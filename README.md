@@ -21,6 +21,8 @@ To register application as Windows Service run this commands:
 
 ``
 set current_dir=%~dp0
+
 sc create FreeBASICWebServer binPath= "%current_dir%WebServer.exe" start= "auto"
+
 sc start FreeBASICWebServer
 ``
