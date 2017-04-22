@@ -1,6 +1,6 @@
 # FreeBASICWebServer #
 
-Very small web server for Windows written in FreeBASIC. Is able to process the methods CONNECT, GET, HEAD, PUT, DELETE, TRACE and OPTIONS.
+Очень компактные вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, PUT, DELETE, TRACE и OPTIONS.
 
 Сервер работает «из коробки», необходимо лишь прописать пути к сайтам в настройках. Также для того, чтобы сервер вёл журнал сетевых соединений, необходимо создать каталог «logs» в папке с программой.
 
@@ -83,21 +83,21 @@ MovedUrl — адрес сайта, куда сервер будет перен�
 Если ни один из этих файлов не найден, то сервер отправляет ошибку «410 Gone», если найдёт файл default.xml.410 или «404 Not Found».
 
 
-## Compile ##
+## Компиляция ##
 
-### Simple version ###
+### Обычная версия ###
 
 ```
 fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas
 ```
 
-### WebServer as Windows Service ###
+### В виде службы Windows ###
 
 ```
 fbc.exe -mt -x "WebServer.exe" -d service=true WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas
 ```
 
-To register application as Windows Service run this commands:
+Для регистрации службы выполни следующие команды:
 
 ```
 set current_dir=%~dp0
