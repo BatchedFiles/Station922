@@ -158,7 +158,7 @@ fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHead
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas
+fbc.exe -mt -x "WebServer.exe" -d service=true WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas WebServerService.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas
 ```
 
 Для уменьшения кода и размера исполняемого файла в сервере не содержится методов автоматической регистрации службы. Для этого можно использовать утилиту `sc`:
