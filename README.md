@@ -1,13 +1,13 @@
-# FreeBASICWebServer
+# Station922
 
-Очень компактный вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, PUT, DELETE, TRACE и OPTIONS.
+Компактный вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, PUT, DELETE, TRACE и OPTIONS.
 
-Сервер работает «из коробки», необходимо лишь прописать пути к сайтам в настройках. Также для того, чтобы сервер вёл журнал сетевых соединений, необходимо создать каталог «logs» в папке с программой.
+Сервер работает «из коробки», необходимо лишь прописать пути к сайтам в файле конфигурации. Для ведения журнала сетевых соединений сервер создаёт каталог «logs» в папке с программой.
 
 
 ## Конфигурация сервера и сайтов
 
-Настройки сервера и сайтов хранятся в обычных INI‐файлах. Рекомендуем сохранять такие файлы в кодировке UTF-16 LE для работы юникодных путей.
+Настройки сервера и сайтов хранятся в обычных INI‐файлах. Рекомендется сохранять такие файлы в кодировке UTF-16 LE.
 
 
 ### Серверные настройки
@@ -22,27 +22,53 @@ ConnectBindAddress=0.0.0.0
 ConnectBindPort=0
 ```
 
-`ListenAddress` — cетевой адрес, к которому будет привязан вебсервер. По умолчанию это 0.0.0.0, то есть сервер будет ожидать соединений со всех сетевых интерфейсов.
 
-`Port` — порт для прослушивания. По умолчанию 80 (стандартный HTTP порт).
+#### Описание
 
-`ConnectBindAddress` — адрес, к которому будет привязываться сервер для выполнения метода CONNECT. По умолчанию 0.0.0.0.
+<dl>
+<dt>ListenAddress</dt>
+<dd>Сетевой адрес, к которому будет привязан вебсервер. По умолчанию это 0.0.0.0, то есть сервер будет ожидать соединений со всех сетевых интерфейсов.</dd>
+</dl>
 
-`ConnectBindPort` — порт, к которому будет привязываться сервер для выполнения метода CONNECT. По умолчанию 0.
+<dl>
+<dt>Port</dt>
+<dd>Порт для прослушивания. По умолчанию 80 (стандартный HTTP порт).</dd>
+</dl>
+
+<dl>
+<dt>ConnectBindAddress</dt>
+<dd>Адрес, к которому будет привязываться сервер для выполнения метода CONNECT. По умолчанию 0.0.0.0.</dd>
+</dl>
+
+<dl>
+<dt>ConnectBindPort</dt>
+<dd>Порт, к которому будет привязываться сервер для выполнения метода CONNECT. По умолчанию 0.</dd>
+</dl>
 
 
 ### Методы CONNECT и PUT
 
-Для своей работы эти методы требуют имени пользователя и пароля. Если имя пользователя и пароль не прописаны, то вебсервер будет отвечать на них ошибкой «401 Unauthorized.
+Для своей работы эти методы требуют имени пользователя и пароля. Если имя пользователя и пароль не прописаны, то вебсервер будет отвечать на методы ошибкой «401 Unauthorized».
 
- Создай в папке с программой файл «users.config» (текстовый INI‐файл) примерно следующего содержания:
+Создай в папке с программой файл «users.config» (текстовый INI‐файл) примерно следующего содержания:
 
 ```
 [admins]
 user=password
 ```
 
-Где «user» — имя пользователя для авторизации, а «password» — пароль.
+
+#### Описание
+
+<dl>
+<dt>user</dt>
+<dd>Имя пользователя для авторизации</dd>
+</dl>
+
+<dl>
+<dt>password</dt>
+<dd>Пароль пользователя.</dd>
+</dl>
 
 Для метода PUT аналогичный файл должен лежать в корневой директории сайта.
 
@@ -59,13 +85,28 @@ IsMoved=0
 MovedUrl=http://localhost
 ```
 
-`VirtualPath` — виртуальное имя сайта. Используется в сообщениях об ошибках.
 
-`PhisycalDir` — физический каталог, где расположены файлы сайта, корневой каталог сайта.
+#### Описание
 
-`IsMoved` — флаг перенаправления на другой сайт. Например, клиент делает запрос на example.org, а настоящий сайт находится на www.example.org. В таком случае необходимо установить 1 для перенаправления.
+<dl>
+<dt>VirtualPath</dt>
+<dd>Виртуальное имя сайта. Используется в сообщениях об ошибках.</dd>
+</dl>
 
-`MovedUrl` — адрес сайта, куда сервер будет перенаправлять при установленном флаге перенаправления. Необходимо начинать с «http://»
+<dl>
+<dt>PhisycalDir</dt>
+<dd>Физический каталог, где расположены файлы сайта, корневой каталог сайта.</dd>
+</dl>
+
+<dl>
+<dt>IsMoved</dt>
+<dd>Флаг перенаправления на другой сайт. Например, клиент делает запрос на example.org, а настоящий сайт находится на www.example.org. В таком случае необходимо установить 1 для перенаправления.</dd>
+</dl>
+
+<dl>
+<dt>MovedUrl</dt>
+<dd>Адрес сайта, куда сервер будет перенаправлять при установленном флаге перенаправления. Необходимо начинать с «http://»</dd>
+</dl>
 
 Таким образом при стандартных настройках, чтобы получить доступ к сайту, необходимо в браузере набрать http://localhost/
 
@@ -150,7 +191,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas
+fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
 ```
 
 
@@ -158,7 +199,7 @@ fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHead
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64-decode.bas WebServerService.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas
+fbc.exe -mt -x "WebServer.exe" -d service=true -d WebServerService.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessRequests.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
 ```
 
 Для уменьшения кода и размера исполняемого файла в сервере не содержится методов автоматической регистрации службы. Для этого можно использовать утилиту `sc`:
