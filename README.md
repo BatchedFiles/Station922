@@ -227,7 +227,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
+fbc.exe -mt -x "WebServer.exe" Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
 ```
 
 
