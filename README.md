@@ -242,6 +242,6 @@ fbc.exe -mt -x "WebServer.exe" -d service=true WebServerService.bas WebServer.ba
 
 ```
 set current_dir=%~dp0
-sc create FreeBASICWebServer binPath= "%current_dir%WebServer.exe" start= "auto"
-sc start FreeBASICWebServer
+sc create Station922 binPath= "%current_dir%WebServer.exe" start= "auto"
+sc start Station922
 ```
