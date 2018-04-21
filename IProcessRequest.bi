@@ -9,6 +9,7 @@ Type IProcessRequest As IProcessRequest_
 
 Type IProcessRequestVirtualTable
 	Dim Process As Function( _
+		ByVal This As IProcessRequest Ptr, _
 		ByVal pState As ReadHeadersResult Ptr, _
 		ByVal ClientSocket As SOCKET, _
 		ByVal pWebSite As WebSite Ptr, _
