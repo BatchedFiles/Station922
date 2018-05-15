@@ -227,7 +227,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
+fbc.exe -mt -x "WebServer.exe" -l crypt32 Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
 ```
 
 
@@ -235,7 +235,7 @@ fbc.exe -mt -x "WebServer.exe" Main.bas WebServer.bas Network.bas ThreadProc.bas
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true WebServerService.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas base64.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
+fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 WebServerService.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
 ```
 
 Для уменьшения кода и размера исполняемого файла в сервере не содержится методов автоматической регистрации службы. Для этого можно использовать утилиту `sc`:
