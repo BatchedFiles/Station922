@@ -48,14 +48,20 @@ ConnectBindPort=0
 
 ### Настройки сайтов
 
-Лежат в файле «WebSites.ini» в каталоге с программой. Каждая секция в файле описывает отдельный сайт, определяемый HTTP‐заголовком «Host», для каждого сайта необходимо создавать отдельную секцию. Вебсервер считае, что example.org, www.example.org и www.example.org:80 — разные сайты, каждый из которых требует отдельной секции. Пример:
+Лежат в файле «WebSites.ini» в каталоге с программой. Каждая секция в файле описывает отдельный сайт, определяемый HTTP‐заголовком «Host», для каждого сайта необходимо создавать отдельную секцию. Вебсервер считает, что example.org, example.org:80, www.example.org и www.example.org:80 — разные сайты, поэтому каждый такой сайт требует отдельной секции. Пример:
 
 ```
 [localhost]
 VirtualPath=/
 PhisycalDir=c:\programming\сайты\localhost\
 IsMoved=0
-MovedUrl=http://localhost
+MovedUrl=http://localhostё/
+
+[localhost:80]
+VirtualPath=/
+PhisycalDir=c:\programming\сайты\localhost\
+IsMoved=0
+MovedUrl=http://localhost:80/
 ```
 
 
