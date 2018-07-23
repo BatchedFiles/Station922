@@ -1,13 +1,13 @@
 # Station922
 
-Компактный вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, PUT, DELETE, TRACE и OPTIONS.
+Компактный вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, POST, PUT, DELETE, TRACE и OPTIONS. Также работает с CGI‐скриптами.
 
-Сервер работает «из коробки», необходимо лишь прописать пути к сайтам в файле конфигурации. Для ведения журнала сетевых соединений сервер создаёт каталог «logs» в папке с программой.
+Сервер работает «из коробки», необходимо лишь прописать пути к сайтам в файле конфигурации.
 
 
 ## Конфигурация сервера и сайтов
 
-Настройки сервера и сайтов хранятся в обычных INI‐файлах. Для поддержки юникодных путей рекомендется сохранять такие файлы в кодировке UTF-16 LE.
+Настройки сервера и сайтов хранятся в обычных INI‐файлах. Для поддержки юникодных путей рекомендется сохранять такие файлы в кодировке UTF-16 LE (1200 с меткой BOM).
 
 
 ### Серверные настройки
@@ -46,9 +46,20 @@ ConnectBindPort=0
 </dl>
 
 
-### Методы CONNECT и PUT
+## Поддерживаемые методы
 
-Для своей работы эти методы требуют имени пользователя и пароля. Если имя пользователя и пароль не прописаны, то вебсервер будет отвечать на методы ошибкой «401 Unauthorized».
+Сервер обрабатывает методы CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT и TRACE.
+
+Если запрошенный файл является CGI‐скриптоми и метод — это GET, HEAD или POST, то запрос отправляется на обработку скрипту. Если метод DELETE, GET, HEAD, OPTIONS, PUT или TRACE и файл не скрипт, то сервер обрабатывает запрос самостоятельно. В остальных случаях сервер отвечает ошибкой «405 Method Not Allowed».
+
+Для неподдерживаемых методов сервер отвечает ошибкой «501 Not Implemented».
+
+Файлом скрипта может быть любая программа, исполняемый или пакетный файл, умеющая читать и записывать в стандартные потоки ввода‐вывода. Также такой файл должен быть в папке «/cgi-bin/», лежащей в корневой директории сайта.
+
+
+### Метод CONNECT
+
+Для своей работы этот метод требуют имени пользователя и пароля в файле «users.config». Если имя пользователя и пароль не прописаны или файл не найден, то вебсервер будет отвечать на методы ошибкой «401 Unauthorized».
 
 Создай в папке с программой файл «users.config» (текстовый INI‐файл) примерно следующего содержания:
 
@@ -70,10 +81,18 @@ user=password
 <dd>Пароль пользователя.</dd>
 </dl>
 
-Для метода PUT аналогичный файл должен лежать в корневой директории сайта.
+
+### Метод PUT
+
+Метод PUT также требует авторизации аналогично методу CONNECT. Файл «users.config» должен лежать в корневой директории сайта.
 
 
-### Настройки сайтов
+### Метод POST
+
+Реализуется через CGI‐скрипты. Для этого файл должен лежать в папке /cgi-bin/ в каталоге с сайтом.
+
+
+## Настройки сайтов
 
 Лежат в файле «WebSites.ini» в каталоге с программой. Каждая секция в файле описывает отдельный сайт, определяемый HTTP‐заголовком «Host», для каждого сайта необходимо создавать отдельную секцию. Вебсервер считае, что example.org, www.example.org и www.example.org:80 — разные сайты, каждый из которых требует отдельной секции. Пример:
 
@@ -105,12 +124,12 @@ MovedUrl=http://localhost
 
 <dl>
 <dt>MovedUrl</dt>
-<dd>Адрес сайта, куда сервер будет перенаправлять при установленном флаге перенаправления. Необходимо начинать с «http://»</dd>
+<dd>Адрес сайта, куда сервер будет перенаправлять при установленном флаге перенаправления. Необходимо начинать с «http://» Также этот адрес используется сервером для установки заголовка «Location» в ответе на метод PUT.</dd>
 </dl>
 
 Таким образом при стандартных настройках, чтобы получить доступ к сайту, необходимо в браузере набрать http://localhost/
 
-Максимальное количество сайтов, поддерживаемое вебсервером: 50.
+Максимальное количество сайтов, поддерживаемое вебсервером, определяется константой «MaxWebSitesCount» в файле «WebSite.bi» По умолчанию MaxWebSitesCount = 50.
 
 
 ### Файлы по умолчанию
@@ -227,7 +246,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" -l crypt32 Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
+fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas SafeHandle.bas
 ```
 
 
@@ -235,13 +254,13 @@ fbc.exe -mt -x "WebServer.exe" -l crypt32 Main.bas WebServer.bas Network.bas Thr
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 WebServerService.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas
+fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 -l Mswsock WebServerService.bas WebServer.bas ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas WebUtils.bas AppendingBuffer.bas Network.bas SafeHandle.bas
 ```
 
-Для уменьшения кода и размера исполняемого файла в сервере не содержится методов автоматической регистрации службы. Для этого можно использовать утилиту `sc`:
+Сервер не регистрирует службу. Для регистрации службы в системе можно использовать утилиту `sc`:
 
 ```
 set current_dir=%~dp0
-sc create Station922 binPath= "%current_dir%WebServer.exe" start= "auto"
+sc create Station922 binPath= "%current_dir%Station922.exe" start= "auto"
 sc start Station922
 ```
