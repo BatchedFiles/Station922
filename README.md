@@ -55,7 +55,7 @@ ConnectBindPort=0
 VirtualPath=/
 PhisycalDir=c:\programming\сайты\localhost\
 IsMoved=0
-MovedUrl=http://localhostё/
+MovedUrl=http://localhost/
 
 [localhost:80]
 VirtualPath=/
