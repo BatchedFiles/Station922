@@ -267,7 +267,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock Main.bas WebServer.bas Network.bas ThreadProc.bas ReadHeadersResult.bas WebUtils.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas AppendingBuffer.bas WebResponse.bas SafeHandle.bas
+fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock -i Modules Modules\Main.bas WebServer.bas Modules\Network.bas Modules\ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Modules\Http.bas WebSite.bas Modules\WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas Modules\WebUtils.bas SafeHandle.bas Classes\InitializeVirtualTables.bas Classes\ArrayStringWriter.bas Classes\ServerState.bas Classes\NetworkStream.bas Classes\FileStream.bas Classes\StreamWriter.bas Classes\Configuration.bas Resources.rc
 ```
 
 
@@ -275,7 +275,7 @@ fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock Main.bas WebServer.bas Netw
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 -l Mswsock WebServerService.bas WebServer.bas ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas WebUtils.bas AppendingBuffer.bas Network.bas SafeHandle.bas
+fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 -l Mswsock -i Modules WebServerService.bas WebServer.bas ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Http.bas WebSite.bas HeapOnArray.bas WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas WebUtils.bas AppendingBuffer.bas Network.bas SafeHandle.bas
 ```
 
 Сервер не регистрирует службу. Для регистрации службы в системе можно использовать утилиту `sc`:
