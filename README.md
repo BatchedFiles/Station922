@@ -9,7 +9,7 @@
 
 ## Конфигурация сервера и сайтов
 
-Настройки сервера и сайтов хранятся в обычных INI‐файлах. Для поддержки юникодных путей рекомендется сохранять такие файлы в кодировке UTF-16 LE (1200 с меткой BOM).
+Настройки сервера и сайтов хранятся в обычных INI‐файлах. Для поддержки юникодных путей рекомендется сохранять такие файлы в кодировке UTF-16 LE (юникод 1200 с меткой BOM).
 
 
 ### Серверные настройки
@@ -24,6 +24,7 @@ ConnectBindAddress=0.0.0.0
 ConnectBindPort=0
 ```
 
+Юникодные имена сайтов следует указывать в кодировке punicode.
 
 #### Описание
 
@@ -269,7 +270,7 @@ Vary
 ### Обычная версия
 
 ```
-fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock -i Modules Modules\Main.bas WebServer.bas Modules\Network.bas Modules\ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Modules\Http.bas WebSite.bas Modules\WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas Modules\WebUtils.bas SafeHandle.bas Classes\InitializeVirtualTables.bas Classes\ArrayStringWriter.bas Classes\ServerState.bas Classes\NetworkStream.bas Classes\Configuration.bas Resources.rc
+fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock -i Modules Modules\Main.bas Mime.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas StreamSocketReader.bas URI.bas WebRequest.bas WebResponse.bas WebServer.bas WebSite.bas Modules\Http.bas Modules\Network.bas Modules\SafeHandle.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WriteHttpError.bas Classes\ArrayStringWriter.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\NetworkStream.bas Classes\ServerState.bas Classes\InitializeVirtualTables.bas Resources.rc
 ```
 
 
@@ -277,7 +278,7 @@ fbc.exe -mt -x "WebServer.exe" -l crypt32 -l Mswsock -i Modules Modules\Main.bas
 
 
 ```
-fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 -l Mswsock -i Modules WebServerService.bas Modules\Main.bas WebServer.bas Modules\Network.bas Modules\ThreadProc.bas ReadHeadersResult.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas Mime.bas Modules\Http.bas WebSite.bas Modules\WriteHttpError.bas StreamSocketReader.bas WebRequest.bas URI.bas WebResponse.bas Modules\WebUtils.bas SafeHandle.bas Classes\InitializeVirtualTables.bas Classes\ArrayStringWriter.bas Classes\ServerState.bas Classes\NetworkStream.bas Classes\Configuration.bas Resources.rc
+fbc.exe -mt -x "WebServer.exe" -d service=true -l crypt32 -l Mswsock -i Modules WebServerService.bas Mime.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas StreamSocketReader.bas URI.bas WebRequest.bas WebResponse.bas WebServer.bas WebSite.bas Modules\Http.bas Modules\Network.bas Modules\SafeHandle.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WriteHttpError.bas Classes\ArrayStringWriter.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\NetworkStream.bas Classes\ServerState.bas Classes\InitializeVirtualTables.bas Resources.rc
 ```
 
 Сервер не регистрирует службу. Для регистрации службы в системе можно использовать утилиту `sc`:
