@@ -85,7 +85,7 @@ set WithoutRuntimeLibraryesFlag=%8
 			call :SetCompilerOutputFileName %%I
 		)
 	) else (
-		call :SetCompilerOutputFileName %OutputFileName%
+		set CompilerOutputFileName=%OutputFileName%
 	)
 	
 	
@@ -145,11 +145,14 @@ set WithoutRuntimeLibraryesFlag=%8
 	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	set GCCOptimizations=-O0 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
-	set IncludeObjectLibraries=-lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -luuid -loleaut32 -lfb -lgcc -lmsvcrt -lmingw32 -lmingwex -lmoldname -lgcc_eh -lgmon
-	set OutputDefinitionFileName=%CompilerOutputFileName:~n%.def
+	set IncludeObjectLibraries=-lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -luuid -loleaut32 -lmsvcrt -lmoldname -lgmon
+	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
 	
 	set UseThreadSafeRuntime=
 	
+	set MajorImageVersion=--major-image-version 1
+	set MinorImageVersion=--minor-image-version 0
+
 	REM Обычный
 	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
 	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
@@ -165,10 +168,14 @@ set WithoutRuntimeLibraryesFlag=%8
 	REM (библиотеки)
 	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
 	
+	set AllFileWithExtensionC=
+	set AllFileWithExtensionAsm=
 	set AllObjectFiles=
 
 	for %%I IN (%AllCompiledFiles%) do (
-		call :GccCompier %%I
+		if "%%~xI"==".bas" (
+			call :GccCompier %%I
+		)
 	)
 	for %%I IN (%AllCompiledFiles%) do (
 		if "%%~xI"==".rc" (
@@ -176,68 +183,83 @@ set WithoutRuntimeLibraryesFlag=%8
 		)
 	)
 
-	REM set MajorImageVersion=--major-image-version 1
-	REM set MinorImageVersion=--minor-image-version 0
+	call :GccLinker
+	
+	call :CleanUp
+	
+	exit /b 0
+	
+:CleanUp
+	
+	del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
+	
+	exit /b 0
 
+
+:GccLinker
+	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-		if "%7"=="dll" (
+		
+		if "%ExeTypeKind%"=="dll" (
 			set EntryPoint=_DllMain@12 --dll --enable-stdcall-fixup --output-def %OutputDefinitionFileName%
 		) else (
-			set EntryPoint=_EntryPoint@12
+			set EntryPoint=_EntryPoint@0
 		)
+		
 		set PEFileFormat=i386pe
+		
 	) else (
-		if "%7"=="dll" (
+		
+		if "%ExeTypeKind%"=="dll" (
 			set EntryPoint=DllMain --dll --enable-stdcall-fixup --output-def %OutputDefinitionFileName%
 		) else (
 			set EntryPoint=EntryPoint
 		)
+		
 		set PEFileFormat=i386pep
+		
 	)
-
-
-:GccLinker
-
+	
 	if "%DebugFlag%"=="debug" (
 		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeObjectLibraries% -)
 	) else (
 		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -s -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeObjectLibraries% -)
 	)
-	del %AllObjectFiles%
-
-	if "%7"=="dll" (
+	
+	if "%ExeTypeKind%"=="dll" (
 		"%CompilerBinDirectory%\dlltool.exe" --def %OutputDefinitionFileName% --dllname %CompilerOutputFileName% --output-lib lib%CompilerOutputFileName%.a
 	)
-
+	
 	exit /b 0
-
-
+	
+	
 :GccCompier
 
-	set FileWithExtensionC=%~n1.c
-	set FileWithExtensionAsm=%~n1.asm
-	set FileWithExtensionObj=.obj
+	set FileWithExtensionBas=%1
+	set FileWithoutExtension=%FileWithExtensionBas:~0,-3%
+	set FileWithExtensionC=%FileWithoutExtension%c
+	set FileWithExtensionAsm=%FileWithoutExtension%asm
+	set FileWithExtensionObj=%FileWithoutExtension%o
 
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
 		set TargetAssemblerArch=--32
 	) else (
 		set TargetAssemblerArch=--64
 		set GCCArchitecture=-m64 -march=x86-64
-		if "%DebugFlag%"=="debug" (
-			"%CompilerBinDirectory%\gcc.exe" %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% -g -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
-		) else (
-			"%CompilerBinDirectory%\gcc.exe" %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
-		)
-		del %FileWithExtensionC%
 	)
 
+	if "%CodeGenerationBackend%"=="gcc" (
+		"%CompilerBinDirectory%\gcc.exe" %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
+	)
+	
 	if "%DebugFlag%"=="debug" (
 		"%CompilerBinDirectory%\as.exe" %TargetAssemblerArch% %FileWithExtensionAsm% -o %FileWithExtensionObj%
 	) else (
 		"%CompilerBinDirectory%\as.exe" %TargetAssemblerArch% --strip-local-absolute %FileWithExtensionAsm% -o %FileWithExtensionObj%
 	)
-	del %FileWithExtensionAsm%
 
+	set AllFileWithExtensionC=%AllFileWithExtensionC% %FileWithExtensionC%
+	set AllFileWithExtensionAsm=%AllFileWithExtensionAsm% %FileWithExtensionAsm%
 	set AllObjectFiles=%AllObjectFiles% %FileWithExtensionObj%
 
 	exit /b 0
@@ -245,13 +267,17 @@ set WithoutRuntimeLibraryesFlag=%8
 
 :ResourceCompiler
 
-	set ResourceFileWithExtensionObj=%~n1.obj
-
+	set ResourceFileWithExtension=%1
+	set ResourceFileWithoutExtension=%ResourceFileWithExtension:~0,-2%
+	set ResourceFileWithExtensionObj=%ResourceFileWithoutExtension%obj
+	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-		"%CompilerBinDirectory%\gorc.exe" /ni /nw /o /fo %ResourceFileWithExtensionObj% %1
+		set ResourceCompiler64Flag=/nw
 	) else (
-		"%CompilerBinDirectory%\gorc.exe" /ni /machine X64 /o /fo %ResourceFileWithExtensionObj% %1
+		set ResourceCompiler64Flag=/machine X64
 	)
+	
+	"%CompilerBinDirectory%\gorc.exe" /ni %ResourceCompiler64Flag% /o /fo %ResourceFileWithExtensionObj% %ResourceFileWithExtension%
 
 	set AllObjectFiles=%AllObjectFiles% %ResourceFileWithExtensionObj%
 
@@ -260,13 +286,16 @@ set WithoutRuntimeLibraryesFlag=%8
 	
 :SetCompilerOutputFileName
 	
+	set CompilerOutputFileNameWithExtensionBas=%1
+	set CompilerOutputFileNameWithouExtension=%CompilerOutputFileNameWithExtensionBas:~0,-3%
+	
 	if "%ExeTypeKind%"=="lib" (
-		set CompilerOutputFileName=lib%~n1.a
+		set CompilerOutputFileName=lib%CompilerOutputFileNameWithouExtension%.a
 	) else (
 		if "%ExeTypeKind%"=="dll" (
-			set CompilerOutputFileName=%~n1.dll
+			set CompilerOutputFileName=%CompilerOutputFileNameWithouExtension%.dll
 		) else (
-			set CompilerOutputFileName=%~n1.exe
+			set CompilerOutputFileName=%CompilerOutputFileNameWithouExtension%.exe
 		)
 	)
 	
