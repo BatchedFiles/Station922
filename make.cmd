@@ -6,7 +6,7 @@ set Modules=Mime.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDele
 set Resources=Resources.rc
 set OutputFile=Station922.exe
 
-set IncludeFilesPath=-i Classes -i Interfaces -i Modules
+set IncludeFilesPath=-i Classes -i Interfaces -i Modules -i Headers
 set IncludeLibraries=-l kernel32 -l crypt32 -l Mswsock
 set ExeTypeKind=console
 
