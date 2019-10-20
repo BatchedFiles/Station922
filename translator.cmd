@@ -147,7 +147,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	set GCCOptimizations=-O0 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
-	set IncludeObjectLibraries=-lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -luuid -loleaut32 -lmsvcrt -lmoldname -lgmon
+	set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -luuid -loleaut32 -lmsvcrt -lmoldname -lgmon
 	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
 	
 	set UseThreadSafeRuntime=
