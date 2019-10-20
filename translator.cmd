@@ -25,13 +25,13 @@ REM driver  Драйвер                             native
 set CompilerLogErrorFileName=_out.txt
 
 set AllCompiledFiles=%~1
-set ExeTypeKind=%2
+set ExeTypeKind=%~2
 set OutputFileName=%~3
 set Directory=%~4
 set CompilerParameters=%~5
-set DebugFlag=%6
-set ProfileFlag=%7
-set WithoutRuntimeLibraryesFlag=%8
+set DebugFlag=%~6
+set ProfileFlag=%~7
+set WithoutRuntimeLibraryesFlag=%~8
 
 
 :CreateCompilerExeTypeKind
@@ -46,14 +46,16 @@ set WithoutRuntimeLibraryesFlag=%8
 		if "%WithoutRuntimeLibraryesFlag%"=="withoutruntime" (
 			set CompilerExeTypeKind=-lib
 		) else (
-			set CompilerExeTypeKind=
+			if "%ExeTypeKind%"=="lib" (
+				set CompilerExeTypeKind=-lib
+			)
 		)
 	)
 	
 :CreateWin32Subsystem
 	
 	if "%ExeTypeKind%"=="lib" (
-		set Win32Subsystem=
+		set Win32Subsystem=console
 	) else (
 		if "%ExeTypeKind%"=="dll" (
 			set Win32Subsystem=console
@@ -191,7 +193,7 @@ set WithoutRuntimeLibraryesFlag=%8
 	
 :CleanUp
 	
-	del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
+	rem del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
 	
 	exit /b 0
 
