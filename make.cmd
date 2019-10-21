@@ -1,13 +1,13 @@
 set CompilerDirectory=%ProgramFiles%\FreeBASIC
 
 set MainFile=Modules\EntryPoint.bas
-set Classes=Classes\ArrayStringWriter.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\NetworkStream.bas Classes\RequestedFile.bas Classes\ServerResponse.bas Classes\ServerState.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas Resources.rc
+set Classes=Classes\ArrayStringWriter.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\NetworkStream.bas Classes\RequestedFile.bas Classes\ServerResponse.bas Classes\ServerState.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas
 set Modules=Mime.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas ProcessWebSocketRequest.bas URI.bas Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\Guids.bas Modules\GuidsWithoutMinGW.bas Modules\Http.bas Modules\InitializeVirtualTables.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\SafeHandle.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WriteHttpError.bas
 set Resources=Resources.rc
 set OutputFile=Station922.exe
 
 set IncludeFilesPath=-i Classes -i Interfaces -i Modules -i Headers
-set IncludeLibraries=-l kernel32 -l crypt32 -l Mswsock
+set IncludeLibraries=-l crypt32 -l kernel32 -l Mswsock
 set ExeTypeKind=console
 
 set MaxErrorsCount=-maxerr 1
@@ -46,6 +46,6 @@ if "%3"=="withoutruntime" (
 	set WithoutRuntime=runtime
 )
 
-set CompilerParameters=-d PROGRAM_VERSION_MAJOR=%PROGRAM_VERSION_MAJOR% -d PROGRAM_VERSION_MINOR=%PROGRAM_VERSION_MINOR% -d PROGRAM_VERSION_BUILD=%PROGRAM_VERSION_BUILD% -d PROGRAM_VERSION_REVISION=%PROGRAM_VERSION_REVISION% %MaxErrorsCount% %UseThreadSafeRuntime% %IncludeLibraries% %IncludeFilesPath% %OptimizationLevel% %VectorizationLevel% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking%
+set CompilerParameters=%SERVICE_DEFINED% -d PROGRAM_VERSION_MAJOR=%PROGRAM_VERSION_MAJOR% -d PROGRAM_VERSION_MINOR=%PROGRAM_VERSION_MINOR% -d PROGRAM_VERSION_BUILD=%PROGRAM_VERSION_BUILD% -d PROGRAM_VERSION_REVISION=%PROGRAM_VERSION_REVISION% %MaxErrorsCount% %UseThreadSafeRuntime% %IncludeLibraries% %IncludeFilesPath% %OptimizationLevel% %VectorizationLevel% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking%
 
 call translator.cmd "%MainFile% %Classes% %Modules% %Resources%" "%ExeTypeKind%" "%OutputFile%" "%CompilerDirectory%" "%CompilerParameters%" %EnableDebug% noprofile %WithoutRuntime%
