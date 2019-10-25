@@ -193,7 +193,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 :CleanUp
 	
-	rem del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
+	del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
 	
 	exit /b 0
 
