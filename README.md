@@ -270,7 +270,7 @@ Vary
 ### Обычная версия
 
 ```
-make.cmd
+make.cmd exe release withoutruntime
 ```
 
 
@@ -278,13 +278,13 @@ make.cmd
 
 
 ```
-make.cmd service
+make.cmd service release withoutruntime
 ```
 
-Сервер не регистрирует службу. Для регистрации службы в системе можно использовать утилиту `sc`:
+Для регистрации службы в системе можно использовать утилиту `sc`:
 
 ```
 set current_dir=%~dp0
-sc create Station922 binPath= "%current_dir%Station922.exe" start= "auto"
+sc create Station922 binPath= "%current_dir%Station922.exe" start= "auto" DisplayName= "WebServer"
 sc start Station922
 ```
