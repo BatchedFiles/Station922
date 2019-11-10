@@ -7,7 +7,7 @@ set Resources=Resources.rc
 set OutputFile=Station922.exe
 
 set IncludeFilesPath=-i Classes -i Interfaces -i Modules -i Headers
-set IncludeLibraries=-l crypt32 -l kernel32 -l Mswsock
+set IncludeLibraries=-l crypt32 -l Mswsock
 set ExeTypeKind=console
 
 set MaxErrorsCount=-maxerr 1
