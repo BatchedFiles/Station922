@@ -1,11 +1,5 @@
 # Задачи
 
-
-## Рефракторинг
-
-* [ ] URI.bas
-
-
 ## Сделать
 
 Эти задачи выполнить в любом порядке.
@@ -34,6 +28,69 @@
 * [ ] Поддержка в запросе множественных байтовых диапазонов.
 * [ ] Асинхронный трубопровод в CGI.
 * [ ] Переименовать функции и структуры: юникодные должны быть с W на конце, неюникодные — с A.
+
+
+## Рефракторинг
+
+### Классы
+
+* [ ] ArrayStringWriter.bas
+* [ ] ClientRequest.bas
+* [ ] Configuration.bas
+* [ ] HttpReader.bas
+* [ ] NetworkStream.bas
+* [ ] RequestedFile.bas
+* [ ] SafeHandle.bas
+* [ ] ServerResponse.bas
+* [ ] ServerState.bas
+* [ ] WebServer.bas
+* [ ] WebSite.bas
+* [ ] WebSiteContainer.bas
+
+### Интерфейсы
+
+* [ ] IArrayStringWriter.bi
+* [ ] IAsyncResult.bi
+* [ ] IBaseStream.bi
+* [ ] IClientRequest.bi
+* [ ] IConfiguration.bi
+* [ ] IFileStream.bi
+* [ ] IHttpReader.bi
+* [ ] INetworkStream.bi
+* [ ] IRequestedFile.bi
+* [ ] IRequestProcessor.bi
+* [ ] IRunnable.bi
+* [ ] ISendable.bi
+* [ ] IServerResponse.bi
+* [ ] IServerState.bi
+* [ ] IStreamReader.bi
+* [ ] IStreamWriter.bi
+* [ ] IStringable.bi
+* [ ] ITextReader.bi
+* [ ] ITextWriter.bi
+* [ ] IUri.bi
+* [ ] IWebSite.bi
+* [ ] IWebSiteContainer.bi
+
+### Модули
+
+* [ ] ConsoleColors.bas
+* [ ] ConsoleMain.bas
+* [ ] EntryPoint.bas
+* [ ] FindNewLineIndex.bas
+* [ ] Guids.bas
+* [ ] GuidsWithoutMinGW.bas
+* [ ] Http.bas
+* [ ] InitializeVirtualTables.bas
+* [ ] Network.bas
+* [ ] NetworkClient.bas
+* [ ] NetworkServer.bas
+* [ ] PrintDebugInfo.bas
+* [ ] ThreadProc.bas
+* [ ] WebUtils.bas
+* [ ] WindowsServiceMain.bas
+* [ ] WriteHttpError.bas
+* [ ] URI.bas
 
 
 ## Выполнено
