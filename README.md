@@ -1,4 +1,4 @@
-# Station922
+﻿# Station922
 
 Компактный вебсервер для Windows, написанный на фрибейсике. Умеет обрабатывать методы CONNECT, GET, HEAD, POST, PUT, DELETE, TRACE и OPTIONS. Также работает с CGI‐скриптами.
 
