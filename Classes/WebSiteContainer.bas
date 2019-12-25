@@ -44,29 +44,29 @@ Dim Shared GlobalWebSiteContainerVirtualTable As IWebSiteContainerVirtualTable =
 )
 
 Sub InitializeWebSiteContainer( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr _
+		ByVal this As WebSiteContainer Ptr _
 	)
 	
-	pWebSiteContainer->pVirtualTable = @GlobalWebSiteContainerVirtualTable
-	pWebSiteContainer->ReferenceCounter = 0
-	pWebSiteContainer->ExecutableDirectory[0] = 0
+	this->pVirtualTable = @GlobalWebSiteContainerVirtualTable
+	this->ReferenceCounter = 0
+	this->ExecutableDirectory[0] = 0
 	
-	pWebSiteContainer->hTreeHeap = HeapCreate(HEAP_NO_SERIALIZE, 0, 0)
-	pWebSiteContainer->pDefaultNode = NULL
-	pWebSiteContainer->pTree = NULL
+	this->hTreeHeap = HeapCreate(HEAP_NO_SERIALIZE, 0, 0)
+	this->pDefaultNode = NULL
+	this->pTree = NULL
 	
 End Sub
 
 Sub UnInitializeWebSiteContainer( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr _
+		ByVal this As WebSiteContainer Ptr _
 	)
 	
-	HeapDestroy(pWebSiteContainer->hTreeHeap)
+	HeapDestroy(this->hTreeHeap)
 	
 End Sub
 
-Function CreateWebSiteContainerOfIWebSiteContainer( _
-	)As IWebSiteContainer Ptr
+Function CreateWebSiteContainer( _
+	)As WebSiteContainer Ptr
 	
 	Dim pWebSiteContainer As WebSiteContainer Ptr = HeapAlloc( _
 		GetProcessHeap(), _
@@ -80,89 +80,87 @@ Function CreateWebSiteContainerOfIWebSiteContainer( _
 	
 	InitializeWebSiteContainer(pWebSiteContainer)
 	
-	pWebSiteContainer->ExistsInStack = False
-	
-	Dim pIWebSiteContainer As IWebSiteContainer Ptr = Any
-	
-	WebSiteContainerQueryInterface( _
-		pWebSiteContainer, @IID_IWebSiteContainer, @pIWebSiteContainer _
-	)
-	
-	Return pIWebSiteContainer
+	Return pWebSiteContainer
 	
 End Function
 
+Sub DestroyWebSiteContainer( _
+		ByVal this As WebSiteContainer Ptr _
+	)
+	
+	UnInitializeWebSiteContainer(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
+
 Function WebSiteContainerQueryInterface( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+		ByVal this As WebSiteContainer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IWebSiteContainer, riid) Then
-		*ppv = @pWebSiteContainer->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
-			*ppv = @pWebSiteContainer->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
-			*ppv = 0
+			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 	
-	WebSiteContainerAddRef(pWebSiteContainer)
+	WebSiteContainerAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteContainerAddRef( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr _
+		ByVal this As WebSiteContainer Ptr _
 	)As ULONG
 	
-	Return InterlockedIncrement(@pWebSiteContainer->ReferenceCounter)
+	Return InterlockedIncrement(@this->ReferenceCounter)
 	
 End Function
 
 Function WebSiteContainerRelease( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr _
+		ByVal this As WebSiteContainer Ptr _
 	)As ULONG
 	
-	InterlockedDecrement(@pWebSiteContainer->ReferenceCounter)
+	InterlockedDecrement(@this->ReferenceCounter)
 	
-	If pWebSiteContainer->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		UnInitializeWebSiteContainer(pWebSiteContainer)
-		
-		If pWebSiteContainer->ExistsInStack = False Then
-			HeapFree(GetProcessHeap(), 0, pWebSiteContainer)
-		End If
+		DestroyWebSiteContainer(this)
 		
 		Return 0
 	End If
 	
-	Return pWebSiteContainer->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function WebSiteContainerGetDefaultWebSite( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+		ByVal this As WebSiteContainer Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	IWebSite_AddRef(pWebSiteContainer->pDefaultNode->pIWebSite)
-	*ppIWebSite = pWebSiteContainer->pDefaultNode->pIWebSite
+	IWebSite_AddRef(this->pDefaultNode->pIWebSite)
+	*ppIWebSite = this->pDefaultNode->pIWebSite
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteContainerFindWebSite( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+		ByVal this As WebSiteContainer Ptr, _
 		ByVal Host As WString Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim pNode As WebSiteNode Ptr = TreeFindNode(pWebSiteContainer->pTree, Host)
+	Dim pNode As WebSiteNode Ptr = TreeFindNode(this->pTree, Host)
 	
 	If pNode = NULL Then
 		*ppIWebSite = NULL
@@ -177,11 +175,11 @@ Function WebSiteContainerFindWebSite( _
 End Function
 
 Function WebSiteContainerLoadWebSites( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+		ByVal this As WebSiteContainer Ptr, _
 		ByVal ExecutableDirectory As WString Ptr _
 	)As HRESULT
 	
-	lstrcpy(@pWebSiteContainer->ExecutableDirectory, ExecutableDirectory)
+	lstrcpy(@this->ExecutableDirectory, ExecutableDirectory)
 	
 	Dim SettingsFileName As WString * (MAX_PATH + 1) = Any
 	PathCombine(@SettingsFileName, ExecutableDirectory, @WebSitesIniFileString)
@@ -202,17 +200,17 @@ Function WebSiteContainerLoadWebSites( _
 	
 	Do While wLength > 0	
 		
-		LoadWebSite(pWebSiteContainer, pIConfig, w)
+		LoadWebSite(this, pIConfig, w)
 
 		w = @w[wLength + 1]
 		wLength = lstrlen(w)
 		
 	Loop
 	
-	pWebSiteContainer->pDefaultNode = CreateWebSiteNode( _
-		pWebSiteContainer->hTreeHeap, _
+	this->pDefaultNode = CreateWebSiteNode( _
+		this->hTreeHeap, _
 		pIConfig, _
-		@pWebSiteContainer->ExecutableDirectory, _
+		@this->ExecutableDirectory, _
 		@DefaultVirtualPath _
 	)
 	
@@ -223,22 +221,22 @@ Function WebSiteContainerLoadWebSites( _
 End Function
 
 Sub LoadWebSite( _
-		ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+		ByVal this As WebSiteContainer Ptr, _
 		ByVal pIConfig As IConfiguration Ptr, _
 		ByVal HostName As WString Ptr _
 	)
 	
 	Dim pNode As WebSiteNode Ptr = CreateWebSiteNode( _
-		pWebSiteContainer->hTreeHeap, _
+		this->hTreeHeap, _
 		pIConfig, _
-		@pWebSiteContainer->ExecutableDirectory, _
+		@this->ExecutableDirectory, _
 		HostName _
 	)
 	
-	If pWebSiteContainer->pTree = NULL Then
-		pWebSiteContainer->pTree = pNode
+	If this->pTree = NULL Then
+		this->pTree = pNode
 	Else
-		TreeAddNode(pWebSiteContainer->pTree, pNode)
+		TreeAddNode(this->pTree, pNode)
 	End If
 	
 End Sub

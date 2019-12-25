@@ -43,7 +43,7 @@ Function InitializeNetworkStreamOfINetworkStream( _
 	Dim pINetworkStream As INetworkStream Ptr = Any
 	
 	NetworkStreamQueryInterface( _
-		pStream, @IID_INETWORKSTREAM, @pINetworkStream _
+		pStream, @IID_INetworkStream, @pINetworkStream _
 	)
 	
 	Return pINetworkStream
@@ -56,16 +56,16 @@ Function NetworkStreamQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_INETWORKSTREAM, riid) Then
+	If IsEqualIID(@IID_INetworkStream, riid) Then
 		*ppv = @pNetworkStream->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IBASESTREAM, riid) Then
+		If IsEqualIID(@IID_IBaseStream, riid) Then
 			*ppv = @pNetworkStream->pVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 				*ppv = @pNetworkStream->pVirtualTable
 			Else
-				*ppv = 0
+				*ppv = NULL
 				Return E_NOINTERFACE
 			End If
 		End If

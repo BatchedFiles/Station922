@@ -1,6 +1,7 @@
 ﻿#include "WebSite.bi"
 #include "win\shlwapi.bi"
 #include "CharacterConstants.bi"
+#include "RequestedFile.bi"
 
 Const DefaultFileNameDefaultXml = "default.xml"
 Const DefaultFileNameDefaultXhtml = "default.xhtml"
@@ -87,7 +88,7 @@ Function WebSiteQueryInterface( _
 		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 			*ppv = @pWebSite->pVirtualTable
 		Else
-			*ppv = 0
+			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
@@ -231,10 +232,10 @@ Function WebSiteGetRequestedFile( _
 		ByVal pWebSite As WebSite Ptr, _
 		ByVal FilePath As WString Ptr, _
 		ByVal ForReading As FileAccess, _
-		ByVal ppRequestedFile As IRequestedFile Ptr Ptr _
+		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
 	)As HRESULT
 	
-	*ppRequestedFile = NULL
+	*ppIRequestedFile = NULL
 	
 	Dim pRequestedFile As RequestedFile Ptr = CreateRequestedFile()
 	
@@ -258,7 +259,7 @@ Function WebSiteGetRequestedFile( _
 		)
 		
 		Dim hr As HRESULT = RequestedFileQueryInterface( _
-			pRequestedFile, @IID_IRequestedFile, ppRequestedFile _
+			pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
 		)
 		
 		If FAILED(hr) Then
@@ -292,7 +293,7 @@ Function WebSiteGetRequestedFile( _
 			If pRequestedFile->FileHandle <> INVALID_HANDLE_VALUE Then
 				
 				Dim hr As HRESULT = RequestedFileQueryInterface( _
-					pRequestedFile, @IID_IRequestedFile, ppRequestedFile _
+					pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
 				)
 				
 				If FAILED(hr) Then
@@ -324,7 +325,7 @@ Function WebSiteGetRequestedFile( _
 		pRequestedFile->FileHandle = INVALID_HANDLE_VALUE
 		
 		Dim hr As HRESULT = RequestedFileQueryInterface( _
-			pRequestedFile, @IID_IRequestedFile, ppRequestedFile _
+			pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
 		)
 		
 		If FAILED(hr) Then

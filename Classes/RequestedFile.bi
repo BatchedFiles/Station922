@@ -4,6 +4,8 @@
 #include "IRequestedFile.bi"
 #include "ISendable.bi"
 
+Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
+
 Type RequestedFile
 	Const MaxFilePathLength As Integer = 4095 + 32
 	Const MaxFilePathTranslatedLength As Integer = MaxFilePathLength + 256

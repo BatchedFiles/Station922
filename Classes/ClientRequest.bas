@@ -85,7 +85,7 @@ Function InitializeClientRequestOfIClientRequest( _
 	Dim pIRequest As IClientRequest Ptr = Any
 	
 	ClientRequestQueryInterface( _
-		pClientRequest, @IID_ICLIENTREQUEST, @pIRequest _
+		pClientRequest, @IID_IClientRequest, @pIRequest _
 	)
 	
 	Return pIRequest
@@ -98,16 +98,16 @@ Function ClientRequestQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_ICLIENTREQUEST, riid) Then
+	If IsEqualIID(@IID_IClientRequest, riid) Then
 		*ppv = @pClientRequest->pClientRequestVirtualTable
 	Else
-		If IsEqualIID(@IID_ISTRINGABLE, riid) Then
+		If IsEqualIID(@IID_IStringable, riid) Then
 			*ppv = @pClientRequest->pStringableVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 				*ppv = @pClientRequest->pClientRequestVirtualTable
 			Else
-				*ppv = 0
+				*ppv = NULL
 				Return E_NOINTERFACE
 			End If
 		End If

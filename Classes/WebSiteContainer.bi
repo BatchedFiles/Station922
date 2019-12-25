@@ -4,6 +4,8 @@
 #include "IWebSiteContainer.bi"
 #include "WebSite.bi"
 
+Extern CLSID_WEBSITECONTAINER Alias "CLSID_WEBSITECONTAINER" As Const CLSID
+
 Type WebSiteNode
 	Const MaxHostNameLength As Integer = 1024 - 1
 	
@@ -24,7 +26,6 @@ Type WebSiteContainer
 	
 	Dim pVirtualTable As IWebSiteContainerVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
-	Dim ExistsInStack As Boolean
 	
 	Dim ExecutableDirectory As WString * (MAX_PATH + 1)
 	Dim hTreeHeap As Handle
@@ -33,48 +34,41 @@ Type WebSiteContainer
 	
 End Type
 
-Declare Function CreateWebSiteContainerOfIWebSiteContainer( _
-)As IWebSiteContainer Ptr
+Declare Function CreateWebSiteContainer( _
+)As WebSiteContainer Ptr
 
-Declare Function InitializeWebSiteContainerOfIWebSiteContainer( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr _
-)As IWebSiteContainer Ptr
+Declare Sub DestroyWebSiteContainer( _
+	ByVal this As WebSiteContainer Ptr _
+)
 
 Declare Function WebSiteContainerQueryInterface( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+	ByVal this As WebSiteContainer Ptr, _
 	ByVal riid As REFIID, _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteContainerAddRef( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr _
+	ByVal this As WebSiteContainer Ptr _
 )As ULONG
 
 Declare Function WebSiteContainerRelease( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr _
+	ByVal this As WebSiteContainer Ptr _
 )As ULONG
 
 Declare Function WebSiteContainerGetDefaultWebSite( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+	ByVal this As WebSiteContainer Ptr, _
 	ByVal ppIWebSite As IWebSite Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteContainerFindWebSite( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+	ByVal this As WebSiteContainer Ptr, _
 	ByVal Host As WString Ptr, _
 	ByVal ppIWebSite As IWebSite Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteContainerLoadWebSites( _
-	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
+	ByVal this As WebSiteContainer Ptr, _
 	ByVal ExecutableDirectory As WString Ptr _
 )As HRESULT
-
-#define WebSiteContainer_NonVirtualQueryInterface(pIWebSiteContainer, riid, ppv) WebSiteContainerQueryInterface(CPtr(WebSiteContainer Ptr, pIWebSiteContainer), riid, ppv)
-#define WebSiteContainer_NonVirtualAddRef(pIWebSiteContainer) WebSiteContainerAddRef(CPtr(WebSiteContainer Ptr, pIWebSiteContainer))
-#define WebSiteContainer_NonVirtualRelease(pIWebSiteContainer) WebSiteContainerRelease(CPtr(WebSiteContainer Ptr, pIWebSiteContainer))
-#define WebSiteContainer_NonVirtualGetDefaultWebSite(pIWebSiteContainer, ppIWebSite) WebSiteContainerGetDefaultWebSite(CPtr(WebSiteContainer Ptr, pIWebSiteContainer), ppIWebSite)
-#define WebSiteContainer_NonVirtualFindWebSite(pIWebSiteContainer, Host, ppIWebSite) WebSiteContainerFindWebSite(CPtr(WebSiteContainer Ptr, pIWebSiteContainer), Host, ppIWebSite)
-#define WebSiteContainer_NonVirtualLoadWebSites(pIWebSiteContainer, ExecutableDirectory) WebSiteContainerLoadWebSites(CPtr(WebSiteContainer Ptr, pIWebSiteContainer), ExecutableDirectory)
 
 #endif

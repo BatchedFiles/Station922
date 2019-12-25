@@ -61,7 +61,7 @@ Function InitializeHttpReaderOfIHttpReader( _
 	Dim pIHttpReader As IHttpReader Ptr = Any
 	
 	HttpReaderQueryInterface( _
-		pHttpReader, @IID_IHTTPREADER, @pIHttpReader _
+		pHttpReader, @IID_IHttpReader, @pIHttpReader _
 	)
 	
 	Return pIHttpReader

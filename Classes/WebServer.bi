@@ -3,7 +3,6 @@
 
 #include "IRunnable.bi"
 #include "Network.bi"
-#include "WebSiteContainer.bi"
 
 Type WebServer
 	Const ListenAddressLengthMaximum As Integer = 255

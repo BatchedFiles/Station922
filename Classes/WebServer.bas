@@ -2,6 +2,7 @@
 #include "win\shlwapi.bi"
 #include "ClientRequest.bi"
 #include "Configuration.bi"
+#include "CreateInstance.bi"
 #include "IniConst.bi"
 #include "Network.bi"
 #include "NetworkServer.bi"
@@ -16,6 +17,7 @@ Const DefaultStackSize As SIZE_T_ = 0
 Const SleepTimeout As DWORD = 60 * 1000
 
 Extern IID_IUnknown_WithoutMinGW As Const IID
+Extern CLSID_WEBSITECONTAINER Alias "CLSID_WEBSITECONTAINER" As Const CLSID
 
 Dim Shared ExecutableDirectory As WString * (MAX_PATH + 1)
 
@@ -70,7 +72,7 @@ Function InitializeWebServerOfIRunnable( _
 	Dim pIWebServer As IRunnable Ptr = Any
 	
 	WebServerQueryInterface( _
-		pWebServer, @IID_IRUNNABLE, @pIWebServer _
+		pWebServer, @IID_IRunnable, @pIWebServer _
 	)
 	
 	Return pIWebServer
@@ -83,13 +85,13 @@ Function WebServerQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IRUNNABLE, riid) Then
+	If IsEqualIID(@IID_IRunnable, riid) Then
 		*ppv = @pWebServer->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 			*ppv = @pWebServer->pVirtualTable
 		Else
-			*ppv = 0
+			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
@@ -135,13 +137,20 @@ Function WebServerRun( _
 		ByVal pWebServer As WebServer Ptr _
 	)As HRESULT
 	
-	Dim pIWebSites As IWebSiteContainer Ptr = CreateWebSiteContainerOfIWebSiteContainer()
+	Dim pIWebSites As IWebSiteContainer Ptr = Any
 	
-	If pIWebSites = NULL Then
-		Return E_OUTOFMEMORY
+	Dim hr As HRESULT = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_WEBSITECONTAINER, _
+		@IID_IWebSiteContainer, _
+		@pIWebSites _
+	)
+	
+	If FAILED(hr) Then
+		Return hr
 	End If
 	
-	WebSiteContainer_NonVirtualLoadWebSites(pIWebSites, @ExecutableDirectory)
+	IWebSiteContainer_LoadWebSites(pIWebSites, @ExecutableDirectory)
 	
 	Do
 		
@@ -183,7 +192,7 @@ Function WebServerRun( _
 			If pWebServer->ReListenSocket Then
 				SleepEx(SleepTimeout, True)
 			Else
-				WebSiteContainer_NonVirtualRelease(pIWebSites)
+				IWebSiteContainer_Release(pIWebSites)
 				Return S_OK
 			End If
 		Else
@@ -290,7 +299,7 @@ Function WebServerRun( _
 				pContext->hThread = hThread
 				pContext->pExeDir = @ExecutableDirectory
 				
-				WebSiteContainer_NonVirtualAddRef(pIWebSites)
+				IWebSiteContainer_AddRef(pIWebSites)
 				pContext->pIWebSites = pIWebSites
 				
 				pContext->hThreadContextHeap = pWebServer->hThreadContextHeap
@@ -306,7 +315,7 @@ Function WebServerRun( _
 		
 	Loop While pWebServer->ReListenSocket
 	
-	WebSiteContainer_NonVirtualRelease(pIWebSites)
+	IWebSiteContainer_Release(pIWebSites)
 	
 	Return S_OK
 	

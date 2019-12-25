@@ -2,7 +2,6 @@
 #define WEBSITE_BI
 
 #include "IWebSite.bi"
-#include "RequestedFile.bi"
 
 Type WebSite
 	

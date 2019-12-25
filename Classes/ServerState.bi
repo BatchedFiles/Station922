@@ -13,7 +13,7 @@ Const ProgID_ServerState = "BatchedFiles.Station922"
 
 Const CLSIDS_SERVERSTATE = "{E9BE6663-1ED6-45A4-9090-01FF8A82AB99}"
 
-Extern CLSID_ServerState Alias "CLSID_ServerState" As Const CLSID
+Extern CLSID_SERVERSTATE Alias "CLSID_SERVERSTATE" As Const CLSID
 
 Type ServerState
 	Dim pVirtualTable As IServerStateVirtualTable Ptr

@@ -137,13 +137,13 @@ Function RequestedFileQueryInterface( _
 	If IsEqualIID(@IID_IRequestedFile, riid) Then
 		*ppv = @pRequestedFile->pRequestedFileVirtualTable
 	Else
-		If IsEqualIID(@IID_ISENDABLE, riid) Then
+		If IsEqualIID(@IID_ISendable, riid) Then
 			*ppv = @pRequestedFile->pSendableVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 				*ppv = @pRequestedFile->pRequestedFileVirtualTable
 			Else
-				*ppv = 0
+				*ppv = NULL
 				Return E_NOINTERFACE
 			End If
 		End If

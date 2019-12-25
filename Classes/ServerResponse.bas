@@ -92,13 +92,13 @@ Function ServerResponseQueryInterface( _
 	If IsEqualIID(@IID_IServerResponse, riid) Then
 		*ppv = @pServerResponse->pServerResponseVirtualTable
 	Else
-		If IsEqualIID(@IID_ISTRINGABLE, riid) Then
+		If IsEqualIID(@IID_IStringable, riid) Then
 			*ppv = @pServerResponse->pStringableVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 				*ppv = @pServerResponse->pServerResponseVirtualTable
 			Else
-				*ppv = 0
+				*ppv = NULL
 				Return E_NOINTERFACE
 			End If
 		End If

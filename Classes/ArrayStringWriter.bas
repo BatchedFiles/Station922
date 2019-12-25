@@ -50,7 +50,7 @@ Function InitializeArrayStringWriterOfIArrayStringWriter( _
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	
 	ArrayStringWriterQueryInterface( _
-		pArrayStringWriter, @IID_IARRAYSTRINGWRITER, @pIWriter _
+		pArrayStringWriter, @IID_IArrayStringWriter, @pIWriter _
 	)
 	
 	Return pIWriter
@@ -63,16 +63,16 @@ Function ArrayStringWriterQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IARRAYSTRINGWRITER, riid) Then
+	If IsEqualIID(@IID_IArrayStringWriter, riid) Then
 		*ppv = @pArrayStringWriter->pVirtualTable
 	Else
-		If IsEqualIID(@IID_ITEXTWRITER, riid) Then
+		If IsEqualIID(@IID_ITextWriter, riid) Then
 			*ppv = @pArrayStringWriter->pVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 				*ppv = @pArrayStringWriter->pVirtualTable
 			Else
-				*ppv = 0
+				*ppv = NULL
 				Return E_NOINTERFACE
 			End If
 		End If

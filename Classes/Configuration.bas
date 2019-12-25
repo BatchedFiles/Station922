@@ -36,7 +36,7 @@ Function InitializeConfigurationOfIConfiguration( _
 	Dim pIConfiguration As IConfiguration Ptr = Any
 	
 	ConfigurationQueryInterface( _
-		pConfig, @IID_ICONFIGURATION, @pIConfiguration _
+		pConfig, @IID_IConfiguration, @pIConfiguration _
 	)
 	
 	Return pIConfiguration
@@ -49,13 +49,13 @@ Function ConfigurationQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_ICONFIGURATION, riid) Then
+	If IsEqualIID(@IID_IConfiguration, riid) Then
 		*ppv = @pConfiguration->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
 			*ppv = @pConfiguration->pVirtualTable
 		Else
-			*ppv = 0
+			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
