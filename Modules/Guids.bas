@@ -7,9 +7,19 @@
 #include "windows.bi"
 #include "win\ole2.bi"
 
+' {9377B23F-E796-4CF9-9F36-3992C79F8A26}
+DEFINE_CLSID(CLSID_REQUESTEDFILE, _
+	&h9377b23f, &he796, &h4cf9, &h9f, &h36, &h39, &h92, &hc7, &h9f, &h8a, &h26 _
+)
+
 ' {E9BE6663-1ED6-45A4-9090-01FF8A82AB99}
-DEFINE_CLSID(CLSID_ServerState, _
+DEFINE_CLSID(CLSID_SERVERSTATE, _
 	&he9be6663, &h1ed6, &h45a4, &h90, &h90, &h01, &hff, &h8a, &h82, &hab, &h99 _
+)
+
+' {EA837873-0F90-4DD6-838C-60391FCF293E}
+DEFINE_CLSID(CLSID_WEBSITECONTAINER, _
+	&hea837873, &hf90, &h4dd6, &h83, &h8c, &h60, &h39, &h1f, &hcf, &h29, &h3e _
 )
 
 ' {BC192A6D-7ACC-4219-A7AB-2900107366A4}
@@ -121,3 +131,4 @@ DEFINE_IID(IID_IWebSite, _
 DEFINE_IID(IID_IWebSiteContainer, _
 	&h9042f178, &hb211, &h478b, &h8f, &hf6, &h9c, &h41, &h33, &h98, &h43, &h64 _
 )
+
