@@ -168,7 +168,6 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 							ByVal pIFile As IRequestedFile Ptr _
 						)As Boolean = Any
 						
-						Dim pIFile As IRequestedFile Ptr = Any
 						Dim RequestedFileAccess As FileAccess = Any
 						
 						Select Case HttpMethod
@@ -212,6 +211,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 								
 						End Select
 						
+						Dim pIFile As IRequestedFile Ptr = Any
 						Dim hrGetFile As HRESULT = IWebSite_GetRequestedFile(pIWebSite, @ClientURI.Path, RequestedFileAccess, @pIFile)
 						
 						If FAILED(hrGetFile) Then
