@@ -1,8 +1,10 @@
 ﻿#include "WindowsServiceMain.bi"
+#include "CreateInstance.bi"
 #include "IRunnable.bi"
-#include "WebServer.bi"
 
 #ifdef WINDOWS_SERVICE
+
+Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
 Const MaxWaitHint As DWORD = 3000
 Const ServiceName = "Station922"
@@ -11,7 +13,6 @@ Type ServiceContext
 	Dim ServiceStatusHandle As SERVICE_STATUS_HANDLE
 	Dim ServiceStatus As SERVICE_STATUS
 	Dim ServiceCheckPoint As DWORD
-	Dim objWebServer As WebServer
 	Dim pIWebServer As IRunnable Ptr
 End Type
 
@@ -78,13 +79,17 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	Context.pIWebServer = InitializeWebServerOfIRunnable(@Context.objWebServer)
+	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_WEBSERVER, @IID_IRunnable, @Context.pIWebServer)
+	
+	If FAILED(hr) Then
+		Exit Sub
+	End If
 	
 	ReportSvcStatus(@Context, SERVICE_RUNNING, NO_ERROR, 0)
 	
-	WebServer_NonVirtualRun(Context.pIWebServer)
+	IRunnable_Run(Context.pIWebServer)
 	
-	WebServer_NonVirtualRelease(Context.pIWebServer)
+	IRunnable_Release(Context.pIWebServer)
 	
 	ReportSvcStatus(@Context, SERVICE_STOPPED, NO_ERROR, 0)
 	
@@ -115,7 +120,7 @@ Function SvcCtrlHandlerEx( _
 				MaxWaitHint _
 			)
 			
-			WebServer_NonVirtualStop(pServiceContext->pIWebServer)
+			IRunnable_Stop(pServiceContext->pIWebServer)
 			
 		Case Else
 			Return ERROR_CALL_NOT_IMPLEMENTED

@@ -62,22 +62,34 @@ Sub UnInitializeWebServer( _
 	
 End Sub
 
-Function InitializeWebServerOfIRunnable( _
-		ByVal pWebServer As WebServer Ptr _
-	)As IRunnable Ptr
+Function CreateWebServer( _
+	)As WebServer Ptr
 	
-	InitializeWebServer(pWebServer)
-	pWebServer->ExistsInStack = True
-	
-	Dim pIWebServer As IRunnable Ptr = Any
-	
-	WebServerQueryInterface( _
-		pWebServer, @IID_IRunnable, @pIWebServer _
+	Dim pWebServer As WebServer Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(WebServer) _
 	)
 	
-	Return pIWebServer
+	If pWebServer = NULL Then
+		Return NULL
+	End If
+	
+	InitializeWebServer(pWebServer)
+	
+	Return pWebServer
 	
 End Function
+
+Sub DestroyWebServer( _
+		ByVal this As WebServer Ptr _
+	)
+	
+	UnInitializeWebServer(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
 
 Function WebServerQueryInterface( _
 		ByVal pWebServer As WebServer Ptr, _
@@ -120,11 +132,7 @@ Function WebServerRelease( _
 	
 	If pWebServer->ReferenceCounter = 0 Then
 		
-		UnInitializeWebServer(pWebServer)
-		
-		If pWebServer->ExistsInStack = False Then
-		
-		End If
+		DestroyWebServer(pWebServer)
 		
 		Return 0
 	End If

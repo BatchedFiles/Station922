@@ -1,18 +1,25 @@
 ﻿#include "ConsoleMain.bi"
-#include "WebServer.bi"
+#include "CreateInstance.bi"
+#include "IRunnable.bi"
 
 #ifndef WINDOWS_SERVICE
 
+Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
+
 Function ConsoleMain()As Integer
 	
-	Dim objWebServer As WebServer = Any
-	Dim pIWebServer As IRunnable Ptr = InitializeWebServerOfIRunnable(@objWebServer)
+	Dim pIWebServer As IRunnable Ptr = Any
+	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_WEBSERVER, @IID_IRunnable, @pIWebServer)
 	
-	WebServer_NonVirtualRun(pIWebServer)
+	If FAILED(hr) Then
+		Return 1
+	End If
 	
-	WebServer_NonVirtualStop(pIWebServer)
+	IRunnable_Run(pIWebServer)
 	
-	WebServer_NonVirtualRelease(pIWebServer)
+	IRunnable_Stop(pIWebServer)
+	
+	IRunnable_Release(pIWebServer)
 	
 	Return 0
 	
