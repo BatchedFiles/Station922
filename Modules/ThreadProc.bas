@@ -100,6 +100,9 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 					IServerResponse_SetHttpHeader(pIResponse, HttpResponseHeaders.HeaderAllow, @AllSupportHttpMethods)
 					WriteHttpNotImplemented(pIClientRequest, pIResponse, CPtr(IBaseStream Ptr, pContext->pINetworkStream), NULL)
 					
+				Case Else
+					WriteHttpBadRequest(pIClientRequest, pIResponse, CPtr(IBaseStream Ptr, pContext->pINetworkStream), 0)
+					
 			End Select
 			
 		Else
@@ -144,7 +147,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 				Else
 					
 					Dim IsSiteMoved As Boolean = Any
-					
+					' TODO Грязный хак с robots.txt
 					If lstrcmpi(ClientURI.pUrl, "/robots.txt") = 0 Then
 						IsSiteMoved = False
 					Else
@@ -157,8 +160,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 						WriteMovedPermanently(pIClientRequest, pIResponse, CPtr(IBaseStream Ptr, pContext->pINetworkStream), pIWebSite)
 					Else
 						
-						' Обработка запроса
-						
+						' TODO Создать отдельные классы обработчиков запроса
 						Dim ProcessRequestVirtualTable As Function( _
 							ByVal pIClientRequest As IClientRequest Ptr, _
 							ByVal pIResponse As IServerResponse Ptr, _
