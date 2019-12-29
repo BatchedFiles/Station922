@@ -1,6 +1,7 @@
 ﻿#include "ProcessConnectRequest.bi"
 #include "CharacterConstants.bi"
-#include "Configuration.bi"
+#include "IConfiguration.bi"
+#include "CreateInstance.bi"
 #include "IniConst.bi"
 #include "Network.bi"
 #include "NetworkClient.bi"
@@ -8,6 +9,8 @@
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 #include "win\shlwapi.bi"
+
+Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 
 Type ClientServerSocket
 	Dim pIStreamIn As INetworkStream Ptr
@@ -45,17 +48,21 @@ Function ProcessConnectRequest( _
 	
 	PathCombine(@SettingsFileName, ExecutableDirectory, @WebServerIniFileString)
 	
-	Dim Config As Configuration = Any
-	Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
+	Dim pIConfig As IConfiguration Ptr = Any
+	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
 	
-	Configuration_NonVirtualSetIniFilename(pIConfig, @SettingsFileName)
+	If FAILED(hr) Then
+		Return False
+	End If
+	
+	IConfiguration_SetIniFilename(pIConfig, @SettingsFileName)
 	
 	Dim ConnectBindAddress As WString * 256 = Any
 	Dim ConnectBindPort As WString * 16 = Any
 	
 	Dim ValueLength As Integer = Any
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		@WebServerSectionString, _
 		@ConnectBindAddressKeyString, _
 		@DefaultAddressString, _
@@ -64,7 +71,7 @@ Function ProcessConnectRequest( _
 		@ValueLength _
 	)
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		@WebServerSectionString, _
 		@ConnectBindPortKeyString, _
 		@ConnectBindDefaultPort, _
@@ -73,7 +80,7 @@ Function ProcessConnectRequest( _
 		@ValueLength _
 	)
 	
-	Configuration_NonVirtualRelease(pIConfig)
+	IConfiguration_Release(pIConfig)
 	
 	Dim pHeaderHost As WString Ptr = Any
 	IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @pHeaderHost)
@@ -121,7 +128,7 @@ Function ProcessConnectRequest( _
 	Dim SendBuffer As ZString * (MaxResponseBufferLength + 1) = Any
 	' send(ClientSocket, @SendBuffer, AllResponseHeadersToBytes(pRequest, pIResponse, @SendBuffer, 0), 0)
 	Dim WritedBytes As Integer = Any
-	Dim hr As HRESULT = INetworkStream_Write(pINetworkStream, _
+	hr = INetworkStream_Write(pINetworkStream, _
 		@SendBuffer, 0, AllResponseHeadersToBytes(pIRequest, pIResponse, @SendBuffer, 0), @WritedBytes _
 	)
 	

@@ -26,22 +26,40 @@ Sub InitializeConfiguration( _
 	
 End Sub
 
-Function InitializeConfigurationOfIConfiguration( _
+Sub UnInitializeConfiguration( _
 		ByVal pConfig As Configuration Ptr _
-	)As IConfiguration Ptr
-	
-	InitializeConfiguration(pConfig)
-	pConfig->ExistsInStack = True
-	
-	Dim pIConfiguration As IConfiguration Ptr = Any
-	
-	ConfigurationQueryInterface( _
-		pConfig, @IID_IConfiguration, @pIConfiguration _
 	)
 	
-	Return pIConfiguration
+End Sub
+
+Function CreateConfiguration( _
+	)As Configuration Ptr
+	
+	Dim pConfig As Configuration Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(Configuration) _
+	)
+	
+	If pConfig = NULL Then
+		Return NULL
+	End If
+	
+	InitializeConfiguration(pConfig)
+	
+	Return pConfig
 	
 End Function
+
+Sub DestroyConfiguration( _
+		ByVal this As Configuration Ptr _
+	)
+	
+	UnInitializeConfiguration(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
 
 Function ConfigurationQueryInterface( _
 		ByVal pConfiguration As Configuration Ptr, _
@@ -84,9 +102,7 @@ Function ConfigurationRelease( _
 	
 	If pConfiguration->ReferenceCounter = 0 Then
 		
-		If pConfiguration->ExistsInStack = False Then
-		
-		End If
+		DestroyConfiguration(pConfiguration)
 		
 		Return 0
 	End If

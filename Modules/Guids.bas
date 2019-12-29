@@ -7,6 +7,11 @@
 #include "windows.bi"
 #include "win\ole2.bi"
 
+' {190A5653-1F53-4FAD-A8CC-8E3998926514}
+DEFINE_CLSID(CLSID_CONFIGURATION, _
+	&h190a5653, &h1f53, &h4fad, &ha8, &hcc, &h8e, &h39, &h98, &h92, &h65, &h14 _
+)
+
 ' {9377B23F-E796-4CF9-9F36-3992C79F8A26}
 DEFINE_CLSID(CLSID_REQUESTEDFILE, _
 	&h9377b23f, &he796, &h4cf9, &h9f, &h36, &h39, &h92, &hc7, &h9f, &h8a, &h26 _

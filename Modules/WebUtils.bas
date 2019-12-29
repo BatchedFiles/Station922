@@ -1,6 +1,7 @@
 ﻿#include "WebUtils.bi"
 #include "CharacterConstants.bi"
-#include "Configuration.bi"
+#include "IConfiguration.bi"
+#include "CreateInstance.bi"
 #include "HttpConst.bi"
 #include "IniConst.bi"
 #include "IntegerToWString.bi"
@@ -18,6 +19,8 @@ Const TimeFormatString = "HH:mm:ss GMT"
 Const DefaultCacheControl = "max-age=2678400"
 Const BytesWithSpaceString = "bytes "
 Const KeepAliveString = "Keep-Alive"
+
+Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 
 Function GetHtmlSafeString( _
 		ByVal Buffer As WString Ptr, _
@@ -265,16 +268,20 @@ Function HttpAuthUtil( _
 	
 	IWebSite_MapPath(pIWebSite, @UsersIniFileString, @SettingsFileName)
 	
-	Dim Config As Configuration = Any
-	Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
+	Dim pIConfig As IConfiguration Ptr = Any
+	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
 	
-	Configuration_NonVirtualSetIniFilename(pIConfig, @SettingsFileName)
+	If FAILED(hr) Then
+		Return False
+	End If
+	
+	IConfiguration_SetIniFilename(pIConfig, @SettingsFileName)
 	
 	Dim PasswordBuffer As WString * (255 + 1) = Any
 	
 	Dim ValueLength As Integer = Any
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		@AdministratorsSectionString, _
 		@UsernamePasswordKey, _
 		@EmptyString, _
@@ -282,6 +289,8 @@ Function HttpAuthUtil( _
 		@PasswordBuffer, _
 		@ValueLength _
 	)
+	
+	IConfiguration_Release(pIConfig)
 	
 	If lstrlen(@PasswordBuffer) = 0 Then
 		WriteHttpBadUserNamePassword(pIRequest, pIResponse, pStream, pIWebSite)

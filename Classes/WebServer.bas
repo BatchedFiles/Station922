@@ -1,7 +1,7 @@
 ﻿#include "WebServer.bi"
 #include "win\shlwapi.bi"
 #include "ClientRequest.bi"
-#include "Configuration.bi"
+#include "IConfiguration.bi"
 #include "CreateInstance.bi"
 #include "IniConst.bi"
 #include "Network.bi"
@@ -17,6 +17,7 @@ Const DefaultStackSize As SIZE_T_ = 0
 Const SleepTimeout As DWORD = 60 * 1000
 
 Extern IID_IUnknown_WithoutMinGW As Const IID
+Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 Extern CLSID_WEBSITECONTAINER Alias "CLSID_WEBSITECONTAINER" As Const CLSID
 
 Dim Shared ExecutableDirectory As WString * (MAX_PATH + 1)
@@ -162,14 +163,18 @@ Function WebServerRun( _
 	
 	Do
 		
-		Dim Config As Configuration = Any
-		Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
+		Dim pIConfig As IConfiguration Ptr = Any
+		hr = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
 		
-		Configuration_NonVirtualSetIniFilename(pIConfig, @pWebServer->SettingsFileName)
+		If FAILED(hr) Then
+			Return hr
+		End If
+		
+		IConfiguration_SetIniFilename(pIConfig, @pWebServer->SettingsFileName)
 		
 		Dim ValueLength As Integer = Any
 		
-		Configuration_NonVirtualGetStringValue(pIConfig, _
+		IConfiguration_GetStringValue(pIConfig, _
 			@WebServerSectionString, _
 			@ListenAddressKeyString, _
 			@DefaultAddressString, _
@@ -178,7 +183,7 @@ Function WebServerRun( _
 			@ValueLength _
 		)
 		
-		Configuration_NonVirtualGetStringValue(pIConfig, _
+		IConfiguration_GetStringValue(pIConfig, _
 			@WebServerSectionString, _
 			@PortKeyString, _
 			@DefaultHttpPort, _
@@ -187,7 +192,7 @@ Function WebServerRun( _
 			@ValueLength _
 		)
 		
-		Configuration_NonVirtualRelease(pIConfig)
+		IConfiguration_Release(pIConfig)
 		
 		Dim hrCreateSocket As HRESULT = CreateSocketAndListen( _
 			@pWebServer->ListenAddress, _

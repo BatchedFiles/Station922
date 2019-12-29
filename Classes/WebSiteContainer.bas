@@ -1,11 +1,14 @@
 ﻿#include "WebSiteContainer.bi"
-#include "Configuration.bi"
+#include "IConfiguration.bi"
+#include "CreateInstance.bi"
 #include "HttpConst.bi"
 #include "IniConst.bi"
 #include "StringConstants.bi"
 #include "win\shlwapi.bi"
 
 Const MaxSectionsLength As Integer = 32000 - 1
+
+Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 
 Declare Sub LoadWebSite( _
 	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
@@ -184,16 +187,20 @@ Function WebSiteContainerLoadWebSites( _
 	Dim SettingsFileName As WString * (MAX_PATH + 1) = Any
 	PathCombine(@SettingsFileName, ExecutableDirectory, @WebSitesIniFileString)
 	
-	Dim Config As Configuration = Any
-	Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
+	Dim pIConfig As IConfiguration Ptr = Any
+	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
 	
-	Configuration_NonVirtualSetIniFilename(pIConfig, @SettingsFileName)
+	If FAILED(hr) Then
+		Return hr
+	End If
+	
+	IConfiguration_SetIniFilename(pIConfig, @SettingsFileName)
 	
 	Dim SectionsLength As Integer = Any
 	
 	Dim AllSections As WString * (MaxSectionsLength + 1) = Any
 	
-	Configuration_NonVirtualGetAllSections(pIConfig, MaxSectionsLength, @AllSections, @SectionsLength)
+	IConfiguration_GetAllSections(pIConfig, MaxSectionsLength, @AllSections, @SectionsLength)
 	
 	Dim w As WString Ptr = @AllSections
 	Dim wLength As Integer = lstrlen(w)
@@ -214,7 +221,7 @@ Function WebSiteContainerLoadWebSites( _
 		@DefaultVirtualPath _
 	)
 	
-	Configuration_NonVirtualRelease(pIConfig)
+	IConfiguration_Release(pIConfig)
 	
 	Return S_OK
 	
@@ -266,7 +273,7 @@ Function CreateWebSiteNode( _
 	
 	Dim ValueLength As Integer = Any
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		Section, _
 		@PhisycalDirKeyString, _
 		pNode->pExecutableDirectory, _
@@ -275,7 +282,7 @@ Function CreateWebSiteNode( _
 		@ValueLength _
 	)
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		Section, _
 		@VirtualPathKeyString, _
 		@DefaultVirtualPath, _
@@ -284,7 +291,7 @@ Function CreateWebSiteNode( _
 		@ValueLength _
 	)
 	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
+	IConfiguration_GetStringValue(pIConfig, _
 		Section, _
 		@MovedUrlKeyString, _
 		@EmptyString, _
@@ -294,7 +301,7 @@ Function CreateWebSiteNode( _
 	)
 	
 	Dim IsMoved As Integer = Any
-	Configuration_NonVirtualGetIntegerValue(pIConfig, _
+	IConfiguration_GetIntegerValue(pIConfig, _
 		Section, _
 		@IsMovedKeyString, _
 		0, _

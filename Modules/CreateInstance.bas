@@ -1,7 +1,7 @@
 ﻿#include "CreateInstance.bi"
 ' #include "ArrayStringWriter.bi"
 ' #include "ClientRequest.bi"
-' #include "Configuration.bi"
+#include "Configuration.bi"
 ' #include "HttpReader.bi"
 ' #include "NetworkStream.bi"
 #include "RequestedFile.bi"
@@ -63,6 +63,22 @@ Function CreateInstance( _
 		
 		If FAILED(hr) Then
 			DestroyWebServer(pWebServer)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_CONFIGURATION, rclsid) Then
+		Dim pConfiguration As Configuration Ptr = CreateConfiguration()
+		
+		If pConfiguration = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ConfigurationQueryInterface(pConfiguration, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyConfiguration(pConfiguration)
 		End If
 		
 		Return hr
