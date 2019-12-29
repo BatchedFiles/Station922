@@ -4,6 +4,8 @@
 #include "IClientRequest.bi"
 #include "IStringable.bi"
 
+Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
+
 Type ClientRequest
 	Dim pClientRequestVirtualTable As IClientRequestVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr

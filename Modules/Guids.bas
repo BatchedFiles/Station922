@@ -7,14 +7,39 @@
 #include "windows.bi"
 #include "win\ole2.bi"
 
+' {BAA2C5A2-E3D0-4AA4-BA7E-E7D13E3FA68D}
+DEFINE_CLSID(CLSID_ARRAYSTRINGWRITER, _
+	&hbaa2c5a2, &he3d0, &h4aa4, &hba, &h7e, &he7, &hd1, &h3e, &h3f, &ha6, &h8d _
+)
+
+' {FB96C7A7-1B31-4351-A300-C17F30D1AF3C}
+DEFINE_CLSID(CLSID_CLIENTREQUEST, _
+	&hfb96c7a7, &h1b31, &h4351, &ha3, &h0, &hc1, &h7f, &h30, &hd1, &haf, &h3c _
+)
+
 ' {190A5653-1F53-4FAD-A8CC-8E3998926514}
 DEFINE_CLSID(CLSID_CONFIGURATION, _
 	&h190a5653, &h1f53, &h4fad, &ha8, &hcc, &h8e, &h39, &h98, &h92, &h65, &h14 _
 )
 
+' {080EB706-1D70-428E-819E-4BCA42154212}
+DEFINE_CLSID(CLSID_HTTPREADER, _
+	&h80eb706, &h1d70, &h428e, &h81, &h9e, &h4b, &hca, &h42, &h15, &h42, &h12 _
+)
+
+' {361758F9-2F6A-414B-AB88-4D7B1EC46C5F}
+DEFINE_CLSID(CLSID_NETWORKSTREAM, _
+	&h361758f9, &h2f6a, &h414b, &hab, &h88, &h4d, &h7b, &h1e, &hc4, &h6c, &h5f _
+)
+
 ' {9377B23F-E796-4CF9-9F36-3992C79F8A26}
 DEFINE_CLSID(CLSID_REQUESTEDFILE, _
 	&h9377b23f, &he796, &h4cf9, &h9f, &h36, &h39, &h92, &hc7, &h9f, &h8a, &h26 _
+)
+
+' {033C9EB2-AB1F-4AC1-A641-B54D4A9C83D7}
+DEFINE_CLSID(CLSID_SERVERRESPONSE, _
+	&h33c9eb2, &hab1f, &h4ac1, &ha6, &h41, &hb5, &h4d, &h4a, &h9c, &h83, &hd7 _
 )
 
 ' {E9BE6663-1ED6-45A4-9090-01FF8A82AB99}
@@ -25,6 +50,11 @@ DEFINE_CLSID(CLSID_SERVERSTATE, _
 ' {EA837873-0F90-4DD6-838C-60391FCF293E}
 DEFINE_CLSID(CLSID_WEBSERVER, _
 	&hdec52339, &hcc4d, &h409d, &h93, &h1, &h21, &hc6, &hd5, &h22, &h9e, &h68 _
+)
+
+' {AB26908E-C919-4D74-8C2C-78E70D11423C}
+DEFINE_CLSID(CLSID_WEBSITE, _
+	&hab26908e, &hc919, &h4d74, &h8c, &h2c, &h78, &he7, &hd, &h11, &h42, &h3c _
 )
 
 ' {EA837873-0F90-4DD6-838C-60391FCF293E}

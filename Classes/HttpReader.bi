@@ -4,6 +4,8 @@
 #include "IBaseStream.bi"
 #include "IHttpReader.bi"
 
+Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
+
 Type HttpReader
 	Const MaxBufferLength As Integer = 16 * 1024 - 1
 	

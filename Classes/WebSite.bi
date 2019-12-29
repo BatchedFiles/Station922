@@ -3,6 +3,8 @@
 
 #include "IWebSite.bi"
 
+Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
+
 Type WebSite
 	
 	Dim pVirtualTable As IWebSiteVirtualTable Ptr

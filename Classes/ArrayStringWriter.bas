@@ -3,6 +3,7 @@
 #include "StringConstants.bi"
 
 Extern IID_IUnknown_WithoutMinGW As Const IID
+Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
 Dim Shared GlobalArrayStringWriterVirtualTable As IArrayStringWriterVirtualTable
 

@@ -3,6 +3,8 @@
 
 #include "INetworkStream.bi"
 
+Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
+
 Type NetworkStream
 	Dim pVirtualTable As INetworkStreamVirtualTable Ptr
 	Dim ReferenceCounter As ULONG

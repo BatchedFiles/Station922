@@ -4,6 +4,8 @@
 #include "IServerResponse.bi"
 #include "IStringable.bi"
 
+Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
+
 Type ServerResponse
 	Dim pServerResponseVirtualTable As IServerResponseVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
