@@ -172,3 +172,7 @@ DEFINE_IID(IID_IWebSiteContainer, _
 	&h9042f178, &hb211, &h478b, &h8f, &hf6, &h9c, &h41, &h33, &h98, &h43, &h64 _
 )
 
+' {263066C6-31B4-42EF-8982-6B58994E2D8F}
+DEFINE_IID(IID_IWorkerThreadContext, _
+	&h263066c6, &h31b4, &h42ef, &h89, &h82, &h6b, &h58, &h99, &h4e, &h2d, &h8f _
+)

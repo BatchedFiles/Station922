@@ -8,7 +8,6 @@
 
 Type ThreadContext
 	Dim ClientSocket As SOCKET
-	Dim ServerSocket As SOCKET
 	Dim RemoteAddress As SOCKADDR_IN
 	Dim RemoteAddressLength As Integer
 	

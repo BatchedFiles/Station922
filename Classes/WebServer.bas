@@ -300,7 +300,6 @@ Function WebServerRun( _
 				SetReceiveTimeout(ClientSocket, ClientSocketReceiveTimeout)
 				
 				pContext->ClientSocket = ClientSocket
-				pContext->ServerSocket = pWebServer->ListenSocket
 				
 				pContext->pINetworkStream = InitializeNetworkStreamOfINetworkStream(@pContext->tcpStream)
 				NetworkStream_NonVirtualSetSocket(pContext->pINetworkStream, ClientSocket)
