@@ -62,6 +62,11 @@ DEFINE_CLSID(CLSID_WEBSITECONTAINER, _
 	&hea837873, &hf90, &h4dd6, &h83, &h8c, &h60, &h39, &h1f, &hcf, &h29, &h3e _
 )
 
+' {D1185FAE-8A30-4519-A532-5A37BEA6AD4D}
+DEFINE_CLSID(CLSID_WORKERTHREADCONTEXT, _
+	&hd1185fae, &h8a30, &h4519, &ha5, &h32, &h5a, &h37, &hbe, &ha6, &had, &h4d _
+)
+
 ' {BC192A6D-7ACC-4219-A7AB-2900107366A4}
 DEFINE_IID(IID_IArrayStringWriter, _
 	&hbc192a6d, &h7acc, &h4219, &ha7, &hab, &h29, &h0, &h10, &h73, &h66, &ha4 _
