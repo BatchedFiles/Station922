@@ -391,11 +391,19 @@ Function AllResponseHeadersToBytes( _
 	End If
 	
 	Dim KeepAlive As Boolean = Any
-	IClientRequest_GetKeepAlive(pIRequest, @KeepAlive)
+	If pIRequest = NULL Then
+		KeepAlive = False
+	Else
+		IClientRequest_GetKeepAlive(pIRequest, @KeepAlive)
+	End If
 	
 	If KeepAlive Then
 		Dim HttpVersion As HttpVersions = Any
-		IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
+		If pIRequest = NULL Then
+			HttpVersion = HttpVersions.Http10
+		Else
+			IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
+		End If
 		
 		If HttpVersion = HttpVersions.Http10 Then
 			IServerResponse_SetHttpHeader(pIResponse, HttpResponseHeaders.HeaderConnection, @KeepAliveString)
@@ -461,11 +469,6 @@ Function AllResponseHeadersToBytes( _
 	IStringable_Release(pIStringable)
 	
 	' TODO Запись в лог
-	' Dim LogBuffer As ZString * (StreamSocketReader.MaxBufferLength + WebResponse.MaxResponseHeaderBuffer) = Any
-	' Dim WriteBytes As DWORD = Any
-	' RtlCopyMemory(@LogBuffer, @ClientReader.Buffer, ClientReader.Start)
-	' RtlCopyMemory(@LogBuffer + ClientReader.Start, zBuffer, HeadersLength)
-	' WriteFile(hOutput, @LogBuffer, ClientReader.Start + HeadersLength, @WriteBytes, 0)
 	Return HeadersLength
 	
 End Function
