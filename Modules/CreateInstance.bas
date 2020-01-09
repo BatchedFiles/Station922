@@ -1,15 +1,16 @@
 ﻿#include "CreateInstance.bi"
 ' #include "ArrayStringWriter.bi"
-' #include "ClientRequest.bi"
+#include "ClientRequest.bi"
 #include "Configuration.bi"
 ' #include "HttpReader.bi"
-' #include "NetworkStream.bi"
+#include "NetworkStream.bi"
 #include "RequestedFile.bi"
-' #include "ServerResponse.bi"
+#include "ServerResponse.bi"
 ' #include "ServerState.bi"
 #include "WebServer.bi"
 ' #include "WebSite.bi"
 #include "WebSiteContainer.bi"
+#include "WorkerThreadContext.bi"
 
 Function CreateInstance( _
 		ByVal hHeap As HANDLE, _
@@ -19,6 +20,70 @@ Function CreateInstance( _
 	)As HRESULT
 	
 	*ppv = NULL
+	
+	If IsEqualCLSID(@CLSID_SERVERRESPONSE, rclsid) Then
+		Dim pResponse As ServerResponse Ptr = CreateServerResponse()
+		
+		If pResponse = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ServerResponseQueryInterface(pResponse, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyServerResponse(pResponse)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_CLIENTREQUEST, rclsid) Then
+		Dim pRequest As ClientRequest Ptr = CreateClientRequest()
+		
+		If pRequest = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ClientRequestQueryInterface(pRequest, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyClientRequest(pRequest)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_NETWORKSTREAM, rclsid) Then
+		Dim pStream As NetworkStream Ptr = CreateNetworkStream()
+		
+		If pStream = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = NetworkStreamQueryInterface(pStream, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyNetworkStream(pStream)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_WORKERTHREADCONTEXT, rclsid) Then
+		Dim pContext As WorkerThreadContext Ptr = CreateWorkerThreadContext()
+		
+		If pContext = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WorkerThreadContextQueryInterface(pContext, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyWorkerThreadContext(pContext)
+		End If
+		
+		Return hr
+	End If
 	
 	If IsEqualCLSID(@CLSID_WEBSITECONTAINER, rclsid) Then
 		Dim pWebSites As WebSiteContainer Ptr = CreateWebSiteContainer()

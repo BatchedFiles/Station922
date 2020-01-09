@@ -1,6 +1,8 @@
 ﻿#ifndef GUIDS_BI
 #define GUIDS_BI
 
+#include "windows.bi"
+
 #ifndef DEFINE_GUID
 #define DEFINE_GUID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const GUID : _ 
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})

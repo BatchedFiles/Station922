@@ -1,11 +1,9 @@
 ﻿#ifndef IWORKERTHREADCONTEXT_BI
 #define IWORKERTHREADCONTEXT_BI
 
-#ifndef unicode
-#define unicode
-#endif
-#include "windows.bi"
-#include "win\ole2.bi"
+#include "IClientRequest.bi"
+#include "INetworkStream.bi"
+#include "IWebSiteContainer.bi"
 
 Type IWorkerThreadContext As IWorkerThreadContext_
 
@@ -15,16 +13,6 @@ Extern IID_IWorkerThreadContext Alias "IID_IWorkerThreadContext" As Const IID
 
 Type IWorkerThreadContextVirtualTable
 	Dim InheritedTable As IUnknownVtbl
-	
-	Dim GetClientSocket As Function( _
-		ByVal this As IWorkerThreadContext Ptr, _
-		ByVal pSocket As SOCKET Ptr _
-	)As HRESULT
-	
-	Dim SetClientSocket As Function( _
-		ByVal this As IWorkerThreadContext Ptr, _
-		ByVal ClientSocket As SOCKET _
-	)As HRESULT
 	
 	Dim GetRemoteAddress As Function( _
 		ByVal this As IWorkerThreadContext Ptr, _
@@ -126,6 +114,16 @@ Type IWorkerThreadContextVirtualTable
 		ByVal StartTicks As LARGE_INTEGER _
 	)As HRESULT
 	
+	Dim GetClientRequest As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal ppIRequest As IClientRequest Ptr Ptr _
+	)As HRESULT
+	
+	Dim SetClientRequest As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal pIRequest As IClientRequest Ptr _
+	)As HRESULT
+	
 	' Dim hInput As HANDLE
 	' Dim hOutput As HANDLE
 	' Dim hError As HANDLE
@@ -139,8 +137,6 @@ End Type
 #define IWorkerThreadContext_QueryInterface(this, riid, ppv) (this)->pVirtualTable->InheritedTable.QueryInterface(CPtr(IUnknown Ptr, this), riid, ppv)
 #define IWorkerThreadContext_AddRef(this) (this)->pVirtualTable->InheritedTable.AddRef(CPtr(IUnknown Ptr, this))
 #define IWorkerThreadContext_Release(this) (this)->pVirtualTable->InheritedTable.Release(CPtr(IUnknown Ptr, this))
-#define IWorkerThreadContext_GetClientSocket(this, pSocket) (this)->pVirtualTable->GetClientSocket(this, pSocket)
-#define IWorkerThreadContext_SetClientSocket(this, ClientSocket) (this)->pVirtualTable->SetClientSocket(this, ClientSocket)
 #define IWorkerThreadContext_GetRemoteAddress(this, pRemoteAddress) (this)->pVirtualTable->GetRemoteAddress(this, pRemoteAddress)
 #define IWorkerThreadContext_SetRemoteAddress(this, RemoteAddress) (this)->pVirtualTable->SetRemoteAddress(this, RemoteAddress)
 #define IWorkerThreadContext_GetRemoteAddressLength(this, pRemoteAddressLength) (this)->pVirtualTable->GetRemoteAddressLength(this, pRemoteAddressLength)
@@ -161,5 +157,7 @@ End Type
 #define IWorkerThreadContext_SetFrequency(this, Frequency) (this)->pVirtualTable->SetFrequency(this, Frequency)
 #define IWorkerThreadContext_GetStartTicks(this, pStartTicks) (this)->pVirtualTable->GetStartTicks(this, pStartTicks)
 #define IWorkerThreadContext_SetStartTicks(this, StartTicks) (this)->pVirtualTable->SetStartTicks(this, StartTicks)
+#define IWorkerThreadContext_GetClientRequest(this, ppIRequest) (this)->pVirtualTable->GetClientRequest(this, ppIRequest)
+#define IWorkerThreadContext_SetClientRequest(this, pIRequest) (this)->pVirtualTable->SetClientRequest(this, pIRequest)
 
 #endif

@@ -1,13 +1,13 @@
 ﻿#include "WebServer.bi"
 #include "win\shlwapi.bi"
-#include "ClientRequest.bi"
+#include "IClientRequest.bi"
 #include "IConfiguration.bi"
+#include "IWorkerThreadContext.bi"
 #include "CreateInstance.bi"
 #include "IniConst.bi"
 #include "Network.bi"
 #include "NetworkServer.bi"
-#include "NetworkStream.bi"
-#include "ServerResponse.bi"
+#include "IServerResponse.bi"
 #include "ThreadProc.bi"
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
@@ -16,9 +16,17 @@ Const ClientSocketReceiveTimeout As DWORD = 90 * 1000
 Const DefaultStackSize As SIZE_T_ = 0
 Const SleepTimeout As DWORD = 60 * 1000
 
+Declare Function WebServerReadConfiguration( _
+	ByVal this As WebServer Ptr _
+)As HRESULT
+
 Extern IID_IUnknown_WithoutMinGW As Const IID
+Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
+Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
+Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 Extern CLSID_WEBSITECONTAINER Alias "CLSID_WEBSITECONTAINER" As Const CLSID
+Extern CLSID_WORKERTHREADCONTEXT Alias "CLSID_WORKERTHREADCONTEXT" As Const CLSID
 
 Dim Shared ExecutableDirectory As WString * (MAX_PATH + 1)
 
@@ -33,13 +41,13 @@ Dim Shared GlobalWebServerVirtualTable As IRunnableVirtualTable = Type( _
 )
 
 Sub InitializeWebServer( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)
 	
-	pWebServer->pVirtualTable = @GlobalWebServerVirtualTable
-	pWebServer->ReferenceCounter = 0
+	this->pVirtualTable = @GlobalWebServerVirtualTable
+	this->ReferenceCounter = 0
 	
-	pWebServer->hThreadContextHeap = HeapCreate(0, 0, 0)
+	this->hThreadContextHeap = HeapCreate(0, 0, 0)
 	
 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 	Dim ExeFileNameLength As DWORD = GetModuleFileName(0, @ExeFileName, MAX_PATH)
@@ -50,35 +58,41 @@ Sub InitializeWebServer( _
 	lstrcpy(@ExecutableDirectory, @ExeFileName)
 	PathRemoveFileSpec(@ExecutableDirectory)
 	
-	PathCombine(@pWebServer->SettingsFileName, @ExecutableDirectory, @WebServerIniFileString)
+	PathCombine(@this->SettingsFileName, @ExecutableDirectory, @WebServerIniFileString)
 	
-	pWebServer->ReListenSocket = True
-	QueryPerformanceFrequency(@pWebServer->Frequency)
+	this->ListenSocket = INVALID_SOCKET
+	this->ReListenSocket = True
+	
+	QueryPerformanceFrequency(@this->Frequency)
 	
 End Sub
 
 Sub UnInitializeWebServer( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)
+	
+	If this->ListenSocket <> INVALID_SOCKET Then
+		closesocket(this->ListenSocket)
+	End If
 	
 End Sub
 
 Function CreateWebServer( _
 	)As WebServer Ptr
 	
-	Dim pWebServer As WebServer Ptr = HeapAlloc( _
+	Dim this As WebServer Ptr = HeapAlloc( _
 		GetProcessHeap(), _
 		0, _
 		SizeOf(WebServer) _
 	)
 	
-	If pWebServer = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
-	InitializeWebServer(pWebServer)
+	InitializeWebServer(this)
 	
-	Return pWebServer
+	Return this
 	
 End Function
 
@@ -93,68 +107,90 @@ Sub DestroyWebServer( _
 End Sub
 
 Function WebServerQueryInterface( _
-		ByVal pWebServer As WebServer Ptr, _
+		ByVal this As WebServer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IRunnable, riid) Then
-		*ppv = @pWebServer->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
-			*ppv = @pWebServer->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 	
-	WebServerAddRef(pWebServer)
+	WebServerAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function WebServerAddRef( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	pWebServer->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pWebServer->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function WebServerRelease( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	pWebServer->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pWebServer->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyWebServer(pWebServer)
+		DestroyWebServer(this)
 		
 		Return 0
 	End If
 	
-	Return pWebServer->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function WebServerRun( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
-	Dim pIWebSites As IWebSiteContainer Ptr = Any
+	Dim hr As HRESULT = Any
 	
-	Dim hr As HRESULT = CreateInstance( _
+	Dim pINetworkStreamDefault As INetworkStream Ptr = Any
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_NETWORKSTREAM, _
+		@IID_INetworkStream, _
+		@pINetworkStreamDefault _
+	)
+	If FAILED(hr) Then
+		Return hr
+	End If
+	
+	Dim pIResponseDefault As IServerResponse Ptr = Any
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_SERVERRESPONSE, _
+		@IID_IServerResponse, _
+		@pIResponseDefault _
+	)
+	If FAILED(hr) Then
+		Return hr
+	End If
+	
+	Dim pIWebSites As IWebSiteContainer Ptr = Any
+	hr = CreateInstance( _
 		GetProcessHeap(), _
 		@CLSID_WEBSITECONTAINER, _
 		@IID_IWebSiteContainer, _
 		@pIWebSites _
 	)
-	
 	If FAILED(hr) Then
 		Return hr
 	End If
@@ -162,47 +198,20 @@ Function WebServerRun( _
 	IWebSiteContainer_LoadWebSites(pIWebSites, @ExecutableDirectory)
 	
 	Do
-		
-		Dim pIConfig As IConfiguration Ptr = Any
-		hr = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
-		
+		hr = WebServerReadConfiguration(this)
 		If FAILED(hr) Then
 			Return hr
 		End If
 		
-		IConfiguration_SetIniFilename(pIConfig, @pWebServer->SettingsFileName)
-		
-		Dim ValueLength As Integer = Any
-		
-		IConfiguration_GetStringValue(pIConfig, _
-			@WebServerSectionString, _
-			@ListenAddressKeyString, _
-			@DefaultAddressString, _
-			WebServer.ListenAddressLengthMaximum, _
-			@pWebServer->ListenAddress, _
-			@ValueLength _
-		)
-		
-		IConfiguration_GetStringValue(pIConfig, _
-			@WebServerSectionString, _
-			@PortKeyString, _
-			@DefaultHttpPort, _
-			WebServer.ListenPortLengthMaximum, _
-			@pWebServer->ListenPort, _
-			@ValueLength _
-		)
-		
-		IConfiguration_Release(pIConfig)
-		
 		Dim hrCreateSocket As HRESULT = CreateSocketAndListen( _
-			@pWebServer->ListenAddress, _
-			@pWebServer->ListenPort, _
-			@pWebServer->ListenSocket _
+			@this->ListenAddress, _
+			@this->ListenPort, _
+			@this->ListenSocket _
 		)
 		
 		If FAILED(hrCreateSocket) Then
 			' TODO Обработать ошибку
-			If pWebServer->ReListenSocket Then
+			If this->ReListenSocket Then
 				SleepEx(SleepTimeout, True)
 			Else
 				IWebSiteContainer_Release(pIWebSites)
@@ -216,10 +225,20 @@ Function WebServerRun( _
 	
 	Do
 		
-		Dim pContext As ThreadContext Ptr = HeapAlloc( _
-			pWebServer->hThreadContextHeap, _
-			0, _
-			SizeOf(ThreadContext) _
+		Dim pIContext As IWorkerThreadContext Ptr = Any
+		Dim hrCreateThreadContext As HRESULT = CreateInstance( _
+			GetProcessHeap(), _
+			@CLSID_WORKERTHREADCONTEXT, _
+			@IID_IWorkerThreadContext, _
+			@pIContext _
+		)
+		
+		Dim pIClientRequest As IClientRequest Ptr = Any
+		Dim hrCreateClientRequest As HRESULT = CreateInstance( _
+			GetProcessHeap(), _
+			@CLSID_CLIENTREQUEST, _
+			@IID_IClientRequest, _
+			@pIClientRequest _
 		)
 		
 		Dim dwThreadId As DWORD = Any
@@ -227,7 +246,7 @@ Function WebServerRun( _
 			NULL, _
 			DefaultStackSize, _
 			@ThreadProc, _
-			pContext, _
+			pIContext, _
 			CREATE_SUSPENDED, _
 			@dwThreadId _
 		)
@@ -237,14 +256,14 @@ Function WebServerRun( _
 		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
 		
 		Dim ClientSocket As SOCKET = accept( _
-			pWebServer->ListenSocket, _
+			this->ListenSocket, _
 			CPtr(SOCKADDR Ptr, @RemoteAddress), _
 			@RemoteAddressLength _
 		)
 		
 		If ClientSocket = INVALID_SOCKET Then
 			
-			If pWebServer->ReListenSocket = False Then
+			If this->ReListenSocket = False Then
 				Exit Do
 			End If
 			
@@ -254,41 +273,35 @@ Function WebServerRun( _
 			
 		Else
 			
-			If pContext = NULL OrElse hThread = NULL Then
-				Dim tcpStream As NetworkStream = Any
-				Dim pINetworkStream As INetworkStream Ptr = InitializeNetworkStreamOfINetworkStream(@tcpStream)
+			Dim FailedFlag As Boolean = FAILED(hrCreateThreadContext) OrElse _
+				FAILED(hrCreateClientRequest) OrElse _
+			hThread = NULL
+			
+			If FailedFlag Then
+				INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
 				
-				NetworkStream_NonVirtualSetSocket(pINetworkStream, ClientSocket)
-				
-				Dim request As ClientRequest = Any
-				Dim pIClientRequest As IClientRequest Ptr = InitializeClientRequestOfIClientRequest(@request)
-				
-				Dim response As ServerResponse = Any
-				Dim pIResponse As IServerResponse Ptr = InitializeServerResponseOfIServerResponse(@response)
-				
-				If pContext = NULL Then
-					WriteHttpNotEnoughMemory( _
-						pIClientRequest, _
-						pIResponse, _
-						CPtr(IBaseStream Ptr, pINetworkStream), _
+				If hThread = NULL Then
+					WriteHttpCannotCreateThread( _
+						NULL, _
+						pIResponseDefault, _
+						CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
 						NULL _
 					)
 				Else
-					WriteHttpCannotCreateThread( _
-						pIClientRequest, _
-						pIResponse, _
-						CPtr(IBaseStream Ptr, pINetworkStream), _
+					WriteHttpNotEnoughMemory( _
+						NULL, _
+						pIResponseDefault, _
+						CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
 						NULL _
 					)
 				End If
 				
-				IServerResponse_Release(pIResponse)
-				IClientRequest_Release(pIClientRequest)
+				If pIClientRequest <> NULL Then
+					IClientRequest_Release(pIClientRequest)
+				End If
 				
-				NetworkStream_NonVirtualRelease(pINetworkStream)
-				
-				If pContext <> NULL Then
-					HeapFree(pWebServer->hThreadContextHeap, 0, pContext)
+				If pIContext <> NULL Then
+					IWorkerThreadContext_Release(pIContext)
 				End If
 				
 				If hThread <> NULL Then
@@ -299,46 +312,116 @@ Function WebServerRun( _
 				
 				SetReceiveTimeout(ClientSocket, ClientSocketReceiveTimeout)
 				
-				pContext->ClientSocket = ClientSocket
-				
-				pContext->pINetworkStream = InitializeNetworkStreamOfINetworkStream(@pContext->tcpStream)
-				NetworkStream_NonVirtualSetSocket(pContext->pINetworkStream, ClientSocket)
-				
-				pContext->RemoteAddress = RemoteAddress
-				pContext->RemoteAddressLength = RemoteAddressLength
-				
-				pContext->ThreadId = dwThreadId
-				pContext->hThread = hThread
-				pContext->pExeDir = @ExecutableDirectory
-				
-				IWebSiteContainer_AddRef(pIWebSites)
-				pContext->pIWebSites = pIWebSites
-				
-				pContext->hThreadContextHeap = pWebServer->hThreadContextHeap
-				
-				pContext->Frequency.QuadPart = pWebServer->Frequency.QuadPart
-				QueryPerformanceCounter(@pContext->m_startTicks)
-				
-				ResumeThread(hThread)
-				
+				Dim pINetworkStream As INetworkStream Ptr = Any
+				hr = CreateInstance( _
+					GetProcessHeap(), _
+					@CLSID_NETWORKSTREAM, _
+					@IID_INetworkStream, _
+					@pINetworkStream _
+				)
+				If FAILED(hr) Then
+					
+				Else
+					
+					INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+					
+					IWorkerThreadContext_SetNetworkStream(pIContext, pINetworkStream)
+					
+					IWorkerThreadContext_SetRemoteAddress(pIContext, RemoteAddress)
+					IWorkerThreadContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
+					
+					IWorkerThreadContext_SetThreadId(pIContext, dwThreadId)
+					IWorkerThreadContext_SetThreadHandle(pIContext, hThread)
+					IWorkerThreadContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
+					
+					IWorkerThreadContext_SetWebSiteContainer(pIContext, pIWebSites)
+					
+					IWorkerThreadContext_SetThreadContextHeap(pIContext, this->hThreadContextHeap)
+					
+					IWorkerThreadContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
+					
+					Dim StartTicks As LARGE_INTEGER
+					QueryPerformanceCounter(@StartTicks)
+					
+					IWorkerThreadContext_SetStartTicks(pIContext, StartTicks)
+					
+					IWorkerThreadContext_SetClientRequest(pIContext, pIClientRequest)
+					
+					ResumeThread(hThread)
+					
+					INetworkStream_Release(pINetworkStream)
+					IClientRequest_Release(pIClientRequest)
+					
+				End If
 			End If
 			
 		End If
 		
-	Loop While pWebServer->ReListenSocket
+	Loop While this->ReListenSocket
 	
 	IWebSiteContainer_Release(pIWebSites)
+	
+	IServerResponse_Release(pIResponseDefault)
+	INetworkStream_Release(pINetworkStreamDefault)
 	
 	Return S_OK
 	
 End Function
 
 Function WebServerStop( _
-		ByVal pWebServer As WebServer Ptr _
+		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
-	pWebServer->ReListenSocket = False
-	closesocket(pWebServer->ListenSocket)
+	this->ReListenSocket = False
+	
+	If this->ListenSocket <> INVALID_SOCKET Then
+		closesocket(this->ListenSocket)
+		this->ListenSocket = INVALID_SOCKET
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function WebServerReadConfiguration( _
+		ByVal this As WebServer Ptr _
+	)As HRESULT
+	
+	Dim pIConfig As IConfiguration Ptr = Any
+	Dim hr As HRESULT = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_CONFIGURATION, _
+		@IID_IConfiguration, _
+		@pIConfig _
+	)
+	
+	If FAILED(hr) Then
+		Return hr
+	End If
+	
+	IConfiguration_SetIniFilename(pIConfig, @this->SettingsFileName)
+	
+	Dim ValueLength As Integer = Any
+	
+	IConfiguration_GetStringValue(pIConfig, _
+		@WebServerSectionString, _
+		@ListenAddressKeyString, _
+		@DefaultAddressString, _
+		ListenAddressLengthMaximum, _
+		@this->ListenAddress, _
+		@ValueLength _
+	)
+	
+	IConfiguration_GetStringValue(pIConfig, _
+		@WebServerSectionString, _
+		@PortKeyString, _
+		@DefaultHttpPort, _
+		ListenPortLengthMaximum, _
+		@this->ListenPort, _
+		@ValueLength _
+	)
+	
+	IConfiguration_Release(pIConfig)
 	
 	Return S_OK
 	

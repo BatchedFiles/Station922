@@ -10,7 +10,6 @@ Type ServerResponse
 	Dim pServerResponseVirtualTable As IServerResponseVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
-	Dim ExistsInStack As Boolean
 	
 	' Буфер заголовков ответа
 	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
@@ -36,9 +35,12 @@ Type ServerResponse
 	
 End Type
 
-Declare Function InitializeServerResponseOfIServerResponse( _
-	ByVal pServerResponse As ServerResponse Ptr _
-)As IServerResponse Ptr
+Declare Function CreateServerResponse( _
+)As ServerResponse Ptr
+
+Declare Sub DestroyServerResponse( _
+	ByVal this As ServerResponse Ptr _
+)
 
 Declare Function ServerResponseQueryInterface( _
 	ByVal pServerResponse As ServerResponse Ptr, _

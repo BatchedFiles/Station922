@@ -4,12 +4,12 @@
 #include "IRunnable.bi"
 #include "Network.bi"
 
+Const ListenAddressLengthMaximum As Integer = 255
+Const ListenPortLengthMaximum As Integer = 15
+
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
 Type WebServer
-	Const ListenAddressLengthMaximum As Integer = 255
-	Const ListenPortLengthMaximum As Integer = 15
-	
 	Dim pVirtualTable As IRunnableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
 	

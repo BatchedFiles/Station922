@@ -5,12 +5,13 @@
 #include "IniConst.bi"
 #include "Network.bi"
 #include "NetworkClient.bi"
-#include "NetworkStream.bi"
+#include "INetworkStream.bi"
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 #include "win\shlwapi.bi"
 
 Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
+Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 
 Type ClientServerSocket
 	Dim pIStreamIn As INetworkStream Ptr
@@ -137,8 +138,17 @@ Function ProcessConnectRequest( _
 		Return False
 	End If
 	
-	Dim tcpStream As NetworkStream = Any
-	Dim pINetworkStreamOut As INetworkStream Ptr = InitializeNetworkStreamOfINetworkStream(@tcpStream)
+	Dim pINetworkStreamOut As INetworkStream Ptr = Any
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_NETWORKSTREAM, _
+		@IID_INetworkStream, _
+		@pINetworkStreamOut _
+	)
+	If FAILED(hr) Then
+		CloseSocketConnection(ServerSocket2)
+		Return False
+	End If
 	
 	INetworkStream_SetSocket(pINetworkStreamOut, ServerSocket2)
 	
@@ -152,12 +162,13 @@ Function ProcessConnectRequest( _
 	
 	If hThread <> NULL Then
 		SendReceiveData(pINetworkStream, pINetworkStreamOut)
-		CloseSocketConnection(ServerSocket2)
 		
 		WaitForSingleObject(hThread, INFINITE)
 		
 		CloseHandle(hThread)
 	End If
+	
+	INetworkStream_Release(pINetworkStreamOut)
 	
 	IServerResponse_SetKeepAlive(pIResponse, False)
 	

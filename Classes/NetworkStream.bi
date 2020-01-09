@@ -8,7 +8,6 @@ Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 Type NetworkStream
 	Dim pVirtualTable As INetworkStreamVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
-	Dim ExistsInStack As Boolean
 	
 	Dim m_Socket As SOCKET
 	
@@ -16,9 +15,12 @@ End Type
 
 Declare Sub InitializeNetworkStreamVirtualTable()
 
-Declare Function InitializeNetworkStreamOfINetworkStream( _
-	ByVal pNetworkStream As NetworkStream Ptr _
-)As INetworkStream Ptr
+Declare Function CreateNetworkStream( _
+)As NetworkStream Ptr
+
+Declare Sub DestroyNetworkStream( _
+	ByVal this As NetworkStream Ptr _
+)
 
 Declare Function NetworkStreamQueryInterface( _
 	ByVal pNetworkStream As NetworkStream Ptr, _

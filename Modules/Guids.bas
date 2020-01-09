@@ -1,12 +1,5 @@
 ﻿#include "Guids.bi"
 
-#ifndef unicode
-#define unicode
-#endif
-
-#include "windows.bi"
-#include "win\ole2.bi"
-
 ' {BAA2C5A2-E3D0-4AA4-BA7E-E7D13E3FA68D}
 DEFINE_CLSID(CLSID_ARRAYSTRINGWRITER, _
 	&hbaa2c5a2, &he3d0, &h4aa4, &hba, &h7e, &he7, &hd1, &h3e, &h3f, &ha6, &h8d _

@@ -66,22 +66,40 @@ Sub InitializeServerResponse( _
 	
 End Sub
 
-Function InitializeServerResponseOfIServerResponse( _
+Sub UnInitializeServerResponse( _
 		ByVal pServerResponse As ServerResponse Ptr _
-	)As IServerResponse Ptr
-	
-	InitializeServerResponse(pServerResponse)
-	pServerResponse->ExistsInStack = True
-	
-	Dim pIResponse As IServerResponse Ptr = Any
-	
-	ServerResponseQueryInterface( _
-		pServerResponse, @IID_IServerResponse, @pIResponse _
 	)
 	
-	Return pIResponse
+End Sub
+
+Function CreateServerResponse( _
+	)As ServerResponse Ptr
+	
+	Dim pResponse As ServerResponse Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(ServerResponse) _
+	)
+	
+	If pResponse = NULL Then
+		Return NULL
+	End If
+	
+	InitializeServerResponse(pResponse)
+	
+	Return pResponse
 	
 End Function
+
+Sub DestroyServerResponse( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+	UnInitializeServerResponse(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
 
 Function ServerResponseQueryInterface( _
 		ByVal pServerResponse As ServerResponse Ptr, _
@@ -128,11 +146,7 @@ Function ServerResponseRelease( _
 	
 	If pServerResponse->ReferenceCounter = 0 Then
 		
-		' UnInitializeServerResponse(pServerResponse)
-		
-		If pServerResponse->ExistsInStack = False Then
-		
-		End If
+		DestroyServerResponse(pServerResponse)
 		
 		Return 0
 	End If

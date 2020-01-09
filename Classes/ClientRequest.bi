@@ -10,7 +10,6 @@ Type ClientRequest
 	Dim pClientRequestVirtualTable As IClientRequestVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
-	Dim ExistsInStack As Boolean
 	
 	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
 	Dim HttpMethod As HttpMethods
@@ -23,9 +22,12 @@ Type ClientRequest
 	
 End Type
 
-Declare Function InitializeClientRequestOfIClientRequest( _
-	ByVal pClientRequest As ClientRequest Ptr _
-)As IClientRequest Ptr
+Declare Function CreateClientRequest( _
+)As ClientRequest Ptr
+
+Declare Sub DestroyClientRequest( _
+	ByVal this As ClientRequest Ptr _
+)
 
 Declare Function ClientRequestQueryInterface( _
 	ByVal pClientRequest As ClientRequest Ptr, _

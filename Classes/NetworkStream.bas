@@ -33,22 +33,44 @@ Sub InitializeNetworkStream( _
 	
 End Sub
 
-Function InitializeNetworkStreamOfINetworkStream( _
+Sub UnInitializeNetworkStream( _
 		ByVal pStream As NetworkStream Ptr _
-	)As INetworkStream Ptr
-	
-	InitializeNetworkStream(pStream)
-	pStream->ExistsInStack = True
-	
-	Dim pINetworkStream As INetworkStream Ptr = Any
-	
-	NetworkStreamQueryInterface( _
-		pStream, @IID_INetworkStream, @pINetworkStream _
 	)
 	
-	Return pINetworkStream
+	If pStream->m_Socket <> INVALID_SOCKET Then
+		CloseSocketConnection(pStream->m_Socket)
+	End If
+	
+End Sub
+
+Function CreateNetworkStream( _
+	)As NetworkStream Ptr
+	
+	Dim pStream As NetworkStream Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(NetworkStream) _
+	)
+	
+	If pStream = NULL Then
+		Return NULL
+	End If
+	
+	InitializeNetworkStream(pStream)
+	
+	Return pStream
 	
 End Function
+
+Sub DestroyNetworkStream( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+	UnInitializeNetworkStream(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
 
 Function NetworkStreamQueryInterface( _
 		ByVal pNetworkStream As NetworkStream Ptr, _
@@ -95,11 +117,7 @@ Function NetworkStreamRelease( _
 	
 	If pNetworkStream->ReferenceCounter = 0 Then
 		
-		CloseSocketConnection(pNetworkStream->m_Socket)
-		
-		If pNetworkStream->ExistsInStack = False Then
-		
-		End If
+		DestroyNetworkStream(pNetworkStream)
 		
 		Return 0
 	End If
@@ -291,6 +309,10 @@ Function NetworkStreamSetSocket( _
 		ByVal pNetworkStream As NetworkStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
+	
+	If pNetworkStream->m_Socket <> INVALID_SOCKET Then
+		CloseSocketConnection(pNetworkStream->m_Socket)
+	End If
 	
 	pNetworkStream->m_Socket = sock
 	

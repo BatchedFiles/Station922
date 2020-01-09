@@ -54,8 +54,6 @@ Sub InitializeClientRequest( _
 	pClientRequest->pStringableVirtualTable = @GlobalClientRequestStringableVirtualTable
 	pClientRequest->ReferenceCounter = 0
 	
-	' pClientRequest->RequestHeaderBuffer[0] = 0
-	' pClientRequest->RequestHeaderBufferLength = 0
 	ZeroMemory(@pClientRequest->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	pClientRequest->HttpMethod = HttpMethods.HttpGet
 	InitializeURI(@pClientRequest->ClientURI)
@@ -75,22 +73,34 @@ Sub UnInitializeClientRequest( _
 	
 End Sub
 
-Function InitializeClientRequestOfIClientRequest( _
-		ByVal pClientRequest As ClientRequest Ptr _
-	)As IClientRequest Ptr
+Function CreateClientRequest( _
+	)As ClientRequest Ptr
 	
-	InitializeClientRequest(pClientRequest)
-	pClientRequest->ExistsInStack = True
-	
-	Dim pIRequest As IClientRequest Ptr = Any
-	
-	ClientRequestQueryInterface( _
-		pClientRequest, @IID_IClientRequest, @pIRequest _
+	Dim pRequest As ClientRequest Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(ClientRequest) _
 	)
 	
-	Return pIRequest
+	If pRequest = NULL Then
+		Return NULL
+	End If
+	
+	InitializeClientRequest(pRequest)
+	
+	Return pRequest
 	
 End Function
+
+Sub DestroyClientRequest( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	UnInitializeClientRequest(this)
+	
+	HeapFree(GetProcessHeap(), 0, this)
+	
+End Sub
 
 Function ClientRequestQueryInterface( _
 		ByVal pClientRequest As ClientRequest Ptr, _
@@ -137,11 +147,7 @@ Function ClientRequestRelease( _
 	
 	If pClientRequest->ReferenceCounter = 0 Then
 		
-		UnInitializeClientRequest(pClientRequest)
-		
-		If pClientRequest->ExistsInStack = False Then
-		
-		End If
+		DestroyClientRequest(pClientRequest)
 		
 		Return 0
 	End If
