@@ -1,8 +1,6 @@
 ﻿#include "ServerState.bi"
 #include "WebUtils.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 ' TODO Заполнить виртуальную таблицу GlobalServerStateVirtualTable
 Dim Shared GlobalServerStateVirtualTable As IServerStateVirtualTable = Type( _
 	Type<IUnknownVtbl>( _

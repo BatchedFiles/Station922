@@ -20,7 +20,6 @@ Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
@@ -115,7 +114,7 @@ Function WebServerQueryInterface( _
 	If IsEqualIID(@IID_IRunnable, riid) Then
 		*ppv = @this->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL

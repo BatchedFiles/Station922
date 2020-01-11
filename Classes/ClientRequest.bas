@@ -17,9 +17,6 @@ Declare Function AddRequestHeader( _
 	ByVal Value As WString Ptr _
 )As Integer
 
-
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalClientRequestVirtualTable As IClientRequestVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@ClientRequestQueryInterface, _
@@ -114,7 +111,7 @@ Function ClientRequestQueryInterface( _
 		If IsEqualIID(@IID_IStringable, riid) Then
 			*ppv = @pClientRequest->pStringableVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pClientRequest->pClientRequestVirtualTable
 			Else
 				*ppv = NULL

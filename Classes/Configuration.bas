@@ -1,7 +1,5 @@
 ﻿#include "Configuration.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalConfigurationVirtualTable As IConfigurationVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@ConfigurationQueryInterface, _
@@ -70,7 +68,7 @@ Function ConfigurationQueryInterface( _
 	If IsEqualIID(@IID_IConfiguration, riid) Then
 		*ppv = @pConfiguration->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @pConfiguration->pVirtualTable
 		Else
 			*ppv = NULL

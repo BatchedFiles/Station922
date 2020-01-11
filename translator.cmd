@@ -130,31 +130,32 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 :FreeBASICCompiler
-
+	
 	"%CompilerDirectory%\fbc.exe" %WITHOUT_RUNTIME_DEFINED% -x %CompilerOutputFileName% %WriteOutOnlyAsm% -s %Win32Subsystem% %CompilerExeTypeKind% -gen %CodeGenerationBackend% %CompilerDebugFlag% %CompilerProfileFlag% %CompilerParameters% %AllCompiledFiles% >%CompilerLogErrorFileName%
-
+	
 	if %errorlevel% GEQ 1 (
 		exit /b 1
 	)
-
+	
 	if not "%WithoutRuntimeLibraryesFlag%"=="withoutruntime" (
 		exit /b 0
 	)
 	
 	
 :WithoutRuntimeCompilation
-
+	
 	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	set GCCOptimizations=-O3 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
-	set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -luuid -loleaut32 -lmsvcrt -lmoldname -lgmon -lgcc
+	REM set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt -luuid -lmoldname -lgmon -lgcc
+	set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt
 	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
 	
 	set UseThreadSafeRuntime=
 	
 	set MajorImageVersion=--major-image-version 1
 	set MinorImageVersion=--minor-image-version 0
-
+	
 	REM Обычный
 	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
 	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
@@ -173,7 +174,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	set AllFileWithExtensionC=
 	set AllFileWithExtensionAsm=
 	set AllObjectFiles=
-
+	
 	for %%I IN (%AllCompiledFiles%) do (
 		if "%%~xI"==".bas" (
 			call :GccCompier %%I
@@ -184,7 +185,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 			call :ResourceCompiler %%I
 		)
 	)
-
+	
 	call :GccLinker
 	
 	call :CleanUp
@@ -196,8 +197,8 @@ set WithoutRuntimeLibraryesFlag=%~8
 	del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
 	
 	exit /b 0
-
-
+	
+	
 :GccLinker
 	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
@@ -236,20 +237,20 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	
 :GccCompier
-
+	
 	set FileWithExtensionBas=%1
 	set FileWithoutExtension=%FileWithExtensionBas:~0,-3%
 	set FileWithExtensionC=%FileWithoutExtension%c
 	set FileWithExtensionAsm=%FileWithoutExtension%asm
 	set FileWithExtensionObj=%FileWithoutExtension%o
-
+	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
 		set TargetAssemblerArch=--32
 	) else (
 		set TargetAssemblerArch=--64
 		set GCCArchitecture=-m64 -march=x86-64
 	)
-
+	
 	if "%CodeGenerationBackend%"=="gcc" (
 		"%CompilerBinDirectory%\gcc.exe" %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
 	)
@@ -259,16 +260,16 @@ set WithoutRuntimeLibraryesFlag=%~8
 	) else (
 		"%CompilerBinDirectory%\as.exe" %TargetAssemblerArch% --strip-local-absolute %FileWithExtensionAsm% -o %FileWithExtensionObj%
 	)
-
+	
 	set AllFileWithExtensionC=%AllFileWithExtensionC% %FileWithExtensionC%
 	set AllFileWithExtensionAsm=%AllFileWithExtensionAsm% %FileWithExtensionAsm%
 	set AllObjectFiles=%AllObjectFiles% %FileWithExtensionObj%
-
+	
 	exit /b 0
-
-
+	
+	
 :ResourceCompiler
-
+	
 	set ResourceFileWithExtension=%1
 	set ResourceFileWithoutExtension=%ResourceFileWithExtension:~0,-2%
 	set ResourceFileWithExtensionObj=%ResourceFileWithoutExtension%obj
@@ -280,9 +281,9 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	"%CompilerBinDirectory%\gorc.exe" /ni %ResourceCompiler64Flag% /o /fo %ResourceFileWithExtensionObj% %ResourceFileWithExtension%
-
+	
 	set AllObjectFiles=%AllObjectFiles% %ResourceFileWithExtensionObj%
-
+	
 	exit /b 0
 	
 	

@@ -2,7 +2,6 @@
 #include "IntegerToWString.bi"
 #include "StringConstants.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
 Dim Shared GlobalArrayStringWriterVirtualTable As IArrayStringWriterVirtualTable
@@ -70,7 +69,7 @@ Function ArrayStringWriterQueryInterface( _
 		If IsEqualIID(@IID_ITextWriter, riid) Then
 			*ppv = @pArrayStringWriter->pVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pArrayStringWriter->pVirtualTable
 			Else
 				*ppv = NULL

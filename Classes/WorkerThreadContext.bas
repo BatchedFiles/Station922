@@ -1,7 +1,5 @@
 ﻿#include "WorkerThreadContext.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@WorkerThreadContextQueryInterface, _
@@ -117,7 +115,7 @@ Function WorkerThreadContextQueryInterface( _
 	If IsEqualIID(@IID_IWorkerThreadContext, riid) Then
 		*ppv = @this->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL

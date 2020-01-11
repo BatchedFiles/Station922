@@ -24,8 +24,6 @@ Declare Function GetDefaultFileName( _
 	ByVal Index As Integer _
 )As Boolean
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalWebSiteVirtualTable As IWebSiteVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@WebSiteQueryInterface, _
@@ -85,7 +83,7 @@ Function WebSiteQueryInterface( _
 	If IsEqualIID(@IID_IWebSite, riid) Then
 		*ppv = @pWebSite->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @pWebSite->pVirtualTable
 		Else
 			*ppv = NULL

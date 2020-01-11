@@ -2,8 +2,6 @@
 #include "ContainerOf.bi"
 #include "HttpConst.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalRequestedFileVirtualTable As IRequestedFileVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@RequestedFileQueryInterface, _
@@ -140,7 +138,7 @@ Function RequestedFileQueryInterface( _
 		If IsEqualIID(@IID_ISendable, riid) Then
 			*ppv = @pRequestedFile->pSendableVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pRequestedFile->pRequestedFileVirtualTable
 			Else
 				*ppv = NULL

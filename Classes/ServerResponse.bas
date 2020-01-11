@@ -4,8 +4,6 @@
 #include "ContainerOf.bi"
 #include "StringConstants.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalServerResponseVirtualTable As IServerResponseVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@ServerResponseQueryInterface, _
@@ -113,7 +111,7 @@ Function ServerResponseQueryInterface( _
 		If IsEqualIID(@IID_IStringable, riid) Then
 			*ppv = @pServerResponse->pStringableVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pServerResponse->pServerResponseVirtualTable
 			Else
 				*ppv = NULL

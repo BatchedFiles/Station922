@@ -1,8 +1,6 @@
 ﻿#include "NetworkStream.bi"
 #include "Network.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalNetworkStreamVirtualTable As INetworkStreamVirtualTable
 
 Sub InitializeNetworkStreamVirtualTable()
@@ -84,7 +82,7 @@ Function NetworkStreamQueryInterface( _
 		If IsEqualIID(@IID_IBaseStream, riid) Then
 			*ppv = @pNetworkStream->pVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pNetworkStream->pVirtualTable
 			Else
 				*ppv = NULL

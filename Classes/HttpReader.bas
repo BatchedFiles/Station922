@@ -2,8 +2,6 @@
 #include "FindNewLineIndex.bi"
 #include "StringConstants.bi"
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
-
 Dim Shared GlobalHttpReaderVirtualTable As IHttpReaderVirtualTable
 
 Sub InitializeHttpReaderVirtualTable()
@@ -80,7 +78,7 @@ Function HttpReaderQueryInterface( _
 		If IsEqualIID(@IID_ITextReader, riid) Then
 			*ppv = @pHttpReader->pVirtualTable
 		Else
-			If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @pHttpReader->pVirtualTable
 			Else
 				*ppv = NULL

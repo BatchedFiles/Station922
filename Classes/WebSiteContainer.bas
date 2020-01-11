@@ -8,8 +8,6 @@
 
 Const MaxSectionsLength As Integer = 32000 - 1
 
-Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
-
 Declare Sub LoadWebSite( _
 	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
 	ByVal pIConfig As IConfiguration Ptr, _
@@ -33,7 +31,7 @@ Declare Function TreeFindNode( _
 	ByVal HostName As WString Ptr _
 )As WebSiteNode Ptr
 
-Extern IID_IUnknown_WithoutMinGW As Const IID
+Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 
 Dim Shared GlobalWebSiteContainerVirtualTable As IWebSiteContainerVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
@@ -106,7 +104,7 @@ Function WebSiteContainerQueryInterface( _
 	If IsEqualIID(@IID_IWebSiteContainer, riid) Then
 		*ppv = @this->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown_WithoutMinGW, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL
