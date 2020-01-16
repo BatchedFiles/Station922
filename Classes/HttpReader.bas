@@ -49,22 +49,34 @@ Sub UnInitializeHttpReader( _
 	
 End Sub
 
-Function InitializeHttpReaderOfIHttpReader( _
-		ByVal pHttpReader As HttpReader Ptr _
-	)As IHttpReader Ptr
+Function CreateHttpReader( _
+	)As HttpReader Ptr
 	
-	InitializeHttpReader(pHttpReader)
-	pHttpReader->ExistsInStack = True
-	
-	Dim pIHttpReader As IHttpReader Ptr = Any
-	
-	HttpReaderQueryInterface( _
-		pHttpReader, @IID_IHttpReader, @pIHttpReader _
+	Dim pReader As HttpReader Ptr = HeapAlloc( _
+		GetProcessHeap(), _
+		0, _
+		SizeOf(HttpReader) _
 	)
 	
-	Return pIHttpReader
+	If pReader = NULL Then
+		Return NULL
+	End If
+	
+	InitializeHttpReader(pReader)
+	
+	Return pReader
 	
 End Function
+
+Sub DestroyHttpReader( _
+		ByVal pReader As HttpReader Ptr _
+	)
+	
+	UnInitializeHttpReader(pReader)
+	
+	HeapFree(GetProcessHeap(), 0, pReader)
+	
+End Sub
 
 Function HttpReaderQueryInterface( _
 		ByVal pHttpReader As HttpReader Ptr, _
@@ -113,9 +125,7 @@ Function HttpReaderRelease( _
 		
 		UnInitializeHttpReader(pHttpReader)
 		
-		If pHttpReader->ExistsInStack = False Then
-		
-		End If
+		DestroyHttpReader(pHttpReader)
 		
 		Return 0
 	End If

@@ -51,10 +51,10 @@ Type IHttpReader_
 	Dim pVirtualTable As IHttpReaderVirtualTable Ptr
 End Type
 
-#define IHttpReader_QueryInterface(this, riid, ppv) (this)->pVirtualTable->InheritedTable.QueryInterface(CPtr(IUnknown Ptr, this), riid, ppv)
-#define IHttpReader_AddRef(this) (this)->pVirtualTable->InheritedTable.AddRef(CPtr(IUnknown Ptr, this))
-#define IHttpReader_Release(this) (this)->pVirtualTable->InheritedTable.Release(CPtr(IUnknown Ptr, this))
-#define IHttpReader_ReadLine(this, Buffer, BufferLength, pLineLength) (this)->pVirtualTable->ReadLine(this, Buffer, BufferLength, pLineLength)
+#define IHttpReader_QueryInterface(this, riid, ppv) (this)->pVirtualTable->InheritedTable.InheritedTable.QueryInterface(CPtr(IUnknown Ptr, this), riid, ppv)
+#define IHttpReader_AddRef(this) (this)->pVirtualTable->InheritedTable.InheritedTable.AddRef(CPtr(IUnknown Ptr, this))
+#define IHttpReader_Release(this) (this)->pVirtualTable->InheritedTable.InheritedTable.Release(CPtr(IUnknown Ptr, this))
+#define IHttpReader_ReadLine(this, pLineLength, pLine) (this)->pVirtualTable->InheritedTable.ReadLine(CPtr(ITextReader Ptr, this), pLineLength, pLine)
 #define IHttpReader_Clear(this) (this)->pVirtualTable->Clear(this)
 #define IHttpReader_GetBaseStream(this, ppResult) (this)->pVirtualTable->GetBaseStream(this, ppResult)
 #define IHttpReader_SetBaseStream(this, pIStream) (this)->pVirtualTable->SetBaseStream(this, pIStream)

@@ -11,7 +11,6 @@ Type HttpReader
 	
 	Dim pVirtualTable As IHttpReaderVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
-	Dim ExistsInStack As Boolean
 	
 	Dim pIStream As IBaseStream Ptr
 	
@@ -29,9 +28,12 @@ End Type
 
 Declare Sub InitializeHttpReaderVirtualTable()
 
-Declare Function InitializeHttpReaderOfIHttpReader( _
-	ByVal pHttpReader As HttpReader Ptr _
-)As IHttpReader Ptr
+Declare Function CreateHttpReader( _
+)As HttpReader Ptr
+
+Declare Sub DestroyHttpReader( _
+	ByVal pReader As HttpReader Ptr _
+)
 
 Declare Function HttpReaderQueryInterface( _
 	ByVal pHttpReader As HttpReader Ptr, _

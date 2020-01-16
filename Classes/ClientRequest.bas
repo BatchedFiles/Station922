@@ -8,7 +8,7 @@
 #include "CharacterConstants.bi"
 #include "ContainerOf.bi"
 #include "HttpConst.bi"
-#include "HttpReader.bi"
+#include "IHttpReader.bi"
 #include "WebUtils.bi"
 
 Declare Function AddRequestHeader( _
@@ -161,7 +161,7 @@ Function ClientRequestReadRequest( _
 	Dim pRequestedLine As WString Ptr = Any
 	Dim RequestedLineLength As Integer = Any
 	
-	Dim hrReadLine As HRESULT = HttpReader_NonVirtualReadLine( _
+	Dim hrReadLine As HRESULT = IHttpReader_ReadLine( _
 		pIReader, _
 		@RequestedLineLength, _
 		@pRequestedLine _
@@ -279,7 +279,7 @@ Function ClientRequestReadRequest( _
 		Dim pLine As WString Ptr = Any ' @pClientRequest->RequestHeaderBuffer[pClientRequest->RequestHeaderBufferLength]
 		Dim LineLength As Integer = Any
 		
-		hrReadLine = HttpReader_NonVirtualReadLine( _
+		hrReadLine = IHttpReader_ReadLine( _
 			pIReader, _
 			@LineLength, _
 			@pLine _
