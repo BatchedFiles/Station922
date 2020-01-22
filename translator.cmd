@@ -147,8 +147,13 @@ set WithoutRuntimeLibraryesFlag=%~8
 	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	set GCCOptimizations=-O3 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
-	REM set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt -luuid -lmoldname -lgmon -lgcc
-	set IncludeObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt
+	
+	set IncludeUuidObjectLibraries=-luuid
+	set IncludeGMonitorObjectLibraries=-lgmon
+	set IncludeGCCObjectLibraries=-lmoldname -lgcc
+	set IncludeWinAPIObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt
+	set IncludeAllObjectLibraries=%IncludeWinAPIObjectLibraries% %IncludeGMonitorObjectLibraries% %IncludeGCCObjectLibraries%
+	
 	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
 	
 	set UseThreadSafeRuntime=
@@ -224,9 +229,9 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	if "%DebugFlag%"=="debug" (
-		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeObjectLibraries% -)
+		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeAllObjectLibraries% -)
 	) else (
-		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -s -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeObjectLibraries% -)
+		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -s -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeAllObjectLibraries% -)
 	)
 	
 	if "%ExeTypeKind%"=="dll" (
