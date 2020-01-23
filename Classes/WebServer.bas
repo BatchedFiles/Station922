@@ -263,12 +263,14 @@ Function WebServerRun( _
 		If ClientSocket = INVALID_SOCKET Then
 			
 			If this->ReListenSocket = False Then
+				CloseHandle(hThread)
 				Exit Do
 			End If
 			
 			' TODO Узнать ошибку и обработать
 			Dim SocketErrorCode As Integer = WSAGetLastError()
 			SleepEx(SleepTimeout, True)
+			CloseHandle(hThread)
 			
 		Else
 			
@@ -320,6 +322,7 @@ Function WebServerRun( _
 				)
 				If FAILED(hr) Then
 					
+					CloseHandle(hThread)
 				Else
 					
 					INetworkStream_SetSocket(pINetworkStream, ClientSocket)
