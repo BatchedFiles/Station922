@@ -346,7 +346,12 @@ Function WebServerRun( _
 					
 					IWorkerThreadContext_SetClientRequest(pIContext, pIClientRequest)
 					
-					ResumeThread(hThread)
+					Dim dwResume As DWORD = ResumeThread(hThread)
+					If dwResume = -1 Then
+						' TODO Узнать ошибку и обработать
+						Dim dwError As DWORD = GetLastError()
+						CloseHandle(hThread)
+					End If
 					
 					INetworkStream_Release(pINetworkStream)
 					IClientRequest_Release(pIClientRequest)
