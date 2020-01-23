@@ -12,9 +12,6 @@
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 
-Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
-Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
-
 Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
 	Dim pIContext As IWorkerThreadContext Ptr = CPtr(IWorkerThreadContext Ptr, lpParam)
@@ -71,15 +68,15 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 				PrintRequestedBytes(pIHttpReader)
 		#endif
 		#ifndef WINDOWS_SERVICE
-				
-				Dim EndRequestTicks As LARGE_INTEGER
-				QueryPerformanceCounter(@EndRequestTicks)
-				
-				Dim EndRequestElapsedTimes As LARGE_INTEGER
-				EndRequestElapsedTimes.QuadPart = EndRequestTicks.QuadPart - StartLoopTicks.QuadPart
-				
-				PrintThreadProcessCount(@Frequency, @EndRequestElapsedTimes)
-				
+			
+			Dim EndRequestTicks As LARGE_INTEGER
+			QueryPerformanceCounter(@EndRequestTicks)
+			
+			Dim EndRequestElapsedTimes As LARGE_INTEGER
+			EndRequestElapsedTimes.QuadPart = EndRequestTicks.QuadPart - StartLoopTicks.QuadPart
+			
+			PrintThreadProcessCount(@Frequency, @EndRequestElapsedTimes)
+			
 		#endif
 		
 		If FAILED(hrReadRequest) Then
