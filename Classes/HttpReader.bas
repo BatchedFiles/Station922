@@ -123,8 +123,6 @@ Function HttpReaderRelease( _
 	
 	If pHttpReader->ReferenceCounter = 0 Then
 		
-		UnInitializeHttpReader(pHttpReader)
-		
 		DestroyHttpReader(pHttpReader)
 		
 		Return 0
@@ -325,7 +323,10 @@ Function HttpReaderSetBaseStream( _
 		IBaseStream_Release(pHttpReader->pIStream)
 	End If
 	
-	IBaseStream_AddRef(pIStream)
+	If pIStream <> NULL Then
+		IBaseStream_AddRef(pIStream)
+	End If
+	
 	pHttpReader->pIStream = pIStream
 	
 	Return S_OK
