@@ -15,17 +15,17 @@ Dim Shared GlobalConfigurationVirtualTable As IConfigurationVirtualTable = Type(
 )
 
 Sub InitializeConfiguration( _
-		ByVal pConfig As Configuration Ptr _
+		ByVal this As Configuration Ptr _
 	)
 	
-	pConfig->pVirtualTable = @GlobalConfigurationVirtualTable
-	pConfig->ReferenceCounter = 0
-	pConfig->IniFileName[0] = 0
+	this->pVirtualTable = @GlobalConfigurationVirtualTable
+	this->ReferenceCounter = 0
+	this->IniFileName[0] = 0
 	
 End Sub
 
 Sub UnInitializeConfiguration( _
-		ByVal pConfig As Configuration Ptr _
+		ByVal this As Configuration Ptr _
 	)
 	
 End Sub
@@ -33,19 +33,19 @@ End Sub
 Function CreateConfiguration( _
 	)As Configuration Ptr
 	
-	Dim pConfig As Configuration Ptr = HeapAlloc( _
+	Dim this As Configuration Ptr = HeapAlloc( _
 		GetProcessHeap(), _
 		0, _
 		SizeOf(Configuration) _
 	)
 	
-	If pConfig = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
-	InitializeConfiguration(pConfig)
+	InitializeConfiguration(this)
 	
-	Return pConfig
+	Return this
 	
 End Function
 
@@ -60,61 +60,61 @@ Sub DestroyConfiguration( _
 End Sub
 
 Function ConfigurationQueryInterface( _
-		ByVal pConfiguration As Configuration Ptr, _
+		ByVal this As Configuration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IConfiguration, riid) Then
-		*ppv = @pConfiguration->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @pConfiguration->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 	
-	ConfigurationAddRef(pConfiguration)
+	ConfigurationAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function ConfigurationAddRef( _
-		ByVal pConfiguration As Configuration Ptr _
+		ByVal this As Configuration Ptr _
 	)As ULONG
 	
-	pConfiguration->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pConfiguration->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function ConfigurationRelease( _
-		ByVal pConfiguration As Configuration Ptr _
+		ByVal this As Configuration Ptr _
 	)As ULONG
 	
-	pConfiguration->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pConfiguration->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyConfiguration(pConfiguration)
+		DestroyConfiguration(this)
 		
 		Return 0
 	End If
 	
-	Return pConfiguration->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function ConfigurationSetIniFilename( _
-		ByVal pConfiguration As Configuration Ptr, _
+		ByVal this As Configuration Ptr, _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
-	lstrcpyn(@pConfiguration->IniFileName, pFileName, MAX_PATH + 1)
+	lstrcpyn(@this->IniFileName, pFileName, MAX_PATH + 1)
 	
 	Return S_OK
 	

@@ -19,85 +19,85 @@ End Type
 Declare Sub InitializeArrayStringWriterVirtualTable()
 
 Declare Function InitializeArrayStringWriterOfIArrayStringWriter( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr _
+	ByVal this As ArrayStringWriter Ptr _
 )As IArrayStringWriter Ptr
 
 Declare Function ArrayStringWriterQueryInterface( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal riid As REFIID, _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterAddRef( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr _
+	ByVal this As ArrayStringWriter Ptr _
 )As ULONG
 
 Declare Function ArrayStringWriterRelease( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr _
+	ByVal this As ArrayStringWriter Ptr _
 )As ULONG
 
 Declare Function ArrayStringWriterWriteLengthString( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal w As WString Ptr, _
 	ByVal Length As Integer _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteNewLine( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr _
+	ByVal this As ArrayStringWriter Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteString( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal w As WString Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteLengthStringLine( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal w As WString Ptr, _
 	ByVal Length As Integer _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteStringLine( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal w As WString Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteChar( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal wc As wchar_t _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteInt32( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Value As Long _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteInt64( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Value As LongInt _
 )As HRESULT
 
 Declare Function ArrayStringWriterWriteUInt64( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Value As ULongInt _
 )As HRESULT
 
 Declare Function ArrayStringWriterGetCodePage( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal CodePage As Integer Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterSetCodePage( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal CodePage As Integer _
 )As HRESULT
 
 Declare Function ArrayStringWriterCloseTextWriter( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr _
+	ByVal this As ArrayStringWriter Ptr _
 )As HRESULT
 
 Declare Function ArrayStringWriterSetBuffer( _
-	ByVal pArrayStringWriter As ArrayStringWriter Ptr, _
+	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Buffer As WString Ptr, _
 	ByVal MaxBufferLength As Integer _
 )As HRESULT

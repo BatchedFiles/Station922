@@ -34,70 +34,70 @@ Declare Function CreateRequestedFile( _
 )As RequestedFile Ptr
 
 Declare Sub DestroyRequestedFile( _
-	ByVal pRequestedFile As RequestedFile Ptr _
+	ByVal this As RequestedFile Ptr _
 )
 
 Declare Function RequestedFileQueryInterface( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal riid As REFIID, _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
 Declare Function RequestedFileAddRef( _
-	ByVal pRequestedFile As RequestedFile Ptr _
+	ByVal this As RequestedFile Ptr _
 )As ULONG
 
 Declare Function RequestedFileRelease( _
-	ByVal pRequestedFile As RequestedFile Ptr _
+	ByVal this As RequestedFile Ptr _
 )As ULONG
 
 Declare Function RequestedFileChoiseFile( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pUri As Station922Uri Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetFilePath( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal ppFilePath As WString Ptr Ptr _
 )As HRESULT
 
 Declare Function RequestedFileSetFilePath( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal FilePath As WString Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetPathTranslated( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal ppPathTranslated As WString Ptr Ptr _
 )As HRESULT
 
 Declare Function RequestedFileSetPathTranslated( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal PathTranslated As WString Ptr Ptr _
 )As HRESULT
 
 Declare Function RequestedFileFileExists( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pResult As RequestedFileState Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetFileHandle( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pResult As HANDLE Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetLastFileModifiedDate( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pResult As FILETIME Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetFileLength( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pResult As ULongInt Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetVaryHeaders( _
-	ByVal pRequestedFile As RequestedFile Ptr, _
+	ByVal this As RequestedFile Ptr, _
 	ByVal pHeadersLength As Integer Ptr, _
 	ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 )As HRESULT

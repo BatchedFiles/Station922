@@ -22,14 +22,14 @@ Dim Shared GlobalServerStateVirtualTable As IServerStateVirtualTable = Type( _
 )
 
 Function ServerStateDllCgiGetRequestHeader( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal Value As WString Ptr, _
 		ByVal BufferLength As Integer, _
 		ByVal HeaderIndex As HttpRequestHeaders _
 	)As Integer
 	
 	Dim pHeader As WString Ptr = Any
-	IClientRequest_GetHttpHeader(objState->pIRequest, HeaderIndex, @pHeader)
+	IClientRequest_GetHttpHeader(this->pIRequest, HeaderIndex, @pHeader)
 	
 	Dim HeaderLength As Integer = lstrlen(pHeader)
 	
@@ -47,11 +47,11 @@ Function ServerStateDllCgiGetRequestHeader( _
 End Function
 
 Function ServerStateDllCgiGetHttpMethod( _
-		ByVal objState As ServerState Ptr _
+		ByVal this As ServerState Ptr _
 	)As HttpMethods
 	
 	Dim HttpMethod As HttpMethods = Any
-	IClientRequest_GetHttpMethod(objState->pIRequest, @HttpMethod)
+	IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 	
 	SetLastError(ERROR_SUCCESS)
 	
@@ -60,11 +60,11 @@ Function ServerStateDllCgiGetHttpMethod( _
 End Function
 
 Function ServerStateDllCgiGetHttpVersion( _
-		ByVal objState As ServerState Ptr _
+		ByVal this As ServerState Ptr _
 	)As HttpVersions
 	
 	Dim HttpVersion As HttpVersions = Any
-	IClientRequest_GetHttpVersion(objState->pIRequest, @HttpVersion)
+	IClientRequest_GetHttpVersion(this->pIRequest, @HttpVersion)
 	
 	SetLastError(ERROR_SUCCESS)
 	
@@ -73,48 +73,48 @@ Function ServerStateDllCgiGetHttpVersion( _
 End Function
 
 Sub ServerStateDllCgiSetStatusCode( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal Code As Integer _
 	)
 	
-	IServerResponse_SetStatusCode(objState->pIResponse, Code)
+	IServerResponse_SetStatusCode(this->pIResponse, Code)
 	
 End Sub
 
 Sub ServerStateDllCgiSetStatusDescription( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal Description As WString Ptr _
 	)
 	
 	' TODO Устранить потенциальное переполнение буфера
-	IServerResponse_SetStatusDescription(objState->pIResponse, Description)
+	IServerResponse_SetStatusDescription(this->pIResponse, Description)
 	
 End Sub
 
 Sub ServerStateDllCgiSetResponseHeader( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As WString Ptr _
 	)
 	
 	' TODO Устранить потенциальное переполнение буфера
-	IServerResponse_AddKnownResponseHeader(objState->pIResponse, HeaderIndex, Value)
+	IServerResponse_AddKnownResponseHeader(this->pIResponse, HeaderIndex, Value)
 	
 End Sub
 
 Function ServerStateDllCgiWriteData( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal Buffer As Any Ptr, _
 		ByVal BytesCount As Integer _
 	)As Boolean
 	
-	If BytesCount > MaxClientBufferLength - objState->BufferLength Then
+	If BytesCount > MaxClientBufferLength - this->BufferLength Then
 		SetLastError(ERROR_BUFFER_OVERFLOW)
 		Return False
 	End If
 	
-	RtlCopyMemory(objState->ClientBuffer, Buffer, BytesCount)
-	objState->BufferLength += BytesCount
+	RtlCopyMemory(this->ClientBuffer, Buffer, BytesCount)
+	this->BufferLength += BytesCount
 	SetLastError(ERROR_SUCCESS)
 	
 	Return True
@@ -122,7 +122,7 @@ Function ServerStateDllCgiWriteData( _
 End Function
 
 Function ServerStateDllCgiReadData( _
-		ByVal objState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal Buffer As Any Ptr, _
 		ByVal BufferLength As Integer, _
 		ByVal ReadedBytesCount As Integer Ptr _
@@ -133,7 +133,7 @@ Function ServerStateDllCgiReadData( _
 End Function
 
 Function ServerStateDllCgiGetHtmlSafeString( _
-		ByVal objState As IServerState Ptr, _
+		ByVal this As IServerState Ptr, _
 		ByVal Buffer As WString Ptr, _
 		ByVal BufferLength As Integer, _
 		ByVal HtmlSafe As WString Ptr, _
@@ -145,7 +145,7 @@ Function ServerStateDllCgiGetHtmlSafeString( _
 End Function
 
 Sub InitializeServerState( _
-		ByVal objServerState As ServerState Ptr, _
+		ByVal this As ServerState Ptr, _
 		ByVal pStream As IBaseStream Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
@@ -154,15 +154,15 @@ Sub InitializeServerState( _
 		ByVal ClientBuffer As Any Ptr _
 	)
 	
-	objServerState->pVirtualTable = @GlobalServerStateVirtualTable
-	objServerState->ReferenceCounter = 1
-	objServerState->pStream = pStream
-	objServerState->pIRequest = pIRequest
-	objServerState->pIResponse = pIResponse
-	objServerState->pIWebSite = pIWebSite
-	objServerState->hMapFile = hMapFile
-	objServerState->ClientBuffer = ClientBuffer
-	objServerState->BufferLength = 0
-	objServerState->ExistsInStack = True
+	this->pVirtualTable = @GlobalServerStateVirtualTable
+	this->ReferenceCounter = 1
+	this->pStream = pStream
+	this->pIRequest = pIRequest
+	this->pIResponse = pIResponse
+	this->pIWebSite = pIWebSite
+	this->hMapFile = hMapFile
+	this->ClientBuffer = ClientBuffer
+	this->BufferLength = 0
+	this->ExistsInStack = True
 	
 End Sub

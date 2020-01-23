@@ -33,7 +33,7 @@ Dim Shared GlobalRequestedFileSendableVirtualTable As ISendableVirtualTable = Ty
 /'
 Function Remove()As Boolean
 	' TODO Узнать код ошибки и отправить его клиенту
-	If DeleteFile(@pRequestedFile->PathTranslated) <> 0 Then
+	If DeleteFile(@this->PathTranslated) <> 0 Then
 		' Удалить возможные заголовочные файлы
 		Dim sExtHeadersFile As WString * (WebSite.MaxFilePathTranslatedLength + 1) = Any
 		lstrcpy(@sExtHeadersFile, @pWebSite->PathTranslated)
@@ -55,44 +55,44 @@ End Function
 '/
 
 Sub InitializeRequestedFile( _
-		ByVal pRequestedFile As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr _
 	)
 	
-	pRequestedFile->pRequestedFileVirtualTable = @GlobalRequestedFileVirtualTable
-	pRequestedFile->pSendableVirtualTable = @GlobalRequestedFileSendableVirtualTable
-	pRequestedFile->ReferenceCounter = 0
+	this->pRequestedFileVirtualTable = @GlobalRequestedFileVirtualTable
+	this->pSendableVirtualTable = @GlobalRequestedFileSendableVirtualTable
+	this->ReferenceCounter = 0
 	
-	pRequestedFile->FilePath[0] = 0
-	pRequestedFile->PathTranslated[0] = 0
+	this->FilePath[0] = 0
+	this->PathTranslated[0] = 0
 	
 	' Dim FileExists As FileState
 	' Dim LastFileModifiedDate As FILETIME
 	
-	pRequestedFile->FileHandle = INVALID_HANDLE_VALUE
-	pRequestedFile->FileDataLength = 0
+	this->FileHandle = INVALID_HANDLE_VALUE
+	this->FileDataLength = 0
 	
-	pRequestedFile->GZipFileHandle = INVALID_HANDLE_VALUE
-	pRequestedFile->GZipFileDataLength = 0
+	this->GZipFileHandle = INVALID_HANDLE_VALUE
+	this->GZipFileDataLength = 0
 	
-	pRequestedFile->DeflateFileHandle = INVALID_HANDLE_VALUE
-	pRequestedFile->DeflateFileDataLength = 0
+	this->DeflateFileHandle = INVALID_HANDLE_VALUE
+	this->DeflateFileDataLength = 0
 	
 End Sub
 
 Sub UnInitializeRequestedFile( _
-		ByVal pRequestedFile As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr _
 	)
 	
-	If pRequestedFile->FileHandle <> INVALID_HANDLE_VALUE Then
-		CloseHandle(pRequestedFile->FileHandle)
+	If this->FileHandle <> INVALID_HANDLE_VALUE Then
+		CloseHandle(this->FileHandle)
 	End If
 	
-	If pRequestedFile->GZipFileHandle <> INVALID_HANDLE_VALUE Then
-		CloseHandle(pRequestedFile->GZipFileHandle)
+	If this->GZipFileHandle <> INVALID_HANDLE_VALUE Then
+		CloseHandle(this->GZipFileHandle)
 	End If
 	
-	If pRequestedFile->DeflateFileHandle <> INVALID_HANDLE_VALUE Then
-		CloseHandle(pRequestedFile->DeflateFileHandle)
+	If this->DeflateFileHandle <> INVALID_HANDLE_VALUE Then
+		CloseHandle(this->DeflateFileHandle)
 	End If
 	
 End Sub
@@ -100,46 +100,46 @@ End Sub
 Function CreateRequestedFile( _
 	)As RequestedFile Ptr
 	
-	Dim pRequestedFile As RequestedFile Ptr = HeapAlloc( _
+	Dim this As RequestedFile Ptr = HeapAlloc( _
 		GetProcessHeap(), _
 		0, _
 		SizeOf(RequestedFile) _
 	)
 	
-	If pRequestedFile = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
-	InitializeRequestedFile(pRequestedFile)
+	InitializeRequestedFile(this)
 	
-	Return pRequestedFile
+	Return this
 	
 End Function
 
 Sub DestroyRequestedFile( _
-		ByVal pRequestedFile As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr _
 	)
 	
-	UnInitializeRequestedFile(pRequestedFile)
+	UnInitializeRequestedFile(this)
 	
-	HeapFree(GetProcessHeap(), 0, pRequestedFile)
+	HeapFree(GetProcessHeap(), 0, this)
 	
 End Sub
 
 Function RequestedFileQueryInterface( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IRequestedFile, riid) Then
-		*ppv = @pRequestedFile->pRequestedFileVirtualTable
+		*ppv = @this->pRequestedFileVirtualTable
 	Else
 		If IsEqualIID(@IID_ISendable, riid) Then
-			*ppv = @pRequestedFile->pSendableVirtualTable
+			*ppv = @this->pSendableVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @pRequestedFile->pRequestedFileVirtualTable
+				*ppv = @this->pRequestedFileVirtualTable
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -147,85 +147,85 @@ Function RequestedFileQueryInterface( _
 		End If
 	End If
 	
-	RequestedFileAddRef(pRequestedFile)
+	RequestedFileAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function RequestedFileAddRef( _
-		ByVal pRequestedFile As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	pRequestedFile->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pRequestedFile->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function RequestedFileRelease( _
-		ByVal pRequestedFile As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	pRequestedFile->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pRequestedFile->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyRequestedFile(pRequestedFile)
+		DestroyRequestedFile(this)
 		
 		Return 0
 	End If
 	
-	Return pRequestedFile->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 ' Declare Function RequestedFileChoiseFile( _
-	' ByVal pRequestedFile As RequestedFile Ptr, _
+	' ByVal this As RequestedFile Ptr, _
 	' ByVal pUri As Uri Ptr _
 ' )As HRESULT
 
 Function RequestedFileGetFilePath( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal ppFilePath As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppFilePath = @pRequestedFile->FilePath
+	*ppFilePath = @this->FilePath
 	
 	Return S_OK
 	
 End Function
 
 ' Declare Function RequestedFileSetFilePath( _
-	' ByVal pRequestedFile As RequestedFile Ptr, _
+	' ByVal this As RequestedFile Ptr, _
 	' ByVal FilePath As WString Ptr _
 ' )As HRESULT
 
 Function RequestedFileGetPathTranslated( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal ppPathTranslated As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppPathTranslated = @pRequestedFile->PathTranslated
+	*ppPathTranslated = @this->PathTranslated
 	
 	Return S_OK
 	
 End Function
 
 ' Declare Function RequestedFileSetPathTranslated( _
-	' ByVal pRequestedFile As RequestedFile Ptr, _
+	' ByVal this As RequestedFile Ptr, _
 	' ByVal PathTranslated As WString Ptr Ptr _
 ' )As HRESULT
 
 Function RequestedFileFileExists( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal pResult As RequestedFileState Ptr _
 	)As HRESULT
 	
-	If pRequestedFile->FileHandle = INVALID_HANDLE_VALUE Then
+	If this->FileHandle = INVALID_HANDLE_VALUE Then
 		' TODO Проверить код ошибки через GetLastError, могут быть не только File Not Found
 		Dim buf410 As WString * (MAX_PATH + 1) = Any
-		lstrcpy(@buf410, @pRequestedFile->PathTranslated)
+		lstrcpy(@buf410, @this->PathTranslated)
 		lstrcat(@buf410, @FileGoneExtension)
 		
 		Dim hFile410 As HANDLE = CreateFile( _
@@ -254,24 +254,24 @@ Function RequestedFileFileExists( _
 End Function
 
 Function RequestedFileGetFileHandle( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
-	*pResult = pRequestedFile->FileHandle
+	*pResult = this->FileHandle
 	
 	Return S_OK
 	
 End Function
 
 Function RequestedFileGetLastFileModifiedDate( _
-		ByVal pRequestedFile As RequestedFile Ptr, _
+		ByVal this As RequestedFile Ptr, _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
 	Dim DateLastFileModified As FILETIME = Any
 	
-	If GetFileTime(pRequestedFile->FileHandle, NULL, NULL, @DateLastFileModified) = 0 Then
+	If GetFileTime(this->FileHandle, NULL, NULL, @DateLastFileModified) = 0 Then
 		Return HRESULT_FROM_WIN32(GetLastError())
 	End If
 	
@@ -281,12 +281,12 @@ Function RequestedFileGetLastFileModifiedDate( _
 	
 End Function
 ' Declare Function RequestedFileGetFileLength( _
-	' ByVal pRequestedFile As RequestedFile Ptr, _
+	' ByVal this As RequestedFile Ptr, _
 	' ByVal pResult As ULongInt Ptr _
 ' )As HRESULT
 
 ' Declare Function RequestedFileGetVaryHeaders( _
-	' ByVal pRequestedFile As RequestedFile Ptr, _
+	' ByVal this As RequestedFile Ptr, _
 	' ByVal pHeadersLength As Integer Ptr, _
 	' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 ' )As HRESULT

@@ -1,4 +1,4 @@
-﻿#include "Resources.rh"
+﻿#include "Resources.RH"
 
 STRINGTABLE LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 BEGIN

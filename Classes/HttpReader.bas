@@ -22,29 +22,29 @@ Sub InitializeHttpReaderVirtualTable()
 End Sub
 
 Sub InitializeHttpReader( _
-		ByVal pHttpReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)
 	
-	pHttpReader->pVirtualTable = @GlobalHttpReaderVirtualTable
-	pHttpReader->ReferenceCounter = 0
+	this->pVirtualTable = @GlobalHttpReaderVirtualTable
+	this->ReferenceCounter = 0
 	
-	pHttpReader->pIStream = NULL
-	pHttpReader->Buffer[0] = 0
-	pHttpReader->Buffer[HttpReader.MaxBufferLength] = 0
-	pHttpReader->BufferLength = 0
-	pHttpReader->LinesBuffer[0] = 0
-	pHttpReader->LinesBufferLength = 0
-	pHttpReader->IsAllBytesReaded = False
-	pHttpReader->StartLineIndex = 0
+	this->pIStream = NULL
+	this->Buffer[0] = 0
+	this->Buffer[HttpReader.MaxBufferLength] = 0
+	this->BufferLength = 0
+	this->LinesBuffer[0] = 0
+	this->LinesBufferLength = 0
+	this->IsAllBytesReaded = False
+	this->StartLineIndex = 0
 	
 End Sub
 
 Sub UnInitializeHttpReader( _
-		ByVal pHttpReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)
 	
-	If pHttpReader->pIStream <> NULL Then
-		IBaseStream_Release(pHttpReader->pIStream)
+	If this->pIStream <> NULL Then
+		IBaseStream_Release(this->pIStream)
 	End If
 	
 End Sub
@@ -52,46 +52,46 @@ End Sub
 Function CreateHttpReader( _
 	)As HttpReader Ptr
 	
-	Dim pReader As HttpReader Ptr = HeapAlloc( _
+	Dim this As HttpReader Ptr = HeapAlloc( _
 		GetProcessHeap(), _
 		0, _
 		SizeOf(HttpReader) _
 	)
 	
-	If pReader = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
-	InitializeHttpReader(pReader)
+	InitializeHttpReader(this)
 	
-	Return pReader
+	Return this
 	
 End Function
 
 Sub DestroyHttpReader( _
-		ByVal pReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)
 	
-	UnInitializeHttpReader(pReader)
+	UnInitializeHttpReader(this)
 	
-	HeapFree(GetProcessHeap(), 0, pReader)
+	HeapFree(GetProcessHeap(), 0, this)
 	
 End Sub
 
 Function HttpReaderQueryInterface( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IHttpReader, riid) Then
-		*ppv = @pHttpReader->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_ITextReader, riid) Then
-			*ppv = @pHttpReader->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @pHttpReader->pVirtualTable
+				*ppv = @this->pVirtualTable
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -99,41 +99,41 @@ Function HttpReaderQueryInterface( _
 		End If
 	End If
 	
-	HttpReaderAddRef(pHttpReader)
+	HttpReaderAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderAddRef( _
-		ByVal pHttpReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	pHttpReader->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pHttpReader->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function HttpReaderRelease( _
-		ByVal pHttpReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	pHttpReader->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pHttpReader->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyHttpReader(pHttpReader)
+		DestroyHttpReader(this)
 		
 		Return 0
 	End If
 	
-	Return pHttpReader->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function HttpReaderReadAllBytes( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal pDoubleCrLfIndex As Integer Ptr _
 	)As HRESULT
 	
@@ -144,10 +144,10 @@ Function HttpReaderReadAllBytes( _
 		Dim ReceivedBytesCount As Integer = Any
 		
 		Dim hr As HRESULT = IBaseStream_Read( _
-			pHttpReader->pIStream, _
-			@pHttpReader->Buffer, _
-			pHttpReader->BufferLength, _
-			HttpReader.MaxBufferLength - pHttpReader->BufferLength, _
+			this->pIStream, _
+			@this->Buffer, _
+			this->BufferLength, _
+			HttpReader.MaxBufferLength - this->BufferLength, _
 			@ReceivedBytesCount _
 		)
 		
@@ -159,30 +159,30 @@ Function HttpReaderReadAllBytes( _
 			Return HTTPREADER_E_CLIENTCLOSEDCONNECTION
 		End If
 		
-		pHttpReader->BufferLength += ReceivedBytesCount
-		pHttpReader->Buffer[pHttpReader->BufferLength] = 0
+		this->BufferLength += ReceivedBytesCount
+		this->Buffer[this->BufferLength] = 0
 		
-		If pHttpReader->BufferLength >= HttpReader.MaxBufferLength Then
+		If this->BufferLength >= HttpReader.MaxBufferLength Then
 			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 		End If
 		
 		FindResult = FindDoubleCrLfIndexA( _
-			@pHttpReader->Buffer, _
-			pHttpReader->BufferLength, _
+			@this->Buffer, _
+			this->BufferLength, _
 			@DoubleCrLfIndex _
 		)
 		
 	Loop While FindResult = False
 	
 	*pDoubleCrLfIndex = DoubleCrLfIndex
-	pHttpReader->IsAllBytesReaded = True
+	this->IsAllBytesReaded = True
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderConvertBytesToString( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal DoubleCrLfIndex As Integer _
 	)As HRESULT
 	
@@ -191,14 +191,14 @@ Function HttpReaderConvertBytesToString( _
 	Dim CharsLength As Integer = MultiByteToWideChar( _
 		CP_UTF8, _
 		dwFlags, _
-		@pHttpReader->Buffer, _
+		@this->Buffer, _
 		DoubleCrLfIndex + 2 * NewLineStringLength, _
-		@pHttpReader->LinesBuffer, _
+		@this->LinesBuffer, _
 		HttpReader.MaxBufferLength _
 	)
 	
-	pHttpReader->LinesBufferLength = CharsLength
-	pHttpReader->LinesBuffer[CharsLength] = 0
+	this->LinesBufferLength = CharsLength
+	this->LinesBuffer[CharsLength] = 0
 	
 	If CharsLength = 0 Then
 		Dim dwError As DWORD = GetLastError()
@@ -210,27 +210,27 @@ Function HttpReaderConvertBytesToString( _
 End Function
 
 Function HttpReaderReadLine( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal pLineLength As Integer Ptr, _
 		ByVal pLine As WString Ptr Ptr _
 	)As HRESULT
 	
-	If pHttpReader->IsAllBytesReaded = False Then
+	If this->IsAllBytesReaded = False Then
 		
 		Dim DoubleCrLfIndex As Integer = Any
-		Dim hr As HRESULT = HttpReaderReadAllBytes(pHttpReader, @DoubleCrLfIndex)
+		Dim hr As HRESULT = HttpReaderReadAllBytes(this, @DoubleCrLfIndex)
 		
 		If FAILED(hr) Then
 			*pLineLength = 0
-			*pLine = @pHttpReader->LinesBuffer
+			*pLine = @this->LinesBuffer
 			Return hr
 		End If
 		
-		hr = HttpReaderConvertBytesToString(pHttpReader, DoubleCrLfIndex)
+		hr = HttpReaderConvertBytesToString(this, DoubleCrLfIndex)
 		
 		If FAILED(hr) Then
 			*pLineLength = 0
-			*pLine = @pHttpReader->LinesBuffer
+			*pLine = @this->LinesBuffer
 			Return hr
 		End If
 		
@@ -240,16 +240,16 @@ Function HttpReaderReadLine( _
 	Dim CrLfIndex As Integer = Any
 	
 	FindCrLfIndexW( _
-		@pHttpReader->LinesBuffer[pHttpReader->StartLineIndex], _
-		pHttpReader->LinesBufferLength - pHttpReader->StartLineIndex, _
+		@this->LinesBuffer[this->StartLineIndex], _
+		this->LinesBufferLength - this->StartLineIndex, _
 		@CrLfIndex _
 	)
 	
 	*pLineLength = CrLfIndex
-	*pLine = @pHttpReader->LinesBuffer[pHttpReader->StartLineIndex]
+	*pLine = @this->LinesBuffer[this->StartLineIndex]
 	
-	pHttpReader->LinesBuffer[pHttpReader->StartLineIndex + CrLfIndex] = 0
-	pHttpReader->StartLineIndex += CrLfIndex + NewLineStringLength
+	this->LinesBuffer[this->StartLineIndex + CrLfIndex] = 0
+	this->StartLineIndex += CrLfIndex + NewLineStringLength
 	
 	Return S_OK
 	
@@ -268,92 +268,92 @@ Function HttpReaderReadLine( _
 End Function
 
 Function HttpReaderClear( _
-		ByVal pHttpReader As HttpReader Ptr _
+		ByVal this As HttpReader Ptr _
 	)As HRESULT
 	
-	If pHttpReader->StartLineIndex <> 0 Then
+	If this->StartLineIndex <> 0 Then
 		
-		If pHttpReader->BufferLength - pHttpReader->StartLineIndex <= 0 Then
-			pHttpReader->Buffer[0] = 0
-			pHttpReader->BufferLength = 0
+		If this->BufferLength - this->StartLineIndex <= 0 Then
+			this->Buffer[0] = 0
+			this->BufferLength = 0
 		Else
 			RtlMoveMemory( _
-				@pHttpReader->Buffer, _
-				@pHttpReader->Buffer[pHttpReader->StartLineIndex], _
-				HttpReader.MaxBufferLength - pHttpReader->StartLineIndex + 1 _
+				@this->Buffer, _
+				@this->Buffer[this->StartLineIndex], _
+				HttpReader.MaxBufferLength - this->StartLineIndex + 1 _
 			)
-			pHttpReader->BufferLength -= pHttpReader->StartLineIndex
+			this->BufferLength -= this->StartLineIndex
 		End If
 		
-		pHttpReader->StartLineIndex = 0
+		this->StartLineIndex = 0
 	End If
 	
-	pHttpReader->LinesBuffer[0] = 0
-	pHttpReader->LinesBufferLength = 0
-	pHttpReader->IsAllBytesReaded = False
-	pHttpReader->StartLineIndex = 0
+	this->LinesBuffer[0] = 0
+	this->LinesBufferLength = 0
+	this->IsAllBytesReaded = False
+	this->StartLineIndex = 0
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderGetBaseStream( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal ppResult As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
-	If pHttpReader->pIStream = NULL Then
+	If this->pIStream = NULL Then
 		*ppResult = NULL
 		Return S_FALSE
 	End If
 	
-	IBaseStream_AddRef(pHttpReader->pIStream)
-	*ppResult = pHttpReader->pIStream
+	IBaseStream_AddRef(this->pIStream)
+	*ppResult = this->pIStream
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderSetBaseStream( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If pHttpReader->pIStream <> NULL Then
-		IBaseStream_Release(pHttpReader->pIStream)
+	If this->pIStream <> NULL Then
+		IBaseStream_Release(this->pIStream)
 	End If
 	
 	If pIStream <> NULL Then
 		IBaseStream_AddRef(pIStream)
 	End If
 	
-	pHttpReader->pIStream = pIStream
+	this->pIStream = pIStream
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderGetPreloadedBytes( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	*pPreloadedBytesLength = pHttpReader->BufferLength - pHttpReader->StartLineIndex
-	*ppPreloadedBytes = @pHttpReader->Buffer[pHttpReader->StartLineIndex]
+	*pPreloadedBytesLength = this->BufferLength - this->StartLineIndex
+	*ppPreloadedBytes = @this->Buffer[this->StartLineIndex]
 	
 	Return S_OK
 	
 End Function
 
 Function HttpReaderGetRequestedBytes( _
-		ByVal pHttpReader As HttpReader Ptr, _
+		ByVal this As HttpReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	*pRequestedBytesLength = pHttpReader->BufferLength
-	*ppRequestedBytes = @pHttpReader->Buffer
+	*pRequestedBytesLength = this->BufferLength
+	*ppRequestedBytes = @this->Buffer
 	
 	Return S_OK
 	

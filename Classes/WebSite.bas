@@ -43,31 +43,31 @@ Dim Shared GlobalWebSiteVirtualTable As IWebSiteVirtualTable = Type( _
 )
 
 Sub InitializeWebSite( _
-		ByVal pWebSite As WebSite Ptr _
+		ByVal this As WebSite Ptr _
 	)
 	
-	pWebSite->pVirtualTable = @GlobalWebSiteVirtualTable
-	pWebSite->ReferenceCounter = 0
-	pWebSite->pHostName = NULL
-	pWebSite->pPhysicalDirectory = NULL
-	pWebSite->pExecutableDirectory = NULL
-	pWebSite->pVirtualPath = NULL
-	pWebSite->IsMoved = False
-	pWebSite->pMovedUrl = NULL
+	this->pVirtualTable = @GlobalWebSiteVirtualTable
+	this->ReferenceCounter = 0
+	this->pHostName = NULL
+	this->pPhysicalDirectory = NULL
+	this->pExecutableDirectory = NULL
+	this->pVirtualPath = NULL
+	this->IsMoved = False
+	this->pMovedUrl = NULL
 	
 End Sub
 
 Function InitializeWebSiteOfIWebSite( _
-		ByVal pWebSite As WebSite Ptr _
+		ByVal this As WebSite Ptr _
 	)As IWebSite Ptr
 	
-	InitializeWebSite(pWebSite)
-	pWebSite->ExistsInStack = True
+	InitializeWebSite(this)
+	this->ExistsInStack = True
 	
 	Dim pIWebSite As IWebSite Ptr = Any
 	
 	WebSiteQueryInterface( _
-		pWebSite, @IID_IWebSite, @pIWebSite _
+		this, @IID_IWebSite, @pIWebSite _
 	)
 	
 	Return pIWebSite
@@ -75,130 +75,130 @@ Function InitializeWebSiteOfIWebSite( _
 End Function
 
 Function WebSiteQueryInterface( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IWebSite, riid) Then
-		*ppv = @pWebSite->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @pWebSite->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 	
-	WebSiteAddRef(pWebSite)
+	WebSiteAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteAddRef( _
-		ByVal pWebSite As WebSite Ptr _
+		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	pWebSite->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pWebSite->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function WebSiteRelease( _
-		ByVal pWebSite As WebSite Ptr _
+		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	pWebSite->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pWebSite->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		If pWebSite->ExistsInStack = False Then
-			HeapFree(GetProcessHeap(), 0, pWebSite)
+		If this->ExistsInStack = False Then
+			HeapFree(GetProcessHeap(), 0, this)
 		End If
 		
 		Return 0
 	End If
 	
-	Return pWebSite->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function WebSiteGetHostName( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal ppHost As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppHost = pWebSite->pHostName
+	*ppHost = this->pHostName
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteGetExecutableDirectory( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal ppExecutableDirectory As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppExecutableDirectory = pWebSite->pExecutableDirectory
+	*ppExecutableDirectory = this->pExecutableDirectory
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteGetSitePhysicalDirectory( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal ppPhysicalDirectory As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppPhysicalDirectory = pWebSite->pPhysicalDirectory
+	*ppPhysicalDirectory = this->pPhysicalDirectory
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteGetVirtualPath( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal ppVirtualPath As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppVirtualPath = pWebSite->pVirtualPath
+	*ppVirtualPath = this->pVirtualPath
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteGetIsMoved( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal pIsMoved As Boolean Ptr _
 	)As HRESULT
 	
-	*pIsMoved = pWebSite->IsMoved
+	*pIsMoved = this->IsMoved
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteGetMovedUrl( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal ppMovedUrl As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppMovedUrl = pWebSite->pMovedUrl
+	*ppMovedUrl = this->pMovedUrl
 	
 	Return S_OK
 	
 End Function
 
 Function WebSiteMapPath( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal Path As WString Ptr, _
 		ByVal pResult As WString Ptr _
 	)As HRESULT
 	
-	lstrcpy(pResult, pWebSite->pPhysicalDirectory)
+	lstrcpy(pResult, this->pPhysicalDirectory)
 	Dim BufferLength As Integer = lstrlen(pResult)
 	
 	If pResult[BufferLength - 1] <> Characters.ReverseSolidus Then
@@ -227,7 +227,7 @@ End Function
 
 ' TODO Убрать манипуляцию данными объекта, использовать интерфейс
 Function WebSiteGetRequestedFile( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal FilePath As WString Ptr, _
 		ByVal ForReading As FileAccess, _
 		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
@@ -246,7 +246,7 @@ Function WebSiteGetRequestedFile( _
 		lstrcpy(pRequestedFile->FilePath, FilePath)
 		
 		WebSiteMapPath( _
-			pWebSite, _
+			this, _
 			@pRequestedFile->FilePath, _
 			@pRequestedFile->PathTranslated _
 		)
@@ -278,7 +278,7 @@ Function WebSiteGetRequestedFile( _
 			lstrcat(@pRequestedFile->FilePath, DefaultFilename)
 			
 			WebSiteMapPath( _
-				pWebSite, _
+				this, _
 				@pRequestedFile->FilePath, _
 				@pRequestedFile->PathTranslated _
 			)
@@ -315,7 +315,7 @@ Function WebSiteGetRequestedFile( _
 		lstrcat(@pRequestedFile->FilePath, @DefaultFilename)
 		
 		WebSiteMapPath( _
-			pWebSite, _
+			this, _
 			@pRequestedFile->FilePath, _
 			@pRequestedFile->PathTranslated _
 		)
@@ -338,7 +338,7 @@ Function WebSiteGetRequestedFile( _
 End Function
 
 Function WebSiteNeedCgiProcessing( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal path As WString Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
@@ -354,7 +354,7 @@ Function WebSiteNeedCgiProcessing( _
 End Function
 
 Function WebSiteNeedDllProcessing( _
-		ByVal pWebSite As WebSite Ptr, _
+		ByVal this As WebSite Ptr, _
 		ByVal path As WString Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT

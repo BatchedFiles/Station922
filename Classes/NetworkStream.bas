@@ -22,21 +22,21 @@ Sub InitializeNetworkStreamVirtualTable()
 End Sub
 
 Sub InitializeNetworkStream( _
-		ByVal pStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)
 	
-	pStream->pVirtualTable = @GlobalNetworkStreamVirtualTable
-	pStream->ReferenceCounter = 0
-	pStream->m_Socket = INVALID_SOCKET
+	this->pVirtualTable = @GlobalNetworkStreamVirtualTable
+	this->ReferenceCounter = 0
+	this->m_Socket = INVALID_SOCKET
 	
 End Sub
 
 Sub UnInitializeNetworkStream( _
-		ByVal pStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)
 	
-	If pStream->m_Socket <> INVALID_SOCKET Then
-		CloseSocketConnection(pStream->m_Socket)
+	If this->m_Socket <> INVALID_SOCKET Then
+		CloseSocketConnection(this->m_Socket)
 	End If
 	
 End Sub
@@ -44,19 +44,19 @@ End Sub
 Function CreateNetworkStream( _
 	)As NetworkStream Ptr
 	
-	Dim pStream As NetworkStream Ptr = HeapAlloc( _
+	Dim this As NetworkStream Ptr = HeapAlloc( _
 		GetProcessHeap(), _
 		0, _
 		SizeOf(NetworkStream) _
 	)
 	
-	If pStream = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
-	InitializeNetworkStream(pStream)
+	InitializeNetworkStream(this)
 	
-	Return pStream
+	Return this
 	
 End Function
 
@@ -71,19 +71,19 @@ Sub DestroyNetworkStream( _
 End Sub
 
 Function NetworkStreamQueryInterface( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_INetworkStream, riid) Then
-		*ppv = @pNetworkStream->pVirtualTable
+		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IBaseStream, riid) Then
-			*ppv = @pNetworkStream->pVirtualTable
+			*ppv = @this->pVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @pNetworkStream->pVirtualTable
+				*ppv = @this->pVirtualTable
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -91,41 +91,41 @@ Function NetworkStreamQueryInterface( _
 		End If
 	End If
 	
-	NetworkStreamAddRef(pNetworkStream)
+	NetworkStreamAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function NetworkStreamAddRef( _
-		ByVal pNetworkStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	pNetworkStream->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pNetworkStream->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function NetworkStreamRelease( _
-		ByVal pNetworkStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	pNetworkStream->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pNetworkStream->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyNetworkStream(pNetworkStream)
+		DestroyNetworkStream(this)
 		
 		Return 0
 	End If
 	
-	Return pNetworkStream->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function NetworkStreamCanRead( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
@@ -136,7 +136,7 @@ Function NetworkStreamCanRead( _
 End Function
 
 Function NetworkStreamCanSeek( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
@@ -147,7 +147,7 @@ Function NetworkStreamCanSeek( _
 End Function
 
 Function NetworkStreamCanWrite( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
@@ -158,7 +158,7 @@ Function NetworkStreamCanWrite( _
 End Function
 
 Function NetworkStreamFlush( _
-		ByVal pNetworkStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)As HRESULT
 	
 	Return S_OK
@@ -166,7 +166,7 @@ Function NetworkStreamFlush( _
 End Function
 
 Function NetworkStreamGetLength( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As LongInt Ptr _
 	)As HRESULT
 	
@@ -177,7 +177,7 @@ Function NetworkStreamGetLength( _
 End Function
 
 Function NetworkStreamPosition( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As LongInt Ptr _
 	)As HRESULT
 	
@@ -188,7 +188,7 @@ Function NetworkStreamPosition( _
 End Function
 
 Function StartRecvOverlapped( _
-		ByVal pNetworkStream As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr _
 	)As HRESULT
 	
 	' memset(@pIrcClient->RecvOverlapped, 0, SizeOf(WSAOVERLAPPED))
@@ -223,14 +223,14 @@ Function StartRecvOverlapped( _
 End Function
 
 Function NetworkStreamRead( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal buffer As UByte Ptr, _
 		ByVal offset As Integer, _
 		ByVal Count As Integer, _
 		ByVal pReadedBytes As LongInt Ptr _
 	)As HRESULT
 	
-	Dim ReadedBytes As Integer = recv(pNetworkStream->m_Socket, @buffer[offset], Count, 0)
+	Dim ReadedBytes As Integer = recv(this->m_Socket, @buffer[offset], Count, 0)
 	
 	Select Case ReadedBytes
 		
@@ -252,14 +252,14 @@ Function NetworkStreamRead( _
 End Function
 
 Function NetworkStreamWrite( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As UByte Ptr, _
 		ByVal Offset As Integer, _
 		ByVal Count As Integer, _
 		ByVal pWritedBytes As Integer Ptr _
 	)As HRESULT
 	
-	Dim WritedBytes As Integer = send(pNetworkStream->m_Socket, @Buffer[Offset], Count - Offset, 0)
+	Dim WritedBytes As Integer = send(this->m_Socket, @Buffer[Offset], Count - Offset, 0)
 	
 	If WritedBytes = SOCKET_ERROR Then	
 		Dim intError As Integer = WSAGetLastError()
@@ -274,7 +274,7 @@ Function NetworkStreamWrite( _
 End Function
 
 Function NetworkStreamSeek( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal offset As LongInt, _
 		ByVal origin As SeekOrigin _
 	)As HRESULT
@@ -284,7 +284,7 @@ Function NetworkStreamSeek( _
 End Function
 
 Function NetworkStreamSetLength( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal length As LongInt _
 	)As HRESULT
 	
@@ -293,26 +293,26 @@ Function NetworkStreamSetLength( _
 End Function
 
 Function NetworkStreamGetSocket( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
 	
-	*pResult = pNetworkStream->m_Socket
+	*pResult = this->m_Socket
 	
 	Return S_OK
 	
 End Function
 	
 Function NetworkStreamSetSocket( _
-		ByVal pNetworkStream As NetworkStream Ptr, _
+		ByVal this As NetworkStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
 	
-	If pNetworkStream->m_Socket <> INVALID_SOCKET Then
-		CloseSocketConnection(pNetworkStream->m_Socket)
+	If this->m_Socket <> INVALID_SOCKET Then
+		CloseSocketConnection(this->m_Socket)
 	End If
 	
-	pNetworkStream->m_Socket = sock
+	this->m_Socket = sock
 	
 	Return S_OK
 	

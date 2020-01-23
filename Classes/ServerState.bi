@@ -32,51 +32,51 @@ Type ServerState
 End Type
 
 Declare Function ServerStateDllCgiGetRequestHeader( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal Value As WString Ptr, _
 	ByVal BufferLength As Integer, _
 	ByVal HeaderIndex As HttpRequestHeaders _
 )As Integer
 
 Declare Function ServerStateDllCgiGetHttpMethod( _
-	ByVal objState As ServerState Ptr _
+	ByVal this As ServerState Ptr _
 )As HttpMethods
 
 Declare Function ServerStateDllCgiGetHttpVersion( _
-	ByVal objState As ServerState Ptr _
+	ByVal this As ServerState Ptr _
 )As HttpVersions
 
 Declare Sub ServerStateDllCgiSetStatusCode( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal Code As Integer _
 )
 
 Declare Sub ServerStateDllCgiSetStatusDescription( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal Description As WString Ptr _
 )
 
 Declare Sub ServerStateDllCgiSetResponseHeader( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal HeaderIndex As HttpResponseHeaders, _
 	ByVal Value As WString Ptr _
 )
 
 Declare Function ServerStateDllCgiWriteData( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal Buffer As Any Ptr, _
 	ByVal BytesCount As Integer _
 )As Boolean
 
 Declare Function ServerStateDllCgiReadData( _
-	ByVal objState As ServerState Ptr, _
+	ByVal this As ServerState Ptr, _
 	ByVal Buffer As Any Ptr, _
 	ByVal BufferLength As Integer, _
 	ByVal ReadedBytesCount As Integer Ptr _
 )As Boolean
 
 Declare Function ServerStateDllCgiGetHtmlSafeString( _
-	ByVal objState As IServerState Ptr, _
+	ByVal this As IServerState Ptr, _
 	ByVal Buffer As WString Ptr, _
 	ByVal BufferLength As Integer, _
 	ByVal HtmlSafe As WString Ptr, _

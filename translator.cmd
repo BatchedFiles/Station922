@@ -186,7 +186,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 		)
 	)
 	for %%I IN (%AllCompiledFiles%) do (
-		if "%%~xI"==".rc" (
+		if "%%~xI"==".RC" (
 			call :ResourceCompiler %%I
 		)
 	)

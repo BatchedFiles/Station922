@@ -12,7 +12,7 @@
 #include "WebUtils.bi"
 
 Declare Function AddRequestHeader( _
-	ByVal pClientRequest As ClientRequest Ptr, _
+	ByVal this As ClientRequest Ptr, _
 	ByVal Header As WString Ptr, _
 	ByVal Value As WString Ptr _
 )As Integer
@@ -44,28 +44,28 @@ Dim Shared GlobalClientRequestStringableVirtualTable As IStringableVirtualTable 
 )
 
 Sub InitializeClientRequest( _
-		ByVal pClientRequest As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr _
 	)
 	
-	pClientRequest->pClientRequestVirtualTable = @GlobalClientRequestVirtualTable
-	pClientRequest->pStringableVirtualTable = @GlobalClientRequestStringableVirtualTable
-	pClientRequest->ReferenceCounter = 0
+	this->pClientRequestVirtualTable = @GlobalClientRequestVirtualTable
+	this->pStringableVirtualTable = @GlobalClientRequestStringableVirtualTable
+	this->ReferenceCounter = 0
 	
-	ZeroMemory(@pClientRequest->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
-	pClientRequest->HttpMethod = HttpMethods.HttpGet
-	InitializeURI(@pClientRequest->ClientURI)
-	pClientRequest->HttpVersion = HttpVersions.Http11
-	pClientRequest->KeepAlive = False
-	ZeroMemory(@pClientRequest->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
-	pClientRequest->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
-	pClientRequest->RequestByteRange.FirstBytePosition = 0
-	pClientRequest->RequestByteRange.LastBytePosition = 0
-	pClientRequest->ContentLength = 0
+	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
+	this->HttpMethod = HttpMethods.HttpGet
+	InitializeURI(@this->ClientURI)
+	this->HttpVersion = HttpVersions.Http11
+	this->KeepAlive = False
+	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
+	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
+	this->RequestByteRange.FirstBytePosition = 0
+	this->RequestByteRange.LastBytePosition = 0
+	this->ContentLength = 0
 	
 End Sub
 
 Sub UnInitializeClientRequest( _
-		ByVal pClientRequest As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr _
 	)
 	
 End Sub
@@ -100,19 +100,19 @@ Sub DestroyClientRequest( _
 End Sub
 
 Function ClientRequestQueryInterface( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
 	If IsEqualIID(@IID_IClientRequest, riid) Then
-		*ppv = @pClientRequest->pClientRequestVirtualTable
+		*ppv = @this->pClientRequestVirtualTable
 	Else
 		If IsEqualIID(@IID_IStringable, riid) Then
-			*ppv = @pClientRequest->pStringableVirtualTable
+			*ppv = @this->pStringableVirtualTable
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @pClientRequest->pClientRequestVirtualTable
+				*ppv = @this->pClientRequestVirtualTable
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -120,41 +120,41 @@ Function ClientRequestQueryInterface( _
 		End If
 	End If
 	
-	ClientRequestAddRef(pClientRequest)
+	ClientRequestAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestAddRef( _
-		ByVal pClientRequest As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	pClientRequest->ReferenceCounter += 1
+	this->ReferenceCounter += 1
 	
-	Return pClientRequest->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function ClientRequestRelease( _
-		ByVal pClientRequest As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	pClientRequest->ReferenceCounter -= 1
+	this->ReferenceCounter -= 1
 	
-	If pClientRequest->ReferenceCounter = 0 Then
+	If this->ReferenceCounter = 0 Then
 		
-		DestroyClientRequest(pClientRequest)
+		DestroyClientRequest(this)
 		
 		Return 0
 	End If
 	
-	Return pClientRequest->ReferenceCounter
+	Return this->ReferenceCounter
 	
 End Function
 
 Function ClientRequestReadRequest( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
 	
@@ -201,14 +201,14 @@ Function ClientRequestReadRequest( _
 	Loop While pSpace[0] = Characters.WhiteSpace
 	
 	' Теперь в pRequestedLine содержится имя метода
-	Dim GetHttpMethodResult As Boolean = GetHttpMethod(pRequestedLine, @pClientRequest->HttpMethod)
+	Dim GetHttpMethodResult As Boolean = GetHttpMethod(pRequestedLine, @this->HttpMethod)
 	
 	If GetHttpMethodResult = False Then
 		Return CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
 	End If
 	
 	' Здесь начинается Url
-	pClientRequest->ClientURI.pUrl = pSpace
+	this->ClientURI.pUrl = pSpace
 	
 	' Второй пробел
 	pSpace = StrChr(pSpace, Characters.WhiteSpace)
@@ -221,62 +221,62 @@ Function ClientRequestReadRequest( _
 		Loop While pSpace[0] = Characters.WhiteSpace
 		
 		' Третий пробел
-		If StrChr(pClientRequest->ClientURI.pUrl, Characters.WhiteSpace) <> 0 Then
+		If StrChr(this->ClientURI.pUrl, Characters.WhiteSpace) <> 0 Then
 			' Слишком много пробелов
 			Return CLIENTREQUEST_E_BADREQUEST
 		End If
 		
 	End If
 	
-	Dim GetHttpVersionResult As Boolean = GetHttpVersion(pSpace, @pClientRequest->HttpVersion)
+	Dim GetHttpVersionResult As Boolean = GetHttpVersion(pSpace, @this->HttpVersion)
 	
 	If GetHttpVersionResult = False Then
 		Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 	End If
 	
-	Select Case pClientRequest->HttpVersion
+	Select Case this->HttpVersion
 		
 		Case HttpVersions.Http11
-			pClientRequest->KeepAlive = True ' Для версии 1.1 это по умолчанию
+			this->KeepAlive = True ' Для версии 1.1 это по умолчанию
 			
 	End Select
 	
-	Dim ClientURILength As Integer = lstrlen(pClientRequest->ClientURI.pUrl)
+	Dim ClientURILength As Integer = lstrlen(this->ClientURI.pUrl)
 	
 	If ClientURILength > Station922Uri.MaxUrlLength Then
 		Return CLIENTREQUEST_E_URITOOLARGE
 	End If
 	
 	' Если есть «?», значит там строка запроса
-	Dim wQS As WString Ptr = StrChr(pClientRequest->ClientURI.pUrl, Characters.QuestionMark)
+	Dim wQS As WString Ptr = StrChr(this->ClientURI.pUrl, Characters.QuestionMark)
 	If wQS = 0 Then
-		lstrcpy(@pClientRequest->ClientURI.Path, pClientRequest->ClientURI.pUrl)
+		lstrcpy(@this->ClientURI.Path, this->ClientURI.pUrl)
 	Else
-		pClientRequest->ClientURI.pQueryString = wQS + 1
+		this->ClientURI.pQueryString = wQS + 1
 		' Получение пути
 		wQS[0] = 0 ' убрать вопросительный знак
-		lstrcpy(@pClientRequest->ClientURI.Path, pClientRequest->ClientURI.pUrl)
+		lstrcpy(@this->ClientURI.Path, this->ClientURI.pUrl)
 		wQS[0] = Characters.QuestionMark ' вернуть, чтобы не портить Url
 	End If
 	
 	Dim PathLength As Integer = Any
 	
-	If StrChr(@pClientRequest->ClientURI.Path, PercentSign) = 0 Then
+	If StrChr(@this->ClientURI.Path, PercentSign) = 0 Then
 		PathLength = ClientURILength
 	Else
 		' Раскодировка пути
 		Dim DecodedPath As WString * (Station922Uri.MaxUrlLength + 1) = Any
-		PathLength = pClientRequest->ClientURI.PathDecode(@DecodedPath)
-		lstrcpy(@pClientRequest->ClientURI.Path, @DecodedPath)
+		PathLength = this->ClientURI.PathDecode(@DecodedPath)
+		lstrcpy(@this->ClientURI.Path, @DecodedPath)
 	End If
 	
-	If FAILED(ContainsBadCharSequence(@pClientRequest->ClientURI.Path, PathLength)) Then
+	If FAILED(ContainsBadCharSequence(@this->ClientURI.Path, PathLength)) Then
 		Return CLIENTREQUEST_E_BADPATH
 	End If
 	
 	' Получить все заголовки запроса
 	Do
-		Dim pLine As WString Ptr = Any ' @pClientRequest->RequestHeaderBuffer[pClientRequest->RequestHeaderBufferLength]
+		Dim pLine As WString Ptr = Any ' @this->RequestHeaderBuffer[this->RequestHeaderBufferLength]
 		Dim LineLength As Integer = Any
 		
 		hrReadLine = IHttpReader_ReadLine( _
@@ -308,7 +308,7 @@ Function ClientRequestReadRequest( _
 			
 		End If
 		
-		' pClientRequest->RequestHeaderBufferLength += LineLength + 1
+		' this->RequestHeaderBufferLength += LineLength + 1
 		
 		If LineLength = 0 Then
 			' Клиент отправил все данные, можно приступать к обработке
@@ -323,46 +323,46 @@ Function ClientRequestReadRequest( _
 				pColon += 1
 			Loop While pColon[0] = Characters.WhiteSpace
 			
-			AddRequestHeader(pClientRequest, pLine, pColon)
+			AddRequestHeader(this, pLine, pColon)
 			
 		End If
 		
 	Loop
 	
 	Scope
-		If StrStrI(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderConnection), @CloseString) <> 0 Then
-			pClientRequest->KeepAlive = False
+		If StrStrI(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @CloseString) <> 0 Then
+			this->KeepAlive = False
 		Else
-			If StrStrI(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderConnection), @"Keep-Alive") <> 0 Then
-				pClientRequest->KeepAlive = True
+			If StrStrI(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @"Keep-Alive") <> 0 Then
+				this->KeepAlive = True
 			End If
 		End If
 			
-		If StrStrI(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @GzipString) <> 0 Then
-			pClientRequest->RequestZipModes(ZipModes.GZip) = True
+		If StrStrI(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @GzipString) <> 0 Then
+			this->RequestZipModes(ZipModes.GZip) = True
 		End If
 		
-		If StrStrI(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @DeflateString) <> 0 Then
-			pClientRequest->RequestZipModes(ZipModes.Deflate) = True
+		If StrStrI(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @DeflateString) <> 0 Then
+			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
 			
 		' Убрать UTC и заменить на GMT
 		'If-Modified-Since: Thu, 24 Mar 2016 16:10:31 UTC
 		'If-Modified-Since: Tue, 11 Mar 2014 20:07:57 GMT
-		Dim wUTC As WString Ptr = StrStr(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), "UTC")
+		Dim wUTC As WString Ptr = StrStr(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), "UTC")
 		
 		If wUTC <> 0 Then
 			lstrcpy(wUTC, "GMT")
 		End If
 		
-		wUTC = StrStr(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), "UTC")
+		wUTC = StrStr(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), "UTC")
 		
 		If wUTC <> 0 Then
 			lstrcpy(wUTC, "GMT")
 		End If
 		
-		If lstrlen(pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderRange)) > 0 Then
-			Dim wHeaderRange As WString Ptr = pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderRange)
+		If lstrlen(this->RequestHeaders(HttpRequestHeaders.HeaderRange)) > 0 Then
+			Dim wHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 			
 			' TODO Обрабатывать несколько байтовых диапазонов
 			Dim wCommaChar As WString Ptr = StrChr(wHeaderRange, Characters.Comma)
@@ -383,16 +383,16 @@ Function ClientRequestReadRequest( _
 					wHyphenMinusChar[0] = 0
 					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
 					
-					If StrToInt64Ex(wStartIndex, STIF_DEFAULT, @pClientRequest->RequestByteRange.FirstBytePosition) <> 0 Then
-						pClientRequest->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
+					If StrToInt64Ex(wStartIndex, STIF_DEFAULT, @this->RequestByteRange.FirstBytePosition) <> 0 Then
+						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
 					End If
 					
-					If StrToInt64Ex(wEndIndex, STIF_DEFAULT, @pClientRequest->RequestByteRange.LastBytePosition) <> 0 Then
+					If StrToInt64Ex(wEndIndex, STIF_DEFAULT, @this->RequestByteRange.LastBytePosition) <> 0 Then
 						
-						If pClientRequest->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
-							pClientRequest->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
+						If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
+							this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
 						Else
-							pClientRequest->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
+							this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
 						End If
 						
 					End If
@@ -409,10 +409,10 @@ Function ClientRequestReadRequest( _
 		
 	End Scope
 	
-	Dim pHeaderContentLength As WString Ptr = pClientRequest->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
+	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
 	
 	If pHeaderContentLength <> NULL Then
-		StrToInt64Ex(pHeaderContentLength, STIF_DEFAULT, @pClientRequest->ContentLength)
+		StrToInt64Ex(pHeaderContentLength, STIF_DEFAULT, @this->ContentLength)
 	End If
 	
 	Return S_OK
@@ -420,96 +420,96 @@ Function ClientRequestReadRequest( _
 End Function	
 
 Function ClientRequestGetHttpMethod( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pHttpMethod As HttpMethods Ptr _
 	)As HRESULT
 	
-	*pHttpMethod = pClientRequest->HttpMethod
+	*pHttpMethod = this->HttpMethod
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetUri( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
-	*pUri = pClientRequest->ClientURI
+	*pUri = this->ClientURI
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetHttpVersion( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
 	
-	*pHttpVersion = pClientRequest->HttpVersion
+	*pHttpVersion = this->HttpVersion
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetHttpHeader( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppHeader = pClientRequest->RequestHeaders(HeaderIndex)
+	*ppHeader = this->RequestHeaders(HeaderIndex)
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetKeepAlive( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 	
-	*pKeepAlive = pClientRequest->KeepAlive
+	*pKeepAlive = this->KeepAlive
 	
 	Return S_OK
 End Function
 
 Function ClientRequestGetContentLength( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
 	
-	*pContentLength = pClientRequest->ContentLength
+	*pContentLength = this->ContentLength
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetByteRange( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
 	
-	*pRange = pClientRequest->RequestByteRange
+	*pRange = this->RequestByteRange
 	
 	Return S_OK
 	
 End Function
 
 Function ClientRequestGetZipMode( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
 	
-	*pSupported = pClientRequest->RequestZipModes(ZipIndex)
+	*pSupported = this->RequestZipModes(ZipIndex)
 	
 	Return S_OK
 	
 End Function
 
 Function AddRequestHeader( _
-		ByVal pClientRequest As ClientRequest Ptr, _
+		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
 		ByVal Value As WString Ptr _
 	)As Integer
@@ -521,7 +521,7 @@ Function AddRequestHeader( _
 		Return -1
 	End If
 	
-	pClientRequest->RequestHeaders(HeaderIndex) = Value
+	this->RequestHeaders(HeaderIndex) = Value
 	
 	Return HeaderIndex
 	
@@ -533,10 +533,10 @@ Function ClientRequestStringableQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pClientRequest As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
+	Dim this As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
 	
 	Return ClientRequestQueryInterface( _
-		pClientRequest, riid, ppv _
+		this, riid, ppv _
 	)
 	
 End Function
@@ -545,9 +545,9 @@ Function ClientRequestStringableAddRef( _
 		ByVal pClientRequestStringable As ClientRequest Ptr _
 	)As ULONG
 	
-	Dim pClientRequest As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
+	Dim this As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
 	
-	Return ClientRequestAddRef(pClientRequest)
+	Return ClientRequestAddRef(this)
 	
 End Function
 
@@ -555,9 +555,9 @@ Function ClientRequestStringableRelease( _
 		ByVal pClientRequestStringable As ClientRequest Ptr _
 	)As ULONG
 	
-	Dim pClientRequest As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
+	Dim this As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
 	
-	Return ClientRequestRelease(pClientRequest)
+	Return ClientRequestRelease(this)
 	
 End Function
 
@@ -567,7 +567,7 @@ Function ClientRequestStringableToString( _
 		ByVal ppResult As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim pClientRequest As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
+	Dim this As ClientRequest Ptr = ContainerOf(pClientRequestStringable, ClientRequest, pStringableVirtualTable)
 	
 	Return S_OK
 	

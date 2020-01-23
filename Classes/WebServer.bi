@@ -57,10 +57,4 @@ Declare Function WebServerStop( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
 
-#define WebServer_NonVirtualQueryInterface(pIWebServer, riid, ppv) WebServerQueryInterface(CPtr(WebServer Ptr, pIWebServer), riid, ppv)
-#define WebServer_NonVirtualAddRef(pIWebServer) WebServerAddRef(CPtr(WebServer Ptr, pIWebServer))
-#define WebServer_NonVirtualRelease(pIWebServer) WebServerRelease(CPtr(WebServer Ptr, pIWebServer))
-#define WebServer_NonVirtualRun(pIWebServer) WebServerRun(CPtr(WebServer Ptr, pIWebServer))
-#define WebServer_NonVirtualStop(pIWebServer) WebServerStop(CPtr(WebServer Ptr, pIWebServer))
-
 #endif
