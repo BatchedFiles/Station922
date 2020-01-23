@@ -87,6 +87,10 @@ Type IClientRequestVirtualTable
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
 	
+	Dim Clear As Function( _
+		ByVal this As IClientRequest Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IClientRequest_
@@ -105,5 +109,6 @@ End Type
 #define IClientRequest_GetContentLength(this, pContentLength) (this)->pVirtualTable->GetContentLength(this, pContentLength)
 #define IClientRequest_GetByteRange(this, pRange) (this)->pVirtualTable->GetByteRange(this, pRange)
 #define IClientRequest_GetZipMode(this, ZipIndex, pSupported) (this)->pVirtualTable->GetZipMode(this, ZipIndex, pSupported)
+#define IClientRequest_Clear(this) (this)->pVirtualTable->Clear(this)
 
 #endif

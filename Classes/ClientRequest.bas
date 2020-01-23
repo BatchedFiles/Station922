@@ -31,7 +31,8 @@ Dim Shared GlobalClientRequestVirtualTable As IClientRequestVirtualTable = Type(
 	@ClientRequestGetKeepAlive, _
 	@ClientRequestGetContentLength, _
 	@ClientRequestGetByteRange, _
-	@ClientRequestGetZipMode _
+	@ClientRequestGetZipMode, _
+	@ClientRequestClear _
 )
 
 Dim Shared GlobalClientRequestStringableVirtualTable As IStringableVirtualTable = Type( _
@@ -507,6 +508,17 @@ Function ClientRequestGetZipMode( _
 	Return S_OK
 	
 End Function
+
+Function ClientRequestClear( _
+		ByVal this As ClientRequest Ptr _
+	)As HRESULT
+	
+	InitializeClientRequest(this)
+	
+	Return S_OK
+	
+End Function
+
 
 Function AddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _

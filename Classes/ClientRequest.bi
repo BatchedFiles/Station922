@@ -90,6 +90,10 @@ Declare Function ClientRequestGetZipMode( _
 	ByVal pSupported As Boolean Ptr _
 )As HRESULT
 
+Declare Function ClientRequestClear( _
+	ByVal this As ClientRequest Ptr _
+)As HRESULT
+
 Declare Function ClientRequestStringableQueryInterface( _
 	ByVal this As ClientRequest Ptr, _
 	ByVal riid As REFIID, _

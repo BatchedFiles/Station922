@@ -81,14 +81,4 @@ Declare Function HttpReaderGetRequestedBytes( _
 	ByVal ppRequestedBytes As UByte Ptr Ptr _
 )As HRESULT
 
-' #define HttpReader_NonVirtualQueryInterface(pIHttpReader, riid, ppv) HttpReaderQueryInterface(CPtr(HttpReader Ptr, pIHttpReader), riid, ppv)
-' #define HttpReader_NonVirtualAddRef(pIHttpReader) HttpReaderAddRef(CPtr(HttpReader Ptr, pIHttpReader))
-' #define HttpReader_NonVirtualRelease(pIHttpReader) HttpReaderRelease(CPtr(HttpReader Ptr, pIHttpReader))
-' #define HttpReader_NonVirtualReadLine(pIHttpReader, pLineLength, pLine) HttpReaderReadLine(CPtr(HttpReader Ptr, pIHttpReader), pLineLength, pLine)
-' #define HttpReader_NonVirtualClear(IHttpReader) HttpReaderClear(CPtr(HttpReader Ptr, pIHttpReader))
-' #define HttpReader_NonVirtualGetBaseStream(IHttpReader, ppResult) HttpReaderGetBaseStream(CPtr(HttpReader Ptr, pIHttpReader), ppResult)
-' #define HttpReader_NonVirtualSetBaseStream(IHttpReader, pIStream) HttpReaderSetBaseStream(CPtr(HttpReader Ptr, pIHttpReader), pIStream)
-' #define HttpReader_NonVirtualGetPreloadedBytes(IHttpReader, pPreloadedBytesLength, ppPreloadedBytes) HttpReaderGetPreloadedBytes(CPtr(HttpReader Ptr, pIHttpReader), pPreloadedBytesLength, ppPreloadedBytes)
-' #define HttpReader_NonVirtualGetRequestedBytes(IHttpReader, pRequestedBytesLength, ppRequestedBytes) HttpReaderGetRequestedBytes(CPtr(HttpReader Ptr, pIHttpReader), pRequestedBytesLength, ppRequestedBytes)
-
 #endif

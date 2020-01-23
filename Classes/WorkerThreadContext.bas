@@ -1,4 +1,10 @@
 ﻿#include "WorkerThreadContext.bi"
+#include "CreateInstance.bi"
+
+Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
+Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
+Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
+Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
 Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
@@ -91,6 +97,28 @@ Function CreateWorkerThreadContext( _
 	End If
 	
 	InitializeWorkerThreadContext(pContext)
+	
+	Dim hr As HRESULT = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_CLIENTREQUEST, _
+		@IID_IClientRequest, _
+		@pContext->pIRequest _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
+	
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_NETWORKSTREAM, _
+		@IID_INetworkStream, _
+		@pContext->pINetworkStream _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
 	
 	Return pContext
 	

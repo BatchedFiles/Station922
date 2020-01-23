@@ -20,7 +20,6 @@ Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
 
-Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
@@ -233,12 +232,7 @@ Function WebServerRun( _
 		)
 		
 		Dim pIClientRequest As IClientRequest Ptr = Any
-		Dim hrCreateClientRequest As HRESULT = CreateInstance( _
-			GetProcessHeap(), _
-			@CLSID_CLIENTREQUEST, _
-			@IID_IClientRequest, _
-			@pIClientRequest _
-		)
+		IWorkerThreadContext_GetClientRequest(pIContext, @pIClientRequest)
 		
 		Dim dwThreadId As DWORD = Any
 		Dim hThread As HANDLE = CreateThread( _
@@ -274,9 +268,7 @@ Function WebServerRun( _
 			
 		Else
 			
-			Dim FailedFlag As Boolean = FAILED(hrCreateThreadContext) OrElse _
-				FAILED(hrCreateClientRequest) OrElse _
-			hThread = NULL
+			Dim FailedFlag As Boolean = FAILED(hrCreateThreadContext) OrElse hThread = NULL
 			
 			If FailedFlag Then
 				INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
@@ -297,9 +289,7 @@ Function WebServerRun( _
 					)
 				End If
 				
-				If pIClientRequest <> NULL Then
-					IClientRequest_Release(pIClientRequest)
-				End If
+				IClientRequest_Release(pIClientRequest)
 				
 				If pIContext <> NULL Then
 					IWorkerThreadContext_Release(pIContext)
@@ -314,52 +304,39 @@ Function WebServerRun( _
 				SetReceiveTimeout(ClientSocket, ClientSocketReceiveTimeout)
 				
 				Dim pINetworkStream As INetworkStream Ptr = Any
-				hr = CreateInstance( _
-					GetProcessHeap(), _
-					@CLSID_NETWORKSTREAM, _
-					@IID_INetworkStream, _
-					@pINetworkStream _
-				)
-				If FAILED(hr) Then
-					
+				IWorkerThreadContext_GetNetworkStream(pIContext, @pINetworkStream)
+				
+				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+				
+				IWorkerThreadContext_SetRemoteAddress(pIContext, RemoteAddress)
+				IWorkerThreadContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
+				
+				IWorkerThreadContext_SetThreadId(pIContext, dwThreadId)
+				IWorkerThreadContext_SetThreadHandle(pIContext, hThread)
+				IWorkerThreadContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
+				
+				IWorkerThreadContext_SetWebSiteContainer(pIContext, pIWebSites)
+				
+				IWorkerThreadContext_SetThreadContextHeap(pIContext, this->hThreadContextHeap)
+				
+				IWorkerThreadContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
+				
+				Dim StartTicks As LARGE_INTEGER
+				QueryPerformanceCounter(@StartTicks)
+				
+				IWorkerThreadContext_SetStartTicks(pIContext, StartTicks)
+				
+				Dim dwResume As DWORD = ResumeThread(hThread)
+				If dwResume = -1 Then
+					' TODO Узнать ошибку и обработать
+					Dim dwError As DWORD = GetLastError()
 					CloseHandle(hThread)
-				Else
-					
-					INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-					
-					IWorkerThreadContext_SetNetworkStream(pIContext, pINetworkStream)
-					
-					IWorkerThreadContext_SetRemoteAddress(pIContext, RemoteAddress)
-					IWorkerThreadContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
-					
-					IWorkerThreadContext_SetThreadId(pIContext, dwThreadId)
-					IWorkerThreadContext_SetThreadHandle(pIContext, hThread)
-					IWorkerThreadContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
-					
-					IWorkerThreadContext_SetWebSiteContainer(pIContext, pIWebSites)
-					
-					IWorkerThreadContext_SetThreadContextHeap(pIContext, this->hThreadContextHeap)
-					
-					IWorkerThreadContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
-					
-					Dim StartTicks As LARGE_INTEGER
-					QueryPerformanceCounter(@StartTicks)
-					
-					IWorkerThreadContext_SetStartTicks(pIContext, StartTicks)
-					
-					IWorkerThreadContext_SetClientRequest(pIContext, pIClientRequest)
-					
-					Dim dwResume As DWORD = ResumeThread(hThread)
-					If dwResume = -1 Then
-						' TODO Узнать ошибку и обработать
-						Dim dwError As DWORD = GetLastError()
-						CloseHandle(hThread)
-					End If
-					
-					INetworkStream_Release(pINetworkStream)
-					IClientRequest_Release(pIClientRequest)
-					
+					IWorkerThreadContext_Release(pIContext)
 				End If
+				
+				INetworkStream_Release(pINetworkStream)
+				IClientRequest_Release(pIClientRequest)
+				
 			End If
 			
 		End If
