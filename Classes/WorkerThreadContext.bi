@@ -18,6 +18,8 @@ Type WorkerThreadContext
 	Dim pIWebSites As IWebSiteContainer Ptr
 	Dim pINetworkStream As INetworkStream Ptr
 	Dim pIRequest As IClientRequest Ptr
+	Dim pIHttpReader As IHttpReader Ptr
+	Dim pIResponse As IServerResponse Ptr
 	
 	Dim hThreadContextHeap As HANDLE
 	
@@ -155,6 +157,26 @@ Declare Function WorkerThreadContextGetClientRequest( _
 Declare Function WorkerThreadContextSetClientRequest( _
 	ByVal this As WorkerThreadContext Ptr, _
 	ByVal pIRequest As IClientRequest Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextGetServerResponse( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal ppIResponse As IServerResponse Ptr Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextSetServerResponse( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal pIResponse As IServerResponse Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextGetHttpReader( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal ppIHttpReader As IHttpReader Ptr Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextSetHttpReader( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal pIHttpReader As IHttpReader Ptr _
 )As HRESULT
 
 #endif

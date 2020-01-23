@@ -2,7 +2,9 @@
 #define IWORKERTHREADCONTEXT_BI
 
 #include "IClientRequest.bi"
+#include "IHttpReader.bi"
 #include "INetworkStream.bi"
+#include "IServerResponse.bi"
 #include "IWebSiteContainer.bi"
 
 Type IWorkerThreadContext As IWorkerThreadContext_
@@ -124,6 +126,26 @@ Type IWorkerThreadContextVirtualTable
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
+	Dim GetServerResponse As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal ppIResponse As IServerResponse Ptr Ptr _
+	)As HRESULT
+	
+	Dim SetServerResponse As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal pIResponse As IServerResponse Ptr _
+	)As HRESULT
+	
+	Dim GetHttpReader As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal ppIHttpReader As IHttpReader Ptr Ptr _
+	)As HRESULT
+	
+	Dim SetHttpReader As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal pIHttpReader As IHttpReader Ptr _
+	)As HRESULT
+	
 	' Dim hInput As HANDLE
 	' Dim hOutput As HANDLE
 	' Dim hError As HANDLE
@@ -159,5 +181,9 @@ End Type
 #define IWorkerThreadContext_SetStartTicks(this, StartTicks) (this)->pVirtualTable->SetStartTicks(this, StartTicks)
 #define IWorkerThreadContext_GetClientRequest(this, ppIRequest) (this)->pVirtualTable->GetClientRequest(this, ppIRequest)
 #define IWorkerThreadContext_SetClientRequest(this, pIRequest) (this)->pVirtualTable->SetClientRequest(this, pIRequest)
+#define IWorkerThreadContext_GetServerResponse(this, ppIResponse) (this)->pVirtualTable->GetServerResponse(this, ppIResponse)
+#define IWorkerThreadContext_SetServerResponse(this, pIResponse) (this)->pVirtualTable->SetServerResponse(this, pIResponse)
+#define IWorkerThreadContext_GetHttpReader(this, ppIHttpReader) (this)->pVirtualTable->GetHttpReader(this, ppIHttpReader)
+#define IWorkerThreadContext_SetHttpReader(this, pIHttpReader) (this)->pVirtualTable->SetHttpReader(this, pIHttpReader)
 
 #endif

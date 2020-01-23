@@ -513,7 +513,17 @@ Function ClientRequestClear( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
-	InitializeClientRequest(this)
+	' TODO Удалить дублирование инициализации
+	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
+	this->HttpMethod = HttpMethods.HttpGet
+	InitializeURI(@this->ClientURI)
+	this->HttpVersion = HttpVersions.Http11
+	this->KeepAlive = False
+	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
+	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
+	this->RequestByteRange.FirstBytePosition = 0
+	this->RequestByteRange.LastBytePosition = 0
+	this->ContentLength = 0
 	
 	Return S_OK
 	

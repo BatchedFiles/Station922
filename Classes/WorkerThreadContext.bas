@@ -33,7 +33,11 @@ Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualT
 	@WorkerThreadContextGetStartTicks, _
 	@WorkerThreadContextSetStartTicks, _
 	@WorkerThreadContextGetClientRequest, _
-	@WorkerThreadContextSetClientRequest _
+	@WorkerThreadContextSetClientRequest, _
+	@WorkerThreadContextGetServerResponse, _
+	@WorkerThreadContextSetServerResponse, _
+	@WorkerThreadContextGetHttpReader, _
+	@WorkerThreadContextSetHttpReader _
 )
 
 Sub InitializeWorkerThreadContext( _
@@ -53,6 +57,8 @@ Sub InitializeWorkerThreadContext( _
 	this->pIWebSites = NULL
 	this->pINetworkStream = NULL
 	this->pIRequest = NULL
+	this->pIHttpReader = NULL
+	this->pIResponse = NULL
 	
 	this->hThreadContextHeap = NULL
 	
@@ -79,6 +85,14 @@ Sub UnInitializeWorkerThreadContext( _
 	
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
+	End If
+	
+	If this->pIHttpReader <> NULL Then
+		IHttpReader_Release(this->pIHttpReader)
+	End If
+	
+	If this->pIResponse <> NULL Then
+		IServerResponse_Release(this->pIResponse)
 	End If
 	
 End Sub
@@ -114,6 +128,28 @@ Function CreateWorkerThreadContext( _
 		@CLSID_NETWORKSTREAM, _
 		@IID_INetworkStream, _
 		@pContext->pINetworkStream _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
+	
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_HTTPREADER, _
+		@IID_IHttpReader, _
+		@pContext->pIHttpReader _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
+	
+	hr = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_SERVERRESPONSE, _
+		@IID_IServerResponse, _
+		@pContext->pIResponse _
 	)
 	If FAILED(hr) Then
 		DestroyWorkerThreadContext(pContext)
@@ -461,6 +497,74 @@ Function WorkerThreadContextSetClientRequest( _
 	End If
 	
 	this->pIRequest = pIRequest
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextGetServerResponse( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal ppIResponse As IServerResponse Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIResponse <> NULL Then
+		IServerResponse_AddRef(this->pIResponse)
+	End If
+	
+	*ppIResponse = this->pIResponse
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextSetServerResponse( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal pIResponse As IServerResponse Ptr _
+	)As HRESULT
+	
+	If this->pIResponse <> NULL Then
+		IServerResponse_Release(this->pIResponse)
+	End If
+	
+	If pIResponse <> NULL Then
+		IClientRequest_AddRef(pIResponse)
+	End If
+	
+	this->pIResponse = pIResponse
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextGetHttpReader( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal ppIHttpReader As IHttpReader Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIHttpReader <> NULL Then
+		IHttpReader_AddRef(this->pIHttpReader)
+	End If
+	
+	*ppIHttpReader = this->pIHttpReader
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextSetHttpReader( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal pIHttpReader As IHttpReader Ptr _
+	)As HRESULT
+	
+	If this->pIHttpReader <> NULL Then
+		IHttpReader_Release(this->pIHttpReader)
+	End If
+	
+	If pIHttpReader <> NULL Then
+		IHttpReader_AddRef(pIHttpReader)
+	End If
+	
+	this->pIHttpReader = pIHttpReader
 	
 	Return S_OK
 	

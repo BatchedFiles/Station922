@@ -160,6 +160,10 @@ Declare Function ServerResponseAddKnownResponseHeader( _
 	ByVal Value As WString Ptr _
 )As HRESULT
 
+Declare Function ServerResponseClear( _
+	ByVal this As ServerResponse Ptr _
+)As HRESULT
+
 Declare Function ServerResponseStringableQueryInterface( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal riid As REFIID, _

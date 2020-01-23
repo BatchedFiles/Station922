@@ -125,6 +125,10 @@ Type IServerResponseVirtualTable
 		ByVal Value As WString Ptr _
 	)As HRESULT
 	
+	Dim Clear As Function( _
+		ByVal this As IServerResponse Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IServerResponse_
@@ -154,5 +158,6 @@ End Type
 #define IServerResponse_SetZipMode(this, ZipMode) (this)->pVirtualTable->SetZipMode(this, ZipMode)
 #define IServerResponse_AddResponseHeader(this, HeaderName, Value) (this)->pVirtualTable->AddResponseHeader(this, HeaderName, Value)
 #define IServerResponse_AddKnownResponseHeader(this, HeaderIndex, Value) (this)->pVirtualTable->AddKnownResponseHeader(this, HeaderIndex, Value)
+#define IServerResponse_Clear(this) (this)->pVirtualTable->Clear(this)
 
 #endif

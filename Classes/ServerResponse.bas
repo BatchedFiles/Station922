@@ -29,7 +29,8 @@ Dim Shared GlobalServerResponseVirtualTable As IServerResponseVirtualTable = Typ
 	@ServerResponseGetZipMode, _
 	@ServerResponseSetZipMode, _
 	@ServerResponseAddResponseHeader, _
-	@ServerResponseAddKnownResponseHeader _
+	@ServerResponseAddKnownResponseHeader, _
+	@ServerResponseClear _
 )
 
 Dim Shared GlobalServerResponseStringableVirtualTable As IStringableVirtualTable = Type( _
@@ -383,6 +384,28 @@ Function ServerResponseAddKnownResponseHeader( _
 	this->ResponseHeaders(HeaderIndex) = this->StartResponseHeadersPtr
 	
 	this->StartResponseHeadersPtr += lstrlen(Value) + 2
+	
+	Return S_OK
+	
+End Function
+
+Function ServerResponseClear( _
+		ByVal this As ServerResponse Ptr _
+	)As HRESULT
+	
+	' TODO Удалить дублирование инициализации
+	this->ResponseHeaderBuffer[0] = 0
+	this->StartResponseHeadersPtr = @this->ResponseHeaderBuffer
+	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(WString Ptr))
+	this->HttpVersion = HttpVersions.Http11
+	this->StatusCode = HttpStatusCodes.OK
+	this->StatusDescription = NULL
+	this->SendOnlyHeaders = False
+	this->KeepAlive = True
+	this->ResponseZipEnable = False
+	this->Mime.ContentType = ContentTypes.AnyAny
+	this->Mime.IsTextFormat = False
+	this->Mime.Charset = DocumentCharsets.ASCII
 	
 	Return S_OK
 	
