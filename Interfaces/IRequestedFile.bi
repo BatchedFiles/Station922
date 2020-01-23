@@ -7,7 +7,7 @@
 #include "windows.bi"
 #include "win\ole2.bi"
 #include "Http.bi"
-#include "Uri.bi"
+#include "Station922Uri.bi"
 
 Enum RequestedFileState
 	Exist
@@ -24,9 +24,10 @@ Extern IID_IRequestedFile Alias "IID_IRequestedFile" As Const IID
 Type IRequestedFileVirtualTable
 	Dim InheritedTable As IUnknownVtbl
 	
+	' TODO Возвращать интерфейс IClientUri
 	Dim ChoiseFile As Function( _
 		ByVal this As IRequestedFile Ptr, _
-		ByVal pUri As Uri Ptr _
+		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
 	Dim GetFilePath As Function( _

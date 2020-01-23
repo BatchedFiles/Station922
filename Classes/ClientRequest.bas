@@ -243,7 +243,7 @@ Function ClientRequestReadRequest( _
 	
 	Dim ClientURILength As Integer = lstrlen(pClientRequest->ClientURI.pUrl)
 	
-	If ClientURILength > URI.MaxUrlLength Then
+	If ClientURILength > Station922Uri.MaxUrlLength Then
 		Return CLIENTREQUEST_E_URITOOLARGE
 	End If
 	
@@ -265,7 +265,7 @@ Function ClientRequestReadRequest( _
 		PathLength = ClientURILength
 	Else
 		' Раскодировка пути
-		Dim DecodedPath As WString * (URI.MaxUrlLength + 1) = Any
+		Dim DecodedPath As WString * (Station922Uri.MaxUrlLength + 1) = Any
 		PathLength = pClientRequest->ClientURI.PathDecode(@DecodedPath)
 		lstrcpy(@pClientRequest->ClientURI.Path, @DecodedPath)
 	End If
@@ -432,7 +432,7 @@ End Function
 
 Function ClientRequestGetUri( _
 		ByVal pClientRequest As ClientRequest Ptr, _
-		ByVal pUri As Uri Ptr _
+		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
 	*pUri = pClientRequest->ClientURI

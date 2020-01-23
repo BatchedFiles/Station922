@@ -53,7 +53,7 @@ Declare Function RequestedFileRelease( _
 
 Declare Function RequestedFileChoiseFile( _
 	ByVal pRequestedFile As RequestedFile Ptr, _
-	ByVal pUri As Uri Ptr _
+	ByVal pUri As Station922Uri Ptr _
 )As HRESULT
 
 Declare Function RequestedFileGetFilePath( _

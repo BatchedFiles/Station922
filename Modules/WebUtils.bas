@@ -9,7 +9,7 @@
 #include "PrintDebugInfo.bi"
 #include "Resources.rh"
 #include "StringConstants.bi"
-#include "URI.bi"
+#include "Station922Uri.bi"
 #include "WriteHttpError.bi"
 #include "win\shlwapi.bi"
 #include "win\wincrypt.bi"

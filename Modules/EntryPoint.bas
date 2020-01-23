@@ -1,14 +1,18 @@
 ﻿#include "EntryPoint.bi"
-#include "ConsoleMain.bi"
 #include "Http.bi"
 #include "InitializeVirtualTables.bi"
-#include "WindowsServiceMain.bi"
 #include "win\winsock2.bi"
 
 #ifdef WINDOWS_SERVICE
+
+#include "WindowsServiceMain.bi"
 #define MAIN_FUNCTION WindowsServiceMain()
+
 #else
+
+#include "ConsoleMain.bi"
 #define MAIN_FUNCTION ConsoleMain()
+
 #endif
 
 Function MainEntryPoint()As Integer

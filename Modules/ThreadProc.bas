@@ -171,7 +171,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 						Dim HttpMethod As HttpMethods = Any
 						IClientRequest_GetHttpMethod(pIRequest, @HttpMethod)
 						
-						Dim ClientURI As URI = Any
+						Dim ClientURI As Station922Uri = Any
 						IClientRequest_GetUri(pIRequest, @ClientURI)
 						
 						' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1

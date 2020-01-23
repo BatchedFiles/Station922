@@ -1,8 +1,8 @@
 set CompilerDirectory=%ProgramFiles%\FreeBASIC
 
-set MainFile=Modules\EntryPoint.bas
-set Classes=Classes\ArrayStringWriter.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\NetworkStream.bas Classes\RequestedFile.bas Classes\SafeHandle.bas Classes\ServerResponse.bas Classes\ServerState.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas Classes\WorkerThreadContext.bas
-set Modules=Mime.bas ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas ProcessWebSocketRequest.bas URI.bas Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\CreateInstance.bas Modules\FindNewLineIndex.bas Modules\Guids.bas Modules\Http.bas Modules\InitializeVirtualTables.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\PrintDebugInfo.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WriteHttpError.bas
+REM set MainFile=Modules\EntryPoint.bas
+set Classes=Classes\ArrayStringWriter.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\Mime.bas Classes\NetworkStream.bas Classes\RequestedFile.bas Classes\SafeHandle.bas Classes\ServerResponse.bas Classes\ServerState.bas Classes\Station922Uri.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas Classes\WorkerThreadContext.bas
+set Modules=ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas ProcessWebSocketRequest.bas Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\CreateInstance.bas Modules\FindNewLineIndex.bas Modules\Guids.bas Modules\Http.bas Modules\InitializeVirtualTables.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\PrintDebugInfo.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WriteHttpError.bas
 set Resources=Resources.rc
 set OutputFile=Station922.exe
 
@@ -14,15 +14,10 @@ set MaxErrorsCount=-maxerr 1
 set MinWarningLevel=-w all
 REM set UseThreadSafeRuntime=-mt
 
-REM set EnableShowIncludes=-showincludes
-REM set EnableVerbose=-v
+set EnableShowIncludes=-showincludes
+set EnableVerbose=-v
 REM set EnableRuntimeErrorChecking=-e
 REM set EnableFunctionProfiling=-profile
-
-set PROGRAM_VERSION_MAJOR=1
-set PROGRAM_VERSION_MINOR=0
-set PROGRAM_VERSION_BUILD=0
-set PROGRAM_VERSION_REVISION=%RANDOM%
 
 if "%1"=="service" (
 	set SERVICE_DEFINED=-d WINDOWS_SERVICE
@@ -48,6 +43,6 @@ if "%3"=="withoutruntime" (
 	set GUIDS_WITHOUT_MINGW=
 )
 
-set CompilerParameters=%SERVICE_DEFINED% -d PROGRAM_VERSION_MAJOR=%PROGRAM_VERSION_MAJOR% -d PROGRAM_VERSION_MINOR=%PROGRAM_VERSION_MINOR% -d PROGRAM_VERSION_BUILD=%PROGRAM_VERSION_BUILD% -d PROGRAM_VERSION_REVISION=%PROGRAM_VERSION_REVISION% %MaxErrorsCount% %UseThreadSafeRuntime% %IncludeLibraries% %GUIDS_WITHOUT_MINGW% %IncludeFilesPath% %OptimizationLevel% %VectorizationLevel% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking%
+set CompilerParameters=%SERVICE_DEFINED% %MaxErrorsCount% %UseThreadSafeRuntime% %IncludeLibraries% %GUIDS_WITHOUT_MINGW% %OptimizationLevel% %VectorizationLevel% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking% %IncludeFilesPath%
 
 call translator.cmd "%MainFile% %Classes% %Modules% %Resources%" "%ExeTypeKind%" "%OutputFile%" "%CompilerDirectory%" "%CompilerParameters%" %EnableDebug% noprofile %WithoutRuntime%

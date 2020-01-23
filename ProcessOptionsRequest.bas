@@ -10,7 +10,7 @@ Function ProcessOptionsRequest( _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)As Boolean
 	
-	Dim ClientURI As URI = Any
+	Dim ClientURI As Station922Uri = Any
 	IClientRequest_GetUri(pIRequest, @ClientURI)
 	
 	' TODO Если звёздочка, то ко всему серверу

@@ -1,5 +1,5 @@
-﻿#ifndef URI_BI
-#define URI_BI
+﻿#ifndef STATION922URI_BI
+#define STATION922URI_BI
 
 Type UserInfo
 	Dim pUserName As WString Ptr
@@ -12,7 +12,7 @@ Type Authority
 	Dim pPort As WString Ptr
 End Type
 
-Type URI
+Type Station922Uri
 	Const MaxUrlLength As Integer = 4096 - 1
 	
 	'Dim Scheme As WString Ptr
@@ -29,7 +29,7 @@ Type URI
 End Type
 
 Declare Sub InitializeURI( _
-	ByVal pURI As URI Ptr _
+	ByVal pURI As Station922Uri Ptr _
 )
 
 /'
@@ -42,7 +42,7 @@ scheme     authority                          path              query           
 '/
 
 /'
-Type Uri
+Type Station922Uri
 	Const MaxUrlLength As Integer = 4096 - 1
 	
 	Dim Scheme As WString Ptr

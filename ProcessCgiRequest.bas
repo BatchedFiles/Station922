@@ -270,7 +270,7 @@ Function CreateEnvironmentBlock( _
 	ArrayStringWriter_NonVirtualWriteString(pIWriter, @"SCRIPT_NAME=")
 	ArrayStringWriter_NonVirtualWriteString(pIWriter, @EmptyString)
 	
-	Dim ClientURI As Uri = Any
+	Dim ClientURI As Station922Uri = Any
 	IClientRequest_GetUri(pIRequest, @ClientURI)
 	
 	ArrayStringWriter_NonVirtualWriteString(pIWriter, @"REQUEST_LINE=")

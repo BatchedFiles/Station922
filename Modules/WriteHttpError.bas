@@ -88,7 +88,7 @@ Sub WriteMovedPermanently( _
 	
 	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.MovedPermanently)
 	
-	Dim buf As WString * (URI.MaxUrlLength * 2 + 1) = Any
+	Dim buf As WString * (Station922Uri.MaxUrlLength * 2 + 1) = Any
 	
 	Dim MovedUrl As WString Ptr = Any
 	
@@ -96,7 +96,7 @@ Sub WriteMovedPermanently( _
 	
 	lstrcpy(@buf, MovedUrl)
 	
-	Dim ClientURI As URI = Any
+	Dim ClientURI As Station922Uri = Any
 	IClientRequest_GetUri(pIRequest, @ClientURI)
 	
 	lstrcat(@buf, ClientURI.pUrl)

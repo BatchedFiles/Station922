@@ -3,7 +3,7 @@
 
 #include "Http.bi"
 #include "IHttpReader.bi"
-#include "Uri.bi"
+#include "Station922Uri.bi"
 
 Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 
@@ -49,9 +49,10 @@ Type IClientRequestVirtualTable
 		ByVal pHttpMethod As HttpMethods Ptr _
 	)As HRESULT
 	
+	' TODO Возвращать интерфейс IClientUri
 	Dim GetUri As Function( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pUri As Uri Ptr _
+		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
 	Dim GetHttpVersion As Function( _

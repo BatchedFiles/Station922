@@ -23,10 +23,10 @@ Function ProcessPostRequest( _
 	Dim FileHandle As HANDLE = Any
 	IRequestedFile_GetFileHandle(pIRequestedFile, @FileHandle)
 	
-	Dim FileExists As RequestedFileState = Any
-	IRequestedFile_FileExists(pIRequestedFile, @FileExists)
+	Dim bFileExists As RequestedFileState = Any
+	IRequestedFile_FileExists(pIRequestedFile, @bFileExists)
 	
-	Select Case FileExists
+	Select Case bFileExists
 		
 		Case RequestedFileState.NotFound
 			WriteHttpFileNotFound(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
@@ -40,7 +40,7 @@ Function ProcessPostRequest( _
 	
 	Scope
 		
-		Dim ClientURI As URI = Any
+		Dim ClientURI As Station922Uri = Any
 		IClientRequest_GetUri(pIRequest, @ClientURI)
 		
 		Dim NeedProcessing As Boolean = Any

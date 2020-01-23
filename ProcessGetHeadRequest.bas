@@ -79,7 +79,7 @@ Function ProcessGetHeadRequest( _
 			End If
 		End If
 		
-		Dim ClientUri As URI = Any
+		Dim ClientUri As Station922Uri = Any
 		IClientRequest_GetUri(pIRequest, @ClientUri)
 		
 		Dim NeedProcessing As Boolean = Any

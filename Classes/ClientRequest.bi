@@ -13,7 +13,7 @@ Type ClientRequest
 	
 	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
 	Dim HttpMethod As HttpMethods
-	Dim ClientURI As URI
+	Dim ClientURI As Station922Uri
 	Dim HttpVersion As HttpVersions
 	Dim KeepAlive As Boolean
 	Dim RequestZipModes(HttpZipModesMaximum - 1) As Boolean
@@ -55,7 +55,7 @@ Declare Function ClientRequestGetHttpMethod( _
 
 Declare Function ClientRequestGetUri( _
 	ByVal pClientRequest As ClientRequest Ptr, _
-	ByVal pUri As Uri Ptr _
+	ByVal pUri As Station922Uri Ptr _
 )As HRESULT
 
 Declare Function ClientRequestGetHttpVersion( _

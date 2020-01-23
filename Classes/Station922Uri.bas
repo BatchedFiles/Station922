@@ -1,4 +1,4 @@
-﻿#include "URI.bi"
+﻿#include "Station922URI.bi"
 
 #ifndef unicode
 #define unicode
@@ -7,14 +7,14 @@
 #include "CharacterConstants.bi"
 
 Sub InitializeURI( _
-		ByVal pURI As URI Ptr _
+		ByVal pURI As Station922Uri Ptr _
 	)
 	pURI->pUrl = NULL
 	pURI->pQueryString = NULL
 	pURI->Path[0] = 0
 End Sub
 
-Function URI.PathDecode( _
+Function Station922Uri.PathDecode( _
 		ByVal pBuffer As WString Ptr _
 	)As Integer
 	
@@ -25,7 +25,7 @@ Function URI.PathDecode( _
 	
 	Dim DecodedBytesUtf8Length As Integer = 0
 	
-	Dim DecodedBytesUtf8 As ZString * (URI.MaxUrlLength + 1) = Any
+	Dim DecodedBytesUtf8 As ZString * (Station922Uri.MaxUrlLength + 1) = Any
 	
 	For i As Integer = 0 To lstrlen(Path) - 1
 		
@@ -95,7 +95,7 @@ Function URI.PathDecode( _
 		@DecodedBytesUtf8, _
 		DecodedBytesUtf8Length, _
 		pBuffer, _
-		URI.MaxUrlLength _
+		Station922Uri.MaxUrlLength _
 	)
 	
 	Return Length
