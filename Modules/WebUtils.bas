@@ -7,7 +7,7 @@
 #include "IntegerToWString.bi"
 #include "IStringable.bi"
 #include "PrintDebugInfo.bi"
-#include "Resources.rh"
+#include "Resources.RH"
 #include "StringConstants.bi"
 #include "Station922Uri.bi"
 #include "WriteHttpError.bi"

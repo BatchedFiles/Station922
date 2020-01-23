@@ -1,9 +1,9 @@
 set CompilerDirectory=%ProgramFiles%\FreeBASIC
 
-REM set MainFile=Modules\EntryPoint.bas
+set MainFile=Modules\EntryPoint.bas
 set Classes=Classes\ArrayStringWriter.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpReader.bas Classes\Mime.bas Classes\NetworkStream.bas Classes\RequestedFile.bas Classes\SafeHandle.bas Classes\ServerResponse.bas Classes\ServerState.bas Classes\Station922Uri.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas Classes\WorkerThreadContext.bas
-set Modules=ProcessCgiRequest.bas ProcessConnectRequest.bas ProcessDeleteRequest.bas ProcessDllRequest.bas ProcessGetHeadRequest.bas ProcessOptionsRequest.bas ProcessPostRequest.bas ProcessPutRequest.bas ProcessTraceRequest.bas ProcessWebSocketRequest.bas Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\CreateInstance.bas Modules\FindNewLineIndex.bas Modules\Guids.bas Modules\Http.bas Modules\InitializeVirtualTables.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\PrintDebugInfo.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WriteHttpError.bas
-set Resources=Resources.rc
+set Modules=Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\CreateInstance.bas Modules\FindNewLineIndex.bas Modules\Guids.bas Modules\Http.bas Modules\InitializeVirtualTables.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\PrintDebugInfo.bas Modules\ProcessCgiRequest.bas Modules\ProcessConnectRequest.bas Modules\ProcessDeleteRequest.bas Modules\ProcessDllRequest.bas Modules\ProcessGetHeadRequest.bas Modules\ProcessOptionsRequest.bas Modules\ProcessPostRequest.bas Modules\ProcessPutRequest.bas Modules\ProcessTraceRequest.bas Modules\ProcessWebSocketRequest.bas Modules\ThreadProc.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WriteHttpError.bas
+set Resources=Resources.RC
 set OutputFile=Station922.exe
 
 set IncludeFilesPath=-i Classes -i Interfaces -i Modules -i Headers
@@ -14,8 +14,8 @@ set MaxErrorsCount=-maxerr 1
 set MinWarningLevel=-w all
 REM set UseThreadSafeRuntime=-mt
 
-set EnableShowIncludes=-showincludes
-set EnableVerbose=-v
+REM set EnableShowIncludes=-showincludes
+REM set EnableVerbose=-v
 REM set EnableRuntimeErrorChecking=-e
 REM set EnableFunctionProfiling=-profile
 
