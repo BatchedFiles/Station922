@@ -20,26 +20,26 @@
 * синхронизация между потоками для выделения памяти из стандартной кучи процесса;
 * требуется вручную удалять объект.
 
-Для создания объектов рекомендуется написать общую функцию `CreateInstance`, принимающая CLSID и IID.
+Для создания объектов рекомендуется написать общую функцию `CreateInstance`, принимающая `CLSID` и `IID`.
 
-### Объекты из кучи
-
-* [ ] RequestedFile.bas
-* [ ] WebSiteContainer.bas
-
-### Объекты из стэка
+### Объекты из стэка переделать в объекты из кучи
 
 * [ ] ArrayStringWriter.bas
-* [ ] ClientRequest.bas
-* [ ] Configuration.bas
-* [ ] HttpReader.bas
-* [ ] NetworkStream.bas
-* [ ] SafeHandle.bas
-* [ ] ServerResponse.bas
+* [ ] RequestedFile.bas
 * [ ] ServerState.bas
-* [ ] WebServer.bas
 * [ ] WebSite.bas
 
+## Предварительное объявление классов
+
+Объявить в заголовочнике псевдоним, а в файле реализации сам тип с подчёркиванием слева.
+
+* [ ] ArrayStringWriter.bas
+* [ ] Mime.bas
+* [ ] RequestedFile.bas
+* [ ] SafeHandle.bas
+* [ ] ServerState.bas
+* [ ] Station922Uri.bas
+* [ ] WebSite.bas
 
 ## Сделать
 
@@ -71,7 +71,6 @@
 * [ ] Поддержка в запросе множественных байтовых диапазонов.
 * [ ] Асинхронный трубопровод в CGI.
 * [ ] Переименовать функции и структуры: юникодные должны быть с W на конце, неюникодные — с A.
-
 
 ## Рефракторинг
 
@@ -122,7 +121,6 @@
 * [ ] EntryPoint.bas
 * [ ] FindNewLineIndex.bas
 * [ ] Guids.bas
-* [ ] GuidsWithoutMinGW.bas
 * [ ] Http.bas
 * [ ] InitializeVirtualTables.bas
 * [ ] Network.bas
@@ -134,7 +132,6 @@
 * [ ] WindowsServiceMain.bas
 * [ ] WriteHttpError.bas
 * [ ] URI.bas
-
 
 ## Выполнено
 
