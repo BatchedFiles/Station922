@@ -1,7 +1,6 @@
 ﻿#ifndef HTTPREADER_BI
 #define HTTPREADER_BI
 
-#include "IBaseStream.bi"
 #include "IHttpReader.bi"
 
 Const HTTPREADER_MAXBUFFER_LENGTH As Integer = 16 * 1024 - 1

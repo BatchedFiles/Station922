@@ -2,7 +2,6 @@
 #define SERVERRESPONSE_BI
 
 #include "IServerResponse.bi"
-#include "IStringable.bi"
 
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 

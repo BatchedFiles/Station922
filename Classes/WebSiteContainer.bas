@@ -4,6 +4,7 @@
 #include "HttpConst.bi"
 #include "IniConst.bi"
 #include "StringConstants.bi"
+#include "WebSite.bi"
 #include "win\shlwapi.bi"
 
 Const MaxSectionsLength As Integer = 32000 - 1

@@ -2,6 +2,7 @@
 #include "ArrayStringWriter.bi"
 #include "CharacterConstants.bi"
 #include "ContainerOf.bi"
+#include "IStringable.bi"
 #include "StringConstants.bi"
 
 Type _ServerResponse

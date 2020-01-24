@@ -1,9 +1,6 @@
 ﻿#include "ClientRequest.bi"
 
-#ifndef unicode
-#define unicode
-#endif
-#include "windows.bi"
+#include "IStringable.bi"
 #include "win\shlwapi.bi"
 #include "CharacterConstants.bi"
 #include "ContainerOf.bi"

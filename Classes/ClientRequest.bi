@@ -2,7 +2,6 @@
 #define CLIENTREQUEST_BI
 
 #include "IClientRequest.bi"
-#include "IStringable.bi"
 
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 

@@ -2,7 +2,6 @@
 #define WEBSITECONTAINER_BI
 
 #include "IWebSiteContainer.bi"
-#include "WebSite.bi"
 
 Extern CLSID_WEBSITECONTAINER Alias "CLSID_WEBSITECONTAINER" As Const CLSID
 
