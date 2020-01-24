@@ -217,8 +217,8 @@ Function WebServerRun( _
 		
 	Loop
 	
-	Const dwThreadContextHeapInitialSize As DWORD = 256 * 1024
-	Const dwThreadContextHeapMaximumSize As DWORD = 256 * 1024
+	Const dwThreadContextHeapInitialSize As DWORD = 50 * 4096
+	Const dwThreadContextHeapMaximumSize As DWORD = 50 * 4096
 	
 	Dim hWorkerThreadContextHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
