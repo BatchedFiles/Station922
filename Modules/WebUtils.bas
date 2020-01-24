@@ -686,16 +686,20 @@ Function ContainsBadCharSequence( _
 				' Кавычки нельзя
 				Return E_FAIL
 				
-			Case Characters.DollarSign
+			'Case Characters.DollarSign
 				' Нельзя доллар, потому что могут открыть $MFT
-				Return E_FAIL
+				'Return E_FAIL
 				
-			Case Characters.PercentSign
+			'Case Characters.PercentSign
 				' TODO Уточнить, почему нельзя использовать знак процента
-				Return E_FAIL
+				'Return E_FAIL
 				
-			Case Characters.Ampersand
+			'Case Characters.Ampersand
 				' Объединение команд в одну
+				'Return E_FAIL
+				
+			Case Characters.Asterisk
+				' Нельзя звёздочку
 				Return E_FAIL
 				
 			Case Characters.FullStop
@@ -716,9 +720,9 @@ Function ContainsBadCharSequence( _
 					
 				End If
 				
-			Case Characters.Semicolon
+			'Case Characters.Semicolon
 				' Разделитель путей
-				Return E_FAIL
+				'Return E_FAIL
 				
 			Case Characters.LessThanSign
 				' Защита от перенаправлений ввода‐вывода
