@@ -54,7 +54,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_CLIENTREQUEST, rclsid) Then
-		Dim pRequest As ClientRequest Ptr = CreateClientRequest()
+		Dim pRequest As ClientRequest Ptr = CreateClientRequest(hHeap)
 		
 		If pRequest = NULL Then
 			Return E_OUTOFMEMORY

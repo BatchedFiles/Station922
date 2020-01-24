@@ -8,9 +8,9 @@ Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 Type NetworkStream
 	Dim pVirtualTable As INetworkStreamVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
 	
 	Dim m_Socket As SOCKET
-	Dim hHeap As HANDLE
 	
 End Type
 

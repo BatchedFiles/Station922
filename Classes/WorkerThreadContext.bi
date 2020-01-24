@@ -8,6 +8,7 @@ Extern CLSID_WORKERTHREADCONTEXT Alias "CLSID_WORKERTHREADCONTEXT" As Const CLSI
 Type WorkerThreadContext
 	Dim pVirtualTable As IWorkerThreadContextVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
 	Dim RemoteAddress As SOCKADDR_IN
 	Dim RemoteAddressLength As Integer
 	
@@ -20,8 +21,6 @@ Type WorkerThreadContext
 	Dim pIRequest As IClientRequest Ptr
 	Dim pIHttpReader As IHttpReader Ptr
 	Dim pIResponse As IServerResponse Ptr
-	
-	Dim hThreadContextHeap As HANDLE
 	
 	Dim Frequency As LARGE_INTEGER
 	Dim StartTicks As LARGE_INTEGER

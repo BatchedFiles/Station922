@@ -45,6 +45,7 @@ Sub InitializeWorkerThreadContext( _
 	
 	this->pVirtualTable = @GlobalWorkerThreadContextVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	
 	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_IN))
 	this->RemoteAddressLength = 0
@@ -58,8 +59,6 @@ Sub InitializeWorkerThreadContext( _
 	this->pIRequest = NULL
 	this->pIHttpReader = NULL
 	this->pIResponse = NULL
-	
-	this->hThreadContextHeap = hHeap
 	
 	this->Frequency.QuadPart = 0
 	this->StartTicks.QuadPart = 0
@@ -113,7 +112,7 @@ Function CreateWorkerThreadContext( _
 	InitializeWorkerThreadContext(pContext, hHeap)
 	
 	Dim hr As HRESULT = CreateInstance( _
-		GetProcessHeap(), _
+		hHeap, _
 		@CLSID_CLIENTREQUEST, _
 		@IID_IClientRequest, _
 		@pContext->pIRequest _
@@ -171,7 +170,7 @@ Sub DestroyWorkerThreadContext( _
 		' HEAP_NO_SERIALIZE, _
 		' this _
 	' )
-	HeapDestroy(this->hThreadContextHeap)
+	HeapDestroy(this->hHeap)
 	
 End Sub
 

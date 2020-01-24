@@ -45,12 +45,14 @@ Dim Shared GlobalClientRequestStringableVirtualTable As IStringableVirtualTable 
 )
 
 Sub InitializeClientRequest( _
-		ByVal this As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pClientRequestVirtualTable = @GlobalClientRequestVirtualTable
 	this->pStringableVirtualTable = @GlobalClientRequestStringableVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpMethod = HttpMethods.HttpGet
@@ -72,11 +74,12 @@ Sub UnInitializeClientRequest( _
 End Sub
 
 Function CreateClientRequest( _
+		ByVal hHeap As HANDLE _
 	)As ClientRequest Ptr
 	
 	Dim pRequest As ClientRequest Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(ClientRequest) _
 	)
 	
@@ -84,7 +87,7 @@ Function CreateClientRequest( _
 		Return NULL
 	End If
 	
-	InitializeClientRequest(pRequest)
+	InitializeClientRequest(pRequest, hHeap)
 	
 	Return pRequest
 	
@@ -96,7 +99,7 @@ Sub DestroyClientRequest( _
 	
 	UnInitializeClientRequest(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 

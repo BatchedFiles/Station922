@@ -10,6 +10,7 @@ Type ClientRequest
 	Dim pClientRequestVirtualTable As IClientRequestVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
 	
 	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
 	Dim HttpMethod As HttpMethods
@@ -23,6 +24,7 @@ Type ClientRequest
 End Type
 
 Declare Function CreateClientRequest( _
+	ByVal hHeap As HANDLE _
 )As ClientRequest Ptr
 
 Declare Sub DestroyClientRequest( _
