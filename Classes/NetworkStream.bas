@@ -22,12 +22,14 @@ Sub InitializeNetworkStreamVirtualTable()
 End Sub
 
 Sub InitializeNetworkStream( _
-		ByVal this As NetworkStream Ptr _
+		ByVal this As NetworkStream Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pVirtualTable = @GlobalNetworkStreamVirtualTable
 	this->ReferenceCounter = 0
 	this->m_Socket = INVALID_SOCKET
+	this->hHeap = hHeap
 	
 End Sub
 
@@ -42,11 +44,12 @@ Sub UnInitializeNetworkStream( _
 End Sub
 
 Function CreateNetworkStream( _
+		ByVal hHeap As HANDLE _
 	)As NetworkStream Ptr
 	
 	Dim this As NetworkStream Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(NetworkStream) _
 	)
 	
@@ -54,7 +57,7 @@ Function CreateNetworkStream( _
 		Return NULL
 	End If
 	
-	InitializeNetworkStream(this)
+	InitializeNetworkStream(this, hHeap)
 	
 	Return this
 	
@@ -66,7 +69,7 @@ Sub DestroyNetworkStream( _
 	
 	UnInitializeNetworkStream(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 

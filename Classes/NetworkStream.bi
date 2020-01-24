@@ -10,12 +10,14 @@ Type NetworkStream
 	Dim ReferenceCounter As ULONG
 	
 	Dim m_Socket As SOCKET
+	Dim hHeap As HANDLE
 	
 End Type
 
 Declare Sub InitializeNetworkStreamVirtualTable()
 
 Declare Function CreateNetworkStream( _
+	ByVal hHeap As HANDLE _
 )As NetworkStream Ptr
 
 Declare Sub DestroyNetworkStream( _

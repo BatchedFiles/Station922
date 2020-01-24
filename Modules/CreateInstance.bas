@@ -70,7 +70,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_NETWORKSTREAM, rclsid) Then
-		Dim pStream As NetworkStream Ptr = CreateNetworkStream()
+		Dim pStream As NetworkStream Ptr = CreateNetworkStream(hHeap)
 		
 		If pStream = NULL Then
 			Return E_OUTOFMEMORY

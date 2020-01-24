@@ -156,27 +156,27 @@ Function WebServerRun( _
 	
 	Dim hr As HRESULT = Any
 	
-	Dim pINetworkStreamDefault As INetworkStream Ptr = Any
-	hr = CreateInstance( _
-		GetProcessHeap(), _
-		@CLSID_NETWORKSTREAM, _
-		@IID_INetworkStream, _
-		@pINetworkStreamDefault _
-	)
-	If FAILED(hr) Then
-		Return hr
-	End If
+	' Dim pINetworkStreamDefault As INetworkStream Ptr = Any
+	' hr = CreateInstance( _
+		' GetProcessHeap(), _
+		' @CLSID_NETWORKSTREAM, _
+		' @IID_INetworkStream, _
+		' @pINetworkStreamDefault _
+	' )
+	' If FAILED(hr) Then
+		' Return hr
+	' End If
 	
-	Dim pIResponseDefault As IServerResponse Ptr = Any
-	hr = CreateInstance( _
-		GetProcessHeap(), _
-		@CLSID_SERVERRESPONSE, _
-		@IID_IServerResponse, _
-		@pIResponseDefault _
-	)
-	If FAILED(hr) Then
-		Return hr
-	End If
+	' Dim pIResponseDefault As IServerResponse Ptr = Any
+	' hr = CreateInstance( _
+		' GetProcessHeap(), _
+		' @CLSID_SERVERRESPONSE, _
+		' @IID_IServerResponse, _
+		' @pIResponseDefault _
+	' )
+	' If FAILED(hr) Then
+		' Return hr
+	' End If
 	
 	Dim pIWebSites As IWebSiteContainer Ptr = Any
 	hr = CreateInstance( _
@@ -265,29 +265,31 @@ Function WebServerRun( _
 		
 		If FailedFlag Then
 			
+			CloseSocketConnection(ClientSocket)
+			
 			If this->ReListenSocket = False Then
 				Exit Do
 			End If
 			
-			INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
+			' INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
 			
-			If hThread = NULL Then
+			' If hThread = NULL Then
 				' TODO Использовать код ошибки создания потока dwCreateThreadErrorCode
-				WriteHttpCannotCreateThread( _
-					NULL, _
-					pIResponseDefault, _
-					CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-					NULL _
-				)
-			Else
+				' WriteHttpCannotCreateThread( _
+					' NULL, _
+					' pIResponseDefault, _
+					' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+					' NULL _
+				' )
+			' Else
 				' TODO Использовать код ошибки создания кучи dwCreateThreadContextHeapErrorCode и выделения памяти hrCreateThreadContext
-				WriteHttpNotEnoughMemory( _
-					NULL, _
-					pIResponseDefault, _
-					CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-					NULL _
-				)
-			End If
+				' WriteHttpNotEnoughMemory( _
+					' NULL, _
+					' pIResponseDefault, _
+					' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+					' NULL _
+				' )
+			' End If
 			
 			If hThread <> NULL Then
 				CloseHandle(hThread)
@@ -375,8 +377,8 @@ Function WebServerRun( _
 	
 	IWebSiteContainer_Release(pIWebSites)
 	
-	IServerResponse_Release(pIResponseDefault)
-	INetworkStream_Release(pINetworkStreamDefault)
+	' IServerResponse_Release(pIResponseDefault)
+	' INetworkStream_Release(pINetworkStreamDefault)
 	
 	Return S_OK
 	
