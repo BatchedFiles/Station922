@@ -29,6 +29,7 @@ Type WorkerThreadContext
 End Type
 
 Declare Function CreateWorkerThreadContext( _
+	ByVal hHeap As HANDLE _
 )As WorkerThreadContext Ptr
 
 Declare Sub DestroyWorkerThreadContext( _
@@ -117,16 +118,6 @@ Declare Function WorkerThreadContextGetNetworkStream( _
 Declare Function WorkerThreadContextSetNetworkStream( _
 	ByVal this As WorkerThreadContext Ptr, _
 	ByVal pINetworkStream As INetworkStream Ptr _
-)As HRESULT
-
-Declare Function WorkerThreadContextGetThreadContextHeap( _
-	ByVal this As WorkerThreadContext Ptr, _
-	ByVal pThreadContextHeap As HANDLE Ptr _
-)As HRESULT
-
-Declare Function WorkerThreadContextSetThreadContextHeap( _
-	ByVal this As WorkerThreadContext Ptr, _
-	ByVal ThreadContextHeap As HANDLE _
 )As HRESULT
 
 Declare Function WorkerThreadContextGetFrequency( _

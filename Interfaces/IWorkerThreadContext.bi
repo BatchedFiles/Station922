@@ -86,16 +86,6 @@ Type IWorkerThreadContextVirtualTable
 		ByVal pINetworkStream As INetworkStream Ptr _
 	)As HRESULT
 	
-	Dim GetThreadContextHeap As Function( _
-		ByVal this As IWorkerThreadContext Ptr, _
-		ByVal pThreadContextHeap As HANDLE Ptr _
-	)As HRESULT
-	
-	Dim SetThreadContextHeap As Function( _
-		ByVal this As IWorkerThreadContext Ptr, _
-		ByVal ThreadContextHeap As HANDLE _
-	)As HRESULT
-	
 	Dim GetFrequency As Function( _
 		ByVal this As IWorkerThreadContext Ptr, _
 		ByVal pFrequency As LARGE_INTEGER Ptr _
@@ -173,8 +163,6 @@ End Type
 #define IWorkerThreadContext_SetWebSiteContainer(this, pIWebSiteContainer) (this)->pVirtualTable->SetWebSiteContainer(this, pIWebSiteContainer)
 #define IWorkerThreadContext_GetNetworkStream(this, ppINetworkStream) (this)->pVirtualTable->GetNetworkStream(this, ppINetworkStream)
 #define IWorkerThreadContext_SetNetworkStream(this, pINetworkStream) (this)->pVirtualTable->SetNetworkStream(this, pINetworkStream)
-#define IWorkerThreadContext_GetThreadContextHeap(this, pThreadContextHeap) (this)->pVirtualTable->GetThreadContextHeap(this, pThreadContextHeap)
-#define IWorkerThreadContext_SetThreadContextHeap(this, ThreadContextHeap) (this)->pVirtualTable->SetThreadContextHeap(this, ThreadContextHeap)
 #define IWorkerThreadContext_GetFrequency(this, pFrequency) (this)->pVirtualTable->GetFrequency(this, pFrequency)
 #define IWorkerThreadContext_SetFrequency(this, Frequency) (this)->pVirtualTable->SetFrequency(this, Frequency)
 #define IWorkerThreadContext_GetStartTicks(this, pStartTicks) (this)->pVirtualTable->GetStartTicks(this, pStartTicks)

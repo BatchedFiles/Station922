@@ -26,8 +26,6 @@ Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualT
 	@WorkerThreadContextSetWebSiteContainer, _
 	@WorkerThreadContextGetNetworkStream, _
 	@WorkerThreadContextSetNetworkStream, _
-	@WorkerThreadContextGetThreadContextHeap, _
-	@WorkerThreadContextSetThreadContextHeap, _
 	@WorkerThreadContextGetFrequency, _
 	@WorkerThreadContextSetFrequency, _
 	@WorkerThreadContextGetStartTicks, _
@@ -41,7 +39,8 @@ Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualT
 )
 
 Sub InitializeWorkerThreadContext( _
-		ByVal this As WorkerThreadContext Ptr _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pVirtualTable = @GlobalWorkerThreadContextVirtualTable
@@ -60,7 +59,7 @@ Sub InitializeWorkerThreadContext( _
 	this->pIHttpReader = NULL
 	this->pIResponse = NULL
 	
-	this->hThreadContextHeap = NULL
+	this->hThreadContextHeap = hHeap
 	
 	this->Frequency.QuadPart = 0
 	this->StartTicks.QuadPart = 0
@@ -98,11 +97,12 @@ Sub UnInitializeWorkerThreadContext( _
 End Sub
 
 Function CreateWorkerThreadContext( _
+		ByVal hHeap As HANDLE _
 	)As WorkerThreadContext Ptr
 	
 	Dim pContext As WorkerThreadContext Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(WorkerThreadContext) _
 	)
 	
@@ -110,7 +110,7 @@ Function CreateWorkerThreadContext( _
 		Return NULL
 	End If
 	
-	InitializeWorkerThreadContext(pContext)
+	InitializeWorkerThreadContext(pContext, hHeap)
 	
 	Dim hr As HRESULT = CreateInstance( _
 		GetProcessHeap(), _
@@ -166,7 +166,12 @@ Sub DestroyWorkerThreadContext( _
 	
 	UnInitializeWorkerThreadContext(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	' HeapFree( _
+		' this->hThreadContextHeap, _
+		' HEAP_NO_SERIALIZE, _
+		' this _
+	' )
+	HeapDestroy(this->hThreadContextHeap)
 	
 End Sub
 
@@ -397,28 +402,6 @@ Function WorkerThreadContextSetNetworkStream( _
 	End If
 	
 	this->pINetworkStream = pINetworkStream
-	
-	Return S_OK
-	
-End Function
-
-Function WorkerThreadContextGetThreadContextHeap( _
-		ByVal this As WorkerThreadContext Ptr, _
-		ByVal pThreadContextHeap As HANDLE Ptr _
-	)As HRESULT
-	
-	*pThreadContextHeap = this->hThreadContextHeap
-	
-	Return S_OK
-	
-End Function
-
-Function WorkerThreadContextSetThreadContextHeap( _
-		ByVal this As WorkerThreadContext Ptr, _
-		ByVal ThreadContextHeap As HANDLE _
-	)As HRESULT
-	
-	this->hThreadContextHeap = ThreadContextHeap
 	
 	Return S_OK
 	

@@ -10,9 +10,9 @@
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 
-Const ClientSocketReceiveTimeout As DWORD = 90 * 1000
-Const DefaultStackSize As SIZE_T_ = 0
-Const SleepTimeout As DWORD = 60 * 1000
+Const CLIENTSOCKET_RECEIVE_TIMEOUT As DWORD = 90 * 1000
+Const THREAD_STACK_SIZE As SIZE_T_ = 0
+Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
@@ -42,8 +42,6 @@ Sub InitializeWebServer( _
 	
 	this->pVirtualTable = @GlobalWebServerVirtualTable
 	this->ReferenceCounter = 0
-	
-	this->hThreadContextHeap = HeapCreate(0, 0, 0)
 	
 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 	Dim ExeFileNameLength As DWORD = GetModuleFileName(0, @ExeFileName, MAX_PATH)
@@ -208,7 +206,7 @@ Function WebServerRun( _
 		If FAILED(hrCreateSocket) Then
 			' TODO Обработать ошибку
 			If this->ReListenSocket Then
-				SleepEx(SleepTimeout, True)
+				SleepEx(THREAD_SLEEPING_TIME, True)
 			Else
 				IWebSiteContainer_Release(pIWebSites)
 				Return S_OK
@@ -219,29 +217,36 @@ Function WebServerRun( _
 		
 	Loop
 	
+	Const dwThreadContextHeapInitialSize As DWORD = 128 * 1024
+	Const dwThreadContextHeapMaximumSize As DWORD = 256 * 1024
+	
+	Dim hWorkerThreadContextHeap As HANDLE = HeapCreate( _
+		HEAP_NO_SERIALIZE, _
+		dwThreadContextHeapInitialSize, _
+		dwThreadContextHeapMaximumSize _
+	)
+	Dim dwCreateThreadContextHeapErrorCode As DWORD = GetLastError()
+	
+	Dim pIContext As IWorkerThreadContext Ptr = Any
+	Dim hrCreateThreadContext As HRESULT = CreateInstance( _
+		hWorkerThreadContextHeap, _
+		@CLSID_WORKERTHREADCONTEXT, _
+		@IID_IWorkerThreadContext, _
+		@pIContext _
+	)
+	
+	Dim dwThreadId As DWORD = Any
+	Dim hThread As HANDLE = CreateThread( _
+		NULL, _
+		THREAD_STACK_SIZE, _
+		@ThreadProc, _
+		pIContext, _
+		CREATE_SUSPENDED, _
+		@dwThreadId _
+	)
+	Dim dwCreateThreadErrorCode As DWORD = GetLastError()
+	
 	Do
-		
-		Dim pIContext As IWorkerThreadContext Ptr = Any
-		Dim hrCreateThreadContext As HRESULT = CreateInstance( _
-			GetProcessHeap(), _
-			@CLSID_WORKERTHREADCONTEXT, _
-			@IID_IWorkerThreadContext, _
-			@pIContext _
-		)
-		
-		Dim pIClientRequest As IClientRequest Ptr = Any
-		IWorkerThreadContext_GetClientRequest(pIContext, @pIClientRequest)
-		
-		Dim dwThreadId As DWORD = Any
-		Dim hThread As HANDLE = CreateThread( _
-			NULL, _
-			DefaultStackSize, _
-			@ThreadProc, _
-			pIContext, _
-			CREATE_SUSPENDED, _
-			@dwThreadId _
-		)
-		Dim dwCreateThreadErrorCode As DWORD = GetLastError()
 		
 		Dim RemoteAddress As SOCKADDR_IN = Any
 		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
@@ -251,95 +256,122 @@ Function WebServerRun( _
 			CPtr(SOCKADDR Ptr, @RemoteAddress), _
 			@RemoteAddressLength _
 		)
+		Dim SocketErrorCode As Integer = WSAGetLastError()
 		
-		If ClientSocket = INVALID_SOCKET Then
+		Dim FailedFlag As Boolean = (hWorkerThreadContextHeap = NULL) OrElse _
+			(FAILED(hrCreateThreadContext)) OrElse _
+			(hThread = NULL) OrElse _
+		(ClientSocket = INVALID_SOCKET)
+		
+		If FailedFlag Then
 			
 			If this->ReListenSocket = False Then
-				CloseHandle(hThread)
 				Exit Do
 			End If
 			
-			' TODO Узнать ошибку и обработать
-			Dim SocketErrorCode As Integer = WSAGetLastError()
-			SleepEx(SleepTimeout, True)
-			CloseHandle(hThread)
+			INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
+			
+			If hThread = NULL Then
+				' TODO Использовать код ошибки создания потока dwCreateThreadErrorCode
+				WriteHttpCannotCreateThread( _
+					NULL, _
+					pIResponseDefault, _
+					CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+					NULL _
+				)
+			Else
+				' TODO Использовать код ошибки создания кучи dwCreateThreadContextHeapErrorCode и выделения памяти hrCreateThreadContext
+				WriteHttpNotEnoughMemory( _
+					NULL, _
+					pIResponseDefault, _
+					CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+					NULL _
+				)
+			End If
+			
+			If hThread <> NULL Then
+				CloseHandle(hThread)
+			End If
+			
+			If hWorkerThreadContextHeap <> NULL Then
+				HeapDestroy(hWorkerThreadContextHeap)
+			End If
+			
+			SleepEx(THREAD_SLEEPING_TIME, True)
 			
 		Else
 			
-			Dim FailedFlag As Boolean = FAILED(hrCreateThreadContext) OrElse hThread = NULL
+			SetReceiveTimeout(ClientSocket, CLIENTSOCKET_RECEIVE_TIMEOUT)
 			
-			If FailedFlag Then
-				INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
-				
-				If hThread = NULL Then
-					WriteHttpCannotCreateThread( _
-						NULL, _
-						pIResponseDefault, _
-						CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-						NULL _
-					)
-				Else
-					WriteHttpNotEnoughMemory( _
-						NULL, _
-						pIResponseDefault, _
-						CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-						NULL _
-					)
-				End If
-				
-				IClientRequest_Release(pIClientRequest)
-				
-				If pIContext <> NULL Then
-					IWorkerThreadContext_Release(pIContext)
-				End If
-				
-				If hThread <> NULL Then
-					CloseHandle(hThread)
-				End If
-				
-			Else
-				
-				SetReceiveTimeout(ClientSocket, ClientSocketReceiveTimeout)
-				
-				Dim pINetworkStream As INetworkStream Ptr = Any
-				IWorkerThreadContext_GetNetworkStream(pIContext, @pINetworkStream)
-				
-				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-				
-				IWorkerThreadContext_SetRemoteAddress(pIContext, RemoteAddress)
-				IWorkerThreadContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
-				
-				IWorkerThreadContext_SetThreadId(pIContext, dwThreadId)
-				IWorkerThreadContext_SetThreadHandle(pIContext, hThread)
-				IWorkerThreadContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
-				
-				IWorkerThreadContext_SetWebSiteContainer(pIContext, pIWebSites)
-				
-				IWorkerThreadContext_SetThreadContextHeap(pIContext, this->hThreadContextHeap)
-				
-				IWorkerThreadContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
-				
-				Dim StartTicks As LARGE_INTEGER
-				QueryPerformanceCounter(@StartTicks)
-				
-				IWorkerThreadContext_SetStartTicks(pIContext, StartTicks)
-				
-				Dim dwResume As DWORD = ResumeThread(hThread)
-				If dwResume = -1 Then
-					' TODO Узнать ошибку и обработать
-					Dim dwError As DWORD = GetLastError()
-					CloseHandle(hThread)
-					IWorkerThreadContext_Release(pIContext)
-				End If
-				
-				INetworkStream_Release(pINetworkStream)
-				IClientRequest_Release(pIClientRequest)
-				
+			Dim pIClientRequest As IClientRequest Ptr = Any
+			IWorkerThreadContext_GetClientRequest(pIContext, @pIClientRequest)
+			
+			Dim pINetworkStream As INetworkStream Ptr = Any
+			IWorkerThreadContext_GetNetworkStream(pIContext, @pINetworkStream)
+			
+			INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+			
+			IWorkerThreadContext_SetRemoteAddress(pIContext, RemoteAddress)
+			IWorkerThreadContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
+			
+			IWorkerThreadContext_SetThreadId(pIContext, dwThreadId)
+			IWorkerThreadContext_SetThreadHandle(pIContext, hThread)
+			IWorkerThreadContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
+			
+			IWorkerThreadContext_SetWebSiteContainer(pIContext, pIWebSites)
+			
+			IWorkerThreadContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
+			
+			INetworkStream_Release(pINetworkStream)
+			IClientRequest_Release(pIClientRequest)
+			
+			Dim StartTicks As LARGE_INTEGER
+			QueryPerformanceCounter(@StartTicks)
+			
+			IWorkerThreadContext_SetStartTicks(pIContext, StartTicks)
+			
+			Dim dwResume As DWORD = ResumeThread(hThread)
+			If dwResume = -1 Then
+				' TODO Узнать ошибку и обработать
+				Dim dwError As DWORD = GetLastError()
+				IWorkerThreadContext_Release(pIContext)
 			End If
 			
 		End If
 		
+		hWorkerThreadContextHeap = HeapCreate( _
+			HEAP_NO_SERIALIZE, _
+			dwThreadContextHeapInitialSize, _
+			dwThreadContextHeapMaximumSize _
+		)
+		dwCreateThreadContextHeapErrorCode = GetLastError()
+		
+		hrCreateThreadContext = CreateInstance( _
+			hWorkerThreadContextHeap, _
+			@CLSID_WORKERTHREADCONTEXT, _
+			@IID_IWorkerThreadContext, _
+			@pIContext _
+		)
+		
+		hThread = CreateThread( _
+			NULL, _
+			THREAD_STACK_SIZE, _
+			@ThreadProc, _
+			pIContext, _
+			CREATE_SUSPENDED, _
+			@dwThreadId _
+		)
+		dwCreateThreadErrorCode = GetLastError()
+		
 	Loop While this->ReListenSocket
+	
+	If hThread <> NULL Then
+		CloseHandle(hThread)
+	End If
+	
+	If hWorkerThreadContextHeap <> NULL Then
+		HeapDestroy(hWorkerThreadContextHeap)
+	End If
 	
 	IWebSiteContainer_Release(pIWebSites)
 	

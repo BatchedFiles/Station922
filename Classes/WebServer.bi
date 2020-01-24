@@ -13,7 +13,6 @@ Type WebServer
 	Dim pVirtualTable As IRunnableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
 	
-	Dim hThreadContextHeap As HANDLE
 	' Dim pExeDir As WString Ptr
 	Dim LogDir As WString * (MAX_PATH + 1)
 	Dim SettingsFileName As WString * (MAX_PATH + 1)

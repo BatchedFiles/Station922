@@ -86,7 +86,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_WORKERTHREADCONTEXT, rclsid) Then
-		Dim pContext As WorkerThreadContext Ptr = CreateWorkerThreadContext()
+		Dim pContext As WorkerThreadContext Ptr = CreateWorkerThreadContext(hHeap)
 		
 		If pContext = NULL Then
 			Return E_OUTOFMEMORY
