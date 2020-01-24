@@ -5,7 +5,7 @@
 
 Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
-Type WebSite
+Type _WebSite
 	
 	Dim pVirtualTable As IWebSiteVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
@@ -19,6 +19,10 @@ Type WebSite
 	Dim pMovedUrl As WString Ptr
 	
 End Type
+
+Type WebSite As _WebSite
+
+Type LPWebSite As _WebSite Ptr
 
 Declare Function InitializeWebSiteOfIWebSite( _
 	ByVal this As WebSite Ptr _

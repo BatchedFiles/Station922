@@ -6,35 +6,9 @@
 
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
-Type ServerResponse
-	Dim pServerResponseVirtualTable As IServerResponseVirtualTable Ptr
-	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	Dim hHeap As HANDLE
-	
-	' Буфер заголовков ответа
-	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
-	' Указатель на свободное место в буфере заголовков ответа
-	Dim StartResponseHeadersPtr As WString Ptr
-	' Заголовки ответа
-	Dim ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
-	
-	Dim HttpVersion As HttpVersions
-	Dim StatusCode As HttpStatusCodes
-	Dim StatusDescription As WString Ptr
-	
-	Dim SendOnlyHeaders As Boolean
-	Dim KeepAlive As Boolean
-	
-	' Сжатие данных, поддерживаемое сервером
-	Dim ResponseZipEnable As Boolean
-	Dim ResponseZipMode As ZipModes
-	
-	Dim Mime As MimeType
-	
-	Dim ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
-	
-End Type
+Type ServerResponse As _ServerResponse
+
+Type LPServerResponse As _ServerResponse Ptr
 
 Declare Function CreateServerResponse( _
 	ByVal hHeap As HANDLE _

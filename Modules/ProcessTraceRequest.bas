@@ -27,7 +27,7 @@ Function ProcessTraceRequest( _
 	
 	IHttpReader_GetRequestedBytes(pIClientReader, @RequestedBytesLength, @pRequestedBytes)
 	
-	Dim SendBuffer As ZString * (MaxResponseBufferLength + HttpReader.MaxBufferLength) = Any
+	Dim SendBuffer As ZString * (MaxResponseBufferLength + HTTPREADER_MAXBUFFER_LENGTH) = Any
 	Dim HeadersLength As Integer = AllResponseHeadersToBytes(pIRequest, pIResponse, @SendBuffer, RequestedBytesLength)
 	
 	RtlCopyMemory(@SendBuffer[HeadersLength], pRequestedBytes, RequestedBytesLength)

@@ -10,6 +10,27 @@
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 
+Const ListenAddressLengthMaximum As Integer = 255
+Const ListenPortLengthMaximum As Integer = 15
+
+Type _WebServer
+	Dim pVirtualTable As IRunnableVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	
+	' Dim pExeDir As WString Ptr
+	Dim LogDir As WString * (MAX_PATH + 1)
+	Dim SettingsFileName As WString * (MAX_PATH + 1)
+	
+	Dim ListenAddress As WString * (ListenAddressLengthMaximum + 1)
+	Dim ListenPort As WString * (ListenPortLengthMaximum + 1)
+	
+	Dim ListenSocket As SOCKET
+	Dim ReListenSocket As Boolean
+	
+	Dim Frequency As LARGE_INTEGER
+	
+End Type
+
 Const CLIENTSOCKET_RECEIVE_TIMEOUT As DWORD = 90 * 1000
 Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000

@@ -6,7 +6,7 @@
 
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 
-Type RequestedFile
+Type _RequestedFile
 	Const MaxFilePathLength As Integer = 4095 + 32
 	Const MaxFilePathTranslatedLength As Integer = MaxFilePathLength + 256
 	
@@ -29,6 +29,10 @@ Type RequestedFile
 	Dim DeflateFileDataLength As ULongInt
 	
 End Type
+
+Type RequestedFile As _RequestedFile
+
+Type LPRequestedFile As _RequestedFile Ptr
 
 Declare Function CreateRequestedFile( _
 )As RequestedFile Ptr
@@ -101,18 +105,5 @@ Declare Function RequestedFileGetVaryHeaders( _
 	ByVal pHeadersLength As Integer Ptr, _
 	ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 )As HRESULT
-
-#define RequestedFile_NonVirtualQueryInterface(pIRequestedFile, riid, ppv) RequestedFileQueryInterface(CPtr(RequestedFile Ptr, pIRequestedFile), riid, ppv)
-#define RequestedFile_NonVirtualAddRef(pIRequestedFile) RequestedFileAddRef(CPtr(RequestedFile Ptr, pIRequestedFile))
-#define RequestedFile_NonVirtualRelease(pIRequestedFile) RequestedFileRelease(CPtr(RequestedFile Ptr, pIRequestedFile))
-#define RequestedFile_NonVirtualChoiseFile(pIRequestedFile, pUri) RequestedFileChoiseFile(CPtr(RequestedFile Ptr, pIRequestedFile), pUri)
-#define RequestedFile_NonVirtualGetFilePath(pIRequestedFile, ppFilePath) RequestedFileGetFilePath(CPtr(RequestedFile Ptr, pIRequestedFile), ppFilePath)
-#define RequestedFile_NonVirtualSetFilePath(pIRequestedFile, FilePath) RequestedFileSetFilePath(CPtr(RequestedFile Ptr, pIRequestedFile), FilePath)
-#define RequestedFile_NonVirtualGetPathTranslated(pIRequestedFile, ppPathTranslated) RequestedFileGetPathTranslated(CPtr(RequestedFile Ptr, pIRequestedFile), ppPathTranslated)
-#define RequestedFile_NonVirtualSetPathTranslated(pIRequestedFile, PathTranslated) RequestedFileSetPathTranslated(CPtr(RequestedFile Ptr, pIRequestedFile), PathTranslated)
-#define RequestedFile_NonVirtualFileExists(pIRequestedFile, pResult) FileExists(CPtr(RequestedFile Ptr, pIRequestedFile), pResult)
-#define RequestedFile_NonVirtualGetFileHandle(pIRequestedFile, pResult) RequestedFileGetFileHandle(CPtr(RequestedFile Ptr, pIRequestedFile), pResult)
-#define RequestedFile_NonVirtualGetLastFileModifiedDate(pIRequestedFile, pResult) RequestedFileGetLastFileModifiedDate(CPtr(RequestedFile Ptr, pIRequestedFile), pResult)
-#define RequestedFile_NonVirtualGetVaryHeaders(pIRequestedFile, pHeadersLength, ppHeaders) RequestedFileGetVaryHeaders(CPtr(RequestedFile Ptr, pIRequestedFile), pHeadersLength, ppHeaders)
 
 #endif

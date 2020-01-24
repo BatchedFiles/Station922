@@ -2,6 +2,26 @@
 #include "FindNewLineIndex.bi"
 #include "StringConstants.bi"
 
+Type _HttpReader
+	
+	Dim pVirtualTable As IHttpReaderVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	Dim pIStream As IBaseStream Ptr
+	
+	Dim Buffer As ZString * (HTTPREADER_MAXBUFFER_LENGTH + 1)
+	Dim BufferLength As Integer
+	
+	Dim LinesBuffer As WString * (HTTPREADER_MAXBUFFER_LENGTH + 1)
+	Dim LinesBufferLength As Integer
+	
+	Dim IsAllBytesReaded As Boolean
+	
+	Dim StartLineIndex As Integer
+	
+End Type
+
 Dim Shared GlobalHttpReaderVirtualTable As IHttpReaderVirtualTable
 
 Sub InitializeHttpReaderVirtualTable()
@@ -32,7 +52,7 @@ Sub InitializeHttpReader( _
 	
 	this->pIStream = NULL
 	this->Buffer[0] = 0
-	this->Buffer[HttpReader.MaxBufferLength] = 0
+	this->Buffer[HTTPREADER_MAXBUFFER_LENGTH] = 0
 	this->BufferLength = 0
 	this->LinesBuffer[0] = 0
 	this->LinesBufferLength = 0
@@ -150,7 +170,7 @@ Function HttpReaderReadAllBytes( _
 			this->pIStream, _
 			@this->Buffer, _
 			this->BufferLength, _
-			HttpReader.MaxBufferLength - this->BufferLength, _
+			HTTPREADER_MAXBUFFER_LENGTH - this->BufferLength, _
 			@ReceivedBytesCount _
 		)
 		
@@ -165,7 +185,7 @@ Function HttpReaderReadAllBytes( _
 		this->BufferLength += ReceivedBytesCount
 		this->Buffer[this->BufferLength] = 0
 		
-		If this->BufferLength >= HttpReader.MaxBufferLength Then
+		If this->BufferLength >= HTTPREADER_MAXBUFFER_LENGTH Then
 			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 		End If
 		
@@ -197,7 +217,7 @@ Function HttpReaderConvertBytesToString( _
 		@this->Buffer, _
 		DoubleCrLfIndex + 2 * NewLineStringLength, _
 		@this->LinesBuffer, _
-		HttpReader.MaxBufferLength _
+		HTTPREADER_MAXBUFFER_LENGTH _
 	)
 	
 	this->LinesBufferLength = CharsLength
@@ -283,7 +303,7 @@ Function HttpReaderClear( _
 			RtlMoveMemory( _
 				@this->Buffer, _
 				@this->Buffer[this->StartLineIndex], _
-				HttpReader.MaxBufferLength - this->StartLineIndex + 1 _
+				HTTPREADER_MAXBUFFER_LENGTH - this->StartLineIndex + 1 _
 			)
 			this->BufferLength -= this->StartLineIndex
 		End If

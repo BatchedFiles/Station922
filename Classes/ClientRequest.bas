@@ -8,8 +8,24 @@
 #include "CharacterConstants.bi"
 #include "ContainerOf.bi"
 #include "HttpConst.bi"
-#include "IHttpReader.bi"
 #include "WebUtils.bi"
+
+Type _ClientRequest
+	Dim pClientRequestVirtualTable As IClientRequestVirtualTable Ptr
+	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
+	Dim HttpMethod As HttpMethods
+	Dim ClientURI As Station922Uri
+	Dim HttpVersion As HttpVersions
+	Dim KeepAlive As Boolean
+	Dim RequestZipModes(HttpZipModesMaximum - 1) As Boolean
+	Dim RequestByteRange As ByteRange
+	Dim ContentLength As LongInt
+	
+End Type
 
 Declare Function AddRequestHeader( _
 	ByVal this As ClientRequest Ptr, _

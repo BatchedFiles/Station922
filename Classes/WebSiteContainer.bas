@@ -8,6 +8,38 @@
 
 Const MaxSectionsLength As Integer = 32000 - 1
 
+Type WebSiteNode As _WebSiteNode
+
+Type LPWebSiteNode As _WebSiteNode Ptr
+
+Type _WebSiteNode
+	Const MaxHostNameLength As Integer = 1024 - 1
+	
+	Dim HostName As WString * (MaxHostNameLength + 1)
+	Dim pExecutableDirectory As WString Ptr
+	Dim PhysicalDirectory As WString * (MAX_PATH + 1)
+	Dim VirtualPath As WString * (MaxHostNameLength + 1)
+	Dim MovedUrl As WString * (MaxHostNameLength + 1)
+	Dim IsMoved As Boolean
+	
+	Dim LeftNode As WebSiteNode Ptr
+	Dim RightNode As WebSiteNode Ptr
+	Dim objWebSite As WebSite
+	Dim pIWebSite As IWebSite Ptr
+End Type
+
+Type _WebSiteContainer
+	
+	Dim pVirtualTable As IWebSiteContainerVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	
+	Dim ExecutableDirectory As WString * (MAX_PATH + 1)
+	Dim hTreeHeap As Handle
+	Dim pDefaultNode As WebSiteNode Ptr
+	Dim pTree As WebSiteNode Ptr
+	
+End Type
+
 Declare Sub LoadWebSite( _
 	ByVal pWebSiteContainer As WebSiteContainer Ptr, _
 	ByVal pIConfig As IConfiguration Ptr, _

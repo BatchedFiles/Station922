@@ -3,7 +3,7 @@
 
 #include "IArrayStringWriter.bi"
 
-Type ArrayStringWriter
+Type _ArrayStringWriter
 	
 	Dim pVirtualTable As IArrayStringWriterVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
@@ -15,6 +15,10 @@ Type ArrayStringWriter
 	Dim Buffer As WString Ptr
 	
 End Type
+
+Type ArrayStringWriter As _ArrayStringWriter
+
+Type LPArrayStringWriter As _ArrayStringWriter Ptr
 
 Declare Sub InitializeArrayStringWriterVirtualTable()
 

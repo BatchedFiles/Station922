@@ -15,7 +15,7 @@ Const CLSIDS_SERVERSTATE = "{E9BE6663-1ED6-45A4-9090-01FF8A82AB99}"
 
 Extern CLSID_SERVERSTATE Alias "CLSID_SERVERSTATE" As Const CLSID
 
-Type ServerState
+Type _ServerState
 	Dim pVirtualTable As IServerStateVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
 	Dim ExistsInStack As Boolean
@@ -30,6 +30,10 @@ Type ServerState
 	Dim ClientBuffer As Any Ptr
 	Dim BufferLength As Integer
 End Type
+
+Type ServerState As _ServerState
+
+Type LPServerState As _ServerState Ptr
 
 Declare Function ServerStateDllCgiGetRequestHeader( _
 	ByVal this As ServerState Ptr, _

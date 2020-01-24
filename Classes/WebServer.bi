@@ -2,30 +2,12 @@
 #define WEBSERVER_BI
 
 #include "IRunnable.bi"
-#include "Network.bi"
-
-Const ListenAddressLengthMaximum As Integer = 255
-Const ListenPortLengthMaximum As Integer = 15
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
-Type WebServer
-	Dim pVirtualTable As IRunnableVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	
-	' Dim pExeDir As WString Ptr
-	Dim LogDir As WString * (MAX_PATH + 1)
-	Dim SettingsFileName As WString * (MAX_PATH + 1)
-	
-	Dim ListenAddress As WString * (ListenAddressLengthMaximum + 1)
-	Dim ListenPort As WString * (ListenPortLengthMaximum + 1)
-	
-	Dim ListenSocket As SOCKET
-	Dim ReListenSocket As Boolean
-	
-	Dim Frequency As LARGE_INTEGER
-	
-End Type
+Type WebServer As _WebServer
+
+Type LPWebServer As _WebServer Ptr
 
 Declare Function CreateWebServer( _
 )As WebServer Ptr

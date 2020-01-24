@@ -1,6 +1,15 @@
 ﻿#include "NetworkStream.bi"
 #include "Network.bi"
 
+Type _NetworkStream
+	Dim pVirtualTable As INetworkStreamVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	Dim m_Socket As SOCKET
+	
+End Type
+
 Dim Shared GlobalNetworkStreamVirtualTable As INetworkStreamVirtualTable
 
 Sub InitializeNetworkStreamVirtualTable()

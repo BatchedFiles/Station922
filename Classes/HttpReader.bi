@@ -4,28 +4,13 @@
 #include "IBaseStream.bi"
 #include "IHttpReader.bi"
 
+Const HTTPREADER_MAXBUFFER_LENGTH As Integer = 16 * 1024 - 1
+
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
-Type HttpReader
-	Const MaxBufferLength As Integer = 16 * 1024 - 1
-	
-	Dim pVirtualTable As IHttpReaderVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	Dim hHeap As HANDLE
-	
-	Dim pIStream As IBaseStream Ptr
-	
-	Dim Buffer As ZString * (HttpReader.MaxBufferLength + 1)
-	Dim BufferLength As Integer
-	
-	Dim LinesBuffer As WString * (HttpReader.MaxBufferLength + 1)
-	Dim LinesBufferLength As Integer
-	
-	Dim IsAllBytesReaded As Boolean
-	
-	Dim StartLineIndex As Integer
-	
-End Type
+Type HttpReader As _HttpReader
+
+Type LPHttpReader As _HttpReader Ptr
 
 Declare Sub InitializeHttpReaderVirtualTable()
 

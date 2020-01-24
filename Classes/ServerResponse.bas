@@ -4,6 +4,36 @@
 #include "ContainerOf.bi"
 #include "StringConstants.bi"
 
+Type _ServerResponse
+	Dim pServerResponseVirtualTable As IServerResponseVirtualTable Ptr
+	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	' Буфер заголовков ответа
+	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
+	' Указатель на свободное место в буфере заголовков ответа
+	Dim StartResponseHeadersPtr As WString Ptr
+	' Заголовки ответа
+	Dim ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
+	
+	Dim HttpVersion As HttpVersions
+	Dim StatusCode As HttpStatusCodes
+	Dim StatusDescription As WString Ptr
+	
+	Dim SendOnlyHeaders As Boolean
+	Dim KeepAlive As Boolean
+	
+	' Сжатие данных, поддерживаемое сервером
+	Dim ResponseZipEnable As Boolean
+	Dim ResponseZipMode As ZipModes
+	
+	Dim Mime As MimeType
+	
+	Dim ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
+	
+End Type
+
 Dim Shared GlobalServerResponseVirtualTable As IServerResponseVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@ServerResponseQueryInterface, _

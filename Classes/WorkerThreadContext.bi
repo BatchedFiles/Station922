@@ -5,27 +5,9 @@
 
 Extern CLSID_WORKERTHREADCONTEXT Alias "CLSID_WORKERTHREADCONTEXT" As Const CLSID
 
-Type WorkerThreadContext
-	Dim pVirtualTable As IWorkerThreadContextVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	Dim hHeap As HANDLE
-	Dim RemoteAddress As SOCKADDR_IN
-	Dim RemoteAddressLength As Integer
-	
-	Dim ThreadId As DWORD
-	Dim hThread As HANDLE
-	Dim pExeDir As WString Ptr
-	
-	Dim pIWebSites As IWebSiteContainer Ptr
-	Dim pINetworkStream As INetworkStream Ptr
-	Dim pIRequest As IClientRequest Ptr
-	Dim pIHttpReader As IHttpReader Ptr
-	Dim pIResponse As IServerResponse Ptr
-	
-	Dim Frequency As LARGE_INTEGER
-	Dim StartTicks As LARGE_INTEGER
-	
-End Type
+Type WorkerThreadContext As _WorkerThreadContext
+
+Type LPWorkerThreadContext As _WorkerThreadContext Ptr
 
 Declare Function CreateWorkerThreadContext( _
 	ByVal hHeap As HANDLE _

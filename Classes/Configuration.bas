@@ -1,5 +1,13 @@
 ﻿#include "Configuration.bi"
 
+Type _Configuration
+	Dim pVirtualTable As IConfigurationVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	
+	Dim IniFileName As WString * (MAX_PATH + 1)
+	
+End Type
+
 Dim Shared GlobalConfigurationVirtualTable As IConfigurationVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@ConfigurationQueryInterface, _

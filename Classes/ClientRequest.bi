@@ -6,22 +6,9 @@
 
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 
-Type ClientRequest
-	Dim pClientRequestVirtualTable As IClientRequestVirtualTable Ptr
-	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	Dim hHeap As HANDLE
-	
-	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
-	Dim HttpMethod As HttpMethods
-	Dim ClientURI As Station922Uri
-	Dim HttpVersion As HttpVersions
-	Dim KeepAlive As Boolean
-	Dim RequestZipModes(HttpZipModesMaximum - 1) As Boolean
-	Dim RequestByteRange As ByteRange
-	Dim ContentLength As LongInt
-	
-End Type
+Type ClientRequest As _ClientRequest
+
+Type LPClientRequest As _ClientRequest Ptr
 
 Declare Function CreateClientRequest( _
 	ByVal hHeap As HANDLE _

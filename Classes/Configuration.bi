@@ -5,13 +5,9 @@
 
 Extern CLSID_CONFIGURATION Alias "CLSID_CONFIGURATION" As Const CLSID
 
-Type Configuration
-	Dim pVirtualTable As IConfigurationVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	
-	Dim IniFileName As WString * (MAX_PATH + 1)
-	
-End Type
+Type Configuration As _Configuration
+
+Type LPConfiguration As _Configuration Ptr
 
 Declare Function CreateConfiguration( _
 )As Configuration Ptr
