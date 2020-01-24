@@ -10,6 +10,7 @@ Type ServerResponse
 	Dim pServerResponseVirtualTable As IServerResponseVirtualTable Ptr
 	Dim pStringableVirtualTable As IStringableVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
 	
 	' Буфер заголовков ответа
 	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
@@ -36,6 +37,7 @@ Type ServerResponse
 End Type
 
 Declare Function CreateServerResponse( _
+	ByVal hHeap As HANDLE _
 )As ServerResponse Ptr
 
 Declare Sub DestroyServerResponse( _

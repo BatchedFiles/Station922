@@ -38,7 +38,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_SERVERRESPONSE, rclsid) Then
-		Dim pResponse As ServerResponse Ptr = CreateServerResponse()
+		Dim pResponse As ServerResponse Ptr = CreateServerResponse(hHeap)
 		
 		If pResponse = NULL Then
 			Return E_OUTOFMEMORY

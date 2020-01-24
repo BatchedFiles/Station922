@@ -43,12 +43,14 @@ Dim Shared GlobalServerResponseStringableVirtualTable As IStringableVirtualTable
 )
 
 Sub InitializeServerResponse( _
-		ByVal this As ServerResponse Ptr _
+		ByVal this As ServerResponse Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pServerResponseVirtualTable = @GlobalServerResponseVirtualTable
 	this->pStringableVirtualTable = @GlobalServerResponseStringableVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	
 	this->ResponseHeaderBuffer[0] = 0
 	this->StartResponseHeadersPtr = @this->ResponseHeaderBuffer
@@ -72,11 +74,12 @@ Sub UnInitializeServerResponse( _
 End Sub
 
 Function CreateServerResponse( _
+		ByVal hHeap As HANDLE _
 	)As ServerResponse Ptr
 	
 	Dim pResponse As ServerResponse Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(ServerResponse) _
 	)
 	
@@ -84,7 +87,7 @@ Function CreateServerResponse( _
 		Return NULL
 	End If
 	
-	InitializeServerResponse(pResponse)
+	InitializeServerResponse(pResponse, hHeap)
 	
 	Return pResponse
 	
@@ -96,7 +99,7 @@ Sub DestroyServerResponse( _
 	
 	UnInitializeServerResponse(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 
