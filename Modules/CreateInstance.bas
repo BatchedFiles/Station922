@@ -22,7 +22,7 @@ Function CreateInstance( _
 	*ppv = NULL
 	
 	If IsEqualCLSID(@CLSID_HTTPREADER, rclsid) Then
-		Dim pReader As HttpReader Ptr = CreateHttpReader()
+		Dim pReader As HttpReader Ptr = CreateHttpReader(hHeap)
 		
 		If pReader = NULL Then
 			Return E_OUTOFMEMORY

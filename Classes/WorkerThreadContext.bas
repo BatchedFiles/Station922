@@ -134,7 +134,7 @@ Function CreateWorkerThreadContext( _
 	End If
 	
 	hr = CreateInstance( _
-		GetProcessHeap(), _
+		hHeap, _
 		@CLSID_HTTPREADER, _
 		@IID_IHttpReader, _
 		@pContext->pIHttpReader _

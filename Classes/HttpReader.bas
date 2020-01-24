@@ -22,11 +22,13 @@ Sub InitializeHttpReaderVirtualTable()
 End Sub
 
 Sub InitializeHttpReader( _
-		ByVal this As HttpReader Ptr _
+		ByVal this As HttpReader Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pVirtualTable = @GlobalHttpReaderVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	
 	this->pIStream = NULL
 	this->Buffer[0] = 0
@@ -50,11 +52,12 @@ Sub UnInitializeHttpReader( _
 End Sub
 
 Function CreateHttpReader( _
+		ByVal hHeap As HANDLE _
 	)As HttpReader Ptr
 	
 	Dim this As HttpReader Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(HttpReader) _
 	)
 	
@@ -62,7 +65,7 @@ Function CreateHttpReader( _
 		Return NULL
 	End If
 	
-	InitializeHttpReader(this)
+	InitializeHttpReader(this, hHeap)
 	
 	Return this
 	
@@ -74,7 +77,7 @@ Sub DestroyHttpReader( _
 	
 	UnInitializeHttpReader(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 

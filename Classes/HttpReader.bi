@@ -11,6 +11,7 @@ Type HttpReader
 	
 	Dim pVirtualTable As IHttpReaderVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
 	
 	Dim pIStream As IBaseStream Ptr
 	
@@ -29,6 +30,7 @@ End Type
 Declare Sub InitializeHttpReaderVirtualTable()
 
 Declare Function CreateHttpReader( _
+	ByVal hHeap As HANDLE _
 )As HttpReader Ptr
 
 Declare Sub DestroyHttpReader( _
