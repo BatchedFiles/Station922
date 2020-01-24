@@ -12,6 +12,8 @@
 #include "WebUtils.bi"
 #include "WriteHttpError.bi"
 
+Type LPProcessRequestVirtualTable As Function(ByVal pIRequest As IClientRequest Ptr, ByVal pIResponse As IServerResponse Ptr, ByVal pINetworkStream As INetworkStream Ptr, ByVal pIWebSite As IWebSite Ptr, ByVal pIClientReader As IHttpReader Ptr, ByVal pIFile As IRequestedFile Ptr)As Boolean
+
 Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
 	Dim pIContext As IWorkerThreadContext Ptr = CPtr(IWorkerThreadContext Ptr, lpParam)
@@ -175,15 +177,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 					Else
 						
 						' TODO Создать отдельные классы обработчиков запроса
-						Dim ProcessRequestVirtualTable As Function( _
-							ByVal pIRequest As IClientRequest Ptr, _
-							ByVal pIResponse As IServerResponse Ptr, _
-							ByVal pINetworkStream As INetworkStream Ptr, _
-							ByVal pIWebSite As IWebSite Ptr, _
-							ByVal pIClientReader As IHttpReader Ptr, _
-							ByVal pIFile As IRequestedFile Ptr _
-						)As Boolean = Any
-						
+						Dim ProcessRequestVirtualTable As LPProcessRequestVirtualTable = Any
 						Dim RequestedFileAccess As FileAccess = Any
 						
 						Select Case HttpMethod
