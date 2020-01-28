@@ -78,11 +78,11 @@ Declare Function WebSiteMapPath( _
 	ByVal pResult As WString Ptr _
 )As HRESULT
 
-Declare Function WebSiteGetRequestedFile( _
+Declare Function WebSiteOpenRequestedFile( _
 	ByVal this As WebSite Ptr, _
+	ByVal pRequestedFile As IRequestedFile Ptr, _
 	ByVal FilePath As WString Ptr, _
-	ByVal ForReading As FileAccess, _
-	ByVal ppRequestedFile As IRequestedFile Ptr Ptr _
+	ByVal fAccess As FileAccess _
 )As HRESULT
 
 Declare Function WebSiteNeedCgiProcessing( _

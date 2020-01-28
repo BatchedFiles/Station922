@@ -4,9 +4,10 @@
 #include "IRequestedFile.bi"
 
 Enum FileAccess
-	ForPut
-	ForGetHead
-	ForDelete
+	CreateAccess
+	ReadAccess
+	UpdateAccess
+	DeleteAccess
 End Enum
 
 Type IWebSite As IWebSite_
@@ -54,11 +55,11 @@ Type IWebSiteVirtualTable
 		ByVal pResult As WString Ptr _
 	)As HRESULT
 	
-	Dim GetRequestedFile As Function( _
+	Dim OpenRequestedFile As Function( _
 		ByVal this As IWebSite Ptr, _
+		ByVal pRequestedFile As IRequestedFile Ptr, _
 		ByVal FilePath As WString Ptr, _
-		ByVal ForReading As FileAccess, _
-		ByVal ppRequestedFile As IRequestedFile Ptr Ptr _
+		ByVal fAccess As FileAccess _
 	)As HRESULT
 	
 	Dim NeedCgiProcessing As Function( _
@@ -89,7 +90,7 @@ End Type
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->pVirtualTable->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->pVirtualTable->GetMovedUrl(this, ppMovedUrl)
 #define IWebSite_MapPath(this, Path, pResult) (this)->pVirtualTable->MapPath(this, Path, pResult)
-#define IWebSite_GetRequestedFile(this, FilePath, ForReading, ppRequestedFile) (this)->pVirtualTable->GetRequestedFile(this, FilePath, ForReading, ppRequestedFile)
+#define IWebSite_OpenRequestedFile(this, pRequestedFile, FilePath, fAccess) (this)->pVirtualTable->OpenRequestedFile(this, pRequestedFile, FilePath, fAccess)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->pVirtualTable->NeedCgiProcessing(this, Path, pResult)
 #define IWebSite_NeedDllProcessing(this, Path, pResult) (this)->pVirtualTable->NeedDllProcessing(this, Path, pResult)
 

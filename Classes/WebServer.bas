@@ -34,6 +34,8 @@ End Type
 Const CLIENTSOCKET_RECEIVE_TIMEOUT As DWORD = 90 * 1000
 Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
+Const ThreadContextHeapInitialSize As DWORD = 256000
+Const ThreadContextHeapMaximumSize As DWORD = 256000
 
 Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
@@ -238,13 +240,10 @@ Function WebServerRun( _
 		
 	Loop
 	
-	Const dwThreadContextHeapInitialSize As DWORD = 50 * 4096
-	Const dwThreadContextHeapMaximumSize As DWORD = 50 * 4096
-	
 	Dim hWorkerThreadContextHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
-		dwThreadContextHeapInitialSize, _
-		dwThreadContextHeapMaximumSize _
+		ThreadContextHeapInitialSize, _
+		ThreadContextHeapMaximumSize _
 	)
 	Dim dwCreateThreadContextHeapErrorCode As DWORD = GetLastError()
 	
@@ -364,8 +363,8 @@ Function WebServerRun( _
 		
 		hWorkerThreadContextHeap = HeapCreate( _
 			HEAP_NO_SERIALIZE, _
-			dwThreadContextHeapInitialSize, _
-			dwThreadContextHeapMaximumSize _
+			ThreadContextHeapInitialSize, _
+			ThreadContextHeapMaximumSize _
 		)
 		dwCreateThreadContextHeapErrorCode = GetLastError()
 		

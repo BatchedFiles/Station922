@@ -2,19 +2,44 @@
 #include "ContainerOf.bi"
 #include "HttpConst.bi"
 
+Const REQUESTEDFILE_MAXPATHLENGTH As Integer = 4095 + 32
+Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = 4095 + 32
+
+Type _RequestedFile
+	Dim pRequestedFileVirtualTable As IRequestedFileVirtualTable Ptr
+	Dim pSendableVirtualTable As ISendableVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	Dim FilePath As WString * (REQUESTEDFILE_MAXPATHLENGTH + 1)
+	Dim PathTranslated As WString * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
+	
+	Dim LastFileModifiedDate As FILETIME
+	
+	Dim FileHandle As Handle
+	Dim FileDataLength As ULongInt
+	
+	Dim GZipFileHandle As Handle
+	Dim GZipFileDataLength As ULongInt
+	
+	Dim DeflateFileHandle As Handle
+	Dim DeflateFileDataLength As ULongInt
+	
+End Type
+
 Dim Shared GlobalRequestedFileVirtualTable As IRequestedFileVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@RequestedFileQueryInterface, _
 		@RequestedFileAddRef, _
 		@RequestedFileRelease _
 	), _
-	NULL, _
 	@RequestedFileGetFilePath, _
-	NULL, _
+	@RequestedFileSetFilePath, _
 	@RequestedFileGetPathTranslated, _
-	NULL, _
+	@RequestedFileSetPathTranslated, _
 	@RequestedFileFileExists, _
 	@RequestedFileGetFileHandle, _
+	@RequestedFileSetFileHandle, _
 	@RequestedFileGetLastFileModifiedDate, _
 	NULL, _
 	NULL _
@@ -30,37 +55,15 @@ Dim Shared GlobalRequestedFileSendableVirtualTable As ISendableVirtualTable = Ty
 	NULL _
 )
 
-/'
-Function Remove()As Boolean
-	' TODO Узнать код ошибки и отправить его клиенту
-	If DeleteFile(@this->PathTranslated) <> 0 Then
-		' Удалить возможные заголовочные файлы
-		Dim sExtHeadersFile As WString * (WebSite.MaxFilePathTranslatedLength + 1) = Any
-		lstrcpy(@sExtHeadersFile, @pWebSite->PathTranslated)
-		lstrcat(@sExtHeadersFile, @HeadersExtensionString)
-		DeleteFile(@sExtHeadersFile)
-		
-		' Создать файл «.410», показывающий, что файл был удалён
-		lstrcpy(@sExtHeadersFile, @pWebSite->PathTranslated)
-		lstrcat(@sExtHeadersFile, @FileGoneExtension)
-		Dim hRequestedFile As HANDLE = CreateFile(@sExtHeadersFile, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL)
-		CloseHandle(hRequestedFile)
-		
-		Return True
-	Else
-		Return False
-	End If
-	
-End Function
-'/
-
 Sub InitializeRequestedFile( _
-		ByVal this As RequestedFile Ptr _
+		ByVal this As RequestedFile Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pRequestedFileVirtualTable = @GlobalRequestedFileVirtualTable
 	this->pSendableVirtualTable = @GlobalRequestedFileSendableVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	
 	this->FilePath[0] = 0
 	this->PathTranslated[0] = 0
@@ -98,11 +101,12 @@ Sub UnInitializeRequestedFile( _
 End Sub
 
 Function CreateRequestedFile( _
+		ByVal hHeap As HANDLE _
 	)As RequestedFile Ptr
 	
 	Dim this As RequestedFile Ptr = HeapAlloc( _
-		GetProcessHeap(), _
-		0, _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(RequestedFile) _
 	)
 	
@@ -110,7 +114,7 @@ Function CreateRequestedFile( _
 		Return NULL
 	End If
 	
-	InitializeRequestedFile(this)
+	InitializeRequestedFile(this, hHeap)
 	
 	Return this
 	
@@ -122,7 +126,7 @@ Sub DestroyRequestedFile( _
 	
 	UnInitializeRequestedFile(this)
 	
-	HeapFree(GetProcessHeap(), 0, this)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 
@@ -180,11 +184,6 @@ Function RequestedFileRelease( _
 	
 End Function
 
-' Declare Function RequestedFileChoiseFile( _
-	' ByVal this As RequestedFile Ptr, _
-	' ByVal pUri As Uri Ptr _
-' )As HRESULT
-
 Function RequestedFileGetFilePath( _
 		ByVal this As RequestedFile Ptr, _
 		ByVal ppFilePath As WString Ptr Ptr _
@@ -196,10 +195,16 @@ Function RequestedFileGetFilePath( _
 	
 End Function
 
-' Declare Function RequestedFileSetFilePath( _
-	' ByVal this As RequestedFile Ptr, _
-	' ByVal FilePath As WString Ptr _
-' )As HRESULT
+Function RequestedFileSetFilePath( _
+		ByVal this As RequestedFile Ptr, _
+		ByVal FilePath As WString Ptr _
+	)As HRESULT
+	
+	lstrcpyn(@this->FilePath, FilePath, REQUESTEDFILE_MAXPATHLENGTH + 1)
+	
+	Return S_OK
+	
+End Function
 
 Function RequestedFileGetPathTranslated( _
 		ByVal this As RequestedFile Ptr, _
@@ -212,10 +217,16 @@ Function RequestedFileGetPathTranslated( _
 	
 End Function
 
-' Declare Function RequestedFileSetPathTranslated( _
-	' ByVal this As RequestedFile Ptr, _
-	' ByVal PathTranslated As WString Ptr Ptr _
-' )As HRESULT
+Function RequestedFileSetPathTranslated( _
+		ByVal this As RequestedFile Ptr, _
+		ByVal PathTranslated As WString Ptr _
+	)As HRESULT
+	
+	lstrcpyn(@this->PathTranslated, PathTranslated, REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
+	
+	Return S_OK
+	
+End Function
 
 Function RequestedFileFileExists( _
 		ByVal this As RequestedFile Ptr, _
@@ -264,6 +275,17 @@ Function RequestedFileGetFileHandle( _
 	
 End Function
 
+Function RequestedFileSetFileHandle( _
+		ByVal this As RequestedFile Ptr, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	
+	this->FileHandle = hFile
+	
+	Return S_OK
+	
+End Function
+
 Function RequestedFileGetLastFileModifiedDate( _
 		ByVal this As RequestedFile Ptr, _
 		ByVal pResult As FILETIME Ptr _
@@ -280,6 +302,7 @@ Function RequestedFileGetLastFileModifiedDate( _
 	Return S_OK
 	
 End Function
+
 ' Declare Function RequestedFileGetFileLength( _
 	' ByVal this As RequestedFile Ptr, _
 	' ByVal pResult As ULongInt Ptr _

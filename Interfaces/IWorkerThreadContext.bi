@@ -4,6 +4,7 @@
 #include "IClientRequest.bi"
 #include "IHttpReader.bi"
 #include "INetworkStream.bi"
+#include "IRequestedFile.bi"
 #include "IServerResponse.bi"
 #include "IWebSiteContainer.bi"
 
@@ -136,6 +137,16 @@ Type IWorkerThreadContextVirtualTable
 		ByVal pIHttpReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	Dim GetRequestedFile As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
+	)As HRESULT
+	
+	Dim SetRequestedFile As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal pIRequestedFile As IRequestedFile Ptr _
+	)As HRESULT
+	
 	' Dim hInput As HANDLE
 	' Dim hOutput As HANDLE
 	' Dim hError As HANDLE
@@ -173,5 +184,7 @@ End Type
 #define IWorkerThreadContext_SetServerResponse(this, pIResponse) (this)->pVirtualTable->SetServerResponse(this, pIResponse)
 #define IWorkerThreadContext_GetHttpReader(this, ppIHttpReader) (this)->pVirtualTable->GetHttpReader(this, ppIHttpReader)
 #define IWorkerThreadContext_SetHttpReader(this, pIHttpReader) (this)->pVirtualTable->SetHttpReader(this, pIHttpReader)
+#define IWorkerThreadContext_GetRequestedFile(this, ppIRequestedFile) (this)->pVirtualTable->GetRequestedFile(this, ppIRequestedFile)
+#define IWorkerThreadContext_SetRequestedFile(this, pIRequestedFile) (this)->pVirtualTable->SetRequestedFile(this, pIRequestedFile)
 
 #endif

@@ -6,35 +6,12 @@
 
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 
-Type _RequestedFile
-	Const MaxFilePathLength As Integer = 4095 + 32
-	Const MaxFilePathTranslatedLength As Integer = MaxFilePathLength + 256
-	
-	Dim pRequestedFileVirtualTable As IRequestedFileVirtualTable Ptr
-	Dim pSendableVirtualTable As ISendableVirtualTable Ptr
-	Dim ReferenceCounter As ULONG
-	
-	Dim FilePath As WString * (MaxFilePathLength + 1)
-	Dim PathTranslated As WString * (MaxFilePathTranslatedLength + 1)
-	
-	Dim LastFileModifiedDate As FILETIME
-	
-	Dim FileHandle As Handle
-	Dim FileDataLength As ULongInt
-	
-	Dim GZipFileHandle As Handle
-	Dim GZipFileDataLength As ULongInt
-	
-	Dim DeflateFileHandle As Handle
-	Dim DeflateFileDataLength As ULongInt
-	
-End Type
-
 Type RequestedFile As _RequestedFile
 
 Type LPRequestedFile As _RequestedFile Ptr
 
 Declare Function CreateRequestedFile( _
+	ByVal hHeap As HANDLE _
 )As RequestedFile Ptr
 
 Declare Sub DestroyRequestedFile( _
@@ -55,11 +32,6 @@ Declare Function RequestedFileRelease( _
 	ByVal this As RequestedFile Ptr _
 )As ULONG
 
-Declare Function RequestedFileChoiseFile( _
-	ByVal this As RequestedFile Ptr, _
-	ByVal pUri As Station922Uri Ptr _
-)As HRESULT
-
 Declare Function RequestedFileGetFilePath( _
 	ByVal this As RequestedFile Ptr, _
 	ByVal ppFilePath As WString Ptr Ptr _
@@ -77,7 +49,7 @@ Declare Function RequestedFileGetPathTranslated( _
 
 Declare Function RequestedFileSetPathTranslated( _
 	ByVal this As RequestedFile Ptr, _
-	ByVal PathTranslated As WString Ptr Ptr _
+	ByVal PathTranslated As WString Ptr _
 )As HRESULT
 
 Declare Function RequestedFileFileExists( _
@@ -88,6 +60,11 @@ Declare Function RequestedFileFileExists( _
 Declare Function RequestedFileGetFileHandle( _
 	ByVal this As RequestedFile Ptr, _
 	ByVal pResult As HANDLE Ptr _
+)As HRESULT
+
+Declare Function RequestedFileSetFileHandle( _
+	ByVal this As RequestedFile Ptr, _
+	ByVal hFile As HANDLE _
 )As HRESULT
 
 Declare Function RequestedFileGetLastFileModifiedDate( _

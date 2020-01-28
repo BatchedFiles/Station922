@@ -118,7 +118,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_REQUESTEDFILE, rclsid) Then
-		Dim pRequestedFile As RequestedFile Ptr = CreateRequestedFile()
+		Dim pRequestedFile As RequestedFile Ptr = CreateRequestedFile(hHeap)
 		
 		If pRequestedFile = NULL Then
 			Return E_OUTOFMEMORY

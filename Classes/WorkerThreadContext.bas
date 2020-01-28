@@ -17,6 +17,8 @@ Type _WorkerThreadContext
 	Dim pIRequest As IClientRequest Ptr
 	Dim pIHttpReader As IHttpReader Ptr
 	Dim pIResponse As IServerResponse Ptr
+	Dim pIRequestedFile As IRequestedFile Ptr
+	' Dim pIWebSite As IWebSite Ptr
 	
 	Dim Frequency As LARGE_INTEGER
 	Dim StartTicks As LARGE_INTEGER
@@ -26,7 +28,9 @@ End Type
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
+Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
+Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
 Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
@@ -57,7 +61,9 @@ Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualT
 	@WorkerThreadContextGetServerResponse, _
 	@WorkerThreadContextSetServerResponse, _
 	@WorkerThreadContextGetHttpReader, _
-	@WorkerThreadContextSetHttpReader _
+	@WorkerThreadContextSetHttpReader, _
+	@WorkerThreadContextGetRequestedFile, _
+	@WorkerThreadContextSetRequestedFile _
 )
 
 Sub InitializeWorkerThreadContext( _
@@ -81,6 +87,7 @@ Sub InitializeWorkerThreadContext( _
 	this->pIRequest = NULL
 	this->pIHttpReader = NULL
 	this->pIResponse = NULL
+	this->pIRequestedFile = NULL
 	
 	this->Frequency.QuadPart = 0
 	this->StartTicks.QuadPart = 0
@@ -113,6 +120,10 @@ Sub UnInitializeWorkerThreadContext( _
 	
 	If this->pIResponse <> NULL Then
 		IServerResponse_Release(this->pIResponse)
+	End If
+	
+	If this->pIRequestedFile <> NULL Then
+		IRequestedFile_Release(this->pIRequestedFile)
 	End If
 	
 End Sub
@@ -171,6 +182,17 @@ Function CreateWorkerThreadContext( _
 		@CLSID_SERVERRESPONSE, _
 		@IID_IServerResponse, _
 		@pContext->pIResponse _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
+	
+	hr = CreateInstance( _
+		hHeap, _
+		@CLSID_REQUESTEDFILE, _
+		@IID_IRequestedFile, _
+		@pContext->pIRequestedFile _
 	)
 	If FAILED(hr) Then
 		DestroyWorkerThreadContext(pContext)
@@ -569,6 +591,40 @@ Function WorkerThreadContextSetHttpReader( _
 	End If
 	
 	this->pIHttpReader = pIHttpReader
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextGetRequestedFile( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIRequestedFile <> NULL Then
+		IRequestedFile_AddRef(this->pIRequestedFile)
+	End If
+	
+	*ppIRequestedFile = this->pIRequestedFile
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextSetRequestedFile( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal pIRequestedFile As IRequestedFile Ptr _
+	)As HRESULT
+	
+	If this->pIRequestedFile <> NULL Then
+		IRequestedFile_Release(this->pIRequestedFile)
+	End If
+	
+	If pIRequestedFile <> NULL Then
+		IRequestedFile_AddRef(pIRequestedFile)
+	End If
+	
+	this->pIRequestedFile = pIRequestedFile
 	
 	Return S_OK
 	

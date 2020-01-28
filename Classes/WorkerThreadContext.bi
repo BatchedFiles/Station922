@@ -151,4 +151,14 @@ Declare Function WorkerThreadContextSetHttpReader( _
 	ByVal pIHttpReader As IHttpReader Ptr _
 )As HRESULT
 
+Declare Function WorkerThreadContextGetRequestedFile( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextSetRequestedFile( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal pIRequestedFile As IRequestedFile Ptr _
+)As HRESULT
+
 #endif

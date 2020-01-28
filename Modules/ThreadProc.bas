@@ -149,7 +149,6 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 				IWorkerThreadContext_GetWebSiteContainer(pIContext, @pIWebSites)
 				
 				Dim pIWebSite As IWebSite Ptr = Any
-				
 				Dim hrFindSite As HRESULT = Any
 				
 				If HttpMethod = HttpMethods.HttpConnect Then
@@ -183,68 +182,64 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 						Select Case HttpMethod
 							
 							Case HttpMethods.HttpGet
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessGetHeadRequest
 								
 							Case HttpMethods.HttpHead
 								IServerResponse_SetSendOnlyHeaders(pIResponse, True)
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessGetHeadRequest
 								
 							Case HttpMethods.HttpPost
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.UpdateAccess
 								ProcessRequestVirtualTable = @ProcessPostRequest
 								
 							Case HttpMethods.HttpPut
-								RequestedFileAccess = FileAccess.ForPut
+								RequestedFileAccess = FileAccess.CreateAccess
 								ProcessRequestVirtualTable = @ProcessPutRequest
 								
 							Case HttpMethods.HttpDelete
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.DeleteAccess
 								ProcessRequestVirtualTable = @ProcessDeleteRequest
 								
 							Case HttpMethods.HttpOptions
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessOptionsRequest
 								
 							Case HttpMethods.HttpTrace
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessTraceRequest
 								
 							Case HttpMethods.HttpConnect
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessConnectRequest
 								
 							Case Else
-								RequestedFileAccess = FileAccess.ForGetHead
+								RequestedFileAccess = FileAccess.ReadAccess
 								ProcessRequestVirtualTable = @ProcessGetHeadRequest
 								
 						End Select
 						
 						Dim pIFile As IRequestedFile Ptr = Any
-						Dim hrGetFile As HRESULT = IWebSite_GetRequestedFile( _
+						IWorkerThreadContext_GetRequestedFile(pIContext, @pIFile)
+						
+						Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
 							pIWebSite, _
+							pIFile, _
 							@ClientURI.Path, _
-							RequestedFileAccess, _
-							@pIFile _
+							RequestedFileAccess _
 						)
 						
-						If FAILED(hrGetFile) Then
-							WriteHttpNotEnoughMemory(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
-						Else
-							
-							ProcessRequestResult = ProcessRequestVirtualTable( _
-								pIRequest, _
-								pIResponse, _
-								pINetworkStream, _
-								pIWebSite, _
-								pIHttpReader, _
-								pIFile _
-							)
-							
-							IRequestedFile_Release(pIFile)
-							
-						End If
+						ProcessRequestResult = ProcessRequestVirtualTable( _
+							pIRequest, _
+							pIResponse, _
+							pINetworkStream, _
+							pIWebSite, _
+							pIHttpReader, _
+							pIFile _
+						)
+						
+						IRequestedFile_Release(pIFile)
 						
 					End If
 					

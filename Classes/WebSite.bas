@@ -12,12 +12,12 @@ Const DefaultFileNameIndexXhtml = "index.xhtml"
 Const DefaultFileNameIndexHtm = "index.htm"
 Const DefaultFileNameIndexHtml = "index.html"
 
-Const MaxDefaultFileNameLength As Integer = 16 - 1
+Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 
 Declare Function OpenFileForReading( _
 	ByVal PathTranslated As WString Ptr, _
 	ByVal ForReading As FileAccess _
-)As Handle
+)As HANDLE
 
 Declare Function GetDefaultFileName( _
 	ByVal Buffer As WString Ptr, _
@@ -37,7 +37,7 @@ Dim Shared GlobalWebSiteVirtualTable As IWebSiteVirtualTable = Type( _
 	@WebSiteGetIsMoved, _
 	@WebSiteGetMovedUrl, _
 	@WebSiteMapPath, _
-	@WebSiteGetRequestedFile, _
+	@WebSiteOpenRequestedFile, _
 	@WebSiteNeedCgiProcessing, _
 	@WebSiteNeedDllProcessing _
 )
@@ -225,115 +225,70 @@ Function WebSiteMapPath( _
 	
 End Function
 
-' TODO Убрать манипуляцию данными объекта, использовать интерфейс
-Function WebSiteGetRequestedFile( _
+Function WebSiteOpenRequestedFile( _
 		ByVal this As WebSite Ptr, _
+		ByVal pRequestedFile As IRequestedFile Ptr, _
 		ByVal FilePath As WString Ptr, _
-		ByVal ForReading As FileAccess, _
-		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
+		ByVal fAccess As FileAccess _
 	)As HRESULT
 	
-	*ppIRequestedFile = NULL
-	
-	Dim pRequestedFile As RequestedFile Ptr = CreateRequestedFile()
-	
-	If pRequestedFile = NULL Then
-		Return E_OUTOFMEMORY
-	End If
+	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
 	
 	If FilePath[lstrlen(FilePath) - 1] <> Characters.Solidus Then
 		' FilePath содержит имя конкретного файла
-		lstrcpy(pRequestedFile->FilePath, FilePath)
 		
-		WebSiteMapPath( _
-			this, _
-			@pRequestedFile->FilePath, _
-			@pRequestedFile->PathTranslated _
-		)
+		WebSiteMapPath(this, FilePath, @PathTranslated)
+		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
 		
-		pRequestedFile->FileHandle = OpenFileForReading( _
-			@pRequestedFile->PathTranslated, _
-			ForReading _
-		)
-		
-		Dim hr As HRESULT = RequestedFileQueryInterface( _
-			pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
-		)
-		
-		If FAILED(hr) Then
-			DestroyRequestedFile(pRequestedFile)
-			Return hr
-		End If
+		IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
+		IRequestedFile_SetFilePath(pRequestedFile, FilePath)
+		IRequestedFile_SetFileHandle(pRequestedFile, hFile)
 		
 		Return S_OK
 		
-	Else
-		Dim DefaultFilenameIndex As Integer = 0
-		Dim DefaultFilename As WString * (MaxDefaultFileNameLength + 1) = Any
+	End If
+	
+	Dim DefaultFilenameIndex As Integer = 0
+	Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
+	Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+	
+	Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
+	
+	Do
+		lstrcpy(@FullDefaultFilename, FilePath)
+		lstrcat(@FullDefaultFilename, DefaultFilename)
 		
-		Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
+		WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
 		
-		Do
-			lstrcpy(@pRequestedFile->FilePath, FilePath)
-			lstrcat(@pRequestedFile->FilePath, DefaultFilename)
+		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
+		
+		If hFile <> INVALID_HANDLE_VALUE Then
 			
-			WebSiteMapPath( _
-				this, _
-				@pRequestedFile->FilePath, _
-				@pRequestedFile->PathTranslated _
-			)
+			IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
+			IRequestedFile_SetFilePath(pRequestedFile, FullDefaultFilename)
+			IRequestedFile_SetFileHandle(pRequestedFile, hFile)
+			Return S_OK
 			
-			pRequestedFile->FileHandle = OpenFileForReading( _
-				@pRequestedFile->PathTranslated, _
-				ForReading _
-			)
-			
-			If pRequestedFile->FileHandle <> INVALID_HANDLE_VALUE Then
-				
-				Dim hr As HRESULT = RequestedFileQueryInterface( _
-					pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
-				)
-				
-				If FAILED(hr) Then
-					DestroyRequestedFile(pRequestedFile)
-					Return hr
-				End If
-				
-				Return S_OK
-				
-			End If
-			
-			DefaultFilenameIndex += 1
-			GetDefaultFileNameResult = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
-			
-		Loop While GetDefaultFileNameResult
-		
-		' Файл по умолчанию не найден
-		GetDefaultFileName(DefaultFilename, 0)
-		
-		lstrcpy(@pRequestedFile->FilePath, FilePath)
-		lstrcat(@pRequestedFile->FilePath, @DefaultFilename)
-		
-		WebSiteMapPath( _
-			this, _
-			@pRequestedFile->FilePath, _
-			@pRequestedFile->PathTranslated _
-		)
-		
-		pRequestedFile->FileHandle = INVALID_HANDLE_VALUE
-		
-		Dim hr As HRESULT = RequestedFileQueryInterface( _
-			pRequestedFile, @IID_IRequestedFile, ppIRequestedFile _
-		)
-		
-		If FAILED(hr) Then
-			DestroyRequestedFile(pRequestedFile)
-			Return hr
 		End If
 		
-		Return S_FALSE
+		DefaultFilenameIndex += 1
+		GetDefaultFileNameResult = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
 		
-	End If
+	Loop While GetDefaultFileNameResult
+	
+	' Файл по умолчанию не найден
+	GetDefaultFileName(DefaultFilename, 0)
+	
+	lstrcpy(@FullDefaultFilename, FilePath)
+	lstrcat(@FullDefaultFilename, @DefaultFilename)
+	
+	WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
+	
+	IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
+	IRequestedFile_SetFilePath(pRequestedFile, FullDefaultFilename)
+	IRequestedFile_SetFileHandle(pRequestedFile, INVALID_HANDLE_VALUE)
+	
+	Return S_FALSE
 	
 End Function
 
@@ -413,14 +368,14 @@ End Function
 Function OpenFileForReading( _
 		ByVal PathTranslated As WString Ptr, _
 		ByVal ForReading As FileAccess _
-	)As Handle
+	)As HANDLE
+	
+	Dim dwError As DWORD = Any
 	
 	Select Case ForReading
 		
-		Case FileAccess.ForPut
-			Return INVALID_HANDLE_VALUE
-			
-		Case FileAccess.ForGetHead
+		Case FileAccess.ReadAccess
+			dwError = GetLastError()
 			Return CreateFile( _
 				PathTranslated, _
 				GENERIC_READ, _
@@ -431,7 +386,8 @@ Function OpenFileForReading( _
 				NULL _
 			)
 			
-		Case FileAccess.ForDelete
+		Case FileAccess.DeleteAccess
+			dwError = GetLastError()
 			Return CreateFile( _
 				PathTranslated, _
 				0, _
@@ -442,5 +398,10 @@ Function OpenFileForReading( _
 				NULL _
 			)
 			
+		Case Else
+			dwError = 0
+			Return INVALID_HANDLE_VALUE
+			
 	End Select
+	
 End Function
