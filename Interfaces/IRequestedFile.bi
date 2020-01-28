@@ -90,7 +90,7 @@ End Type
 #define IRequestedFile_SetPathTranslated(this, PathTranslated) (this)->pVirtualTable->SetPathTranslated(this, PathTranslated)
 #define IRequestedFile_FileExists(this, pResult) (this)->pVirtualTable->FileExists(this, pResult)
 #define IRequestedFile_GetFileHandle(this, pResult) (this)->pVirtualTable->GetFileHandle(this, pResult)
-#define IRequestedFile_SetFileHandle(this, hFile) (this)->pVirtualTable->GetFileHandle(this, hFile)
+#define IRequestedFile_SetFileHandle(this, hFile) (this)->pVirtualTable->SetFileHandle(this, hFile)
 #define IRequestedFile_GetLastFileModifiedDate(this, pResult) (this)->pVirtualTable->GetLastFileModifiedDate(this, pResult)
 #define IRequestedFile_GetFileLength(this, pResult) (this)->pVirtualTable->GetFileLength(this, pResult)
 #define IRequestedFile_GetVaryHeaders(this, pHeadersLength, ppHeaders) (this)->pVirtualTable->GetVaryHeaders(this, pHeadersLength, ppHeaders)
