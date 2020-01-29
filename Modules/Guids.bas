@@ -95,6 +95,11 @@ DEFINE_IID(IID_IHttpReader, _
 	&hd34d026f, &hd057, &h422f, &h9b, &h32, &hc6, &hd9, &h42, &h43, &h36, &hf2 _
 )
 
+' {FD8CC1E3-E4E0-4E11-87DF-903D193D1F84}
+DEFINE_IID(IID_IMutableWebSite, _
+	&hfd8cc1e3, &he4e0, &h4e11, &h87, &hdf, &h90, &h3d, &h19, &h3d, &h1f, &h84 _
+)
+
 ' {A4C7EAED-5EC0-4B7C-81D2-05BE69E63A1F}
 DEFINE_IID(IID_INetworkStream, _
 	&ha4c7eaed, &h5ec0, &h4b7c, &h81, &hd2, &h5, &hbe, &h69, &he6, &h3a, &h1f _
