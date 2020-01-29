@@ -5,6 +5,11 @@ DEFINE_CLSID(CLSID_ARRAYSTRINGWRITER, _
 	&hbaa2c5a2, &he3d0, &h4aa4, &hba, &h7e, &he7, &hd1, &h3e, &h3f, &ha6, &h8d _
 )
 
+' {F103EB8A-22EC-4A4F-AB51-CBE7DE29B354}
+DEFINE_CLSID(CLSID_CLIENTCONTEXT, _
+	&hf103eb8a, &h22ec, &h4a4f, &hab, &h51, &hcb, &he7, &hde, &h29, &hb3, &h54 _
+)
+
 ' {FB96C7A7-1B31-4351-A300-C17F30D1AF3C}
 DEFINE_CLSID(CLSID_CLIENTREQUEST, _
 	&hfb96c7a7, &h1b31, &h4351, &ha3, &h0, &hc1, &h7f, &h30, &hd1, &haf, &h3c _
@@ -73,6 +78,11 @@ DEFINE_IID(IID_IAsyncResult, _
 ' {B6AC4CEF-9B3D-4B41-B2F6-DEA27D085EB7}
 DEFINE_IID(IID_IBaseStream, _
 	&hb6ac4cef, &h9b3d, &h4b41, &hb2, &hf6, &hde, &ha2, &h7d, &h8, &h5e, &hb7 _
+)
+
+' {DBFDAAD7-BEB7-4551-A432-FD87DCA6E7CD}
+DEFINE_IID(IID_IClientContext, _
+	&hdbfdaad7, &hbeb7, &h4551, &ha4, &h32, &hfd, &h87, &hdc, &ha6, &he7, &hcd _
 )
 
 ' {E998CAB4-5559-409C-93BC-97AFDF6A3921}

@@ -1,6 +1,6 @@
 ﻿#include "ThreadProc.bi"
 #include "CreateInstance.bi"
-#include "IWorkerThreadContext.bi"
+#include "IClientContext.bi"
 #include "PrintDebugInfo.bi"
 #include "ProcessConnectRequest.bi"
 #include "ProcessDeleteRequest.bi"
@@ -16,18 +16,18 @@ Type LPProcessRequestVirtualTable As Function(ByVal pIRequest As IClientRequest 
 
 Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
-	Dim pIContext As IWorkerThreadContext Ptr = CPtr(IWorkerThreadContext Ptr, lpParam)
+	Dim pIContext As IClientContext Ptr = CPtr(IClientContext Ptr, lpParam)
 	
 	#ifndef WINDOWS_SERVICE
 		
 		Dim Frequency As LARGE_INTEGER
-		IWorkerThreadContext_GetFrequency(pIContext, @Frequency)
+		IClientContext_GetFrequency(pIContext, @Frequency)
 		
 		Dim EndThreadTicks As LARGE_INTEGER
 		QueryPerformanceCounter(@EndThreadTicks)
 		
 		Dim StartThreadTicks As LARGE_INTEGER
-		IWorkerThreadContext_GetStartTicks(pIContext, @StartThreadTicks)
+		IClientContext_GetStartTicks(pIContext, @StartThreadTicks)
 		
 		Dim ThreadWakeUpElapsedTimes As LARGE_INTEGER
 		ThreadWakeUpElapsedTimes.QuadPart = EndThreadTicks.QuadPart - StartThreadTicks.QuadPart
@@ -37,16 +37,16 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	#endif
 	
 	Dim pINetworkStream As INetworkStream Ptr = Any
-	IWorkerThreadContext_GetNetworkStream(pIContext, @pINetworkStream)
+	IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
 	
 	Dim pIRequest As IClientRequest Ptr = Any
-	IWorkerThreadContext_GetClientRequest(pIContext, @pIRequest)
+	IClientContext_GetClientRequest(pIContext, @pIRequest)
 	
 	Dim pIHttpReader As IHttpReader Ptr
-	IWorkerThreadContext_GetHttpReader(pIContext, @pIHttpReader)
+	IClientContext_GetHttpReader(pIContext, @pIHttpReader)
 	
 	Dim pIResponse As IServerResponse Ptr = Any
-	IWorkerThreadContext_GetServerResponse(pIContext, @pIResponse)
+	IClientContext_GetServerResponse(pIContext, @pIResponse)
 	
 	IHttpReader_SetBaseStream(pIHttpReader, CPtr(IBaseStream Ptr, pINetworkStream))
 	
@@ -146,10 +146,10 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 			Else
 				
 				Dim pIWebSites As IWebSiteContainer Ptr = Any
-				IWorkerThreadContext_GetWebSiteContainer(pIContext, @pIWebSites)
+				IClientContext_GetWebSiteContainer(pIContext, @pIWebSites)
 				
 				Dim pIWebSite As IWebSite Ptr = Any
-				IWorkerThreadContext_GetWebSite(pIContext, @pIWebSite)
+				IClientContext_GetWebSite(pIContext, @pIWebSite)
 				
 				Dim hrFindSite As HRESULT = Any
 				If HttpMethod = HttpMethods.HttpConnect Then
@@ -222,7 +222,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 						End Select
 						
 						Dim pIFile As IRequestedFile Ptr = Any
-						IWorkerThreadContext_GetRequestedFile(pIContext, @pIFile)
+						IClientContext_GetRequestedFile(pIContext, @pIFile)
 						
 						Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
 							pIWebSite, _
@@ -277,7 +277,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	IClientRequest_Release(pIRequest)
 	INetworkStream_Release(pINetworkStream)
 	
-	IWorkerThreadContext_Release(pIContext)
+	IClientContext_Release(pIContext)
 	
 	Return 0
 	

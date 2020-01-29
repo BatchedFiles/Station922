@@ -10,7 +10,7 @@
 #include "WebServer.bi"
 #include "WebSite.bi"
 #include "WebSiteContainer.bi"
-#include "WorkerThreadContext.bi"
+#include "ClientContext.bi"
 
 Function CreateInstance( _
 		ByVal hHeap As HANDLE, _
@@ -101,17 +101,17 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_WORKERTHREADCONTEXT, rclsid) Then
-		Dim pContext As WorkerThreadContext Ptr = CreateWorkerThreadContext(hHeap)
+	If IsEqualCLSID(@CLSID_CLIENTCONTEXT, rclsid) Then
+		Dim pContext As ClientContext Ptr = CreateClientContext(hHeap)
 		
 		If pContext = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim hr As HRESULT = WorkerThreadContextQueryInterface(pContext, riid, ppv)
+		Dim hr As HRESULT = ClientContextQueryInterface(pContext, riid, ppv)
 		
 		If FAILED(hr) Then
-			DestroyWorkerThreadContext(pContext)
+			DestroyClientContext(pContext)
 		End If
 		
 		Return hr

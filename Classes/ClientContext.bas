@@ -1,8 +1,8 @@
-﻿#include "WorkerThreadContext.bi"
+﻿#include "ClientContext.bi"
 #include "CreateInstance.bi"
 
-Type _WorkerThreadContext
-	Dim pVirtualTable As IWorkerThreadContextVirtualTable Ptr
+Type _ClientContext
+	Dim pVirtualTable As IClientContextVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
 	Dim hHeap As HANDLE
 	Dim RemoteAddress As SOCKADDR_IN
@@ -32,48 +32,48 @@ Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
-Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualTable = Type( _
+Dim Shared GlobalClientContextVirtualTable As IClientContextVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
-		@WorkerThreadContextQueryInterface, _
-		@WorkerThreadContextAddRef, _
-		@WorkerThreadContextRelease _
+		@ClientContextQueryInterface, _
+		@ClientContextAddRef, _
+		@ClientContextRelease _
 	), _
-	@WorkerThreadContextGetRemoteAddress, _
-	@WorkerThreadContextSetRemoteAddress, _
-	@WorkerThreadContextGetRemoteAddressLength, _
-	@WorkerThreadContextSetRemoteAddressLength, _
-	@WorkerThreadContextGetThreadId, _
-	@WorkerThreadContextSetThreadId, _
-	@WorkerThreadContextGetThreadHandle, _
-	@WorkerThreadContextSetThreadHandle, _
-	@WorkerThreadContextGetExecutableDirectory, _
-	@WorkerThreadContextSetExecutableDirectory, _
-	@WorkerThreadContextGetWebSiteContainer, _
-	@WorkerThreadContextSetWebSiteContainer, _
-	@WorkerThreadContextGetNetworkStream, _
-	@WorkerThreadContextSetNetworkStream, _
-	@WorkerThreadContextGetFrequency, _
-	@WorkerThreadContextSetFrequency, _
-	@WorkerThreadContextGetStartTicks, _
-	@WorkerThreadContextSetStartTicks, _
-	@WorkerThreadContextGetClientRequest, _
-	@WorkerThreadContextSetClientRequest, _
-	@WorkerThreadContextGetServerResponse, _
-	@WorkerThreadContextSetServerResponse, _
-	@WorkerThreadContextGetHttpReader, _
-	@WorkerThreadContextSetHttpReader, _
-	@WorkerThreadContextGetRequestedFile, _
-	@WorkerThreadContextSetRequestedFile, _
-	@WorkerThreadContextGetWebSite, _
-	@WorkerThreadContextSetWebSite _
+	@ClientContextGetRemoteAddress, _
+	@ClientContextSetRemoteAddress, _
+	@ClientContextGetRemoteAddressLength, _
+	@ClientContextSetRemoteAddressLength, _
+	@ClientContextGetThreadId, _
+	@ClientContextSetThreadId, _
+	@ClientContextGetThreadHandle, _
+	@ClientContextSetThreadHandle, _
+	@ClientContextGetExecutableDirectory, _
+	@ClientContextSetExecutableDirectory, _
+	@ClientContextGetWebSiteContainer, _
+	@ClientContextSetWebSiteContainer, _
+	@ClientContextGetNetworkStream, _
+	@ClientContextSetNetworkStream, _
+	@ClientContextGetFrequency, _
+	@ClientContextSetFrequency, _
+	@ClientContextGetStartTicks, _
+	@ClientContextSetStartTicks, _
+	@ClientContextGetClientRequest, _
+	@ClientContextSetClientRequest, _
+	@ClientContextGetServerResponse, _
+	@ClientContextSetServerResponse, _
+	@ClientContextGetHttpReader, _
+	@ClientContextSetHttpReader, _
+	@ClientContextGetRequestedFile, _
+	@ClientContextSetRequestedFile, _
+	@ClientContextGetWebSite, _
+	@ClientContextSetWebSite _
 )
 
-Sub InitializeWorkerThreadContext( _
-		ByVal this As WorkerThreadContext Ptr, _
+Sub InitializeClientContext( _
+		ByVal this As ClientContext Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
-	this->pVirtualTable = @GlobalWorkerThreadContextVirtualTable
+	this->pVirtualTable = @GlobalClientContextVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
 	
@@ -97,8 +97,8 @@ Sub InitializeWorkerThreadContext( _
 	
 End Sub
 
-Sub UnInitializeWorkerThreadContext( _
-		ByVal this As WorkerThreadContext Ptr _
+Sub UnInitializeClientContext( _
+		ByVal this As ClientContext Ptr _
 	)
 	
 	If this->hThread <> NULL Then
@@ -135,21 +135,21 @@ Sub UnInitializeWorkerThreadContext( _
 	
 End Sub
 
-Function CreateWorkerThreadContext( _
+Function CreateClientContext( _
 		ByVal hHeap As HANDLE _
-	)As WorkerThreadContext Ptr
+	)As ClientContext Ptr
 	
-	Dim pContext As WorkerThreadContext Ptr = HeapAlloc( _
+	Dim pContext As ClientContext Ptr = HeapAlloc( _
 		hHeap, _
 		HEAP_NO_SERIALIZE, _
-		SizeOf(WorkerThreadContext) _
+		SizeOf(ClientContext) _
 	)
 	
 	If pContext = NULL Then
 		Return NULL
 	End If
 	
-	InitializeWorkerThreadContext(pContext, hHeap)
+	InitializeClientContext(pContext, hHeap)
 	
 	Dim hr As HRESULT = CreateInstance( _
 		hHeap, _
@@ -158,7 +158,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pIRequest _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -169,7 +169,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pINetworkStream _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -180,7 +180,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pIHttpReader _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -191,7 +191,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pIResponse _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -202,7 +202,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pIRequestedFile _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -213,7 +213,7 @@ Function CreateWorkerThreadContext( _
 		@pContext->pIWebSite _
 	)
 	If FAILED(hr) Then
-		DestroyWorkerThreadContext(pContext)
+		DestroyClientContext(pContext)
 		Return NULL
 	End If
 	
@@ -221,11 +221,11 @@ Function CreateWorkerThreadContext( _
 	
 End Function
 
-Sub DestroyWorkerThreadContext( _
-		ByVal this As WorkerThreadContext Ptr _
+Sub DestroyClientContext( _
+		ByVal this As ClientContext Ptr _
 	)
 	
-	UnInitializeWorkerThreadContext(this)
+	UnInitializeClientContext(this)
 	
 	' HeapFree( _
 		' this->hThreadContextHeap, _
@@ -236,13 +236,13 @@ Sub DestroyWorkerThreadContext( _
 	
 End Sub
 
-Function WorkerThreadContextQueryInterface( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextQueryInterface( _
+		ByVal this As ClientContext Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IWorkerThreadContext, riid) Then
+	If IsEqualIID(@IID_IClientContext, riid) Then
 		*ppv = @this->pVirtualTable
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
@@ -253,14 +253,14 @@ Function WorkerThreadContextQueryInterface( _
 		End If
 	End If
 	
-	WorkerThreadContextAddRef(this)
+	ClientContextAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
-Function WorkerThreadContextAddRef( _
-		ByVal this As WorkerThreadContext Ptr _
+Function ClientContextAddRef( _
+		ByVal this As ClientContext Ptr _
 	)As ULONG
 	
 	this->ReferenceCounter += 1
@@ -269,15 +269,15 @@ Function WorkerThreadContextAddRef( _
 	
 End Function
 
-Function WorkerThreadContextRelease( _
-		ByVal this As WorkerThreadContext Ptr _
+Function ClientContextRelease( _
+		ByVal this As ClientContext Ptr _
 	)As ULONG
 	
 	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter = 0 Then
 		
-		DestroyWorkerThreadContext(this)
+		DestroyClientContext(this)
 		
 		Return 0
 	End If
@@ -286,8 +286,8 @@ Function WorkerThreadContextRelease( _
 	
 End Function
 
-Function WorkerThreadContextGetRemoteAddress( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetRemoteAddress( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pRemoteAddress As SOCKADDR_IN Ptr _
 	)As HRESULT
 	
@@ -297,8 +297,8 @@ Function WorkerThreadContextGetRemoteAddress( _
 	
 End Function
 
-Function WorkerThreadContextSetRemoteAddress( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetRemoteAddress( _
+		ByVal this As ClientContext Ptr, _
 		ByVal RemoteAddress As SOCKADDR_IN _
 	)As HRESULT
 	
@@ -308,8 +308,8 @@ Function WorkerThreadContextSetRemoteAddress( _
 	
 End Function
 
-Function WorkerThreadContextGetRemoteAddressLength( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetRemoteAddressLength( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
 	
@@ -319,8 +319,8 @@ Function WorkerThreadContextGetRemoteAddressLength( _
 	
 End Function
 
-Function WorkerThreadContextSetRemoteAddressLength( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetRemoteAddressLength( _
+		ByVal this As ClientContext Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
@@ -330,8 +330,8 @@ Function WorkerThreadContextSetRemoteAddressLength( _
 	
 End Function
 
-Function WorkerThreadContextGetThreadId( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetThreadId( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pThreadId As DWORD Ptr _
 	)As HRESULT
 	
@@ -341,8 +341,8 @@ Function WorkerThreadContextGetThreadId( _
 	
 End Function
 
-Function WorkerThreadContextSetThreadId( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetThreadId( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ThreadId As DWORD _
 	)As HRESULT
 	
@@ -352,8 +352,8 @@ Function WorkerThreadContextSetThreadId( _
 	
 End Function
 
-Function WorkerThreadContextGetThreadHandle( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetThreadHandle( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pThreadHandle As HANDLE Ptr _
 	)As HRESULT
 	
@@ -363,8 +363,8 @@ Function WorkerThreadContextGetThreadHandle( _
 	
 End Function
 
-Function WorkerThreadContextSetThreadHandle( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetThreadHandle( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ThreadHandle As HANDLE _
 	)As HRESULT
 	
@@ -378,8 +378,8 @@ Function WorkerThreadContextSetThreadHandle( _
 	
 End Function
 
-Function WorkerThreadContextGetExecutableDirectory( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetExecutableDirectory( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppExecutableDirectory As WString Ptr Ptr _
 	)As HRESULT
 	
@@ -389,8 +389,8 @@ Function WorkerThreadContextGetExecutableDirectory( _
 	
 End Function
 
-Function WorkerThreadContextSetExecutableDirectory( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetExecutableDirectory( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pExecutableDirectory As WString Ptr _
 	)As HRESULT
 	
@@ -400,8 +400,8 @@ Function WorkerThreadContextSetExecutableDirectory( _
 	
 End Function
 
-Function WorkerThreadContextGetWebSiteContainer( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetWebSiteContainer( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIWebSiteContainer As IWebSiteContainer Ptr Ptr _
 	)As HRESULT
 	
@@ -415,8 +415,8 @@ Function WorkerThreadContextGetWebSiteContainer( _
 	
 End Function
 
-Function WorkerThreadContextSetWebSiteContainer( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetWebSiteContainer( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIWebSiteContainer As IWebSiteContainer Ptr _
 	)As HRESULT
 	
@@ -434,8 +434,8 @@ Function WorkerThreadContextSetWebSiteContainer( _
 	
 End Function
 
-Function WorkerThreadContextGetNetworkStream( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetNetworkStream( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppINetworkStream As INetworkStream Ptr Ptr _
 	)As HRESULT
 	
@@ -449,8 +449,8 @@ Function WorkerThreadContextGetNetworkStream( _
 	
 End Function
 
-Function WorkerThreadContextSetNetworkStream( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetNetworkStream( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pINetworkStream As INetworkStream Ptr _
 	)As HRESULT
 	
@@ -468,8 +468,8 @@ Function WorkerThreadContextSetNetworkStream( _
 	
 End Function
 
-Function WorkerThreadContextGetFrequency( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetFrequency( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pFrequency As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
@@ -479,8 +479,8 @@ Function WorkerThreadContextGetFrequency( _
 	
 End Function
 
-Function WorkerThreadContextSetFrequency( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetFrequency( _
+		ByVal this As ClientContext Ptr, _
 		ByVal Frequency As LARGE_INTEGER _
 	)As HRESULT
 	
@@ -490,8 +490,8 @@ Function WorkerThreadContextSetFrequency( _
 	
 End Function
 
-Function WorkerThreadContextGetStartTicks( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetStartTicks( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pStartTicks As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
@@ -501,8 +501,8 @@ Function WorkerThreadContextGetStartTicks( _
 	
 End Function
 
-Function WorkerThreadContextSetStartTicks( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetStartTicks( _
+		ByVal this As ClientContext Ptr, _
 		ByVal StartTicks As LARGE_INTEGER _
 	)As HRESULT
 	
@@ -512,8 +512,8 @@ Function WorkerThreadContextSetStartTicks( _
 	
 End Function
 
-Function WorkerThreadContextGetClientRequest( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetClientRequest( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	
@@ -527,8 +527,8 @@ Function WorkerThreadContextGetClientRequest( _
 	
 End Function
 
-Function WorkerThreadContextSetClientRequest( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetClientRequest( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
@@ -546,8 +546,8 @@ Function WorkerThreadContextSetClientRequest( _
 	
 End Function
 
-Function WorkerThreadContextGetServerResponse( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetServerResponse( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIResponse As IServerResponse Ptr Ptr _
 	)As HRESULT
 	
@@ -561,8 +561,8 @@ Function WorkerThreadContextGetServerResponse( _
 	
 End Function
 
-Function WorkerThreadContextSetServerResponse( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetServerResponse( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)As HRESULT
 	
@@ -580,8 +580,8 @@ Function WorkerThreadContextSetServerResponse( _
 	
 End Function
 
-Function WorkerThreadContextGetHttpReader( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetHttpReader( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIHttpReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
@@ -595,8 +595,8 @@ Function WorkerThreadContextGetHttpReader( _
 	
 End Function
 
-Function WorkerThreadContextSetHttpReader( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetHttpReader( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIHttpReader As IHttpReader Ptr _
 	)As HRESULT
 	
@@ -614,8 +614,8 @@ Function WorkerThreadContextSetHttpReader( _
 	
 End Function
 
-Function WorkerThreadContextGetRequestedFile( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetRequestedFile( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
 	)As HRESULT
 	
@@ -629,8 +629,8 @@ Function WorkerThreadContextGetRequestedFile( _
 	
 End Function
 
-Function WorkerThreadContextSetRequestedFile( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetRequestedFile( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)As HRESULT
 	
@@ -648,8 +648,8 @@ Function WorkerThreadContextSetRequestedFile( _
 	
 End Function
 
-Function WorkerThreadContextGetWebSite( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextGetWebSite( _
+		ByVal this As ClientContext Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
@@ -663,8 +663,8 @@ Function WorkerThreadContextGetWebSite( _
 	
 End Function
 
-Function WorkerThreadContextSetWebSite( _
-		ByVal this As WorkerThreadContext Ptr, _
+Function ClientContextSetWebSite( _
+		ByVal this As ClientContext Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
