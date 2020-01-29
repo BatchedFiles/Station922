@@ -1,6 +1,12 @@
 ﻿#ifndef IMUTABLEWEBSITE_BI
 #define IMUTABLEWEBSITE_BI
 
+#ifndef unicode
+#define unicode
+#endif
+#include "windows.bi"
+#include "win\ole2.bi"
+
 Type IMutableWebSite As IMutableWebSite_
 
 Type LPIMUTABLEWEBSITE As IMutableWebSite Ptr
