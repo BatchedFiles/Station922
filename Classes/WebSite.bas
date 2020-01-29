@@ -1,6 +1,8 @@
 ﻿#include "WebSite.bi"
 #include "win\shlwapi.bi"
 #include "CharacterConstants.bi"
+#include "ContainerOf.bi"
+#include "IMutableWebSite.bi"
 #include "RequestedFile.bi"
 
 Const DefaultFileNameDefaultXml = "default.xml"
@@ -24,6 +26,22 @@ Declare Function GetDefaultFileName( _
 	ByVal Index As Integer _
 )As Boolean
 
+Type _WebSite
+	
+	Dim pVirtualTable As IWebSiteVirtualTable Ptr
+	Dim pMutableWebSiteVirtualTable As IMutableWebSiteVirtualTable Ptr
+	Dim ReferenceCounter As ULONG
+	Dim hHeap As HANDLE
+	
+	Dim pHostName As WString Ptr
+	Dim pPhysicalDirectory As WString Ptr
+	Dim pExecutableDirectory As WString Ptr
+	Dim pVirtualPath As WString Ptr
+	Dim IsMoved As Boolean
+	Dim pMovedUrl As WString Ptr
+	
+End Type
+
 Dim Shared GlobalWebSiteVirtualTable As IWebSiteVirtualTable = Type( _
 	Type<IUnknownVtbl>( _
 		@WebSiteQueryInterface, _
@@ -42,12 +60,29 @@ Dim Shared GlobalWebSiteVirtualTable As IWebSiteVirtualTable = Type( _
 	@WebSiteNeedDllProcessing _
 )
 
+Dim Shared GlobalMutableWebSiteVirtualTable As IMutableWebSiteVirtualTable = Type( _
+	Type<IUnknownVtbl>( _
+		@MutableWebSiteQueryInterface, _
+		@MutableWebSiteAddRef, _
+		@MutableWebSiteRelease _
+	), _
+	@MutableWebSiteSetHostName, _
+	@MutableWebSiteSetExecutableDirectory, _
+	@MutableWebSiteSetSitePhysicalDirectory, _
+	@MutableWebSiteSetVirtualPath, _
+	@MutableWebSiteSetIsMoved, _
+	@MutableWebSiteSetMovedUrl _
+)
+
 Sub InitializeWebSite( _
-		ByVal this As WebSite Ptr _
+		ByVal this As WebSite Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->pVirtualTable = @GlobalWebSiteVirtualTable
+	this->pMutableWebSiteVirtualTable = @GlobalMutableWebSiteVirtualTable
 	this->ReferenceCounter = 0
+	this->hHeap = hHeap
 	this->pHostName = NULL
 	this->pPhysicalDirectory = NULL
 	this->pExecutableDirectory = NULL
@@ -57,22 +92,45 @@ Sub InitializeWebSite( _
 	
 End Sub
 
-Function InitializeWebSiteOfIWebSite( _
+Sub UnInitializeWebSite( _
 		ByVal this As WebSite Ptr _
-	)As IWebSite Ptr
-	
-	InitializeWebSite(this)
-	this->ExistsInStack = True
-	
-	Dim pIWebSite As IWebSite Ptr = Any
-	
-	WebSiteQueryInterface( _
-		this, @IID_IWebSite, @pIWebSite _
 	)
 	
-	Return pIWebSite
+End Sub
+
+Function CreateWebSite( _
+		ByVal hHeap As HANDLE _
+	)As WebSite Ptr
+	
+	Dim pWebSite As WebSite Ptr = HeapAlloc( _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
+		SizeOf(WebSite) _
+	)
+	
+	If pWebSite = NULL Then
+		Return NULL
+	End If
+	
+	InitializeWebSite(pWebSite, hHeap)
+	
+	Return pWebSite
 	
 End Function
+
+Sub DestroyWebSite( _
+		ByVal this As WebSite Ptr _
+	)
+	
+	UnInitializeWebSite(this)
+	
+	HeapFree( _
+		this->hHeap, _
+		HEAP_NO_SERIALIZE, _
+		this _
+	)
+	
+End Sub
 
 Function WebSiteQueryInterface( _
 		ByVal this As WebSite Ptr, _
@@ -83,11 +141,15 @@ Function WebSiteQueryInterface( _
 	If IsEqualIID(@IID_IWebSite, riid) Then
 		*ppv = @this->pVirtualTable
 	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->pVirtualTable
+		If IsEqualIID(@IID_IMutableWebSite, riid) Then
+			*ppv = @this->pMutableWebSiteVirtualTable
 		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->pVirtualTable
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
 		End If
 	End If
 	
@@ -115,9 +177,7 @@ Function WebSiteRelease( _
 	
 	If this->ReferenceCounter = 0 Then
 		
-		If this->ExistsInStack = False Then
-			HeapFree(GetProcessHeap(), 0, this)
-		End If
+		DestroyWebSite(this)
 		
 		Return 0
 	End If
@@ -403,5 +463,117 @@ Function OpenFileForReading( _
 			Return INVALID_HANDLE_VALUE
 			
 	End Select
+	
+End Function
+
+Function MutableWebSiteQueryInterface( _
+		ByVal this As WebSite Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	Return WebSiteQueryInterface( _
+		pWebSite, riid, ppv _
+	)
+	
+End Function
+
+Function MutableWebSiteAddRef( _
+		ByVal this As WebSite Ptr _
+	)As ULONG
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	Return WebSiteAddRef(pWebSite)
+	
+End Function
+
+Function MutableWebSiteRelease( _
+		ByVal this As WebSite Ptr _
+	)As ULONG
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	Return WebSiteRelease(pWebSite)
+	
+End Function
+
+Function MutableWebSiteSetHostName( _
+		ByVal this As WebSite Ptr, _
+		ByVal pHost As WString Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->pHostName = pHost
+	
+	Return S_OK
+	
+End Function
+
+Function MutableWebSiteSetExecutableDirectory( _
+		ByVal this As WebSite Ptr, _
+		ByVal pExecutableDirectory As WString Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->pExecutableDirectory = pExecutableDirectory
+	
+	Return S_OK
+	
+End Function
+
+Function MutableWebSiteSetSitePhysicalDirectory( _
+		ByVal this As WebSite Ptr, _
+		ByVal pPhysicalDirectory As WString Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->pPhysicalDirectory = pPhysicalDirectory
+	
+	Return S_OK
+	
+End Function
+
+Function MutableWebSiteSetVirtualPath( _
+		ByVal this As WebSite Ptr, _
+		ByVal pVirtualPath As WString Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->pVirtualPath = pVirtualPath
+	
+	Return S_OK
+	
+End Function
+
+Function MutableWebSiteSetIsMoved( _
+		ByVal this As WebSite Ptr, _
+		ByVal IsMoved As Boolean _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->IsMoved = IsMoved
+	
+	Return S_OK
+	
+End Function
+
+Function MutableWebSiteSetMovedUrl( _
+		ByVal this As WebSite Ptr, _
+		ByVal pMovedUrl As WString Ptr _
+	)As HRESULT
+	
+	Dim pWebSite As WebSite Ptr = ContainerOf(this, WebSite, pMutableWebSiteVirtualTable)
+	
+	pWebSite->pMovedUrl = pMovedUrl
+	
+	Return S_OK
 	
 End Function

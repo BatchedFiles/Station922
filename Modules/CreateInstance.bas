@@ -8,7 +8,7 @@
 #include "ServerResponse.bi"
 ' #include "ServerState.bi"
 #include "WebServer.bi"
-' #include "WebSite.bi"
+#include "WebSite.bi"
 #include "WebSiteContainer.bi"
 #include "WorkerThreadContext.bi"
 
@@ -20,6 +20,22 @@ Function CreateInstance( _
 	)As HRESULT
 	
 	*ppv = NULL
+	
+	If IsEqualCLSID(@CLSID_WEBSITE, rclsid) Then
+		Dim pWebSite As WebSite Ptr = CreateWebSite(hHeap)
+		
+		If pWebSite = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WebSiteQueryInterface(pWebSite, riid, ppv)
+		
+		If FAILED(hr) Then
+			DestroyWebSite(pWebSite)
+		End If
+		
+		Return hr
+	End If
 	
 	If IsEqualCLSID(@CLSID_HTTPREADER, rclsid) Then
 		Dim pReader As HttpReader Ptr = CreateHttpReader(hHeap)

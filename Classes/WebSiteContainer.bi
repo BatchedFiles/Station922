@@ -32,13 +32,13 @@ Declare Function WebSiteContainerRelease( _
 
 Declare Function WebSiteContainerGetDefaultWebSite( _
 	ByVal this As WebSiteContainer Ptr, _
-	ByVal ppIWebSite As IWebSite Ptr Ptr _
+	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 
 Declare Function WebSiteContainerFindWebSite( _
 	ByVal this As WebSiteContainer Ptr, _
 	ByVal Host As WString Ptr, _
-	ByVal ppIWebSite As IWebSite Ptr Ptr _
+	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 
 Declare Function WebSiteContainerLoadWebSites( _

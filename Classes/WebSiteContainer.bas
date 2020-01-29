@@ -1,21 +1,20 @@
 ﻿#include "WebSiteContainer.bi"
-#include "IConfiguration.bi"
 #include "CreateInstance.bi"
 #include "HttpConst.bi"
+#include "IConfiguration.bi"
+#include "IMutableWebSite.bi"
 #include "IniConst.bi"
 #include "StringConstants.bi"
-#include "WebSite.bi"
 #include "win\shlwapi.bi"
 
 Const MaxSectionsLength As Integer = 32000 - 1
+Const MaxHostNameLength As Integer = 1024 - 1
 
 Type WebSiteNode As _WebSiteNode
 
 Type LPWebSiteNode As _WebSiteNode Ptr
 
 Type _WebSiteNode
-	Const MaxHostNameLength As Integer = 1024 - 1
-	
 	Dim HostName As WString * (MaxHostNameLength + 1)
 	Dim pExecutableDirectory As WString Ptr
 	Dim PhysicalDirectory As WString * (MAX_PATH + 1)
@@ -25,8 +24,6 @@ Type _WebSiteNode
 	
 	Dim LeftNode As WebSiteNode Ptr
 	Dim RightNode As WebSiteNode Ptr
-	Dim objWebSite As WebSite
-	Dim pIWebSite As IWebSite Ptr
 End Type
 
 Type _WebSiteContainer
@@ -176,13 +173,35 @@ Function WebSiteContainerRelease( _
 	
 End Function
 
+Sub SetMutableWebSite( _
+		ByVal pIMutable As IMutableWebSite Ptr, _
+		ByVal pNode As WebSiteNode Ptr _
+	)
+	
+	IMutableWebSite_SetHostName(pIMutable, @pNode->HostName)
+	IMutableWebSite_SetExecutableDirectory(pIMutable, pNode->pExecutableDirectory)
+	IMutableWebSite_SetSitePhysicalDirectory(pIMutable, @pNode->PhysicalDirectory)
+	IMutableWebSite_SetVirtualPath(pIMutable, @pNode->VirtualPath)
+	IMutableWebSite_SetIsMoved(pIMutable, pNode->IsMoved)
+	IMutableWebSite_SetMovedUrl(pIMutable, @pNode->MovedUrl)
+	
+End Sub
+
 Function WebSiteContainerGetDefaultWebSite( _
 		ByVal this As WebSiteContainer Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
-	IWebSite_AddRef(this->pDefaultNode->pIWebSite)
-	*ppIWebSite = this->pDefaultNode->pIWebSite
+	Dim pIMutable As IMutableWebSite Ptr = Any
+	Dim hr As HRESULT = IWebSite_QueryInterface( _
+		pIWebSite, _
+		@IID_IMutableWebSite, _
+		@pIMutable _
+	)
+	
+	SetMutableWebSite(pIMutable, this->pDefaultNode)
+	
+	IMutableWebSite_Release(pIMutable)
 	
 	Return S_OK
 	
@@ -191,18 +210,25 @@ End Function
 Function WebSiteContainerFindWebSite( _
 		ByVal this As WebSiteContainer Ptr, _
 		ByVal Host As WString Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	Dim pNode As WebSiteNode Ptr = TreeFindNode(this->pTree, Host)
 	
 	If pNode = NULL Then
-		*ppIWebSite = NULL
 		Return E_FAIL
 	End If
 	
-	IWebSite_AddRef(pNode->pIWebSite)
-	*ppIWebSite = pNode->pIWebSite
+	Dim pIMutable As IMutableWebSite Ptr = Any
+	Dim hr As HRESULT = IWebSite_QueryInterface( _
+		pIWebSite, _
+		@IID_IMutableWebSite, _
+		@pIMutable _
+	)
+	
+	SetMutableWebSite(pIMutable, pNode)
+	
+	IMutableWebSite_Release(pIMutable)
 	
 	Return S_OK
 	
@@ -279,7 +305,6 @@ Sub LoadWebSite( _
 	
 End Sub
 
-' TODO Убрать манипуляцию данными объекта, использовать интерфейс
 Function CreateWebSiteNode( _
 		ByVal hHeap As HANDLE, _
 		ByVal pIConfig As IConfiguration Ptr, _
@@ -289,7 +314,7 @@ Function CreateWebSiteNode( _
 	
 	Dim pNode As WebSiteNode Ptr = HeapAlloc( _
 		hHeap, _
-		0, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(WebSiteNode) _
 	)
 	
@@ -317,7 +342,7 @@ Function CreateWebSiteNode( _
 		Section, _
 		@VirtualPathKeyString, _
 		@DefaultVirtualPath, _
-		WebSiteNode.MaxHostNameLength, _
+		MaxHostNameLength, _
 		@pNode->VirtualPath, _
 		@ValueLength _
 	)
@@ -326,7 +351,7 @@ Function CreateWebSiteNode( _
 		Section, _
 		@MovedUrlKeyString, _
 		@EmptyString, _
-		WebSiteNode.MaxHostNameLength, _
+		MaxHostNameLength, _
 		@pNode->MovedUrl, _
 		@ValueLength _
 	)
@@ -345,14 +370,14 @@ Function CreateWebSiteNode( _
 		pNode->IsMoved = True
 	End If
 	
-	pNode->pIWebSite = InitializeWebSiteOfIWebSite(@pNode->objWebSite)
+	' pNode->pIWebSite = InitializeWebSiteOfIWebSite(@pNode->objWebSite)
 	
-	pNode->objWebSite.pHostName = @pNode->HostName
-	pNode->objWebSite.pPhysicalDirectory = @pNode->PhysicalDirectory
-	pNode->objWebSite.pExecutableDirectory = pNode->pExecutableDirectory
-	pNode->objWebSite.pVirtualPath = @pNode->VirtualPath
-	pNode->objWebSite.IsMoved = pNode->IsMoved
-	pNode->objWebSite.pMovedUrl = @pNode->MovedUrl
+	' pNode->objWebSite.pHostName = @pNode->HostName
+	' pNode->objWebSite.pPhysicalDirectory = @pNode->PhysicalDirectory
+	' pNode->objWebSite.pExecutableDirectory = pNode->pExecutableDirectory
+	' pNode->objWebSite.pVirtualPath = @pNode->VirtualPath
+	' pNode->objWebSite.IsMoved = pNode->IsMoved
+	' pNode->objWebSite.pMovedUrl = @pNode->MovedUrl
 	
 	Return pNode
 	

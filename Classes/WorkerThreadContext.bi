@@ -161,4 +161,14 @@ Declare Function WorkerThreadContextSetRequestedFile( _
 	ByVal pIRequestedFile As IRequestedFile Ptr _
 )As HRESULT
 
+Declare Function WorkerThreadContextGetWebSite( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal ppIWebSite As IWebSite Ptr Ptr _
+)As HRESULT
+
+Declare Function WorkerThreadContextSetWebSite( _
+	ByVal this As WorkerThreadContext Ptr, _
+	ByVal pIWebSite As IWebSite Ptr _
+)As HRESULT
+
 #endif

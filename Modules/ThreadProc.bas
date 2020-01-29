@@ -149,12 +149,13 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 				IWorkerThreadContext_GetWebSiteContainer(pIContext, @pIWebSites)
 				
 				Dim pIWebSite As IWebSite Ptr = Any
-				Dim hrFindSite As HRESULT = Any
+				IWorkerThreadContext_GetWebSite(pIContext, @pIWebSite)
 				
+				Dim hrFindSite As HRESULT = Any
 				If HttpMethod = HttpMethods.HttpConnect Then
-					hrFindSite = IWebSiteContainer_GetDefaultWebSite(pIWebSites, @pIWebSite)
+					hrFindSite = IWebSiteContainer_GetDefaultWebSite(pIWebSites, pIWebSite)
 				Else
-					hrFindSite = IWebSiteContainer_FindWebSite(pIWebSites, pHeaderHost, @pIWebSite)
+					hrFindSite = IWebSiteContainer_FindWebSite(pIWebSites, pHeaderHost, pIWebSite)
 				End If
 				
 				If FAILED(hrFindSite) Then
@@ -243,10 +244,9 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 						
 					End If
 					
-					IWebSite_Release(pIWebSite)
-					
 				End If
 				
+				IWebSite_Release(pIWebSite)
 				IWebSiteContainer_Release(pIWebSites)
 				
 			End If

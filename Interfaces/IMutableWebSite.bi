@@ -11,32 +11,32 @@ Type IMutableWebSiteVirtualTable
 	Dim InheritedTable As IUnknownVtbl
 	
 	Dim SetHostName As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal pHost As WString Ptr _
 	)As HRESULT
 	
 	Dim SetExecutableDirectory As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal pExecutableDirectory As WString Ptr _
 	)As HRESULT
 	
 	Dim SetSitePhysicalDirectory As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal pPhysicalDirectory As WString Ptr _
 	)As HRESULT
 	
 	Dim SetVirtualPath As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal pVirtualPath As WString Ptr _
 	)As HRESULT
 	
 	Dim SetIsMoved As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal IsMoved As Boolean _
 	)As HRESULT
 	
 	Dim SetMovedUrl As Function( _
-		ByVal this As IWebSite Ptr, _
+		ByVal this As IMutableWebSite Ptr, _
 		ByVal pMovedUrl As WString Ptr _
 	)As HRESULT
 	

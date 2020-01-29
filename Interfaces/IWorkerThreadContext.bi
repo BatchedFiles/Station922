@@ -147,6 +147,16 @@ Type IWorkerThreadContextVirtualTable
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)As HRESULT
 	
+	Dim GetWebSite As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
+	Dim SetWebSite As Function( _
+		ByVal this As IWorkerThreadContext Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
 	' Dim hInput As HANDLE
 	' Dim hOutput As HANDLE
 	' Dim hError As HANDLE
@@ -173,18 +183,20 @@ End Type
 #define IWorkerThreadContext_GetWebSiteContainer(this, ppIWebSiteContainer) (this)->pVirtualTable->GetWebSiteContainer(this, ppIWebSiteContainer)
 #define IWorkerThreadContext_SetWebSiteContainer(this, pIWebSiteContainer) (this)->pVirtualTable->SetWebSiteContainer(this, pIWebSiteContainer)
 #define IWorkerThreadContext_GetNetworkStream(this, ppINetworkStream) (this)->pVirtualTable->GetNetworkStream(this, ppINetworkStream)
-#define IWorkerThreadContext_SetNetworkStream(this, pINetworkStream) (this)->pVirtualTable->SetNetworkStream(this, pINetworkStream)
+' #define IWorkerThreadContext_SetNetworkStream(this, pINetworkStream) (this)->pVirtualTable->SetNetworkStream(this, pINetworkStream)
 #define IWorkerThreadContext_GetFrequency(this, pFrequency) (this)->pVirtualTable->GetFrequency(this, pFrequency)
 #define IWorkerThreadContext_SetFrequency(this, Frequency) (this)->pVirtualTable->SetFrequency(this, Frequency)
 #define IWorkerThreadContext_GetStartTicks(this, pStartTicks) (this)->pVirtualTable->GetStartTicks(this, pStartTicks)
 #define IWorkerThreadContext_SetStartTicks(this, StartTicks) (this)->pVirtualTable->SetStartTicks(this, StartTicks)
 #define IWorkerThreadContext_GetClientRequest(this, ppIRequest) (this)->pVirtualTable->GetClientRequest(this, ppIRequest)
-#define IWorkerThreadContext_SetClientRequest(this, pIRequest) (this)->pVirtualTable->SetClientRequest(this, pIRequest)
+' #define IWorkerThreadContext_SetClientRequest(this, pIRequest) (this)->pVirtualTable->SetClientRequest(this, pIRequest)
 #define IWorkerThreadContext_GetServerResponse(this, ppIResponse) (this)->pVirtualTable->GetServerResponse(this, ppIResponse)
-#define IWorkerThreadContext_SetServerResponse(this, pIResponse) (this)->pVirtualTable->SetServerResponse(this, pIResponse)
+' #define IWorkerThreadContext_SetServerResponse(this, pIResponse) (this)->pVirtualTable->SetServerResponse(this, pIResponse)
 #define IWorkerThreadContext_GetHttpReader(this, ppIHttpReader) (this)->pVirtualTable->GetHttpReader(this, ppIHttpReader)
-#define IWorkerThreadContext_SetHttpReader(this, pIHttpReader) (this)->pVirtualTable->SetHttpReader(this, pIHttpReader)
+' #define IWorkerThreadContext_SetHttpReader(this, pIHttpReader) (this)->pVirtualTable->SetHttpReader(this, pIHttpReader)
 #define IWorkerThreadContext_GetRequestedFile(this, ppIRequestedFile) (this)->pVirtualTable->GetRequestedFile(this, ppIRequestedFile)
-#define IWorkerThreadContext_SetRequestedFile(this, pIRequestedFile) (this)->pVirtualTable->SetRequestedFile(this, pIRequestedFile)
+' #define IWorkerThreadContext_SetRequestedFile(this, pIRequestedFile) (this)->pVirtualTable->SetRequestedFile(this, pIRequestedFile)
+#define IWorkerThreadContext_GetWebSite(this, ppIWebSite) (this)->pVirtualTable->GetWebSite(this, ppIWebSite)
+' #define IWorkerThreadContext_SetWebSite(this, pIWebSite) (this)->pVirtualTable->SetWebSite(this, pIWebSite)
 
 #endif

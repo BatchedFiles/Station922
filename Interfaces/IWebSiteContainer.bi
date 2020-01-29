@@ -15,12 +15,12 @@ Type IWebSiteContainerVirtualTable
 	Dim FindWebSite As Function( _
 		ByVal this As IWebSiteContainer Ptr, _
 		ByVal Host As WString Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	Dim GetDefaultWebSite As Function( _
 		ByVal this As IWebSiteContainer Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	Dim LoadWebSites As Function( _
@@ -37,8 +37,8 @@ End Type
 #define IWebSiteContainer_QueryInterface(this, riid, ppv) (this)->pVirtualTable->InheritedTable.QueryInterface(CPtr(IUnknown Ptr, this), riid, ppv)
 #define IWebSiteContainer_AddRef(this) (this)->pVirtualTable->InheritedTable.AddRef(CPtr(IUnknown Ptr, this))
 #define IWebSiteContainer_Release(this) (this)->pVirtualTable->InheritedTable.Release(CPtr(IUnknown Ptr, this))
-#define IWebSiteContainer_GetDefaultWebSite(this, ppIWebSite) (this)->pVirtualTable->GetDefaultWebSite(this, ppIWebSite)
-#define IWebSiteContainer_FindWebSite(this, Host, ppIWebSite) (this)->pVirtualTable->FindWebSite(this, Host, ppIWebSite)
+#define IWebSiteContainer_FindWebSite(this, Host, pIWebSite) (this)->pVirtualTable->FindWebSite(this, Host, pIWebSite)
+#define IWebSiteContainer_GetDefaultWebSite(this, pIWebSite) (this)->pVirtualTable->GetDefaultWebSite(this, pIWebSite)
 #define IWebSiteContainer_LoadWebSites(this, ExecutableDirectory) (this)->pVirtualTable->LoadWebSites(this, ExecutableDirectory)
 
 #endif

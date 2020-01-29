@@ -18,7 +18,7 @@ Type _WorkerThreadContext
 	Dim pIHttpReader As IHttpReader Ptr
 	Dim pIResponse As IServerResponse Ptr
 	Dim pIRequestedFile As IRequestedFile Ptr
-	' Dim pIWebSite As IWebSite Ptr
+	Dim pIWebSite As IWebSite Ptr
 	
 	Dim Frequency As LARGE_INTEGER
 	Dim StartTicks As LARGE_INTEGER
@@ -63,7 +63,9 @@ Dim Shared GlobalWorkerThreadContextVirtualTable As IWorkerThreadContextVirtualT
 	@WorkerThreadContextGetHttpReader, _
 	@WorkerThreadContextSetHttpReader, _
 	@WorkerThreadContextGetRequestedFile, _
-	@WorkerThreadContextSetRequestedFile _
+	@WorkerThreadContextSetRequestedFile, _
+	@WorkerThreadContextGetWebSite, _
+	@WorkerThreadContextSetWebSite _
 )
 
 Sub InitializeWorkerThreadContext( _
@@ -88,6 +90,7 @@ Sub InitializeWorkerThreadContext( _
 	this->pIHttpReader = NULL
 	this->pIResponse = NULL
 	this->pIRequestedFile = NULL
+	this->pIWebSite = NULL
 	
 	this->Frequency.QuadPart = 0
 	this->StartTicks.QuadPart = 0
@@ -124,6 +127,10 @@ Sub UnInitializeWorkerThreadContext( _
 	
 	If this->pIRequestedFile <> NULL Then
 		IRequestedFile_Release(this->pIRequestedFile)
+	End If
+	
+	If this->pIWebSite <> NULL Then
+		IWebSite_Release(this->pIWebSite)
 	End If
 	
 End Sub
@@ -193,6 +200,17 @@ Function CreateWorkerThreadContext( _
 		@CLSID_REQUESTEDFILE, _
 		@IID_IRequestedFile, _
 		@pContext->pIRequestedFile _
+	)
+	If FAILED(hr) Then
+		DestroyWorkerThreadContext(pContext)
+		Return NULL
+	End If
+	
+	hr = CreateInstance( _
+		hHeap, _
+		@CLSID_WEBSITE, _
+		@IID_IWebSite, _
+		@pContext->pIWebSite _
 	)
 	If FAILED(hr) Then
 		DestroyWorkerThreadContext(pContext)
@@ -625,6 +643,40 @@ Function WorkerThreadContextSetRequestedFile( _
 	End If
 	
 	this->pIRequestedFile = pIRequestedFile
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextGetWebSite( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIWebSite <> NULL Then
+		IWebSite_AddRef(this->pIWebSite)
+	End If
+	
+	*ppIWebSite = this->pIWebSite
+	
+	Return S_OK
+	
+End Function
+
+Function WorkerThreadContextSetWebSite( _
+		ByVal this As WorkerThreadContext Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	If this->pIWebSite <> NULL Then
+		IWebSite_Release(this->pIWebSite)
+	End If
+	
+	If pIWebSite <> NULL Then
+		IWebSite_AddRef(pIWebSite)
+	End If
+	
+	this->pIWebSite = pIWebSite
 	
 	Return S_OK
 	
