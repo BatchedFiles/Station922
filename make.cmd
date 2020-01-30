@@ -23,6 +23,7 @@ if "%1"=="service" (
 	set SERVICE_DEFINED=-d WINDOWS_SERVICE
 ) else (
 	set SERVICE_DEFINED=
+	set PERFORMANCE_TESTING_DEFINED=-d PERFORMANCE_TESTING
 )
 
 if "%2"=="debug" (
@@ -43,6 +44,6 @@ if "%3"=="withoutruntime" (
 	set GUIDS_WITHOUT_MINGW=
 )
 
-set CompilerParameters=%SERVICE_DEFINED% %MaxErrorsCount% %UseThreadSafeRuntime% %IncludeLibraries% %GUIDS_WITHOUT_MINGW% %OptimizationLevel% %VectorizationLevel% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking% %IncludeFilesPath%
+set CompilerParameters=%SERVICE_DEFINED% %PERFORMANCE_TESTING_DEFINED% %GUIDS_WITHOUT_MINGW% %MaxErrorsCount% %UseThreadSafeRuntime% %MinWarningLevel% %EnableFunctionProfiling% %EnableShowIncludes% %EnableVerbose% %EnableRuntimeErrorChecking% %IncludeFilesPath% %IncludeLibraries% %OptimizationLevel% %VectorizationLevel% 
 
 call translator.cmd "%MainFile% %Classes% %Modules% %Resources%" "%ExeTypeKind%" "%OutputFile%" "%CompilerDirectory%" "%CompilerParameters%" %EnableDebug% noprofile %WithoutRuntime%

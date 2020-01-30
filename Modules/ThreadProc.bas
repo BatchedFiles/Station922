@@ -18,21 +18,21 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
 	Dim pIContext As IClientContext Ptr = CPtr(IClientContext Ptr, lpParam)
 	
-	#ifndef WINDOWS_SERVICE
+	#ifdef PERFORMANCE_TESTING
 		
 		Dim Frequency As LARGE_INTEGER
 		IClientContext_GetFrequency(pIContext, @Frequency)
 		
-		Dim EndThreadTicks As LARGE_INTEGER
-		QueryPerformanceCounter(@EndThreadTicks)
+		Dim StartThreadSuspendedTicks As LARGE_INTEGER
+		IClientContext_GetStartTicks(pIContext, @StartThreadSuspendedTicks)
 		
-		Dim StartThreadTicks As LARGE_INTEGER
-		IClientContext_GetStartTicks(pIContext, @StartThreadTicks)
+		Dim EndThreadSuspendedTicks As LARGE_INTEGER
+		QueryPerformanceCounter(@EndThreadSuspendedTicks)
 		
-		Dim ThreadWakeUpElapsedTimes As LARGE_INTEGER
-		ThreadWakeUpElapsedTimes.QuadPart = EndThreadTicks.QuadPart - StartThreadTicks.QuadPart
+		Dim ThreadSuspendedElapsedTimes As LARGE_INTEGER
+		ThreadSuspendedElapsedTimes.QuadPart = EndThreadSuspendedTicks.QuadPart - StartThreadSuspendedTicks.QuadPart
 		
-		PrintThreadStartCount(@Frequency, @ThreadWakeUpElapsedTimes)
+		PrintThreadSuspendedElapsedTimes(@Frequency, @ThreadSuspendedElapsedTimes)
 		
 	#endif
 	
@@ -55,7 +55,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
 	Do
 		
-		#ifndef WINDOWS_SERVICE
+		#ifdef PERFORMANCE_TESTING
 			
 			Dim StartLoopTicks As LARGE_INTEGER
 			QueryPerformanceCounter(@StartLoopTicks)
@@ -69,15 +69,16 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 		#ifndef WINDOWS_SERVICE
 				PrintRequestedBytes(pIHttpReader)
 		#endif
-		#ifndef WINDOWS_SERVICE
+		
+		#ifdef PERFORMANCE_TESTING
 			
 			Dim EndRequestTicks As LARGE_INTEGER
 			QueryPerformanceCounter(@EndRequestTicks)
 			
-			Dim EndRequestElapsedTimes As LARGE_INTEGER
-			EndRequestElapsedTimes.QuadPart = EndRequestTicks.QuadPart - StartLoopTicks.QuadPart
+			Dim RequestElapsedTimes As LARGE_INTEGER
+			RequestElapsedTimes.QuadPart = EndRequestTicks.QuadPart - StartLoopTicks.QuadPart
 			
-			PrintThreadProcessCount(@Frequency, @EndRequestElapsedTimes)
+			PrintRequestElapsedTimes(@Frequency, @RequestElapsedTimes)
 			
 		#endif
 		
@@ -255,15 +256,15 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 			
 		End If
 		
-		#ifndef WINDOWS_SERVICE
+		#ifdef PERFORMANCE_TESTING
 			
 			Dim EndLoopTicks As LARGE_INTEGER
 			QueryPerformanceCounter(@EndLoopTicks)
 			
-			Dim EndLoopElapsedTimes As LARGE_INTEGER
-			EndLoopElapsedTimes.QuadPart = EndLoopTicks.QuadPart - StartLoopTicks.QuadPart
+			Dim LoopElapsedTimes As LARGE_INTEGER
+			LoopElapsedTimes.QuadPart = EndLoopTicks.QuadPart - StartLoopTicks.QuadPart
 			
-			PrintThreadProcessCount(@Frequency, @EndLoopElapsedTimes)
+			PrintRequestElapsedTimes(@Frequency, @LoopElapsedTimes)
 			
 		#endif
 		

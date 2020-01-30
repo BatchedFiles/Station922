@@ -27,7 +27,9 @@ Type _WebServer
 	Dim ListenSocket As SOCKET
 	Dim ReListenSocket As Boolean
 	
-	Dim Frequency As LARGE_INTEGER
+	#ifdef PERFORMANCE_TESTING
+		Dim Frequency As LARGE_INTEGER
+	#endif
 	
 End Type
 
@@ -80,7 +82,9 @@ Sub InitializeWebServer( _
 	this->ListenSocket = INVALID_SOCKET
 	this->ReListenSocket = True
 	
-	QueryPerformanceFrequency(@this->Frequency)
+	#ifdef PERFORMANCE_TESTING
+		QueryPerformanceFrequency(@this->Frequency)
+	#endif
 	
 End Sub
 
@@ -343,15 +347,17 @@ Function WebServerRun( _
 			
 			IClientContext_SetWebSiteContainer(pIContext, pIWebSites)
 			
-			IClientContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
-			
 			INetworkStream_Release(pINetworkStream)
 			IClientRequest_Release(pIClientRequest)
 			
-			Dim StartTicks As LARGE_INTEGER
-			QueryPerformanceCounter(@StartTicks)
-			
-			IClientContext_SetStartTicks(pIContext, StartTicks)
+			#ifdef PERFORMANCE_TESTING
+				IClientContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
+				
+				Dim StartTicks As LARGE_INTEGER
+				QueryPerformanceCounter(@StartTicks)
+				
+				IClientContext_SetStartTicks(pIContext, StartTicks)
+			#endif
 			
 			Dim dwResume As DWORD = ResumeThread(hThread)
 			If dwResume = -1 Then

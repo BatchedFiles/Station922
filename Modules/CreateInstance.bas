@@ -1,5 +1,6 @@
 ﻿#include "CreateInstance.bi"
 ' #include "ArrayStringWriter.bi"
+#include "ClientContext.bi"
 #include "ClientRequest.bi"
 #include "Configuration.bi"
 #include "HttpReader.bi"
@@ -10,7 +11,6 @@
 #include "WebServer.bi"
 #include "WebSite.bi"
 #include "WebSiteContainer.bi"
-#include "ClientContext.bi"
 
 Function CreateInstance( _
 		ByVal hHeap As HANDLE, _

@@ -21,9 +21,10 @@ Type _ClientContext
 	Dim pIRequestedFile As IRequestedFile Ptr
 	Dim pIWebSite As IWebSite Ptr
 	
-	Dim Frequency As LARGE_INTEGER
-	Dim StartTicks As LARGE_INTEGER
-	
+	#ifdef PERFORMANCE_TESTING
+		Dim Frequency As LARGE_INTEGER
+		Dim StartTicks As LARGE_INTEGER
+	#endif
 End Type
 
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
@@ -95,9 +96,10 @@ Sub InitializeClientContext( _
 	this->pIRequestedFile = NULL
 	this->pIWebSite = NULL
 	
-	this->Frequency.QuadPart = 0
-	this->StartTicks.QuadPart = 0
-	
+	#ifdef PERFORMANCE_TESTING
+		this->Frequency.QuadPart = 0
+		this->StartTicks.QuadPart = 0
+	#endif
 End Sub
 
 Sub UnInitializeClientContext( _
@@ -493,7 +495,9 @@ Function ClientContextGetFrequency( _
 		ByVal pFrequency As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
-	pFrequency->QuadPart = this->Frequency.QuadPart
+	#ifdef PERFORMANCE_TESTING
+		pFrequency->QuadPart = this->Frequency.QuadPart
+	#endif
 	
 	Return S_OK
 	
@@ -504,7 +508,9 @@ Function ClientContextSetFrequency( _
 		ByVal Frequency As LARGE_INTEGER _
 	)As HRESULT
 	
-	this->Frequency.QuadPart = Frequency.QuadPart
+	#ifdef PERFORMANCE_TESTING
+		this->Frequency.QuadPart = Frequency.QuadPart
+	#endif
 	
 	Return S_OK
 	
@@ -515,7 +521,9 @@ Function ClientContextGetStartTicks( _
 		ByVal pStartTicks As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
-	pStartTicks->QuadPart = this->StartTicks.QuadPart
+	#ifdef PERFORMANCE_TESTING
+		pStartTicks->QuadPart = this->StartTicks.QuadPart
+	#endif
 	
 	Return S_OK
 	
@@ -526,7 +534,9 @@ Function ClientContextSetStartTicks( _
 		ByVal StartTicks As LARGE_INTEGER _
 	)As HRESULT
 	
-	this->StartTicks.QuadPart = StartTicks.QuadPart
+	#ifdef PERFORMANCE_TESTING
+		this->StartTicks.QuadPart = StartTicks.QuadPart
+	#endif
 	
 	Return S_OK
 	

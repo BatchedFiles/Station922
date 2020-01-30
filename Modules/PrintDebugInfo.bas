@@ -12,78 +12,7 @@ Const RequestedBytesBackground = ConsoleColors.Black
 Const ResponseBytesBackground = ConsoleColors.Black
 
 Const MicroSeconds As LongInt = 1000 * 1000
-Const IntegerToStringBufferLength As Integer = 255
-
-Sub PrintThreadProcessCount( _
-		ByVal pFrequency As PLARGE_INTEGER, _
-		ByVal pTicks As PLARGE_INTEGER _
-	)
-	
-	Dim CharsWritten As Integer = Any
-	Dim wstrTemp As WString * (IntegerToStringBufferLength + 1) = Any
-	
-	i64tow( _
-		(pTicks->QuadPart * MicroSeconds) \ pFrequency->QuadPart, _
-		@wstrTemp, _
-		10 _
-	)
-	' i64tow( _
-		' pTicks->QuadPart, _
-		' @wstrTemp, _
-		' 10 _
-	' )
-	
-	lstrcat(@wstrTemp, @NewLineString)
-	lstrcat(@wstrTemp, @NewLineString)
-	
-	ConsoleWriteColorStringW( _
-		@!"Количество микросекунд обработки запроса\t", _
-		@CharsWritten, _
-		InformationForeground, _
-		InformationBackground _
-	)
-	ConsoleWriteColorLineW( _
-		@wstrTemp, _
-		@CharsWritten, _
-		InformationForeground, _
-		InformationBackground _
-	)
-	
-End Sub
-
-Sub PrintThreadStartCount( _
-		ByVal pFrequency As PLARGE_INTEGER, _
-		ByVal pTicks As PLARGE_INTEGER _
-	)
-	
-	Dim CharsWritten As Integer = Any
-	Dim wstrTemp As WString * (IntegerToStringBufferLength + 1) = Any
-	
-	i64tow( _
-		(pTicks->QuadPart * MicroSeconds) \ pFrequency->QuadPart, _
-		@wstrTemp, _
-		10 _
-	)
-	' i64tow( _
-		' pTicks->QuadPart, _
-		' @wstrTemp, _
-		' 10 _
-	' )
-	
-	ConsoleWriteColorStringW( _
-		@!"Количество микросекунд запуска потока\t", _
-		@CharsWritten, _
-		InformationForeground, _
-		InformationBackground _
-	)
-	ConsoleWriteColorLineW( _
-		@wstrTemp, _
-		@CharsWritten, _
-		InformationForeground, _
-		InformationBackground _
-	)
-	
-End Sub
+Const IntegerToStringBufferLength As Integer = 128 - 1
 
 Sub PrintRequestedBytes( _
 		ByVal pIHttpReader As IHttpReader Ptr _
@@ -133,3 +62,60 @@ Sub PrintResponseString( _
 	ConsoleWriteColorLineW(wResponse, @CharsWritten, ForeColor, ResponseBytesBackground)
 	
 End Sub
+
+#ifdef PERFORMANCE_TESTING
+
+Sub ElapsedTimesToString( _
+		ByVal wstrElapsedTimes As WString Ptr, _
+		ByVal pFrequency As PLARGE_INTEGER, _
+		ByVal pTicks As PLARGE_INTEGER _
+	)
+	Dim ElapsedTimes As LongInt = (pTicks->QuadPart * MicroSeconds) \ pFrequency->QuadPart
+	
+	i64tow(ElapsedTimes, wstrElapsedTimes, 10)
+	
+End Sub
+
+Sub PrintRequestElapsedTimes( _
+		ByVal pFrequency As PLARGE_INTEGER, _
+		ByVal pTicks As PLARGE_INTEGER _
+	)
+	Dim wstrElapsedTimes As WString * (IntegerToStringBufferLength + 1) = Any
+	ElapsedTimesToString(@wstrElapsedTimes, pFrequency, pTicks)
+	
+	Dim wstrTemp As WString * (2 * IntegerToStringBufferLength + 1) = Any
+	lstrcpy(@wstrTemp, @!"Обработка запроса:\t")
+	lstrcat(@wstrTemp, @wstrTemp)
+	
+	Dim CharsWritten As Integer = Any
+	ConsoleWriteColorLineW( _
+		@wstrTemp, _
+		@CharsWritten, _
+		InformationForeground, _
+		InformationBackground _
+	)
+	
+End Sub
+
+Sub PrintThreadSuspendedElapsedTimes( _
+		ByVal pFrequency As PLARGE_INTEGER, _
+		ByVal pTicks As PLARGE_INTEGER _
+	)
+	Dim wstrElapsedTimes As WString * (IntegerToStringBufferLength + 1) = Any
+	ElapsedTimesToString(@wstrElapsedTimes, pFrequency, pTicks)
+	
+	Dim wstrTemp As WString * (2 * IntegerToStringBufferLength + 1) = Any
+	lstrcpy(@wstrTemp, @!"Пробуждение потока:\t")
+	lstrcat(@wstrTemp, @wstrElapsedTimes)
+	
+	Dim CharsWritten As Integer = Any
+	ConsoleWriteColorLineW( _
+		@wstrTemp, _
+		@CharsWritten, _
+		InformationForeground, _
+		InformationBackground _
+	)
+	
+End Sub
+
+#endif
