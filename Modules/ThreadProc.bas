@@ -55,6 +55,8 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	
 	Do
 		
+		IHttpReader_Clear(pIHttpReader)
+		
 		#ifdef PERFORMANCE_TESTING
 			
 			Dim StartLoopTicks As LARGE_INTEGER
@@ -62,13 +64,7 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 			
 		#endif
 		
-		IHttpReader_Clear(pIHttpReader)
-		
 		Dim hrReadRequest As HRESULT = IClientRequest_ReadRequest(pIRequest, pIHttpReader)
-		
-		#ifndef WINDOWS_SERVICE
-				PrintRequestedBytes(pIHttpReader)
-		#endif
 		
 		#ifdef PERFORMANCE_TESTING
 			
@@ -80,6 +76,10 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 			
 			PrintRequestElapsedTimes(@Frequency, @RequestElapsedTimes)
 			
+		#endif
+		
+		#ifndef WINDOWS_SERVICE
+				PrintRequestedBytes(pIHttpReader)
 		#endif
 		
 		If FAILED(hrReadRequest) Then
