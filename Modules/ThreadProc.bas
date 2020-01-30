@@ -9,7 +9,6 @@
 #include "ProcessPostRequest.bi"
 #include "ProcessPutRequest.bi"
 #include "ProcessTraceRequest.bi"
-#include "WebUtils.bi"
 #include "WriteHttpError.bi"
 
 Type LPProcessRequestVirtualTable As Function(ByVal pIRequest As IClientRequest Ptr, ByVal pIResponse As IServerResponse Ptr, ByVal pINetworkStream As INetworkStream Ptr, ByVal pIWebSite As IWebSite Ptr, ByVal pIClientReader As IHttpReader Ptr, ByVal pIFile As IRequestedFile Ptr)As Boolean

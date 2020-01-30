@@ -7,7 +7,6 @@
 #include "windows.bi"
 #include "win\ole2.bi"
 #include "Http.bi"
-' #include "Station922Uri.bi"
 
 Enum RequestedFileState
 	Exist
