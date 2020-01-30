@@ -85,7 +85,7 @@ Sub PrintRequestElapsedTimes( _
 	
 	Dim wstrTemp As WString * (2 * IntegerToStringBufferLength + 1) = Any
 	lstrcpy(@wstrTemp, @!"Обработка запроса:\t")
-	lstrcat(@wstrTemp, @wstrTemp)
+	lstrcat(@wstrTemp, @wstrElapsedTimes)
 	
 	Dim CharsWritten As Integer = Any
 	ConsoleWriteColorLineW( _
