@@ -10,6 +10,7 @@ Type _ClientContext
 	
 	Dim ThreadId As DWORD
 	Dim hThread As HANDLE
+	Dim hClientContextHeap As HANDLE
 	Dim pExeDir As WString Ptr
 	
 	Dim pIWebSites As IWebSiteContainer Ptr
@@ -46,6 +47,8 @@ Dim Shared GlobalClientContextVirtualTable As IClientContextVirtualTable = Type(
 	@ClientContextSetThreadId, _
 	@ClientContextGetThreadHandle, _
 	@ClientContextSetThreadHandle, _
+	@ClientContextGetClientContextHeap, _
+	@ClientContextSetClientContextHeap, _
 	@ClientContextGetExecutableDirectory, _
 	@ClientContextSetExecutableDirectory, _
 	@ClientContextGetWebSiteContainer, _
@@ -227,12 +230,7 @@ Sub DestroyClientContext( _
 	
 	UnInitializeClientContext(this)
 	
-	' HeapFree( _
-		' this->hThreadContextHeap, _
-		' HEAP_NO_SERIALIZE, _
-		' this _
-	' )
-	HeapDestroy(this->hHeap)
+	HeapFree(this->hHeap, HEAP_NO_SERIALIZE, this)
 	
 End Sub
 
@@ -373,6 +371,28 @@ Function ClientContextSetThreadHandle( _
 	End If
 	
 	this->hThread = ThreadHandle
+	
+	Return S_OK
+	
+End Function
+
+Function ClientContextGetClientContextHeap( _
+		ByVal this As ClientContext Ptr, _
+		ByVal pHeap As HANDLE Ptr _
+	)As HRESULT
+	
+	*pHeap = this->hClientContextHeap
+	
+	Return S_OK
+	
+End Function
+
+Function ClientContextSetClientContextHeap( _
+		ByVal this As ClientContext Ptr, _
+		ByVal hHeap As HANDLE _
+	)As HRESULT
+	
+	this->hClientContextHeap = hHeap
 	
 	Return S_OK
 	

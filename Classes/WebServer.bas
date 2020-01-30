@@ -338,6 +338,7 @@ Function WebServerRun( _
 			
 			IClientContext_SetThreadId(pIContext, dwThreadId)
 			IClientContext_SetThreadHandle(pIContext, hThread)
+			IClientContext_SetClientContextHeap(pIContext, hClientContextHeap)
 			IClientContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
 			
 			IClientContext_SetWebSiteContainer(pIContext, pIWebSites)

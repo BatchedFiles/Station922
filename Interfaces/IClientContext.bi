@@ -57,6 +57,16 @@ Type IClientContextVirtualTable
 		ByVal ThreadHandle As HANDLE _
 	)As HRESULT
 	
+	Dim GetClientContextHeap As Function( _
+		ByVal this As IClientContext Ptr, _
+		ByVal pHeap As HANDLE Ptr _
+	)As HRESULT
+	
+	Dim SetClientContextHeap As Function( _
+		ByVal this As IClientContext Ptr, _
+		ByVal hHeap As HANDLE _
+	)As HRESULT
+	
 	Dim GetExecutableDirectory As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppExecutableDirectory As WString Ptr Ptr _
@@ -174,6 +184,8 @@ End Type
 #define IClientContext_SetThreadId(this, ThreadId) (this)->pVirtualTable->SetThreadId(this, ThreadId)
 #define IClientContext_GetThreadHandle(this, pThreadHandle) (this)->pVirtualTable->GetThreadHandle(this, pThreadHandle)
 #define IClientContext_SetThreadHandle(this, ThreadHandle) (this)->pVirtualTable->SetThreadHandle(this, ThreadHandle)
+#define IClientContext_GetClientContextHeap(this, pHeap) (this)->pVirtualTable->GetClientContextHeap(this, pHeap)
+#define IClientContext_SetClientContextHeap(this, hHeap) (this)->pVirtualTable->SetClientContextHeap(this, hHeap)
 #define IClientContext_GetExecutableDirectory(this, ppExecutableDirectory) (this)->pVirtualTable->GetExecutableDirectory(this, ppExecutableDirectory)
 #define IClientContext_SetExecutableDirectory(this, pExecutableDirectory) (this)->pVirtualTable->SetExecutableDirectory(this, pExecutableDirectory)
 #define IClientContext_GetWebSiteContainer(this, ppIWebSiteContainer) (this)->pVirtualTable->GetWebSiteContainer(this, ppIWebSiteContainer)

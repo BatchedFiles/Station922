@@ -277,7 +277,12 @@ Function ThreadProc(ByVal lpParam As LPVOID)As DWORD
 	IClientRequest_Release(pIRequest)
 	INetworkStream_Release(pINetworkStream)
 	
+	Dim hClientContextHeap As HANDLE = Any
+	IClientContext_GetClientContextHeap(pIContext, @hClientContextHeap)
+	
 	IClientContext_Release(pIContext)
+	
+	HeapDestroy(hClientContextHeap)
 	
 	Return 0
 	

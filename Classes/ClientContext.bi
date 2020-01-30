@@ -71,6 +71,16 @@ Declare Function ClientContextSetThreadHandle( _
 	ByVal ThreadHandle As HANDLE _
 )As HRESULT
 
+Declare Function ClientContextGetClientContextHeap( _
+	ByVal this As ClientContext Ptr, _
+	ByVal pHeap As HANDLE Ptr _
+)As HRESULT
+
+Declare Function ClientContextSetClientContextHeap( _
+	ByVal this As ClientContext Ptr, _
+	ByVal hHeap As HANDLE _
+)As HRESULT
+
 Declare Function ClientContextGetExecutableDirectory( _
 	ByVal this As ClientContext Ptr, _
 	ByVal ppExecutableDirectory As WString Ptr Ptr _
