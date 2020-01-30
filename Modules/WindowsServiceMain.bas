@@ -1,8 +1,8 @@
-﻿#include "WindowsServiceMain.bi"
+﻿#ifdef WINDOWS_SERVICE
+
+#include "WindowsServiceMain.bi"
 #include "CreateInstance.bi"
 #include "IRunnable.bi"
-
-#ifdef WINDOWS_SERVICE
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 

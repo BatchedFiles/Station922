@@ -2,18 +2,13 @@
 #include "Http.bi"
 #include "InitializeVirtualTables.bi"
 #include "win\winsock2.bi"
-
 #ifdef WINDOWS_SERVICE
-
-#include "WindowsServiceMain.bi"
-#define MAIN_FUNCTION WindowsServiceMain()
-
+	#include "WindowsServiceMain.bi"
 #else
-
-#include "ConsoleMain.bi"
-#define MAIN_FUNCTION ConsoleMain()
-
+	#include "ConsoleMain.bi"
 #endif
+
+Type MainFunction As Function()As Integer
 
 Function MainEntryPoint()As Integer
 	
@@ -28,7 +23,14 @@ Function MainEntryPoint()As Integer
 		Return 1
 	End If
 	
-	Dim RetCode As Integer = MAIN_FUNCTION
+	Dim lpfnMain As MainFunction = Any
+	#ifdef WINDOWS_SERVICE
+		lpfnMain = @WindowsServiceMain
+	#else
+		lpfnMain = @ConsoleMain
+	#endif
+	
+	Dim RetCode As Integer = lpfnMain()
 	
 	WSACleanup()
 	
