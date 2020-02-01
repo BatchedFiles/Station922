@@ -21,6 +21,11 @@ Type IStopWatcherVirtualTable
 		ByVal pFrequency As LongInt Ptr _
 	)As HRESULT
 	
+	Dim GetTicks As Function( _
+		ByVal this As IStopWatcher Ptr, _
+		ByVal pTicks As LongInt Ptr _
+	)As HRESULT
+	
 	Dim GetElapsedTicks As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pElapsedTicks As LongInt Ptr _
@@ -29,11 +34,6 @@ Type IStopWatcherVirtualTable
 	Dim GetElapsedMilliseconds As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pElapsedMilliseconds As LongInt Ptr _
-	)As HRESULT
-	
-	Dim GetTicks As Function( _
-		ByVal this As IStopWatcher Ptr, _
-		ByVal pTicks As LongInt Ptr _
 	)As HRESULT
 	
 	Dim IsRunning As Function( _
@@ -67,9 +67,9 @@ End Type
 #define IStopWatcher_AddRef(this) (this)->pVirtualTable->InheritedTable.AddRef(CPtr(IUnknown Ptr, this))
 #define IStopWatcher_Release(this) (this)->pVirtualTable->InheritedTable.Release(CPtr(IUnknown Ptr, this))
 #define IStopWatcher_GetFrequency(this, pFrequency) (this)->pVirtualTable->GetFrequency(this, pFrequency)
+#define IStopWatcher_GetTicks(this, pTicks) (this)->pVirtualTable->GetTicks(this, pTicks)
 #define IStopWatcher_GetElapsedTicks(this, pElapsedTicks) (this)->pVirtualTable->GetElapsedTicks(this, pElapsedTicks)
 #define IStopWatcher_GetElapsedMilliseconds(this, pElapsedMilliseconds) (this)->pVirtualTable->GetElapsedMilliseconds(this, pElapsedMilliseconds)
-#define IStopWatcher_GetTicks(this, pTicks) (this)->pVirtualTable->GetTicks(this, pTicks)
 #define IStopWatcher_IsRunning(this, pIsRunning) (this)->pVirtualTable->IsRunning(this, pIsRunning)
 #define IStopWatcher_StartWatch(this) (this)->pVirtualTable->StartWatch(this)
 #define IStopWatcher_StopWatch(this) (this)->pVirtualTable->StopWatch(this)
@@ -77,9 +77,11 @@ End Type
 #define IStopWatcher_RestartWatch(this) (this)->pVirtualTable->RestartWatch(this)
 
 #endif
+	' GetFrequency — количество тиков (операций) в секунду
+	' GetTicks — количество операций с начала запуска операционной системы
+	' GetElapsedTicks — количество измеренных операций (от Start до Stop)
+	' GetElapsedMilliseconds — количество измеренных миллисекунд
 '		long nanosecPerTick = (1000L*1000L*1000L) / frequency;
-	 ' — измеренное количество тактов
-	' GetTicks — получает текущее число тактов
 	' IsRunning — запущено ли измерение времени
 	' Start — запусает измерение времени
 	' Stop — останавливает измерение времени
@@ -88,3 +90,13 @@ End Type
 	
 	' private const long TicksPerMillisecond = 10000;
 ' private const long TicksPerSecond = TicksPerMillisecond * 1000;
+' //
+' // We now have the elapsed number of ticks, along with the
+' // number of ticks-per-second. We use these values
+' // to convert to the number of elapsed microseconds.
+' // To guard against loss-of-precision, we convert
+' // to microseconds *before* dividing by ticks-per-second.
+' //
+
+' ElapsedMicroseconds.QuadPart *= 1000000;
+' ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;

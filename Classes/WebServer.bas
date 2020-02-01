@@ -249,10 +249,10 @@ Function WebServerRun( _
 		ThreadContextHeapInitialSize, _
 		ThreadContextHeapMaximumSize _
 	)
-	Dim dwCreateThreadContextHeapErrorCode As DWORD = GetLastError()
+	Dim dwCreateClientContextHeapErrorCode As DWORD = GetLastError()
 	
 	Dim pIContext As IClientContext Ptr = Any
-	Dim hrCreateThreadContext As HRESULT = CreateInstance( _
+	Dim hrCreateClientContext As HRESULT = CreateInstance( _
 		hClientContextHeap, _
 		@CLSID_CLIENTCONTEXT, _
 		@IID_IClientContext, _
@@ -283,17 +283,13 @@ Function WebServerRun( _
 		Dim SocketErrorCode As Integer = WSAGetLastError()
 		
 		Dim FailedFlag As Boolean = (hClientContextHeap = NULL) OrElse _
-			(FAILED(hrCreateThreadContext)) OrElse _
+			(FAILED(hrCreateClientContext)) OrElse _
 			(hThread = NULL) OrElse _
 		(ClientSocket = INVALID_SOCKET)
 		
 		If FailedFlag Then
 			
 			CloseSocketConnection(ClientSocket)
-			
-			If this->ReListenSocket = False Then
-				Exit Do
-			End If
 			
 			' INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
 			
@@ -306,7 +302,7 @@ Function WebServerRun( _
 					' NULL _
 				' )
 			' Else
-				' TODO Использовать код ошибки создания кучи dwCreateThreadContextHeapErrorCode и выделения памяти hrCreateThreadContext
+				' TODO Использовать код ошибки создания кучи dwCreateClientContextHeapErrorCode и выделения памяти hrCreateClientContext
 				' WriteHttpNotEnoughMemory( _
 					' NULL, _
 					' pIResponseDefault, _
@@ -321,6 +317,10 @@ Function WebServerRun( _
 			
 			If hClientContextHeap <> NULL Then
 				HeapDestroy(hClientContextHeap)
+			End If
+			
+			If this->ReListenSocket = False Then
+				Exit Do
 			End If
 			
 			SleepEx(THREAD_SLEEPING_TIME, True)
@@ -362,8 +362,10 @@ Function WebServerRun( _
 			Dim dwResume As DWORD = ResumeThread(hThread)
 			If dwResume = -1 Then
 				' TODO Узнать ошибку и обработать
-				Dim dwError As DWORD = GetLastError()
+				Dim dwResumeThreadError As DWORD = GetLastError()
+				
 				IClientContext_Release(pIContext)
+				HeapDestroy(hClientContextHeap)
 			End If
 			
 		End If
@@ -373,9 +375,9 @@ Function WebServerRun( _
 			ThreadContextHeapInitialSize, _
 			ThreadContextHeapMaximumSize _
 		)
-		dwCreateThreadContextHeapErrorCode = GetLastError()
+		dwCreateClientContextHeapErrorCode = GetLastError()
 		
-		hrCreateThreadContext = CreateInstance( _
+		hrCreateClientContext = CreateInstance( _
 			hClientContextHeap, _
 			@CLSID_CLIENTCONTEXT, _
 			@IID_IClientContext, _
