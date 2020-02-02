@@ -264,7 +264,8 @@ Function WebServerRun( _
 		
 	Loop
 	
-	Dim pIContext As IClientContext Ptr = Any
+	Dim pIContext As IClientContext Ptr = NULL
+	Dim hrCreateClientContext As HRESULT = E_FAIL
 	
 	Dim hClientContextHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -273,6 +274,15 @@ Function WebServerRun( _
 	)
 	Dim dwCreateClientContextHeapErrorCode As DWORD = GetLastError()
 	
+	If hClientContextHeap <> NULL Then
+		hrCreateClientContext = CreateInstance( _
+			hClientContextHeap, _
+			@CLSID_CLIENTCONTEXT, _
+			@IID_IClientContext, _
+			@pIContext _
+		)
+	End If
+			
 	Dim dwThreadId As DWORD = Any
 	Dim hThread As HANDLE = CreateThread( _
 		NULL, _
@@ -284,17 +294,18 @@ Function WebServerRun( _
 	)
 	Dim dwCreateThreadErrorCode As DWORD = GetLastError()
 	
+	Dim ClientSocket As SOCKET = INVALID_SOCKET
+	
 	Do
-		
-		Dim RemoteAddress As SOCKADDR_IN = Any
-		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
-		
 		Dim ClientSocket As SOCKET = accept( _
 			this->ListenSocket, _
 			CPtr(SOCKADDR Ptr, @RemoteAddress), _
 			@RemoteAddressLength _
 		)
 		Dim SocketErrorCode As Integer = WSAGetLastError()
+		
+		Dim RemoteAddress As SOCKADDR_IN = Any
+		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
 		
 		Dim FailedFlag As Boolean = (hClientContextHeap = NULL) OrElse _
 			(hThread = NULL) OrElse _
@@ -323,13 +334,6 @@ Function WebServerRun( _
 			SleepEx(THREAD_SLEEPING_TIME, True)
 			
 		Else
-			
-			Dim hrCreateClientContext As HRESULT = CreateInstance( _
-				hClientContextHeap, _
-				@CLSID_CLIENTCONTEXT, _
-				@IID_IClientContext, _
-				@pIContext _
-			)
 			
 			If FAILED(hrCreateClientContext) Then
 				' TODO Отправить клиенту сообщение об ошибке сервера
@@ -389,12 +393,24 @@ Function WebServerRun( _
 			
 		End If
 		
+		pIContext = NULL
+		hrCreateClientContext = E_FAIL
+		
 		hClientContextHeap = HeapCreate( _
 			HEAP_NO_SERIALIZE, _
 			ThreadContextHeapInitialSize, _
 			ThreadContextHeapMaximumSize _
 		)
 		dwCreateClientContextHeapErrorCode = GetLastError()
+		
+		If hClientContextHeap <> NULL Then
+			hrCreateClientContext = CreateInstance( _
+				hClientContextHeap, _
+				@CLSID_CLIENTCONTEXT, _
+				@IID_IClientContext, _
+				@pIContext _
+			)
+		End If
 		
 		hThread = CreateThread( _
 			NULL, _
@@ -407,6 +423,10 @@ Function WebServerRun( _
 		dwCreateThreadErrorCode = GetLastError()
 		
 	Loop While this->ReListenSocket
+	
+	If ClientSocket <> INVALID_SOCKET Then
+		CloseSocketConnection(ClientSocket)
+	End If
 	
 	If hThread <> NULL Then
 		CloseHandle(hThread)
