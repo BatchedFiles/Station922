@@ -294,18 +294,15 @@ Function WebServerRun( _
 	)
 	Dim dwCreateThreadErrorCode As DWORD = GetLastError()
 	
-	Dim ClientSocket As SOCKET = INVALID_SOCKET
-	
 	Do
+		Dim RemoteAddress As SOCKADDR_IN = Any
+		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
 		Dim ClientSocket As SOCKET = accept( _
 			this->ListenSocket, _
 			CPtr(SOCKADDR Ptr, @RemoteAddress), _
 			@RemoteAddressLength _
 		)
 		Dim SocketErrorCode As Integer = WSAGetLastError()
-		
-		Dim RemoteAddress As SOCKADDR_IN = Any
-		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
 		
 		Dim FailedFlag As Boolean = (hClientContextHeap = NULL) OrElse _
 			(hThread = NULL) OrElse _
@@ -423,10 +420,6 @@ Function WebServerRun( _
 		dwCreateThreadErrorCode = GetLastError()
 		
 	Loop While this->ReListenSocket
-	
-	If ClientSocket <> INVALID_SOCKET Then
-		CloseSocketConnection(ClientSocket)
-	End If
 	
 	If hThread <> NULL Then
 		CloseHandle(hThread)
