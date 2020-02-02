@@ -40,6 +40,7 @@ Const ThreadContextHeapInitialSize As DWORD = 256000
 Const ThreadContextHeapMaximumSize As DWORD = 256000
 
 #define CreateSuspendedThread(lpThreadProc, pIContext, lpThreadId) CreateThread(NULL, THREAD_STACK_SIZE, (lpThreadProc), (pIContext), CREATE_SUSPENDED, (lpThreadId))
+#define CreateClientContextHeap HeapCreate(HEAP_NO_SERIALIZE, ThreadContextHeapInitialSize, ThreadContextHeapMaximumSize)
 
 Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
@@ -267,11 +268,7 @@ Function WebServerRun( _
 		
 	Loop
 	
-	Dim hClientContextHeap As HANDLE = HeapCreate( _
-		HEAP_NO_SERIALIZE, _
-		ThreadContextHeapInitialSize, _
-		ThreadContextHeapMaximumSize _
-	)
+	Dim hClientContextHeap As HANDLE = CreateClientContextHeap
 	Dim dwCreateClientContextHeapErrorCode As DWORD = GetLastError()
 	
 	Dim pIContext As IClientContext Ptr = NULL
@@ -379,11 +376,7 @@ Function WebServerRun( _
 			
 		End If
 		
-		hClientContextHeap = HeapCreate( _
-			HEAP_NO_SERIALIZE, _
-			ThreadContextHeapInitialSize, _
-			ThreadContextHeapMaximumSize _
-		)
+		hClientContextHeap = CreateClientContextHeap
 		dwCreateClientContextHeapErrorCode = GetLastError()
 		
 		pIContext = NULL
