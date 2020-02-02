@@ -39,6 +39,8 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 Const ThreadContextHeapInitialSize As DWORD = 256000
 Const ThreadContextHeapMaximumSize As DWORD = 256000
 
+#define CreateSuspendedThread(lpThreadProc, pIContext, lpThreadId) CreateThread(NULL, THREAD_STACK_SIZE, (lpThreadProc), (pIContext), CREATE_SUSPENDED, (lpThreadId))
+
 Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
@@ -205,6 +207,7 @@ Function WebServerRun( _
 		' Return hr
 	' End If
 	
+	
 	' INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
 	
 	' If hThread = NULL Then
@@ -283,14 +286,7 @@ Function WebServerRun( _
 	End If
 			
 	Dim dwThreadId As DWORD = Any
-	Dim hThread As HANDLE = CreateThread( _
-		NULL, _
-		THREAD_STACK_SIZE, _
-		@ThreadProc, _
-		pIContext, _
-		CREATE_SUSPENDED, _
-		@dwThreadId _
-	)
+	Dim hThread As HANDLE = CreateSuspendedThread(@ThreadProc, pIContext, @dwThreadId)
 	Dim dwCreateThreadErrorCode As DWORD = GetLastError()
 	
 	Do
@@ -401,14 +397,7 @@ Function WebServerRun( _
 			)
 		End If
 		
-		hThread = CreateThread( _
-			NULL, _
-			THREAD_STACK_SIZE, _
-			@ThreadProc, _
-			pIContext, _
-			CREATE_SUSPENDED, _
-			@dwThreadId _
-		)
+		hThread = CreateSuspendedThread(@ThreadProc, pIContext, @dwThreadId)
 		dwCreateThreadErrorCode = GetLastError()
 		
 	Loop While this->ReListenSocket
