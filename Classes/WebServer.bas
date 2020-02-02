@@ -205,6 +205,26 @@ Function WebServerRun( _
 		' Return hr
 	' End If
 	
+	' INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
+	
+	' If hThread = NULL Then
+		' TODO Использовать код ошибки создания потока dwCreateThreadErrorCode
+		' WriteHttpCannotCreateThread( _
+			' NULL, _
+			' pIResponseDefault, _
+			' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+			' NULL _
+		' )
+	' Else
+		' TODO Использовать код ошибки создания кучи dwCreateClientContextHeapErrorCode и выделения памяти hrCreateClientContext
+		' WriteHttpNotEnoughMemory( _
+			' NULL, _
+			' pIResponseDefault, _
+			' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
+			' NULL _
+		' )
+	' End If
+	
 	Dim pIWebSites As IWebSiteContainer Ptr = Any
 	hr = CreateInstance( _
 		GetProcessHeap(), _
@@ -244,20 +264,14 @@ Function WebServerRun( _
 		
 	Loop
 	
+	Dim pIContext As IClientContext Ptr = Any
+	
 	Dim hClientContextHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
 		ThreadContextHeapInitialSize, _
 		ThreadContextHeapMaximumSize _
 	)
 	Dim dwCreateClientContextHeapErrorCode As DWORD = GetLastError()
-	
-	Dim pIContext As IClientContext Ptr = Any
-	Dim hrCreateClientContext As HRESULT = CreateInstance( _
-		hClientContextHeap, _
-		@CLSID_CLIENTCONTEXT, _
-		@IID_IClientContext, _
-		@pIContext _
-	)
 	
 	Dim dwThreadId As DWORD = Any
 	Dim hThread As HANDLE = CreateThread( _
@@ -283,33 +297,16 @@ Function WebServerRun( _
 		Dim SocketErrorCode As Integer = WSAGetLastError()
 		
 		Dim FailedFlag As Boolean = (hClientContextHeap = NULL) OrElse _
-			(FAILED(hrCreateClientContext)) OrElse _
 			(hThread = NULL) OrElse _
 		(ClientSocket = INVALID_SOCKET)
 		
 		If FailedFlag Then
+			' TODO Отправить клиенту сообщение об ошибке сервера
 			
-			CloseSocketConnection(ClientSocket)
-			
-			' INetworkStream_SetSocket(pINetworkStreamDefault, ClientSocket)
-			
-			' If hThread = NULL Then
-				' TODO Использовать код ошибки создания потока dwCreateThreadErrorCode
-				' WriteHttpCannotCreateThread( _
-					' NULL, _
-					' pIResponseDefault, _
-					' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-					' NULL _
-				' )
-			' Else
-				' TODO Использовать код ошибки создания кучи dwCreateClientContextHeapErrorCode и выделения памяти hrCreateClientContext
-				' WriteHttpNotEnoughMemory( _
-					' NULL, _
-					' pIResponseDefault, _
-					' CPtr(IBaseStream Ptr, pINetworkStreamDefault), _
-					' NULL _
-				' )
-			' End If
+			' Очистка
+			If ClientSocket <> INVALID_SOCKET Then
+				CloseSocketConnection(ClientSocket)
+			End If
 			
 			If hThread <> NULL Then
 				CloseHandle(hThread)
@@ -327,45 +324,67 @@ Function WebServerRun( _
 			
 		Else
 			
-			SetReceiveTimeout(ClientSocket, CLIENTSOCKET_RECEIVE_TIMEOUT)
+			Dim hrCreateClientContext As HRESULT = CreateInstance( _
+				hClientContextHeap, _
+				@CLSID_CLIENTCONTEXT, _
+				@IID_IClientContext, _
+				@pIContext _
+			)
 			
-			Dim pIClientRequest As IClientRequest Ptr = Any
-			IClientContext_GetClientRequest(pIContext, @pIClientRequest)
-			
-			Dim pINetworkStream As INetworkStream Ptr = Any
-			IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
-			
-			INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-			
-			IClientContext_SetRemoteAddress(pIContext, RemoteAddress)
-			IClientContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
-			
-			IClientContext_SetThreadId(pIContext, dwThreadId)
-			IClientContext_SetThreadHandle(pIContext, hThread)
-			IClientContext_SetClientContextHeap(pIContext, hClientContextHeap)
-			IClientContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
-			
-			IClientContext_SetWebSiteContainer(pIContext, pIWebSites)
-			
-			INetworkStream_Release(pINetworkStream)
-			IClientRequest_Release(pIClientRequest)
-			
-			#ifdef PERFORMANCE_TESTING
-				IClientContext_SetFrequency(pIContext, this->Frequency) '.QuadPart
+			If FAILED(hrCreateClientContext) Then
+				' TODO Отправить клиенту сообщение об ошибке сервера
 				
-				Dim StartTicks As LARGE_INTEGER
-				QueryPerformanceCounter(@StartTicks)
-				
-				IClientContext_SetStartTicks(pIContext, StartTicks)
-			#endif
-			
-			Dim dwResume As DWORD = ResumeThread(hThread)
-			If dwResume = -1 Then
-				' TODO Узнать ошибку и обработать
-				Dim dwResumeThreadError As DWORD = GetLastError()
-				
-				IClientContext_Release(pIContext)
+				CloseSocketConnection(ClientSocket)
+				CloseHandle(hThread)
 				HeapDestroy(hClientContextHeap)
+				
+			Else
+				
+				SetReceiveTimeout(ClientSocket, CLIENTSOCKET_RECEIVE_TIMEOUT)
+				
+				Dim pIClientRequest As IClientRequest Ptr = Any
+				IClientContext_GetClientRequest(pIContext, @pIClientRequest)
+				
+				Dim pINetworkStream As INetworkStream Ptr = Any
+				IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
+				
+				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+				
+				IClientContext_SetRemoteAddress(pIContext, RemoteAddress)
+				IClientContext_SetRemoteAddressLength(pIContext, RemoteAddressLength)
+				
+				IClientContext_SetThreadId(pIContext, dwThreadId)
+				IClientContext_SetThreadHandle(pIContext, hThread)
+				IClientContext_SetClientContextHeap(pIContext, hClientContextHeap)
+				IClientContext_SetExecutableDirectory(pIContext, @ExecutableDirectory)
+				
+				IClientContext_SetWebSiteContainer(pIContext, pIWebSites)
+				
+				INetworkStream_Release(pINetworkStream)
+				IClientRequest_Release(pIClientRequest)
+				
+				#ifdef PERFORMANCE_TESTING
+					IClientContext_SetFrequency(pIContext, this->Frequency)
+					
+					Dim StartTicks As LARGE_INTEGER
+					QueryPerformanceCounter(@StartTicks)
+					
+					IClientContext_SetStartTicks(pIContext, StartTicks)
+				#endif
+				
+				Dim dwResume As DWORD = ResumeThread(hThread)
+				If dwResume = -1 Then
+					' TODO Отправить клиенту сообщение об ошибке сервера
+					
+					' TODO Узнать ошибку и обработать
+					Dim dwResumeThreadError As DWORD = GetLastError()
+					
+					CloseSocketConnection(ClientSocket)
+					CloseHandle(hThread)
+					HeapDestroy(hClientContextHeap)
+					
+				End If
+				
 			End If
 			
 		End If
@@ -376,13 +395,6 @@ Function WebServerRun( _
 			ThreadContextHeapMaximumSize _
 		)
 		dwCreateClientContextHeapErrorCode = GetLastError()
-		
-		hrCreateClientContext = CreateInstance( _
-			hClientContextHeap, _
-			@CLSID_CLIENTCONTEXT, _
-			@IID_IClientContext, _
-			@pIContext _
-		)
 		
 		hThread = CreateThread( _
 			NULL, _
