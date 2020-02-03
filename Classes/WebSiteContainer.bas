@@ -26,13 +26,16 @@ Type _WebSiteNode
 	Dim RightNode As WebSiteNode Ptr
 End Type
 
+Const WEBSITENODE_HEAPINITIALSIZE As DWORD = 50 * SizeOf(WebSiteNode)
+Const WEBSITENODE_HEAPMAXIMUMSIZE As DWORD = 50 * SizeOf(WebSiteNode)
+
 Type _WebSiteContainer
 	
 	Dim pVirtualTable As IWebSiteContainerVirtualTable Ptr
 	Dim ReferenceCounter As ULONG
 	
 	Dim ExecutableDirectory As WString * (MAX_PATH + 1)
-	Dim hTreeHeap As Handle
+	Dim hWebSiteNodesHeap As Handle
 	Dim pDefaultNode As WebSiteNode Ptr
 	Dim pTree As WebSiteNode Ptr
 	
@@ -82,7 +85,7 @@ Sub InitializeWebSiteContainer( _
 	this->ReferenceCounter = 0
 	this->ExecutableDirectory[0] = 0
 	
-	this->hTreeHeap = HeapCreate(HEAP_NO_SERIALIZE, 0, 0)
+	this->hWebSiteNodesHeap = NULL
 	this->pDefaultNode = NULL
 	this->pTree = NULL
 	
@@ -92,7 +95,9 @@ Sub UnInitializeWebSiteContainer( _
 		ByVal this As WebSiteContainer Ptr _
 	)
 	
-	HeapDestroy(this->hTreeHeap)
+	If this->hWebSiteNodesHeap <> NULL Then
+		HeapDestroy(this->hWebSiteNodesHeap)
+	End If
 	
 End Sub
 
@@ -110,6 +115,16 @@ Function CreateWebSiteContainer( _
 	End If
 	
 	InitializeWebSiteContainer(pWebSiteContainer)
+	
+	pWebSiteContainer->hWebSiteNodesHeap = HeapCreate( _
+		HEAP_NO_SERIALIZE, _
+		WEBSITENODE_HEAPINITIALSIZE, _
+		WEBSITENODE_HEAPMAXIMUMSIZE _
+	)
+	If pWebSiteContainer->hWebSiteNodesHeap = NULL Then
+		DestroyWebSiteContainer(pWebSiteContainer)
+		Return NULL
+	End If
 	
 	Return pWebSiteContainer
 	
@@ -245,8 +260,12 @@ Function WebSiteContainerLoadWebSites( _
 	PathCombine(@SettingsFileName, ExecutableDirectory, @WebSitesIniFileString)
 	
 	Dim pIConfig As IConfiguration Ptr = Any
-	Dim hr As HRESULT = CreateInstance(GetProcessHeap(), @CLSID_CONFIGURATION, @IID_IConfiguration, @pIConfig)
-	
+	Dim hr As HRESULT = CreateInstance( _
+		GetProcessHeap(), _
+		@CLSID_CONFIGURATION, _
+		@IID_IConfiguration, _
+		@pIConfig _
+	)
 	If FAILED(hr) Then
 		Return hr
 	End If
@@ -272,7 +291,7 @@ Function WebSiteContainerLoadWebSites( _
 	Loop
 	
 	this->pDefaultNode = CreateWebSiteNode( _
-		this->hTreeHeap, _
+		this->hWebSiteNodesHeap, _
 		pIConfig, _
 		@this->ExecutableDirectory, _
 		@DefaultVirtualPath _
@@ -291,7 +310,7 @@ Sub LoadWebSite( _
 	)
 	
 	Dim pNode As WebSiteNode Ptr = CreateWebSiteNode( _
-		this->hTreeHeap, _
+		this->hWebSiteNodesHeap, _
 		pIConfig, _
 		@this->ExecutableDirectory, _
 		HostName _
