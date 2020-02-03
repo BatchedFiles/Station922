@@ -36,11 +36,11 @@ End Type
 Const CLIENTSOCKET_RECEIVE_TIMEOUT As DWORD = 90 * 1000
 Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
-Const ThreadContextHeapInitialSize As DWORD = 256000
-Const ThreadContextHeapMaximumSize As DWORD = 256000
+Const THREADCONTEXT_HEAPINITIALSIZE As DWORD = 256000
+Const THREADCONTEXT_HEAPMAXIMUMSIZE As DWORD = 256000
 
 #define CreateSuspendedThread(lpThreadProc, pIContext, lpThreadId) CreateThread(NULL, THREAD_STACK_SIZE, (lpThreadProc), (pIContext), CREATE_SUSPENDED, (lpThreadId))
-#define CreateClientContextHeap HeapCreate(HEAP_NO_SERIALIZE, ThreadContextHeapInitialSize, ThreadContextHeapMaximumSize)
+#define CreateClientContextHeap HeapCreate(HEAP_NO_SERIALIZE, THREADCONTEXT_HEAPINITIALSIZE, THREADCONTEXT_HEAPMAXIMUMSIZE)
 
 Declare Function WebServerReadConfiguration( _
 	ByVal this As WebServer Ptr _
