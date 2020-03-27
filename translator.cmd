@@ -1,26 +1,26 @@
-REM РўСЂР°РЅСЃР»СЏС‚РѕСЂ Р±РµР№СЃРёРєвЂђС„Р°Р№Р»РѕРІ
+REM Транслятор бейсик-файлов
 
-REM РСЃС…РѕРґРЅС‹Рµ РєРѕРґС‹: *.bas
-REM Р’РєР»СЋС‡Р°РµРјС‹Рµ С„Р°Р№Р»С‹: *.bi
-REM Р¤Р°Р№Р»С‹ СЂРµСЃСѓСЂСЃРѕРІ: *.rc
+REM Исходные коды: *.bas
+REM Включаемые файлы: *.bi
+REM Файлы ресурсов: *.rc
 
-REM РџР°СЂР°РјРµС‚СЂС‹:
-REM 1. Р’СЃРµ РєРѕРјРїРёР»РёСЂСѓРµРјС‹Рµ *.bas Рё *.rc С„Р°Р№Р»С‹ (РІ РєР°РІС‹С‡РєР°С…)
-REM 2. РўРёРї РёСЃРїРѕР»РЅСЏРµРјРѕРіРѕ С„Р°Р№Р»Р°               [console | gui | lib | dll | native | driver]
-REM 3. РРјСЏ СЃРєРѕРјРїРёР»РёСЂРѕРІР°РЅРЅРѕРіРѕ С„Р°Р№Р»Р°          [РІ РєР°РІС‹С‡РєР°С…] = РёРјСЏ РїРµСЂРІРѕРіРѕ С„Р°Р№Р»Р° + .exe
-REM 4. Р”РёСЂРµРєС‚РѕСЂРёСЏ РєРѕРјРїРёР»СЏС‚РѕСЂР°               [РІ РєР°РІС‹С‡РєР°С…] %ProgramFiles%\FreeBASIC
-REM 5. Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РєРѕРјРїРёР»СЏС†РёРё  [РІ РєР°РІС‹С‡РєР°С…]
-REM 6. Р¤Р»Р°Рі РѕС‚Р»Р°РґРєРё                         [release   | debug]
-REM 7. Р¤Р»Р°Рі РїСЂРѕС„РёР»РёСЂРѕРІС‰РёРєР°                  [noprofile | profile]
-REM 8. Р¤Р»Р°Рі СѓРґР°Р»РµРЅРёСЏ RTL                    [runtime   | withoutruntime]
+REM Параметры:
+REM 1. Все компилируемые *.bas и *.rc файлы (в кавычках)
+REM 2. Тип исполняемого файла               [console | gui | lib | dll | native | driver]
+REM 3. Имя скомпилированного файла          [в кавычках] = имя первого файла + .exe
+REM 4. Директория компилятора               [в кавычках] %ProgramFiles%\FreeBASIC
+REM 5. Дополнительные параметры компиляции  [в кавычках]
+REM 6. Флаг отладки                         [release   | debug]
+REM 7. Флаг профилировщика                  [noprofile | profile]
+REM 8. Флаг удаления RTL                    [runtime   | withoutruntime]
 
-REM РўРёРїС‹ РёСЃРїРѕР»РЅСЏРµРјС‹С… С„Р°Р№Р»РѕРІ
-REM lib     РЎС‚Р°С‚РёС‡РµСЃРєРё РїРѕРґРєР»СЋС‡Р°РµРјР°СЏ Р±РёР±Р»РёРѕС‚РµРєР°  -
-REM dll     Р”РёРЅР°РјРёС‡РµСЃРєРё РїРѕРґРєР»СЋС‡Р°РµРјР°СЏ Р±РёР±Р»РёРѕС‚РµРєР° console
-REM console РљРѕРЅСЃРѕР»СЊРЅРѕРµ РїСЂРёР»РѕР¶РµРЅРёРµ               console
-REM gui     Р“СЂР°С„РёС‡РµСЃРєРѕРµ РїСЂРёР»РѕР¶РµРЅРёРµ              gui
-REM native  РќР°С‚РёРІРЅРѕРµ РїСЂРёР»РѕР¶РµРЅРёРµ                 native
-REM driver  Р”СЂР°Р№РІРµСЂ                             native
+REM Типы исполняемых файлов
+REM lib     Статически подключаемая библиотека  -
+REM dll     Динамически подключаемая библиотека console
+REM console Консольное приложение               console
+REM gui     Графическое приложение              gui
+REM native  Нативное приложение                 native
+REM driver  Драйвер                             native
 
 set CompilerLogErrorFileName=_out.txt
 
@@ -34,6 +34,56 @@ set ProfileFlag=%~7
 set WithoutRuntimeLibraryesFlag=%~8
 
 
+:CreateCompilerPath
+	
+	if "%Directory%"=="" (
+		set FreeBasicCompilerFilePath="%ProgramFiles%\FreeBASIC\fbc.exe"
+		
+		if "%PROCESSOR_ARCHITECTURE%"=="x86" (
+			set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win32\gcc.exe"
+			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\as.exe"
+			set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\ld.exe"
+			set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win32\dlltool.exe"
+			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\GoRC.exe"
+			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\ar.exe"
+			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win32"
+			set CodeGenerationBackend=gas
+		) else (
+			set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win64\gcc.exe"
+			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\as.exe"
+			set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ld.exe"
+			set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win64\dlltool.exe"
+			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\GoRC.exe"
+			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ar.exe"
+			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win64"
+			set CodeGenerationBackend=gcc
+		)
+		
+	) else (
+		set FreeBasicCompilerFilePath="%Directory%\fbc.exe"
+		
+		if "%PROCESSOR_ARCHITECTURE%"=="x86" (
+			set GccFilePath="%Directory%\bin\win32\gcc.exe"
+			set AssemblerFilePath="%Directory%\bin\win32\as.exe"
+			set LinkerFilePath="%Directory%\bin\win32\ld.exe"
+			set DllToolFilePath="%Directory%\bin\win32\dlltool.exe"
+			set ResourceCompilerFilePath="%Directory%\bin\win32\GoRC.exe"
+			set ArchiveCompilerFilePath="%Directory%\bin\win32\ar.exe"
+			set CompilerLibDirectoryPath="%Directory%\lib\win32"
+			set CodeGenerationBackend=gas
+		) else (
+			set GccFilePath="%Directory%\bin\win64\gcc.exe"
+			set AssemblerFilePath="%Directory%\bin\win64\as.exe"
+			set LinkerFilePath="%Directory%\bin\win64\ld.exe"
+			set DllToolFilePath="%Directory%\bin\win64\dlltool.exe"
+			set ResourceCompilerFilePath="%Directory%\bin\win64\GoRC.exe"
+			set ArchiveCompilerFilePath="%Directory%\bin\win64\ar.exe"
+			set CompilerLibDirectoryPath="%Directory%\lib\win64"
+			set CodeGenerationBackend=gcc
+		)
+	)
+	
+	
 :CreateCompilerExeTypeKind
 	
 	if "%ExeTypeKind%"=="dll" (
@@ -64,7 +114,11 @@ set WithoutRuntimeLibraryesFlag=%~8
 				set Win32Subsystem=console
 			) else (
 				if "%ExeTypeKind%"=="gui" (
-					set Win32Subsystem=gui
+					if "%WithoutRuntimeLibraryesFlag%"=="withoutruntime" (
+						set Win32Subsystem=windows
+					) else (
+						set Win32Subsystem=gui
+					)
 				) else (
 					if "%ExeTypeKind%"=="native" (
 						set Win32Subsystem=native
@@ -91,23 +145,6 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	
-:CreateCompilerPath
-	
-	if "%Directory%"=="" (
-		set CompilerDirectory=%ProgramFiles%\FreeBASIC
-	)
-	
-	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-		set CompilerBinDirectory=%CompilerDirectory%\bin\win32
-		set CompilerLibDirectory=%CompilerDirectory%\lib\win32
-		set CodeGenerationBackend=gas
-	) else (
-		set CompilerBinDirectory=%CompilerDirectory%\bin\win64
-		set CompilerLibDirectory=%CompilerDirectory%\lib\win64
-		set CodeGenerationBackend=gcc
-	)
-	
-	
 :CreateCompilerDebugFlag
 	
 	if "%DebugFlag%"=="debug" (
@@ -126,15 +163,15 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	if "%WithoutRuntimeLibraryesFlag%"=="withoutruntime" (
 		set WITHOUT_RUNTIME_DEFINED=-d WITHOUT_RUNTIME
-		set WriteOutOnlyAsm=-r
+		set WriteOutOnlyAsmFlag=-r
 	)
 	
-:FreeBASICCompiler
+:RuntimeCompilation
 	
-	"%CompilerDirectory%\fbc.exe" %WITHOUT_RUNTIME_DEFINED% -x %CompilerOutputFileName% %WriteOutOnlyAsm% -s %Win32Subsystem% %CompilerExeTypeKind% -gen %CodeGenerationBackend% %CompilerDebugFlag% %CompilerProfileFlag% %CompilerParameters% %AllCompiledFiles% >%CompilerLogErrorFileName%
+	%FreeBasicCompilerFilePath% %WITHOUT_RUNTIME_DEFINED% -x %CompilerOutputFileName% %WriteOutOnlyAsmFlag% -s %Win32Subsystem% %CompilerExeTypeKind% -gen %CodeGenerationBackend% %CompilerDebugFlag% %CompilerProfileFlag% %CompilerParameters% %AllCompiledFiles% >%CompilerLogErrorFileName%
 	
 	if %errorlevel% GEQ 1 (
-		exit /b 1
+		exit /b %errorlevel%
 	)
 	
 	if not "%WithoutRuntimeLibraryesFlag%"=="withoutruntime" (
@@ -143,38 +180,6 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	
 :WithoutRuntimeCompilation
-	
-	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
-	set GCCNoInclude=-nostdlib -nostdinc
-	set GCCOptimizations=-O3 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
-	
-	set IncludeUuidObjectLibraries=-luuid
-	set IncludeGMonitorObjectLibraries=-lgmon
-	set IncludeGCCObjectLibraries=-lmoldname -lgcc
-	set IncludeWinAPIObjectLibraries=-lws2_32 -lshlwapi -lshell32 -lcrypt32 -lmswsock -lgdiplus -lkernel32 -lgdi32 -lmsimg32 -luser32 -lversion -ladvapi32 -limm32 -lole32 -loleaut32 -lmsvcrt
-	set IncludeAllObjectLibraries=%IncludeWinAPIObjectLibraries% %IncludeGMonitorObjectLibraries% %IncludeGCCObjectLibraries%
-	
-	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
-	
-	set UseThreadSafeRuntime=
-	
-	set MajorImageVersion=--major-image-version 1
-	set MinorImageVersion=--minor-image-version 0
-	
-	REM РћР±С‹С‡РЅС‹Р№
-	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
-	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
-	REM "C:\Program Files\FreeBASIC\lib\win64\fbrt0.o"
-	REM (Р±РёР±Р»РёРѕС‚РµРєРё)
-	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
-	
-	REM РџСЂРѕС„РёР»РёСЂРѕРІС‰РёРє
-	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
-	REM "C:\Program Files\FreeBASIC\lib\win64\gcrt2.o"
-	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
-	REM "C:\Program Files\FreeBASIC\lib\win64\fbrt0.o"
-	REM (Р±РёР±Р»РёРѕС‚РµРєРё)
-	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
 	
 	set AllFileWithExtensionC=
 	set AllFileWithExtensionAsm=
@@ -199,12 +204,46 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 :CleanUp
 	
-	del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
-	
+	if %CodeGenerationBackend%==gcc (
+		del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
+	) else (
+		del %AllFileWithExtensionAsm% %AllObjectFiles%
+	)
 	exit /b 0
 	
 	
 :GccLinker
+	
+	REM Обычный и отладчик
+	REM "C:\Program Files\FreeBASIC\lib\win64\fbextra.x"
+	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
+	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
+	REM "C:\Program Files\FreeBASIC\lib\win64\fbrt0.o"
+	REM (библиотеки)
+	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
+	
+	REM Профилировщик
+	REM "C:\Program Files\FreeBASIC\lib\win64\fbextra.x"
+	REM "C:\Program Files\FreeBASIC\lib\win64\crt2.o"
+	REM "C:\Program Files\FreeBASIC\lib\win64\gcrt2.o"
+	REM "C:\Program Files\FreeBASIC\lib\win64\crtbegin.o"
+	REM "C:\Program Files\FreeBASIC\lib\win64\fbrt0.o"
+	REM (библиотеки)
+	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
+	
+	set IncludeUuidObjectLibraries=-luuid
+	set IncludeGMonitorObjectLibraries=-lgmon
+	set IncludeGccObjectLibraries=-lmoldname -lgcc
+	set IncludeWinApiObjectLibraries=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
+	
+	set IncludeAllObjectLibraries=%IncludeWinApiObjectLibraries% %IncludeGMonitorObjectLibraries% %IncludeGccObjectLibraries%
+	
+	set UseThreadSafeRuntime=
+	
+	set MajorImageVersion=--major-image-version 1
+	set MinorImageVersion=--minor-image-version 0
+	
+	set OutputDefinitionFileName=%OutputFileName:~0,-3%def
 	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
 		
@@ -229,19 +268,29 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	if "%DebugFlag%"=="debug" (
-		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeAllObjectLibraries% -)
+		set LinkerStripFlag=
 	) else (
-		"%CompilerBinDirectory%\ld.exe" -m %PEFileFormat% -subsystem %Win32Subsystem% "%CompilerLibDirectory%\fbextra.x" -e %EntryPoint% --stack 1048576,1048576 -s -L "%CompilerLibDirectory%" -L "." %AllObjectFiles% -o %CompilerOutputFileName% -( %IncludeAllObjectLibraries% -)
+		set LinkerStripFlag=-s
 	)
+	%LinkerFilePath% -m %PEFileFormat% -o %CompilerOutputFileName% -subsystem %Win32Subsystem% -e %EntryPoint% --stack 1048576,1048576 %LinkerStripFlag% -L %CompilerLibDirectoryPath% -L "." "%CompilerLibDirectoryPath:~1,-1%\fbextra.x" %AllObjectFiles% -( %IncludeAllObjectLibraries% -)
 	
 	if "%ExeTypeKind%"=="dll" (
-		"%CompilerBinDirectory%\dlltool.exe" --def %OutputDefinitionFileName% --dllname %CompilerOutputFileName% --output-lib lib%CompilerOutputFileName%.a
+		%DllToolFilePath% --def %OutputDefinitionFileName% --dllname %CompilerOutputFileName% --output-lib lib%CompilerOutputFileName%.a
 	)
 	
 	exit /b 0
 	
 	
 :GccCompier
+	
+	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
+	set GCCNoInclude=-nostdlib -nostdinc
+	if "%DebugFlag%"=="debug" (
+		set OptimizationLevel=-O0
+	) else (
+		set OptimizationLevel=-O3
+	)
+	set GCCOptimizations=%OptimizationLevel% -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
 	
 	set FileWithExtensionBas=%1
 	set FileWithoutExtension=%FileWithExtensionBas:~0,-3%
@@ -257,18 +306,19 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	if "%CodeGenerationBackend%"=="gcc" (
-		"%CompilerBinDirectory%\gcc.exe" %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
+		%GccFilePath% %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
 	)
-	
-	if "%DebugFlag%"=="debug" (
-		"%CompilerBinDirectory%\as.exe" %TargetAssemblerArch% %FileWithExtensionAsm% -o %FileWithExtensionObj%
-	) else (
-		"%CompilerBinDirectory%\as.exe" %TargetAssemblerArch% --strip-local-absolute %FileWithExtensionAsm% -o %FileWithExtensionObj%
-	)
-	
 	set AllFileWithExtensionC=%AllFileWithExtensionC% %FileWithExtensionC%
 	set AllFileWithExtensionAsm=%AllFileWithExtensionAsm% %FileWithExtensionAsm%
+	
+	if "%DebugFlag%"=="debug" (
+		set AssemblerStripFlag=
+	) else (
+		set AssemblerStripFlag=--strip-local-absolute
+	)
+	%AssemblerFilePath% %TargetAssemblerArch% %AssemblerStripFlag% %FileWithExtensionAsm% -o %FileWithExtensionObj%
 	set AllObjectFiles=%AllObjectFiles% %FileWithExtensionObj%
+	
 	
 	exit /b 0
 	
@@ -280,12 +330,12 @@ set WithoutRuntimeLibraryesFlag=%~8
 	set ResourceFileWithExtensionObj=%ResourceFileWithoutExtension%obj
 	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-		set ResourceCompiler64Flag=/nw
+		set ResourceCompilerBitFlag=/nw
 	) else (
-		set ResourceCompiler64Flag=/machine X64
+		set ResourceCompilerBitFlag=/machine X64
 	)
 	
-	"%CompilerBinDirectory%\gorc.exe" /ni %ResourceCompiler64Flag% /o /fo %ResourceFileWithExtensionObj% %ResourceFileWithExtension%
+	%ResourceCompilerFilePath% /ni %ResourceCompilerBitFlag% /o /fo %ResourceFileWithExtensionObj% %ResourceFileWithExtension%
 	
 	set AllObjectFiles=%AllObjectFiles% %ResourceFileWithExtensionObj%
 	
