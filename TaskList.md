@@ -1,5 +1,85 @@
 ﻿# Задачи
 
+## Иерархия классов
+
+IUnknown
+├───IAsyncResult
+│
+├───IBaseStream
+│   ├───IFileStream
+│   │   └───FileStream       [ ]
+│   │
+│   └───INetworkStream
+│       └───NetworkStream
+│
+├───IClientContext
+│   └───ClientContext
+│
+├───IClientRequest
+│   └───ClientRequest
+│
+├───IClientUri
+│   └───ClientUri            [ ]
+│
+├───IConfiguration
+│   └───Configuration
+│
+├───IMutableWebSite
+│   └───WebSite
+│
+├───IRequestedFile
+│   └───RequestedFile
+│
+├───IRequestProcessor
+│   ├───CgiProcessor         [ ]
+│   ├───DllProcessor         [ ]
+│   ├───HttpConnectProcessor [ ]
+│   ├───HttpDeleteProcessor  [ ]
+│   ├───HttpGetProcessor     [ ]
+│   ├───HttpHeadProcessor    [ ]
+│   ├───HttpOptionsProcessor [ ]
+│   ├───HttpPostProcessor    [ ]
+│   ├───HttpPutProcessor     [ ]
+│   └───HttpTraceProcessor   [ ]
+│
+├───ISendable
+│   └───RequestedFile        [ ]
+│
+├───IServerResponse
+│   └───ServerResponse
+│
+├───IServerState
+│   └───ServerState          [ ]
+│
+├───IStopWatcher
+│   └───StopWatcher          [ ]
+│
+├───IStringable
+│   ├───ClientRequest
+│   └───ServerResponse
+│
+├───ITextReader
+│   ├───IHttpReader
+│   │   └───HttpReader
+│   │
+│   └───IStreamReader
+│
+├───ITextWriter
+│   ├───IArrayStringWriter
+│   │   └───ArrayStringWriter
+│   │
+│   └───IStreamWriter
+│
+└───IWebSite
+    ├───WebSite
+    │
+    └───IWebSiteContainer
+        └───WebSiteContainer
+
+Mime                         [ ]
+SafeHandle
+Station922Uri                [ ]
+
 ## Создание объектов
 
 Объекты создаёт функция CreateInstance.
@@ -8,13 +88,10 @@
 
 Объявить в заголовочнике псевдоним, а в файле реализации сам тип с подчёркиванием слева.
 
-* [x] ArrayStringWriter.bas
 * [x] Mime.bas
-* [x] RequestedFile.bas
 * [x] SafeHandle.bas
 * [x] ServerState.bas
 * [x] Station922Uri.bas
-* [x] WebSite.bas
 
 ## Сделать
 
@@ -112,3 +189,4 @@
 
 * [x] Обновить Read.Me про компиляцию и настройку службы.
 * [x] Исправить перемотку видеофайлов.
+
