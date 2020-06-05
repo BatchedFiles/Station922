@@ -9,8 +9,10 @@ IUnknown
 │   ├───IFileStream
 │   │   └───FileStream       [ ]
 │   │
-│   └───INetworkStream
-│       └───NetworkStream
+│   ├───INetworkStream
+│   │   └───NetworkStream
+│   │
+│   └───SslStream            [ ]
 │
 ├───IClientContext
 │   └───ClientContext
@@ -34,10 +36,13 @@ IUnknown
 │   ├───CgiProcessor         [ ]
 │   ├───DllProcessor         [ ]
 │   ├───HttpConnectProcessor [ ]
+│   ├───HttpCopyProcessor    [ ]
 │   ├───HttpDeleteProcessor  [ ]
 │   ├───HttpGetProcessor     [ ]
 │   ├───HttpHeadProcessor    [ ]
+│   ├───HttpMoveProcessor    [ ]
 │   ├───HttpOptionsProcessor [ ]
+│   ├───HttpPatchProcessor   [ ]
 │   ├───HttpPostProcessor    [ ]
 │   ├───HttpPutProcessor     [ ]
 │   └───HttpTraceProcessor   [ ]
