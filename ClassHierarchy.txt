@@ -1,0 +1,83 @@
+﻿IUnknown
+├───IAsyncResult
+│
+├───IBaseStream
+│   ├───IFileStream
+│   │   └───FileStream       [ ]
+│   │
+│   ├───INetworkStream
+│   │   └───NetworkStream
+│   │
+│   └───ISslStream
+│       └───SslStream        [ ]
+│
+├───IClientContext
+│   └───ClientContext
+│
+├───IClientRequest
+│   └───ClientRequest
+│
+├───IClientUri
+│   └───ClientUri            [ ]
+│
+├───IConfiguration
+│   └───Configuration
+│
+├───IMutableWebSite
+│   └───WebSite
+│
+├───IRequestedFile
+│   └───RequestedFile
+│
+├───IRequestProcessor
+│   ├───CgiProcessor         [ ]
+│   ├───DllProcessor         [ ]
+│   ├───HttpConnectProcessor [ ]
+│   ├───HttpCopyProcessor    [ ]
+│   ├───HttpDeleteProcessor  [ ]
+│   ├───HttpGetProcessor     [ ]
+│   ├───HttpHeadProcessor    [ ]
+│   ├───HttpMoveProcessor    [ ]
+│   ├───HttpOptionsProcessor [ ]
+│   ├───HttpPatchProcessor   [ ]
+│   ├───HttpPostProcessor    [ ]
+│   ├───HttpPutProcessor     [ ]
+│   └───HttpTraceProcessor   [ ]
+│
+├───ISendable
+│   └───RequestedFile        [ ]
+│
+├───IServerResponse
+│   └───ServerResponse
+│
+├───IServerState
+│   └───ServerState          [ ]
+│
+├───IStopWatcher
+│   └───StopWatcher          [ ]
+│
+├───IStringable
+│   ├───ClientRequest
+│   └───ServerResponse
+│
+├───ITextReader
+│   ├───IHttpReader
+│   │   └───HttpReader
+│   │
+│   └───IStreamReader
+│
+├───ITextWriter
+│   ├───IArrayStringWriter
+│   │   └───ArrayStringWriter
+│   │
+│   └───IStreamWriter
+│
+└───IWebSite
+    ├───WebSite
+    │
+    └───IWebSiteContainer
+        └───WebSiteContainer
+
+Mime                         [ ]
+SafeHandle
+Station922Uri                [ ]
