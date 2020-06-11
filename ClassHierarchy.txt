@@ -1,5 +1,10 @@
 ﻿IUnknown
 ├───IAsyncResult
+│   ├───INetworkStreamAsyncResult
+│   │   └───NetworkStreamAsyncResult        [ ]
+│   │
+│   └───IFileStreamAsyncResult
+│       └───FileStreamAsyncResult        [ ]
 │
 ├───IBaseStream
 │   ├───IFileStream
@@ -7,6 +12,9 @@
 │   │
 │   ├───INetworkStream
 │   │   └───NetworkStream
+│   │
+│   ├───IPipeStream
+│   │   └───PipeStream        [ ]
 │   │
 │   └───ISslStream
 │       └───SslStream         [ ]
