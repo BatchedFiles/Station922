@@ -1,101 +1,101 @@
 ﻿IUnknown
 ├───IAsyncResult
-│   ├───INetworkStreamAsyncResult
-│   │   └───NetworkStreamAsyncResult        [ ]
-│   │
-│   └───IFileStreamAsyncResult
-│       └───FileStreamAsyncResult        [ ]
+│   ├───INetworkStreamAsyncResult
+│   │   └───NetworkStreamAsyncResult
+│   │
+│   └───IFileStreamAsyncResult
+│       └───FileStreamAsyncResult        [ ]
 │
 ├───IBaseStream
-│   ├───IFileStream
-│   │   └───FileStream        [ ]
-│   │
-│   ├───INetworkStream
-│   │   └───NetworkStream
-│   │
-│   ├───IPipeStream
-│   │   └───PipeStream        [ ]
-│   │
-│   └───ISslStream
-│       └───SslStream         [ ]
+│   ├───IFileStream
+│   │   └───FileStream        [ ]
+│   │
+│   ├───INetworkStream
+│   │   └───NetworkStream
+│   │
+│   ├───IPipeStream
+│   │   └───PipeStream        [ ]
+│   │
+│   └───ISslStream
+│       └───SslStream         [ ]
 │
 ├───IClientContext
-│   └───ClientContext
+│   └───ClientContext
 │
 ├───IClientRequest
-│   └───ClientRequest
+│   └───ClientRequest
 │
 ├───IClientUri
-│   └───ClientUri             [ ]
+│   └───ClientUri             [ ]
 │
 ├───IConfiguration
-│   └───Configuration
+│   └───Configuration
 │
 ├───IMutableWebSite
-│   └───WebSite
+│   └───WebSite
 │
 ├───IRequestedFile
-│   └───RequestedFile
+│   └───RequestedFile
 │
 ├───IRequestProcessor
-│   ├───CgiProcessor          [ ]
-│   ├───DllProcessor          [ ]
-│   ├───HttpConnectProcessor  [ ]
-│   ├───HttpCopyProcessor     [ ]
-│   ├───HttpDeleteProcessor   [ ]
-│   ├───HttpGetProcessor      [ ]
-│   ├───HttpHeadProcessor     [ ]
-│   ├───HttpLinkProcessor     [ ]
-│   ├───HttpLockProcessor     [ ]
-│   ├───HttpMkcolProcessor    [ ]
-│   ├───HttpMoveProcessor     [ ]
-│   ├───HttpOptionsProcessor  [ ]
-│   ├───HttpPatchProcessor    [ ]
-│   ├───HttpPostProcessor     [ ]
-│   ├───HttpPropfindProcessor [ ]
-│   ├───HttpProppatchProcessor[ ]
-│   ├───HttpPutProcessor      [ ]
-│   ├───HttpTraceProcessor    [ ]
-│   ├───HttpUnlinkProcessor   [ ]
-│   └───HttpUnlockProcessor   [ ]
+│   ├───CgiProcessor          [ ]
+│   ├───DllProcessor          [ ]
+│   ├───HttpConnectProcessor  [ ]
+│   ├───HttpCopyProcessor     [ ]
+│   ├───HttpDeleteProcessor   [ ]
+│   ├───HttpGetProcessor
+│   ├───HttpHeadProcessor
+│   ├───HttpLinkProcessor     [ ]
+│   ├───HttpLockProcessor     [ ]
+│   ├───HttpMkcolProcessor    [ ]
+│   ├───HttpMoveProcessor     [ ]
+│   ├───HttpOptionsProcessor  [ ]
+│   ├───HttpPatchProcessor    [ ]
+│   ├───HttpPostProcessor     [ ]
+│   ├───HttpPropfindProcessor [ ]
+│   ├───HttpProppatchProcessor[ ]
+│   ├───HttpPutProcessor      [ ]
+│   ├───HttpTraceProcessor    [ ]
+│   ├───HttpUnlinkProcessor   [ ]
+│   └───HttpUnlockProcessor   [ ]
 │
 ├───IRunnable
-│   └───WebServer             [ ]
+│   └───WebServer             [ ]
 │
 ├───ISendable
-│   └───RequestedFile         [ ]
+│   └───RequestedFile         [ ]
 │
 ├───IServerResponse
-│   └───ServerResponse
+│   └───ServerResponse
 │
 ├───IServerState
-│   └───ServerState           [ ]
+│   └───ServerState           [ ]
 │
 ├───IStopWatcher
-│   └───StopWatcher           [ ]
+│   └───StopWatcher           [ ]
 │
 ├───IStringable
-│   ├───ClientRequest
-│   └───ServerResponse
+│   ├───ClientRequest
+│   └───ServerResponse
 │
 ├───ITextReader
-│   ├───IHttpReader
-│   │   └───HttpReader
-│   │
-│   └───IStreamReader
+│   ├───IHttpReader
+│   │   └───HttpReader
+│   │
+│   └───IStreamReader
 │
 ├───ITextWriter
-│   ├───IArrayStringWriter
-│   │   └───ArrayStringWriter
-│   │
-│   └───IStreamWriter
+│   ├───IArrayStringWriter
+│   │   └───ArrayStringWriter
+│   │
+│   └───IStreamWriter
 │
 └───IWebSite
-    ├───WebSite
-    │
-    └───IWebSiteContainer
-        └───WebSiteContainer
+    ├───WebSite
+    │
+    └───IWebSiteContainer
+        └───WebSiteContainer
 
-Mime                          [ ]
+Mime                          [ ]
 SafeHandle
-Station922Uri                 [ ]
+Station922Uri                 [ ]
