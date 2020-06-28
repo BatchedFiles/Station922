@@ -19,6 +19,10 @@
 │   └───ISslStream
 │       └───SslStream         [ ]
 │
+├───IClassFactory
+│   └───IPrivateHeapMemoryAllocatorClassFactory      [ ]
+│       └───PrivateHeapMemoryAllocatorClassFactory      [ ]
+│
 ├───IClientContext
 │   └───ClientContext
 │
@@ -30,6 +34,10 @@
 │
 ├───IConfiguration
 │   └───Configuration
+│
+├───IMalloc
+│   └───IPrivateHeapMemoryAllocator         [ ]
+│       └───PrivateHeapMemoryAllocator      [ ]
 │
 ├───IMutableWebSite
 │   └───WebSite
