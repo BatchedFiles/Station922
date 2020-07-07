@@ -22,6 +22,8 @@ ListenAddress=0.0.0.0
 Port=80
 ConnectBindAddress=0.0.0.0
 ConnectBindPort=0
+MaxWorkerThreads=1
+MaxCachedClientMemoryContext=10
 ```
 
 #### Описание
@@ -44,6 +46,16 @@ ConnectBindPort=0
 <dl>
 <dt>ConnectBindPort</dt>
 <dd>Порт, к которому будет привязываться сервер для выполнения метода CONNECT. По умолчанию 0, это значит, что система будет сама выбирать порт для привязки.</dd>
+</dl>
+
+<dl>
+<dt>MaxWorkerThreads</dt>
+<dd>Количество рабочих потоков.</dd>
+</dl>
+
+<dl>
+<dt>MaxCachedClientMemoryContext</dt>
+<dd>Размер предварительно созданных куч памяти для клиентских контекстов.</dd>
 </dl>
 
 
