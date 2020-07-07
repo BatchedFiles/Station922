@@ -1,7 +1,7 @@
 ﻿IUnknown
 ├───IAsyncResult
-│   ├───INetworkStreamAsyncResult
-│   │   └───NetworkStreamAsyncResult
+│   ├───IMutableAsyncResult
+│   │   └───AsyncResult
 │   │
 │   └───IFileStreamAsyncResult
 │       └───FileStreamAsyncResult        [ ]
@@ -68,7 +68,8 @@
 │   └───HttpUnlockProcessor   [ ]
 │
 ├───IRunnable
-│   └───WebServer             [ ]
+│   └───IPauseable            [ ]
+│       └───WebServer         [ ]
 │
 ├───ISendable
 │   └───RequestedFile         [ ]
@@ -98,11 +99,14 @@
 │   │
 │   └───IStreamWriter
 │
-└───IWebSite
-    ├───WebSite
-    │
-    └───IWebSiteContainer
-        └───WebSiteContainer
+├───IWebServer
+│   └───WebServer           [ ]
+│
+├───IWebSite
+│   └───WebSite
+│
+└───IWebSiteContainer
+    └───WebSiteContainer
 
 Mime                          [ ]
 SafeHandle

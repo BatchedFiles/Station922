@@ -2,7 +2,7 @@ set CompilerDirectory=%ProgramFiles%\FreeBASIC
 REM Classes\ServerState.bas
 REM Modules\ProcessDllRequest.bas
 set MainFile=Modules\EntryPoint.bas
-set Classes=Classes\ArrayStringWriter.bas Classes\ClientContext.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpGetProcessor.bas Classes\HttpReader.bas Classes\Mime.bas Classes\NetworkStream.bas Classes\NetworkStreamAsyncResult.bas Classes\PrivateHeapMemoryAllocator.bas Classes\RequestedFile.bas Classes\SafeHandle.bas Classes\ServerResponse.bas Classes\Station922Uri.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas
+set Classes=Classes\ArrayStringWriter.bas Classes\AsyncResult.bas Classes\ClientContext.bas Classes\ClientRequest.bas Classes\Configuration.bas Classes\HttpGetProcessor.bas Classes\HttpReader.bas Classes\Mime.bas Classes\NetworkStream.bas Classes\PrivateHeapMemoryAllocator.bas Classes\RequestedFile.bas Classes\SafeHandle.bas Classes\ServerResponse.bas Classes\Station922Uri.bas Classes\WebServer.bas Classes\WebSite.bas Classes\WebSiteContainer.bas
 set Modules=Modules\ConsoleColors.bas Modules\ConsoleMain.bas Modules\CreateInstance.bas Modules\FindNewLineIndex.bas Modules\Guids.bas Modules\Http.bas Modules\Network.bas Modules\NetworkClient.bas Modules\NetworkServer.bas Modules\PrintDebugInfo.bas Modules\WebUtils.bas Modules\WindowsServiceMain.bas Modules\WorkerThread.bas Modules\WriteHttpError.bas
 set Resources=Resources.RC
 set OutputFile=Station922.exe
