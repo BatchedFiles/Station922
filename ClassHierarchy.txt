@@ -27,13 +27,13 @@
 │   └───ClientContext
 │
 ├───IClientRequest
-│   └───ClientRequest
+│   └───ClientRequest             — строки
 │
 ├───IClientUri
-│   └───ClientUri             [ ]
+│   └───ClientUri             [ ] — строки
 │
 ├───IConfiguration
-│   └───Configuration
+│   └───Configuration             — строки
 │
 ├───IHeapBSTR
 │   └───HeapBSTR
@@ -43,10 +43,10 @@
 │       └───PrivateHeapMemoryAllocator      [ ]
 │
 ├───IMutableWebSite
-│   └───WebSite
+│   └───WebSite                   — строки
 │
 ├───IRequestedFile
-│   └───RequestedFile
+│   └───RequestedFile             — строки?
 │
 ├───IRequestProcessor
 │   ├───CgiProcessor          [ ]
@@ -78,7 +78,7 @@
 │   └───RequestedFile         [ ]
 │
 ├───IServerResponse
-│   └───ServerResponse
+│   └───ServerResponse             — строки
 │
 ├───IServerState
 │   └───ServerState           [ ]
@@ -86,29 +86,29 @@
 ├───IStopWatcher
 │   └───StopWatcher           [ ]
 │
-├───IStringable
-│   ├───ClientRequest
-│   └───ServerResponse
+├───IStringable                     — строки
+│   ├───ClientRequest                — строки
+│   └───ServerResponse               — строки
 │
-├───ITextReader
+├───ITextReader                       — строки
 │   ├───IHttpReader
 │   │   └───HttpReader
 │   │
-│   └───IStreamReader
+│   └───IStreamReader                 — строки
 │
-├───ITextWriter
+├───ITextWriter                        — строки
 │   ├───IArrayStringWriter
 │   │   └───ArrayStringWriter
 │   │
-│   └───IStreamWriter
+│   └───IStreamWriter                
 │
 ├───IWebServer
 │   └───WebServer           [ ]
 │
-├───IWebSite
+├───IWebSite                       — строки
 │   └───WebSite
 │
-└───IWebSiteContainer
+└───IWebSiteContainer               — строки
     └───WebSiteContainer
 
 Mime                          [ ]
