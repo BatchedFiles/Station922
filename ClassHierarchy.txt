@@ -108,6 +108,7 @@
 └───IWebSiteContainer
     └───WebSiteContainer
 
+HeapBSTR                      [ ]
 Mime                          [ ]
 SafeHandle
 Station922Uri                 [ ]
