@@ -35,6 +35,9 @@
 ├───IConfiguration
 │   └───Configuration
 │
+├───IHeapBSTR
+│   └───HeapBSTR
+│
 ├───IMalloc
 │   └───IPrivateHeapMemoryAllocator         [ ]
 │       └───PrivateHeapMemoryAllocator      [ ]
@@ -108,7 +111,6 @@
 └───IWebSiteContainer
     └───WebSiteContainer
 
-HeapBSTR                      [ ]
 Mime                          [ ]
 SafeHandle
 Station922Uri                 [ ]
