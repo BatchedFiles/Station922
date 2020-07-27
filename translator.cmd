@@ -72,6 +72,8 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set CompilerLibDirectoryPath="%Directory%\lib\win32"
 			set CodeGenerationBackend=gas
 		) else (
+			set ClangFilePath="%ProgramFiles%\LLVM\bin\clang.exe"
+			set LlvmLinkerFilePath="%ProgramFiles%\LLVM\bin\lld-link.exe"
 			set GccFilePath="%Directory%\bin\win64\gcc.exe"
 			set AssemblerFilePath="%Directory%\bin\win64\as.exe"
 			set LinkerFilePath="%Directory%\bin\win64\ld.exe"
@@ -149,6 +151,8 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	if "%DebugFlag%"=="debug" (
 		set CompilerDebugFlag=-g
+	) else (
+		set CompilerDebugFlag=
 	)
 	
 	
@@ -156,6 +160,8 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	if "%ProfileFlag%"=="profile" (
 		set CompilerProfileFlag=-profile
+	) else (
+		set CompilerProfileFlag=
 	)
 	
 	
@@ -205,9 +211,9 @@ set WithoutRuntimeLibraryesFlag=%~8
 :CleanUp
 	
 	if %CodeGenerationBackend%==gcc (
-		del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
+		REM del %AllFileWithExtensionC% %AllFileWithExtensionAsm% %AllObjectFiles%
 	) else (
-		del %AllFileWithExtensionAsm% %AllObjectFiles%
+		REM del %AllFileWithExtensionAsm% %AllObjectFiles%
 	)
 	exit /b 0
 	
@@ -283,7 +289,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 :GccCompier
 	
-	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main
+	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	if "%DebugFlag%"=="debug" (
 		set OptimizationLevel=-O0
@@ -300,6 +306,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	
 	if "%PROCESSOR_ARCHITECTURE%"=="x86" (
 		set TargetAssemblerArch=--32
+		set GCCArchitecture=
 	) else (
 		set TargetAssemblerArch=--64
 		set GCCArchitecture=-m64 -march=x86-64
