@@ -47,8 +47,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\ar.exe"
 			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\GoRC.exe"
 			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win32"
-			REM set CodeGenerationBackend=gas
-			set CodeGenerationBackend=gcc
+			set CodeGenerationBackend=gas
 		) else (
 			set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win64\gcc.exe"
 			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\as.exe"
@@ -71,8 +70,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set ArchiveCompilerFilePath="%Directory%\bin\win32\ar.exe"
 			set ResourceCompilerFilePath="%Directory%\bin\win32\GoRC.exe"
 			set CompilerLibDirectoryPath="%Directory%\lib\win32"
-			REM set CodeGenerationBackend=gas
-			set CodeGenerationBackend=gcc
+			set CodeGenerationBackend=gas
 		) else (
 			set ClangFilePath="%ProgramFiles%\LLVM\bin\clang.exe"
 			set LlvmLinkerFilePath="%ProgramFiles%\LLVM\bin\lld-link.exe"
