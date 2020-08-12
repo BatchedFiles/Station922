@@ -44,17 +44,18 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\as.exe"
 			set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\ld.exe"
 			set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win32\dlltool.exe"
-			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\GoRC.exe"
 			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\ar.exe"
+			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win32\GoRC.exe"
 			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win32"
-			set CodeGenerationBackend=gas
+			REM set CodeGenerationBackend=gas
+			set CodeGenerationBackend=gcc
 		) else (
 			set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win64\gcc.exe"
 			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\as.exe"
 			set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ld.exe"
 			set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win64\dlltool.exe"
-			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\GoRC.exe"
 			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ar.exe"
+			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\GoRC.exe"
 			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win64"
 			set CodeGenerationBackend=gcc
 		)
@@ -67,19 +68,30 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set AssemblerFilePath="%Directory%\bin\win32\as.exe"
 			set LinkerFilePath="%Directory%\bin\win32\ld.exe"
 			set DllToolFilePath="%Directory%\bin\win32\dlltool.exe"
-			set ResourceCompilerFilePath="%Directory%\bin\win32\GoRC.exe"
 			set ArchiveCompilerFilePath="%Directory%\bin\win32\ar.exe"
+			set ResourceCompilerFilePath="%Directory%\bin\win32\GoRC.exe"
 			set CompilerLibDirectoryPath="%Directory%\lib\win32"
-			set CodeGenerationBackend=gas
+			REM set CodeGenerationBackend=gas
+			set CodeGenerationBackend=gcc
 		) else (
 			set ClangFilePath="%ProgramFiles%\LLVM\bin\clang.exe"
 			set LlvmLinkerFilePath="%ProgramFiles%\LLVM\bin\lld-link.exe"
-			set GccFilePath="%Directory%\bin\win64\gcc.exe"
-			set AssemblerFilePath="%Directory%\bin\win64\as.exe"
-			set LinkerFilePath="%Directory%\bin\win64\ld.exe"
-			set DllToolFilePath="%Directory%\bin\win64\dlltool.exe"
+			
+			REM gcc version 5.2.0
+			REM set GccFilePath="%Directory%\bin\win64\gcc.exe"
+			REM set AssemblerFilePath="%Directory%\bin\win64\as.exe"
+			REM set LinkerFilePath="%Directory%\bin\win64\ld.exe"
+			REM set DllToolFilePath="%Directory%\bin\win64\dlltool.exe"
+			REM set ArchiveCompilerFilePath="%Directory%\bin\win64\ar.exe"
+			
+			REM gcc version 8.1.0
+			set GccFilePath="%ProgramFiles%\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\gcc.exe"
+			set AssemblerFilePath="%ProgramFiles%\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\as.exe"
+			set LinkerFilePath="%ProgramFiles%\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\ld.exe"
+			set DllToolFilePath="%ProgramFiles%\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\dlltool.exe"
+			set ArchiveCompilerFilePath="%ProgramFiles%\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\ar.exe"
+			
 			set ResourceCompilerFilePath="%Directory%\bin\win64\GoRC.exe"
-			set ArchiveCompilerFilePath="%Directory%\bin\win64\ar.exe"
 			set CompilerLibDirectoryPath="%Directory%\lib\win64"
 			set CodeGenerationBackend=gcc
 		)
@@ -237,12 +249,12 @@ set WithoutRuntimeLibraryesFlag=%~8
 	REM (библиотеки)
 	REM "C:\Program Files\FreeBASIC\lib\win64\crtend.o"
 	
-	set IncludeUuidObjectLibraries=-luuid
-	set IncludeGMonitorObjectLibraries=-lgmon
-	set IncludeGccObjectLibraries=-lmoldname -lgcc
-	set IncludeWinApiObjectLibraries=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
+	set UuidObjectLibraries=-luuid
+	set GMonitorObjectLibraries=-lgmon
+	set GccObjectLibraries=-lmoldname -lgcc
+	set WinApiObjectLibraries=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
 	
-	set IncludeAllObjectLibraries=%IncludeWinApiObjectLibraries% %IncludeGMonitorObjectLibraries% %IncludeGccObjectLibraries%
+	set AllObjectLibraries=%WinApiObjectLibraries% %GMonitorObjectLibraries% %GccObjectLibraries%
 	
 	set UseThreadSafeRuntime=
 	
@@ -278,7 +290,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	) else (
 		set LinkerStripFlag=-s
 	)
-	%LinkerFilePath% -m %PEFileFormat% -o %CompilerOutputFileName% -subsystem %Win32Subsystem% -e %EntryPoint% --stack 1048576,1048576 %LinkerStripFlag% -L %CompilerLibDirectoryPath% -L "." "%CompilerLibDirectoryPath:~1,-1%\fbextra.x" %AllObjectFiles% -( %IncludeAllObjectLibraries% -)
+	%LinkerFilePath% -m %PEFileFormat% -o %CompilerOutputFileName% -subsystem %Win32Subsystem% -e %EntryPoint% --stack 1048576,1048576 %LinkerStripFlag% -L %CompilerLibDirectoryPath% -L "." "%CompilerLibDirectoryPath:~1,-1%\fbextra.x" %AllObjectFiles% -( %AllObjectLibraries% -)
 	
 	if "%ExeTypeKind%"=="dll" (
 		%DllToolFilePath% --def %OutputDefinitionFileName% --dllname %CompilerOutputFileName% --output-lib lib%CompilerOutputFileName%.a
