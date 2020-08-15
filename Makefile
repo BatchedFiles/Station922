@@ -1,8 +1,20 @@
 ﻿COMPILERDIRECTORY=%ProgramFiles%\FreeBASIC
+FREEBASIC_COMPILER="C:\Program Files\FreeBASIC\fbc.exe"
 INCLUDEFILESPATH=-i Classes -i Interfaces -i Modules -i Headers
 EXETYPEKIND=console
 MAXERRORSCOUNT=-maxerr 1
 MINWARNINGLEVEL=-w all
+UseThreadSafeRuntime=-mt
+
+ALL_OBJECT_FILES=$(OBJ_DIR)\ArrayStringWriter.o $(OBJ_DIR)\AsyncResult.o $(OBJ_DIR)\ClientContext.o $(OBJ_DIR)\ClientRequest.o $(OBJ_DIR)\Configuration.o $(OBJ_DIR)\HeapBSTR.o $(OBJ_DIR)\HttpGetProcessor.o $(OBJ_DIR)\HttpReader.o $(OBJ_DIR)\Mime.o $(OBJ_DIR)\NetworkStream.o $(OBJ_DIR)\PrivateHeapMemoryAllocator.o $(OBJ_DIR)\RequestedFile.o $(OBJ_DIR)\SafeHandle.o $(OBJ_DIR)\ServerResponse.o $(OBJ_DIR)\Station922Uri.o $(OBJ_DIR)\WebServer.o $(OBJ_DIR)\WebSite.o $(OBJ_DIR)\WebSiteContainer.o $(OBJ_DIR)\CreateInstance.o $(OBJ_DIR)\EntryPoint.o $(OBJ_DIR)\FindNewLineIndex.o $(OBJ_DIR)\Guids.o $(OBJ_DIR)\Http.o $(OBJ_DIR)\Network.o $(OBJ_DIR)\NetworkClient.o $(OBJ_DIR)\NetworkServer.o $(OBJ_DIR)\WebUtils.o $(OBJ_DIR)\WorkerThread.o $(OBJ_DIR)\WriteHttpError.o $(OBJ_DIR)\Resources.obj
+ALL_OBJECT_FILES_SERVICE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\WindowsServiceMain.o
+ALL_OBJECT_FILES_CONSOLE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleColors.o $(OBJ_DIR)\ConsoleMain.o $(OBJ_DIR)\PrintDebugInfo.o
+
+# FreeBASIC   *.bas     -> *.c + зависимости от заголовочников
+# GccCompiler *.c       -> *.asm
+# Assembler   *.asm     -> *.o
+# ResCompiler *.RC      -> *.obj
+# Linker      *.o *.obj -> *.exe
 
 CODEGENERATIONBACKEND=gcc
 # CODEGENERATIONBACKEND=gas
@@ -40,8 +52,6 @@ GccObjectLibraries=-lmoldname -lgcc
 WinApiObjectLibraries=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
 ALL_OBJECT_LIBRARIES=$(WinApiObjectLibraries) $(GMonitorObjectLibraries) $(GccObjectLibraries)
 
-UseThreadSafeRuntime=-mt
-
 MajorImageVersion=--major-image-version 1
 MinorImageVersion=--minor-image-version 0
 
@@ -53,13 +63,17 @@ MinorImageVersion=--minor-image-version 0
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 
-FREEBASIC_COMPILER="C:\Program Files\FreeBASIC\fbc.exe"
-GCC_COMPILER="C:\Program Files\FreeBASIC\bin\win64\gcc.exe"
-GCC_ASSEMBLER="C:\Program Files\FreeBASIC\bin\win64\as.exe"
+# GCC_COMPILER="C:\Program Files\FreeBASIC\bin\win64\gcc.exe"
+# GCC_ASSEMBLER="C:\Program Files\FreeBASIC\bin\win64\as.exe"
+# GCC_LINKER="C:\Program Files\FreeBASIC\bin\win64\ld.exe"
+# ARCHIVE_COMPILER="C:\Program Files\FreeBASIC\bin\win64\ar.exe"
+# DLL_TOOL="C:\Program Files\FreeBASIC\bin\win64\dlltool.exe"
+GCC_COMPILER="C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\gcc.exe"
+GCC_ASSEMBLER="C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\as.exe"
+GCC_LINKER="C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\ld.exe"
+ARCHIVE_COMPILER="C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\ar.exe"
+DLL_TOOL="C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\dlltool.exe"
 RESOURCE_COMPILER="C:\Program Files\FreeBASIC\bin\win64\GoRC.exe"
-GCC_LINKER="C:\Program Files\FreeBASIC\bin\win64\ld.exe"
-ARCHIVE_COMPILER="C:\Program Files\FreeBASIC\bin\win64\ar.exe"
-DLL_TOOL="C:\Program Files\FreeBASIC\bin\win64\dlltool.exe"
 COMPILER_LIB_PATH="C:\Program Files\FreeBASIC\lib\win64"
 FBEXTRA="C:\Program Files\FreeBASIC\lib\win64\fbextra.x"
 
@@ -77,7 +91,6 @@ ResourceCompilerBitFlag=/machine X64
 
 else
 
-FREEBASIC_COMPILER="C:\Program Files\FreeBASIC\fbc.exe"
 GCC_COMPILER="C:\Program Files\FreeBASIC\bin\win32\gcc.exe"
 GCC_ASSEMBLER="C:\Program Files\FreeBASIC\bin\win32\as.exe"
 RESOURCE_COMPILER="C:\Program Files\FreeBASIC\bin\win32\GoRC.exe"
@@ -113,11 +126,11 @@ endif
 	# set GUIDS_WITHOUT_MINGW=
 # )
 
-ifeq ($(SERVICE_DEFINED),service)
-WINDOWS_SERVICE_DEFINED=-d WINDOWS_SERVICE
-else
-WINDOWS_SERVICE_DEFINED=
-endif
+# ifeq ($(SERVICE_DEFINED),service)
+# WINDOWS_SERVICE_DEFINED=-d WINDOWS_SERVICE
+# else
+# WINDOWS_SERVICE_DEFINED=
+# endif
 
 ifeq ($(RUNTIME_DEFINED),runtime)
 WITHOUT_RUNTIME_DEFINED=
@@ -125,7 +138,7 @@ else
 WITHOUT_RUNTIME_DEFINED=-d GUIDS_WITHOUT_MINGW -d WITHOUT_RUNTIME
 endif
 
-FREEBASIC_PARAMETERS_BASE=-r -gen $(CODEGENERATIONBACKEND) $(MAXERRORSCOUNT) $(MINWARNINGLEVEL) $(INCLUDEFILESPATH) -d UNICODE $(WINDOWS_SERVICE_DEFINED) $(WITHOUT_RUNTIME_DEFINED)
+FREEBASIC_PARAMETERS_BASE=-r -gen $(CODEGENERATIONBACKEND) $(MAXERRORSCOUNT) $(MINWARNINGLEVEL) $(INCLUDEFILESPATH) -d UNICODE -d WITHOUT_CRITICAL_SECTIONS $(WINDOWS_SERVICE_DEFINED) $(WITHOUT_RUNTIME_DEFINED)
 
 GCC_WARNING=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-main
 GCC_NOINCLUDE=-nostdlib -nostdinc -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
@@ -149,19 +162,9 @@ LINKER_STRIP_FLAG=-s
 BIN_DIR=$(BIN_RELEASE_DIR)
 OBJ_DIR=$(OBJ_RELEASE_DIR)
 GCC_COMPILER_PARAMETERS=$(GCC_WARNING) $(GCC_NOINCLUDE) $(GCC_ARCHITECTURE) -masm=intel -S -Ofast
+FREEBASIC_PARAMETERS=$(FREEBASIC_PARAMETERS_BASE) -g
 
 endif
-
-ALL_OBJECT_FILES=$(OBJ_DIR)\ArrayStringWriter.o $(OBJ_DIR)\AsyncResult.o $(OBJ_DIR)\ClientContext.o $(OBJ_DIR)\ClientRequest.o $(OBJ_DIR)\Configuration.o $(OBJ_DIR)\HeapBSTR.o $(OBJ_DIR)\HttpGetProcessor.o $(OBJ_DIR)\HttpReader.o $(OBJ_DIR)\Mime.o $(OBJ_DIR)\NetworkStream.o $(OBJ_DIR)\PrivateHeapMemoryAllocator.o $(OBJ_DIR)\RequestedFile.o $(OBJ_DIR)\SafeHandle.o $(OBJ_DIR)\ServerResponse.o $(OBJ_DIR)\Station922Uri.o $(OBJ_DIR)\WebServer.o $(OBJ_DIR)\WebSite.o $(OBJ_DIR)\WebSiteContainer.o $(OBJ_DIR)\ConsoleColors.o $(OBJ_DIR)\CreateInstance.o $(OBJ_DIR)\EntryPoint.o $(OBJ_DIR)\FindNewLineIndex.o $(OBJ_DIR)\Guids.o $(OBJ_DIR)\Http.o $(OBJ_DIR)\Network.o $(OBJ_DIR)\NetworkClient.o $(OBJ_DIR)\NetworkServer.o $(OBJ_DIR)\PrintDebugInfo.o $(OBJ_DIR)\WebUtils.o $(OBJ_DIR)\WorkerThread.o $(OBJ_DIR)\WriteHttpError.o $(OBJ_DIR)\Resources.obj
-ALL_OBJECT_FILES_SERVICE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\WindowsServiceMain.o
-ALL_OBJECT_FILES_CONSOLE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleMain.o
-
-# FreeBASIC   *.bas     -> *.c + зависимости от заголовочников
-# GccCompiler *.c       -> *.asm
-# Assembler   *.asm     -> *.o
-# ResCompiler *.RC      -> *.obj
-# Linker      *.o *.obj -> *.exe
-
 
 .PHONY: all clean install uninstall configure
 
@@ -169,6 +172,8 @@ ALL_OBJECT_FILES_CONSOLE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleMain.o
 
 $(BIN_DIR)\WebServer.exe: $(ALL_OBJECT_FILES_CONSOLE)
 	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_CONSOLE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\WebServer.exe"
+
+$(BIN_DIR)\Station922.exe: WINDOWS_SERVICE_DEFINED=-d WINDOWS_SERVICE
 
 $(BIN_DIR)\Station922.exe: $(ALL_OBJECT_FILES_SERVICE)
 	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_SERVICE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\Station922.exe"
@@ -633,7 +638,7 @@ Classes\WebServer.bas: Classes\WebServer.bi Classes\ClientContext.bi Classes\Cli
 Classes\WebServer.bi: Interfaces\IRunnable.bi
 
 Classes\WebSite.bas: Classes\WebSite.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Interfaces\IMutableWebSite.bi Modules\PrintDebugInfo.bi Classes\RequestedFile.bi
-Classes\WebSite.bi: Interfaces\IWebSite.bi
+Classes\WebSite.bi: Interfaces\IMutableWebSite.bi
 
 Classes\WebSiteContainer.bas: Classes\WebSiteContainer.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Headers\HttpConst.bi Interfaces\IConfiguration.bi Interfaces\IMutableWebSite.bi Headers\IniConst.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi
 Classes\WebSiteContainer.bi: Interfaces\IWebSiteContainer.bi
@@ -656,7 +661,7 @@ Interfaces\IFileStream.bi: Interfaces\IBaseStream.bi
 Interfaces\IHeapBSTR.bi:
 Interfaces\IHttpReader.bi: Interfaces\IBaseStream.bi Interfaces\ITextReader.bi
 Interfaces\IMutableAsyncResult.bi: Interfaces\IAsyncResult.bi
-Interfaces\IMutableWebSite.bi:
+Interfaces\IMutableWebSite.bi: Interfaces\IWebSite.bi
 Interfaces\INetworkStream.bi: Interfaces\IBaseStream.bi
 Interfaces\IPauseable.bi: Interfaces\IRunnable.bi
 Interfaces\IPrivateHeapMemoryAllocator.bi:

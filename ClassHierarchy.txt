@@ -42,9 +42,6 @@
 │   └───IPrivateHeapMemoryAllocator         [ ]
 │       └───PrivateHeapMemoryAllocator      [ ]
 │
-├───IMutableWebSite
-│   └───WebSite                   — строки
-│
 ├───IRequestedFile
 │   └───RequestedFile             — строки?
 │
@@ -106,7 +103,8 @@
 │   └───WebServer           [ ]
 │
 ├───IWebSite                       — строки
-│   └───WebSite
+│   └───IMutableWebSite
+│       └───WebSite                   — строки
 │
 └───IWebSiteContainer               — строки
     └───WebSiteContainer
