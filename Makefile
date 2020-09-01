@@ -19,8 +19,8 @@ ifeq ($@,WindowsService)
 WINDOWS_SERVICE_FLAG=-d WINDOWS_SERVICE
 WINDOWS_SERVICE_SUFFIX=Service
 else
-WINDOWS_SERVICE_FLAG=-d WINDOWS_SERVICE
-WINDOWS_SERVICE_SUFFIX=Service
+WINDOWS_SERVICE_FLAG=
+WINDOWS_SERVICE_SUFFIX=Console
 endif
 
 PERFORMANCE_TESTING_FLAG=
@@ -47,12 +47,6 @@ ALL_OBJECT_FILES_CONSOLE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleColors$(FILE_SUFF
 ALL_OBJECT_FILES_SERVICE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\WindowsServiceMain$(FILE_SUFFIX).o
 
 ALL_OBJECT_FILES_TEST=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleColors$(FILE_SUFFIX).o $(OBJ_DIR)\PrintDebugInfo$(FILE_SUFFIX).o $(OBJ_DIR)\test$(FILE_SUFFIX).o
-
-# FreeBASIC   *.bas     -> *.c + зависимости от заголовочников
-# GccCompiler *.c       -> *.asm
-# Assembler   *.asm     -> *.o
-# ResCompiler *.RC      -> *.obj
-# Linker      *.o *.obj -> *.exe
 
 CODEGENERATIONBACKEND=gcc
 # CODEGENERATIONBACKEND=gas
