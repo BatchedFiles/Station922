@@ -49,12 +49,12 @@ set WithoutRuntimeLibraryesFlag=%~8
 			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win32"
 			set CodeGenerationBackend=gas
 		) else (
-			set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win64\gcc.exe"
-			set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\as.exe"
-			set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ld.exe"
-			set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win64\dlltool.exe"
-			set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ar.exe"
-			set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\GoRC.exe"
+			REM set GccFilePath="%ProgramFiles%\FreeBASIC\bin\win64\gcc.exe"
+			REM set AssemblerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\as.exe"
+			REM set LinkerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ld.exe"
+			REM set DllToolFilePath="%ProgramFiles%\FreeBASIC\bin\win64\dlltool.exe"
+			REM set ArchiveCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\ar.exe"
+			REM set ResourceCompilerFilePath="%ProgramFiles%\FreeBASIC\bin\win64\GoRC.exe"
 			set CompilerLibDirectoryPath="%ProgramFiles%\FreeBASIC\lib\win64"
 			set CodeGenerationBackend=gcc
 		)
@@ -302,11 +302,11 @@ set WithoutRuntimeLibraryesFlag=%~8
 	set GCCWarning=-Werror -Wall -Wno-unused-label -Wno-unused-function -Wno-main
 	set GCCNoInclude=-nostdlib -nostdinc
 	if "%DebugFlag%"=="debug" (
-		set OptimizationLevel=-O0
+		set OptimizationLevel=-Og
 	) else (
-		set OptimizationLevel=-O3
+		set OptimizationLevel=-O3 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
 	)
-	set GCCOptimizations=%OptimizationLevel% -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident
+	set GCCOptimizations=%OptimizationLevel%
 	
 	set FileWithExtensionBas=%1
 	set FileWithoutExtension=%FileWithExtensionBas:~0,-3%
@@ -323,7 +323,9 @@ set WithoutRuntimeLibraryesFlag=%~8
 	)
 	
 	if "%CodeGenerationBackend%"=="gcc" (
-		%GccFilePath% %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
+		replace.vbs %FileWithExtensionC%
+		%ClangFilePath% %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -S %FileWithExtensionC% -o %FileWithExtensionAsm%
+		REM %GccFilePath% %GCCWarning% %GCCNoInclude% %GCCOptimizations% %GCCArchitecture% %CompilerDebugFlag% -masm=intel -S %FileWithExtensionC% -o %FileWithExtensionAsm%
 	)
 	set AllFileWithExtensionC=%AllFileWithExtensionC% %FileWithExtensionC%
 	set AllFileWithExtensionAsm=%AllFileWithExtensionAsm% %FileWithExtensionAsm%
@@ -333,7 +335,7 @@ set WithoutRuntimeLibraryesFlag=%~8
 	) else (
 		set AssemblerStripFlag=--strip-local-absolute
 	)
-	%AssemblerFilePath% %TargetAssemblerArch% %AssemblerStripFlag% %FileWithExtensionAsm% -o %FileWithExtensionObj%
+	REM %AssemblerFilePath% %TargetAssemblerArch% %AssemblerStripFlag% %FileWithExtensionAsm% -o %FileWithExtensionObj%
 	set AllObjectFiles=%AllObjectFiles% %FileWithExtensionObj%
 	
 	

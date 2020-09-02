@@ -105,7 +105,7 @@ Interfaces\IWebSiteContainer.bi: Interfaces\IWebSite.bi
 Modules\ConsoleColors.bas: Modules\ConsoleColors.bi
 Modules\ConsoleColors.bi:
 
-Modules\ConsoleMain.bas: Modules\ConsoleMain.bi Modules\CreateInstance.bi Classes\WebServer.bi
+Modules\ConsoleMain.bas: Modules\ConsoleMain.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Classes\WebServer.bi
 Modules\ConsoleMain.bi:
 
 Modules\CreateInstance.bas: Modules\CreateInstance.bi Classes\ArrayStringWriter.bi Classes\AsyncResult.bi Classes\ClientContext.bi Classes\ClientRequest.bi Classes\Configuration.bi Classes\HttpGetProcessor.bi Classes\HttpReader.bi Classes\NetworkStream.bi Classes\PrivateHeapMemoryAllocator.bi Classes\RequestedFile.bi Classes\ServerResponse.bi Classes\WebServer.bi Classes\WebSite.bi Classes\WebSiteContainer.bi

@@ -4,7 +4,6 @@ INCLUDEFILESPATH=-i Classes -i Interfaces -i Modules -i Headers
 EXETYPEKIND=console
 MAXERRORSCOUNT=-maxerr 1
 MINWARNINGLEVEL=-w all
-UseThreadSafeRuntime=-mt
 
 # Все флаги:
 # DEBUG 0 | 1
@@ -196,6 +195,7 @@ $(BIN_DIR)\WebServer.exe: $(ALL_OBJECT_FILES_CONSOLE)
 	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_CONSOLE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\WebServer.exe"
 
 $(BIN_DIR)\Station922.exe: $(ALL_OBJECT_FILES_SERVICE)
+	echo $@
 	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_SERVICE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\Station922.exe"
 
 $(BIN_DIR)\test.exe: $(ALL_OBJECT_FILES_TEST)
