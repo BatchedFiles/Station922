@@ -133,7 +133,7 @@ Modules\NetworkServer.bas: Modules\NetworkServer.bi
 Modules\NetworkServer.bi: Modules\Network.bi
 
 Modules\PrintDebugInfo.bas: Modules\PrintDebugInfo.bi Modules\ConsoleColors.bi Headers\IntegerToWString.bi Headers\StringConstants.bi
-Modules\PrintDebugInfo.bi: Classes\HttpReader.bi
+Modules\PrintDebugInfo.bi: Classes\HttpReader.bi Modules\Http.bi
 
 Modules\WebUtils.bas: Modules\WebUtils.bi Headers\CharacterConstants.bi Modules\CreateInstance.bi Headers\HttpConst.bi Classes\Configuration.bi Headers\IniConst.bi Headers\IntegerToWString.bi Interfaces\IStringable.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi Classes\Station922Uri.bi Modules\WriteHttpError.bi
 Modules\WebUtils.bi: Interfaces\IClientRequest.bi Interfaces\IServerResponse.bi Interfaces\ITextWriter.bi Interfaces\IWebSite.bi Classes\Mime.bi
