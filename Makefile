@@ -100,7 +100,6 @@ ARCHIVE_COMPILER="$(ProgramFiles)\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mi
 DLL_TOOL="$(ProgramFiles)\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\dlltool.exe"
 RESOURCE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win64\GoRC.exe"
 COMPILER_LIB_PATH="$(ProgramFiles)\FreeBASIC\lib\win64"
-FBEXTRA="$(ProgramFiles)\FreeBASIC\lib\win64\fbextra.x"
 
 GCC_ARCHITECTURE=-m64 -march=x86-64
 TARGET_ASSEMBLER_ARCH=--64
@@ -123,7 +122,6 @@ GCC_LINKER="$(ProgramFiles)\FreeBASIC\bin\win32\ld.exe"
 ARCHIVE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win32\ar.exe"
 DLL_TOOL="$(ProgramFiles)\FreeBASIC\bin\win32\dlltool.exe"
 COMPILER_LIB_PATH="$(ProgramFiles)\FreeBASIC\lib\win32"
-FBEXTRA="$(ProgramFiles)\FreeBASIC\lib\win32\fbextra.x"
 
 GCC_ARCHITECTURE=
 TARGET_ASSEMBLER_ARCH=--32
@@ -175,7 +173,7 @@ FREEBASIC_PARAMETERS=$(FREEBASIC_PARAMETERS_BASE)
 else
 
 ASSEMBLER_STRIP_FLAG=--strip-local-absolute
-LINKER_STRIP_FLAG=-s
+LINKER_STRIP_FLAG=-s --gc-sections
 BIN_DIR=$(BIN_RELEASE_DIR)
 OBJ_DIR=$(OBJ_RELEASE_DIR)
 GCC_COMPILER_PARAMETERS=$(GCC_WARNING) $(GCC_NOINCLUDE) $(GCC_ARCHITECTURE) -masm=intel -S -Ofast
@@ -192,14 +190,14 @@ WindowsService: $(BIN_DIR)\Station922.exe
 test: $(BIN_DIR)\test.exe
 
 $(BIN_DIR)\WebServer.exe: $(ALL_OBJECT_FILES_CONSOLE)
-	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_CONSOLE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\WebServer.exe"
+	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(ALL_OBJECT_FILES_CONSOLE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\WebServer.exe"
 
 $(BIN_DIR)\Station922.exe: $(ALL_OBJECT_FILES_SERVICE)
 	echo $@
-	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_SERVICE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\Station922.exe"
+	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(ALL_OBJECT_FILES_SERVICE) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\Station922.exe"
 
 $(BIN_DIR)\test.exe: $(ALL_OBJECT_FILES_TEST)
-	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(FBEXTRA) $(ALL_OBJECT_FILES_TEST) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\test.exe"
+	$(GCC_LINKER) -m $(PE_FILE_FORMAT) -subsystem console -e $(ENTRY_POINT) $(DEFAULT_STACK_SIZE) $(LINKER_STRIP_FLAG) -L $(COMPILER_LIB_PATH) -L "." $(ALL_OBJECT_FILES_TEST) -( $(ALL_OBJECT_LIBRARIES) -) -o "$(BIN_DIR)\test.exe"
 
 
 $(OBJ_DIR)\ArrayStringWriter$(FILE_SUFFIX).o: $(OBJ_DIR)\ArrayStringWriter$(FILE_SUFFIX).asm
