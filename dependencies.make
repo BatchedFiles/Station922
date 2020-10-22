@@ -1,4 +1,4 @@
-Classes\ArrayStringWriter.bas: Classes\ArrayStringWriter.bi Headers\ContainerOf.bi Headers\IntegerToWString.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi
+Classes\ArrayStringWriter.bas: Classes\ArrayStringWriter.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi
 Classes\ArrayStringWriter.bi: Interfaces\IArrayStringWriter.bi
 
 Classes\AsyncResult.bas: Classes\AsyncResult.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi
@@ -68,7 +68,6 @@ Headers\CharacterConstants.bi:
 Headers\ContainerOf.bi:
 Headers\HttpConst.bi:
 Headers\IniConst.bi:
-Headers\IntegerToWString.bi:
 Headers\StringConstants.bi:
 
 Interfaces\IArrayStringWriter.bi: Interfaces\ITextWriter.bi
@@ -132,10 +131,10 @@ Modules\NetworkClient.bi: Modules\Network.bi
 Modules\NetworkServer.bas: Modules\NetworkServer.bi
 Modules\NetworkServer.bi: Modules\Network.bi
 
-Modules\PrintDebugInfo.bas: Modules\PrintDebugInfo.bi Modules\ConsoleColors.bi Headers\IntegerToWString.bi Headers\StringConstants.bi
+Modules\PrintDebugInfo.bas: Modules\PrintDebugInfo.bi Modules\ConsoleColors.bi Headers\StringConstants.bi
 Modules\PrintDebugInfo.bi: Classes\HttpReader.bi Modules\Http.bi
 
-Modules\WebUtils.bas: Modules\WebUtils.bi Headers\CharacterConstants.bi Modules\CreateInstance.bi Headers\HttpConst.bi Classes\Configuration.bi Headers\IniConst.bi Headers\IntegerToWString.bi Interfaces\IStringable.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi Classes\Station922Uri.bi Modules\WriteHttpError.bi
+Modules\WebUtils.bas: Modules\WebUtils.bi Headers\CharacterConstants.bi Modules\CreateInstance.bi Headers\HttpConst.bi Classes\Configuration.bi Headers\IniConst.bi Interfaces\IStringable.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi Classes\Station922Uri.bi Modules\WriteHttpError.bi
 Modules\WebUtils.bi: Interfaces\IClientRequest.bi Interfaces\IServerResponse.bi Interfaces\ITextWriter.bi Interfaces\IWebSite.bi Classes\Mime.bi
 
 Modules\WindowsServiceMain.bas: Modules\WindowsServiceMain.bi Modules\CreateInstance.bi Classes\WebServer.bi
