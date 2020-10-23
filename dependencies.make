@@ -1,13 +1,13 @@
 Classes\ArrayStringWriter.bas: Classes\ArrayStringWriter.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi
 Classes\ArrayStringWriter.bi: Interfaces\IArrayStringWriter.bi
 
-Classes\AsyncResult.bas: Classes\AsyncResult.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi
+Classes\AsyncResult.bas: Classes\AsyncResult.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi
 Classes\AsyncResult.bi: Interfaces\IMutableAsyncResult.bi
 
-Classes\ClientContext.bas: Classes\ClientContext.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi
+Classes\ClientContext.bas: Classes\ClientContext.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi
 Classes\ClientContext.bi: Interfaces\IClientContext.bi
 
-Classes\ClientRequest.bas: Classes\ClientRequest.bi Interfaces\IStringable.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Headers\HttpConst.bi Modules\WebUtils.bi
+Classes\ClientRequest.bas: Classes\ClientRequest.bi Interfaces\IStringable.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Headers\HttpConst.bi Modules\WebUtils.bi Classes\ReferenceCounter.bi
 Classes\ClientRequest.bi: Interfaces\IClientRequest.bi
 
 Classes\Configuration.bas: Classes\Configuration.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi
@@ -16,10 +16,10 @@ Classes\Configuration.bi: Interfaces\IConfiguration.bi
 Classes\HeapBSTR.bas: Classes\HeapBSTR.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi
 Classes\HeapBSTR.bi: Interfaces\IHeapBSTR.bi
 
-Classes\HttpGetProcessor.bas: Classes\HttpGetProcessor.bi Classes\ArrayStringWriter.bi Classes\AsyncResult.bi Headers\ContainerOf.bi Headers\CharacterConstants.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Headers\HttpConst.bi Classes\Mime.bi Classes\SafeHandle.bi Headers\StringConstants.bi Modules\WebUtils.bi
+Classes\HttpGetProcessor.bas: Classes\HttpGetProcessor.bi Classes\ArrayStringWriter.bi Classes\AsyncResult.bi Headers\ContainerOf.bi Headers\CharacterConstants.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Headers\HttpConst.bi Classes\Mime.bi Classes\SafeHandle.bi Headers\StringConstants.bi Modules\WebUtils.bi Classes\ReferenceCounter.bi
 Classes\HttpGetProcessor.bi: Interfaces\IRequestProcessor.bi
 
-Classes\HttpReader.bas: Classes\HttpReader.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Modules\FindNewLineIndex.bi Headers\StringConstants.bi
+Classes\HttpReader.bas: Classes\HttpReader.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Modules\FindNewLineIndex.bi Headers\StringConstants.bi Classes\ReferenceCounter.bi
 Classes\HttpReader.bi: Interfaces\IHttpReader.bi
 
 Classes\Mime.bas: Classes\Mime.bi
@@ -28,22 +28,25 @@ Classes\Mime.bi:
 Classes\Monitor.bas: Classes\Monitor.bi
 Classes\Monitor.bi:
 
-Classes\NetworkStream.bas: Classes\NetworkStream.bi Classes\AsyncResult.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Modules\Network.bi
+Classes\NetworkStream.bas: Classes\NetworkStream.bi Classes\AsyncResult.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Modules\Network.bi Classes\ReferenceCounter.bi
 Classes\NetworkStream.bi: Interfaces\INetworkStream.bi
 
-Classes\PrivateHeapMemoryAllocator.bas: Classes\PrivateHeapMemoryAllocator.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi
+Classes\PrivateHeapMemoryAllocator.bas: Classes\PrivateHeapMemoryAllocator.bi Headers\ContainerOf.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi
 Classes\PrivateHeapMemoryAllocator.bi: Interfaces\IPrivateHeapMemoryAllocator.bi
 
 Classes\PrivateHeapMemoryAllocatorClassFactory.bas: Classes\PrivateHeapMemoryAllocatorClassFactory.bi Classes\ObjectsCounter.bi
-Classes\PrivateHeapMemoryAllocatorClassFactory.bi:
+Classes\PrivateHeapMemoryAllocatorClassFactory.bi: Classes\ReferenceCounter.bi
 
-Classes\RequestedFile.bas: Classes\RequestedFile.bi Headers\ContainerOf.bi Headers\HttpConst.bi Modules\PrintDebugInfo.bi
+Classes\ReferenceCounter.bas: Classes\ReferenceCounter.bi
+Classes\ReferenceCounter.bi:
+
+Classes\RequestedFile.bas: Classes\RequestedFile.bi Headers\ContainerOf.bi Headers\HttpConst.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi
 Classes\RequestedFile.bi: Interfaces\IRequestedFile.bi Interfaces\ISendable.bi
 
 Classes\SafeHandle.bas: Classes\SafeHandle.bi
 Classes\SafeHandle.bi:
 
-Classes\ServerResponse.bas: Classes\ServerResponse.bi Classes\ArrayStringWriter.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Headers\HttpConst.bi Interfaces\IStringable.bi Modules\PrintDebugInfo.bi Resources.RH Headers\StringConstants.bi Modules\WebUtils.bi
+Classes\ServerResponse.bas: Classes\ServerResponse.bi Classes\ArrayStringWriter.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Classes\ReferenceCounter.bi Modules\CreateInstance.bi Headers\HttpConst.bi Interfaces\IStringable.bi Modules\PrintDebugInfo.bi Resources.RH Headers\StringConstants.bi Modules\WebUtils.bi
 Classes\ServerResponse.bi: Interfaces\IServerResponse.bi
 
 Classes\ServerState.bas: Classes\ServerState.bi Modules\WebUtils.bi
@@ -58,10 +61,10 @@ Classes\StopWatcher.bi:
 Classes\WebServer.bas: Classes\WebServer.bi Classes\ClientContext.bi Classes\ClientRequest.bi Classes\Configuration.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Modules\PrintDebugInfo.bi Headers\IniConst.bi Modules\Network.bi Modules\NetworkServer.bi Classes\NetworkStream.bi Classes\ServerResponse.bi Classes\WebSiteContainer.bi Modules\WorkerThread.bi Modules\WriteHttpError.bi
 Classes\WebServer.bi: Interfaces\IRunnable.bi
 
-Classes\WebSite.bas: Classes\WebSite.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Interfaces\IMutableWebSite.bi Modules\PrintDebugInfo.bi Classes\RequestedFile.bi
+Classes\WebSite.bas: Classes\WebSite.bi Headers\CharacterConstants.bi Headers\ContainerOf.bi Interfaces\IMutableWebSite.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi Classes\RequestedFile.bi
 Classes\WebSite.bi: Interfaces\IMutableWebSite.bi
 
-Classes\WebSiteContainer.bas: Classes\WebSiteContainer.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Headers\HttpConst.bi Interfaces\IConfiguration.bi Interfaces\IMutableWebSite.bi Headers\IniConst.bi Modules\PrintDebugInfo.bi Headers\StringConstants.bi
+Classes\WebSiteContainer.bas: Classes\WebSiteContainer.bi Headers\ContainerOf.bi Modules\CreateInstance.bi Headers\HttpConst.bi Interfaces\IConfiguration.bi Interfaces\IMutableWebSite.bi Headers\IniConst.bi Modules\PrintDebugInfo.bi Classes\ReferenceCounter.bi Headers\StringConstants.bi
 Classes\WebSiteContainer.bi: Interfaces\IWebSiteContainer.bi
 
 Headers\CharacterConstants.bi:

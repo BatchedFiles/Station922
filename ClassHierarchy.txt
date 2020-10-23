@@ -112,3 +112,4 @@
 Mime                          [ ]
 SafeHandle
 Station922Uri                 [ ]
+ReferenceCounter

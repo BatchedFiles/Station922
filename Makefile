@@ -39,7 +39,7 @@ UNICODE_SUFFIX=W
 
 FILE_SUFFIX=$(WINDOWS_SERVICE_SUFFIX)$(PERFORMANCE_TESTING_SUFFIX)$(GUIDS_WITHOUT_MINGW_SUFFIX)$(WITHOUT_RUNTIME_SUFFIX)$(WITHOUT_CRITICAL_SECTIONS_SUFFIX)$(UNICODE_SUFFIX)
 
-ALL_OBJECT_FILES=$(OBJ_DIR)\ArrayStringWriter$(FILE_SUFFIX).o $(OBJ_DIR)\AsyncResult$(FILE_SUFFIX).o $(OBJ_DIR)\ClientContext$(FILE_SUFFIX).o $(OBJ_DIR)\ClientRequest$(FILE_SUFFIX).o $(OBJ_DIR)\Configuration$(FILE_SUFFIX).o $(OBJ_DIR)\HeapBSTR$(FILE_SUFFIX).o $(OBJ_DIR)\HttpGetProcessor$(FILE_SUFFIX).o $(OBJ_DIR)\HttpReader$(FILE_SUFFIX).o $(OBJ_DIR)\Mime$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkStream$(FILE_SUFFIX).o $(OBJ_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX).o $(OBJ_DIR)\RequestedFile$(FILE_SUFFIX).o $(OBJ_DIR)\SafeHandle$(FILE_SUFFIX).o $(OBJ_DIR)\ServerResponse$(FILE_SUFFIX).o $(OBJ_DIR)\Station922Uri$(FILE_SUFFIX).o $(OBJ_DIR)\WebServer$(FILE_SUFFIX).o $(OBJ_DIR)\WebSite$(FILE_SUFFIX).o $(OBJ_DIR)\WebSiteContainer$(FILE_SUFFIX).o $(OBJ_DIR)\CreateInstance$(FILE_SUFFIX).o $(OBJ_DIR)\EntryPoint$(FILE_SUFFIX).o $(OBJ_DIR)\FindNewLineIndex$(FILE_SUFFIX).o $(OBJ_DIR)\Guids$(FILE_SUFFIX).o $(OBJ_DIR)\Http$(FILE_SUFFIX).o $(OBJ_DIR)\Network$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkClient$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkServer$(FILE_SUFFIX).o $(OBJ_DIR)\WebUtils$(FILE_SUFFIX).o $(OBJ_DIR)\WorkerThread$(FILE_SUFFIX).o $(OBJ_DIR)\WriteHttpError$(FILE_SUFFIX).o $(OBJ_DIR)\Resources$(FILE_SUFFIX).obj
+ALL_OBJECT_FILES=$(OBJ_DIR)\ArrayStringWriter$(FILE_SUFFIX).o $(OBJ_DIR)\AsyncResult$(FILE_SUFFIX).o $(OBJ_DIR)\ClientContext$(FILE_SUFFIX).o $(OBJ_DIR)\ClientRequest$(FILE_SUFFIX).o $(OBJ_DIR)\Configuration$(FILE_SUFFIX).o $(OBJ_DIR)\HeapBSTR$(FILE_SUFFIX).o $(OBJ_DIR)\HttpGetProcessor$(FILE_SUFFIX).o $(OBJ_DIR)\HttpReader$(FILE_SUFFIX).o $(OBJ_DIR)\Mime$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkStream$(FILE_SUFFIX).o $(OBJ_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX).o $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).o $(OBJ_DIR)\RequestedFile$(FILE_SUFFIX).o $(OBJ_DIR)\SafeHandle$(FILE_SUFFIX).o $(OBJ_DIR)\ServerResponse$(FILE_SUFFIX).o $(OBJ_DIR)\Station922Uri$(FILE_SUFFIX).o $(OBJ_DIR)\WebServer$(FILE_SUFFIX).o $(OBJ_DIR)\WebSite$(FILE_SUFFIX).o $(OBJ_DIR)\WebSiteContainer$(FILE_SUFFIX).o $(OBJ_DIR)\CreateInstance$(FILE_SUFFIX).o $(OBJ_DIR)\EntryPoint$(FILE_SUFFIX).o $(OBJ_DIR)\FindNewLineIndex$(FILE_SUFFIX).o $(OBJ_DIR)\Guids$(FILE_SUFFIX).o $(OBJ_DIR)\Http$(FILE_SUFFIX).o $(OBJ_DIR)\Network$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkClient$(FILE_SUFFIX).o $(OBJ_DIR)\NetworkServer$(FILE_SUFFIX).o $(OBJ_DIR)\WebUtils$(FILE_SUFFIX).o $(OBJ_DIR)\WorkerThread$(FILE_SUFFIX).o $(OBJ_DIR)\WriteHttpError$(FILE_SUFFIX).o $(OBJ_DIR)\Resources$(FILE_SUFFIX).obj
 
 ALL_OBJECT_FILES_CONSOLE=$(ALL_OBJECT_FILES) $(OBJ_DIR)\ConsoleColors$(FILE_SUFFIX).o $(OBJ_DIR)\ConsoleMain$(FILE_SUFFIX).o $(OBJ_DIR)\PrintDebugInfo$(FILE_SUFFIX).o
 
@@ -330,6 +330,17 @@ $(OBJ_DIR)\PrivateHeapMemoryAllocatorClassFactory$(FILE_SUFFIX).asm: $(OBJ_DIR)\
 $(OBJ_DIR)\PrivateHeapMemoryAllocatorClassFactory$(FILE_SUFFIX).c: Classes\PrivateHeapMemoryAllocatorClassFactory.bas
 	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS) "Classes\PrivateHeapMemoryAllocatorClassFactory.bas"
 	move /y Classes\PrivateHeapMemoryAllocatorClassFactory.c $(OBJ_DIR)\PrivateHeapMemoryAllocatorClassFactory$(FILE_SUFFIX).c
+
+
+$(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).o: $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).asm
+	$(GCC_ASSEMBLER) $(TARGET_ASSEMBLER_ARCH) $(ASSEMBLER_STRIP_FLAG) $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).asm -o $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).o
+
+$(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).asm: $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).c
+	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS) $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).c -o $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).asm
+
+$(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).c: Classes\ReferenceCounter.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS) "Classes\ReferenceCounter.bas"
+	move /y Classes\ReferenceCounter.c $(OBJ_DIR)\ReferenceCounter$(FILE_SUFFIX).c
 
 
 $(OBJ_DIR)\RequestedFile$(FILE_SUFFIX).o: $(OBJ_DIR)\RequestedFile$(FILE_SUFFIX).asm
