@@ -81,7 +81,7 @@ UuidObjectLibraries=-luuid
 GMonitorObjectLibraries=-lgmon
 GccObjectLibraries=-lmoldname -lgcc -lmingw32 -lmingwex -lgcc_eh
 WinApiObjectLibraries=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
-ALL_OBJECT_LIBRARIES=$(WinApiObjectLibraries) $(GMonitorObjectLibraries) $(GccObjectLibraries)
+ALL_OBJECT_LIBRARIES=$(WinApiObjectLibraries) $(UuidObjectLibraries) $(GMonitorObjectLibraries) $(GccObjectLibraries)
 
 MajorImageVersion=--major-image-version 1
 MinorImageVersion=--minor-image-version 0
