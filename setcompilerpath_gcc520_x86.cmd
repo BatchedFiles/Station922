@@ -1,0 +1,15 @@
+set GCC_VERSION_SUFFIX=GCC520
+set UNICODE_FLAG=true
+set WITHOUT_RUNTIME_FLAG=true
+set WITHOUT_CRITICAL_SECTIONS_FLAG=true
+set PERFORMANCE_TESTING_FLAG=false
+set MULTITHREAD_RUNTIME_FLAG=false
+set FREEBASIC_COMPILER="%ProgramFiles%\FreeBASIC\fbc.exe"
+set GCC_COMPILER=      "%ProgramFiles%\FreeBASIC\bin\win32\gcc.exe"
+set GCC_ASSEMBLER=     "%ProgramFiles%\FreeBASIC\bin\win32\as.exe"
+set GCC_LINKER=        "%ProgramFiles%\FreeBASIC\bin\win32\ld.exe"
+set ARCHIVE_COMPILER=  "%ProgramFiles%\FreeBASIC\bin\win32\ar.exe"
+set DLL_TOOL=          "%ProgramFiles%\FreeBASIC\bin\win32\dlltool.exe"
+set RESOURCE_COMPILER= "%ProgramFiles%\FreeBASIC\bin\win32\GoRC.exe"
+set COMPILER_LIB_PATH= "%ProgramFiles%\FreeBASIC\lib\win32"
+set FB_EXTRA=          "%ProgramFiles%\FreeBASIC\lib\win32\fbextra.x"
