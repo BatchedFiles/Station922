@@ -26,21 +26,21 @@
 ├───IClientContext
 │   └───ClientContext
 │
-├───IClientRequest
-│   └───ClientRequest             — строки
+├───IClientRequest             — строки
+│   └───ClientRequest
 │
-├───IClientUri
-│   └───ClientUri             [ ] — строки
+├───IClientUri             [ ] — строки
+│   └───ClientUri
 │
-├───IConfiguration
-│   └───Configuration             — строки
+├───IEnumWebServerConfiguration             
+│   └───EnumWebServerConfiguration     [ ]
 │
-├───IHeapBSTR
-│   └───HeapBSTR
+├───IEnumWebSite             
+│   └───EnumWebSite                    [ ]
 │
 ├───IMalloc
-│   └───IPrivateHeapMemoryAllocator         [ ]
-│       └───PrivateHeapMemoryAllocator      [ ]
+│   └───IPrivateHeapMemoryAllocator
+│       └───PrivateHeapMemoryAllocator
 │
 ├───IRequestedFile
 │   └───RequestedFile             — строки?
@@ -69,7 +69,7 @@
 │
 ├───IRunnable
 │   └───IPauseable            [ ]
-│       └───WebServer         [ ]
+│       └───WebServer         
 │
 ├───ISendable
 │   └───RequestedFile         [ ]
@@ -77,11 +77,14 @@
 ├───IServerResponse
 │   └───ServerResponse             — строки
 │
-├───IServerState
+├───IServerState              [ ]
 │   └───ServerState           [ ]
 │
-├───IStopWatcher
+├───IStopWatcher              [ ]
 │   └───StopWatcher           [ ]
+│
+├───IString                       — строки
+│   └───HeapBSTR
 │
 ├───IStringable                     — строки
 │   ├───ClientRequest                — строки
@@ -99,15 +102,19 @@
 │   │
 │   └───IStreamWriter                
 │
-├───IWebServer
-│   └───WebServer           [ ]
+├───IWebServer           [ ]
+│   └───WebServer
+│
+├───IWebServerConfiguration             — строки
+│   └───WebServerIniConfiguration
 │
 ├───IWebSite                       — строки
 │   └───IMutableWebSite
 │       └───WebSite                   — строки
 │
-└───IWebSiteContainer               — строки
-    └───WebSiteContainer
+└───IWebSiteCollection               
+    └───IMutableWebSiteCollection
+        └───WebSiteCollection    
 
 Mime                          [ ]
 SafeHandle
