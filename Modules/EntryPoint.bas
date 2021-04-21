@@ -5,7 +5,7 @@
 Declare Function wMain()As Long
 
 #ifdef WITHOUT_RUNTIME
-Function EntryPoint Alias "EntryPoint"()As Integer
+Function EntryPoint()As Integer
 #else
 Function main Alias "main"()As Long
 #endif

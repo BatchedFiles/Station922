@@ -1,12 +1,12 @@
 #ifndef INTERFACEHELPER_BI
 #define INTERFACEHELPER_BI
 
-#MACRO LET_INTERFACE(lhs, rhs)
+#MACRO SAFE_LET(lhs, rhs)
 	(rhs)->lpVtbl->AddRef(rhs)
 	lhs = rhs
 #ENDMACRO
 
-#MACRO RELEASE_INTERFACE(lhs)
+#MACRO SAFE_RELEASE(lhs)
 	(lhs)->lpVtbl->Release(lhs)
 	lhs = 0
 #ENDMACRO

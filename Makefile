@@ -1,25 +1,29 @@
 ﻿.PHONY: debug release all clean install uninstall configure service service_debug test test_debug
 
 ifndef GCC_VERSION_SUFFIX
-GCC_VERSION_SUFFIX=GCC520
+GCC_VERSION_SUFFIX=GCC-5.2.0
+endif
+
+ifndef FBC_VERSION_SUFFIX
+FBC_VERSION_SUFFIX=FBC-1.07.3
 endif
 
 ifeq ($(PERFORMANCE_TESTING_FLAG),true)
 PERFORMANCE_TESTING_DEFINED=-d PERFORMANCE_TESTING
-PERFORMANCE_TESTING_SUFFIX=PT
+PERFORMANCE_TESTING_SUFFIX=PT+
 LIBRARIES_GMONITOR=-lgmon
 else
 PERFORMANCE_TESTING_DEFINED=
-PERFORMANCE_TESTING_SUFFIX=WoPT
+PERFORMANCE_TESTING_SUFFIX=PT-
 LIBRARIES_GMONITOR=
 endif
 
 ifeq ($(WITHOUT_CRITICAL_SECTIONS_FLAG),true)
 WITHOUT_CRITICAL_SECTIONS_DEFINED=-d WITHOUT_CRITICAL_SECTIONS
-WITHOUT_CRITICAL_SECTIONS_SUFFIX=WoCr
+WITHOUT_CRITICAL_SECTIONS_SUFFIX=Cr-
 else
 WITHOUT_CRITICAL_SECTIONS_DEFINED=
-WITHOUT_CRITICAL_SECTIONS_SUFFIX=Cr
+WITHOUT_CRITICAL_SECTIONS_SUFFIX=Cr+
 endif
 
 ifeq ($(UNICODE_FLAG),true)
@@ -33,8 +37,8 @@ endif
 ifeq ($(WITHOUT_RUNTIME_FLAG),true)
 WITHOUT_RUNTIME_DEFINED=-d WITHOUT_RUNTIME
 GUIDS_WITHOUT_MINGW_DEFINED=-d GUIDS_WITHOUT_MINGW
-WITHOUT_RUNTIME_SUFFIX=WoRt
-GUIDS_WITHOUT_MINGW_SUFFIX=WoMingw
+WITHOUT_RUNTIME_SUFFIX=Rt-
+GUIDS_WITHOUT_MINGW_SUFFIX=Mingw-
 OBJECTFILES_CRUNTIME_ST=
 OBJECTFILES_CRUNTIME_MT=
 LIBRARIES_FBRUNTIME_ST=
@@ -43,8 +47,8 @@ LIBRARIES_GCCRUNTIME=
 else
 WITHOUT_RUNTIME_DEFINED=
 GUIDS_WITHOUT_MINGW_DEFINED=
-WITHOUT_RUNTIME_SUFFIX=Rt
-GUIDS_WITHOUT_MINGW_SUFFIX=Mingw
+WITHOUT_RUNTIME_SUFFIX=Rt+
+GUIDS_WITHOUT_MINGW_SUFFIX=Mingw+
 OBJECTFILES_CRUNTIME_ST="$(COMPILER_LIB_PATH)\crt2.o" "$(COMPILER_LIB_PATH)\crtbegin.o" "$(COMPILER_LIB_PATH)\crtend.o" "$(COMPILER_LIB_PATH)\fbrt0.o"
 OBJECTFILES_CRUNTIME_MT=$(OBJECTFILES_CRUNTIME_ST) "$(COMPILER_LIB_PATH)\gcrt2.o"
 LIBRARIES_FBRUNTIME_ST=-lfb
@@ -60,7 +64,7 @@ LIBRARIES_FBRUNTIME=$(LIBRARIES_FBRUNTIME_ST)
 OBJECTFILES_CRUNTIME=$(OBJECTFILES_CRUNTIME_ST)
 endif
 
-FILE_SUFFIX_BASE=_$(GCC_VERSION_SUFFIX)$(PERFORMANCE_TESTING_SUFFIX)$(WITHOUT_RUNTIME_SUFFIX)$(WITHOUT_CRITICAL_SECTIONS_SUFFIX)$(GUIDS_WITHOUT_MINGW_SUFFIX)$(UNICODE_SUFFIX)
+FILE_SUFFIX_BASE=_$(GCC_VERSION_SUFFIX)_$(FBC_VERSION_SUFFIX)_$(PERFORMANCE_TESTING_SUFFIX)$(WITHOUT_RUNTIME_SUFFIX)$(WITHOUT_CRITICAL_SECTIONS_SUFFIX)$(GUIDS_WITHOUT_MINGW_SUFFIX)$(UNICODE_SUFFIX)
 FILE_SUFFIX_CONSOLE=_Console$(FILE_SUFFIX_BASE)
 FILE_SUFFIX_GUI=_GUI$(FILE_SUFFIX_BASE)
 FILE_SUFFIX_SERVICE=_Service$(FILE_SUFFIX_BASE)
@@ -101,34 +105,34 @@ ifndef FREEBASIC_COMPILER
 FREEBASIC_COMPILER="$(ProgramFiles)\FreeBASIC\fbc.exe"
 endif
 ifndef GCC_COMPILER
-GCC_COMPILER=      "$(ProgramFiles)\FreeBASIC\bin\win64\gcc.exe"
+GCC_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win64\gcc.exe"
 endif
 ifndef GCC_ASSEMBLER
-GCC_ASSEMBLER=     "$(ProgramFiles)\FreeBASIC\bin\win64\as.exe"
+GCC_ASSEMBLER="$(ProgramFiles)\FreeBASIC\bin\win64\as.exe"
 endif
 ifndef GCC_LINKER
-GCC_LINKER=        "$(ProgramFiles)\FreeBASIC\bin\win64\ld.exe"
+GCC_LINKER="$(ProgramFiles)\FreeBASIC\bin\win64\ld.exe"
 endif
 ifndef ARCHIVE_COMPILER
-ARCHIVE_COMPILER=  "$(ProgramFiles)\FreeBASIC\bin\win64\ar.exe"
+ARCHIVE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win64\ar.exe"
 endif
 ifndef DLL_TOOL
-DLL_TOOL=          "$(ProgramFiles)\FreeBASIC\bin\win64\dlltool.exe"
+DLL_TOOL="$(ProgramFiles)\FreeBASIC\bin\win64\dlltool.exe"
 endif
 ifndef RESOURCE_COMPILER
-RESOURCE_COMPILER= "$(ProgramFiles)\FreeBASIC\bin\win64\GoRC.exe"
+RESOURCE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win64\GoRC.exe"
 endif
 ifndef COMPILER_LIB_PATH
-COMPILER_LIB_PATH= $(ProgramFiles)\FreeBASIC\lib\win64
+COMPILER_LIB_PATH=$(ProgramFiles)\FreeBASIC\lib\win64
 endif
 ifndef FB_EXTRA
-FB_EXTRA=          "$(ProgramFiles)\FreeBASIC\lib\win64\fbextra.x"
+FB_EXTRA="$(ProgramFiles)\FreeBASIC\lib\win64\fbextra.x"
 endif
 
 GCC_ARCHITECTURE=-m64 -march=x86-64
 TARGET_ASSEMBLER_ARCH=--64
 ifeq ($(WITHOUT_RUNTIME_FLAG),true)
-ENTRY_POINT_PARAM=-e EntryPoint
+ENTRY_POINT_PARAM=-e ENTRYPOINT
 else
 ENTRY_POINT_PARAM=
 endif
@@ -145,34 +149,34 @@ ifndef FREEBASIC_COMPILER
 FREEBASIC_COMPILER="$(ProgramFiles)\FreeBASIC\fbc.exe"
 endif
 ifndef GCC_COMPILER
-GCC_COMPILER=      "$(ProgramFiles)\FreeBASIC\bin\win32\gcc.exe"
+GCC_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win32\gcc.exe"
 endif
 ifndef GCC_ASSEMBLER
-GCC_ASSEMBLER=     "$(ProgramFiles)\FreeBASIC\bin\win32\as.exe"
+GCC_ASSEMBLER="$(ProgramFiles)\FreeBASIC\bin\win32\as.exe"
 endif
 ifndef GCC_LINKER
-GCC_LINKER=        "$(ProgramFiles)\FreeBASIC\bin\win32\ld.exe"
+GCC_LINKER="$(ProgramFiles)\FreeBASIC\bin\win32\ld.exe"
 endif
 ifndef ARCHIVE_COMPILER
-ARCHIVE_COMPILER=  "$(ProgramFiles)\FreeBASIC\bin\win32\ar.exe"
+ARCHIVE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win32\ar.exe"
 endif
 ifndef DLL_TOOL
-DLL_TOOL=          "$(ProgramFiles)\FreeBASIC\bin\win32\dlltool.exe"
+DLL_TOOL="$(ProgramFiles)\FreeBASIC\bin\win32\dlltool.exe"
 endif
 ifndef RESOURCE_COMPILER
-RESOURCE_COMPILER= "$(ProgramFiles)\FreeBASIC\bin\win32\GoRC.exe"
+RESOURCE_COMPILER="$(ProgramFiles)\FreeBASIC\bin\win32\GoRC.exe"
 endif
 ifndef COMPILER_LIB_PATH
-COMPILER_LIB_PATH= $(ProgramFiles)\FreeBASIC\lib\win32
+COMPILER_LIB_PATH=$(ProgramFiles)\FreeBASIC\lib\win32
 endif
 ifndef FB_EXTRA
-FB_EXTRA=          "$(ProgramFiles)\FreeBASIC\lib\win32\fbextra.x"
+FB_EXTRA="$(ProgramFiles)\FreeBASIC\lib\win32\fbextra.x"
 endif
 
 GCC_ARCHITECTURE=
 TARGET_ASSEMBLER_ARCH=--32
 ifeq ($(WITHOUT_RUNTIME_FLAG),true)
-ENTRY_POINT_PARAM=-e _EntryPoint@0
+ENTRY_POINT_PARAM=-e _ENTRYPOINT@0
 else
 ENTRY_POINT_PARAM=
 endif
@@ -188,12 +192,15 @@ endif
 FREEBASIC_PARAMETERS_BASE=-gen $(CODE_GENERATION_BACKEND) -r -maxerr 1 -w all -i Classes -i Headers -i Interfaces -i Modules $(UNICODE_DEFINED) $(WITHOUT_CRITICAL_SECTIONS_DEFINED) $(WITHOUT_RUNTIME_DEFINED) $(GUIDS_WITHOUT_MINGW_DEFINED) $(PERFORMANCE_TESTING_DEFINED)
 FREEBASIC_PARAMETERS_RELEASE=$(FREEBASIC_PARAMETERS_BASE) -O 0
 FREEBASIC_PARAMETERS_DEGUG=  $(FREEBASIC_PARAMETERS_BASE) -O 0 -g
-FREEBASIC_PARAMETERS_RELEASE_CONSOLE=$(FREEBASIC_PARAMETERS_RELEASE) -d WINDOWS_CONSOLE
-FREEBASIC_PARAMETERS_DEGUG_CONSOLE=  $(FREEBASIC_PARAMETERS_DEGUG)   -d WINDOWS_CONSOLE
-FREEBASIC_PARAMETERS_RELEASE_SERVICE=$(FREEBASIC_PARAMETERS_RELEASE) -d WINDOWS_SERVICE
-FREEBASIC_PARAMETERS_DEGUG_SERVICE=  $(FREEBASIC_PARAMETERS_DEGUG)   -d WINDOWS_SERVICE
-FREEBASIC_PARAMETERS_RELEASE_TEST=   $(FREEBASIC_PARAMETERS_RELEASE) -d WINDOWS_TEST
-FREEBASIC_PARAMETERS_DEGUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -d WINDOWS_TEST
+
+FREEBASIC_PARAMETERS_RELEASE_GUI=    $(FREEBASIC_PARAMETERS_RELEASE) -s gui     -d WINDOWS_GUI
+FREEBASIC_PARAMETERS_DEBUG_GUI=      $(FREEBASIC_PARAMETERS_DEGUG)   -s gui     -d WINDOWS_GUI
+FREEBASIC_PARAMETERS_RELEASE_CONSOLE=$(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_CONSOLE
+FREEBASIC_PARAMETERS_DEBUG_CONSOLE=  $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_CONSOLE
+FREEBASIC_PARAMETERS_RELEASE_SERVICE=$(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_SERVICE
+FREEBASIC_PARAMETERS_DEBUG_SERVICE=  $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_SERVICE
+FREEBASIC_PARAMETERS_RELEASE_TEST=   $(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_TEST
+FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_TEST
 
 # -Wno-unused-but-set-variable
 # -fwrapv
@@ -201,7 +208,9 @@ FREEBASIC_PARAMETERS_DEGUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -d WINDOWS_
 #                            -nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno -fwrapv -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wno-format
 GCC_COMPILER_PARAMETERS_BASE=-nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable                              -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno         -fno-exceptions                                                                -Werror -fno-ident
 GCC_COMPILER_PARAMETERS_RELEASE=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -Ofast -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
+GCC_COMPILER_PARAMETERS_RELEASE_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -O0 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 GCC_COMPILER_PARAMETERS_DEBUG=  $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -Og                                                            
+GCC_COMPILER_PARAMETERS_DEBUG_O0=  $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -O0
 
 GCC_ASSEMBLER_PARAMETERS_RELEASE=$(TARGET_ASSEMBLER_ARCH) --strip-local-absolute
 GCC_ASSEMBLER_PARAMETERS_DEBUG=  $(TARGET_ASSEMBLER_ARCH)
@@ -339,13 +348,13 @@ $(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).asm: $(OBJ_RELEASE_DIR)\Guids$(FILE_
 $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).asm: $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_RELEASE) $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c -o $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).asm
 
-$(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).c: Modules\Guids.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Modules\Guids.bas"
-	move /y Modules\Guids.c $(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).c
+$(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).c: Classes\Guids.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Classes\Guids.bas"
+	move /y Classes\Guids.c $(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).c
 
-$(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c: Modules\Guids.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Modules\Guids.bas"
-	move /y Modules\Guids.c $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c
+$(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c: Classes\Guids.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Classes\Guids.bas"
+	move /y Classes\Guids.c $(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c
 
 
 
@@ -366,7 +375,7 @@ $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c: Classes\ArrayStrin
 	move /y Classes\ArrayStringWriter.c $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c:   Classes\ArrayStringWriter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\ArrayStringWriter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\ArrayStringWriter.bas"
 	move /y Classes\ArrayStringWriter.c $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -388,7 +397,7 @@ $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_SERVICE).c: Classes\ArrayStrin
 	move /y Classes\ArrayStringWriter.c $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_SERVICE).c:   Classes\ArrayStringWriter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\ArrayStringWriter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\ArrayStringWriter.bas"
 	move /y Classes\ArrayStringWriter.c $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_SERVICE).c
 
 
@@ -410,7 +419,7 @@ $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_TEST).c: Classes\ArrayStringWr
 	move /y Classes\ArrayStringWriter.c $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_TEST).c:   Classes\ArrayStringWriter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\ArrayStringWriter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\ArrayStringWriter.bas"
 	move /y Classes\ArrayStringWriter.c $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_TEST).c
 
 
@@ -432,7 +441,7 @@ $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_CONSOLE).c: Classes\AsyncResult.bas
 	move /y Classes\AsyncResult.c $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_CONSOLE).c:   Classes\AsyncResult.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\AsyncResult.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\AsyncResult.bas"
 	move /y Classes\AsyncResult.c $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -454,7 +463,7 @@ $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_SERVICE).c: Classes\AsyncResult.bas
 	move /y Classes\AsyncResult.c $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_SERVICE).c:   Classes\AsyncResult.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\AsyncResult.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\AsyncResult.bas"
 	move /y Classes\AsyncResult.c $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_SERVICE).c
 
 
@@ -476,7 +485,7 @@ $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_TEST).c: Classes\AsyncResult.bas
 	move /y Classes\AsyncResult.c $(OBJ_RELEASE_DIR)\AsyncResult$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_TEST).c:   Classes\AsyncResult.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\AsyncResult.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\AsyncResult.bas"
 	move /y Classes\AsyncResult.c $(OBJ_DEBUG_DIR)\AsyncResult$(FILE_SUFFIX_TEST).c
 
 
@@ -498,7 +507,7 @@ $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_CONSOLE).c: Classes\ClientContext.
 	move /y Classes\ClientContext.c $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_CONSOLE).c:   Classes\ClientContext.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\ClientContext.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\ClientContext.bas"
 	move /y Classes\ClientContext.c $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -520,7 +529,7 @@ $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_SERVICE).c: Classes\ClientContext.
 	move /y Classes\ClientContext.c $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_SERVICE).c:   Classes\ClientContext.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\ClientContext.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\ClientContext.bas"
 	move /y Classes\ClientContext.c $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_SERVICE).c
 
 
@@ -542,7 +551,7 @@ $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_TEST).c: Classes\ClientContext.bas
 	move /y Classes\ClientContext.c $(OBJ_RELEASE_DIR)\ClientContext$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_TEST).c:   Classes\ClientContext.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\ClientContext.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\ClientContext.bas"
 	move /y Classes\ClientContext.c $(OBJ_DEBUG_DIR)\ClientContext$(FILE_SUFFIX_TEST).c
 
 
@@ -564,7 +573,7 @@ $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_CONSOLE).c: Classes\ClientRequest.
 	move /y Classes\ClientRequest.c $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_CONSOLE).c:   Classes\ClientRequest.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\ClientRequest.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\ClientRequest.bas"
 	move /y Classes\ClientRequest.c $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -586,7 +595,7 @@ $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_SERVICE).c: Classes\ClientRequest.
 	move /y Classes\ClientRequest.c $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_SERVICE).c:   Classes\ClientRequest.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\ClientRequest.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\ClientRequest.bas"
 	move /y Classes\ClientRequest.c $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_SERVICE).c
 
 
@@ -608,7 +617,7 @@ $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_TEST).c: Classes\ClientRequest.bas
 	move /y Classes\ClientRequest.c $(OBJ_RELEASE_DIR)\ClientRequest$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_TEST).c:   Classes\ClientRequest.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\ClientRequest.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\ClientRequest.bas"
 	move /y Classes\ClientRequest.c $(OBJ_DEBUG_DIR)\ClientRequest$(FILE_SUFFIX_TEST).c
 
 
@@ -630,7 +639,7 @@ $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_CONSOLE).c: Classes\HeapBSTR.bas
 	move /y Classes\HeapBSTR.c $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_CONSOLE).c:   Classes\HeapBSTR.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\HeapBSTR.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\HeapBSTR.bas"
 	move /y Classes\HeapBSTR.c $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -652,7 +661,7 @@ $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_SERVICE).c: Classes\HeapBSTR.bas
 	move /y Classes\HeapBSTR.c $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_SERVICE).c:   Classes\HeapBSTR.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\HeapBSTR.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\HeapBSTR.bas"
 	move /y Classes\HeapBSTR.c $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_SERVICE).c
 
 
@@ -674,7 +683,7 @@ $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_TEST).c: Classes\HeapBSTR.bas
 	move /y Classes\HeapBSTR.c $(OBJ_RELEASE_DIR)\HeapBSTR$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_TEST).c:   Classes\HeapBSTR.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\HeapBSTR.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\HeapBSTR.bas"
 	move /y Classes\HeapBSTR.c $(OBJ_DEBUG_DIR)\HeapBSTR$(FILE_SUFFIX_TEST).c
 
 
@@ -696,7 +705,7 @@ $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_CONSOLE).c: Classes\HttpGetProc
 	move /y Classes\HttpGetProcessor.c $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_CONSOLE).c:   Classes\HttpGetProcessor.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\HttpGetProcessor.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\HttpGetProcessor.bas"
 	move /y Classes\HttpGetProcessor.c $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -718,7 +727,7 @@ $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_SERVICE).c: Classes\HttpGetProc
 	move /y Classes\HttpGetProcessor.c $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_SERVICE).c:   Classes\HttpGetProcessor.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\HttpGetProcessor.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\HttpGetProcessor.bas"
 	move /y Classes\HttpGetProcessor.c $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_SERVICE).c
 
 
@@ -740,7 +749,7 @@ $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c: Classes\HttpGetProcess
 	move /y Classes\HttpGetProcessor.c $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c:   Classes\HttpGetProcessor.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\HttpGetProcessor.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\HttpGetProcessor.bas"
 	move /y Classes\HttpGetProcessor.c $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c
 
 
@@ -762,7 +771,7 @@ $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c: Classes\HttpReader.bas
 	move /y Classes\HttpReader.c $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c:   Classes\HttpReader.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\HttpReader.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\HttpReader.bas"
 	move /y Classes\HttpReader.c $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -784,7 +793,7 @@ $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_SERVICE).c: Classes\HttpReader.bas
 	move /y Classes\HttpReader.c $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_SERVICE).c:   Classes\HttpReader.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\HttpReader.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\HttpReader.bas"
 	move /y Classes\HttpReader.c $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_SERVICE).c
 
 
@@ -806,7 +815,7 @@ $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_TEST).c: Classes\HttpReader.bas
 	move /y Classes\HttpReader.c $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_TEST).c:   Classes\HttpReader.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\HttpReader.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\HttpReader.bas"
 	move /y Classes\HttpReader.c $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_TEST).c
 
 
@@ -828,7 +837,7 @@ $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c: Classes\NetworkStream.
 	move /y Classes\NetworkStream.c $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c:   Classes\NetworkStream.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\NetworkStream.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\NetworkStream.bas"
 	move /y Classes\NetworkStream.c $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -850,7 +859,7 @@ $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_SERVICE).c: Classes\NetworkStream.
 	move /y Classes\NetworkStream.c $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_SERVICE).c:   Classes\NetworkStream.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\NetworkStream.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\NetworkStream.bas"
 	move /y Classes\NetworkStream.c $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_SERVICE).c
 
 
@@ -872,7 +881,7 @@ $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_TEST).c: Classes\NetworkStream.bas
 	move /y Classes\NetworkStream.c $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_TEST).c:   Classes\NetworkStream.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\NetworkStream.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\NetworkStream.bas"
 	move /y Classes\NetworkStream.c $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_TEST).c
 
 
@@ -894,7 +903,7 @@ $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_CONSOLE).c: Classes\P
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_CONSOLE).c:   Classes\PrivateHeapMemoryAllocator.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\PrivateHeapMemoryAllocator.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\PrivateHeapMemoryAllocator.bas"
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -916,7 +925,7 @@ $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_SERVICE).c: Classes\P
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_SERVICE).c:   Classes\PrivateHeapMemoryAllocator.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\PrivateHeapMemoryAllocator.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\PrivateHeapMemoryAllocator.bas"
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_SERVICE).c
 
 
@@ -938,7 +947,7 @@ $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_TEST).c: Classes\Priv
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_RELEASE_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_TEST).c:   Classes\PrivateHeapMemoryAllocator.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\PrivateHeapMemoryAllocator.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\PrivateHeapMemoryAllocator.bas"
 	move /y Classes\PrivateHeapMemoryAllocator.c $(OBJ_DEBUG_DIR)\PrivateHeapMemoryAllocator$(FILE_SUFFIX_TEST).c
 
 
@@ -960,7 +969,7 @@ $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_CONSOLE).c: Classes\RequestedFile.
 	move /y Classes\RequestedFile.c $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_CONSOLE).c:   Classes\RequestedFile.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\RequestedFile.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\RequestedFile.bas"
 	move /y Classes\RequestedFile.c $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -982,7 +991,7 @@ $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_SERVICE).c: Classes\RequestedFile.
 	move /y Classes\RequestedFile.c $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_SERVICE).c:   Classes\RequestedFile.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\RequestedFile.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\RequestedFile.bas"
 	move /y Classes\RequestedFile.c $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1004,7 +1013,7 @@ $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_TEST).c: Classes\RequestedFile.bas
 	move /y Classes\RequestedFile.c $(OBJ_RELEASE_DIR)\RequestedFile$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_TEST).c:   Classes\RequestedFile.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\RequestedFile.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\RequestedFile.bas"
 	move /y Classes\RequestedFile.c $(OBJ_DEBUG_DIR)\RequestedFile$(FILE_SUFFIX_TEST).c
 
 
@@ -1026,7 +1035,7 @@ $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_CONSOLE).c: Classes\ServerRespons
 	move /y Classes\ServerResponse.c $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_CONSOLE).c:   Classes\ServerResponse.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\ServerResponse.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\ServerResponse.bas"
 	move /y Classes\ServerResponse.c $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1048,7 +1057,7 @@ $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_SERVICE).c: Classes\ServerRespons
 	move /y Classes\ServerResponse.c $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_SERVICE).c:   Classes\ServerResponse.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\ServerResponse.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\ServerResponse.bas"
 	move /y Classes\ServerResponse.c $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1070,7 +1079,7 @@ $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c: Classes\ServerResponse.b
 	move /y Classes\ServerResponse.c $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c:   Classes\ServerResponse.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\ServerResponse.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\ServerResponse.bas"
 	move /y Classes\ServerResponse.c $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c
 
 
@@ -1092,7 +1101,7 @@ $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_CONSOLE).c: Classes\WebServer.bas
 	move /y Classes\WebServer.c $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_CONSOLE).c:   Classes\WebServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\WebServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\WebServer.bas"
 	move /y Classes\WebServer.c $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1114,7 +1123,7 @@ $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_SERVICE).c: Classes\WebServer.bas
 	move /y Classes\WebServer.c $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_SERVICE).c:   Classes\WebServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\WebServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\WebServer.bas"
 	move /y Classes\WebServer.c $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1136,7 +1145,7 @@ $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_TEST).c: Classes\WebServer.bas
 	move /y Classes\WebServer.c $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_TEST).c:   Classes\WebServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\WebServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\WebServer.bas"
 	move /y Classes\WebServer.c $(OBJ_DEBUG_DIR)\WebServer$(FILE_SUFFIX_TEST).c
 
 
@@ -1158,7 +1167,7 @@ $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_CONSOLE).c: Classes\We
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_CONSOLE).c:   Classes\WebServerIniConfiguration.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\WebServerIniConfiguration.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\WebServerIniConfiguration.bas"
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1180,7 +1189,7 @@ $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_SERVICE).c: Classes\We
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_SERVICE).c:   Classes\WebServerIniConfiguration.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\WebServerIniConfiguration.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\WebServerIniConfiguration.bas"
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1202,7 +1211,7 @@ $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_TEST).c: Classes\WebSe
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_RELEASE_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_TEST).c:   Classes\WebServerIniConfiguration.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\WebServerIniConfiguration.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\WebServerIniConfiguration.bas"
 	move /y Classes\WebServerIniConfiguration.c $(OBJ_DEBUG_DIR)\WebServerIniConfiguration$(FILE_SUFFIX_TEST).c
 
 
@@ -1224,7 +1233,7 @@ $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_CONSOLE).c: Classes\WebSite.bas
 	move /y Classes\WebSite.c $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_CONSOLE).c:   Classes\WebSite.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\WebSite.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\WebSite.bas"
 	move /y Classes\WebSite.c $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1246,7 +1255,7 @@ $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_SERVICE).c: Classes\WebSite.bas
 	move /y Classes\WebSite.c $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_SERVICE).c:   Classes\WebSite.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\WebSite.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\WebSite.bas"
 	move /y Classes\WebSite.c $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1268,7 +1277,7 @@ $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_TEST).c: Classes\WebSite.bas
 	move /y Classes\WebSite.c $(OBJ_RELEASE_DIR)\WebSite$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_TEST).c:   Classes\WebSite.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\WebSite.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\WebSite.bas"
 	move /y Classes\WebSite.c $(OBJ_DEBUG_DIR)\WebSite$(FILE_SUFFIX_TEST).c
 
 
@@ -1290,7 +1299,7 @@ $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_CONSOLE).c: Classes\WebSiteCol
 	move /y Classes\WebSiteCollection.c $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_CONSOLE).c:   Classes\WebSiteCollection.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Classes\WebSiteCollection.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\WebSiteCollection.bas"
 	move /y Classes\WebSiteCollection.c $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1312,7 +1321,7 @@ $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_SERVICE).c: Classes\WebSiteCol
 	move /y Classes\WebSiteCollection.c $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_SERVICE).c:   Classes\WebSiteCollection.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Classes\WebSiteCollection.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\WebSiteCollection.bas"
 	move /y Classes\WebSiteCollection.c $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1334,7 +1343,7 @@ $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_TEST).c: Classes\WebSiteCollec
 	move /y Classes\WebSiteCollection.c $(OBJ_RELEASE_DIR)\WebSiteCollection$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_TEST).c:   Classes\WebSiteCollection.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Classes\WebSiteCollection.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\WebSiteCollection.bas"
 	move /y Classes\WebSiteCollection.c $(OBJ_DEBUG_DIR)\WebSiteCollection$(FILE_SUFFIX_TEST).c
 
 
@@ -1356,7 +1365,7 @@ $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_CONSOLE).c: Modules\Mime.bas
 	move /y Modules\Mime.c $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_CONSOLE).c:   Modules\Mime.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\Mime.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\Mime.bas"
 	move /y Modules\Mime.c $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1378,7 +1387,7 @@ $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_SERVICE).c: Modules\Mime.bas
 	move /y Modules\Mime.c $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_SERVICE).c:   Modules\Mime.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\Mime.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\Mime.bas"
 	move /y Modules\Mime.c $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1400,7 +1409,7 @@ $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_TEST).c: Modules\Mime.bas
 	move /y Modules\Mime.c $(OBJ_RELEASE_DIR)\Mime$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_TEST).c:   Modules\Mime.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\Mime.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\Mime.bas"
 	move /y Modules\Mime.c $(OBJ_DEBUG_DIR)\Mime$(FILE_SUFFIX_TEST).c
 
 
@@ -1422,7 +1431,7 @@ $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_CONSOLE).c: Modules\ReferenceCo
 	move /y Modules\ReferenceCounter.c $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_CONSOLE).c:   Modules\ReferenceCounter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\ReferenceCounter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\ReferenceCounter.bas"
 	move /y Modules\ReferenceCounter.c $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1444,7 +1453,7 @@ $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_SERVICE).c: Modules\ReferenceCo
 	move /y Modules\ReferenceCounter.c $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_SERVICE).c:   Modules\ReferenceCounter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\ReferenceCounter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\ReferenceCounter.bas"
 	move /y Modules\ReferenceCounter.c $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1466,7 +1475,7 @@ $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_TEST).c: Modules\ReferenceCount
 	move /y Modules\ReferenceCounter.c $(OBJ_RELEASE_DIR)\ReferenceCounter$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_TEST).c:   Modules\ReferenceCounter.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\ReferenceCounter.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\ReferenceCounter.bas"
 	move /y Modules\ReferenceCounter.c $(OBJ_DEBUG_DIR)\ReferenceCounter$(FILE_SUFFIX_TEST).c
 
 
@@ -1488,7 +1497,7 @@ $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_CONSOLE).c: Modules\SafeHandle.bas
 	move /y Modules\SafeHandle.c $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_CONSOLE).c:   Modules\SafeHandle.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\SafeHandle.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\SafeHandle.bas"
 	move /y Modules\SafeHandle.c $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1510,7 +1519,7 @@ $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_SERVICE).c: Modules\SafeHandle.bas
 	move /y Modules\SafeHandle.c $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_SERVICE).c:   Modules\SafeHandle.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\SafeHandle.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\SafeHandle.bas"
 	move /y Modules\SafeHandle.c $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1532,7 +1541,7 @@ $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_TEST).c: Modules\SafeHandle.bas
 	move /y Modules\SafeHandle.c $(OBJ_RELEASE_DIR)\SafeHandle$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_TEST).c:   Modules\SafeHandle.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\SafeHandle.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\SafeHandle.bas"
 	move /y Modules\SafeHandle.c $(OBJ_DEBUG_DIR)\SafeHandle$(FILE_SUFFIX_TEST).c
 
 
@@ -1554,7 +1563,7 @@ $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_CONSOLE).c: Modules\Station922Uri.
 	move /y Modules\Station922Uri.c $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_CONSOLE).c:   Modules\Station922Uri.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\Station922Uri.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\Station922Uri.bas"
 	move /y Modules\Station922Uri.c $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1576,7 +1585,7 @@ $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_SERVICE).c: Modules\Station922Uri.
 	move /y Modules\Station922Uri.c $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_SERVICE).c:   Modules\Station922Uri.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\Station922Uri.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\Station922Uri.bas"
 	move /y Modules\Station922Uri.c $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1598,7 +1607,7 @@ $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_TEST).c: Modules\Station922Uri.bas
 	move /y Modules\Station922Uri.c $(OBJ_RELEASE_DIR)\Station922Uri$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_TEST).c:   Modules\Station922Uri.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\Station922Uri.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\Station922Uri.bas"
 	move /y Modules\Station922Uri.c $(OBJ_DEBUG_DIR)\Station922Uri$(FILE_SUFFIX_TEST).c
 
 
@@ -1614,13 +1623,13 @@ $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).asm: $(OBJ_RELEASE_DIR)\
 $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).asm:   $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c -o $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).asm
 
-$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c: Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c
+$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c: Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c
 
-$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c:   Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c
+$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c:   Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_CONSOLE).c
 
 
 
@@ -1636,13 +1645,13 @@ $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).asm: $(OBJ_RELEASE_DIR)\
 $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).asm:   $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c -o $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).asm
 
-$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c: Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_SERVICE) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c
+$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c: Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_SERVICE) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c
 
-$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c:   Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c
+$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c:   Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_SERVICE).c
 
 
 
@@ -1658,13 +1667,13 @@ $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_TEST).asm: $(OBJ_RELEASE_DIR)\Cre
 $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).asm:   $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c -o $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).asm
 
-$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c: Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_TEST) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c
+$(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c: Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_TEST) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_RELEASE_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c
 
-$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c:   Modules\CreateInstance.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\CreateInstance.bas"
-	move /y Modules\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c
+$(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c:   Classes\CreateInstance.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Classes\CreateInstance.bas"
+	move /y Classes\CreateInstance.c $(OBJ_DEBUG_DIR)\CreateInstance$(FILE_SUFFIX_TEST).c
 
 
 
@@ -1685,7 +1694,7 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c: Modules\EntryPoint.bas
 	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\EntryPoint.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\EntryPoint.bas"
 	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1707,7 +1716,7 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c: Modules\EntryPoint.bas
 	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\EntryPoint.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\EntryPoint.bas"
 	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1729,7 +1738,7 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: Modules\EntryPoint.bas
 	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\EntryPoint.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\EntryPoint.bas"
 	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
 
 
@@ -1751,7 +1760,7 @@ $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_CONSOLE).c: Modules\FindNewLine
 	move /y Modules\FindNewLineIndex.c $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_CONSOLE).c:   Modules\FindNewLineIndex.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\FindNewLineIndex.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\FindNewLineIndex.bas"
 	move /y Modules\FindNewLineIndex.c $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1773,7 +1782,7 @@ $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_SERVICE).c: Modules\FindNewLine
 	move /y Modules\FindNewLineIndex.c $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_SERVICE).c:   Modules\FindNewLineIndex.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\FindNewLineIndex.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\FindNewLineIndex.bas"
 	move /y Modules\FindNewLineIndex.c $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1795,7 +1804,7 @@ $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_TEST).c: Modules\FindNewLineInd
 	move /y Modules\FindNewLineIndex.c $(OBJ_RELEASE_DIR)\FindNewLineIndex$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_TEST).c:   Modules\FindNewLineIndex.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\FindNewLineIndex.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\FindNewLineIndex.bas"
 	move /y Modules\FindNewLineIndex.c $(OBJ_DEBUG_DIR)\FindNewLineIndex$(FILE_SUFFIX_TEST).c
 
 
@@ -1817,7 +1826,7 @@ $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_CONSOLE).c: Modules\Http.bas
 	move /y Modules\Http.c $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_CONSOLE).c:   Modules\Http.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\Http.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\Http.bas"
 	move /y Modules\Http.c $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1839,7 +1848,7 @@ $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_SERVICE).c: Modules\Http.bas
 	move /y Modules\Http.c $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_SERVICE).c:   Modules\Http.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\Http.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\Http.bas"
 	move /y Modules\Http.c $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1861,7 +1870,7 @@ $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_TEST).c: Modules\Http.bas
 	move /y Modules\Http.c $(OBJ_RELEASE_DIR)\Http$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_TEST).c:   Modules\Http.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\Http.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\Http.bas"
 	move /y Modules\Http.c $(OBJ_DEBUG_DIR)\Http$(FILE_SUFFIX_TEST).c
 
 
@@ -1883,7 +1892,7 @@ $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_CONSOLE).c: Modules\Network.bas
 	move /y Modules\Network.c $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_CONSOLE).c:   Modules\Network.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\Network.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\Network.bas"
 	move /y Modules\Network.c $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1905,7 +1914,7 @@ $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_SERVICE).c: Modules\Network.bas
 	move /y Modules\Network.c $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_SERVICE).c:   Modules\Network.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\Network.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\Network.bas"
 	move /y Modules\Network.c $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1927,7 +1936,7 @@ $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_TEST).c: Modules\Network.bas
 	move /y Modules\Network.c $(OBJ_RELEASE_DIR)\Network$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_TEST).c:   Modules\Network.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\Network.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\Network.bas"
 	move /y Modules\Network.c $(OBJ_DEBUG_DIR)\Network$(FILE_SUFFIX_TEST).c
 
 
@@ -1949,7 +1958,7 @@ $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_CONSOLE).c: Modules\NetworkClient.
 	move /y Modules\NetworkClient.c $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_CONSOLE).c:   Modules\NetworkClient.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\NetworkClient.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\NetworkClient.bas"
 	move /y Modules\NetworkClient.c $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -1971,7 +1980,7 @@ $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_SERVICE).c: Modules\NetworkClient.
 	move /y Modules\NetworkClient.c $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_SERVICE).c:   Modules\NetworkClient.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\NetworkClient.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\NetworkClient.bas"
 	move /y Modules\NetworkClient.c $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_SERVICE).c
 
 
@@ -1993,7 +2002,7 @@ $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_TEST).c: Modules\NetworkClient.bas
 	move /y Modules\NetworkClient.c $(OBJ_RELEASE_DIR)\NetworkClient$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_TEST).c:   Modules\NetworkClient.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\NetworkClient.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\NetworkClient.bas"
 	move /y Modules\NetworkClient.c $(OBJ_DEBUG_DIR)\NetworkClient$(FILE_SUFFIX_TEST).c
 
 
@@ -2015,7 +2024,7 @@ $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_CONSOLE).c: Modules\NetworkServer.
 	move /y Modules\NetworkServer.c $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_CONSOLE).c:   Modules\NetworkServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\NetworkServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\NetworkServer.bas"
 	move /y Modules\NetworkServer.c $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2037,7 +2046,7 @@ $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_SERVICE).c: Modules\NetworkServer.
 	move /y Modules\NetworkServer.c $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_SERVICE).c:   Modules\NetworkServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\NetworkServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\NetworkServer.bas"
 	move /y Modules\NetworkServer.c $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_SERVICE).c
 
 
@@ -2059,7 +2068,7 @@ $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_TEST).c: Modules\NetworkServer.bas
 	move /y Modules\NetworkServer.c $(OBJ_RELEASE_DIR)\NetworkServer$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_TEST).c:   Modules\NetworkServer.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\NetworkServer.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\NetworkServer.bas"
 	move /y Modules\NetworkServer.c $(OBJ_DEBUG_DIR)\NetworkServer$(FILE_SUFFIX_TEST).c
 
 
@@ -2081,7 +2090,7 @@ $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_CONSOLE).c: Modules\WebUtils.bas
 	move /y Modules\WebUtils.c $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_CONSOLE).c:   Modules\WebUtils.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\WebUtils.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\WebUtils.bas"
 	move /y Modules\WebUtils.c $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2103,7 +2112,7 @@ $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_SERVICE).c: Modules\WebUtils.bas
 	move /y Modules\WebUtils.c $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_SERVICE).c:   Modules\WebUtils.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\WebUtils.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\WebUtils.bas"
 	move /y Modules\WebUtils.c $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_SERVICE).c
 
 
@@ -2125,7 +2134,7 @@ $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_TEST).c: Modules\WebUtils.bas
 	move /y Modules\WebUtils.c $(OBJ_RELEASE_DIR)\WebUtils$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_TEST).c:   Modules\WebUtils.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\WebUtils.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\WebUtils.bas"
 	move /y Modules\WebUtils.c $(OBJ_DEBUG_DIR)\WebUtils$(FILE_SUFFIX_TEST).c
 
 
@@ -2147,7 +2156,7 @@ $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_CONSOLE).c: Modules\WorkerThread.ba
 	move /y Modules\WorkerThread.c $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_CONSOLE).c:   Modules\WorkerThread.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\WorkerThread.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\WorkerThread.bas"
 	move /y Modules\WorkerThread.c $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2169,7 +2178,7 @@ $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_SERVICE).c: Modules\WorkerThread.ba
 	move /y Modules\WorkerThread.c $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_SERVICE).c:   Modules\WorkerThread.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\WorkerThread.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\WorkerThread.bas"
 	move /y Modules\WorkerThread.c $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_SERVICE).c
 
 
@@ -2191,7 +2200,7 @@ $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_TEST).c: Modules\WorkerThread.bas
 	move /y Modules\WorkerThread.c $(OBJ_RELEASE_DIR)\WorkerThread$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_TEST).c:   Modules\WorkerThread.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\WorkerThread.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\WorkerThread.bas"
 	move /y Modules\WorkerThread.c $(OBJ_DEBUG_DIR)\WorkerThread$(FILE_SUFFIX_TEST).c
 
 
@@ -2213,7 +2222,7 @@ $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_CONSOLE).c: Modules\WriteHttpErro
 	move /y Modules\WriteHttpError.c $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_CONSOLE).c:   Modules\WriteHttpError.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\WriteHttpError.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\WriteHttpError.bas"
 	move /y Modules\WriteHttpError.c $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2235,7 +2244,7 @@ $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_SERVICE).c: Modules\WriteHttpErro
 	move /y Modules\WriteHttpError.c $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_SERVICE).c:   Modules\WriteHttpError.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) "Modules\WriteHttpError.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\WriteHttpError.bas"
 	move /y Modules\WriteHttpError.c $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_SERVICE).c
 
 
@@ -2257,7 +2266,7 @@ $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_TEST).c: Modules\WriteHttpError.b
 	move /y Modules\WriteHttpError.c $(OBJ_RELEASE_DIR)\WriteHttpError$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_TEST).c:   Modules\WriteHttpError.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_TEST) "Modules\WriteHttpError.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\WriteHttpError.bas"
 	move /y Modules\WriteHttpError.c $(OBJ_DEBUG_DIR)\WriteHttpError$(FILE_SUFFIX_TEST).c
 
 
@@ -2293,7 +2302,7 @@ $(OBJ_RELEASE_DIR)\ConsoleColors$(FILE_SUFFIX_CONSOLE).c: Modules\ConsoleColors.
 	move /y Modules\ConsoleColors.c $(OBJ_RELEASE_DIR)\ConsoleColors$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ConsoleColors$(FILE_SUFFIX_CONSOLE).c:   Modules\ConsoleColors.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\ConsoleColors.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\ConsoleColors.bas"
 	move /y Modules\ConsoleColors.c $(OBJ_DEBUG_DIR)\ConsoleColors$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2315,7 +2324,7 @@ $(OBJ_RELEASE_DIR)\ConsoleColors$(FILE_SUFFIX_TEST).c: Modules\ConsoleColors.bas
 	move /y Modules\ConsoleColors.c $(OBJ_RELEASE_DIR)\ConsoleColors$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\ConsoleColors$(FILE_SUFFIX_TEST).c:   Modules\ConsoleColors.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\ConsoleColors.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\ConsoleColors.bas"
 	move /y Modules\ConsoleColors.c $(OBJ_DEBUG_DIR)\ConsoleColors$(FILE_SUFFIX_TEST).c
 
 
@@ -2337,7 +2346,7 @@ $(OBJ_RELEASE_DIR)\PrintDebugInfo$(FILE_SUFFIX_CONSOLE).c: Modules\PrintDebugInf
 	move /y Modules\PrintDebugInfo.c $(OBJ_RELEASE_DIR)\PrintDebugInfo$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\PrintDebugInfo$(FILE_SUFFIX_CONSOLE).c:   Modules\PrintDebugInfo.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\PrintDebugInfo.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\PrintDebugInfo.bas"
 	move /y Modules\PrintDebugInfo.c $(OBJ_DEBUG_DIR)\PrintDebugInfo$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2359,7 +2368,7 @@ $(OBJ_RELEASE_DIR)\PrintDebugInfo$(FILE_SUFFIX_TEST).c: Modules\PrintDebugInfo.b
 	move /y Modules\PrintDebugInfo.c $(OBJ_RELEASE_DIR)\PrintDebugInfo$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\PrintDebugInfo$(FILE_SUFFIX_TEST).c:   Modules\PrintDebugInfo.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\PrintDebugInfo.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\PrintDebugInfo.bas"
 	move /y Modules\PrintDebugInfo.c $(OBJ_DEBUG_DIR)\PrintDebugInfo$(FILE_SUFFIX_TEST).c
 
 
@@ -2381,7 +2390,7 @@ $(OBJ_RELEASE_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c: Modules\ConsoleMain.bas
 	move /y Modules\ConsoleMain.c $(OBJ_RELEASE_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c
 
 $(OBJ_DEBUG_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c:   Modules\ConsoleMain.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_CONSOLE) "Modules\ConsoleMain.bas"
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\ConsoleMain.bas"
 	move /y Modules\ConsoleMain.c $(OBJ_DEBUG_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c
 
 
@@ -2403,7 +2412,7 @@ $(OBJ_RELEASE_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c: Modules\WindowsSe
 	move /y Modules\WindowsServiceMain.c $(OBJ_RELEASE_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c
 
 $(OBJ_DEBUG_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c:   Modules\WindowsServiceMain.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) Modules\WindowsServiceMain.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) Modules\WindowsServiceMain.bas
 	move /y Modules\WindowsServiceMain.c $(OBJ_DEBUG_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c
 
 
@@ -2424,7 +2433,7 @@ $(OBJ_RELEASE_DIR)\TestMain$(FILE_SUFFIX_TEST).c: Modules\TestMain.bas
 	move /y Modules\TestMain.c $(OBJ_RELEASE_DIR)\TestMain$(FILE_SUFFIX_TEST).c
 
 $(OBJ_DEBUG_DIR)\TestMain$(FILE_SUFFIX_TEST).c:   Modules\TestMain.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEGUG_SERVICE) Modules\TestMain.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) Modules\TestMain.bas
 	move /y Modules\TestMain.c $(OBJ_DEBUG_DIR)\TestMain$(FILE_SUFFIX_TEST).c
 
 
