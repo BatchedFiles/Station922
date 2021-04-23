@@ -562,8 +562,7 @@ Sub CreateCachedClientMemoryContext( _
 		For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
 			
 			Dim pCachedContext As ClientMemoryContext Ptr = @this->pCachedClientMemoryContext[i]
-			pCachedContext->hrMemoryAllocator = GetPrivateHeapMalloc( _
-				1, _
+			pCachedContext->hrMemoryAllocator = CreateMemoryAllocator( _
 				@pCachedContext->pIMemoryAllocator _
 			)
 			

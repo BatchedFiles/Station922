@@ -11,8 +11,7 @@ Declare Function CreateInstance( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Function GetPrivateHeapMalloc( _
-	ByVal dwMemContext As DWORD, _
+Declare Function CreateMemoryAllocator( _
 	ByVal ppMalloc As LPMALLOC Ptr _
 )As HRESULT
 

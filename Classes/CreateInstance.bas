@@ -209,12 +209,11 @@ Function CreateInstance( _
 	
 End Function
 
-Function GetPrivateHeapMalloc( _
-		ByVal dwMemContext As DWORD, _
+Function CreateMemoryAllocator( _
 		ByVal ppMalloc As LPMALLOC Ptr _
 	)As HRESULT
 	
-	' Return CoGetMalloc(dwMemContext, ppMalloc)
+	' Return CoGetMalloc(0, ppMalloc)
 	
 	*ppMalloc = NULL
 	
