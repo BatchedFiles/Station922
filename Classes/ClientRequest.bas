@@ -231,7 +231,7 @@ Function ClientRequestEndReadRequest( _
 			Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
 				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 				
-			Case HTTPREADER_E_BUFFERTOOSMALL
+			Case HTTPREADER_E_INSUFFICIENT_BUFFER
 				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 				
 			Case HTTPREADER_E_SOCKETERROR
@@ -374,7 +374,7 @@ Function ClientRequestPrepare( _
 				Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
 					Return CLIENTREQUEST_E_EMPTYREQUEST
 					
-				Case HTTPREADER_E_BUFFERTOOSMALL
+				Case HTTPREADER_E_INSUFFICIENT_BUFFER
 					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 					
 				Case Else
@@ -669,18 +669,18 @@ Function ClientRequestStringableRelease( _
 End Function
 
 ' TODO Реализовать ClientRequestToString
-Function ClientRequestStringableToString( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal pLength As Integer Ptr, _
-		ByVal ppResult As WString Ptr Ptr _
-	)As HRESULT
+' Function ClientRequestStringableToString( _
+		' ByVal this As ClientRequest Ptr, _
+		' ByVal pLength As Integer Ptr, _
+		' ByVal ppResult As WString Ptr Ptr _
+	' )As HRESULT
 	
-	*pLength = 0
-	*ppResult = NULL
+	' *pLength = 0
+	' *ppResult = NULL
 	
-	Return S_FALSE
+	' Return S_FALSE
 	
-End Function
+' End Function
 
 Function AddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
@@ -848,37 +848,37 @@ Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( 
 	@IClientRequestSetTextReader _
 )
 
-Function IClientRequestStringableQueryInterface( _
-		ByVal this As IStringable Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	Return ClientRequestStringableQueryInterface(ContainerOf(this, ClientRequest, lpStringableVtbl), riid, ppvObject)
-End Function
+' Function IClientRequestStringableQueryInterface( _
+		' ByVal this As IStringable Ptr, _
+		' ByVal riid As REFIID, _
+		' ByVal ppvObject As Any Ptr Ptr _
+	' )As HRESULT
+	' Return ClientRequestStringableQueryInterface(ContainerOf(this, ClientRequest, lpStringableVtbl), riid, ppvObject)
+' End Function
 
-Function IClientRequestStringableAddRef( _
-		ByVal this As IStringable Ptr _
-	)As ULONG
-	Return ClientRequestStringableAddRef(ContainerOf(this, ClientRequest, lpStringableVtbl))
-End Function
+' Function IClientRequestStringableAddRef( _
+		' ByVal this As IStringable Ptr _
+	' )As ULONG
+	' Return ClientRequestStringableAddRef(ContainerOf(this, ClientRequest, lpStringableVtbl))
+' End Function
 
-Function IClientRequestStringableRelease( _
-		ByVal this As IStringable Ptr _
-	)As ULONG
-	Return ClientRequestStringableRelease(ContainerOf(this, ClientRequest, lpStringableVtbl))
-End Function
+' Function IClientRequestStringableRelease( _
+		' ByVal this As IStringable Ptr _
+	' )As ULONG
+	' Return ClientRequestStringableRelease(ContainerOf(this, ClientRequest, lpStringableVtbl))
+' End Function
 
-Function IClientRequestStringableToString( _
-		ByVal this As IStringable Ptr, _
-		ByVal pLength As Integer Ptr, _
-		ByVal ppResult As WString Ptr Ptr _
-	)As HRESULT
-	Return ClientRequestStringableToString(ContainerOf(this, ClientRequest, lpStringableVtbl), pLength, ppResult)
-End Function
+' Function IClientRequestStringableToString( _
+		' ByVal this As IStringable Ptr, _
+		' ByVal pLength As Integer Ptr, _
+		' ByVal ppResult As WString Ptr Ptr _
+	' )As HRESULT
+	' Return ClientRequestStringableToString(ContainerOf(this, ClientRequest, lpStringableVtbl), pLength, ppResult)
+' End Function
 
 Dim GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable = Type( _
-	@IClientRequestStringableQueryInterface, _
-	@IClientRequestStringableAddRef, _
-	@IClientRequestStringableRelease, _
-	@IClientRequestStringableToString _
+	NULL, _ /' @IClientRequestStringableQueryInterface, _ '/
+	NULL, _ /' @IClientRequestStringableAddRef, _ '/
+	NULL, _ /' @IClientRequestStringableRelease, _ '/
+	NULL _ /' @IClientRequestStringableToString _ '/
 )

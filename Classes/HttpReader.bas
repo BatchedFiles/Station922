@@ -1,34 +1,224 @@
 #include once "HttpReader.bi"
 #include once "ContainerOf.bi"
 #include once "PrintDebugInfo.bi"
-#include once "FindNewLineIndex.bi"
 #include once "ReferenceCounter.bi"
 #include once "StringConstants.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
+
+Const MEMORYPAGE_SIZE As Integer = 4096
+
+Type FastInteger As Integer
+
+Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(FastInteger)) \ SizeOf(UByte) - 1
+
+Type _RawBuffer
+	Dim cbUsed As FastInteger
+	Dim cbLength As FastInteger
+	Dim Bytes(RAWBUFFER_CAPACITY) As UByte
+End Type
+
+Type RawBuffer As _RawBuffer
+
+Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(FastInteger)) \ SizeOf(WString) - 1
+
+Type _LinesBuffer
+	Dim Start As FastInteger
+	Dim Length As FastInteger
+	Dim wszLine As WString * (LINESBUFFER_CAPACITY + 1)
+End Type
+
+Type LinesBuffer As _LinesBuffer
 
 Type _HttpReader
 	Dim lpVtbl As Const IHttpReaderVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pIStream As IBaseStream Ptr
-	Dim Buffer As ZString * (HTTPREADER_MAXBUFFER_LENGTH + 1)
-	Dim BufferLength As Integer
-	Dim LinesBuffer As WString * (HTTPREADER_MAXBUFFER_LENGTH + 1)
-	Dim LinesBufferLength As Integer
-	Dim StartLineIndex As Integer
+	Dim ReadedData As RawBuffer
+	Dim Lines As LinesBuffer
 	Dim IsAllBytesReaded As Boolean
 End Type
 
-Declare Function HttpReaderConvertBytesToString( _
-	ByVal this As HttpReader Ptr, _
-	ByVal DoubleCrLfIndex As Integer _
-)As HRESULT
+Function FindCrLfIndexA( _
+		ByVal Buffer As ZString Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal pFindIndex As Integer Ptr _
+	)As Boolean
+	
+	For i As Integer = 0 To BufferLength - NewLineStringLength
+		
+		If Buffer[i + 0] = 13 AndAlso Buffer[i + 1] = 10 Then
+			*pFindIndex = i
+			Return True
+		End If
+		
+	Next
+	
+	*pFindIndex = 0
+	
+	Return False
+	
+End Function
 
-Declare Function HttpReaderReadAllBytes( _
-	ByVal this As HttpReader Ptr, _
-	ByVal pDoubleCrLfIndex As Integer Ptr _
-)As HRESULT
+Function FindCrLfIndexW( _
+		ByVal Buffer As WString Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal pFindIndex As Integer Ptr _
+	)As Boolean
+	
+	For i As Integer = 0 To BufferLength - NewLineStringLength
+		
+		If Buffer[i + 0] = 13 AndAlso Buffer[i + 1] = 10 Then
+			*pFindIndex = i
+			Return True
+		End If
+		
+	Next
+	
+	*pFindIndex = 0
+	
+	Return False
+	
+End Function
+
+Function FindDoubleCrLfIndexA( _
+		ByVal Buffer As ZString Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal pFindIndex As Integer Ptr _
+	)As Boolean
+	
+	For i As Integer = 0 To BufferLength - NewLineStringLength * 2
+		
+		If Buffer[i + 0] = 13 Then
+			If Buffer[i + 1] = 10  Then
+				If Buffer[i + 2] = 13 Then
+					If Buffer[i + 3] = 10 Then
+						
+						*pFindIndex = i
+						Return True
+						
+					End If
+				End If
+			End If
+		End If
+		
+	Next
+	
+	*pFindIndex = 0
+	Return False
+	
+End Function
+
+Function ConvertBytesToWString( _
+		ByVal lpLines As LinesBuffer Ptr, _
+		ByVal lpRaw As RawBuffer Ptr _
+	)As HRESULT
+	
+	Const dwFlags As DWORD = 0
+	
+	Dim CharsLength As Integer = MultiByteToWideChar( _
+		CP_UTF8, _
+		dwFlags, _
+		@lpRaw->Bytes(0), _
+		lpRaw->cbUsed, _
+		@lpLines->wszLine[0], _
+		LINESBUFFER_CAPACITY _
+	)
+	
+	lpLines->Start = 0
+	lpLines->Length = CharsLength
+	lpLines->wszLine[CharsLength] = 0
+	
+	If CharsLength = 0 Then
+		Return HTTPREADER_E_INSUFFICIENT_BUFFER
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function GetLine( _
+		ByVal lpLines As LinesBuffer Ptr, _
+		ByVal ppLine As WString Ptr Ptr _
+	)As Integer
+	
+	Dim CrLfIndex As Integer = Any
+	Dim cbUsedChars As Integer = lpLines->Length - lpLines->Start
+	FindCrLfIndexW( _
+		@lpLines->wszLine[lpLines->Start], _
+		cbUsedChars, _
+		@CrLfIndex _
+	)
+	
+	Dim CrlfOrdinal As Integer = lpLines->Start + CrLfIndex
+	lpLines->wszLine[CrlfOrdinal] = 0
+	
+	*ppLine = @lpLines->wszLine[lpLines->Start]
+	
+	Dim NewStartIndex As Integer = lpLines->Start + CrLfIndex + NewLineStringLength
+	lpLines->Start = NewStartIndex
+	
+	Return CrLfIndex
+	' TODO ѕроверить, начинаетс€ ли строка за CrLf с пробела
+	' ≈сли начинаетс€ Ч сдвинуть до начала непробела
+	
+End Function
+
+Function HttpReaderReadAllBytes( _
+		ByVal this As HttpReader Ptr _
+	)As HRESULT
+	
+	Dim DoubleCrLfIndex As Integer = Any
+	
+	Do
+		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->ReadedData.cbLength
+		Dim cbReceived As Integer = Any
+		Dim hrRead As HRESULT = IBaseStream_Read( _
+			this->pIStream, _
+			@this->ReadedData.Bytes(this->ReadedData.cbLength), _
+			cbFreeSpace, _
+			@cbReceived _
+		)
+		If FAILED(hrRead) Then
+			Return HTTPREADER_E_SOCKETERROR
+		Else
+			Select Case hrRead
+				Case S_FALSE
+					Return HTTPREADER_E_CLIENTCLOSEDCONNECTION
+					
+				Case Else
+					
+					this->ReadedData.cbLength += cbReceived
+					
+					If this->ReadedData.cbLength >= RAWBUFFER_CAPACITY Then
+						Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
+					End If
+					
+					Dim Finded As Boolean = FindDoubleCrLfIndexA( _
+						@this->ReadedData.Bytes(0), _
+						this->ReadedData.cbLength, _
+						@DoubleCrLfIndex _
+					)
+					
+					If Finded Then
+						Exit Do
+					End If
+					
+			End Select
+			
+		End If
+		
+	Loop
+	
+	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
+	this->ReadedData.cbUsed = cbNewUsed
+	
+	this->IsAllBytesReaded = True
+	
+	Return S_OK
+	
+End Function
 
 Sub InitializeHttpReader( _
 		ByVal this As HttpReader Ptr, _
@@ -40,13 +230,13 @@ Sub InitializeHttpReader( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
-	this->Buffer[0] = 0
-	this->Buffer[HTTPREADER_MAXBUFFER_LENGTH] = 0
-	this->BufferLength = 0
-	this->LinesBuffer[0] = 0
-	this->LinesBufferLength = 0
+	this->ReadedData.cbUsed = 0
+	this->ReadedData.cbLength = 0
+	this->ReadedData.Bytes(RAWBUFFER_CAPACITY) = 0
+	this->Lines.Start = 0
+	this->Lines.Length = 0
+	this->Lines.wszLine[0] = 0
 	this->IsAllBytesReaded = False
-	this->StartLineIndex = 0
 	
 End Sub
 
@@ -166,51 +356,36 @@ Function HttpReaderReadLine( _
 	
 	If this->IsAllBytesReaded = False Then
 		
-		Dim DoubleCrLfIndex As Integer = Any
-		Dim hr As HRESULT = HttpReaderReadAllBytes(this, @DoubleCrLfIndex)
-		If FAILED(hr) Then
+		Dim hrReadAllBytes As HRESULT = HttpReaderReadAllBytes(this)
+		If FAILED(hrReadAllBytes) Then
 			*pLineLength = 0
-			*ppLine = @this->LinesBuffer
-			Return hr
+			*ppLine = NULL
+			Return hrReadAllBytes
 		End If
 		
-		hr = HttpReaderConvertBytesToString(this, DoubleCrLfIndex)
-		If FAILED(hr) Then
+		Dim hrConvertBytes As HRESULT = ConvertBytesToWString(@this->Lines, @this->ReadedData)
+		If FAILED(hrConvertBytes) Then
 			*pLineLength = 0
-			*ppLine = @this->LinesBuffer
-			Return hr
+			*ppLine = NULL
+			Return hrConvertBytes
 		End If
 		
 	End If
 	
-	' Ќайти CrLf
-	Dim CrLfIndex As Integer = Any
-	
-	FindCrLfIndexW( _
-		@this->LinesBuffer[this->StartLineIndex], _
-		this->LinesBufferLength - this->StartLineIndex, _
-		@CrLfIndex _
-	)
-	
-	*pLineLength = CrLfIndex
-	*ppLine = @this->LinesBuffer[this->StartLineIndex]
-	
-	this->LinesBuffer[this->StartLineIndex + CrLfIndex] = 0
-	this->StartLineIndex += CrLfIndex + NewLineStringLength
+	Scope
+		
+		Dim pCurrentLine As WString Ptr = Any
+		Dim LineLength As Integer = GetLine( _
+			@this->Lines, _
+			@pCurrentLine  _
+		)
+		
+		*pLineLength = LineLength
+		*ppLine = pCurrentLine
+		
+	End Scope
 	
 	Return S_OK
-	
-	' TODO ѕроверить, начинаетс€ ли строка за CrLf с пробела
-	' ≈сли начинаетс€ Ч сдвинуть до начала непробела
-	
-	' If ppLine[0] = Characters.WhiteSpace Then
-		' Do
-			' pLine += 1
-		' Loop While pLine[0] = Characters.WhiteSpace
-		
-		' lstrcat(pClientRequest->RequestHeaders(PreviousHeaderIndex), pLine)
-		
-	' End If
 	
 End Function
 
@@ -221,20 +396,25 @@ Function HttpReaderBeginReadLine( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hr As HRESULT = IBaseStream_BeginRead( _
-		this->pIStream, _
-		@this->Buffer[this->BufferLength], _
-		HTTPREADER_MAXBUFFER_LENGTH - this->BufferLength, _
-		callback, _
-		StateObject, _
-		ppIAsyncResult _
-	)
-	If FAILED(hr) Then
-		Return HTTPREADER_E_SOCKETERROR
-	End If
-	
-	If hr = BASESTREAM_S_IO_PENDING Then
-		Return TEXTREADER_S_IO_PENDING
+	If this->IsAllBytesReaded = False Then
+		
+		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->ReadedData.cbLength
+		Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
+			this->pIStream, _
+			@this->ReadedData.Bytes(this->ReadedData.cbLength), _
+			cbFreeSpace, _
+			callback, _
+			StateObject, _
+			ppIAsyncResult _
+		)
+		If FAILED(hrBeginRead) Then
+			Return HTTPREADER_E_SOCKETERROR
+		End If
+		
+		If hrBeginRead = BASESTREAM_S_IO_PENDING Then
+			Return TEXTREADER_S_IO_PENDING
+		End If
+		
 	End If
 	
 	Return S_OK
@@ -248,63 +428,76 @@ Function HttpReaderEndReadLine( _
 		ByVal ppLine As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim ReceivedBytesCount As Integer = Any
-	Dim hr As HRESULT = IBaseStream_EndRead( _
+	Dim cbReceived As Integer = Any
+	Dim hrRead As HRESULT = IBaseStream_EndRead( _
 		this->pIStream, _
 		pIAsyncResult, _
-		@ReceivedBytesCount _
+		@cbReceived _
 	)
-	If FAILED(hr) Then
-		Return HTTPREADER_E_SOCKETERROR
-	End If
-	
-	If hr = BASESTREAM_S_IO_PENDING Then
-		Return TEXTREADER_S_IO_PENDING
-	End If
-	
-	If hr = S_FALSE Then
-		Return S_FALSE
-	End If
-	
-	this->BufferLength += ReceivedBytesCount
-	this->Buffer[this->BufferLength] = 0
-	
-	If this->BufferLength >= HTTPREADER_MAXBUFFER_LENGTH Then
-		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
-	End If
-	
-	Dim DoubleCrLfIndex As Integer = Any
-	Dim FindResult As Boolean = FindDoubleCrLfIndexA( _
-		@this->Buffer, _
-		this->BufferLength, _
-		@DoubleCrLfIndex _
-	)
-	If FindResult = False Then
-		Return TEXTREADER_S_IO_PENDING
-	End If
-	
-	this->IsAllBytesReaded = True
-	
-	hr = HttpReaderConvertBytesToString(this, DoubleCrLfIndex)
-	If FAILED(hr) Then
+	If FAILED(hrRead) Then
 		*pLineLength = 0
-		*ppLine = @this->LinesBuffer
-		Return hr
+		*ppLine = NULL
+		Return HTTPREADER_E_SOCKETERROR
+	Else
+		Select Case hrRead
+			Case BASESTREAM_S_IO_PENDING
+				*pLineLength = 0
+				*ppLine = NULL
+				Return TEXTREADER_S_IO_PENDING
+				
+			Case S_FALSE
+				*pLineLength = 0
+				*ppLine = NULL
+				Return S_FALSE
+				
+			Case Else
+				this->ReadedData.cbLength += cbReceived
+				
+				If this->ReadedData.cbLength >= RAWBUFFER_CAPACITY Then
+					*pLineLength = 0
+					*ppLine = NULL
+					Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
+				Else
+					Dim DoubleCrLfIndex As Integer = Any
+					Dim Finded As Boolean = FindDoubleCrLfIndexA( _
+						@this->ReadedData.Bytes(0), _
+						this->ReadedData.cbLength, _
+						@DoubleCrLfIndex _
+					)
+					If Finded = False Then
+						*pLineLength = 0
+						*ppLine = NULL
+						Return TEXTREADER_S_IO_PENDING
+					Else
+						
+						Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
+						this->ReadedData.cbUsed = cbNewUsed
+						
+						this->IsAllBytesReaded = True
+						
+						Dim hrConvertBytes As HRESULT = ConvertBytesToWString(@this->Lines, @this->ReadedData)
+						If FAILED(hrConvertBytes) Then
+							*pLineLength = 0
+							*ppLine = NULL
+							Return hrConvertBytes
+						Else
+							
+							Dim pCurrentLine As WString Ptr = Any
+							Dim LineLength As Integer = GetLine( _
+								@this->Lines, _
+								@pCurrentLine  _
+							)
+							
+							*pLineLength = LineLength
+							*ppLine = pCurrentLine
+							
+						End If
+					End If
+				End If
+				
+		End Select
+		
 	End If
-	
-	Dim CrLfIndex As Integer = Any
-	
-	FindCrLfIndexW( _
-		@this->LinesBuffer[this->StartLineIndex], _
-		this->LinesBufferLength - this->StartLineIndex, _
-		@CrLfIndex _
-	)
-	
-	*pLineLength = CrLfIndex
-	*ppLine = @this->LinesBuffer[this->StartLineIndex]
-	
-	this->LinesBuffer[this->StartLineIndex + CrLfIndex] = 0
-	this->StartLineIndex += CrLfIndex + NewLineStringLength
 	
 	Return S_OK
 	
@@ -314,27 +507,26 @@ Function HttpReaderClear( _
 		ByVal this As HttpReader Ptr _
 	)As HRESULT
 	
-	If this->StartLineIndex <> 0 Then
-		
-		If this->BufferLength - this->StartLineIndex <= 0 Then
-			this->Buffer[0] = 0
-			this->BufferLength = 0
-		Else
-			RtlMoveMemory( _
-				@this->Buffer, _
-				@this->Buffer[this->StartLineIndex], _
-				HTTPREADER_MAXBUFFER_LENGTH - this->StartLineIndex + 1 _
-			)
-			this->BufferLength -= this->StartLineIndex
-		End If
-		
-		this->StartLineIndex = 0
-	End If
-	
-	this->LinesBuffer[0] = 0
-	this->LinesBufferLength = 0
 	this->IsAllBytesReaded = False
-	this->StartLineIndex = 0
+	
+	this->Lines.Start = 0
+	this->Lines.Length = 0
+	this->Lines.wszLine[0] = 0
+	
+	Dim cbPreloadedBytes As Integer = this->ReadedData.cbLength - this->ReadedData.cbUsed
+	
+	If cbPreloadedBytes > 0 Then
+		RtlMoveMemory( _
+			@this->ReadedData.Bytes(0), _
+			@this->ReadedData.Bytes(this->ReadedData.cbUsed), _
+			cbPreloadedBytes _
+		)
+		this->ReadedData.cbUsed = 0
+		this->ReadedData.cbLength = cbPreloadedBytes
+	Else
+		this->ReadedData.cbUsed = 0
+		this->ReadedData.cbLength = 0
+	End If
 	
 	Return S_OK
 	
@@ -382,8 +574,10 @@ Function HttpReaderGetPreloadedBytes( _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	*pPreloadedBytesLength = this->BufferLength - this->StartLineIndex
-	*ppPreloadedBytes = @this->Buffer[this->StartLineIndex]
+	Dim cbPreloadedBytes As Integer = this->ReadedData.cbLength - this->ReadedData.cbUsed
+	
+	*pPreloadedBytesLength = cbPreloadedBytes
+	*ppPreloadedBytes = @this->ReadedData.Bytes(this->ReadedData.cbUsed)
 	
 	Return S_OK
 	
@@ -395,8 +589,8 @@ Function HttpReaderGetRequestedBytes( _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	*pRequestedBytesLength = this->BufferLength
-	*ppRequestedBytes = @this->Buffer
+	*pRequestedBytesLength = this->ReadedData.cbLength
+	*ppRequestedBytes = @this->ReadedData.Bytes(0)
 	
 	Return S_OK
 	
@@ -408,82 +602,6 @@ Function HttpReaderIsCompleted( _
 	)As HRESULT
 	
 	*pCompleted = this->IsAllBytesReaded
-	
-	Return S_OK
-	
-End Function
-
-Function HttpReaderConvertBytesToString( _
-		ByVal this As HttpReader Ptr, _
-		ByVal DoubleCrLfIndex As Integer _
-	)As HRESULT
-	
-	Const dwFlags As DWORD = 0
-	
-	Dim CharsLength As Integer = MultiByteToWideChar( _
-		CP_UTF8, _
-		dwFlags, _
-		@this->Buffer, _
-		DoubleCrLfIndex + 2 * NewLineStringLength, _
-		@this->LinesBuffer, _
-		HTTPREADER_MAXBUFFER_LENGTH _
-	)
-	
-	this->LinesBufferLength = CharsLength
-	this->LinesBuffer[CharsLength] = 0
-	
-	If CharsLength = 0 Then
-		' Dim dwError As DWORD = GetLastError()
-		Return HTTPREADER_E_BUFFERTOOSMALL
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function HttpReaderReadAllBytes( _
-		ByVal this As HttpReader Ptr, _
-		ByVal pDoubleCrLfIndex As Integer Ptr _
-	)As HRESULT
-	
-	Dim DoubleCrLfIndex As Integer = Any
-	Dim FindResult As Boolean = Any
-	
-	Do
-		Dim ReceivedBytesCount As Integer = Any
-		
-		Dim hr As HRESULT = IBaseStream_Read( _
-			this->pIStream, _
-			@this->Buffer[this->BufferLength], _
-			HTTPREADER_MAXBUFFER_LENGTH - this->BufferLength, _
-			@ReceivedBytesCount _
-		)
-		
-		If FAILED(hr) Then
-			Return HTTPREADER_E_SOCKETERROR
-		End If
-		
-		If hr = S_FALSE Then
-			Return HTTPREADER_E_CLIENTCLOSEDCONNECTION
-		End If
-		
-		this->BufferLength += ReceivedBytesCount
-		this->Buffer[this->BufferLength] = 0
-		
-		If this->BufferLength >= HTTPREADER_MAXBUFFER_LENGTH Then
-			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
-		End If
-		
-		FindResult = FindDoubleCrLfIndexA( _
-			@this->Buffer, _
-			this->BufferLength, _
-			@DoubleCrLfIndex _
-		)
-		
-	Loop While FindResult = False
-	
-	*pDoubleCrLfIndex = DoubleCrLfIndex
-	this->IsAllBytesReaded = True
 	
 	Return S_OK
 	

@@ -3,8 +3,6 @@
 
 #include once "IHttpReader.bi"
 
-Const HTTPREADER_MAXBUFFER_LENGTH As Integer = 16 * 1024 - 1
-
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
 Type HttpReader As _HttpReader

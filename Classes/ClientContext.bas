@@ -364,57 +364,57 @@ Function ClientContextSetNetworkStream( _
 	
 End Function
 
-Function ClientContextGetFrequency( _
-		ByVal this As ClientContext Ptr, _
-		ByVal pFrequency As LARGE_INTEGER Ptr _
-	)As HRESULT
+' Function ClientContextGetFrequency( _
+		' ByVal this As ClientContext Ptr, _
+		' ByVal pFrequency As LARGE_INTEGER Ptr _
+	' )As HRESULT
 	
-	#ifdef PERFORMANCE_TESTING
-		pFrequency->QuadPart = this->Frequency.QuadPart
-	#endif
+	' #ifdef PERFORMANCE_TESTING
+		' pFrequency->QuadPart = this->Frequency.QuadPart
+	' #endif
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
-Function ClientContextSetFrequency( _
-		ByVal this As ClientContext Ptr, _
-		ByVal Frequency As LARGE_INTEGER _
-	)As HRESULT
+' Function ClientContextSetFrequency( _
+		' ByVal this As ClientContext Ptr, _
+		' ByVal Frequency As LARGE_INTEGER _
+	' )As HRESULT
 	
-	#ifdef PERFORMANCE_TESTING
-		this->Frequency.QuadPart = Frequency.QuadPart
-	#endif
+	' #ifdef PERFORMANCE_TESTING
+		' this->Frequency.QuadPart = Frequency.QuadPart
+	' #endif
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
-Function ClientContextGetStartTicks( _
-		ByVal this As ClientContext Ptr, _
-		ByVal pStartTicks As LARGE_INTEGER Ptr _
-	)As HRESULT
+' Function ClientContextGetStartTicks( _
+		' ByVal this As ClientContext Ptr, _
+		' ByVal pStartTicks As LARGE_INTEGER Ptr _
+	' )As HRESULT
 	
-	#ifdef PERFORMANCE_TESTING
-		pStartTicks->QuadPart = this->StartTicks.QuadPart
-	#endif
+	' #ifdef PERFORMANCE_TESTING
+		' pStartTicks->QuadPart = this->StartTicks.QuadPart
+	' #endif
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
-Function ClientContextSetStartTicks( _
-		ByVal this As ClientContext Ptr, _
-		ByVal StartTicks As LARGE_INTEGER _
-	)As HRESULT
+' Function ClientContextSetStartTicks( _
+		' ByVal this As ClientContext Ptr, _
+		' ByVal StartTicks As LARGE_INTEGER _
+	' )As HRESULT
 	
-	#ifdef PERFORMANCE_TESTING
-		this->StartTicks.QuadPart = StartTicks.QuadPart
-	#endif
+	' #ifdef PERFORMANCE_TESTING
+		' this->StartTicks.QuadPart = StartTicks.QuadPart
+	' #endif
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
 Function ClientContextGetClientRequest( _
 		ByVal this As ClientContext Ptr, _
@@ -719,33 +719,33 @@ Function IClientContextSetNetworkStream( _
 	Return ClientContextSetNetworkStream(ContainerOf(this, ClientContext, lpVtbl), pINetworkStream)
 End Function
 
-Function IClientContextGetFrequency( _
-		ByVal this As IClientContext Ptr, _
-		ByVal pFrequency As LARGE_INTEGER Ptr _
-	)As HRESULT
-	Return ClientContextGetFrequency(ContainerOf(this, ClientContext, lpVtbl), pFrequency)
-End Function
+' Function IClientContextGetFrequency( _
+		' ByVal this As IClientContext Ptr, _
+		' ByVal pFrequency As LARGE_INTEGER Ptr _
+	' )As HRESULT
+	' Return ClientContextGetFrequency(ContainerOf(this, ClientContext, lpVtbl), pFrequency)
+' End Function
 
-Function IClientContextSetFrequency( _
-		ByVal this As IClientContext Ptr, _
-		ByVal Frequency As LARGE_INTEGER _
-	)As HRESULT
-	Return ClientContextSetFrequency(ContainerOf(this, ClientContext, lpVtbl), Frequency)
-End Function
+' Function IClientContextSetFrequency( _
+		' ByVal this As IClientContext Ptr, _
+		' ByVal Frequency As LARGE_INTEGER _
+	' )As HRESULT
+	' Return ClientContextSetFrequency(ContainerOf(this, ClientContext, lpVtbl), Frequency)
+' End Function
 
-Function IClientContextGetStartTicks( _
-		ByVal this As IClientContext Ptr, _
-		ByVal pStartTicks As LARGE_INTEGER Ptr _
-	)As HRESULT
-	Return ClientContextGetStartTicks(ContainerOf(this, ClientContext, lpVtbl), pStartTicks)
-End Function
+' Function IClientContextGetStartTicks( _
+		' ByVal this As IClientContext Ptr, _
+		' ByVal pStartTicks As LARGE_INTEGER Ptr _
+	' )As HRESULT
+	' Return ClientContextGetStartTicks(ContainerOf(this, ClientContext, lpVtbl), pStartTicks)
+' End Function
 
-Function IClientContextSetStartTicks( _
-		ByVal this As IClientContext Ptr, _
-		ByVal StartTicks As LARGE_INTEGER _
-	)As HRESULT
-	Return ClientContextSetStartTicks(ContainerOf(this, ClientContext, lpVtbl), StartTicks)
-End Function
+' Function IClientContextSetStartTicks( _
+		' ByVal this As IClientContext Ptr, _
+		' ByVal StartTicks As LARGE_INTEGER _
+	' )As HRESULT
+	' Return ClientContextSetStartTicks(ContainerOf(this, ClientContext, lpVtbl), StartTicks)
+' End Function
 
 Function IClientContextGetClientRequest( _
 		ByVal this As IClientContext Ptr, _
@@ -857,10 +857,10 @@ Dim GlobalClientContextVirtualTable As Const IClientContextVirtualTable = Type( 
 	@IClientContextGetMemoryAllocator, _
 	@IClientContextGetNetworkStream, _
 	@IClientContextSetNetworkStream, _
-	@IClientContextGetFrequency, _
-	@IClientContextSetFrequency, _
-	@IClientContextGetStartTicks, _
-	@IClientContextSetStartTicks, _
+	NULL, _ /' @IClientContextGetFrequency, _ '/
+	NULL, _ /' @IClientContextSetFrequency, _ '/
+	NULL, _ /' @IClientContextGetStartTicks, _ '/
+	NULL, _ /' @IClientContextSetStartTicks, _ '/
 	@IClientContextGetClientRequest, _
 	@IClientContextSetClientRequest, _
 	@IClientContextGetServerResponse, _
