@@ -36,16 +36,124 @@ Type _HttpGetProcessor
 	Dim TransmitHeader As TRANSMIT_FILE_BUFFERS
 End Type
 
-Declare Function GetFileBytesStartingIndex( _
-	ByVal mt As MimeType Ptr, _
-	ByVal hRequestedFile As HANDLE, _
-	ByVal hZipFile As HANDLE _
-)As LongInt
+Function GetFileBytesStartingIndex( _
+		ByVal mt As MimeType Ptr, _
+		ByVal hRequestedFile As HANDLE, _
+		ByVal hZipFile As HANDLE _
+	)As LongInt
+	
+	If mt->IsTextFormat Then
+		Const MaxBytesRead As DWORD = 16 - 1
+		
+		Dim FileBytes As ZString * (MaxBytesRead + 1) = Any
+		Dim BytesReaded As DWORD = Any
+		
+		If ReadFile(hRequestedFile, @FileBytes, MaxBytesRead, @BytesReaded, 0) <> 0 Then
+			
+			mt->Charset = GetDocumentCharset(@FileBytes)
+			
+			Dim FileBytesStartIndex As LongInt = Any
+			
+			If hZipFile = INVALID_HANDLE_VALUE Then
+				
+				Select Case mt->Charset
+					
+					Case DocumentCharsets.Utf8BOM
+						FileBytesStartIndex = 3
+						
+					Case DocumentCharsets.Utf16LE
+						FileBytesStartIndex = 0
+						
+					Case DocumentCharsets.Utf16BE
+						FileBytesStartIndex = 2
+						
+					Case Else
+						FileBytesStartIndex = 0
+						
+				End Select
+			Else
+				FileBytesStartIndex = 0
+				
+			End If
+			
+			Dim liDistanceToMove As LARGE_INTEGER = Any
+			liDistanceToMove.QuadPart = FileBytesStartIndex
+			SetFilePointerEx(hRequestedFile, liDistanceToMove, NULL, FILE_BEGIN)
+			
+			Return FileBytesStartIndex
+		End If
+	End If
+	
+	Return 0
+End Function
 
-Declare Sub AddExtendedHeaders( _
-	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal pIRequestedFile As IRequestedFile Ptr _
-)
+Sub AddExtendedHeaders( _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal pIRequestedFile As IRequestedFile Ptr _
+	)
+	' TODO ”брать переполнение буфера при слишком длинных заголовках
+	
+	Dim PathTranslated As WString Ptr = Any
+	IRequestedFile_GetPathTranslated(pIRequestedFile, @PathTranslated)
+	
+	Dim wExtHeadersFile As WString * (MAX_PATH + 1) = Any
+	lstrcpyW(@wExtHeadersFile, PathTranslated)
+	lstrcatW(@wExtHeadersFile, @HeadersExtensionString)
+	
+	Dim hExtHeadersFile As HANDLE = CreateFileW( _
+		@wExtHeadersFile, _
+		GENERIC_READ, _
+		FILE_SHARE_READ, _
+		NULL, _
+		OPEN_EXISTING, _
+		FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_SEQUENTIAL_SCAN, _
+		NULL _
+	)
+	
+	If hExtHeadersFile <> INVALID_HANDLE_VALUE Then
+		Dim zExtHeaders As ZString * (MaxResponseBufferLength + 1) = Any
+		Dim wExtHeaders As WString * (MaxResponseBufferLength + 1) = Any
+		
+		Dim BytesReaded As DWORD = Any
+		If ReadFile(hExtHeadersFile, @zExtHeaders, MaxResponseBufferLength, @BytesReaded, 0) <> 0 Then
+			
+			If BytesReaded > 2 Then
+				zExtHeaders[BytesReaded] = 0
+				
+				If MultiByteToWideChar(CP_UTF8, 0, @zExtHeaders, -1, @wExtHeaders, MaxResponseBufferLength) > 0 Then
+					Dim w As WString Ptr = @wExtHeaders
+					
+					Do
+						Dim wName As WString Ptr = w
+						Dim wColon As WString Ptr = StrChrW(w, Characters.Colon)
+						
+						w = StrStrW(w, NewLineString)
+						
+						If w <> 0 Then
+							w[0] = Characters.NullChar ' и ещЄ w[1] = 0
+							' ”казываем на следующий символ после vbCrLf, если это ноль Ч то это конец
+							w += 2
+						End If
+						
+						If wColon > 0 Then
+							wColon[0] = Characters.NullChar
+							Do
+								wColon += 1
+							Loop While wColon[0] = Characters.WhiteSpace
+							
+							IServerResponse_AddResponseHeader(pIResponse, wName, wColon)
+						End If
+						
+					Loop While lstrlenW(w) > 0
+					
+				End If
+			End If
+		End If
+		
+		CloseHandle(hExtHeadersFile)
+	End If
+	
+End Sub
 
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
@@ -571,39 +679,37 @@ Function HttpGetProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	' Dim pINetworkStreamAsyncResult As INetworkStreamAsyncResult Ptr = CPtr(INetworkStreamAsyncResult Ptr, pIAsyncResult)
-	
-	' Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	' INetworkStreamAsyncResult_GetWsaOverlapped(pINetworkStreamAsyncResult, @lpRecvOverlapped)
-	
-	' Const fNoWait As Boolean = False
-	' Dim cbTransfer As DWORD = Any
-	' Dim dwFlags As DWORD = Any
-	
-	' Dim OverlappedResult As Integer = WSAGetOverlappedResult( _
-		' this->ClientSocket, _
-		' CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
-		' @cbTransfer, _
-		' fNoWait, _
-		' @dwFlags _
-	' )
-	' If OverlappedResult = 0 Then
+	' TODO ѕриЄм и отправка данных через какой-нибудь объект
+	' Scope
+		' Dim pINetworkStreamAsyncResult As INetworkStreamAsyncResult Ptr = CPtr(INetworkStreamAsyncResult Ptr, pIAsyncResult)
 		
-		' Dim intError As Long = WSAGetLastError()
+		' Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
+		' INetworkStreamAsyncResult_GetWsaOverlapped(pINetworkStreamAsyncResult, @lpRecvOverlapped)
 		
-		' If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
-			' Return REQUESTPROCESSOR_S_IO_PENDING
+		' Const fNoWait As Boolean = False
+		' Dim cbTransfer As DWORD = Any
+		' Dim dwFlags As DWORD = Any
+		
+		' Dim OverlappedResult As Integer = WSAGetOverlappedResult( _
+			' this->ClientSocket, _
+			' CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+			' @cbTransfer, _
+			' fNoWait, _
+			' @dwFlags _
+		' )
+		' If OverlappedResult = 0 Then
+			
+			' Dim intError As Long = WSAGetLastError()
+			
+			' If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
+				' Return REQUESTPROCESSOR_S_IO_PENDING
+			' End If
+			
+			' Return HRESULT_FROM_WIN32(intError)
 		' End If
 		
-		' Return HRESULT_FROM_WIN32(intError)
-	' End If
+	' End Scope
 	
-	' Dim SendOnlyHeaders As Boolean = Any
-	' IServerResponse_GetSendOnlyHeaders(pc->pIResponse, @SendOnlyHeaders)
-	' If SendOnlyHeaders Then
-		' this->AllBytesReaded = False
-		' Return S_OK
-	' End If
 	If this->hTransmitFile = NULL Then
 		If this->FileHandle <> INVALID_HANDLE_VALUE Then
 			' If CloseHandle(this->FileHandle) = 0 Then
@@ -660,125 +766,6 @@ Function HttpGetProcessorEndProcess( _
 	Return REQUESTPROCESSOR_S_IO_PENDING
 	
 End Function
-
-Function GetFileBytesStartingIndex( _
-		ByVal mt As MimeType Ptr, _
-		ByVal hRequestedFile As HANDLE, _
-		ByVal hZipFile As HANDLE _
-	)As LongInt
-	
-	If mt->IsTextFormat Then
-		Const MaxBytesRead As DWORD = 16 - 1
-		
-		Dim FileBytes As ZString * (MaxBytesRead + 1) = Any
-		Dim BytesReaded As DWORD = Any
-		
-		If ReadFile(hRequestedFile, @FileBytes, MaxBytesRead, @BytesReaded, 0) <> 0 Then
-			
-			mt->Charset = GetDocumentCharset(@FileBytes)
-			
-			Dim FileBytesStartIndex As LongInt = Any
-			
-			If hZipFile = INVALID_HANDLE_VALUE Then
-				
-				Select Case mt->Charset
-					
-					Case DocumentCharsets.Utf8BOM
-						FileBytesStartIndex = 3
-						
-					Case DocumentCharsets.Utf16LE
-						FileBytesStartIndex = 0
-						
-					Case DocumentCharsets.Utf16BE
-						FileBytesStartIndex = 2
-						
-					Case Else
-						FileBytesStartIndex = 0
-						
-				End Select
-			Else
-				FileBytesStartIndex = 0
-				
-			End If
-			
-			Dim liDistanceToMove As LARGE_INTEGER = Any
-			liDistanceToMove.QuadPart = FileBytesStartIndex
-			SetFilePointerEx(hRequestedFile, liDistanceToMove, NULL, FILE_BEGIN)
-			
-			Return FileBytesStartIndex
-		End If
-	End If
-	
-	Return 0
-End Function
-
-Sub AddExtendedHeaders( _
-		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal pIRequestedFile As IRequestedFile Ptr _
-	)
-	' TODO ”брать переполнение буфера при слишком длинных заголовках
-	
-	Dim PathTranslated As WString Ptr = Any
-	IRequestedFile_GetPathTranslated(pIRequestedFile, @PathTranslated)
-	
-	Dim wExtHeadersFile As WString * (MAX_PATH + 1) = Any
-	lstrcpyW(@wExtHeadersFile, PathTranslated)
-	lstrcatW(@wExtHeadersFile, @HeadersExtensionString)
-	
-	Dim hExtHeadersFile As HANDLE = CreateFileW( _
-		@wExtHeadersFile, _
-		GENERIC_READ, _
-		FILE_SHARE_READ, _
-		NULL, _
-		OPEN_EXISTING, _
-		FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_SEQUENTIAL_SCAN, _
-		NULL _
-	)
-	
-	If hExtHeadersFile <> INVALID_HANDLE_VALUE Then
-		Dim zExtHeaders As ZString * (MaxResponseBufferLength + 1) = Any
-		Dim wExtHeaders As WString * (MaxResponseBufferLength + 1) = Any
-		
-		Dim BytesReaded As DWORD = Any
-		If ReadFile(hExtHeadersFile, @zExtHeaders, MaxResponseBufferLength, @BytesReaded, 0) <> 0 Then
-			
-			If BytesReaded > 2 Then
-				zExtHeaders[BytesReaded] = 0
-				
-				If MultiByteToWideChar(CP_UTF8, 0, @zExtHeaders, -1, @wExtHeaders, MaxResponseBufferLength) > 0 Then
-					Dim w As WString Ptr = @wExtHeaders
-					
-					Do
-						Dim wName As WString Ptr = w
-						Dim wColon As WString Ptr = StrChrW(w, Characters.Colon)
-						
-						w = StrStrW(w, NewLineString)
-						
-						If w <> 0 Then
-							w[0] = Characters.NullChar ' и ещЄ w[1] = 0
-							' ”казываем на следующий символ после vbCrLf, если это ноль Ч то это конец
-							w += 2
-						End If
-						
-						If wColon > 0 Then
-							wColon[0] = Characters.NullChar
-							Do
-								wColon += 1
-							Loop While wColon[0] = Characters.WhiteSpace
-							
-							IServerResponse_AddResponseHeader(pIResponse, wName, wColon)
-						End If
-						
-					Loop While lstrlenW(w) > 0
-					
-				End If
-			End If
-		End If
-		
-		CloseHandle(hExtHeadersFile)
-	End If
-	
-End Sub
 
 
 Function IHttpGetProcessorQueryInterface( _
