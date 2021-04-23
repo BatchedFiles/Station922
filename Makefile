@@ -205,8 +205,9 @@ FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -s console 
 # -Wno-unused-but-set-variable
 # -fwrapv
 # -Wno-format
-#                            -nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno -fwrapv -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wno-format
-GCC_COMPILER_PARAMETERS_BASE=-nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable                              -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno         -fno-exceptions                                                                -Werror -fno-ident
+# -Wextra
+GCC_COMPILER_WARNINGS=-Wall -Werror -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-main -Werror-implicit-function-declaration
+GCC_COMPILER_PARAMETERS_BASE=$(GCC_COMPILER_WARNINGS) -nostdlib -nostdinc -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-ident -fdata-sections -ffunction-sections
 GCC_COMPILER_PARAMETERS_RELEASE=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -Ofast -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 GCC_COMPILER_PARAMETERS_RELEASE_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -O0 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 GCC_COMPILER_PARAMETERS_DEBUG=  $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -Og                                                            
@@ -216,7 +217,8 @@ GCC_ASSEMBLER_PARAMETERS_RELEASE=$(TARGET_ASSEMBLER_ARCH) --strip-local-absolute
 GCC_ASSEMBLER_PARAMETERS_DEBUG=  $(TARGET_ASSEMBLER_ARCH)
 
 GCC_LINKER_PARAMETERS_BASE=-m $(PE_FILE_FORMAT) -subsystem console $(FB_EXTRA) $(ENTRY_POINT_PARAM) --stack 1048576,1048576 -L "$(COMPILER_LIB_PATH)" -L "." --major-image-version 1 --minor-image-version 0 --no-seh --nxcompat $(OBJECTFILES_CRUNTIME)
-GCC_LINKER_PARAMETERS_RELEASE=$(GCC_LINKER_PARAMETERS_BASE) -s --gc-sections --print-gc-sections
+# --print-gc-sections
+GCC_LINKER_PARAMETERS_RELEASE=$(GCC_LINKER_PARAMETERS_BASE) -s --gc-sections
 GCC_LINKER_PARAMETERS_DEBUG=  $(GCC_LINKER_PARAMETERS_BASE)
 
 OUTPUT_FILE_NAME_CONSOLE=Station922$(FILE_SUFFIX_CONSOLE).exe
@@ -2377,7 +2379,7 @@ $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.R
 	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
 $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
 	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
 $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources.RC Resources.RH
@@ -2385,7 +2387,7 @@ $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources.RC Resources.R
 	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
 
 $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
 	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
 
 $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources.RC Resources.RH
@@ -2393,6 +2395,6 @@ $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources.RC Resources.RH
 	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj
 
 $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
 	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj
 
