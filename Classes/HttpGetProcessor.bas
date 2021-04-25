@@ -474,6 +474,7 @@ Function HttpGetProcessorPrepare( _
 				
 				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
 				
+				' TODO Запросить интерфейс вместо конвертирования указателя
 				MakeContentRangeHeader( _
 					CPtr(ITextWriter Ptr, pIWriter), _
 					RequestedByteRange.FirstBytePosition, _
@@ -504,6 +505,7 @@ Function HttpGetProcessorPrepare( _
 				
 				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
 				
+				' TODO Запросить интерфейс вместо конвертирования указателя
 				MakeContentRangeHeader( _
 					CPtr(ITextWriter Ptr, pIWriter), _
 					TotalBodyLength - this->BodyLength, _
@@ -536,6 +538,7 @@ Function HttpGetProcessorPrepare( _
 					
 					IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
 					
+					' TODO Запросить интерфейс вместо конвертирования указателя
 					MakeContentRangeHeader( _
 						CPtr(ITextWriter Ptr, pIWriter), _
 						RequestedByteRange.FirstBytePosition, _
@@ -592,6 +595,7 @@ Function HttpGetProcessorBeginProcess( _
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
 	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, NULL)
@@ -658,6 +662,7 @@ Function HttpGetProcessorBeginProcess( _
 		Dim intError As Long = WSAGetLastError()
 		If intError = ERROR_IO_PENDING OrElse intError = WSA_IO_PENDING Then
 			IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, False)
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 			Return REQUESTPROCESSOR_S_IO_PENDING
 		End If
@@ -668,6 +673,7 @@ Function HttpGetProcessorBeginProcess( _
 	End If
 	
 	IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, True)
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
 	Return S_OK
@@ -681,6 +687,7 @@ Function HttpGetProcessorEndProcess( _
 	
 	' TODO Приём и отправка данных через какой-нибудь объект
 	' Scope
+		' TODO Запросить интерфейс вместо конвертирования указателя
 		' Dim pINetworkStreamAsyncResult As INetworkStreamAsyncResult Ptr = CPtr(INetworkStreamAsyncResult Ptr, pIAsyncResult)
 		
 		' Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any

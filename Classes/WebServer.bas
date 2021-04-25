@@ -472,6 +472,7 @@ Function AcceptConnection( _
 		IClientContext_SetStartTicks(pCachedContext->pIContext, StartTicks)
 	#endif
 	
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	Dim pIAsyncResult As IAsyncResult Ptr = Any
 	Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
 		pIRequest, _
@@ -515,6 +516,7 @@ Function ProcessErrorAssociateWithIOCP( _
 		If pCachedContext->pIMemoryAllocator = NULL Then
 			' TODO Отправить клиенту Не могу создать кучу памяти
 			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
 			' CloseSocketConnection(ClientSocket)
 			Return pCachedContext->hrMemoryAllocator
@@ -523,6 +525,7 @@ Function ProcessErrorAssociateWithIOCP( _
 		If FAILED(pCachedContext->hrClientContex) Then
 			' TODO Отправить клиенту Не могу выделить память в куче
 			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
 			' CloseSocketConnection(ClientSocket)
 			Return pCachedContext->hrClientContex
@@ -537,6 +540,7 @@ Function ProcessErrorAssociateWithIOCP( _
 			IClientContext_Release(pCachedContext->pIContext)
 			' TODO Отправить клиенту Не могу ассоциировать с портом завершения
 			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
 			' CloseSocketConnection(ClientSocket)
 			Return hrAssociate
@@ -583,6 +587,7 @@ Sub CreateCachedClientMemoryContext( _
 					Scope
 						Dim pINetworkStream As INetworkStream Ptr = Any
 						IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
+						' TODO Запросить интерфейс вместо конвертирования указателя
 						IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
 						INetworkStream_Release(pINetworkStream)
 					End Scope
@@ -590,6 +595,7 @@ Sub CreateCachedClientMemoryContext( _
 					Scope
 						Dim pIRequest As IClientRequest Ptr = Any
 						IClientContext_GetClientRequest(pCachedContext->pIContext, @pIRequest)
+						' TODO Запросить интерфейс вместо конвертирования указателя
 						IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
 						IClientRequest_Release(pIRequest)
 					End Scope

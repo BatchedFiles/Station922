@@ -295,6 +295,7 @@ Function NetworkStreamBeginRead( _
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
 	If callback = NULL Then
@@ -349,12 +350,14 @@ Function NetworkStreamBeginRead( _
 		End If
 		
 		IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, False)
+		' TODO Запросить интерфейс вместо конвертирования указателя
 		*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 		
 		Return BASESTREAM_S_IO_PENDING
 	End If
 	
 	IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, True)
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
 	Return S_OK
@@ -369,6 +372,7 @@ Function NetworkStreamEndRead( _
 	
 	*pReadedBytes = 0
 	
+	' TODO Запросить интерфейс вместо конвертирования указателя
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = CPtr(IMutableAsyncResult Ptr, pIAsyncResult)
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
