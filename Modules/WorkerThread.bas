@@ -24,20 +24,24 @@ Sub ProcessBeginReadError( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal hrDataError As DataError _
 	)
+	
 	Dim pIResponse As IServerResponse Ptr = Any
 	IClientContext_GetServerResponse(pIContext, @pIResponse)
+	
 	Dim pINetworkStream As INetworkStream Ptr = Any
 	IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
 	
 	Select Case hrDataError
 		
 		Case DataError.NotEnoughMemory
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotEnoughMemory(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 	End Select
 	
 	INetworkStream_Release(pINetworkStream)
 	IServerResponse_Release(pIResponse)
+	
 End Sub
 
 Sub ProcessEndReadError( _
@@ -45,20 +49,25 @@ Sub ProcessEndReadError( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal hrEndReadRequest As HRESULT _
 	)
+	
 	Dim pIResponse As IServerResponse Ptr = Any
 	IClientContext_GetServerResponse(pIContext, @pIResponse)
+	
 	Dim pINetworkStream As INetworkStream Ptr = Any
 	IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
 	
 	Select Case hrEndReadRequest
 		
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpVersionNotSupported(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case CLIENTREQUEST_E_BADREQUEST
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpBadRequest(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case CLIENTREQUEST_E_BADPATH
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpPathNotValid(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case CLIENTREQUEST_E_EMPTYREQUEST
@@ -68,16 +77,20 @@ Sub ProcessEndReadError( _
 			' Ошибка сокета
 			
 		Case CLIENTREQUEST_E_URITOOLARGE
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpRequestUrlTooLarge(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpRequestHeaderFieldsTooLarge(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
 			IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderAllow, @AllSupportHttpMethods)
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotImplemented(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case Else
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpBadRequest(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 	End Select
@@ -96,24 +109,30 @@ Sub ProcessDataError( _
 	
 	Dim pIResponse As IServerResponse Ptr = Any
 	IClientContext_GetServerResponse(pIContext, @pIResponse)
+	
 	Dim pINetworkStream As INetworkStream Ptr = Any
 	IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
 	
 	Select Case hrDataError
 		
 		Case DataError.HostNotFound
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpHostNotFound(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case DataError.SiteNotFound
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpSiteNotFound(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 		Case DataError.MovedPermanently
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteMovedPermanently(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 		Case DataError.NotEnoughMemory
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotEnoughMemory(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 		Case DataError.HttpMethodNotSupported
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpNotImplemented(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), NULL)
 			
 	End Select
@@ -131,21 +150,26 @@ Sub ProcessBeginWriteError( _
 	)
 	Dim pIResponse As IServerResponse Ptr = Any
 	IClientContext_GetServerResponse(pIContext, @pIResponse)
+	
 	Dim pINetworkStream As INetworkStream Ptr = Any
 	IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
 	
 	Select Case hrBeginProcess
 		
 		Case REQUESTPROCESSOR_E_FILENOTFOUND
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpFileNotFound(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 		Case REQUESTPROCESSOR_E_FILEGONE
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpFileGone(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 		Case REQUESTPROCESSOR_E_FORBIDDEN
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpForbidden(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 		Case Else
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpInternalServerError(pIRequest, pIResponse, CPtr(IBaseStream Ptr, pINetworkStream), pIWebSite)
 			
 	End Select
@@ -160,6 +184,7 @@ Sub ProcessEndWriteError( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal hrEndProcess As HRESULT _
 	)
+	
 End Sub
 
 Function PrepareRequestResponse( _
@@ -210,7 +235,8 @@ Function PrepareRequestResponse( _
 		IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
 		IServerResponse_SetHttpVersion(pIResponse, HttpVersion)
 		
-		If lstrlenW(pHeaderHost) = 0 AndAlso HttpVersion = HttpVersions.Http11 Then
+		Dim HeaderHostLength As Integer = lstrlenW(pHeaderHost)
+		If HeaderHostLength = 0 AndAlso HttpVersion = HttpVersions.Http11 Then
 			ProcessDataError(pIContext, pIRequest, DataError.HostNotFound, NULL)
 			hrResult = E_FAIL
 		Else
@@ -230,7 +256,8 @@ Function PrepareRequestResponse( _
 				
 				Dim IsSiteMoved As Boolean = Any
 				' TODO Грязный хак с robots.txt
-				If lstrcmpiW(ClientURI.pUrl, WStr("/robots.txt")) = 0 Then
+				Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.pUrl, WStr("/robots.txt"))
+				If IsRobotsTxt = 0 Then
 					IsSiteMoved = False
 				Else
 					IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
@@ -246,6 +273,7 @@ Function PrepareRequestResponse( _
 					Dim pIMemoryAllocator As IMalloc Ptr = Any
 					IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
 					
+					Dim IsKnownHttpMethod As Boolean = Any
 					Dim RequestedFileAccess As FileAccess = Any
 					Dim pIProcessor As IRequestProcessor Ptr = Any
 					Dim hrCreateRequestProcessor As HRESULT = Any
@@ -253,6 +281,7 @@ Function PrepareRequestResponse( _
 					Select Case HttpMethod
 						
 						Case HttpMethods.HttpGet
+							IsKnownHttpMethod = True
 							RequestedFileAccess = FileAccess.ReadAccess
 							hrCreateRequestProcessor = CreateInstance( _
 								pIMemoryAllocator, _
@@ -262,6 +291,7 @@ Function PrepareRequestResponse( _
 							)
 							
 						Case HttpMethods.HttpHead
+							IsKnownHttpMethod = True
 							IServerResponse_SetSendOnlyHeaders(pIResponse, True)
 							RequestedFileAccess = FileAccess.ReadAccess
 							hrCreateRequestProcessor = CreateInstance( _
@@ -296,87 +326,94 @@ Function PrepareRequestResponse( _
 							' ProcessRequestVirtualTable = @ProcessConnectRequest
 							
 						Case Else
+							IsKnownHttpMethod = False
 							RequestedFileAccess = FileAccess.ReadAccess
 							pIProcessor = NULL
 							hrCreateRequestProcessor = E_OUTOFMEMORY
 							
 					End Select
 					
-					If FAILED(hrCreateRequestProcessor) Then
+					If IsKnownHttpMethod = False Then
 						ProcessDataError(pIContext, pIRequest, DataError.HttpMethodNotSupported, pIWebSite)
 						hrResult = E_FAIL
 					Else
-						IClientContext_SetRequestProcessor(pIContext, pIProcessor)
-						
-						Dim pIFile As IRequestedFile Ptr = Any
-						Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_REQUESTEDFILE, _
-							@IID_IRequestedFile, _
-							@pIFile _
-						)
-						If FAILED(hrCreateRequestedFile) Then
+						If FAILED(hrCreateRequestProcessor) Then
 							ProcessDataError(pIContext, pIRequest, DataError.NotEnoughMemory, pIWebSite)
 							hrResult = E_FAIL
 						Else
-							IClientContext_SetRequestedFile(pIContext, pIFile)
+							IClientContext_SetRequestProcessor(pIContext, pIProcessor)
 							
-							Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
-								pIWebSite, _
-								pIFile, _
-								@ClientURI.Path, _
-								RequestedFileAccess _
+							Dim pIFile As IRequestedFile Ptr = Any
+							Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
+								pIMemoryAllocator, _
+								@CLSID_REQUESTEDFILE, _
+								@IID_IRequestedFile, _
+								@pIFile _
 							)
-							If FAILED(hrGetFile) Then
+							If FAILED(hrCreateRequestedFile) Then
 								ProcessDataError(pIContext, pIRequest, DataError.NotEnoughMemory, pIWebSite)
 								hrResult = E_FAIL
 							Else
+								IClientContext_SetRequestedFile(pIContext, pIFile)
 								
-								Dim pINetworkStream As INetworkStream Ptr = Any
-								IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
-								Dim pIHttpReader As IHttpReader Ptr = Any
-								IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-								
-								Dim pc As ProcessorContext = Any
-								pc.pIRequest = pIRequest
-								pc.pIResponse = pIResponse
-								pc.pINetworkStream = pINetworkStream
-								pc.pIWebSite = pIWebSite
-								pc.pIClientReader = pIHttpReader
-								pc.pIRequestedFile = pIFile
-								pc.pIMemoryAllocator = pIMemoryAllocator
-								
-								Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
-									pIProcessor, _
-									@pc _
+								Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
+									pIWebSite, _
+									pIFile, _
+									@ClientURI.Path, _
+									RequestedFileAccess _
 								)
-								If FAILED(hrPrepare) Then
-									ProcessBeginWriteError(pIContext, pIRequest, hrPrepare, pIWebSite)
+								If FAILED(hrGetFile) Then
+									ProcessDataError(pIContext, pIRequest, DataError.NotEnoughMemory, pIWebSite)
+									hrResult = E_FAIL
 								Else
-									IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
 									
-									Dim pINewAsyncResult As IAsyncResult Ptr = Any
-									Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
+									Dim pINetworkStream As INetworkStream Ptr = Any
+									IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
+									Dim pIHttpReader As IHttpReader Ptr = Any
+									IClientContext_GetHttpReader(pIContext, @pIHttpReader)
+									
+									Dim pc As ProcessorContext = Any
+									pc.pIRequest = pIRequest
+									pc.pIResponse = pIResponse
+									pc.pINetworkStream = pINetworkStream
+									pc.pIWebSite = pIWebSite
+									pc.pIClientReader = pIHttpReader
+									pc.pIRequestedFile = pIFile
+									pc.pIMemoryAllocator = pIMemoryAllocator
+									
+									Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
 										pIProcessor, _
-										@pc, _
-										CPtr(IUnknown Ptr, pIContext), _
-										@pINewAsyncResult _
+										@pc _
 									)
-									If FAILED(hrBeginProcess) Then
-										ProcessBeginWriteError(pIContext, pIRequest, hrBeginProcess, pIWebSite)
-										hrResult = E_FAIL
+									If FAILED(hrPrepare) Then
+										ProcessBeginWriteError(pIContext, pIRequest, hrPrepare, pIWebSite)
+									Else
+										IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
+										
+										' TODO Запросить интерфейс вместо конвертирования указателя
+										Dim pINewAsyncResult As IAsyncResult Ptr = Any
+										Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
+											pIProcessor, _
+											@pc, _
+											CPtr(IUnknown Ptr, pIContext), _
+											@pINewAsyncResult _
+										)
+										If FAILED(hrBeginProcess) Then
+											ProcessBeginWriteError(pIContext, pIRequest, hrBeginProcess, pIWebSite)
+											hrResult = E_FAIL
+										End If
+										
 									End If
 									
+									IHttpReader_Release(pIHttpReader)
+									INetworkStream_Release(pINetworkStream)
 								End If
 								
-								IHttpReader_Release(pIHttpReader)
-								INetworkStream_Release(pINetworkStream)
+								IRequestedFile_Release(pIFile)
 							End If
 							
-							IRequestedFile_Release(pIFile)
+							IRequestProcessor_Release(pIProcessor)
 						End If
-						
-						IRequestProcessor_Release(pIProcessor)
 					End If
 					
 					IMalloc_Release(pIMemoryAllocator)
@@ -436,6 +473,7 @@ Function ReadRequest( _
 			Dim pIRequest As IClientRequest Ptr = Any
 			IClientContext_GetClientRequest(pIContext, @pIRequest)
 			
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			Dim pINewAsyncResult As IAsyncResult Ptr = Any
 			Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
 				pIRequest, _
@@ -562,6 +600,7 @@ Function WriteResponse( _
 			Dim pIProcessor As IRequestProcessor Ptr = Any
 			IClientContext_GetRequestProcessor(pIContext, @pIProcessor)
 			
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			Dim pINewAsyncResult As IAsyncResult Ptr = Any
 			Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
 				pIProcessor, _
@@ -612,6 +651,7 @@ Function WriteResponse( _
 				
 				IClientRequest_Clear(pIRequest)
 				
+				' TODO Запросить интерфейс вместо конвертирования указателя
 				Dim pINewAsyncResult As IAsyncResult Ptr = Any
 				Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
 					pIRequest, _
@@ -682,6 +722,7 @@ Function WorkerThread( _
 				Exit Do
 			End If
 			
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			' If BytesTransferred = 0 Then
 			' End If
 			' Dim pIContext As IClientContext Ptr = Any
@@ -709,6 +750,7 @@ Function WorkerThread( _
 			
 			If BytesTransferred <> 0 Then
 				Dim pIContext As IClientContext Ptr = Any
+				' TODO Запросить интерфейс вместо конвертирования указателя
 				IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 				
 				Dim OpCode As OperationCodes = Any
@@ -776,6 +818,7 @@ Function WorkerThread( _
 			Else
 				
 				' Dim pIContext As IClientContext Ptr = Any
+				' TODO Запросить интерфейс вместо конвертирования указателя
 				' IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 				' Scope
 					' Dim pINetworkStream As INetworkStream Ptr = Any
@@ -839,6 +882,7 @@ Function CloserThread( _
 			
 		Else
 			
+			' TODO Запросить интерфейс вместо конвертирования указателя
 			' Dim pIContext As IClientContext Ptr = Any
 			' IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 			' IClientContext_Release(pIContext)
