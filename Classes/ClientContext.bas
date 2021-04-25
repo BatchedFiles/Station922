@@ -26,11 +26,6 @@ Type _ClientContext
 	Dim OperationCode As OperationCodes
 	Dim RemoteAddress As SOCKADDR_IN
 	Dim RemoteAddressLength As Integer
-	
-	#ifdef PERFORMANCE_TESTING
-		Dim Frequency As LARGE_INTEGER
-		Dim StartTicks As LARGE_INTEGER
-	#endif
 End Type
 
 Sub InitializeClientContext( _
@@ -59,10 +54,6 @@ Sub InitializeClientContext( _
 	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_IN))
 	this->RemoteAddressLength = 0
 	
-	#ifdef PERFORMANCE_TESTING
-		this->Frequency.QuadPart = 0
-		this->StartTicks.QuadPart = 0
-	#endif
 End Sub
 
 Sub UnInitializeClientContext( _
