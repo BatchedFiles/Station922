@@ -34,9 +34,9 @@ Sub UnInitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
-	' If this->ClientSocket <> INVALID_SOCKET Then
-		' CloseSocketConnection(this->ClientSocket)
-	' End If
+	If this->ClientSocket <> INVALID_SOCKET Then
+		CloseSocketConnection(this->ClientSocket)
+	End If
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
