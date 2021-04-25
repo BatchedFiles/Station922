@@ -202,7 +202,6 @@ Function WebServerIniConfigurationGetListenAddress( _
 		CPtr(OLECHAR Ptr, @buf), _
 		Cast(UINT, ValueLength) _
 	)
-	
 	If *bstrListenAddress = NULL Then
 		Return E_OUTOFMEMORY
 	End If
@@ -248,7 +247,6 @@ Function WebServerIniConfigurationGetConnectBindAddress( _
 		CPtr(OLECHAR Ptr, @buf), _
 		Cast(UINT, ValueLength) _
 	)
-	
 	If *bstrConnectBindAddress = NULL Then
 		Return E_OUTOFMEMORY
 	End If
