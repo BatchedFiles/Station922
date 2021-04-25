@@ -5,7 +5,7 @@
 
 Extern GlobalPrivateHeapMemoryAllocatorVirtualTable As Const IPrivateHeapMemoryAllocatorVirtualTable
 
-Const PRIVATEHEAP_INITIALSIZE As DWORD = 256 * 1024
+Const PRIVATEHEAP_INITIALSIZE As DWORD = 96 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Type _PrivateHeapMemoryAllocator
