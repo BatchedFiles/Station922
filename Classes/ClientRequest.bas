@@ -16,7 +16,6 @@ Type _ClientRequest
 	Dim lpStringableVtbl As Const IStringableVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
 	Dim pIMemoryAllocator As IMalloc Ptr
-	
 	Dim pIReader As ITextReader Ptr
 	Dim RequestedLine As WString Ptr
 	Dim RequestedLineLength As Integer
@@ -28,14 +27,26 @@ Type _ClientRequest
 	Dim RequestZipModes(HttpZipModesMaximum - 1) As Boolean
 	Dim RequestByteRange As ByteRange
 	Dim ContentLength As LongInt
-	
 End Type
 
-Declare Function AddRequestHeader( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal Header As WString Ptr, _
-	ByVal Value As WString Ptr _
-)As Integer
+Function ClientRequestAddRequestHeader( _
+		ByVal this As ClientRequest Ptr, _
+		ByVal Header As WString Ptr, _
+		ByVal Value As WString Ptr _
+	)As Integer
+	
+	Dim HeaderIndex As HttpRequestHeaders = Any
+	
+	If GetKnownRequestHeaderIndex(Header, @HeaderIndex) = False Then
+		' TODO ƒобавить в нераспознанные заголовки запроса
+		Return -1
+	End If
+	
+	this->RequestHeaders(HeaderIndex) = Value
+	
+	Return HeaderIndex
+	
+End Function
 
 Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
@@ -183,7 +194,12 @@ End Function
 		' @pRequestedLine _
 	' )
 	
-	' Return ReadRequestedLines(this, pRequestedLine, RequestedLineLength, hrReadLine)
+	' Return ReadRequestedLines( _
+		' this, _
+		' pRequestedLine, _
+		' RequestedLineLength, _
+		' hrReadLine _
+	' )
 	
 ' End Function
 
@@ -195,21 +211,27 @@ Function ClientRequestBeginReadRequest( _
 	
 	Const NullCallback As AsyncCallback = NULL
 	
-	Dim hr As HRESULT = ITextReader_BeginReadLine( _
+	Dim hrBeginReadLine As HRESULT = ITextReader_BeginReadLine( _
 		this->pIReader, _
 		NullCallback, _
 		StateObject, _
 		ppIAsyncResult _
 	)
-	If FAILED(hr) Then
+	If FAILED(hrBeginReadLine) Then
 		Return CLIENTREQUEST_E_SOCKETERROR
+	Else
+		
+		Select Case hrBeginReadLine
+			
+			Case TEXTREADER_S_IO_PENDING
+				Return CLIENTREQUEST_S_IO_PENDING
+				
+			Case Else
+				Return S_OK
+				
+		End Select
+		
 	End If
-	
-	If hr = TEXTREADER_S_IO_PENDING Then
-		Return CLIENTREQUEST_S_IO_PENDING
-	End If
-	
-	Return S_OK
 	
 End Function
 
@@ -218,15 +240,15 @@ Function ClientRequestEndReadRequest( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hr As HRESULT = ITextReader_EndReadLine( _
+	Dim EndReadLine As HRESULT = ITextReader_EndReadLine( _
 		this->pIReader, _
 		pIAsyncResult, _
 		@this->RequestedLineLength, _
 		@this->RequestedLine _
 	)
-	If FAILED(hr) Then
+	If FAILED(EndReadLine) Then
 		
-		Select Case hr
+		Select Case EndReadLine
 			
 			Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
 				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
@@ -244,25 +266,27 @@ Function ClientRequestEndReadRequest( _
 				Return E_FAIL
 				
 		End Select
+	End If
+	
+	Select Case EndReadLine
 		
-	End If
-	
-	If hr = TEXTREADER_S_IO_PENDING Then
-		Return CLIENTREQUEST_S_IO_PENDING
-	End If
-	
-	If hr = S_FALSE Then
-		Return S_FALSE
-	End If
-	
-	Return S_OK
+		Case TEXTREADER_S_IO_PENDING
+			Return CLIENTREQUEST_S_IO_PENDING
+			
+		Case S_FALSE
+			Return S_FALSE
+			
+		Case Else
+			Return S_OK
+			
+	End Select
 	
 End Function
 
 Function ClientRequestPrepare( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
-		
+	
 	' ћетод, запрошенный ресурс и верси€ протокола
 	' ѕервый пробел
 	Dim pSpace As WString Ptr = StrChrW(this->RequestedLine, Characters.WhiteSpace)
@@ -399,7 +423,7 @@ Function ClientRequestPrepare( _
 				pColon += 1
 			Loop While pColon[0] = Characters.WhiteSpace
 			
-			AddRequestHeader(this, pLine, pColon)
+			ClientRequestAddRequestHeader(this, pLine, pColon)
 			
 		End If
 		
@@ -681,25 +705,6 @@ End Function
 	' Return S_FALSE
 	
 ' End Function
-
-Function AddRequestHeader( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal Header As WString Ptr, _
-		ByVal Value As WString Ptr _
-	)As Integer
-	
-	Dim HeaderIndex As HttpRequestHeaders = Any
-	
-	If GetKnownRequestHeaderIndex(Header, @HeaderIndex) = False Then
-		' TODO ƒобавить в нераспознанные заголовки запроса
-		Return -1
-	End If
-	
-	this->RequestHeaders(HeaderIndex) = Value
-	
-	Return HeaderIndex
-	
-End Function
 
 
 Function IClientRequestQueryInterface( _
