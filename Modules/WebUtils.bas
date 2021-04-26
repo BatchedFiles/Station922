@@ -6,6 +6,7 @@
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
+#include once "Mime.bi"
 #include once "PrintDebugInfo.bi"
 #include once "StringConstants.bi"
 #include once "Station922Uri.bi"
@@ -16,6 +17,11 @@ Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" A
 Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 Const TimeFormatString = WStr("HH:mm:ss GMT")
 Const DefaultCacheControl = WStr("max-age=2678400")
+
+Declare Function GetBase64Sha1( _
+	ByVal pDestination As WString Ptr, _
+	ByVal pSource As WString Ptr _
+)As Boolean
 
 Function GetHtmlSafeString( _
 		ByVal Buffer As WString Ptr, _
@@ -631,96 +637,6 @@ Sub AddResponseCacheHeaders( _
 	End If
 	
 End Sub
-
-Function ContainsBadCharSequence( _
-		ByVal Buffer As WString Ptr, _
-		ByVal Length As Integer _
-	)As HRESULT
-	
-	' TODO Звёздочка в пути допустима при методе OPTIONS
-	
-	If Length = 0 Then
-		Return E_FAIL
-	End If
-	
-	If Buffer[Length - 1] = Characters.FullStop Then
-		Return E_FAIL
-	End If
-	
-	For i As Integer = 0 To Length - 1
-		
-		Dim c As wchar_t = Buffer[i]
-		
-		Select Case c
-			
-			Case Is < Characters.WhiteSpace
-				Return E_FAIL
-				
-			Case Characters.QuotationMark
-				' Кавычки нельзя
-				Return E_FAIL
-				
-			'Case Characters.DollarSign
-				' Нельзя доллар, потому что могут открыть $MFT
-				'Return E_FAIL
-				
-			'Case Characters.PercentSign
-				' TODO Уточнить, почему нельзя использовать знак процента
-				'Return E_FAIL
-				
-			'Case Characters.Ampersand
-				' Объединение команд в одну
-				'Return E_FAIL
-				
-			Case Characters.Asterisk
-				' Нельзя звёздочку
-				Return E_FAIL
-				
-			Case Characters.FullStop
-				' Разрешены .. потому что могут встретиться в имени файла
-				' Запрещены /.. потому что могут привести к смене каталога
-				Dim NextChar As wchar_t = Buffer[i + 1]
-				
-				If NextChar = Characters.FullStop Then
-					
-					If i > 0 Then
-						Dim PrevChar As wchar_t = Buffer[i - 1]
-						
-						If PrevChar = Characters.Solidus Then
-							Return E_FAIL
-						End If
-						
-					End If
-					
-				End If
-				
-			'Case Characters.Semicolon
-				' Разделитель путей
-				'Return E_FAIL
-				
-			Case Characters.LessThanSign
-				' Защита от перенаправлений ввода-вывода
-				Return E_FAIL
-				
-			Case Characters.GreaterThanSign
-				' Защита от перенаправлений ввода-вывода
-				Return E_FAIL
-				
-			Case Characters.QuestionMark
-				' Подстановочный знак
-				Return E_FAIL
-				
-			Case Characters.VerticalLine
-				' Символ конвейера
-				Return E_FAIL
-				
-		End Select
-		
-	Next
-	
-	Return S_OK
-	
-End Function
 
 Function GetBase64Sha1( _
 		ByVal pDestination As WString Ptr, _

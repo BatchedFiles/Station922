@@ -29,6 +29,96 @@ Type _ClientRequest
 	Dim ContentLength As LongInt
 End Type
 
+Function ContainsBadCharSequence( _
+		ByVal Buffer As WString Ptr, _
+		ByVal Length As Integer _
+	)As HRESULT
+	
+	' TODO Звёздочка в пути допустима при методе OPTIONS
+	
+	If Length = 0 Then
+		Return E_FAIL
+	End If
+	
+	If Buffer[Length - 1] = Characters.FullStop Then
+		Return E_FAIL
+	End If
+	
+	For i As Integer = 0 To Length - 1
+		
+		Dim c As wchar_t = Buffer[i]
+		
+		Select Case c
+			
+			Case Is < Characters.WhiteSpace
+				Return E_FAIL
+				
+			Case Characters.QuotationMark
+				' Кавычки нельзя
+				Return E_FAIL
+				
+			'Case Characters.DollarSign
+				' Нельзя доллар, потому что могут открыть $MFT
+				'Return E_FAIL
+				
+			'Case Characters.PercentSign
+				' TODO Уточнить, почему нельзя использовать знак процента
+				'Return E_FAIL
+				
+			'Case Characters.Ampersand
+				' Объединение команд в одну
+				'Return E_FAIL
+				
+			Case Characters.Asterisk
+				' Нельзя звёздочку
+				Return E_FAIL
+				
+			Case Characters.FullStop
+				' Разрешены .. потому что могут встретиться в имени файла
+				' Запрещены /.. потому что могут привести к смене каталога
+				Dim NextChar As wchar_t = Buffer[i + 1]
+				
+				If NextChar = Characters.FullStop Then
+					
+					If i > 0 Then
+						Dim PrevChar As wchar_t = Buffer[i - 1]
+						
+						If PrevChar = Characters.Solidus Then
+							Return E_FAIL
+						End If
+						
+					End If
+					
+				End If
+				
+			'Case Characters.Semicolon
+				' Разделитель путей
+				'Return E_FAIL
+				
+			Case Characters.LessThanSign
+				' Защита от перенаправлений ввода-вывода
+				Return E_FAIL
+				
+			Case Characters.GreaterThanSign
+				' Защита от перенаправлений ввода-вывода
+				Return E_FAIL
+				
+			Case Characters.QuestionMark
+				' Подстановочный знак
+				Return E_FAIL
+				
+			Case Characters.VerticalLine
+				' Символ конвейера
+				Return E_FAIL
+				
+		End Select
+		
+	Next
+	
+	Return S_OK
+	
+End Function
+
 Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _

@@ -5,16 +5,15 @@
 #include once "IServerResponse.bi"
 #include once "ITextWriter.bi"
 #include once "IWebSite.bi"
-#include once "Mime.bi"
 
 ' Заполняет буфер экранированной строкой, безопасной для html
 ' Принимающий буфер должен быть в 6 раз длиннее строки
-Declare Function GetHtmlSafeString( _
-	ByVal Buffer As WString Ptr, _
-	ByVal BufferLength As Integer, _
-	ByVal HtmlSafe As WString Ptr, _
-	ByVal pHtmlSafeLength As Integer Ptr _
-)As Boolean
+' Declare Function GetHtmlSafeString( _
+	' ByVal Buffer As WString Ptr, _
+	' ByVal BufferLength As Integer, _
+	' ByVal HtmlSafe As WString Ptr, _
+	' ByVal pHtmlSafeLength As Integer Ptr _
+' )As Boolean
 
 ' Определяет кодировку документа (массива байт)
 Declare Function GetDocumentCharset( _
@@ -73,15 +72,5 @@ Declare Sub AddResponseCacheHeaders( _
 	ByVal pIResponse As IServerResponse Ptr, _
 	ByVal hFile As HANDLE _
 )
-
-Declare Function ContainsBadCharSequence( _
-	ByVal Buffer As WString Ptr, _
-	ByVal Length As Integer _
-)As HRESULT
-
-Declare Function GetBase64Sha1( _
-	ByVal pDestination As WString Ptr, _
-	ByVal pSource As WString Ptr _
-)As Boolean
 
 #endif
