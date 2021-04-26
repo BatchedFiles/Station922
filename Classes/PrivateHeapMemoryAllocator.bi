@@ -10,7 +10,6 @@ Type PrivateHeapMemoryAllocator As _PrivateHeapMemoryAllocator
 Type LPPrivateHeapMemoryAllocator As _PrivateHeapMemoryAllocator Ptr
 
 Declare Function CreatePrivateHeapMemoryAllocator( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As PrivateHeapMemoryAllocator Ptr
 
 Declare Sub DestroyPrivateHeapMemoryAllocator( _

@@ -206,7 +206,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_PRIVATEHEAPMEMORYALLOCATOR, rclsid) Then
-		Dim pAllocator As PrivateHeapMemoryAllocator Ptr = CreatePrivateHeapMemoryAllocator(pIMemoryAllocator)
+		Dim pAllocator As PrivateHeapMemoryAllocator Ptr = CreatePrivateHeapMemoryAllocator()
 		If pAllocator = NULL Then
 			Return E_OUTOFMEMORY
 		End If

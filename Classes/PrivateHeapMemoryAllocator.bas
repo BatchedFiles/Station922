@@ -16,7 +16,6 @@ End Type
 Type _PrivateHeapMemoryAllocator
 	Dim lpVtbl As Const IPrivateHeapMemoryAllocatorVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
-	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pISpyObject As IMallocSpy Ptr
 	Dim MemoryAllocations As Integer
 	Dim hHeap As HANDLE
@@ -26,14 +25,11 @@ End Type
 
 Sub InitializePrivateHeapMemoryAllocator( _
 		ByVal this As PrivateHeapMemoryAllocator Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
 	this->lpVtbl = @GlobalPrivateHeapMemoryAllocatorVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
 	this->hHeap = hHeap
@@ -50,12 +46,10 @@ Sub UnInitializePrivateHeapMemoryAllocator( _
 	End If
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
-	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
 
 Function CreatePrivateHeapMemoryAllocator( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As PrivateHeapMemoryAllocator Ptr
 	
 	DebugPrintInteger(WStr(!"PrivateHeapMemoryAllocator creating\t"), SizeOf(PrivateHeapMemoryAllocator))
@@ -69,8 +63,9 @@ Function CreatePrivateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	Dim this As PrivateHeapMemoryAllocator Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
+	Dim this As PrivateHeapMemoryAllocator Ptr = HeapAlloc( _
+		hHeap, _
+		HEAP_NO_SERIALIZE, _
 		SizeOf(PrivateHeapMemoryAllocator) _
 	)
 	If this = NULL Then
@@ -78,7 +73,7 @@ Function CreatePrivateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	InitializePrivateHeapMemoryAllocator(this, pIMemoryAllocator, hHeap)
+	InitializePrivateHeapMemoryAllocator(this, hHeap)
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator created"))
 	
@@ -91,9 +86,6 @@ Sub DestroyPrivateHeapMemoryAllocator( _
 	)
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroying"))
-	
-	IMalloc_AddRef(this->pIMemoryAllocator)
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	If this->MemoryAllocations <> 0 Then
 		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak\t"), this->MemoryAllocations)
@@ -112,10 +104,6 @@ Sub DestroyPrivateHeapMemoryAllocator( _
 	If hHeap <> NULL Then
 		HeapDestroy(hHeap)
 	End If
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	IMalloc_Release(pIMemoryAllocator)
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroyed"))
 	
