@@ -90,7 +90,7 @@ Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientRequest Ptr
 	
-	DebugPrintWString(WStr("ClientRequest creating"))
+	DebugPrintInteger(WStr(!"ClientRequest creating\t"), SizeOf(ClientRequest))
 	
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

@@ -97,7 +97,7 @@ Function CreateClientContext( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientContext Ptr
 	
-	DebugPrintWString(WStr("ClientContext creating"))
+	DebugPrintInteger(WStr(!"ClientContext creating\t"), SizeOf(ClientContext))
 	
 	' Dim pIRequestedFile As IRequestedFile Ptr = Any
 	' Dim hr1 As HRESULT = CreateInstance( _

@@ -205,28 +205,20 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
+	If IsEqualCLSID(@CLSID_PRIVATEHEAPMEMORYALLOCATOR, rclsid) Then
+		Dim pAllocator As PrivateHeapMemoryAllocator Ptr = CreatePrivateHeapMemoryAllocator(pIMemoryAllocator)
+		If pAllocator = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = PrivateHeapMemoryAllocatorQueryInterface(pAllocator, riid, ppv)
+		If FAILED(hr) Then
+			DestroyPrivateHeapMemoryAllocator(pAllocator)
+		End If
+		
+		Return hr
+	End If
+	
 	Return CLASS_E_CLASSNOTAVAILABLE
-	
-End Function
-
-Function CreateMemoryAllocator( _
-		ByVal ppMalloc As LPMALLOC Ptr _
-	)As HRESULT
-	
-	' Return CoGetMalloc(0, ppMalloc)
-	
-	*ppMalloc = NULL
-	
-	Dim pAllocator As PrivateHeapMemoryAllocator Ptr = CreatePrivateHeapMemoryAllocator()
-	If pAllocator = NULL Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Dim hr As HRESULT = PrivateHeapMemoryAllocatorQueryInterface(pAllocator, @IID_IPrivateHeapMemoryAllocator, ppMalloc)
-	If FAILED(hr) Then
-		DestroyPrivateHeapMemoryAllocator(pAllocator)
-	End If
-	
-	Return hr
 	
 End Function

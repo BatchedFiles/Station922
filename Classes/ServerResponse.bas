@@ -85,7 +85,7 @@ Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
-	DebugPrintWString(WStr("ServerResponse creating"))
+	DebugPrintInteger(WStr(!"ServerResponse creating\t"), SizeOf(ServerResponse))
 	
 	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

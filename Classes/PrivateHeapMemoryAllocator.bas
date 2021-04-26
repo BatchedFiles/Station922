@@ -5,30 +5,40 @@
 
 Extern GlobalPrivateHeapMemoryAllocatorVirtualTable As Const IPrivateHeapMemoryAllocatorVirtualTable
 
-Const PRIVATEHEAP_INITIALSIZE As DWORD = 96 * 4096
+Const PRIVATEHEAP_INITIALSIZE As DWORD = 70 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
+
+Type MemoryRegion
+	Dim pMemory As Any Ptr
+	Dim Size As Integer
+End Type
 
 Type _PrivateHeapMemoryAllocator
 	Dim lpVtbl As Const IPrivateHeapMemoryAllocatorVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pISpyObject As IMallocSpy Ptr
 	Dim MemoryAllocations As Integer
 	Dim hHeap As HANDLE
-	Dim HeapFlags As DWORD
+	Dim Memoryes(19) As MemoryRegion
+	Dim cbMemoryUsed As Integer
 End Type
 
 Sub InitializePrivateHeapMemoryAllocator( _
 		ByVal this As PrivateHeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE, _
-		ByVal HeapFlags As DWORD _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal hHeap As HANDLE _
 	)
 	
 	this->lpVtbl = @GlobalPrivateHeapMemoryAllocatorVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	IMalloc_AddRef(pIMemoryAllocator)
+	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
 	this->hHeap = hHeap
-	this->HeapFlags = HeapFlags
+	ZeroMemory(@this->Memoryes(0), SizeOf(MemoryRegion) * 20)
+	this->cbMemoryUsed = 0
 	
 End Sub
 
@@ -40,13 +50,15 @@ Sub UnInitializePrivateHeapMemoryAllocator( _
 	End If
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
+	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
 
 Function CreatePrivateHeapMemoryAllocator( _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As PrivateHeapMemoryAllocator Ptr
 	
-	DebugPrintWString(WStr("PrivateHeapMemoryAllocator creating"))
+	DebugPrintInteger(WStr(!"PrivateHeapMemoryAllocator creating\t"), SizeOf(PrivateHeapMemoryAllocator))
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -57,9 +69,8 @@ Function CreatePrivateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	Dim this As PrivateHeapMemoryAllocator Ptr = HeapAlloc( _
-		hHeap, _
-		HEAP_NO_SERIALIZE, _
+	Dim this As PrivateHeapMemoryAllocator Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
 		SizeOf(PrivateHeapMemoryAllocator) _
 	)
 	If this = NULL Then
@@ -67,7 +78,7 @@ Function CreatePrivateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	InitializePrivateHeapMemoryAllocator(this, hHeap, HEAP_NO_SERIALIZE)
+	InitializePrivateHeapMemoryAllocator(this, pIMemoryAllocator, hHeap)
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator created"))
 	
@@ -81,8 +92,17 @@ Sub DestroyPrivateHeapMemoryAllocator( _
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroying"))
 	
+	IMalloc_AddRef(this->pIMemoryAllocator)
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
 	If this->MemoryAllocations <> 0 Then
 		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak\t"), this->MemoryAllocations)
+		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak Size\t"), this->cbMemoryUsed)
+		For i As Integer = 0 To 19
+			If this->Memoryes(i).pMemory <> 0 Then
+				DebugPrintInteger(WStr(!"\t\t\t\tMemory Size  "), this->Memoryes(i).Size)
+			End If
+		Next
 	End If
 	
 	Dim hHeap As HANDLE = this->hHeap
@@ -92,6 +112,10 @@ Sub DestroyPrivateHeapMemoryAllocator( _
 	If hHeap <> NULL Then
 		HeapDestroy(hHeap)
 	End If
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	IMalloc_Release(pIMemoryAllocator)
 	
 	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroyed"))
 	
@@ -156,22 +180,36 @@ Function PrivateHeapMemoryAllocatorAlloc( _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
 	
-	this->MemoryAllocations += 1
-	
 	If this->pISpyObject <> NULL Then
 		cb = IMallocSpy_PreAlloc(this->pISpyObject, cb)
 	End If
 	
 	Dim pMemory As Any Ptr = Any
+	
 	' EnterCriticalSection(@this->crSection)
 	Scope
 		pMemory = HeapAlloc( _
 			this->hHeap, _
-			this->HeapFlags, _
+			HEAP_NO_SERIALIZE, _
 			cb _
 		)
 	End Scope
 	' LeaveCriticalSection(@this->crSection)
+	
+	If pMemory = NULL Then
+		DebugPrintInteger(WStr(!"\t\t\t\tAlloc Memory Failed\t"), cb)
+	Else
+		DebugPrintInteger(WStr(!"\t\t\t\tAlloc Memory Size\t"), cb)
+		For i As Integer = 0 To 19
+			If this->Memoryes(i).pMemory = 0 Then
+				this->Memoryes(i).pMemory = pMemory
+				this->Memoryes(i).Size = cb
+				Exit For
+			End If
+		Next
+		this->MemoryAllocations += 1
+		this->cbMemoryUsed += cb
+	End If
 	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PostAlloc(this->pISpyObject, pMemory)
@@ -192,7 +230,7 @@ Function PrivateHeapMemoryAllocatorRealloc( _
 		cb = IMallocSpy_PreRealloc(this->pISpyObject, pv, cb, ppNewRequest, True)
 	End If
 	
-	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, this->HeapFlags, ppNewRequest, cb)
+	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, HEAP_NO_SERIALIZE, ppNewRequest, cb)
 	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PostRealloc(this->pISpyObject, pMemory, True)
@@ -207,8 +245,6 @@ Sub PrivateHeapMemoryAllocatorFree( _
 		ByVal pMemory As Any Ptr _
 	)
 	
-	this->MemoryAllocations -= 1
-	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PreFree(this->pISpyObject, pMemory, True)
 	End If
@@ -217,11 +253,19 @@ Sub PrivateHeapMemoryAllocatorFree( _
 	Scope
 		HeapFree( _
 			this->hHeap, _
-			this->HeapFlags, _
+			HEAP_NO_SERIALIZE, _
 			pMemory _
 		)
 	End Scope
 	' LeaveCriticalSection(@this->crSection)
+	For i As Integer = 0 To 19
+		If this->Memoryes(i).pMemory = pMemory Then
+			this->Memoryes(i).pMemory = 0
+			this->cbMemoryUsed -= this->Memoryes(i).Size
+			Exit For
+		End If
+	Next
+	this->MemoryAllocations -= 1
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_PostFree(this->pISpyObject, True)
@@ -234,17 +278,16 @@ Function PrivateHeapMemoryAllocatorGetSize( _
 		ByVal pMemory As Any Ptr _
 	)As SIZE_T_
 	
-	Dim Size As SIZE_T_ = Any
-	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PreGetSize(this->pISpyObject, pMemory, True)
 	End If
 	
+	Dim Size As SIZE_T_ = Any
 	' EnterCriticalSection(@this->crSection)
 	Scope
 		Size = HeapSize( _
 			this->hHeap, _
-			this->HeapFlags, _
+			HEAP_NO_SERIALIZE, _
 			pMemory _
 		)
 	End Scope
@@ -263,13 +306,12 @@ Function PrivateHeapMemoryAllocatorDidAlloc( _
 		ByVal pMemory As Any Ptr _
 	)As Long
 	
-	Dim phe As PROCESS_HEAP_ENTRY = Any
-	phe.lpData = NULL
-	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PreDidAlloc(this->pISpyObject, pMemory, True)
 	End If
 	
+	Dim phe As PROCESS_HEAP_ENTRY = Any
+	phe.lpData = NULL
 	Dim res As Long = 0
 	Do While HeapWalk(this->hHeap, @phe)
 		If phe.lpData = pMemory Then
@@ -294,7 +336,7 @@ Sub PrivateHeapMemoryAllocatorHeapMinimize( _
 		IMallocSpy_PreHeapMinimize(this->pISpyObject)
 	End If
 	
-	HeapCompact(this->hHeap, this->HeapFlags)
+	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE)
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_PostHeapMinimize(this->pISpyObject)

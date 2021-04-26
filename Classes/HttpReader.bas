@@ -255,7 +255,7 @@ Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpReader Ptr
 	
-	DebugPrintWString(WStr("HttpReader creating"))
+	DebugPrintInteger(WStr(!"HttpReader creating\t"), SizeOf(HttpReader))
 	
 	Dim this As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

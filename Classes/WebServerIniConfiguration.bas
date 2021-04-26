@@ -74,7 +74,7 @@ Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServerIniConfiguration Ptr
 	
-	DebugPrintWString(WStr("WebServerIniConfiguration creating"))
+	DebugPrintInteger(WStr(!"WebServerIniConfiguration creating\t"), SizeOf(WebServerIniConfiguration))
 	
 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 	Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _

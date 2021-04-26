@@ -47,7 +47,7 @@ Function CreateNetworkStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As NetworkStream Ptr
 	
-	DebugPrintWString(WStr("NetworkStream creating"))
+	DebugPrintInteger(WStr(!"NetworkStream creating\t"), SizeOf(NetworkStream))
 	
 	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

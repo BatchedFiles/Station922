@@ -50,7 +50,7 @@ Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AsyncResult Ptr
 	
-	DebugPrintWString(WStr("AsyncResult creating"))
+	DebugPrintInteger(WStr(!"AsyncResult creating\t"), SizeOf(AsyncResult))
 	
 	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

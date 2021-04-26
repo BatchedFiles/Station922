@@ -65,7 +65,7 @@ Function CreateRequestedFile( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As RequestedFile Ptr
 	
-	DebugPrintWString(WStr("RequestedFile creating"))
+	DebugPrintInteger(WStr(!"RequestedFile creating\t"), SizeOf(RequestedFile))
 	
 	Dim this As RequestedFile Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

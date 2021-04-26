@@ -19,6 +19,7 @@ Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
+Extern CLSID_PRIVATEHEAPMEMORYALLOCATOR Alias "CLSID_PRIVATEHEAPMEMORYALLOCATOR" As Const CLSID
 
 Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
@@ -191,7 +192,7 @@ Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServer Ptr
 	
-	DebugPrintWString(WStr("WebServer creating"))
+	DebugPrintInteger(WStr(!"WebServer creating\t"), SizeOf(WebServer))
 	
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
@@ -555,6 +556,7 @@ End Function
 Sub CreateCachedClientMemoryContext( _
 		ByVal this As WebServer Ptr _
 	)
+	
 	' TODO Асинхронное создание списка контекстов
 	this->pCachedClientMemoryContext = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
@@ -566,7 +568,10 @@ Sub CreateCachedClientMemoryContext( _
 		For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
 			
 			Dim pCachedContext As ClientMemoryContext Ptr = @this->pCachedClientMemoryContext[i]
-			pCachedContext->hrMemoryAllocator = CreateMemoryAllocator( _
+			pCachedContext->hrMemoryAllocator = CreateInstance( _
+				this->pIMemoryAllocator, _
+				@CLSID_PRIVATEHEAPMEMORYALLOCATOR, _
+				@IID_IMalloc, _
 				@pCachedContext->pIMemoryAllocator _
 			)
 			

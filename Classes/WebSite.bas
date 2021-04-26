@@ -76,7 +76,7 @@ Function CreateWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSite Ptr
 	
-	DebugPrintWString(WStr("WebSite creating"))
+	DebugPrintInteger(WStr(!"WebSite creating\t"), SizeOf(WebSite))
 	
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

@@ -48,7 +48,7 @@ Function CreateInternalHeapBSTR( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As InternalHeapBSTR Ptr
 	
-	DebugPrintWString(WStr("InternalHeapBSTR creating"))
+	DebugPrintInteger(WStr(!"InternalHeapBSTR creating\t"), SizeOf(InternalHeapBSTR))
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

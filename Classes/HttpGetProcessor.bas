@@ -191,7 +191,7 @@ Function CreateHttpGetProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpGetProcessor Ptr
 	
-	DebugPrintWString(WStr("HttpGetProcessor creating"))
+	DebugPrintInteger(WStr(!"HttpGetProcessor creating\t"), SizeOf(HttpGetProcessor))
 	
 	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

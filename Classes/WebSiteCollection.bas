@@ -69,7 +69,7 @@ Function CreateWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSiteCollection Ptr
 	
-	DebugPrintWString(WStr("WebSiteCollection creating"))
+	DebugPrintInteger(WStr(!"WebSiteCollection creating\t"), SizeOf(WebSiteCollection))
 	
 	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _

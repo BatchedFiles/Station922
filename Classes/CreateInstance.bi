@@ -11,10 +11,6 @@ Declare Function CreateInstance( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Function CreateMemoryAllocator( _
-	ByVal ppMalloc As LPMALLOC Ptr _
-)As HRESULT
-
 Declare Function CreateClassFactoryInstance Alias "DllGetClassObject"( _
 	ByVal rclsid As REFCLSID, _
 	ByVal riid As REFIID, _
