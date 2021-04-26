@@ -722,35 +722,22 @@ Function WorkerThread( _
 				Exit Do
 			End If
 			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			' If BytesTransferred = 0 Then
+			' res = PostQueuedCompletionStatus( _
+				' pWorkerContext->hIOCompletionClosePort, _
+				' BytesTransferred, _
+				' CompletionKey, _
+				' CPtr(LPOVERLAPPED, pOverlapped) _
+			' )
+			' If res = 0 Then
+				' DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
 			' End If
-			' Dim pIContext As IClientContext Ptr = Any
-			' IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
-			
-			' Dim hClientContextHeap As HANDLE = Any
-			' IClientContext_GetClientContextHeap(pIContext, @hClientContextHeap)
-			
-			' IClientContext_Release(pIContext)
-			' IAsyncResult_Release(pOverlapped->pIAsync)
-			
-			' HeapDestroy(hClientContextHeap)
-			res = PostQueuedCompletionStatus( _
-				pWorkerContext->hIOCompletionClosePort, _
-				BytesTransferred, _
-				CompletionKey, _
-				CPtr(LPOVERLAPPED, pOverlapped) _
-			)
-			If res = 0 Then
-				DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
-			End If
+			IAsyncResult_Release(pOverlapped->pIAsync)
 			
 		Else
 			DebugPrintDWORD(WStr(!"\t\t\tBytesTransferred\t"), BytesTransferred)
 			
 			If BytesTransferred <> 0 Then
 				Dim pIContext As IClientContext Ptr = Any
-				' TODO Запросить интерфейс вместо конвертирования указателя
 				IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 				
 				Dim OpCode As OperationCodes = Any
@@ -829,15 +816,18 @@ Function WorkerThread( _
 				' End Scope
 				' IClientContext_Release(pIContext)
 				
-				res = PostQueuedCompletionStatus( _
-					pWorkerContext->hIOCompletionClosePort, _
-					BytesTransferred, _
-					CompletionKey, _
-					CPtr(LPOVERLAPPED, pOverlapped) _
-				)
-				If res = 0 Then
-					DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
-				End If
+				' res = PostQueuedCompletionStatus( _
+					' pWorkerContext->hIOCompletionClosePort, _
+					' BytesTransferred, _
+					' CompletionKey, _
+					' CPtr(LPOVERLAPPED, pOverlapped) _
+				' )
+				' If res = 0 Then
+					' DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
+				' End If
+				
+				
+				IAsyncResult_Release(pOverlapped->pIAsync)
 				
 			End If
 			
@@ -847,6 +837,7 @@ Function WorkerThread( _
 	
 	CloseHandle(pWorkerContext->hThread)
 	IWebSiteCollection_Release(pWorkerContext->pIWebSites)
+	
 	CoTaskMemFree(pWorkerContext)
 	
 	Return 0
@@ -895,6 +886,7 @@ Function CloserThread( _
 	Loop
 	
 	CloseHandle(pCloserContext->hThread)
+	
 	CoTaskMemFree(pCloserContext)
 	
 	Return 0

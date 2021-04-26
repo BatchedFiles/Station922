@@ -739,29 +739,29 @@ Function InitializeIOCP( _
 		
 	Next
 	
-	For i As Integer = 0 To this->WorkerThreadsCount - 1
+	' For i As Integer = 0 To this->WorkerThreadsCount - 1
 		
-		Dim pCloserThreadContext As CloserThreadContext Ptr = CoTaskMemAlloc(SizeOf(CloserThreadContext))
-		If pCloserThreadContext = NULL Then
-			Return E_OUTOFMEMORY
-		End If
+		' Dim pCloserThreadContext As CloserThreadContext Ptr = CoTaskMemAlloc(SizeOf(CloserThreadContext))
+		' If pCloserThreadContext = NULL Then
+			' Return E_OUTOFMEMORY
+		' End If
 		
-		pCloserThreadContext->hIOCompletionClosePort = this->hIOCompletionClosePort
+		' pCloserThreadContext->hIOCompletionClosePort = this->hIOCompletionClosePort
 		
-		pCloserThreadContext->hThread = CreateThread( _
-			NULL, _
-			DefaultStackSize, _
-			@CloserThread, _
-			pCloserThreadContext, _
-			0, _
-			@pCloserThreadContext->ThreadId _
-		)
-		If pCloserThreadContext->hThread = NULL Then
-			Dim dwError As DWORD = GetLastError()
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
+		' pCloserThreadContext->hThread = CreateThread( _
+			' NULL, _
+			' DefaultStackSize, _
+			' @CloserThread, _
+			' pCloserThreadContext, _
+			' 0, _
+			' @pCloserThreadContext->ThreadId _
+		' )
+		' If pCloserThreadContext->hThread = NULL Then
+			' Dim dwError As DWORD = GetLastError()
+			' Return HRESULT_FROM_WIN32(dwError)
+		' End If
 		
-	Next
+	' Next
 	
 	Return S_OK
 	
