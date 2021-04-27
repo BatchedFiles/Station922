@@ -3,6 +3,8 @@
 
 #include once "IString.bi"
 
+Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
+
 Type _HeapBSTR As OLECHAR Ptr
 
 Type HeapBSTR As _HeapBSTR
@@ -29,7 +31,9 @@ Declare Sub HeapSysFreeString( _
 )
 
 Declare Function CreateInternalHeapBSTR( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr, _
+		ByVal Length As UINT _
 )As InternalHeapBSTR Ptr
 
 Declare Sub DestroyInternalHeapBSTR( _
