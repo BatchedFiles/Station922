@@ -506,48 +506,45 @@ Function ProcessErrorAssociateWithIOCP( _
 	
 	DebugPrintInteger(WStr(!"\t\t\t\tClient connected\t"), dwErrorAccept)
 	
-	Scope
-		If ClientSocket = INVALID_SOCKET Then
-			If pCachedContext->pIContext <> NULL Then
-				IClientContext_Release(pCachedContext->pIContext)
-			End If
-			Return HRESULT_FROM_WIN32(dwErrorAccept)
-		End If
-		
-		If pCachedContext->pIMemoryAllocator = NULL Then
-			' TODO Отправить клиенту Не могу создать кучу памяти
-			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
-			' CloseSocketConnection(ClientSocket)
-			Return pCachedContext->hrMemoryAllocator
-		End If
-		
-		If FAILED(pCachedContext->hrClientContex) Then
-			' TODO Отправить клиенту Не могу выделить память в куче
-			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
-			' CloseSocketConnection(ClientSocket)
-			Return pCachedContext->hrClientContex
-		End If
-		
-		Dim hrAssociate As HRESULT = AssociateWithIOCP( _
-			this, _
-			ClientSocket, _
-			0 _
-		)
-		If FAILED(hrAssociate) Then
+	If ClientSocket = INVALID_SOCKET Then
+		If pCachedContext->pIContext <> NULL Then
 			IClientContext_Release(pCachedContext->pIContext)
-			' TODO Отправить клиенту Не могу ассоциировать с портом завершения
-			INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
-			' CloseSocketConnection(ClientSocket)
-			Return hrAssociate
 		End If
-		
-	End Scope
+		Return HRESULT_FROM_WIN32(dwErrorAccept)
+	End If
+	
+	If pCachedContext->pIMemoryAllocator = NULL Then
+		' TODO Отправить клиенту Не могу создать кучу памяти
+		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+		' TODO Запросить интерфейс вместо конвертирования указателя
+		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		' CloseSocketConnection(ClientSocket)
+		Return pCachedContext->hrMemoryAllocator
+	End If
+	
+	If FAILED(pCachedContext->hrClientContex) Then
+		' TODO Отправить клиенту Не могу выделить память в куче
+		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+		' TODO Запросить интерфейс вместо конвертирования указателя
+		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		' CloseSocketConnection(ClientSocket)
+		Return pCachedContext->hrClientContex
+	End If
+	
+	Dim hrAssociate As HRESULT = AssociateWithIOCP( _
+		this, _
+		ClientSocket, _
+		0 _
+	)
+	If FAILED(hrAssociate) Then
+		IClientContext_Release(pCachedContext->pIContext)
+		' TODO Отправить клиенту Не могу ассоциировать с портом завершения
+		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+		' TODO Запросить интерфейс вместо конвертирования указателя
+		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		' CloseSocketConnection(ClientSocket)
+		Return hrAssociate
+	End If
 	
 	Return S_OK
 	

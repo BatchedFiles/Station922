@@ -10,10 +10,7 @@
 
 Enum OperationCodes
 	ReadRequest = 1
-	' PrepareRequest
-	' PrepareResponse
 	WriteResponse
-	OpClose
 End Enum
 
 Type IClientContext As IClientContext_

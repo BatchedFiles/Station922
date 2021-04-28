@@ -709,24 +709,11 @@ Function WorkerThread( _
 							pWorkerContext->pIWebSites _
 						)
 						
-					' Case OperationCodes.PrepareResponse
-						' PrepareRequestResponse( _
-							' pIContext, _
-							' pOverlapped->pIAsync, _
-							' pWorkerContext->pIWebSites _
-						' )
-						
 					Case OperationCodes.WriteResponse
 						WriteResponse( _
 							pIContext, _
 							pOverlapped->pIAsync, _
 							pWorkerContext->pIWebSites _
-						)
-						
-					Case OperationCodes.OpClose
-						ProcessCloseOperation( _
-							pIContext, _
-							pOverlapped->pIAsync _
 						)
 						
 				End Select
@@ -745,49 +732,6 @@ Function WorkerThread( _
 	IWebSiteCollection_Release(pWorkerContext->pIWebSites)
 	
 	CoTaskMemFree(pWorkerContext)
-	
-	Return 0
-	
-End Function
-
-Function CloserThread( _
-		ByVal lpParam As LPVOID _
-	)As DWORD
-	
-	Dim pCloserContext As CloserThreadContext Ptr = CPtr(CloserThreadContext Ptr, lpParam)
-	
-	' TODO Удалять контексты из списка все что старше трёх секунд пачками
-	Do
-		
-		Dim BytesTransferred As DWORD = Any
-		Dim CompletionKey As ULONG_PTR = Any
-		Dim pOverlapped As LPASYNCRESULTOVERLAPPED = Any
-		
-		Dim res As Integer = GetQueuedCompletionStatus( _
-			pCloserContext->hIOCompletionClosePort, _
-			@BytesTransferred, _
-			@CompletionKey, _
-			CPtr(LPOVERLAPPED Ptr, @pOverlapped), _
-			INFINITE _
-		)
-		If res = 0 Then
-			' TODO Обработать ошибку
-			DebugPrintDWORD(WStr(!"GetQueuedCompletionStatus CloserThread Error\t"), GetLastError())
-			If pOverlapped = NULL Then
-				Exit Do
-			End If
-			
-		Else
-			Const dwSleepTime As DWORD = 3000
-			Sleep_(dwSleepTime)
-			IAsyncResult_Release(pOverlapped->pIAsync)
-		End If
-		
-	Loop
-	
-	CloseHandle(pCloserContext->hThread)
-	
-	CoTaskMemFree(pCloserContext)
 	
 	Return 0
 	
