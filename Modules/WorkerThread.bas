@@ -188,7 +188,6 @@ Sub ProcessEndWriteError( _
 End Sub
 
 Function PrepareRequestResponse( _
-		ByVal hIoCompletionPort As HANDLE, _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
@@ -437,7 +436,6 @@ Function PrepareRequestResponse( _
 End Function
 
 Function ReadRequest( _
-		ByVal hIoCompletionPort As HANDLE, _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
@@ -502,30 +500,11 @@ Function ReadRequest( _
 			DebugPrintHttpReader(pIHttpReader2)
 			IHttpReader_Release(pIHttpReader2)
 			
-			' Dim pIMemoryAllocator As IMalloc Ptr = Any
-			' IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
-			
-			' Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
-			' Dim hr As HRESULT = CreateInstance( _
-				' pIMemoryAllocator, _
-				' @CLSID_ASYNCRESULT, _
-				' @IID_IMutableAsyncResult, _
-				' @pINewAsyncResult _
-			' )
-			' IMalloc_Release(pIMemoryAllocator)
-			
-			' If FAILED(hr) Then
-				' ProcessBeginReadError(pIContext, pIRequest, DataError.NotEnoughMemory)
-				' hrResult = hr
-			' Else
-				hrResult = PrepareRequestResponse( _
-					hIoCompletionPort, _
-					pIContext, _
-					pIAsyncResult, _
-					pIWebSites _
-				)
-				
-			' End If
+			hrResult = PrepareRequestResponse( _
+				pIContext, _
+				pIAsyncResult, _
+				pIWebSites _
+			)
 			
 	End Select
 	
@@ -534,7 +513,6 @@ Function ReadRequest( _
 End Function
 
 Function WriteResponse( _
-		ByVal hIoCompletionPort As HANDLE, _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
@@ -638,8 +616,6 @@ Function WriteResponse( _
 			End Scope
 			
 			If KeepAlive Then
-				' IClientContext_SetRequestProcessor(pIContext, NULL)
-				' IClientContext_SetRequestedFile(pIContext, NULL)
 				IClientContext_SetOperationCode(pIContext, OperationCodes.ReadRequest)
 				
 				Scope
@@ -676,18 +652,12 @@ Function WriteResponse( _
 End Function
 
 Function ProcessCloseOperation( _
-		ByVal hIoCompletionPort As HANDLE, _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	' Dim hClientContextHeap As HANDLE = Any
-	' IClientContext_GetClientContextHeap(pIContext, @hClientContextHeap)
-	
 	IClientContext_Release(pIContext)
 	IAsyncResult_Release(pIAsyncResult)
-	
-	' HeapDestroy(hClientContextHeap)
 	
 	Return S_FALSE
 	
@@ -715,26 +685,13 @@ Function WorkerThread( _
 		If res = 0 Then
 			' TODO Обработать ошибку
 			DebugPrintDWORD(WStr(!"GetQueuedCompletionStatus Error\t"), GetLastError())
-			' If dwError = ERROR_ABANDONED_WAIT_0 Then
-				' Exit Do
-			' End If
+			
 			If pOverlapped = NULL Then
 				Exit Do
 			End If
 			
-			' res = PostQueuedCompletionStatus( _
-				' pWorkerContext->hIOCompletionClosePort, _
-				' BytesTransferred, _
-				' CompletionKey, _
-				' CPtr(LPOVERLAPPED, pOverlapped) _
-			' )
-			' If res = 0 Then
-				' DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
-			' End If
-			IAsyncResult_Release(pOverlapped->pIAsync)
-			
 		Else
-			DebugPrintDWORD(WStr(!"\t\t\tBytesTransferred\t"), BytesTransferred)
+			DebugPrintDWORD(WStr(!"\t\t\t\tBytesTransferred\t"), BytesTransferred)
 			
 			If BytesTransferred <> 0 Then
 				Dim pIContext As IClientContext Ptr = Any
@@ -743,41 +700,31 @@ Function WorkerThread( _
 				Dim OpCode As OperationCodes = Any
 				IClientContext_GetOperationCode(pIContext, @OpCode)
 				
-				' Dim hrProcess As HRESULT = S_OK
-				
 				Select Case OpCode
 					
 					Case OperationCodes.ReadRequest
-						' hrProcess = ReadRequest( _
 						ReadRequest( _
-							pWorkerContext->hIOCompletionPort, _
 							pIContext, _
 							pOverlapped->pIAsync, _
 							pWorkerContext->pIWebSites _
 						)
 						
 					' Case OperationCodes.PrepareResponse
-						' hrProcess = PrepareRequestResponse( _
 						' PrepareRequestResponse( _
-							' pWorkerContext->hIOCompletionPort, _
 							' pIContext, _
 							' pOverlapped->pIAsync, _
 							' pWorkerContext->pIWebSites _
 						' )
 						
 					Case OperationCodes.WriteResponse
-						' hrProcess = WriteResponse( _
 						WriteResponse( _
-							pWorkerContext->hIOCompletionPort, _
 							pIContext, _
 							pOverlapped->pIAsync, _
 							pWorkerContext->pIWebSites _
 						)
 						
 					Case OperationCodes.OpClose
-						' hrProcess = ProcessCloseOperation( _
 						ProcessCloseOperation( _
-							pWorkerContext->hIOCompletionPort, _
 							pIContext, _
 							pOverlapped->pIAsync _
 						)
@@ -785,53 +732,12 @@ Function WorkerThread( _
 				End Select
 				
 				IClientContext_Release(pIContext)
-				IAsyncResult_Release(pOverlapped->pIAsync)
-				
-				' If FAILED(hrProcess) Then
-					' res = PostQueuedCompletionStatus( _
-						' pWorkerContext->hIOCompletionClosePort, _
-						' BytesTransferred, _
-						' CompletionKey, _
-						' CPtr(LPOVERLAPPED, pOverlapped) _
-					' )
-					' If res = 0 Then
-						' Dim dwError As DWORD = GetLastError()
-						' #ifndef WINDOWS_SERVICE
-							' DebugPrint(!"Error to Post CloserCompletionPort\t", dwError)
-						' #endif
-					' End If
-				' End If
-				
-			Else
-				
-				' Dim pIContext As IClientContext Ptr = Any
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				' IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
-				' Scope
-					' Dim pINetworkStream As INetworkStream Ptr = Any
-					' IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
-					
-					' INetworkStream_Close(pINetworkStream)
-					' INetworkStream_Release(pINetworkStream)
-				' End Scope
-				' IClientContext_Release(pIContext)
-				
-				' res = PostQueuedCompletionStatus( _
-					' pWorkerContext->hIOCompletionClosePort, _
-					' BytesTransferred, _
-					' CompletionKey, _
-					' CPtr(LPOVERLAPPED, pOverlapped) _
-				' )
-				' If res = 0 Then
-					' DebugPrintDWORD(WStr(!"Error to Post CloserCompletionPort\t"), GetLastError())
-				' End If
-				
-				
-				IAsyncResult_Release(pOverlapped->pIAsync)
 				
 			End If
 			
 		End If
+		
+		IAsyncResult_Release(pOverlapped->pIAsync)
 		
 	Loop
 	
@@ -872,12 +778,6 @@ Function CloserThread( _
 			End If
 			
 		Else
-			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			' Dim pIContext As IClientContext Ptr = Any
-			' IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
-			' IClientContext_Release(pIContext)
-			
 			Const dwSleepTime As DWORD = 3000
 			Sleep_(dwSleepTime)
 			IAsyncResult_Release(pOverlapped->pIAsync)

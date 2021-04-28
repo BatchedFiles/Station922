@@ -504,7 +504,7 @@ Function ProcessErrorAssociateWithIOCP( _
 		ByVal dwErrorAccept As Long _
 	)As HRESULT
 	
-	DebugPrintInteger(WStr(!"\r\n\r\n\r\nClient connected\t"), dwErrorAccept)
+	DebugPrintInteger(WStr(!"\t\t\t\tClient connected\t"), dwErrorAccept)
 	
 	Scope
 		If ClientSocket = INVALID_SOCKET Then
