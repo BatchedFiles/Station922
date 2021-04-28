@@ -5,30 +5,53 @@
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
-Type _HeapBSTR As OLECHAR Ptr
+' Declare Function HeapSysAllocString( _
+	' ByVal pIMemoryAllocator As IMalloc Ptr, _
+	' ByVal psz As Const WString Ptr _
+' )As HeapBSTR
 
-Type HeapBSTR As _HeapBSTR
+' Declare Function HeapSysAllocStringLen( _
+	' ByVal pIMemoryAllocator As IMalloc Ptr, _
+	' ByVal psz As Const WString Ptr, _
+	' ByVal ui As UINT _
+' )As HeapBSTR
 
-Type LPHEAPBSTR As _HeapBSTR Ptr
+' Declare Sub HeapSysFreeString( _
+	' ByVal bstrString As HeapBSTR _ 
+' )
+
+Type HeapWideString
+	Dim pIString As IString Ptr
+	Declare Constructor(ByVal pIMemoryAllocator As IMalloc Ptr, ByVal psz As Const WString Ptr)
+	Declare Constructor(ByVal pIMemoryAllocator As IMalloc Ptr, ByVal psz As Const WString Ptr, ByVal ui As UINT)
+	Declare Constructor(ByRef lhs As Const HeapWideString)
+	Declare Destructor
+	Declare Operator Let(ByRef lhs As Const WString)
+	Declare Operator Let(ByRef lhs As Const HeapWideString)
+	Declare Operator += (ByRef lhs As Const WString)
+	Declare Operator += (ByRef lhs As Const HeapWideString)
+	Declare Operator &= (ByRef lhs As Const WString)
+	Declare Operator &= (ByRef lhs As Const HeapWideString)
+End Type
+
+Declare Operator & (ByRef lhs As HeapWideString, ByRef rhs As HeapWideString)As HeapWideString
+Declare Operator & (ByRef lhs As HeapWideString, ByRef rhs As WString)As HeapWideString
+Declare Operator & (ByRef lhs As WString, ByRef rhs As HeapWideString)As HeapWideString
+Declare Operator + (ByRef lhs As HeapWideString, ByRef rhs As HeapWideString)As HeapWideString
+Declare Operator + (ByRef lhs As HeapWideString, ByRef rhs As WString)As HeapWideString
+Declare Operator + (ByRef lhs As WString, ByRef rhs As HeapWideString)As HeapWideString
+Declare Operator = (ByRef lhs As HeapWideString, ByRef rhs As HeapWideString)As Integer
+Declare Operator = (ByRef lhs As HeapWideString, ByRef rhs As WString)As Integer
+Declare Operator = (ByRef lhs As WString, ByRef rhs As HeapWideString)As Integer
+Declare Operator <> (ByRef lhs As HeapWideString, ByRef rhs As HeapWideString)As Integer
+Declare Operator <> (ByRef lhs As HeapWideString, ByRef rhs As WString)As Integer
+Declare Operator <> (ByRef lhs As WString, ByRef rhs As HeapWideString)As Integer
+Declare Operator Len(ByRef lhs As HeapWideString)As Integer
+Declare Operator * (ByRef lhs As HeapWideString)As WString Ptr
 
 Type InternalHeapBSTR As _InternalHeapBSTR
 
 Type LPInternalHeapBSTR As _InternalHeapBSTR Ptr
-
-Declare Function HeapSysAllocString( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	byval psz As Const WString Ptr _
-)As HeapBSTR
-
-Declare Function HeapSysAllocStringLen( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	byval psz As Const WString Ptr, _
-	ByVal ui As UINT _
-)As HeapBSTR
-
-Declare Sub HeapSysFreeString( _
-	byval bstrString As HeapBSTR _ 
-)
 
 Declare Function CreateInternalHeapBSTR( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -53,5 +76,10 @@ Declare Function InternalHeapBSTRAddRef( _
 Declare Function InternalHeapBSTRRelease( _
 	ByVal this As InternalHeapBSTR Ptr _
 )As ULONG
+
+Declare Function InternalHeapBSTRGetHeapBSTR( _
+	ByVal this As InternalHeapBSTR Ptr, _
+	ByVal pcHeapBSTR As HeapBSTR Const Ptr _
+)As HRESULT
 
 #endif

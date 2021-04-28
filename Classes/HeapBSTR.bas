@@ -140,7 +140,18 @@ Function InternalHeapBSTRRelease( _
 	
 End Function
 
+Function InternalHeapBSTRGetHeapBSTR( _
+		ByVal this As InternalHeapBSTR Ptr, _
+		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
+	)As HRESULT
+	
+	*pcHeapBSTR = @this->wszNullChar
+	
+	Return S_OK
+	
+End Function
 
+/'
 Function HeapSysAllocString( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr _
@@ -183,7 +194,7 @@ Sub HeapSysFreeString( _
 	End If
 	
 End Sub
-
+'/
 
 Function IStringQueryInterface( _
 		ByVal this As IString Ptr, _
@@ -205,8 +216,16 @@ Function IStringRelease( _
 	Return InternalHeapBSTRRelease(ContainerOf(this, InternalHeapBSTR, lpVtbl))
 End Function
 
+Function IStringGetHeapBSTR( _
+		ByVal this As IString Ptr, _
+		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
+	)As HRESULT
+	Return InternalHeapBSTRGetHeapBSTR(ContainerOf(this, InternalHeapBSTR, lpVtbl), pcHeapBSTR)
+End Function
+
 Dim GlobalInternalStringVirtualTable As Const IStringVirtualTable = Type( _
 	@IStringQueryInterface, _
 	@IStringAddRef, _
-	@IStringRelease _
+	@IStringRelease, _
+	@IStringGetHeapBSTR _
 )
