@@ -1,9 +1,9 @@
-#include once "PrivateHeapMemoryAllocator.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
 #include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 
-Extern GlobalPrivateHeapMemoryAllocatorVirtualTable As Const IPrivateHeapMemoryAllocatorVirtualTable
+Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
 Const PRIVATEHEAP_INITIALSIZE As DWORD = 80 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
@@ -13,8 +13,8 @@ Type MemoryRegion
 	Dim Size As Integer
 End Type
 
-Type _PrivateHeapMemoryAllocator
-	Dim lpVtbl As Const IPrivateHeapMemoryAllocatorVirtualTable Ptr
+Type _HeapMemoryAllocator
+	Dim lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
 	Dim pISpyObject As IMallocSpy Ptr
 	Dim MemoryAllocations As Integer
@@ -23,12 +23,12 @@ Type _PrivateHeapMemoryAllocator
 	Dim cbMemoryUsed As Integer
 End Type
 
-Sub InitializePrivateHeapMemoryAllocator( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Sub InitializeHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
-	this->lpVtbl = @GlobalPrivateHeapMemoryAllocatorVirtualTable
+	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
@@ -38,8 +38,8 @@ Sub InitializePrivateHeapMemoryAllocator( _
 	
 End Sub
 
-Sub UnInitializePrivateHeapMemoryAllocator( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr _
+Sub UnInitializeHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
@@ -49,10 +49,10 @@ Sub UnInitializePrivateHeapMemoryAllocator( _
 	
 End Sub
 
-Function CreatePrivateHeapMemoryAllocator( _
-	)As PrivateHeapMemoryAllocator Ptr
+Function CreateHeapMemoryAllocator( _
+	)As HeapMemoryAllocator Ptr
 	
-	DebugPrintInteger(WStr(!"PrivateHeapMemoryAllocator creating\t"), SizeOf(PrivateHeapMemoryAllocator))
+	DebugPrintInteger(WStr(!"HeapMemoryAllocator creating\t"), SizeOf(HeapMemoryAllocator))
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -63,29 +63,29 @@ Function CreatePrivateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	Dim this As PrivateHeapMemoryAllocator Ptr = HeapAlloc( _
+	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 		hHeap, _
 		HEAP_NO_SERIALIZE, _
-		SizeOf(PrivateHeapMemoryAllocator) _
+		SizeOf(HeapMemoryAllocator) _
 	)
 	If this = NULL Then
 		HeapDestroy(hHeap)
 		Return NULL
 	End If
 	
-	InitializePrivateHeapMemoryAllocator(this, hHeap)
+	InitializeHeapMemoryAllocator(this, hHeap)
 	
-	DebugPrintWString(WStr("PrivateHeapMemoryAllocator created"))
+	DebugPrintWString(WStr("HeapMemoryAllocator created"))
 	
 	Return this
 	
 End Function
 
-Sub DestroyPrivateHeapMemoryAllocator( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr _
+Sub DestroyHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroying"))
+	DebugPrintWString(WStr("HeapMemoryAllocator destroying"))
 	
 	If this->MemoryAllocations <> 0 Then
 		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak\t"), this->MemoryAllocations)
@@ -99,23 +99,23 @@ Sub DestroyPrivateHeapMemoryAllocator( _
 	
 	Dim hHeap As HANDLE = this->hHeap
 	
-	UnInitializePrivateHeapMemoryAllocator(this)
+	UnInitializeHeapMemoryAllocator(this)
 	
 	If hHeap <> NULL Then
 		HeapDestroy(hHeap)
 	End If
 	
-	DebugPrintWString(WStr("PrivateHeapMemoryAllocator destroyed"))
+	DebugPrintWString(WStr("HeapMemoryAllocator destroyed"))
 	
 End Sub
 
-Function PrivateHeapMemoryAllocatorQueryInterface( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Function HeapMemoryAllocatorQueryInterface( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IPrivateHeapMemoryAllocator, riid) Then
+	If IsEqualIID(@IID_IHeapMemoryAllocator, riid) Then
 		*ppv = @this->lpVtbl
 	Else
 		If IsEqualIID(@IID_IMalloc, riid) Then
@@ -130,14 +130,14 @@ Function PrivateHeapMemoryAllocatorQueryInterface( _
 		End If
 	End If
 	
-	PrivateHeapMemoryAllocatorAddRef(this)
+	HeapMemoryAllocatorAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
-Function PrivateHeapMemoryAllocatorAddRef( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr _
+Function HeapMemoryAllocatorAddRef( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
 	ReferenceCounterIncrement(@this->RefCounter)
@@ -146,15 +146,15 @@ Function PrivateHeapMemoryAllocatorAddRef( _
 	
 End Function
 
-Function PrivateHeapMemoryAllocatorRelease( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr _
+Function HeapMemoryAllocatorRelease( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
 	ReferenceCounterDecrement(@this->RefCounter)
 	
 	If this->RefCounter.Counter = 0 Then
 		
-		DestroyPrivateHeapMemoryAllocator(this)
+		DestroyHeapMemoryAllocator(this)
 		
 		Return 0
 	End If
@@ -163,8 +163,8 @@ Function PrivateHeapMemoryAllocatorRelease( _
 	
 End Function
 
-Function PrivateHeapMemoryAllocatorAlloc( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Function HeapMemoryAllocatorAlloc( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
 	
@@ -207,8 +207,8 @@ Function PrivateHeapMemoryAllocatorAlloc( _
 	
 End Function
 
-Function PrivateHeapMemoryAllocatorRealloc( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Function HeapMemoryAllocatorRealloc( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
@@ -228,8 +228,8 @@ Function PrivateHeapMemoryAllocatorRealloc( _
 	
 End Function
 
-Sub PrivateHeapMemoryAllocatorFree( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Sub HeapMemoryAllocatorFree( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
 	)
 	
@@ -261,8 +261,8 @@ Sub PrivateHeapMemoryAllocatorFree( _
 	
 End Sub
 
-Function PrivateHeapMemoryAllocatorGetSize( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Function HeapMemoryAllocatorGetSize( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
 	)As SIZE_T_
 	
@@ -289,8 +289,8 @@ Function PrivateHeapMemoryAllocatorGetSize( _
 	
 End Function
 
-Function PrivateHeapMemoryAllocatorDidAlloc( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Function HeapMemoryAllocatorDidAlloc( _
+		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
 	)As Long
 	
@@ -316,8 +316,8 @@ Function PrivateHeapMemoryAllocatorDidAlloc( _
 	
 End Function
 
-Sub PrivateHeapMemoryAllocatorHeapMinimize( _
-		ByVal this As PrivateHeapMemoryAllocator Ptr _
+Sub HeapMemoryAllocatorHeapMinimize( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
 	If this->pISpyObject <> NULL Then
@@ -332,88 +332,88 @@ Sub PrivateHeapMemoryAllocatorHeapMinimize( _
 	
 End Sub
 
-' Declare Function PrivateHeapMemoryAllocatorRegisterMallocSpy( _
-	' ByVal this As PrivateHeapMemoryAllocator Ptr, _
+' Declare Function HeapMemoryAllocatorRegisterMallocSpy( _
+	' ByVal this As HeapMemoryAllocator Ptr, _
 	' ByVal pMallocSpy As LPMALLOCSPY _
 ' )As HRESULT
 
-' Declare Function PrivateHeapMemoryAllocatorRevokeMallocSpy( _
-	' ByVal this As PrivateHeapMemoryAllocator Ptr _
+' Declare Function HeapMemoryAllocatorRevokeMallocSpy( _
+	' ByVal this As HeapMemoryAllocator Ptr _
 ' )As HRESULT
 
 
-Function IPrivateHeapMemoryAllocatorQueryInterface( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Function IHeapMemoryAllocatorQueryInterface( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return PrivateHeapMemoryAllocatorQueryInterface(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), riid, ppvObject)
+	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtbl), riid, ppvObject)
 End Function
 
-Function IPrivateHeapMemoryAllocatorAddRef( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr _
+Function IHeapMemoryAllocatorAddRef( _
+		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
-	Return PrivateHeapMemoryAllocatorAddRef(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl))
+	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
-Function IPrivateHeapMemoryAllocatorRelease( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr _
+Function IHeapMemoryAllocatorRelease( _
+		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
-	Return PrivateHeapMemoryAllocatorRelease(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl))
+	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
-Function IPrivateHeapMemoryAllocatorAlloc( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Function IHeapMemoryAllocatorAlloc( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
-	Return PrivateHeapMemoryAllocatorAlloc(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), cb)
+	Return HeapMemoryAllocatorAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), cb)
 End Function
 
-Function IPrivateHeapMemoryAllocatorRealloc( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Function IHeapMemoryAllocatorRealloc( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
-	Return PrivateHeapMemoryAllocatorRealloc(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), pv, cb)
+	Return HeapMemoryAllocatorRealloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv, cb)
 End Function
 
-Sub IPrivateHeapMemoryAllocatorFree( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Sub IHeapMemoryAllocatorFree( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
-	PrivateHeapMemoryAllocatorFree(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), pv)
+	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
 
-Function IPrivateHeapMemoryAllocatorGetSize( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Function IHeapMemoryAllocatorGetSize( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As SIZE_T_
-	Return PrivateHeapMemoryAllocatorGetSize(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), pv)
+	Return HeapMemoryAllocatorGetSize(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Function
 
-Function IPrivateHeapMemoryAllocatorDidAlloc( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr, _
+Function IHeapMemoryAllocatorDidAlloc( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As Long
-	Return PrivateHeapMemoryAllocatorDidAlloc(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl), pv)
+	Return HeapMemoryAllocatorDidAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Function
 
-Sub IPrivateHeapMemoryAllocatorHeapMinimize( _
-		ByVal this As IPrivateHeapMemoryAllocator Ptr _
+Sub IHeapMemoryAllocatorHeapMinimize( _
+		ByVal this As IHeapMemoryAllocator Ptr _
 	)
-	PrivateHeapMemoryAllocatorHeapMinimize(ContainerOf(this, PrivateHeapMemoryAllocator, lpVtbl))
+	HeapMemoryAllocatorHeapMinimize(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Sub
 
-Dim GlobalPrivateHeapMemoryAllocatorVirtualTable As Const IPrivateHeapMemoryAllocatorVirtualTable = Type( _
-	@IPrivateHeapMemoryAllocatorQueryInterface, _
-	@IPrivateHeapMemoryAllocatorAddRef, _
-	@IPrivateHeapMemoryAllocatorRelease, _
-	@IPrivateHeapMemoryAllocatorAlloc, _
-	@IPrivateHeapMemoryAllocatorRealloc, _
-	@IPrivateHeapMemoryAllocatorFree, _
-	@IPrivateHeapMemoryAllocatorGetSize, _
-	@IPrivateHeapMemoryAllocatorDidAlloc, _
-	@IPrivateHeapMemoryAllocatorHeapMinimize, _
+Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _
+	@IHeapMemoryAllocatorQueryInterface, _
+	@IHeapMemoryAllocatorAddRef, _
+	@IHeapMemoryAllocatorRelease, _
+	@IHeapMemoryAllocatorAlloc, _
+	@IHeapMemoryAllocatorRealloc, _
+	@IHeapMemoryAllocatorFree, _
+	@IHeapMemoryAllocatorGetSize, _
+	@IHeapMemoryAllocatorDidAlloc, _
+	@IHeapMemoryAllocatorHeapMinimize, _
 	NULL, _
 	NULL _
 )

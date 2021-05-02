@@ -1,4 +1,4 @@
-#include once "PrivateHeapMemoryAllocatorClassFactory.bi"
+#include once "HeapMemoryAllocatorClassFactory.bi"
 #include once "ObjectsCounter.bi"
 
 Extern GlobalClassFactoryTestComServerVirtualTable As Const IClassFactoryVtbl

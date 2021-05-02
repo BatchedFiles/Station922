@@ -61,7 +61,7 @@ DEFINE_CLSID(CLSID_NETWORKSTREAM, _
 )
 
 ' {48744EFA-75A5-4873-AD7E-AEC4F1AE3D6B}
-DEFINE_CLSID(CLSID_PRIVATEHEAPMEMORYALLOCATOR, _
+DEFINE_CLSID(CLSID_HEAPMEMORYALLOCATOR, _
 	&h48744efa, &h75a5, &h4873, &had, &h7e, &hae, &hc4, &hf1, &hae, &h3d, &h6b _
 )
 
@@ -176,7 +176,7 @@ DEFINE_IID(IID_INetworkStream, _
 )
 
 ' {6C7428A7-2E13-453C-90E9-534281710B85}
-DEFINE_IID(IID_IPrivateHeapMemoryAllocator, _
+DEFINE_IID(IID_IHeapMemoryAllocator, _
 	&h6c7428a7, &h2e13, &h453c, &h90, &he9, &h53, &h42, &h81, &h71, &hb, &h85 _
 )
 

@@ -1,72 +1,72 @@
-#ifndef PRIVATEHEAPMEMORYALLOCATOR_BI
-#define PRIVATEHEAPMEMORYALLOCATOR_BI
+#ifndef HEAPMEMORYALLOCATOR_BI
+#define HEAPMEMORYALLOCATOR_BI
 
-#include once "IPrivateHeapMemoryAllocator.bi"
+#include once "IHeapMemoryAllocator.bi"
 
-Extern CLSID_PRIVATEHEAPMEMORYALLOCATOR Alias "CLSID_PRIVATEHEAPMEMORYALLOCATOR" As Const CLSID
+Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
 
-Type PrivateHeapMemoryAllocator As _PrivateHeapMemoryAllocator
+Type HeapMemoryAllocator As _HeapMemoryAllocator
 
-Type LPPrivateHeapMemoryAllocator As _PrivateHeapMemoryAllocator Ptr
+Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
 
-Declare Function CreatePrivateHeapMemoryAllocator( _
-)As PrivateHeapMemoryAllocator Ptr
+Declare Function CreateHeapMemoryAllocator( _
+)As HeapMemoryAllocator Ptr
 
-Declare Sub DestroyPrivateHeapMemoryAllocator( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr _
+Declare Sub DestroyHeapMemoryAllocator( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )
 
-Declare Function PrivateHeapMemoryAllocatorQueryInterface( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorQueryInterface( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal riid As REFIID, _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Function PrivateHeapMemoryAllocatorAddRef( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr _
+Declare Function HeapMemoryAllocatorAddRef( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )As ULONG
 
-Declare Function PrivateHeapMemoryAllocatorRelease( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr _
+Declare Function HeapMemoryAllocatorRelease( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )As ULONG
 
-Declare Function PrivateHeapMemoryAllocatorAlloc( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorAlloc( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal cb As SIZE_T_ _
 )As Any Ptr
 
-Declare Function PrivateHeapMemoryAllocatorRealloc( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorRealloc( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal pv As Any Ptr, _
 	ByVal cb As SIZE_T_ _
 )As Any Ptr
 
-Declare Sub PrivateHeapMemoryAllocatorFree( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Sub HeapMemoryAllocatorFree( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal pv As Any Ptr _
 )
 
-Declare Function PrivateHeapMemoryAllocatorGetSize( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorGetSize( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal pv As Any Ptr _
 )As SIZE_T_
 
-Declare Function PrivateHeapMemoryAllocatorDidAlloc( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorDidAlloc( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal pv As Any Ptr _
 )As Long
 
-Declare Sub PrivateHeapMemoryAllocatorHeapMinimize( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr _
+Declare Sub HeapMemoryAllocatorHeapMinimize( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )
 
-Declare Function PrivateHeapMemoryAllocatorRegisterMallocSpy( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr, _
+Declare Function HeapMemoryAllocatorRegisterMallocSpy( _
+	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal pMallocSpy As LPMALLOCSPY _
 )As HRESULT
 
-Declare Function PrivateHeapMemoryAllocatorRevokeMallocSpy( _
-	ByVal this As PrivateHeapMemoryAllocator Ptr _
+Declare Function HeapMemoryAllocatorRevokeMallocSpy( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )As HRESULT
 
 #endif

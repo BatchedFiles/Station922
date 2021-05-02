@@ -6,7 +6,7 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
-#include once "PrivateHeapMemoryAllocator.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "RequestedFile.bi"
 #include once "ServerResponse.bi"
 #include once "WebServer.bi"
@@ -205,15 +205,15 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_PRIVATEHEAPMEMORYALLOCATOR, rclsid) Then
-		Dim pAllocator As PrivateHeapMemoryAllocator Ptr = CreatePrivateHeapMemoryAllocator()
+	If IsEqualCLSID(@CLSID_HEAPMEMORYALLOCATOR, rclsid) Then
+		Dim pAllocator As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator()
 		If pAllocator = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim hr As HRESULT = PrivateHeapMemoryAllocatorQueryInterface(pAllocator, riid, ppv)
+		Dim hr As HRESULT = HeapMemoryAllocatorQueryInterface(pAllocator, riid, ppv)
 		If FAILED(hr) Then
-			DestroyPrivateHeapMemoryAllocator(pAllocator)
+			DestroyHeapMemoryAllocator(pAllocator)
 		End If
 		
 		Return hr
