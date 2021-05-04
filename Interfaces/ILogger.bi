@@ -13,17 +13,17 @@ Extern IID_ILogger Alias "IID_ILogger" As Const IID
 Type ILoggerVirtualTable
 	
 	Dim QueryInterface As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal this As ILogger Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
 	Dim AddRef As Function( _
-		ByVal this As IClientUri Ptr _
+		ByVal this As ILogger Ptr _
 	)As ULONG
 	
 	Dim Release As Function( _
-		ByVal this As IClientUri Ptr _
+		ByVal this As ILogger Ptr _
 	)As ULONG
 	
 End Type
