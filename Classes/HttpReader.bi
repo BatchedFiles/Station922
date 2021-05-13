@@ -2,6 +2,7 @@
 #define HTTPREADER_BI
 
 #include once "IHttpReader.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
@@ -10,6 +11,7 @@ Type HttpReader As _HttpReader
 Type LPHttpReader As _HttpReader Ptr
 
 Declare Function CreateHttpReader( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As HttpReader Ptr
 

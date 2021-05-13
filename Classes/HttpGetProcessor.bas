@@ -8,7 +8,6 @@
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
 #include once "Mime.bi"
-#include once "PrintDebugInfo.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
 #include once "ReferenceCounter.bi"
@@ -25,6 +24,7 @@ Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 Type _HttpGetProcessor
 	Dim lpVtbl As Const IRequestProcessorVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim FileHandle As HANDLE
 	Dim ZipFileHandle As HANDLE
@@ -157,11 +157,14 @@ End Sub
 
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->FileHandle = INVALID_HANDLE_VALUE
@@ -184,14 +187,19 @@ Sub UnInitializeHttpGetProcessor( _
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateHttpGetProcessor( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpGetProcessor Ptr
 	
-	DebugPrintInteger(WStr(!"HttpGetProcessor creating\t"), SizeOf(HttpGetProcessor))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(HttpGetProcessor)
+	ILogger_LogDebug(pILogger, WStr(!"HttpGetProcessor creating\t"), vtAllocatedBytes)
 	
 	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -201,9 +209,11 @@ Function CreateHttpGetProcessor( _
 		Return NULL
 	End If
 	
-	InitializeHttpGetProcessor(this, pIMemoryAllocator)
+	InitializeHttpGetProcessor(this, pILogger, pIMemoryAllocator)
 	
-	DebugPrintWString(WStr("HttpGetProcessor created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
 	
 	Return this
 	
@@ -213,8 +223,13 @@ Sub DestroyHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
 	
-	DebugPrintWString(WStr("HttpGetProcessor destroying"))
+	' DebugPrintWString(WStr("HttpGetProcessor destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("HttpGetProcessor destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -222,9 +237,10 @@ Sub DestroyHttpGetProcessor( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("HttpGetProcessor destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("HttpGetProcessor destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -439,6 +455,7 @@ Function HttpGetProcessorPrepare( _
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		this->pILogger, _
 		pc->pIMemoryAllocator, _
 		@CLSID_ARRAYSTRINGWRITER, _
 		@IID_IArrayStringWriter, _
@@ -584,6 +601,7 @@ Function HttpGetProcessorBeginProcess( _
 	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
 		@IID_IMutableAsyncResult, _

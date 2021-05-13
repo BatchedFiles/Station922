@@ -1,11 +1,13 @@
 #include once "IRunnable.bi"
 #include once "CreateInstance.bi"
-#include once "PrintDebugInfo.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
+Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 
 Type ServerContext
 	Dim hStopEvent As HANDLE
+	Dim pILogger As ILogger Ptr
 	Dim pIWebServer As IRunnable Ptr
 End Type
 
@@ -16,7 +18,10 @@ Function RunnableStatusHandler( _
 	
 	Dim pContext As ServerContext Ptr = Context
 	
-	DebugPrintHRESULT(WStr(!"RunnableStatusHandler\t"), Status)
+	Dim vtSCode As VARIANT = Any
+	vtSCode.vt = VT_ERROR
+	vtSCode.scode = Status
+	ILogger_LogDebug(pContext->pILogger, WStr(!"RunnableStatusHandler\t"), vtSCode)
 	
 	If FAILED(Status) Then
 		SetEvent(pContext->hStopEvent)
@@ -38,14 +43,28 @@ Function wMain()As Long
 		Return 1
 	End If
 	
+	Dim pILogger As ILogger Ptr = Any
+	hr = CreateLoggerInstance( _
+		pIMemoryAllocator, _
+		@CLSID_CONSOLELOGGER, _
+		@IID_ILogger, _
+		@pILogger _
+	)
+	If FAILED(hr) Then
+		IMalloc_Release(pIMemoryAllocator)
+		Return 1
+	End If
+	
 	Dim pIWebServer As IRunnable Ptr = Any
 	hr = CreateInstance( _
+		pILogger, _
 		pIMemoryAllocator, _
 		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
 		@pIWebServer _
 	)
 	If FAILED(hr) Then
+		ILogger_Release(pILogger)
 		IMalloc_Release(pIMemoryAllocator)
 		Return 1
 	End If
@@ -66,6 +85,7 @@ Function wMain()As Long
 	Dim Context As ServerContext = Any
 	With Context
 		.hStopEvent = hStopEvent
+		.pILogger = pILogger
 		.pIWebServer = pIWebServer
 	End With
 	
@@ -76,21 +96,7 @@ Function wMain()As Long
 		Return 2
 	End If
 	
-	Scope
-		' Const BufferLength As Integer = 7
-		' Dim Buffer As WString * (BufferLength + 1) = Any
-		' Dim NumberOfCharsRead As DWORD = Any
-		' ReadConsole( _
-			' GetStdHandle(STD_INPUT_HANDLE), _
-			' @Buffer, _
-			' BufferLength, _
-			' @NumberOfCharsRead, _
-			' NULL _
-		' )
-		
-		WaitForSingleObject(hStopEvent, INFINITE)
-		
-	End Scope
+	WaitForSingleObject(hStopEvent, INFINITE)
 	
 	hr = IRunnable_Stop(pIWebServer)
 	If FAILED(hr) Then
@@ -98,6 +104,7 @@ Function wMain()As Long
 	End If
 	
 	IRunnable_Release(pIWebServer)
+	ILogger_Release(pILogger)
 	
 	Return 0
 	

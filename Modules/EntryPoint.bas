@@ -1,6 +1,5 @@
 #include once "windows.bi"
 #include once "win\winsock2.bi"
-#include once "PrintDebugInfo.bi"
 
 Declare Function wMain()As Long
 

@@ -2,6 +2,7 @@
 #define CLIENTREQUEST_BI
 
 #include once "IClientRequest.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 
@@ -10,6 +11,7 @@ Type ClientRequest As _ClientRequest
 Type LPClientRequest As _ClientRequest Ptr
 
 Declare Function CreateClientRequest( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ClientRequest Ptr
 

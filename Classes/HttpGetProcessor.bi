@@ -2,6 +2,7 @@
 #define HTTPGETPROCESSOR_BI
 
 #include once "IRequestProcessor.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_HTTPGETPROCESSOR Alias "CLSID_HTTPGETPROCESSOR" As Const CLSID
 
@@ -10,6 +11,7 @@ Type HttpGetProcessor As _HttpGetProcessor
 Type LPHttpGetProcessor As _HttpGetProcessor Ptr
 
 Declare Function CreateHttpGetProcessor( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As HttpGetProcessor Ptr
 

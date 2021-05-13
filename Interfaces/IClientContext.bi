@@ -3,6 +3,7 @@
 
 #include once "IClientRequest.bi"
 #include once "IHttpReader.bi"
+#include once "ILogger.bi"
 #include once "INetworkStream.bi"
 #include once "IRequestedFile.bi"
 #include once "IRequestProcessor.bi"
@@ -59,11 +60,6 @@ Type IClientContextVirtualTable
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIMemoryAllocator As IMalloc Ptr Ptr _
 	)As HRESULT
-	
-	' Dim SetMemoryAllocator As Function( _
-		' ByVal this As IClientContext Ptr, _
-		' ByVal pIMemoryAllocator As IMalloc Ptr _
-	' )As HRESULT
 	
 	Dim GetNetworkStream As Function( _
 		ByVal this As IClientContext Ptr, _
@@ -165,6 +161,11 @@ Type IClientContextVirtualTable
 		ByVal Code As OperationCodes _
 	)As HRESULT
 	
+	Dim GetLogger As Function( _
+		ByVal this As IClientContext Ptr, _
+		ByVal ppILogger As ILogger Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IClientContext_
@@ -179,17 +180,8 @@ End Type
 ' #define IClientContext_GetRemoteAddressLength(this, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddressLength(this, pRemoteAddressLength)
 #define IClientContext_SetRemoteAddressLength(this, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddressLength(this, RemoteAddressLength)
 #define IClientContext_GetMemoryAllocator(this, ppIMemoryAllocator) (this)->lpVtbl->GetMemoryAllocator(this, ppIMemoryAllocator)
-' #define IClientContext_SetMemoryAllocator(this, pIMemoryAllocator) (this)->lpVtbl->SetMemoryAllocator(this, pIMemoryAllocator)
 #define IClientContext_GetNetworkStream(this, ppINetworkStream) (this)->lpVtbl->GetNetworkStream(this, ppINetworkStream)
 ' #define IClientContext_SetNetworkStream(this, pINetworkStream) (this)->lpVtbl->SetNetworkStream(this, pINetworkStream)
-
-#ifdef PERFORMANCE_TESTING
-#define IClientContext_GetFrequency(this, pFrequency) (this)->lpVtbl->GetFrequency(this, pFrequency)
-#define IClientContext_SetFrequency(this, Frequency) (this)->lpVtbl->SetFrequency(this, Frequency)
-#define IClientContext_GetStartTicks(this, pStartTicks) (this)->lpVtbl->GetStartTicks(this, pStartTicks)
-#define IClientContext_SetStartTicks(this, StartTicks) (this)->lpVtbl->SetStartTicks(this, StartTicks)
-#endif
-
 #define IClientContext_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 ' #define IClientContext_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IClientContext_GetServerResponse(this, ppIResponse) (this)->lpVtbl->GetServerResponse(this, ppIResponse)
@@ -204,5 +196,6 @@ End Type
 #define IClientContext_SetRequestProcessor(this, pIProcessor) (this)->lpVtbl->SetRequestProcessor(this, pIProcessor)
 #define IClientContext_GetOperationCode(this, pCode) (this)->lpVtbl->GetOperationCode(this, pCode)
 #define IClientContext_SetOperationCode(this, Code) (this)->lpVtbl->SetOperationCode(this, Code)
+#define IClientContext_GetLogger(this, ppILogger) (this)->lpVtbl->GetLogger(this, ppILogger)
 
 #endif

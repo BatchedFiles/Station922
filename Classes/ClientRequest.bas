@@ -4,7 +4,6 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HttpConst.bi"
-#include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 #include once "WebUtils.bi"
 
@@ -15,6 +14,7 @@ Type _ClientRequest
 	Dim lpVtbl As Const IClientRequestVirtualTable Ptr
 	Dim lpStringableVtbl As Const IStringableVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pIReader As ITextReader Ptr
 	Dim RequestedLine As WString Ptr
@@ -140,12 +140,15 @@ End Function
 
 Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -173,14 +176,19 @@ Sub UnInitializeClientRequest( _
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateClientRequest( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientRequest Ptr
 	
-	DebugPrintInteger(WStr(!"ClientRequest creating\t"), SizeOf(ClientRequest))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(ClientRequest)
+	ILogger_LogDebug(pILogger, WStr(!"ClientRequest creating\t"), vtAllocatedBytes)
 	
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -190,9 +198,11 @@ Function CreateClientRequest( _
 		Return NULL
 	End If
 	
-	InitializeClientRequest(this, pIMemoryAllocator)
+	InitializeClientRequest(this, pILogger, pIMemoryAllocator)
 	
-	DebugPrintWString(WStr("ClientRequest created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
 	
 	Return this
 	
@@ -202,8 +212,12 @@ Sub DestroyClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-	DebugPrintWString(WStr("ClientRequest destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("ClientRequest destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -211,9 +225,10 @@ Sub DestroyClientRequest( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("ClientRequest destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("ClientRequest destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 

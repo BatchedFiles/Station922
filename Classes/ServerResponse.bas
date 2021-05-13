@@ -5,7 +5,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
-#include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 #include once "Resources.RH"
 #include once "StringConstants.bi"
@@ -20,40 +19,37 @@ Type _ServerResponse
 	Dim lpVtbl As Const IServerResponseVirtualTable Ptr
 	Dim lpStringableVtbl As Const IStringableVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
-	
 	' Буфер заголовков ответа
 	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
 	' Указатель на свободное место в буфере заголовков ответа
 	Dim StartResponseHeadersPtr As WString Ptr
 	' Заголовки ответа
 	Dim ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
-	
 	Dim HttpVersion As HttpVersions
 	Dim StatusCode As HttpStatusCodes
 	Dim StatusDescription As WString Ptr
-	
 	Dim SendOnlyHeaders As Boolean
 	Dim KeepAlive As Boolean
-	
 	' Сжатие данных, поддерживаемое сервером
 	Dim ResponseZipEnable As Boolean
 	Dim ResponseZipMode As ZipModes
-	
 	Dim Mime As MimeType
-	
 	Dim ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
-	
 End Type
 
 Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalServerResponseVirtualTable
 	this->lpStringableVtbl = @GlobalServerResponseStringableVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -78,14 +74,19 @@ Sub UnInitializeServerResponse( _
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateServerResponse( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
-	DebugPrintInteger(WStr(!"ServerResponse creating\t"), SizeOf(ServerResponse))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(ServerResponse)
+	ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
 	
 	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -95,9 +96,11 @@ Function CreateServerResponse( _
 		Return NULL
 	End If
 	
-	InitializeServerResponse(this, pIMemoryAllocator)
+	InitializeServerResponse(this, pILogger, pIMemoryAllocator)
 	
-	DebugPrintWString(WStr("ServerResponse created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
 	
 	Return this
 	
@@ -107,8 +110,12 @@ Sub DestroyServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-	DebugPrintWString(WStr("ServerResponse destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("ServerResponse destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -116,9 +123,10 @@ Sub DestroyServerResponse( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("ServerResponse destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("ServerResponse destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -469,6 +477,7 @@ Function ServerResponseStringableToString( _
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_ARRAYSTRINGWRITER, _
 		@IID_IArrayStringWriter, _

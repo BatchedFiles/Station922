@@ -2,6 +2,7 @@
 #define ASYNCRESULT_BI
 
 #include once "IMutableAsyncResult.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
@@ -10,6 +11,7 @@ Type AsyncResult As _AsyncResult
 Type LPAsyncResult As _AsyncResult Ptr
 
 Declare Function CreateAsyncResult( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As AsyncResult Ptr
 

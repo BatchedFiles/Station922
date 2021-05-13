@@ -2,6 +2,7 @@
 #define BATCHEDFILES_HEAPBSTR_BI
 
 #include once "IString.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
@@ -19,6 +20,19 @@ Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 ' Declare Sub HeapSysFreeString( _
 	' ByVal bstrString As HeapBSTR _ 
 ' )
+/'
+typedef struct {
+#ifdef _WIN64
+    DWORD pad;
+#endif
+    DWORD size;
+    union {
+        char ptr[1];
+        WCHAR str[1];
+        DWORD dwptr[1];
+    } u;
+} bstr_t;
+'/
 
 Type HeapWideString
 	Dim pIString As IString Ptr
@@ -54,9 +68,10 @@ Type InternalHeapBSTR As _InternalHeapBSTR
 Type LPInternalHeapBSTR As _InternalHeapBSTR Ptr
 
 Declare Function CreateInternalHeapBSTR( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		byval pwsz As Const WString Ptr, _
-		ByVal Length As UINT _
+	ByVal pILogger As ILogger Ptr, _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	byval pwsz As Const WString Ptr, _
+	ByVal Length As UINT _
 )As InternalHeapBSTR Ptr
 
 Declare Sub DestroyInternalHeapBSTR( _

@@ -2,6 +2,7 @@
 #define ARRAYSTRINGWRITER_BI
 
 #include once "IArrayStringWriter.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
@@ -10,6 +11,7 @@ Type ArrayStringWriter As _ArrayStringWriter
 Type LPArrayStringWriter As _ArrayStringWriter Ptr
 
 Declare Function CreateArrayStringWriter( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ArrayStringWriter Ptr
 

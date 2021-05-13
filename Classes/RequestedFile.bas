@@ -1,7 +1,6 @@
 #include once "RequestedFile.bi"
 #include once "ContainerOf.bi"
 #include once "HttpConst.bi"
-#include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 
 Extern GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable
@@ -14,25 +13,25 @@ Type _RequestedFile
 	Dim lpVtbl As Const IRequestedFileVirtualTable Ptr
 	Dim lpSendableVtbl As Const ISendableVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
-	
 	Dim FilePath As WString * (REQUESTEDFILE_MAXPATHLENGTH + 1)
 	Dim PathTranslated As WString * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
-	
 	Dim LastFileModifiedDate As FILETIME
-	
 	Dim FileHandle As Handle
-	
 End Type
 
 Sub InitializeRequestedFile( _
 		ByVal this As RequestedFile Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
 	this->lpSendableVtbl = @GlobalRequestedFileSendableVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -50,7 +49,10 @@ Sub UnInitializeRequestedFile( _
 		If CloseHandle(this->FileHandle) = 0 Then
 			Dim dwError As DWORD = GetLastError()
 			If dwError <> ERROR_SUCCESS Then
-				DebugPrintDWORD(WStr(!"RequestedFile Error Close FileHandle\t"), dwError)
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_UI4
+				vtErrorCode.ulVal = dwError
+				ILogger_LogDebug(this->pILogger, WStr(!"RequestedFile Error Close FileHandle\t"), vtErrorCode)
 			End If
 		End If
 		this->FileHandle = INVALID_HANDLE_VALUE
@@ -58,14 +60,19 @@ Sub UnInitializeRequestedFile( _
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateRequestedFile( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As RequestedFile Ptr
 	
-	DebugPrintInteger(WStr(!"RequestedFile creating\t"), SizeOf(RequestedFile))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(RequestedFile)
+	ILogger_LogDebug(pILogger, WStr(!"RequestedFile creating\t"), vtAllocatedBytes)
 	
 	Dim this As RequestedFile Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -75,9 +82,11 @@ Function CreateRequestedFile( _
 		Return NULL
 	End If
 	
-	InitializeRequestedFile(this, pIMemoryAllocator)
+	InitializeRequestedFile(this, pILogger, pIMemoryAllocator)
 	
-	DebugPrintWString(WStr("RequestedFile created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
 	
 	Return this
 	
@@ -87,8 +96,13 @@ Sub DestroyRequestedFile( _
 		ByVal this As RequestedFile Ptr _
 	)
 	
-	DebugPrintWString(WStr("RequestedFile destroying"))
+	' DebugPrintWString(WStr("RequestedFile destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("RequestedFile destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -96,9 +110,10 @@ Sub DestroyRequestedFile( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("RequestedFile destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("RequestedFile destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 

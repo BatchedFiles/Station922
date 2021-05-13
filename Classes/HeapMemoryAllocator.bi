@@ -2,6 +2,7 @@
 #define HEAPMEMORYALLOCATOR_BI
 
 #include once "IHeapMemoryAllocator.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
 
@@ -10,6 +11,7 @@ Type HeapMemoryAllocator As _HeapMemoryAllocator
 Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
 
 Declare Function CreateHeapMemoryAllocator( _
+	ByVal pILogger As ILogger Ptr _
 )As HeapMemoryAllocator Ptr
 
 Declare Sub DestroyHeapMemoryAllocator( _

@@ -7,7 +7,6 @@
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
 #include once "Mime.bi"
-#include once "PrintDebugInfo.bi"
 #include once "StringConstants.bi"
 #include once "Station922Uri.bi"
 #include once "WriteHttpError.bi"
@@ -205,6 +204,7 @@ Sub GetHttpDate(ByVal Buffer As WString Ptr)
 	
 End Sub
 
+/'
 Function HttpAuthUtil( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
@@ -289,15 +289,29 @@ Function HttpAuthUtil( _
 		End If
 	End Scope
 	
+	Dim pILogger As ILogger Ptr = Any
+	Dim hrCreateLogger As HRESULT = CreateLoggerInstance( _
+		pIMemoryAllocator, _
+		@CLSID_CONSOLELOGGER, _
+		@IID_ILogger, _
+		@pILogger _
+	)
+	If FAILED(hrCreateLogger) Then
+		IMalloc_Release(pIMemoryAllocator)
+		Return False
+	End If
+	
 	Dim pIConfig As IWebServerConfiguration Ptr = Any
 	Scope
 		Dim hr As HRESULT = CreateInstance( _
+			pILogger, _
 			pIMemoryAllocator, _
 			@CLSID_WEBSERVERINICONFIGURATION, _
 			@IID_IWebServerConfiguration, _
 			@pIConfig _
 		)
 		If FAILED(hr) Then
+			ILogger_Release(pILogger)
 			IMalloc_Release(pIMemoryAllocator)
 			Return False
 		End If
@@ -313,17 +327,20 @@ Function HttpAuthUtil( _
 		)
 		If FAILED(hr) Then
 			IWebServerConfiguration_Release(pIConfig)
+			ILogger_Release(pILogger)
 			IMalloc_Release(pIMemoryAllocator)
 			Return False
 		End If
 	End Scope
 	
 	IWebServerConfiguration_Release(pIConfig)
+	ILogger_Release(pILogger)
 	IMalloc_Release(pIMemoryAllocator)
 	
 	Return IsPasswordValid
 	
 End Function
+'/
 
 Sub GetETag( _
 		ByVal wETag As WString Ptr, _
@@ -444,7 +461,9 @@ Function AllResponseHeadersToBytes( _
 		0 _
 	)
 	
-	DebugPrintHttpStatusCode(pHeadersBuffer, StatusCode)
+	' TODO Вывести в лог байты ответа
+	' Dim b As BSTR = SysAllocString(pHeadersBuffer)
+	' DebugPrintHttpStatusCode(pHeadersBuffer, StatusCode)
 	
 	IStringable_Release(pIStringable)
 	

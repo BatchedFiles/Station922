@@ -3,7 +3,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Network.bi"
-#include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
@@ -13,17 +12,21 @@ Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 Type _NetworkStream
 	Dim lpVtbl As Const INetworkStreamVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim ClientSocket As SOCKET
 End Type
 
 Sub InitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->ClientSocket = INVALID_SOCKET
@@ -40,14 +43,19 @@ Sub UnInitializeNetworkStream( _
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateNetworkStream( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As NetworkStream Ptr
 	
-	DebugPrintInteger(WStr(!"NetworkStream creating\t"), SizeOf(NetworkStream))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(NetworkStream)
+	ILogger_LogDebug(pILogger, WStr(!"NetworkStream creating\t"), vtAllocatedBytes)
 	
 	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -57,9 +65,11 @@ Function CreateNetworkStream( _
 		Return NULL
 	End If
 	
-	InitializeNetworkStream(this, pIMemoryAllocator)
+	InitializeNetworkStream(this, pILogger, pIMemoryAllocator)
 	
-	DebugPrintWString(WStr("NetworkStream created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("NetworkStream created"), vtEmpty)
 	
 	Return this
 	
@@ -69,8 +79,12 @@ Sub DestroyNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
-	DebugPrintWString(WStr("NetworkStream destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("NetworkStream destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -78,9 +92,10 @@ Sub DestroyNetworkStream( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("NetworkStream destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("NetworkStream destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -282,6 +297,7 @@ Function NetworkStreamBeginRead( _
 	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
 		@IID_IMutableAsyncResult, _

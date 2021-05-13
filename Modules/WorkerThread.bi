@@ -2,10 +2,12 @@
 #define WORKERTHREAD_BI
 
 #include once "IWebSiteCollection.bi"
+#include once "ILogger.bi"
 
 Type WorkerThreadContext
 	Dim hIOCompletionPort As HANDLE
 	Dim hIOCompletionClosePort As HANDLE
+	Dim pILogger As ILogger Ptr
 	Dim pIWebSites As IWebSiteCollection Ptr
 	Dim hThread As HANDLE
 	Dim ThreadId As DWORD

@@ -1,6 +1,5 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
-#include once "PrintDebugInfo.bi"
 #include once "ReferenceCounter.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
@@ -16,6 +15,7 @@ End Type
 Type _HeapMemoryAllocator
 	Dim lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	Dim RefCounter As ReferenceCounter
+	Dim pILogger As ILogger Ptr
 	Dim pISpyObject As IMallocSpy Ptr
 	Dim MemoryAllocations As Integer
 	Dim hHeap As HANDLE
@@ -25,11 +25,14 @@ End Type
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	ReferenceCounterInitialize(@this->RefCounter)
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
 	this->hHeap = hHeap
@@ -46,13 +49,18 @@ Sub UnInitializeHeapMemoryAllocator( _
 	End If
 	
 	ReferenceCounterUnInitialize(@this->RefCounter)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateHeapMemoryAllocator( _
+		ByVal pILogger As ILogger Ptr _
 	)As HeapMemoryAllocator Ptr
 	
-	DebugPrintInteger(WStr(!"HeapMemoryAllocator creating\t"), SizeOf(HeapMemoryAllocator))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr(!"HeapMemoryAllocator creating\t"), vtAllocatedBytes)
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -73,9 +81,11 @@ Function CreateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	InitializeHeapMemoryAllocator(this, hHeap)
+	InitializeHeapMemoryAllocator(this, pILogger, hHeap)
 	
-	DebugPrintWString(WStr("HeapMemoryAllocator created"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator created"), vtEmpty)
 	
 	Return this
 	
@@ -85,14 +95,30 @@ Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	DebugPrintWString(WStr("HeapMemoryAllocator destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("HeapMemoryAllocator destroying"), vtEmpty)
+	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	
 	If this->MemoryAllocations <> 0 Then
-		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak\t"), this->MemoryAllocations)
-		DebugPrintInteger(WStr(!"\t\t\t\t\tMemoryLeak Size\t"), this->cbMemoryUsed)
+		Dim vtMemoryLeaksCount As VARIANT = Any
+		vtMemoryLeaksCount.vt = VT_I4
+		vtMemoryLeaksCount.lVal = this->MemoryAllocations
+		ILogger_LogDebug(pILogger, WStr("\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
+		
+		Dim vtMemoryLeaksSize As VARIANT = Any
+		vtMemoryLeaksSize.vt = VT_I8
+		vtMemoryLeaksSize.llVal = this->cbMemoryUsed
+		ILogger_LogDebug(pILogger, WStr("\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
+		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory <> 0 Then
-				DebugPrintInteger(WStr(!"\t\t\t\tMemory Size  "), this->Memoryes(i).Size)
+				Dim vtMemorySize As VARIANT = Any
+				vtMemorySize.vt = VT_I8
+				vtMemorySize.llVal = this->Memoryes(i).Size
+				ILogger_LogDebug(pILogger, WStr("\t\t\t\tMemory Size\t"), vtMemorySize)
 			End If
 		Next
 	End If
@@ -105,7 +131,9 @@ Sub DestroyHeapMemoryAllocator( _
 		HeapDestroy(hHeap)
 	End If
 	
-	DebugPrintWString(WStr("HeapMemoryAllocator destroyed"))
+	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator destroyed"), vtEmpty)
+	
+	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -172,22 +200,21 @@ Function HeapMemoryAllocatorAlloc( _
 		cb = IMallocSpy_PreAlloc(this->pISpyObject, cb)
 	End If
 	
-	Dim pMemory As Any Ptr = Any
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = cb
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		pMemory = HeapAlloc( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE, _
-			cb _
-		)
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	Dim pMemory As Any Ptr = HeapAlloc( _
+		this->hHeap, _
+		HEAP_NO_SERIALIZE, _
+		cb _
+	)
 	
 	If pMemory = NULL Then
-		DebugPrintInteger(WStr(!"\t\t\t\tAlloc Memory Failed\t"), cb)
+		ILogger_LogDebug(this->pILogger, WStr(!"\t\t\t\tAllocMemory Failed\t"), vtAllocatedBytes)
 	Else
-		DebugPrintInteger(WStr(!"\t\t\t\tAlloc Memory Size\t"), cb)
+		ILogger_LogDebug(this->pILogger, WStr(!"\t\t\t\tAllocMemory Succeeded\t"), vtAllocatedBytes)
+		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory = 0 Then
 				this->Memoryes(i).pMemory = pMemory
@@ -195,8 +222,10 @@ Function HeapMemoryAllocatorAlloc( _
 				Exit For
 			End If
 		Next
+		
 		this->MemoryAllocations += 1
 		this->cbMemoryUsed += cb
+		
 	End If
 	
 	If this->pISpyObject <> NULL Then
@@ -237,15 +266,12 @@ Sub HeapMemoryAllocatorFree( _
 		pMemory = IMallocSpy_PreFree(this->pISpyObject, pMemory, True)
 	End If
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		HeapFree( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE, _
-			pMemory _
-		)
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	HeapFree( _
+		this->hHeap, _
+		HEAP_NO_SERIALIZE, _
+		pMemory _
+	)
+	
 	For i As Integer = 0 To 19
 		If this->Memoryes(i).pMemory = pMemory Then
 			this->Memoryes(i).pMemory = 0
@@ -270,16 +296,11 @@ Function HeapMemoryAllocatorGetSize( _
 		pMemory = IMallocSpy_PreGetSize(this->pISpyObject, pMemory, True)
 	End If
 	
-	Dim Size As SIZE_T_ = Any
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		Size = HeapSize( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE, _
-			pMemory _
-		)
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	Dim Size As SIZE_T_ = HeapSize( _
+		this->hHeap, _
+		HEAP_NO_SERIALIZE, _
+		pMemory _
+	)
 	
 	If this->pISpyObject <> NULL Then
 		Size = IMallocSpy_PostGetSize(this->pISpyObject, Size, True)

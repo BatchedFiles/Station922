@@ -6,7 +6,6 @@
 #include once "IWebServerConfiguration.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "PrintDebugInfo.bi"
 #include once "Network.bi"
 #include once "NetworkServer.bi"
 #include once "WorkerThread.bi"
@@ -14,6 +13,7 @@
 
 Extern GlobalWebServerVirtualTable As Const IRunnableVirtualTable
 
+Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 Extern CLSID_CLIENTCONTEXT Alias "CLSID_CLIENTCONTEXT" As Const CLSID
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
@@ -25,10 +25,12 @@ Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Type ClientMemoryContext
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pIContext As IClientContext Ptr
 	Dim hrMemoryAllocator As HRESULT
 	Dim hrClientContex As HRESULT
+	Dim hrLogger As HRESULT
 End Type
 
 /'
@@ -40,6 +42,7 @@ End Type
 Type _WebServer
 	Dim lpVtbl As Const IRunnableVirtualTable Ptr
 	Dim ReferenceCounter As Integer
+	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	
 	Dim hIOCompletionPort As HANDLE
@@ -118,6 +121,7 @@ Declare Sub DestroyCachedClientMemoryContext( _
 
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pINetworkStream As INetworkStream Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -126,6 +130,8 @@ Sub InitializeWebServer( _
 	
 	this->lpVtbl = @GlobalWebServerVirtualTable
 	this->ReferenceCounter = 0
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hIOCompletionPort = NULL
@@ -185,17 +191,23 @@ Sub UnInitializeWebServer( _
 	DestroyCachedClientMemoryContext(this)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
+	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateWebServer( _
+		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServer Ptr
 	
-	DebugPrintInteger(WStr(!"WebServer creating\t"), SizeOf(WebServer))
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(WebServer)
+	ILogger_LogDebug(pILogger, WStr(!"WebServer creating\t"), vtAllocatedBytes)
 	
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		pILogger, _
 		pIMemoryAllocator, _
 		@CLSID_CLIENTREQUEST, _
 		@IID_IClientRequest, _
@@ -204,6 +216,7 @@ Function CreateWebServer( _
 	If SUCCEEDED(hr) Then
 		Dim pIResponse As IServerResponse Ptr = Any
 		hr = CreateInstance( _
+			pILogger, _
 			pIMemoryAllocator, _
 			@CLSID_SERVERRESPONSE, _
 			@IID_IServerResponse, _
@@ -212,6 +225,7 @@ Function CreateWebServer( _
 		If SUCCEEDED(hr) Then
 			Dim pINetworkStream As INetworkStream Ptr = Any
 			hr = CreateInstance( _
+				pILogger, _
 				pIMemoryAllocator, _
 				@CLSID_NETWORKSTREAM, _
 				@IID_INetworkStream, _
@@ -224,8 +238,11 @@ Function CreateWebServer( _
 				)
 				If this <> NULL Then
 					
-					InitializeWebServer(this, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
-					DebugPrintWString(WStr("WebServer created"))
+					InitializeWebServer(this, pILogger, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
+					
+					Dim vtEmpty As VARIANT = Any
+					vtEmpty.vt = VT_EMPTY
+					ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
 					
 					Return this
 				End If
@@ -250,8 +267,12 @@ Sub DestroyWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	DebugPrintWString(WStr("WebServer destroying"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("WebServer destroying"), vtEmpty)
 	
+	ILogger_AddRef(this->pILogger)
+	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -259,9 +280,10 @@ Sub DestroyWebServer( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	IMalloc_Release(pIMemoryAllocator)
+	ILogger_LogDebug(pILogger, WStr("WebServer destroyed"), vtEmpty)
 	
-	DebugPrintWString(WStr("WebServer destroyed"))
+	IMalloc_Release(pIMemoryAllocator)
+	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -484,7 +506,17 @@ Function AcceptConnection( _
 	IClientContext_Release(pCachedContext->pIContext)
 	
 	If FAILED(hrBeginReadRequest) Then
-		DebugPrintHRESULT(WStr(!"Error IClientRequest_BeginReadRequest\t"), hrBeginReadRequest)
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginReadRequest
+		
+		Dim pILogger As ILogger Ptr = Any
+		IClientContext_GetLogger(pCachedContext->pIContext, @pILogger)
+		
+		ILogger_LogDebug(pILogger, WStr(!"Error IClientRequest_BeginReadRequest\t"), vtSCode)
+		
+		ILogger_Release(pILogger)
+		
 		' TODO Отправить клиенту Не могу начать асинхронное чтение
 		' CloseSocketConnection(ClientSocket)
 		Return S_FALSE
@@ -504,7 +536,19 @@ Function ProcessErrorAssociateWithIOCP( _
 		ByVal dwErrorAccept As Long _
 	)As HRESULT
 	
-	DebugPrintInteger(WStr(!"\t\t\t\tClient connected\t"), dwErrorAccept)
+	' DebugPrintInteger(WStr(!"\t\t\t\tClient connected\t"), dwErrorAccept)
+	Scope
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_UI4
+		vtErrorCode.ulVal = dwErrorAccept
+		
+		Dim pILogger As ILogger Ptr = Any
+		IClientContext_GetLogger(pCachedContext->pIContext, @pILogger)
+		
+		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tClient connected\t"), vtErrorCode)
+		
+		ILogger_Release(pILogger)
+	End Scope
 	
 	If ClientSocket = INVALID_SOCKET Then
 		If pCachedContext->pIContext <> NULL Then
@@ -516,8 +560,7 @@ Function ProcessErrorAssociateWithIOCP( _
 	If pCachedContext->pIMemoryAllocator = NULL Then
 		' TODO Отправить клиенту Не могу создать кучу памяти
 		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		WriteHttpNotEnoughMemory(pCachedContext->pIContext, NULL)
 		' CloseSocketConnection(ClientSocket)
 		Return pCachedContext->hrMemoryAllocator
 	End If
@@ -525,8 +568,7 @@ Function ProcessErrorAssociateWithIOCP( _
 	If FAILED(pCachedContext->hrClientContex) Then
 		' TODO Отправить клиенту Не могу выделить память в куче
 		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		WriteHttpNotEnoughMemory(pCachedContext->pIContext, NULL)
 		' CloseSocketConnection(ClientSocket)
 		Return pCachedContext->hrClientContex
 	End If
@@ -537,11 +579,10 @@ Function ProcessErrorAssociateWithIOCP( _
 		0 _
 	)
 	If FAILED(hrAssociate) Then
-		IClientContext_Release(pCachedContext->pIContext)
 		' TODO Отправить клиенту Не могу ассоциировать с портом завершения
 		INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		WriteHttpNotEnoughMemory(this->pIRequest, this->pIResponse, CPtr(IBaseStream Ptr, this->pINetworkStream), NULL)
+		WriteHttpNotEnoughMemory(pCachedContext->pIContext, NULL)
+		IClientContext_Release(pCachedContext->pIContext)
 		' CloseSocketConnection(ClientSocket)
 		Return hrAssociate
 	End If
@@ -565,44 +606,57 @@ Sub CreateCachedClientMemoryContext( _
 		For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
 			
 			Dim pCachedContext As ClientMemoryContext Ptr = @this->pCachedClientMemoryContext[i]
-			pCachedContext->hrMemoryAllocator = CreateInstance( _
+			
+			pCachedContext->hrLogger = CreateLoggerInstance( _
 				this->pIMemoryAllocator, _
-				@CLSID_HEAPMEMORYALLOCATOR, _
-				@IID_IMalloc, _
-				@pCachedContext->pIMemoryAllocator _
+				@CLSID_CONSOLELOGGER, _
+				@IID_ILogger, _
+				@pCachedContext->pILogger _
 			)
 			
-			If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
-				pCachedContext->hrClientContex = CreateInstance( _
-					pCachedContext->pIMemoryAllocator, _
-					@CLSID_CLIENTCONTEXT, _
-					@IID_IClientContext, _
-					@pCachedContext->pIContext _
+			If SUCCEEDED(pCachedContext->hrLogger) Then
+				
+				pCachedContext->hrMemoryAllocator = CreateMemoryAllocatorInstance( _
+					pCachedContext->pILogger, _
+					@CLSID_HEAPMEMORYALLOCATOR, _
+					@IID_IMalloc, _
+					@pCachedContext->pIMemoryAllocator _
 				)
 				
-				If SUCCEEDED(pCachedContext->hrClientContex) Then
-					IClientContext_SetOperationCode(pCachedContext->pIContext, OperationCodes.ReadRequest)
+				If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
+					pCachedContext->hrClientContex = CreateInstance( _
+						pCachedContext->pILogger, _
+						pCachedContext->pIMemoryAllocator, _
+						@CLSID_CLIENTCONTEXT, _
+						@IID_IClientContext, _
+						@pCachedContext->pIContext _
+					)
 					
-					Dim pIReader As IHttpReader Ptr = Any
-					IClientContext_GetHttpReader(pCachedContext->pIContext, @pIReader)
-					
-					Scope
-						Dim pINetworkStream As INetworkStream Ptr = Any
-						IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
-						' TODO Запросить интерфейс вместо конвертирования указателя
-						IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
-						INetworkStream_Release(pINetworkStream)
-					End Scope
-					
-					Scope
-						Dim pIRequest As IClientRequest Ptr = Any
-						IClientContext_GetClientRequest(pCachedContext->pIContext, @pIRequest)
-						' TODO Запросить интерфейс вместо конвертирования указателя
-						IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
-						IClientRequest_Release(pIRequest)
-					End Scope
-					
-					IHttpReader_Release(pIReader)
+					If SUCCEEDED(pCachedContext->hrClientContex) Then
+						IClientContext_SetOperationCode(pCachedContext->pIContext, OperationCodes.ReadRequest)
+						
+						Dim pIReader As IHttpReader Ptr = Any
+						IClientContext_GetHttpReader(pCachedContext->pIContext, @pIReader)
+						
+						Scope
+							Dim pINetworkStream As INetworkStream Ptr = Any
+							IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
+							' TODO Запросить интерфейс вместо конвертирования указателя
+							IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
+							INetworkStream_Release(pINetworkStream)
+						End Scope
+						
+						Scope
+							Dim pIRequest As IClientRequest Ptr = Any
+							IClientContext_GetClientRequest(pCachedContext->pIContext, @pIRequest)
+							' TODO Запросить интерфейс вместо конвертирования указателя
+							IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
+							IClientRequest_Release(pIRequest)
+						End Scope
+						
+						IHttpReader_Release(pIReader)
+						
+					End If
 					
 				End If
 				
@@ -620,7 +674,15 @@ Sub DestroyCachedClientMemoryContext( _
 	
 	For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
 		Dim pCachedContext As ClientMemoryContext Ptr = @this->pCachedClientMemoryContext[i]
-		IMalloc_Release(pCachedContext->pIMemoryAllocator)
+		
+		If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
+			IMalloc_Release(pCachedContext->pIMemoryAllocator)
+		End If
+		
+		If SUCCEEDED(pCachedContext->hrLogger) Then
+			ILogger_Release(pCachedContext->pILogger)
+		End If
+		
 		' IClientContext_Release(pCachedContext->pIContext)
 	Next
 	
@@ -656,6 +718,7 @@ Function ReadConfiguration( _
 	
 	Dim pIConfig As IWebServerConfiguration Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
+		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_WEBSERVERINICONFIGURATION, _
 		@IID_IWebServerConfiguration, _
@@ -720,6 +783,8 @@ Function InitializeIOCP( _
 		pWorkerContext->hIOCompletionClosePort = this->hIOCompletionClosePort
 		IWebSiteCollection_AddRef(this->pIWebSites)
 		pWorkerContext->pIWebSites = this->pIWebSites
+		ILogger_AddRef(this->pILogger)
+		pWorkerContext->pILogger = this->pILogger
 		
 		pWorkerContext->hThread = CreateThread( _
 			NULL, _
@@ -823,7 +888,9 @@ Function ServerThread( _
 	
 	WebServerRelease(this)
 	
-	DebugPrintWString(WStr(!"Server stopped"))
+	Dim vtEmpty As VARIANT = Any
+	vtEmpty.vt = VT_EMPTY
+	ILogger_LogDebug(this->pILogger, WStr("Server stopped"), vtEmpty)
 	
 	Return 0
 	

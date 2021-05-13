@@ -2,6 +2,7 @@
 #define WEBSERVERINICONFIGURATION_BI
 
 #include once "IWebServerConfiguration.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
 
@@ -10,6 +11,7 @@ Type WebServerIniConfiguration As _WebServerIniConfiguration
 Type LPWebServerIniConfiguration As _WebServerIniConfiguration Ptr
 
 Declare Function CreateWebServerIniConfiguration( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebServerIniConfiguration Ptr
 

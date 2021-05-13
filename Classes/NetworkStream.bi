@@ -2,6 +2,7 @@
 #define NETWORKSTREAM_BI
 
 #include once "INetworkStream.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 
@@ -10,6 +11,7 @@ Type NetworkStream As _NetworkStream
 Type LPNetworkStream As _NetworkStream Ptr
 
 Declare Function CreateNetworkStream( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As NetworkStream Ptr
 

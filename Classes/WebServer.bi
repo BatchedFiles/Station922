@@ -2,6 +2,7 @@
 #define WEBSERVER_BI
 
 #include once "IRunnable.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
@@ -10,6 +11,7 @@ Type WebServer As _WebServer
 Type LPWebServer As _WebServer Ptr
 
 Declare Function CreateWebServer( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebServer Ptr
 

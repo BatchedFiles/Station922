@@ -2,6 +2,7 @@
 #define SERVERRESPONSE_BI
 
 #include once "IServerResponse.bi"
+#include once "ILogger.bi"
 
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
@@ -10,6 +11,7 @@ Type ServerResponse As _ServerResponse
 Type LPServerResponse As _ServerResponse Ptr
 
 Declare Function CreateServerResponse( _
+	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ServerResponse Ptr
 
