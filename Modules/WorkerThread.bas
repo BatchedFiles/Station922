@@ -8,7 +8,6 @@
 
 Extern CLSID_HTTPGETPROCESSOR Alias "CLSID_HTTPGETPROCESSOR" As Const CLSID
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
-Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
 Enum DataError
 	HostNotFound
@@ -612,18 +611,6 @@ Function WriteResponse( _
 	IClientRequest_Release(pIRequest)
 	
 	Return hrResult
-	
-End Function
-
-Function ProcessCloseOperation( _
-		ByVal pIContext As IClientContext Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	
-	IClientContext_Release(pIContext)
-	IAsyncResult_Release(pIAsyncResult)
-	
-	Return S_FALSE
 	
 End Function
 
