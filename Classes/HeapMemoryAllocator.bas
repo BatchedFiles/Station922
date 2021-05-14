@@ -106,19 +106,19 @@ Sub DestroyHeapMemoryAllocator( _
 		Dim vtMemoryLeaksCount As VARIANT = Any
 		vtMemoryLeaksCount.vt = VT_I4
 		vtMemoryLeaksCount.lVal = this->MemoryAllocations
-		ILogger_LogDebug(pILogger, WStr("\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
+		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
 		
 		Dim vtMemoryLeaksSize As VARIANT = Any
 		vtMemoryLeaksSize.vt = VT_I8
 		vtMemoryLeaksSize.llVal = this->cbMemoryUsed
-		ILogger_LogDebug(pILogger, WStr("\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
+		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
 		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory <> 0 Then
 				Dim vtMemorySize As VARIANT = Any
 				vtMemorySize.vt = VT_I8
 				vtMemorySize.llVal = this->Memoryes(i).Size
-				ILogger_LogDebug(pILogger, WStr("\t\t\t\tMemory Size\t"), vtMemorySize)
+				ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tMemory Size\t"), vtMemorySize)
 			End If
 		Next
 	End If
