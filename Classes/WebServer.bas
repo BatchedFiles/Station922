@@ -467,7 +467,13 @@ Function AcceptConnection( _
 		)
 		Dim dwErrorAccept As Long = WSAGetLastError()
 		
-		If FAILED(ProcessErrorAssociateWithIOCP(this, ClientSocket, pCachedContext, dwErrorAccept)) Then
+		Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
+			this, _
+			ClientSocket, _
+			pCachedContext, _
+			dwErrorAccept _
+		)
+		If FAILED(hrAssociateWithIOCP) Then
 			Return E_FAIL
 		End If
 		
@@ -536,7 +542,6 @@ Function ProcessErrorAssociateWithIOCP( _
 		ByVal dwErrorAccept As Long _
 	)As HRESULT
 	
-	' DebugPrintInteger(WStr(!"\t\t\t\tClient connected\t"), dwErrorAccept)
 	Scope
 		Dim vtErrorCode As VARIANT = Any
 		vtErrorCode.vt = VT_UI4
