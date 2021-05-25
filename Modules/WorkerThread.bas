@@ -70,7 +70,6 @@ Sub ProcessEndReadError( _
 			IServerResponse_Release(pIResponse)
 			
 		Case Else
-			' TODO Запросить интерфейс вместо конвертирования указателя
 			WriteHttpBadRequest(pIContext, NULL)
 			
 	End Select
@@ -137,7 +136,6 @@ End Sub
 
 Function PrepareRequestResponse( _
 		ByVal pIContext As IClientContext Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
@@ -465,7 +463,6 @@ Function ReadRequest( _
 			
 			hrResult = PrepareRequestResponse( _
 				pIContext, _
-				pIAsyncResult, _
 				pIWebSites _
 			)
 			
