@@ -180,7 +180,7 @@ ENTRY_POINT_PARAM=-e _ENTRYPOINT@0
 else
 ENTRY_POINT_PARAM=
 endif
-PE_FILE_FORMAT=i386pe
+PE_FILE_FORMAT=i386pe --large-address-aware
 ResourceCompilerBitFlag=/nw
 BIN_DEBUG_DIR=$(BIN_DEBUG_DIR_86)
 BIN_RELEASE_DIR=$(BIN_RELEASE_DIR_86)
@@ -207,16 +207,17 @@ FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -s console 
 # -Wno-format
 # -Wextra
 GCC_COMPILER_WARNINGS=-Wall -Werror -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-main -Werror-implicit-function-declaration
+GCC_COMPILER_OPTIMIZATIONS=-fdata-sections -ffunction-sections -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 GCC_COMPILER_PARAMETERS_BASE=$(GCC_COMPILER_WARNINGS) -nostdlib -nostdinc -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-ident
-GCC_COMPILER_PARAMETERS_RELEASE_03=$(GCC_COMPILER_PARAMETERS_BASE) -fdata-sections -ffunction-sections $(GCC_ARCHITECTURE) -masm=intel -S -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables -Ofast
-GCC_COMPILER_PARAMETERS_RELEASE_O0=$(GCC_COMPILER_PARAMETERS_BASE) -fdata-sections -ffunction-sections $(GCC_ARCHITECTURE) -masm=intel -S -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables -O0
+GCC_COMPILER_PARAMETERS_RELEASE_03=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) $(GCC_COMPILER_OPTIMIZATIONS) -masm=intel -S -Ofast
+GCC_COMPILER_PARAMETERS_RELEASE_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) $(GCC_COMPILER_OPTIMIZATIONS) -masm=intel -S -O0
 GCC_COMPILER_PARAMETERS_DEBUG=   $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -Og                                                            
 GCC_COMPILER_PARAMETERS_DEBUG_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -O0
 
 GCC_ASSEMBLER_PARAMETERS_RELEASE=$(TARGET_ASSEMBLER_ARCH) --strip-local-absolute
 GCC_ASSEMBLER_PARAMETERS_DEBUG=  $(TARGET_ASSEMBLER_ARCH)
 
-GCC_LINKER_PARAMETERS_BASE=-m $(PE_FILE_FORMAT) -subsystem console $(ENTRY_POINT_PARAM) --stack 1048576,1048576 -L "$(COMPILER_LIB_PATH)" -L "." --major-image-version 1 --minor-image-version 0 --no-seh --nxcompat $(OBJECTFILES_CRUNTIME)
+GCC_LINKER_PARAMETERS_BASE=-m $(PE_FILE_FORMAT) -subsystem console $(ENTRY_POINT_PARAM) --stack 1048576,1048576 --major-image-version 1 --minor-image-version 0 --no-seh --nxcompat -L "$(COMPILER_LIB_PATH)" -L "." $(OBJECTFILES_CRUNTIME)
 # --print-gc-sections
 GCC_LINKER_PARAMETERS_RELEASE=$(GCC_LINKER_PARAMETERS_BASE) -s --gc-sections
 GCC_LINKER_PARAMETERS_DEBUG=  $(GCC_LINKER_PARAMETERS_BASE)
