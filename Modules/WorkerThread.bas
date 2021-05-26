@@ -17,6 +17,46 @@ Enum DataError
 	HttpMethodNotSupported
 End Enum
 
+Type _WorkerThreadContext
+	Dim hIOCompletionPort As HANDLE
+	Dim pILogger As ILogger Ptr
+	Dim pIWebSites As IWebSiteCollection Ptr
+End Type
+
+Function CreateWorkerThreadContext( _
+		ByVal hIOCompletionPort As HANDLE, _
+		ByVal pILogger As ILogger Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
+	)As WorkerThreadContext Ptr
+	
+	Dim this As WorkerThreadContext Ptr = CoTaskMemAlloc(SizeOf(WorkerThreadContext))
+	If this = NULL Then
+		Return NULL
+	End If
+	
+	this->hIOCompletionPort = hIOCompletionPort
+	
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
+	
+	IWebSiteCollection_AddRef(pIWebSites)
+	this->pIWebSites = pIWebSites
+	
+	Return this
+	
+End Function
+
+Sub DestroyWorkerThreadContext( _
+		ByVal this As WorkerThreadContext Ptr _
+	)
+	
+	ILogger_Release(this->pILogger)
+	IWebSiteCollection_Release(this->pIWebSites)
+	
+	CoTaskMemFree(this)
+	
+End Sub
+
 Sub ProcessBeginReadError( _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal hrDataError As DataError _
@@ -688,11 +728,7 @@ Function WorkerThread( _
 		
 	Loop
 	
-	CloseHandle(pWorkerContext->hThread)
-	ILogger_Release(pWorkerContext->pILogger)
-	IWebSiteCollection_Release(pWorkerContext->pIWebSites)
-	
-	CoTaskMemFree(pWorkerContext)
+	DestroyWorkerThreadContext(pWorkerContext)
 	
 	Return 0
 	

@@ -781,30 +781,31 @@ Function InitializeIOCP( _
 	
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
 		
-		Dim pWorkerContext As WorkerThreadContext Ptr = CoTaskMemAlloc(SizeOf(WorkerThreadContext))
+		Dim pWorkerContext As WorkerThreadContext Ptr = CreateWorkerThreadContext( _
+			this->hIOCompletionPort, _
+			this->pILogger, _
+			this->pIWebSites _
+		)
 		If pWorkerContext = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		pWorkerContext->hIOCompletionPort = this->hIOCompletionPort
-		pWorkerContext->hIOCompletionClosePort = this->hIOCompletionClosePort
-		IWebSiteCollection_AddRef(this->pIWebSites)
-		pWorkerContext->pIWebSites = this->pIWebSites
-		ILogger_AddRef(this->pILogger)
-		pWorkerContext->pILogger = this->pILogger
-		
-		pWorkerContext->hThread = CreateThread( _
+		Dim ThreadId As DWORD = Any
+		Dim hThread As HANDLE = CreateThread( _
 			NULL, _
 			DefaultStackSize, _
 			@WorkerThread, _
 			pWorkerContext, _
 			0, _
-			@pWorkerContext->ThreadId _
+			@ThreadId _
 		)
-		If pWorkerContext->hThread = NULL Then
+		If hThread = NULL Then
 			Dim dwError As DWORD = GetLastError()
+			DestroyWorkerThreadContext(pWorkerContext)
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
+		
+		CloseHandle(hThread)
 		
 	Next
 	

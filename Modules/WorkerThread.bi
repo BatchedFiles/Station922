@@ -4,14 +4,17 @@
 #include once "IWebSiteCollection.bi"
 #include once "ILogger.bi"
 
-Type WorkerThreadContext
-	Dim hIOCompletionPort As HANDLE
-	Dim hIOCompletionClosePort As HANDLE
-	Dim pILogger As ILogger Ptr
-	Dim pIWebSites As IWebSiteCollection Ptr
-	Dim hThread As HANDLE
-	Dim ThreadId As DWORD
-End Type
+Type WorkerThreadContext As _WorkerThreadContext
+
+Declare Function CreateWorkerThreadContext( _
+	ByVal hIOCompletionPort As HANDLE, _
+	ByVal pILogger As ILogger Ptr, _
+	ByVal pIWebSites As IWebSiteCollection Ptr _
+)As WorkerThreadContext Ptr
+
+Declare Sub DestroyWorkerThreadContext( _
+	ByVal this As WorkerThreadContext Ptr _
+)
 
 Declare Function WorkerThread( _
 	ByVal lpParam As LPVOID _
