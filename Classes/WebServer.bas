@@ -79,16 +79,20 @@ Function CreateClientMemoryContext( _
 					Scope
 						Dim pINetworkStream As INetworkStream Ptr = Any
 						IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
+						
 						' TODO Запросить интерфейс вместо конвертирования указателя
 						IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
+						
 						INetworkStream_Release(pINetworkStream)
 					End Scope
 					
 					Scope
 						Dim pIRequest As IClientRequest Ptr = Any
 						IClientContext_GetClientRequest(pCachedContext->pIContext, @pIRequest)
+						
 						' TODO Запросить интерфейс вместо конвертирования указателя
 						IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
+						
 						IClientRequest_Release(pIRequest)
 					End Scope
 					
@@ -139,7 +143,7 @@ Type _WebServer
 	Dim pIResponse As IServerResponse Ptr
 	
 	Dim ppCachedClientMemoryContext As ClientMemoryContext Ptr Ptr
-	Dim CachedClientMemoryContextMaximum As Integer
+	Dim CachedClientMemoryContextLength As Integer
 	Dim CachedClientMemoryContextIndex As Integer
 	
 	Dim Context As Any Ptr
@@ -244,6 +248,10 @@ End Sub
 Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
+	
+	If this->ppCachedClientMemoryContext <> NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, this->ppCachedClientMemoryContext)
+	End If
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
@@ -676,7 +684,7 @@ Sub CreateCachedClientMemoryContext( _
 	)
 	
 	' TODO Асинхронное создание списка контекстов
-	For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
+	For i As Integer = 0 To this->CachedClientMemoryContextLength - 1
 		
 		this->ppCachedClientMemoryContext[i] = CreateClientMemoryContext( _
 			this->pIMemoryAllocator _
@@ -690,7 +698,7 @@ Sub DestroyCachedClientMemoryContext( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	For i As Integer = 0 To this->CachedClientMemoryContextMaximum - 1
+	For i As Integer = 0 To this->CachedClientMemoryContextLength - 1
 		DestroyClientMemoryContext( _
 			this->ppCachedClientMemoryContext[i], _
 			this->pIMemoryAllocator _
@@ -741,11 +749,19 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetWorkerThreadsCount(pIConfig, @this->WorkerThreadsCount)
 	
-	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextMaximum)
+	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
 	
 	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
 	
 	IWebServerConfiguration_Release(pIConfig)
+	
+	this->ppCachedClientMemoryContext = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		this->CachedClientMemoryContextLength * SizeOf(ClientMemoryContext Ptr Ptr) _
+	)
+	If this->ppCachedClientMemoryContext = NULL Then
+		Return E_OUTOFMEMORY
+	End If
 	
 	Return S_OK
 
@@ -866,7 +882,7 @@ Function ServerThread( _
 	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
 	
 	Do
-		If this->CachedClientMemoryContextIndex >= this->CachedClientMemoryContextMaximum Then
+		If this->CachedClientMemoryContextIndex >= this->CachedClientMemoryContextLength Then
 			this->CachedClientMemoryContextIndex = 0
 			DestroyCachedClientMemoryContext(this)
 			CreateCachedClientMemoryContext(this)
