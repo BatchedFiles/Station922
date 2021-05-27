@@ -22,7 +22,6 @@ Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 Extern CLSID_CLIENTCONTEXT Alias "CLSID_CLIENTCONTEXT" As Const CLSID
 Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
 
-Const THREAD_STACK_SIZE As SIZE_T_ = 0
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Type ClientMemoryContext
@@ -135,7 +134,6 @@ Type _WebServer
 	Dim pIMemoryAllocator As IMalloc Ptr
 	
 	Dim hIOCompletionPort As HANDLE
-	Dim hIOCompletionClosePort As HANDLE
 	Dim WorkerThreadsCount As Integer
 	Dim pIWebSites As IWebSiteCollection Ptr
 	Dim pINetworkStream As INetworkStream Ptr
@@ -224,7 +222,6 @@ Sub InitializeWebServer( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hIOCompletionPort = NULL
-	this->hIOCompletionClosePort = NULL
 	this->WorkerThreadsCount = 0
 	this->pIWebSites = NULL
 	this->pINetworkStream = pINetworkStream
@@ -275,10 +272,6 @@ Sub UnInitializeWebServer( _
 	
 	If this->hIOCompletionPort <> NULL Then
 		CloseHandle(this->hIOCompletionPort)
-	End If
-	
-	If this->hIOCompletionClosePort <> NULL Then
-		CloseHandle(this->hIOCompletionClosePort)
 	End If
 	
 	DestroyCachedClientMemoryContext(this)
@@ -782,17 +775,6 @@ Function InitializeIOCP( _
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	this->hIOCompletionClosePort = CreateIoCompletionPort( _
-		INVALID_HANDLE_VALUE, _
-		NULL, _
-		Cast(ULONG_PTR, 0), _
-		this->WorkerThreadsCount _
-	)
-	If this->hIOCompletionClosePort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
 	Const DefaultStackSize As SIZE_T_ = 0
 	
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
@@ -824,30 +806,6 @@ Function InitializeIOCP( _
 		CloseHandle(hThread)
 		
 	Next
-	
-	' For i As Integer = 0 To this->WorkerThreadsCount - 1
-		
-		' Dim pCloserThreadContext As CloserThreadContext Ptr = CoTaskMemAlloc(SizeOf(CloserThreadContext))
-		' If pCloserThreadContext = NULL Then
-			' Return E_OUTOFMEMORY
-		' End If
-		
-		' pCloserThreadContext->hIOCompletionClosePort = this->hIOCompletionClosePort
-		
-		' pCloserThreadContext->hThread = CreateThread( _
-			' NULL, _
-			' DefaultStackSize, _
-			' @CloserThread, _
-			' pCloserThreadContext, _
-			' 0, _
-			' @pCloserThreadContext->ThreadId _
-		' )
-		' If pCloserThreadContext->hThread = NULL Then
-			' Dim dwError As DWORD = GetLastError()
-			' Return HRESULT_FROM_WIN32(dwError)
-		' End If
-		
-	' Next
 	
 	Return S_OK
 	
