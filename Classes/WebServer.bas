@@ -8,6 +8,7 @@
 #include once "CreateInstance.bi"
 #include once "Network.bi"
 #include once "NetworkServer.bi"
+#include once "ReferenceCounter.bi"
 #include once "WorkerThread.bi"
 #include once "WriteHttpError.bi"
 
@@ -24,7 +25,7 @@ Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSI
 
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
-Type ClientMemoryContext
+Type CachedClientContext
 	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	Dim pIContext As IClientContext Ptr
@@ -35,11 +36,11 @@ End Type
 
 Function CreateClientMemoryContext( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ClientMemoryContext Ptr
+	)As CachedClientContext Ptr
 	
-	Dim pCachedContext As ClientMemoryContext Ptr = IMalloc_Alloc( _
+	Dim pCachedContext As CachedClientContext Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(ClientMemoryContext) _
+		SizeOf(CachedClientContext) _
 	)
 	
 	If pCachedContext <> NULL Then
@@ -112,7 +113,7 @@ Function CreateClientMemoryContext( _
 End Function
 
 Sub DestroyClientMemoryContext( _
-		ByVal pClientMemoryContext As ClientMemoryContext Ptr, _
+		ByVal pClientMemoryContext As CachedClientContext Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	If SUCCEEDED(pClientMemoryContext->hrMemoryAllocator) Then
@@ -129,7 +130,7 @@ End Sub
 
 Type _WebServer
 	Dim lpVtbl As Const IRunnableVirtualTable Ptr
-	Dim ReferenceCounter As Integer
+	Dim RefCounter As ReferenceCounter
 	Dim pILogger As ILogger Ptr
 	Dim pIMemoryAllocator As IMalloc Ptr
 	
@@ -140,7 +141,7 @@ Type _WebServer
 	Dim pIRequest As IClientRequest Ptr
 	Dim pIResponse As IServerResponse Ptr
 	
-	Dim ppCachedClientMemoryContext As ClientMemoryContext Ptr Ptr
+	Dim ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
 	Dim CachedClientMemoryContextLength As Integer
 	Dim CachedClientMemoryContextIndex As Integer
 	
@@ -153,15 +154,11 @@ Type _WebServer
 	Dim ListenSocket As SOCKET
 	Dim CurrentStatus As HRESULT
 	
-	#ifdef PERFORMANCE_TESTING
-		Dim Frequency As LARGE_INTEGER
-	#endif
-	
 End Type
 
 Declare Function AcceptConnection( _
 	ByVal this As WebServer Ptr, _
-	ByVal pCachedContext As ClientMemoryContext Ptr _
+	ByVal pCachedContext As CachedClientContext Ptr _
 )As HRESULT
 
 Declare Function ReadConfiguration( _
@@ -179,7 +176,7 @@ Declare Function InitializeIOCP( _
 Declare Function ProcessErrorAssociateWithIOCP( _
 	ByVal this As WebServer Ptr, _
 	ByVal ClientSocket As SOCKET, _
-	ByVal pCachedContext As ClientMemoryContext Ptr, _
+	ByVal pCachedContext As CachedClientContext Ptr, _
 	ByVal dwErrorAccept As Long _
 )As HRESULT
 
@@ -216,7 +213,7 @@ Sub InitializeWebServer( _
 	)
 	
 	this->lpVtbl = @GlobalWebServerVirtualTable
-	this->ReferenceCounter = 0
+	ReferenceCounterInitialize(@this->RefCounter)
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -276,6 +273,7 @@ Sub UnInitializeWebServer( _
 	
 	DestroyCachedClientMemoryContext(this)
 	
+	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
 	
@@ -400,7 +398,7 @@ Function WebServerAddRef( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter += 1
+	ReferenceCounterIncrement(@this->RefCounter)
 	
 	Return 1
 	
@@ -410,9 +408,9 @@ Function WebServerRelease( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter -= 1
+	ReferenceCounterDecrement(@this->RefCounter)
 	
-	If this->ReferenceCounter = 0 Then
+	If this->RefCounter.Counter = 0 Then
 		
 		DestroyWebServer(this)
 		
@@ -539,7 +537,7 @@ End Sub
 
 Function AcceptConnection( _
 		ByVal this As WebServer Ptr, _
-		ByVal pCachedContext As ClientMemoryContext Ptr _
+		ByVal pCachedContext As CachedClientContext Ptr _
 	)As HRESULT
 	
 	Scope
@@ -614,7 +612,7 @@ End Function
 Function ProcessErrorAssociateWithIOCP( _
 		ByVal this As WebServer Ptr, _
 		ByVal ClientSocket As SOCKET, _
-		ByVal pCachedContext As ClientMemoryContext Ptr, _
+		ByVal pCachedContext As CachedClientContext Ptr, _
 		ByVal dwErrorAccept As Long _
 	)As HRESULT
 	
@@ -750,7 +748,7 @@ Function ReadConfiguration( _
 	
 	this->ppCachedClientMemoryContext = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
-		this->CachedClientMemoryContextLength * SizeOf(ClientMemoryContext Ptr Ptr) _
+		this->CachedClientMemoryContextLength * SizeOf(CachedClientContext Ptr Ptr) _
 	)
 	If this->ppCachedClientMemoryContext = NULL Then
 		Return E_OUTOFMEMORY
