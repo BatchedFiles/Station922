@@ -38,21 +38,13 @@ Type IClientContextVirtualTable
 	
 	Dim GetRemoteAddress As Function( _
 		ByVal this As IClientContext Ptr, _
-		ByVal pRemoteAddress As SOCKADDR_IN Ptr _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
 	
 	Dim SetRemoteAddress As Function( _
 		ByVal this As IClientContext Ptr, _
-		ByVal RemoteAddress As SOCKADDR_IN _
-	)As HRESULT
-	
-	Dim GetRemoteAddressLength As Function( _
-		ByVal this As IClientContext Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	
-	Dim SetRemoteAddressLength As Function( _
-		ByVal this As IClientContext Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
@@ -175,10 +167,10 @@ End Type
 #define IClientContext_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IClientContext_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IClientContext_Release(this) (this)->lpVtbl->Release(this)
-' #define IClientContext_GetRemoteAddress(this, pRemoteAddress) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress)
-#define IClientContext_SetRemoteAddress(this, RemoteAddress) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress)
+' #define IClientContext_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
+#define IClientContext_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 ' #define IClientContext_GetRemoteAddressLength(this, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddressLength(this, pRemoteAddressLength)
-#define IClientContext_SetRemoteAddressLength(this, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddressLength(this, RemoteAddressLength)
+' #define IClientContext_SetRemoteAddressLength(this, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddressLength(this, RemoteAddressLength)
 #define IClientContext_GetMemoryAllocator(this, ppIMemoryAllocator) (this)->lpVtbl->GetMemoryAllocator(this, ppIMemoryAllocator)
 #define IClientContext_GetNetworkStream(this, ppINetworkStream) (this)->lpVtbl->GetNetworkStream(this, ppINetworkStream)
 ' #define IClientContext_SetNetworkStream(this, pINetworkStream) (this)->lpVtbl->SetNetworkStream(this, pINetworkStream)

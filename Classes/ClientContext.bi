@@ -35,21 +35,13 @@ Declare Function ClientContextRelease( _
 
 Declare Function ClientContextGetRemoteAddress( _
 	ByVal this As ClientContext Ptr, _
-	ByVal pRemoteAddress As SOCKADDR_IN Ptr _
+	ByVal pRemoteAddress As SOCKADDR Ptr, _
+	ByVal pRemoteAddressLength As Integer Ptr _
 )As HRESULT
 
 Declare Function ClientContextSetRemoteAddress( _
 	ByVal this As ClientContext Ptr, _
-	ByVal RemoteAddress As SOCKADDR_IN _
-)As HRESULT
-
-Declare Function ClientContextGetRemoteAddressLength( _
-	ByVal this As ClientContext Ptr, _
-	ByVal pRemoteAddressLength As Integer Ptr _
-)As HRESULT
-
-Declare Function ClientContextSetRemoteAddressLength( _
-	ByVal this As ClientContext Ptr, _
+	ByVal RemoteAddress As SOCKADDR Ptr, _
 	ByVal RemoteAddressLength As Integer _
 )As HRESULT
 

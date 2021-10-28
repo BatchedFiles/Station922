@@ -24,7 +24,7 @@ Type _ClientContext
 	Dim pIAsync As IAsyncResult Ptr
 	Dim pIProcessor As IRequestProcessor Ptr
 	Dim OperationCode As OperationCodes
-	Dim RemoteAddress As SOCKADDR_IN
+	Dim RemoteAddress As SOCKADDR
 	Dim RemoteAddressLength As Integer
 End Type
 
@@ -54,7 +54,7 @@ Sub InitializeClientContext( _
 	this->pIAsync = NULL
 	this->pIProcessor = NULL
 	
-	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_IN))
+	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR))
 	this->RemoteAddressLength = 0
 	
 End Sub
@@ -275,10 +275,12 @@ End Function
 
 Function ClientContextGetRemoteAddress( _
 		ByVal this As ClientContext Ptr, _
-		ByVal pRemoteAddress As SOCKADDR_IN Ptr _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
 	
-	*pRemoteAddress = this->RemoteAddress
+	*pRemoteAddressLength = this->RemoteAddressLength
+	CopyMemory(pRemoteAddress, @this->RemoteAddress, this->RemoteAddressLength)
 	
 	Return S_OK
 	
@@ -286,32 +288,12 @@ End Function
 
 Function ClientContextSetRemoteAddress( _
 		ByVal this As ClientContext Ptr, _
-		ByVal RemoteAddress As SOCKADDR_IN _
-	)As HRESULT
-	
-	this->RemoteAddress = RemoteAddress
-	
-	Return S_OK
-	
-End Function
-
-Function ClientContextGetRemoteAddressLength( _
-		ByVal this As ClientContext Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	
-	*pRemoteAddressLength = this->RemoteAddressLength
-	
-	Return S_OK
-	
-End Function
-
-Function ClientContextSetRemoteAddressLength( _
-		ByVal this As ClientContext Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
 	this->RemoteAddressLength = RemoteAddressLength
+	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
 	
 	Return S_OK
 	
@@ -687,30 +669,18 @@ End Function
 
 Function IClientContextGetRemoteAddress( _
 		ByVal this As IClientContext Ptr, _
-		ByVal pRemoteAddress As SOCKADDR_IN Ptr _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
-	Return ClientContextGetRemoteAddress(ContainerOf(this, ClientContext, lpVtbl), pRemoteAddress)
+	Return ClientContextGetRemoteAddress(ContainerOf(this, ClientContext, lpVtbl), pRemoteAddress, pRemoteAddressLength)
 End Function
 
 Function IClientContextSetRemoteAddress( _
 		ByVal this As IClientContext Ptr, _
-		ByVal RemoteAddress As SOCKADDR_IN _
-	)As HRESULT
-	Return ClientContextSetRemoteAddress(ContainerOf(this, ClientContext, lpVtbl), RemoteAddress)
-End Function
-
-Function IClientContextGetRemoteAddressLength( _
-		ByVal this As IClientContext Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	Return ClientContextGetRemoteAddressLength(ContainerOf(this, ClientContext, lpVtbl), pRemoteAddressLength)
-End Function
-
-Function IClientContextSetRemoteAddressLength( _
-		ByVal this As IClientContext Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
-	Return ClientContextSetRemoteAddressLength(ContainerOf(this, ClientContext, lpVtbl), RemoteAddressLength)
+	Return ClientContextSetRemoteAddress(ContainerOf(this, ClientContext, lpVtbl), RemoteAddress, RemoteAddressLength)
 End Function
 
 Function IClientContextGetMemoryAllocator( _
@@ -880,8 +850,6 @@ Dim GlobalClientContextVirtualTable As Const IClientContextVirtualTable = Type( 
 	@IClientContextRelease, _
 	@IClientContextGetRemoteAddress, _
 	@IClientContextSetRemoteAddress, _
-	@IClientContextGetRemoteAddressLength, _
-	@IClientContextSetRemoteAddressLength, _
 	@IClientContextGetMemoryAllocator, _
 	@IClientContextGetNetworkStream, _
 	@IClientContextSetNetworkStream, _
