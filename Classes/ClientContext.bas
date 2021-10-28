@@ -24,7 +24,7 @@ Type _ClientContext
 	Dim pIAsync As IAsyncResult Ptr
 	Dim pIProcessor As IRequestProcessor Ptr
 	Dim OperationCode As OperationCodes
-	Dim RemoteAddress As SOCKADDR
+	Dim RemoteAddress As SOCKADDR_STORAGE
 	Dim RemoteAddressLength As Integer
 End Type
 
@@ -54,7 +54,7 @@ Sub InitializeClientContext( _
 	this->pIAsync = NULL
 	this->pIProcessor = NULL
 	
-	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR))
+	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
 	this->RemoteAddressLength = 0
 	
 End Sub

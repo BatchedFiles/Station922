@@ -541,10 +541,9 @@ Function AcceptConnection( _
 	)As HRESULT
 	
 	Scope
-		Dim ClientSocket As SOCKET = Any
-		Dim RemoteAddress As SOCKADDR_IN = Any
-		Dim RemoteAddressLength As Long = SizeOf(RemoteAddress)
-		ClientSocket = accept( _
+		Dim RemoteAddress As SOCKADDR_STORAGE = Any
+		Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+		Dim ClientSocket As SOCKET = accept( _
 			this->ListenSocket, _
 			CPtr(SOCKADDR Ptr, @RemoteAddress), _
 			@RemoteAddressLength _
@@ -561,8 +560,7 @@ Function AcceptConnection( _
 			Return E_FAIL
 		End If
 		
-		IClientContext_SetRemoteAddress(pCachedContext->pIContext, RemoteAddress)
-		IClientContext_SetRemoteAddressLength(pCachedContext->pIContext, RemoteAddressLength)
+		IClientContext_SetRemoteAddress(pCachedContext->pIContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
 		
 		Dim pINetworkStream As INetworkStream Ptr = Any
 		IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
