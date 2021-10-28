@@ -1,11 +1,11 @@
-﻿.PHONY: debug release all clean install uninstall configure service service_debug test test_debug
+﻿.PHONY: all debug release clean install uninstall
 
 ifndef GCC_VERSION_SUFFIX
 GCC_VERSION_SUFFIX=GCC-5.2.0
 endif
 
 ifndef FBC_VERSION_SUFFIX
-FBC_VERSION_SUFFIX=FBC-1.07.3
+FBC_VERSION_SUFFIX=FBC-1.08.1
 endif
 
 ifeq ($(PERFORMANCE_TESTING_FLAG),true)
@@ -191,16 +191,16 @@ endif
 
 FREEBASIC_PARAMETERS_BASE=-gen $(CODE_GENERATION_BACKEND) -r -maxerr 1 -w all -i Classes -i Headers -i Interfaces -i Modules $(UNICODE_DEFINED) $(WITHOUT_CRITICAL_SECTIONS_DEFINED) $(WITHOUT_RUNTIME_DEFINED) $(GUIDS_WITHOUT_MINGW_DEFINED) $(PERFORMANCE_TESTING_DEFINED)
 FREEBASIC_PARAMETERS_RELEASE=$(FREEBASIC_PARAMETERS_BASE) -O 0
-FREEBASIC_PARAMETERS_DEGUG=  $(FREEBASIC_PARAMETERS_BASE) -O 0 -g
+FREEBASIC_PARAMETERS_DEBUG=  $(FREEBASIC_PARAMETERS_BASE) -O 0 -g
 
 FREEBASIC_PARAMETERS_RELEASE_GUI=    $(FREEBASIC_PARAMETERS_RELEASE) -s gui     -d WINDOWS_GUI
-FREEBASIC_PARAMETERS_DEBUG_GUI=      $(FREEBASIC_PARAMETERS_DEGUG)   -s gui     -d WINDOWS_GUI
+FREEBASIC_PARAMETERS_DEBUG_GUI=      $(FREEBASIC_PARAMETERS_DEBUG)   -s gui     -d WINDOWS_GUI
 FREEBASIC_PARAMETERS_RELEASE_CONSOLE=$(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_CONSOLE
-FREEBASIC_PARAMETERS_DEBUG_CONSOLE=  $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_CONSOLE
+FREEBASIC_PARAMETERS_DEBUG_CONSOLE=  $(FREEBASIC_PARAMETERS_DEBUG)   -s console -d WINDOWS_CONSOLE
 FREEBASIC_PARAMETERS_RELEASE_SERVICE=$(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_SERVICE
-FREEBASIC_PARAMETERS_DEBUG_SERVICE=  $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_SERVICE
+FREEBASIC_PARAMETERS_DEBUG_SERVICE=  $(FREEBASIC_PARAMETERS_DEBUG)   -s console -d WINDOWS_SERVICE
 FREEBASIC_PARAMETERS_RELEASE_TEST=   $(FREEBASIC_PARAMETERS_RELEASE) -s console -d WINDOWS_TEST
-FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEGUG)   -s console -d WINDOWS_TEST
+FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEBUG)   -s console -d WINDOWS_TEST
 
 # -Wno-unused-but-set-variable
 # -fwrapv
@@ -1758,13 +1758,13 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).asm: $(OBJ_RELEASE_DIR)\Entr
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).asm:   $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c -o $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).asm
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c: Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c: EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_CONSOLE) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c:   EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_CONSOLE) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c
 
 
 
@@ -1780,13 +1780,13 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).asm: $(OBJ_RELEASE_DIR)\Entr
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).asm:   $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c -o $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).asm
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c: Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_SERVICE) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c: EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_SERVICE) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_SERVICE) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c
 
 
 
@@ -1802,13 +1802,13 @@ $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).asm: $(OBJ_RELEASE_DIR)\EntryPo
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).asm:   $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
 	$(GCC_COMPILER) $(GCC_COMPILER_PARAMETERS_DEBUG) $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c -o $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).asm
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_TEST) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_RELEASE_TEST) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   Modules\EntryPoint.bas
-	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "Modules\EntryPoint.bas"
-	move /y Modules\EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   EntryPoint.bas
+	$(FREEBASIC_COMPILER) $(FREEBASIC_PARAMETERS_DEBUG_TEST) "EntryPoint.bas"
+	move /y EntryPoint.c $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c
 
 
 
@@ -2441,27 +2441,27 @@ $(OBJ_DEBUG_DIR)\TestMain$(FILE_SUFFIX_TEST).c:   Modules\TestMain.bas
 
 
 
-$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
-$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
-$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
 
-$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj
 
-$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj
 
-$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources.RC Resources.RH
-	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources\Resources.RC Resources\Resources.RH
+	$(RESOURCE_COMPILER) /d DEBUG /ni $(ResourceCompilerBitFlag) /o /fo Resources\Resources.obj Resources\Resources.RC
+	move /y Resources\Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj
 
