@@ -16,7 +16,7 @@ Const HttpErrorHead1 = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999
 Const HttpErrorHead2 = WStr("</title></head>")
 Const HttpErrorBody1 = WStr("<body><h1>")
 Const HttpErrorBody3 = WStr("</h1><h2>HTTP Status Code ")
-Const HttpErrorBody4 = WStr(" — ")
+Const HttpErrorBody4 = WStr(" - ")
 Const HttpErrorBody5 = WStr("</h2><p>")
 Const HttpErrorBody6 = WStr("</p><p>Visit <a href=""/"">website main page</a>.</p></body></html>")
 
