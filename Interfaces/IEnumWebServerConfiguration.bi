@@ -11,37 +11,37 @@ Extern IID_IEnumWebServerConfiguration Alias "IID_IEnumWebServerConfiguration" A
 
 Type IEnumWebServerConfigurationVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr _
 	)As ULONG
 	
-	Dim Next As Function( _
+	Next As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr, _
 		ByVal celt As ULONG, _
 		ByVal rgelt As IWebServerConfiguration Ptr Ptr, _
 		ByVal pceltFetched As ULONG Ptr _
 	)As HRESULT
 	
-	Dim Skip As Function( _
+	Skip As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr, _
 		ByVal celt As ULONG _
 	)As HRESULT
 	
-	Dim Reset As Function( _
+	Reset As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr _
 	)As HRESULT
 	
-	Dim Clone As Function( _
+	Clone As Function( _
 		ByVal this As IEnumWebServerConfiguration Ptr, _
 		ByVal ppenum As IEnumWebServerConfiguration Ptr Ptr _
 	)As HRESULT
@@ -49,7 +49,7 @@ Type IEnumWebServerConfigurationVirtualTable
 End Type
 
 Type IEnumWebServerConfiguration_
-	Dim lpVtbl As IEnumWebServerConfigurationVirtualTable Ptr
+	lpVtbl As IEnumWebServerConfigurationVirtualTable Ptr
 End Type
 
 #define IEnumWebServerConfiguration_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

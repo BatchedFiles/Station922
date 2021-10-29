@@ -12,75 +12,75 @@ Extern IID_INetworkStream Alias "IID_INetworkStream" As Const IID
 
 Type INetworkStreamVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As INetworkStream Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As INetworkStream Ptr _
 	)As ULONG
 	
-	Dim CanRead As Function( _
+	CanRead As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	Dim CanSeek As Function( _
+	CanSeek As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	Dim CanWrite As Function( _
+	CanWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	Dim Flush As Function( _
+	Flush As Function( _
 		ByVal this As INetworkStream Ptr _
 	)As HRESULT
 	
-	Dim GetLength As Function( _
+	GetLength As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As LongInt Ptr _
 	)As HRESULT
 	
-	Dim Position As Function( _
+	Position As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As LongInt Ptr _
 	)As HRESULT
 	
-	Dim Read As Function( _
+	Read As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As UByte Ptr, _
 		ByVal Count As Integer, _
 		ByVal pReadedBytes As Integer Ptr _
 	)As HRESULT
 	
-	Dim Seek As Function( _
+	Seek As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Offset As LongInt, _
 		ByVal Origin As SeekOrigin _
 	)As HRESULT
 	
-	Dim SetLength As Function( _
+	SetLength As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
 	
-	Dim Write As Function( _
+	Write As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As UByte Ptr, _
 		ByVal Count As Integer, _
 		ByVal pWritedBytes As Integer Ptr _
 	)As HRESULT
 	
-	Dim BeginRead As Function( _
+	BeginRead As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As UByte Ptr, _
 		ByVal Count As Integer, _
@@ -89,7 +89,7 @@ Type INetworkStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim BeginWrite As Function( _
+	BeginWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As UByte Ptr, _
 		ByVal Count As Integer, _
@@ -98,36 +98,36 @@ Type INetworkStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim EndRead As Function( _
+	EndRead As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As Integer Ptr _
 	)As HRESULT
 	
-	Dim EndWrite As Function( _
+	EndWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As Integer Ptr _
 	)As HRESULT
 	
-	Dim GetSocket As Function( _
+	GetSocket As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
 	
-	Dim SetSocket As Function( _
+	SetSocket As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
 	
-	Dim Close As Function( _
+	Close As Function( _
 		ByVal this As INetworkStream Ptr _
 	)As HRESULT
 	
 End Type
 
 Type INetworkStream_
-	Dim lpVtbl As INetworkStreamVirtualTable Ptr
+	lpVtbl As INetworkStreamVirtualTable Ptr
 End Type
 
 #define INetworkStream_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

@@ -127,9 +127,9 @@ Enum DocumentCharsets
 End Enum
 
 Type _MimeType
-	Dim ContentType As ContentTypes
-	Dim IsTextFormat As Boolean
-	Dim Charset As DocumentCharsets
+	ContentType As ContentTypes
+	IsTextFormat As Boolean
+	Charset As DocumentCharsets
 End Type
 
 Type MimeType As _MimeType

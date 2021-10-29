@@ -8,19 +8,19 @@ Const PRIVATEHEAP_INITIALSIZE As DWORD = 80 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Type MemoryRegion
-	Dim pMemory As Any Ptr
-	Dim Size As Integer
+	pMemory As Any Ptr
+	Size As Integer
 End Type
 
 Type _HeapMemoryAllocator
-	Dim lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pISpyObject As IMallocSpy Ptr
-	Dim MemoryAllocations As Integer
-	Dim hHeap As HANDLE
-	Dim Memoryes(19) As MemoryRegion
-	Dim cbMemoryUsed As Integer
+	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pISpyObject As IMallocSpy Ptr
+	MemoryAllocations As Integer
+	hHeap As HANDLE
+	Memoryes(19) As MemoryRegion
+	cbMemoryUsed As Integer
 End Type
 
 Sub InitializeHeapMemoryAllocator( _

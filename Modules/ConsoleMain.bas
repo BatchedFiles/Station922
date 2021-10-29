@@ -6,9 +6,9 @@ Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 
 Type ServerContext
-	Dim hStopEvent As HANDLE
-	Dim pILogger As ILogger Ptr
-	Dim pIWebServer As IRunnable Ptr
+	hStopEvent As HANDLE
+	pILogger As ILogger Ptr
+	pIWebServer As IRunnable Ptr
 End Type
 
 Function RunnableStatusHandler( _

@@ -30,15 +30,15 @@ Declare Function GetDefaultFileName( _
 )As Boolean
 
 Type _WebSite
-	Dim lpVtbl As Const IMutableWebSiteVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pHostName As BSTR
-	Dim pPhysicalDirectory As BSTR
-	Dim pVirtualPath As BSTR
-	Dim pMovedUrl As BSTR
-	Dim IsMoved As Boolean
+	lpVtbl As Const IMutableWebSiteVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pHostName As BSTR
+	pPhysicalDirectory As BSTR
+	pVirtualPath As BSTR
+	pMovedUrl As BSTR
+	IsMoved As Boolean
 End Type
 
 Sub InitializeWebSite( _

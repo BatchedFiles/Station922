@@ -11,83 +11,83 @@ Extern IID_IArrayStringWriter Alias "IID_IArrayStringWriter" As Const IID
 
 Type IArrayStringWriterVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IArrayStringWriter Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IArrayStringWriter Ptr _
 	)As ULONG
 	
-	Dim GetCodePage As Function( _
+	GetCodePage As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal pCodePage As Integer Ptr _
 	)As HRESULT
 	
-	Dim SetCodePage As Function( _
+	SetCodePage As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal CodePage As Integer _
 	)As HRESULT
 	
-	Dim WriteNewLine As Function( _
+	WriteNewLine As Function( _
 		ByVal this As IArrayStringWriter Ptr _
 	)As HRESULT
 	
-	Dim WriteStringLine As Function( _
+	WriteStringLine As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal w As WString Ptr _
 	)As HRESULT
 	
-	Dim WriteLengthStringLine As Function( _
+	WriteLengthStringLine As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	Dim WriteString As Function( _
+	WriteString As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal w As WString Ptr _
 	)As HRESULT
 	
-	Dim WriteLengthString As Function( _
+	WriteLengthString As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	Dim WriteChar As Function( _
+	WriteChar As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal wc As wchar_t _
 	)As HRESULT
 	
-	Dim WriteInt32 As Function( _
+	WriteInt32 As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Value As Long _
 	)As HRESULT
 	
-	Dim WriteInt64 As Function( _
+	WriteInt64 As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Value As LongInt _
 	)As HRESULT
 	
-	Dim WriteUInt64 As Function( _
+	WriteUInt64 As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Value As ULongInt _
 	)As HRESULT
 	
-	Dim SetBuffer As Function( _
+	SetBuffer As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Buffer As WString Ptr, _
 		ByVal MaxBufferLength As Integer _
 	)As HRESULT
 	
-	Dim GetBufferLength As Function( _
+	GetBufferLength As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal pLength As Integer Ptr _
 	)As HRESULT
@@ -95,7 +95,7 @@ Type IArrayStringWriterVirtualTable
 End Type
 
 Type IArrayStringWriter_
-	Dim lpVtbl As IArrayStringWriterVirtualTable Ptr
+	lpVtbl As IArrayStringWriterVirtualTable Ptr
 End Type
 
 #define IArrayStringWriter_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

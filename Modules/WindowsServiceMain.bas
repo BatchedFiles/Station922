@@ -8,11 +8,11 @@ Const MaxWaitHint As DWORD = 3000
 Const ServiceName = WStr("Station922")
 
 Type _ServiceContext
-	Dim hStopEvent As HANDLE
-	Dim pIWebServer As IRunnable Ptr
-	Dim ServiceStatusHandle As SERVICE_STATUS_HANDLE
-	Dim ServiceStatus As SERVICE_STATUS
-	Dim ServiceCheckPoint As DWORD
+	hStopEvent As HANDLE
+	pIWebServer As IRunnable Ptr
+	ServiceStatusHandle As SERVICE_STATUS_HANDLE
+	ServiceStatus As SERVICE_STATUS
+	ServiceCheckPoint As DWORD
 End Type
 
 Type SERVICE_TABLE_ENTRYW_ZERO

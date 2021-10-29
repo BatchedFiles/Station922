@@ -15,50 +15,50 @@ Extern IID_IPauseable Alias "IID_IPauseable" As Const IID
 
 Type IPauseableVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IPauseable Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IPauseable Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IPauseable Ptr _
 	)As ULONG
 	
-	Dim Run As Function( _
+	Run As Function( _
 		ByVal this As IPauseable Ptr _
 	)As HRESULT
 	
-	Dim Stop As Function( _
+	Stop As Function( _
 		ByVal this As IPauseable Ptr _
 	)As HRESULT
 	
-	Dim IsRunning As Function( _
+	IsRunning As Function( _
 		ByVal this As IPauseable Ptr _
 	)As HRESULT
 	
-	Dim RegisterStatusHandler As Function( _
+	RegisterStatusHandler As Function( _
 		ByVal this As IPauseable Ptr, _
 		ByVal Context As Any Ptr, _
 		ByVal StatusHandler As RunnableStatusHandler _
 	)As HRESULT
 	
-	Dim Suspend As Function( _
+	Suspend As Function( _
 		ByVal this As IPauseable Ptr _
 	)As HRESULT
 	
-	Dim Resume As Function( _
+	Resume As Function( _
 		ByVal this As IPauseable Ptr _
 	)As HRESULT
 	
 End Type
 
 Type IPauseable_
-	Dim lpVtbl As IPauseableVirtualTable Ptr
+	lpVtbl As IPauseableVirtualTable Ptr
 End Type
 
 #define IPauseable_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

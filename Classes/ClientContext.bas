@@ -12,20 +12,20 @@ Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
 Type _ClientContext
-	Dim lpVtbl As Const IClientContextVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pINetworkStream As INetworkStream Ptr
-	Dim pIRequest As IClientRequest Ptr
-	Dim pIHttpReader As IHttpReader Ptr
-	Dim pIResponse As IServerResponse Ptr
-	Dim pIRequestedFile As IRequestedFile Ptr
-	Dim pIAsync As IAsyncResult Ptr
-	Dim pIProcessor As IRequestProcessor Ptr
-	Dim OperationCode As OperationCodes
-	Dim RemoteAddress As SOCKADDR_STORAGE
-	Dim RemoteAddressLength As Integer
+	lpVtbl As Const IClientContextVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pINetworkStream As INetworkStream Ptr
+	pIRequest As IClientRequest Ptr
+	pIHttpReader As IHttpReader Ptr
+	pIResponse As IServerResponse Ptr
+	pIRequestedFile As IRequestedFile Ptr
+	pIAsync As IAsyncResult Ptr
+	pIProcessor As IRequestProcessor Ptr
+	OperationCode As OperationCodes
+	RemoteAddress As SOCKADDR_STORAGE
+	RemoteAddressLength As Integer
 End Type
 
 Sub InitializeClientContext( _

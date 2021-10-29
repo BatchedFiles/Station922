@@ -18,21 +18,21 @@ Extern IID_IString Alias "IID_IString" As Const IID
 
 Type IStringVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IString Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	
-	Dim GetHeapBSTR As Function( _
+	GetHeapBSTR As Function( _
 		ByVal this As IString Ptr, _
 		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
 	)As HRESULT
@@ -40,7 +40,7 @@ Type IStringVirtualTable
 End Type
 
 Type IString_
-	Dim lpVtbl As IStringVirtualTable Ptr
+	lpVtbl As IStringVirtualTable Ptr
 End Type
 
 #define IString_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

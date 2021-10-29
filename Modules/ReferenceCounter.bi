@@ -6,18 +6,18 @@
 #ifdef __FB_64BIT__
 
 Type _ReferenceCounter
-	Dim Counter As LONG64
+	Counter As LONG64
 	#ifndef WITHOUT_CRITICAL_SECTIONS
-		Dim crSection As CRITICAL_SECTION
+		crSection As CRITICAL_SECTION
 	#endif
 End Type
 
 #else
 
 Type _ReferenceCounter
-	Dim Counter As LONG
+	Counter As LONG
 	#ifndef WITHOUT_CRITICAL_SECTIONS
-		Dim crSection As CRITICAL_SECTION
+		crSection As CRITICAL_SECTION
 	#endif
 End Type
 

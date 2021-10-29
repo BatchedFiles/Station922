@@ -22,18 +22,18 @@ Const TRANSMIT_CHUNK_SIZE As DWORD = 1024 * 1024 * 265
 Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
 Type _HttpGetProcessor
-	Dim lpVtbl As Const IRequestProcessorVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim FileHandle As HANDLE
-	Dim ZipFileHandle As HANDLE
-	Dim SendBuffer As ZString * (MaxResponseBufferLength + 1)
-	Dim HeadersLength As Integer
-	Dim BodyLength As LongInt
-	Dim hTransmitFile As HANDLE
-	Dim CurrentChunkIndex As LongInt
-	Dim TransmitHeader As TRANSMIT_FILE_BUFFERS
+	lpVtbl As Const IRequestProcessorVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	FileHandle As HANDLE
+	ZipFileHandle As HANDLE
+	SendBuffer As ZString * (MaxResponseBufferLength + 1)
+	HeadersLength As Integer
+	BodyLength As LongInt
+	hTransmitFile As HANDLE
+	CurrentChunkIndex As LongInt
+	TransmitHeader As TRANSMIT_FILE_BUFFERS
 End Type
 
 Function GetFileBytesStartingIndex( _

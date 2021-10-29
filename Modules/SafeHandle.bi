@@ -10,7 +10,7 @@ Type SafeHandle
 	
 	Declare Destructor()
 	
-	Dim WinAPIHandle As HANDLE
+	WinAPIHandle As HANDLE
 End Type
 
 #endif

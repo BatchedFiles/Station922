@@ -6,8 +6,8 @@ Extern GlobalClassFactoryVirtualTableConnectionPointVirtualTable As Const IClass
 Extern GlobalClassFactoryDispatchConnectionPointVirtualTable As Const IClassFactoryVtbl
 
 Type ClassFactoryVirtualTable
-	Dim rclsid As Const CLSID Ptr
-	Dim lpVtbl As Const IClassFactoryVtbl Ptr
+	rclsid As Const CLSID Ptr
+	lpVtbl As Const IClassFactoryVtbl Ptr
 End Type
 
 Common Shared PGlobalCounter As ObjectsCounter Ptr

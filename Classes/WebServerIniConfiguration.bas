@@ -41,13 +41,13 @@ Const MaxSectionsLength As Integer = 32000 - 1
 ' Const ListenPortLengthMaximum As Integer = 15
 
 Type _WebServerIniConfiguration
-	Dim lpVtbl As Const IWebServerConfigurationVirtualTable Ptr
-	Dim ReferenceCounter As Integer
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim WebServerIniFileName As WString * (MAX_PATH + 1)
-	Dim WebSitesIniFileName As WString * (MAX_PATH + 1)
-	Dim UsersIniFileName As WString * (MAX_PATH + 1)
+	lpVtbl As Const IWebServerConfigurationVirtualTable Ptr
+	ReferenceCounter As Integer
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	WebServerIniFileName As WString * (MAX_PATH + 1)
+	WebSitesIniFileName As WString * (MAX_PATH + 1)
+	UsersIniFileName As WString * (MAX_PATH + 1)
 End Type
 
 Sub InitializeWebServerIniConfiguration( _

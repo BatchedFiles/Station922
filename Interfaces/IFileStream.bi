@@ -12,12 +12,12 @@ Extern IID_IFileStream Alias "IID_IFileStream" As Const IID
 Type IFileStreamVirtualTable
 	Dim InheritedTable As IBaseStreamVirtualTable
 	
-	Dim GetFileHandle As Function( _
+	GetFileHandle As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
-	Dim SetFileHandle As Function( _
+	SetFileHandle As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
@@ -25,7 +25,7 @@ Type IFileStreamVirtualTable
 End Type
 
 Type IFileStream_
-	Dim lpVtbl As IFileStreamVirtualTable Ptr
+	lpVtbl As IFileStreamVirtualTable Ptr
 End Type
 
 #endif

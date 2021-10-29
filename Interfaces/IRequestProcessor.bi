@@ -8,13 +8,13 @@
 #include once "IWebSite.bi"
 
 Type _ProcessorContext
-	Dim pIRequest As IClientRequest Ptr
-	Dim pIResponse As IServerResponse Ptr
-	Dim pINetworkStream As INetworkStream Ptr
-	Dim pIWebSite As IWebSite Ptr
-	Dim pIClientReader As IHttpReader Ptr
-	Dim pIRequestedFile As IRequestedFile Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
+	pIRequest As IClientRequest Ptr
+	pIResponse As IServerResponse Ptr
+	pINetworkStream As INetworkStream Ptr
+	pIWebSite As IWebSite Ptr
+	pIClientReader As IHttpReader Ptr
+	pIRequestedFile As IRequestedFile Ptr
+	pIMemoryAllocator As IMalloc Ptr
 End Type
 
 Type ProcessorContext As _ProcessorContext
@@ -37,38 +37,38 @@ Extern IID_IRequestProcessor Alias "IID_IRequestProcessor" As Const IID
 
 Type IRequestProcessorVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IRequestProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IRequestProcessor Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IRequestProcessor Ptr _
 	)As ULONG
 	
-	Dim Prepare As Function( _
+	Prepare As Function( _
 		ByVal this As IRequestProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr _
 	)As HRESULT
 	
-	Dim Process As Function( _
+	Process As Function( _
 		ByVal this As IRequestProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr _
 	)As HRESULT
 	
-	Dim BeginProcess As Function( _
+	BeginProcess As Function( _
 		ByVal this As IRequestProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim EndProcess As Function( _
+	EndProcess As Function( _
 		ByVal this As IRequestProcessor Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
@@ -76,7 +76,7 @@ Type IRequestProcessorVirtualTable
 End Type
 
 Type IRequestProcessor_
-	Dim lpVtbl As IRequestProcessorVirtualTable Ptr
+	lpVtbl As IRequestProcessorVirtualTable Ptr
 End Type
 
 #define IRequestProcessor_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

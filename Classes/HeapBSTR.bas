@@ -5,12 +5,12 @@
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
 Type _InternalHeapBSTR
-	Dim lpVtbl As Const IStringVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim cbBytes As UINT
-	Dim wszNullChar As OLECHAR
+	lpVtbl As Const IStringVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	cbBytes As UINT
+	wszNullChar As OLECHAR
 End Type
 
 Sub InitializeInternalHeapBSTR( _

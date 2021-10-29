@@ -16,132 +16,132 @@ Extern IID_IServerResponse Alias "IID_IServerResponse" As Const IID
 
 Type IServerResponseVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IServerResponse Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IServerResponse Ptr _
 	)As ULONG
 	
-	Dim GetHttpVersion As Function( _
+	GetHttpVersion As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
 	
-	Dim SetHttpVersion As Function( _
+	SetHttpVersion As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HttpVersion As HttpVersions _
 	)As HRESULT
 	
-	Dim GetStatusCode As Function( _
+	GetStatusCode As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pStatusCode As HttpStatusCodes Ptr _
 	)As HRESULT
 	
-	Dim SetStatusCode As Function( _
+	SetStatusCode As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal StatusCode As HttpStatusCodes _
 	)As HRESULT
 	
-	Dim GetStatusDescription As Function( _
+	GetStatusDescription As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ppStatusDescription As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetStatusDescription As Function( _
+	SetStatusDescription As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pStatusDescription As WString Ptr _
 	)As HRESULT
 	
-	Dim GetKeepAlive As Function( _
+	GetKeepAlive As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 	
-	Dim SetKeepAlive As Function( _
+	SetKeepAlive As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
 	
-	Dim GetSendOnlyHeaders As Function( _
+	GetSendOnlyHeaders As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pSendOnlyHeaders As Boolean Ptr _
 	)As HRESULT
 	
-	Dim SetSendOnlyHeaders As Function( _
+	SetSendOnlyHeaders As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal SendOnlyHeaders As Boolean _
 	)As HRESULT
 	
-	Dim GetMimeType As Function( _
+	GetMimeType As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 	
-	Dim SetMimeType As Function( _
+	SetMimeType As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 	
-	Dim GetHttpHeader As Function( _
+	GetHttpHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal ppHeader As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetHttpHeader As Function( _
+	SetHttpHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeader As WString Ptr _
 	)As HRESULT
 	
-	Dim GetZipEnabled As Function( _
+	GetZipEnabled As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pZipEnabled As Boolean Ptr _
 	)As HRESULT
 	
-	Dim SetZipEnabled As Function( _
+	SetZipEnabled As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ZipEnabled As Boolean _
 	)As HRESULT
 	
-	Dim GetZipMode As Function( _
+	GetZipMode As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
-	Dim SetZipMode As Function( _
+	SetZipMode As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 	
-	Dim AddResponseHeader As Function( _
+	AddResponseHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderName As WString Ptr, _
 		ByVal Value As WString Ptr _
 	)As HRESULT
 	
-	Dim AddKnownResponseHeader As Function( _
+	AddKnownResponseHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As WString Ptr _
 	)As HRESULT
 	
-	Dim Clear As Function( _
+	Clear As Function( _
 		ByVal this As IServerResponse Ptr _
 	)As HRESULT
 	
 End Type
 
 Type IServerResponse_
-	Dim lpVtbl As IServerResponseVirtualTable Ptr
+	lpVtbl As IServerResponseVirtualTable Ptr
 End Type
 
 #define IServerResponse_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

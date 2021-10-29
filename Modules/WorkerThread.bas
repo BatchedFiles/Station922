@@ -18,9 +18,9 @@ Enum DataError
 End Enum
 
 Type _WorkerThreadContext
-	Dim hIOCompletionPort As HANDLE
-	Dim pILogger As ILogger Ptr
-	Dim pIWebSites As IWebSiteCollection Ptr
+	hIOCompletionPort As HANDLE
+	pILogger As ILogger Ptr
+	pIWebSites As IWebSiteCollection Ptr
 End Type
 
 Function CreateWorkerThreadContext( _

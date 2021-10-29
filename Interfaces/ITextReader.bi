@@ -23,31 +23,31 @@ Extern IID_ITextReader Alias "IID_ITextReader" As Const IID
 
 Type ITextReaderVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As ITextReader Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As ITextReader Ptr _
 	)As ULONG
 	
-	Dim Peek As Function( _
+	Peek As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pChar As wchar_t Ptr _
 	)As HRESULT
 	
-	Dim ReadChar As Function( _
+	ReadChar As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pChar As wchar_t Ptr _
 	)As HRESULT
 	
-	Dim ReadCharArray As Function( _
+	ReadCharArray As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal Buffer As WString Ptr, _
 		ByVal Index As Integer, _
@@ -55,40 +55,40 @@ Type ITextReaderVirtualTable
 		ByVal pReadedChars As Integer Ptr _
 	)As HRESULT
 	
-	Dim ReadLine As Function( _
+	ReadLine As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pLineLength As Integer Ptr, _
 		ByVal pLine As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim ReadToEnd As Function( _
+	ReadToEnd As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pLinesLength As Integer Ptr, _
 		ByVal pLines As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim BeginReadLine As Function( _
+	BeginReadLine As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim EndReadLine As Function( _
+	EndReadLine As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pLineLength As Integer Ptr, _
 		ByVal pLine As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim BeginReadToEnd As Function( _
+	BeginReadToEnd As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim EndReadToEnd As Function( _
+	EndReadToEnd As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pLinesLength As Integer Ptr, _
@@ -98,7 +98,7 @@ Type ITextReaderVirtualTable
 End Type
 
 Type ITextReader_
-	Dim lpVtbl As ITextReaderVirtualTable Ptr
+	lpVtbl As ITextReaderVirtualTable Ptr
 End Type
 
 #define ITextReader_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

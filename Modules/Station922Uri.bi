@@ -2,25 +2,25 @@
 #define STATION922URI_BI
 
 Type UserInfo
-	Dim pUserName As WString Ptr
-	Dim pPassword As WString Ptr
+	pUserName As WString Ptr
+	pPassword As WString Ptr
 End Type
 
 Type Authority
-	Dim Info As UserInfo
-	Dim pHost As WString Ptr
-	Dim pPort As WString Ptr
+	Info As UserInfo
+	pHost As WString Ptr
+	pPort As WString Ptr
 End Type
 
 Type Station922Uri
 	Const MaxUrlLength As Integer = 4096 - 1
 	
-	'Dim Scheme As WString Ptr
-	'Dim Authority As Authority
-	Dim pUrl As WString Ptr
-	Dim Path As WString * (MaxUrlLength + 1)
-	Dim pQueryString As WString Ptr
-	Dim pFragment As WString Ptr
+	'Scheme As WString Ptr
+	'Authority As Authority
+	pUrl As WString Ptr
+	Path As WString * (MaxUrlLength + 1)
+	pQueryString As WString Ptr
+	pFragment As WString Ptr
 	
 	Declare Function PathDecode( _
 		ByVal Buffer As WString Ptr _
@@ -45,11 +45,11 @@ scheme     authority                          path              query           
 Type Station922Uri
 	Const MaxUrlLength As Integer = 4096 - 1
 	
-	Dim Scheme As WString Ptr
-	Dim Authority As Authority
-	Dim Path As WString Ptr
-	Dim Query As WString Ptr
-	Dim Fragment As WString Ptr
+	Scheme As WString Ptr
+	Authority As Authority
+	Path As WString Ptr
+	Query As WString Ptr
+	Fragment As WString Ptr
 	
 	Declare Sub PathDecode( _
 		ByVal Buffer As WString Ptr _

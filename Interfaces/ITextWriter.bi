@@ -15,72 +15,72 @@ Extern IID_ITextWriter Alias "IID_ITextWriter" As Const IID
 
 Type ITextWriterVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As ITextWriter Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As ITextWriter Ptr _
 	)As ULONG
 	
-	Dim GetCodePage As Function( _
+	GetCodePage As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal pCodePage As Integer Ptr _
 	)As HRESULT
 	
-	Dim SetCodePage As Function( _
+	SetCodePage As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal CodePage As Integer _
 	)As HRESULT
 	
-	Dim WriteNewLine As Function( _
+	WriteNewLine As Function( _
 		ByVal this As ITextWriter Ptr _
 	)As HRESULT
 	
-	Dim WriteStringLine As Function( _
+	WriteStringLine As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal w As WString Ptr _
 	)As HRESULT
 	
-	Dim WriteLengthStringLine As Function( _
+	WriteLengthStringLine As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	Dim WriteString As Function( _
+	WriteString As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal w As WString Ptr _
 	)As HRESULT
 	
-	Dim WriteLengthString As Function( _
+	WriteLengthString As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	Dim WriteChar As Function( _
+	WriteChar As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal wc As wchar_t _
 	)As HRESULT
 	
-	Dim WriteInt32 As Function( _
+	WriteInt32 As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal Value As Long _
 	)As HRESULT
 	
-	Dim WriteInt64 As Function( _
+	WriteInt64 As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal Value As LongInt _
 	)As HRESULT
 	
-	Dim WriteUInt64 As Function( _
+	WriteUInt64 As Function( _
 		ByVal this As ITextWriter Ptr, _
 		ByVal Value As ULongInt _
 	)As HRESULT
@@ -88,7 +88,7 @@ Type ITextWriterVirtualTable
 End Type
 
 Type ITextWriter_
-	Dim lpVtbl As ITextWriterVirtualTable Ptr
+	lpVtbl As ITextWriterVirtualTable Ptr
 End Type
 
 #define ITextWriter_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

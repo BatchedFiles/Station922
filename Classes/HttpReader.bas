@@ -12,9 +12,9 @@ Type FastInteger As Integer
 Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(FastInteger)) \ SizeOf(UByte) - 1
 
 Type _RawBuffer
-	Dim cbUsed As FastInteger
-	Dim cbLength As FastInteger
-	Dim Bytes(RAWBUFFER_CAPACITY) As UByte
+	cbUsed As FastInteger
+	cbLength As FastInteger
+	Bytes(RAWBUFFER_CAPACITY) As UByte
 End Type
 
 Type RawBuffer As _RawBuffer
@@ -22,22 +22,22 @@ Type RawBuffer As _RawBuffer
 Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(FastInteger)) \ SizeOf(WString) - 1
 
 Type _LinesBuffer
-	Dim Start As FastInteger
-	Dim Length As FastInteger
-	Dim wszLine As WString * (LINESBUFFER_CAPACITY + 1)
+	Start As FastInteger
+	Length As FastInteger
+	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
 End Type
 
 Type LinesBuffer As _LinesBuffer
 
 Type _HttpReader
-	Dim lpVtbl As Const IHttpReaderVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pIStream As IBaseStream Ptr
-	Dim ReadedData As RawBuffer
-	Dim Lines As LinesBuffer
-	Dim IsAllBytesReaded As Boolean
+	lpVtbl As Const IHttpReaderVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pIStream As IBaseStream Ptr
+	ReadedData As RawBuffer
+	Lines As LinesBuffer
+	IsAllBytesReaded As Boolean
 End Type
 
 Function FindCrLfIndexA( _

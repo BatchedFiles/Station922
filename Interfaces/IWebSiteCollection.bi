@@ -11,32 +11,32 @@ Extern IID_IWebSiteCollection Alias "IID_IWebSiteCollection" As Const IID
 
 Type IWebSiteCollectionVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IWebSiteCollection Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IWebSiteCollection Ptr _
 	)As ULONG
 	
-	Dim _NewEnum As Function( _
+	_NewEnum As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
 		ByVal ppIEnum As IEnumWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim Item As Function( _
+	Item As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim Count As Function( _
+	Count As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
@@ -44,7 +44,7 @@ Type IWebSiteCollectionVirtualTable
 End Type
 
 Type IWebSiteCollection_
-	Dim lpVtbl As IWebSiteCollectionVirtualTable Ptr
+	lpVtbl As IWebSiteCollectionVirtualTable Ptr
 End Type
 
 #define IWebSiteCollection_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

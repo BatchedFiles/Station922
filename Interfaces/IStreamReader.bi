@@ -10,12 +10,12 @@ Type IStreamReader As IStreamReader_
 Extern IID_IStreamReader Alias "IID_IStreamReader" As Const IID
 
 Type IStreamReaderVirtualTable
-	Dim InheritedTable As ITextReaderVirtualTable
+	InheritedTable As ITextReaderVirtualTable
 	
 End Type
 
 Type IStreamReader_
-	Dim lpVtbl As IStreamReaderVirtualTable Ptr
+	lpVtbl As IStreamReaderVirtualTable Ptr
 End Type
 
 #endif

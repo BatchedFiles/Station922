@@ -18,65 +18,65 @@ Extern IID_IWebSite Alias "IID_IWebSite" As Const IID
 
 Type IWebSiteVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IWebSite Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IWebSite Ptr _
 	)As ULONG
 	
-	Dim GetHostName As Function( _
+	GetHostName As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppHost As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetSitePhysicalDirectory As Function( _
+	GetSitePhysicalDirectory As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppPhysicalDirectory As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetVirtualPath As Function( _
+	GetVirtualPath As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppVirtualPath As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetIsMoved As Function( _
+	GetIsMoved As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIsMoved As Boolean Ptr _
 	)As HRESULT
 	
-	Dim GetMovedUrl As Function( _
+	GetMovedUrl As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppMovedUrl As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim MapPath As Function( _
+	MapPath As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As WString Ptr, _
 		ByVal pResult As WString Ptr _
 	)As HRESULT
 	
-	Dim OpenRequestedFile As Function( _
+	OpenRequestedFile As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pRequestedFile As IRequestedFile Ptr, _
 		ByVal FilePath As WString Ptr, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
 	
-	Dim NeedCgiProcessing As Function( _
+	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal path As WString Ptr, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	Dim NeedDllProcessing As Function( _
+	NeedDllProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal path As WString Ptr, _
 		ByVal pResult As Boolean Ptr _
@@ -85,7 +85,7 @@ Type IWebSiteVirtualTable
 End Type
 
 Type IWebSite_
-	Dim lpVtbl As IWebSiteVirtualTable Ptr
+	lpVtbl As IWebSiteVirtualTable Ptr
 End Type
 
 #define IWebSite_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

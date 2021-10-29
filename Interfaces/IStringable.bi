@@ -12,21 +12,21 @@ Extern IID_IStringable Alias "IID_IStringable" As Const IID
 
 Type IStringableVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IStringable Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IStringable Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IStringable Ptr _
 	)As ULONG
 	
-	Dim ToString As Function( _
+	ToString As Function( _
 		ByVal this As IStringable Ptr, _
 		ByVal pLength As Integer Ptr, _
 		ByVal ppResult As WString Ptr Ptr _
@@ -35,7 +35,7 @@ Type IStringableVirtualTable
 End Type
 
 Type IStringable_
-	Dim lpVtbl As IStringableVirtualTable Ptr
+	lpVtbl As IStringableVirtualTable Ptr
 End Type
 
 #define IStringable_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

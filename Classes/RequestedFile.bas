@@ -10,15 +10,15 @@ Const REQUESTEDFILE_MAXPATHLENGTH As Integer = 4095 + 32
 Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = 4095 + 32
 
 Type _RequestedFile
-	Dim lpVtbl As Const IRequestedFileVirtualTable Ptr
-	Dim lpSendableVtbl As Const ISendableVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim FilePath As WString * (REQUESTEDFILE_MAXPATHLENGTH + 1)
-	Dim PathTranslated As WString * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
-	Dim LastFileModifiedDate As FILETIME
-	Dim FileHandle As Handle
+	lpVtbl As Const IRequestedFileVirtualTable Ptr
+	lpSendableVtbl As Const ISendableVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	FilePath As WString * (REQUESTEDFILE_MAXPATHLENGTH + 1)
+	PathTranslated As WString * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
+	LastFileModifiedDate As FILETIME
+	FileHandle As Handle
 End Type
 
 Sub InitializeRequestedFile( _

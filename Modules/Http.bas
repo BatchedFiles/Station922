@@ -294,27 +294,27 @@ Const HttpStatusCodeString510Length As Integer = 12
 Const HttpStatusCodeString511Length As Integer = 31
 
 Type StatusCodeNode
-	Dim pDescription As WString Ptr
-	Dim DescriptionLength As Integer
-	Dim StatusCodeIndex As HttpStatusCodes
+	pDescription As WString Ptr
+	DescriptionLength As Integer
+	StatusCodeIndex As HttpStatusCodes
 End Type
 
 Type RequestHeaderNode
-	Dim pHeader As WString Ptr
-	Dim HeaderLength As Integer
-	Dim HeaderIndex As HttpRequestHeaders
+	pHeader As WString Ptr
+	HeaderLength As Integer
+	HeaderIndex As HttpRequestHeaders
 End Type
 
 Type ResponseHeaderNode
-	Dim pHeader As WString Ptr
-	Dim HeaderLength As Integer
-	Dim HeaderIndex As HttpResponseHeaders
+	pHeader As WString Ptr
+	HeaderLength As Integer
+	HeaderIndex As HttpResponseHeaders
 End Type
 
 Type CgiHeaderNode
-	Dim pHeader As WString Ptr
-	Dim HeaderLength As Integer
-	Dim HeaderIndex As HttpRequestHeaders
+	pHeader As WString Ptr
+	HeaderLength As Integer
+	HeaderIndex As HttpRequestHeaders
 End Type
 
 Dim Shared StatusCodeNodesVector(1 To HttpStatusCodesSize) As StatusCodeNode = { _

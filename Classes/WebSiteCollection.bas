@@ -25,20 +25,20 @@ Declare Function CreateWebSiteNode( _
 )As WebSiteNode Ptr
 
 Type _WebSiteNode
-	Dim HostName As BSTR
-	Dim pIWebSite As IWebSite Ptr
-	Dim LeftNode As WebSiteNode Ptr
-	Dim RightNode As WebSiteNode Ptr
+	HostName As BSTR
+	pIWebSite As IWebSite Ptr
+	LeftNode As WebSiteNode Ptr
+	RightNode As WebSiteNode Ptr
 End Type
 
 Type _WebSiteCollection
-	Dim lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pDefaultNode As WebSiteNode Ptr
-	Dim pTree As WebSiteNode Ptr
-	Dim WebSitesCount As Integer
+	lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pDefaultNode As WebSiteNode Ptr
+	pTree As WebSiteNode Ptr
+	WebSitesCount As Integer
 End Type
 
 Sub InitializeWebSiteCollection( _

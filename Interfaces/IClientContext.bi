@@ -22,138 +22,138 @@ Extern IID_IClientContext Alias "IID_IClientContext" As Const IID
 
 Type IClientContextVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IClientContext Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IClientContext Ptr _
 	)As ULONG
 	
-	Dim GetRemoteAddress As Function( _
+	GetRemoteAddress As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
 	
-	Dim SetRemoteAddress As Function( _
+	SetRemoteAddress As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
-	Dim GetMemoryAllocator As Function( _
+	GetMemoryAllocator As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIMemoryAllocator As IMalloc Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetNetworkStream As Function( _
+	GetNetworkStream As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppINetworkStream As INetworkStream Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetNetworkStream As Function( _
+	SetNetworkStream As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pINetworkStream As INetworkStream Ptr _
 	)As HRESULT
 	
-	Dim GetFrequency As Function( _
+	GetFrequency As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pFrequency As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
-	Dim SetFrequency As Function( _
+	SetFrequency As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal Frequency As LARGE_INTEGER _
 	)As HRESULT
 	
-	Dim GetStartTicks As Function( _
+	GetStartTicks As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pStartTicks As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
-	Dim SetStartTicks As Function( _
+	SetStartTicks As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal StartTicks As LARGE_INTEGER _
 	)As HRESULT
 	
-	Dim GetClientRequest As Function( _
+	GetClientRequest As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetClientRequest As Function( _
+	SetClientRequest As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
-	Dim GetServerResponse As Function( _
+	GetServerResponse As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIResponse As IServerResponse Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetServerResponse As Function( _
+	SetServerResponse As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)As HRESULT
 	
-	Dim GetHttpReader As Function( _
+	GetHttpReader As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIHttpReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetHttpReader As Function( _
+	SetHttpReader As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIHttpReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	Dim GetRequestedFile As Function( _
+	GetRequestedFile As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIRequestedFile As IRequestedFile Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetRequestedFile As Function( _
+	SetRequestedFile As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)As HRESULT
 	
-	Dim GetAsyncResult As Function( _
+	GetAsyncResult As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIAsync As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetAsyncResult As Function( _
+	SetAsyncResult As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIAsync As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim GetRequestProcessor As Function( _
+	GetRequestProcessor As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppIProcessor As IRequestProcessor Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetRequestProcessor As Function( _
+	SetRequestProcessor As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pIProcessor As IRequestProcessor Ptr _
 	)As HRESULT
 	
-	Dim GetOperationCode As Function( _
+	GetOperationCode As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal pCode As OperationCodes Ptr _
 	)As HRESULT
 	
-	Dim SetOperationCode As Function( _
+	SetOperationCode As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal Code As OperationCodes _
 	)As HRESULT
 	
-	Dim GetLogger As Function( _
+	GetLogger As Function( _
 		ByVal this As IClientContext Ptr, _
 		ByVal ppILogger As ILogger Ptr Ptr _
 	)As HRESULT
@@ -161,7 +161,7 @@ Type IClientContextVirtualTable
 End Type
 
 Type IClientContext_
-	Dim lpVtbl As IClientContextVirtualTable Ptr
+	lpVtbl As IClientContextVirtualTable Ptr
 End Type
 
 #define IClientContext_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

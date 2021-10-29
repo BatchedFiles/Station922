@@ -12,63 +12,63 @@ Extern IID_IHeapMemoryAllocator Alias "IID_IHeapMemoryAllocator" As Const IID
 
 Type IHeapMemoryAllocatorVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	Dim Alloc As Function( _
+	Alloc As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
 	
-	Dim Realloc As Function( _
+	Realloc As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
 	
-	Dim Free As Sub( _
+	Free As Sub( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
 	
-	Dim GetSize As Function( _
+	GetSize As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As SIZE_T_
 	
-	Dim DidAlloc As Function( _
+	DidAlloc As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As Long
 	
-	Dim HeapMinimize As Sub( _
+	HeapMinimize As Sub( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)
 	
-	Dim RegisterMallocSpy As Function( _
+	RegisterMallocSpy As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pMallocSpy As LPMALLOCSPY _
 	)As HRESULT
 	
-	Dim RevokeMallocSpy As Function( _
+	RevokeMallocSpy As Function( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As HRESULT
 	
 End Type
 
 Type IHeapMemoryAllocatorVirtualTable_
-	Dim lpVtbl As IHeapMemoryAllocatorVirtualTable Ptr
+	lpVtbl As IHeapMemoryAllocatorVirtualTable Ptr
 End Type
 
 #define IHeapMemoryAllocator_QueryInterface(This, riid, ppvObject) (This)->lpVtbl->QueryInterface(This, riid, ppvObject)

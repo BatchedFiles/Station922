@@ -11,37 +11,37 @@ Extern IID_IMutableWebSiteCollection Alias "IID_IMutableWebSiteCollection" As Co
 
 Type IMutableWebSiteCollectionVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr _
 	)As ULONG
 	
-	Dim _NewEnum As Function( _
+	_NewEnum As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal ppIEnum As IEnumWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim Item As Function( _
+	Item As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim Count As Function( _
+	Count As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	
-	Dim Add As Function( _
+	Add As Function( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
@@ -56,7 +56,7 @@ Type IMutableWebSiteCollectionVirtualTable
 End Type
 
 Type IMutableWebSiteCollection_
-	Dim lpVtbl As IMutableWebSiteCollectionVirtualTable Ptr
+	lpVtbl As IMutableWebSiteCollectionVirtualTable Ptr
 End Type
 
 #define IMutableWebSiteCollection_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

@@ -12,65 +12,65 @@ Extern IID_IStopWatcher Alias "IID_IStopWatcher" As Const IID
 
 Type IStopWatcherVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As ULONG
 	
-	Dim GetFrequency As Function( _
+	GetFrequency As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pFrequency As LongInt Ptr _
 	)As HRESULT
 	
-	Dim GetTicks As Function( _
+	GetTicks As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pTicks As LongInt Ptr _
 	)As HRESULT
 	
-	Dim GetElapsedTicks As Function( _
+	GetElapsedTicks As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pElapsedTicks As LongInt Ptr _
 	)As HRESULT
 	
-	Dim GetElapsedMilliseconds As Function( _
+	GetElapsedMilliseconds As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pElapsedMilliseconds As LongInt Ptr _
 	)As HRESULT
 	
-	Dim IsRunning As Function( _
+	IsRunning As Function( _
 		ByVal this As IStopWatcher Ptr, _
 		ByVal pIsRunning As Boolean Ptr _
 	)As HRESULT
 	
-	Dim StartWatch As Function( _
+	StartWatch As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As HRESULT
 	
-	Dim StopWatch As Function( _
+	StopWatch As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As HRESULT
 	
-	Dim ResetWatch As Function( _
+	ResetWatch As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As HRESULT
 	
-	Dim RestartWatch As Function( _
+	RestartWatch As Function( _
 		ByVal this As IStopWatcher Ptr _
 	)As HRESULT
 	
 End Type
 
 Type IStopWatcher_
-	Dim lpVtbl As IStopWatcherVirtualTable Ptr
+	lpVtbl As IStopWatcherVirtualTable Ptr
 End Type
 
 #define IStopWatcher_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

@@ -17,37 +17,37 @@ Type AsyncCallback As Sub(ByVal ar As IAsyncResult Ptr, ByVal ReadedBytes As Int
 Extern IID_IAsyncResult Alias "IID_IAsyncResult" As Const IID
 
 Type _ASYNCRESULTOVERLAPPED
-	Dim OverLap As OVERLAPPED
-	Dim pIAsync As IAsyncResult Ptr
+	OverLap As OVERLAPPED
+	pIAsync As IAsyncResult Ptr
 End Type
 
 Type IAsyncResultVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IAsyncResult Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IAsyncResult Ptr _
 	)As ULONG
 	
-	Dim GetAsyncState As Function( _
+	GetAsyncState As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal ppState As IUnknown Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetWaitHandle As Function( _
+	GetWaitHandle As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pWaitHandle As HANDLE Ptr _
 	)As HRESULT
 	
-	Dim GetCompletedSynchronously As Function( _
+	GetCompletedSynchronously As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pCompletedSynchronously As Boolean Ptr _
 	)As HRESULT
@@ -55,7 +55,7 @@ Type IAsyncResultVirtualTable
 End Type
 
 Type IAsyncResult_
-	Dim lpVtbl As IAsyncResultVirtualTable Ptr
+	lpVtbl As IAsyncResultVirtualTable Ptr
 End Type
 
 #define IAsyncResult_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

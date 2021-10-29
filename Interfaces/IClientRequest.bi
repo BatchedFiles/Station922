@@ -44,9 +44,9 @@ Enum ByteRangeIsSet
 End Enum
 
 Type ByteRange
-	Dim IsSet As ByteRangeIsSet
-	Dim FirstBytePosition As LongInt
-	Dim LastBytePosition As LongInt
+	IsSet As ByteRangeIsSet
+	FirstBytePosition As LongInt
+	LastBytePosition As LongInt
 End Type
 
 Type IClientRequest As IClientRequest_
@@ -57,92 +57,92 @@ Extern IID_IClientRequest Alias "IID_IClientRequest" As Const IID
 
 Type IClientRequestVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
 	
-	Dim ReadRequest As Function( _
+	ReadRequest As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As HRESULT
 	
-	Dim BeginReadRequest As Function( _
+	BeginReadRequest As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim EndReadRequest As Function( _
+	EndReadRequest As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim Prepare As Function( _
+	Prepare As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As HRESULT
 	
-	Dim GetHttpMethod As Function( _
+	GetHttpMethod As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pHttpMethod As HttpMethods Ptr _
 	)As HRESULT
 	
 	' TODO Get IClientUri Interface
-	Dim GetUri As Function( _
+	GetUri As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
-	Dim GetHttpVersion As Function( _
+	GetHttpVersion As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pHttpVersions As HttpVersions Ptr _
 	)As HRESULT
 	
-	Dim GetHttpHeader As Function( _
+	GetHttpHeader As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim GetKeepAlive As Function( _
+	GetKeepAlive As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 	
-	Dim GetContentLength As Function( _
+	GetContentLength As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
 	
-	Dim GetByteRange As Function( _
+	GetByteRange As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
 	
-	Dim GetZipMode As Function( _
+	GetZipMode As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
 	
-	Dim Clear As Function( _
+	Clear As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As HRESULT
 	
-	Dim GetTextReader As Function( _
+	GetTextReader As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ppIReader As ITextReader Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetTextReader As Function( _
+	SetTextReader As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pIReader As ITextReader Ptr _
 	)As HRESULT
@@ -150,7 +150,7 @@ Type IClientRequestVirtualTable
 End Type
 
 Type IClientRequest_
-	Dim lpVtbl As IClientRequestVirtualTable Ptr
+	lpVtbl As IClientRequestVirtualTable Ptr
 End Type
 
 #define IClientRequest_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

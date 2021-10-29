@@ -11,22 +11,22 @@ Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 Extern GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable
 
 Type _ClientRequest
-	Dim lpVtbl As Const IClientRequestVirtualTable Ptr
-	Dim lpStringableVtbl As Const IStringableVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pIReader As ITextReader Ptr
-	Dim RequestedLine As WString Ptr
-	Dim RequestedLineLength As Integer
-	Dim RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
-	Dim HttpMethod As HttpMethods
-	Dim ClientURI As Station922Uri
-	Dim HttpVersion As HttpVersions
-	Dim KeepAlive As Boolean
-	Dim RequestZipModes(HttpZipModesMaximum - 1) As Boolean
-	Dim RequestByteRange As ByteRange
-	Dim ContentLength As LongInt
+	lpVtbl As Const IClientRequestVirtualTable Ptr
+	lpStringableVtbl As Const IStringableVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pIReader As ITextReader Ptr
+	RequestedLine As WString Ptr
+	RequestedLineLength As Integer
+	RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
+	HttpMethod As HttpMethods
+	ClientURI As Station922Uri
+	HttpVersion As HttpVersions
+	KeepAlive As Boolean
+	RequestZipModes(HttpZipModesMaximum - 1) As Boolean
+	RequestByteRange As ByteRange
+	ContentLength As LongInt
 End Type
 
 Function ContainsBadCharSequence( _

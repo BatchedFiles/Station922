@@ -19,66 +19,66 @@ Extern IID_IRequestedFile Alias "IID_IRequestedFile" As Const IID
 
 Type IRequestedFileVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IRequestedFile Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IRequestedFile Ptr _
 	)As ULONG
 	
-	Dim GetFilePath As Function( _
+	GetFilePath As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal ppFilePath As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetFilePath As Function( _
+	SetFilePath As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal FilePath As WString Ptr _
 	)As HRESULT
 	
-	Dim GetPathTranslated As Function( _
+	GetPathTranslated As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal ppPathTranslated As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim SetPathTranslated As Function( _
+	SetPathTranslated As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal PathTranslated As WString Ptr _
 	)As HRESULT
 	
-	Dim FileExists As Function( _
+	FileExists As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal pResult As RequestedFileState Ptr _
 	)As HRESULT
 	
-	Dim GetFileHandle As Function( _
+	GetFileHandle As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
-	Dim SetFileHandle As Function( _
+	SetFileHandle As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
-	Dim GetLastFileModifiedDate As Function( _
+	GetLastFileModifiedDate As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
-	Dim GetFileLength As Function( _
+	GetFileLength As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal pResult As ULongInt Ptr _
 	)As HRESULT
 	
-	Dim GetVaryHeaders As Function( _
+	GetVaryHeaders As Function( _
 		ByVal this As IRequestedFile Ptr, _
 		ByVal pHeadersLength As Integer Ptr, _
 		ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
@@ -87,7 +87,7 @@ Type IRequestedFileVirtualTable
 End Type
 
 Type IRequestedFile_
-	Dim lpVtbl As IRequestedFileVirtualTable Ptr
+	lpVtbl As IRequestedFileVirtualTable Ptr
 End Type
 
 #define IRequestedFile_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

@@ -4,11 +4,36 @@
 
 Extern GlobalConsoleLoggerVirtualTable As Const ILoggerVirtualTable
 
-Type _ConsoleLogger
-	Dim lpVtbl As Const ILoggerVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pIMemoryAllocator As IMalloc Ptr
+Enum EntryType
+	Debug
+	Information
+	Warning
+	Error
+	Critical
+End Enum
+
+Const MaxEntryes As Integer = 50
+
+Type LogEntry
+	Reason As EntryType
+	Description As BSTR
+	vtData As VARIANT
 End Type
+
+Type _ConsoleLogger
+	lpVtbl As Const ILoggerVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pIMemoryAllocator As IMalloc Ptr
+	Entryes(MaxEntryes - 1) As LogEntry
+	EntryesCount As Integer
+End Type
+
+Declare Function ConsoleLoggerWriteEntry( _
+	ByVal this As ConsoleLogger Ptr, _
+	ByVal Reason As EntryType, _
+	ByVal pwszText As WString Ptr, _
+	ByVal pvtData As VARIANT Ptr _
+)As HRESULT
 
 Sub InitializeConsoleLogger( _
 		ByVal this As ConsoleLogger Ptr, _
@@ -19,6 +44,10 @@ Sub InitializeConsoleLogger( _
 	ReferenceCounterInitialize(@this->RefCounter)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	' For i As Integer = 0 To MaxEntryes - 1
+		' Entryes(i)
+	' Next
+	this->EntryesCount = 0
 	
 End Sub
 
@@ -120,7 +149,14 @@ Function ConsoleLoggerLogDebug( _
 		ByVal vtData As VARIANT _
 	)As HRESULT
 	
-	Return S_OK
+	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
+		this, _
+		EntryType.Debug, _
+		pwszText, _
+		@vtData _
+	)
+	
+	Return hr
 	
 End Function
 
@@ -130,7 +166,14 @@ Function ConsoleLoggerLogInformation( _
 		ByVal vtData As VARIANT _
 	)As HRESULT
 	
-	Return S_OK
+	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
+		this, _
+		EntryType.Information, _
+		pwszText, _
+		@vtData _
+	)
+	
+	Return hr
 	
 End Function
 
@@ -140,7 +183,14 @@ Function ConsoleLoggerLogWarning( _
 		ByVal vtData As VARIANT _
 	)As HRESULT
 	
-	Return S_OK
+	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
+		this, _
+		EntryType.Warning, _
+		pwszText, _
+		@vtData _
+	)
+	
+	Return hr
 	
 End Function
 
@@ -150,7 +200,14 @@ Function ConsoleLoggerLogError( _
 		ByVal vtData As VARIANT _
 	)As HRESULT
 	
-	Return S_OK
+	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
+		this, _
+		EntryType.Error, _
+		pwszText, _
+		@vtData _
+	)
+	
+	Return hr
 	
 End Function
 
@@ -159,6 +216,30 @@ Function ConsoleLoggerLogCritical( _
 		ByVal pwszText As WString Ptr, _
 		ByVal vtData As VARIANT _
 	)As HRESULT
+	
+	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
+		this, _
+		EntryType.Critical, _
+		pwszText, _
+		@vtData _
+	)
+	
+	Return hr
+	
+End Function
+
+Function ConsoleLoggerWriteEntry( _
+		ByVal this As ConsoleLogger Ptr, _
+		ByVal Reason As EntryType, _
+		ByVal pwszText As WString Ptr, _
+		ByVal pvtData As VARIANT Ptr _
+	)As HRESULT
+	
+	Dim Entry As LogEntry = Any
+	Entry.Reason = Reason
+	Entry.Description = SysAllocString(pwszText)
+	VariantInit(@Entry.vtData)
+	VariantCopy(@Entry.vtData, pvtData)
 	
 	Return S_OK
 	

@@ -10,11 +10,11 @@ Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
 Type _NetworkStream
-	Dim lpVtbl As Const INetworkStreamVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim ClientSocket As SOCKET
+	lpVtbl As Const INetworkStreamVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	ClientSocket As SOCKET
 End Type
 
 Sub InitializeNetworkStream( _

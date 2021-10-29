@@ -5,15 +5,15 @@
 Extern GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTable
 
 Type _AsyncResult
-	Dim lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pState As IUnknown Ptr
-	Dim callback As AsyncCallback
-	Dim WaitHandle As HANDLE
-	Dim OverLap As ASYNCRESULTOVERLAPPED
-	Dim CompletedSynchronously As Boolean
+	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pState As IUnknown Ptr
+	callback As AsyncCallback
+	WaitHandle As HANDLE
+	OverLap As ASYNCRESULTOVERLAPPED
+	CompletedSynchronously As Boolean
 End Type
 
 Sub InitializeAsyncResult( _

@@ -11,58 +11,58 @@ Extern IID_IWebServerConfiguration Alias "IID_IWebServerConfiguration" As Const 
 
 Type IWebServerConfigurationVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
 		
-	Dim GetListenAddress As Function( _
+	GetListenAddress As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal bstrListenAddress As BSTR Ptr _
 	)As HRESULT
 	
-	Dim GetListenPort As Function( _
+	GetListenPort As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pListenPort As UINT Ptr _
 	)As HRESULT
 	
-	Dim GetConnectBindAddress As Function( _
+	GetConnectBindAddress As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal bstrConnectBindAddress As BSTR Ptr _
 	)As HRESULT
 	
-	Dim GetConnectBindPort As Function( _
+	GetConnectBindPort As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pConnectBindPort As UINT Ptr _
 	)As HRESULT
 	
-	Dim GetWorkerThreadsCount As Function( _
+	GetWorkerThreadsCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As Integer Ptr _
 	)As HRESULT
 	
-	Dim GetCachedClientMemoryContextCount As Function( _
+	GetCachedClientMemoryContextCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As Integer Ptr _
 	)As HRESULT
 	
-	Dim GetIsPasswordValid As Function( _
+	GetIsPasswordValid As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pUserName As WString Ptr, _
 		ByVal pPassword As WString Ptr, _
 		ByVal pIsPasswordValid As Boolean Ptr _
 	)As HRESULT
 	
-	Dim GetWebSiteCollection As Function( _
+	GetWebSiteCollection As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
@@ -70,7 +70,7 @@ Type IWebServerConfigurationVirtualTable
 End Type
 
 Type IWebServerConfiguration_
-	Dim lpVtbl As IWebServerConfigurationVirtualTable Ptr
+	lpVtbl As IWebServerConfigurationVirtualTable Ptr
 End Type
 
 #define IWebServerConfiguration_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)

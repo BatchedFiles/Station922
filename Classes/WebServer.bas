@@ -25,12 +25,12 @@ Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSI
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Type CachedClientContext
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
-	Dim pIContext As IClientContext Ptr
-	Dim hrLogger As HRESULT
-	Dim hrMemoryAllocator As HRESULT
-	Dim hrClientContex As HRESULT
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	pIContext As IClientContext Ptr
+	hrLogger As HRESULT
+	hrMemoryAllocator As HRESULT
+	hrClientContex As HRESULT
 End Type
 
 Function CreateClientMemoryContext( _
@@ -128,32 +128,32 @@ Sub DestroyClientMemoryContext( _
 End Sub
 
 Type _WebServer
-	Dim lpVtbl As Const IRunnableVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
+	lpVtbl As Const IRunnableVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
 	
-	Dim hIOCompletionPort As HANDLE
-	Dim WorkerThreadsCount As Integer
-	Dim pIWebSites As IWebSiteCollection Ptr
-	Dim pINetworkStream As INetworkStream Ptr
-	Dim pIRequest As IClientRequest Ptr
-	Dim pIResponse As IServerResponse Ptr
+	hIOCompletionPort As HANDLE
+	WorkerThreadsCount As Integer
+	pIWebSites As IWebSiteCollection Ptr
+	pINetworkStream As INetworkStream Ptr
+	pIRequest As IClientRequest Ptr
+	pIResponse As IServerResponse Ptr
 	
-	Dim ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
-	Dim CachedClientMemoryContextLength As Integer
-	Dim CachedClientMemoryContextIndex As Integer
+	ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
+	CachedClientMemoryContextLength As Integer
+	CachedClientMemoryContextIndex As Integer
 	
-	Dim Context As Any Ptr
-	Dim StatusHandler As RunnableStatusHandler
+	Context As Any Ptr
+	StatusHandler As RunnableStatusHandler
 	
-	Dim ListenAddress As BSTR
-	Dim ListenPort As UINT
+	ListenAddress As BSTR
+	ListenPort As UINT
 	
-	Dim SocketList As SocketNode Ptr
-	Dim hEvents As WSAEVENT Ptr
-	Dim EventCount As Integer
-	Dim CurrentStatus As HRESULT
+	SocketList As SocketNode Ptr
+	hEvents As WSAEVENT Ptr
+	EventCount As Integer
+	CurrentStatus As HRESULT
 	
 End Type
 

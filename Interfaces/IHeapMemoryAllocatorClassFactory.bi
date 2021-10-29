@@ -12,43 +12,43 @@ Extern IID_IPrivateHeapMemoryAllocatorClassFactory Alias "IID_IPrivateHeapMemory
 
 Type IPrivateHeapMemoryAllocatorClassFactoryVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this as IPrivateHeapMemoryAllocatorClassFactory Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr _
 	)As ULONG
 	
-	Dim CreateInstance As Function( _
+	CreateInstance As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal pUnkOuter As IUnknown Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim LockServer As Function( _
+	LockServer As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal fLock As WINBOOL _
 	)As HRESULT
 	
-	Dim SetHeapInitialSize As Function( _
+	SetHeapInitialSize As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal dwInitialSize As DWORD _
 	)As HRESULT
 	
-	Dim SetHeapMaximumSize As Function( _
+	SetHeapMaximumSize As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal dwMaximumSize As DWORD _
 	)As HRESULT
 	
-	Dim SetHeapFlags As Function( _
+	SetHeapFlags As Function( _
 		ByVal this As IPrivateHeapMemoryAllocatorClassFactory Ptr, _
 		ByVal dwFlags As DWORD _
 	)As HRESULT
@@ -56,7 +56,7 @@ Type IPrivateHeapMemoryAllocatorClassFactoryVirtualTable
 End Type
 
 Type IPrivateHeapMemoryAllocatorClassFactoryVirtualTable_
-	Dim lpVtbl As IPrivateHeapMemoryAllocatorClassFactoryVirtualTable Ptr
+	lpVtbl As IPrivateHeapMemoryAllocatorClassFactoryVirtualTable Ptr
 End Type
 
 #define IPrivateHeapMemoryAllocatorClassFactory_QueryInterface(This, riid, ppvObject) (This)->lpVtbl->QueryInterface(This, riid, ppvObject)

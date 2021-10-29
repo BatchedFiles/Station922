@@ -16,27 +16,27 @@ Extern GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTab
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
 Type _ServerResponse
-	Dim lpVtbl As Const IServerResponseVirtualTable Ptr
-	Dim lpStringableVtbl As Const IStringableVirtualTable Ptr
-	Dim RefCounter As ReferenceCounter
-	Dim pILogger As ILogger Ptr
-	Dim pIMemoryAllocator As IMalloc Ptr
+	lpVtbl As Const IServerResponseVirtualTable Ptr
+	lpStringableVtbl As Const IStringableVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
 	' Буфер заголовков ответа
-	Dim ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
+	ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
 	' Указатель на свободное место в буфере заголовков ответа
-	Dim StartResponseHeadersPtr As WString Ptr
+	StartResponseHeadersPtr As WString Ptr
 	' Заголовки ответа
-	Dim ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
-	Dim HttpVersion As HttpVersions
-	Dim StatusCode As HttpStatusCodes
-	Dim StatusDescription As WString Ptr
-	Dim SendOnlyHeaders As Boolean
-	Dim KeepAlive As Boolean
+	ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
+	HttpVersion As HttpVersions
+	StatusCode As HttpStatusCodes
+	StatusDescription As WString Ptr
+	SendOnlyHeaders As Boolean
+	KeepAlive As Boolean
 	' Сжатие данных, поддерживаемое сервером
-	Dim ResponseZipEnable As Boolean
-	Dim ResponseZipMode As ZipModes
-	Dim Mime As MimeType
-	Dim ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
+	ResponseZipEnable As Boolean
+	ResponseZipMode As ZipModes
+	Mime As MimeType
+	ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
 End Type
 
 Sub InitializeServerResponse( _

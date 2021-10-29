@@ -19,33 +19,33 @@ Extern IID_IRunnable Alias "IID_IRunnable" As Const IID
 
 Type IRunnableVirtualTable
 	
-	Dim QueryInterface As Function( _
+	QueryInterface As Function( _
 		ByVal this As IRunnable Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim AddRef As Function( _
+	AddRef As Function( _
 		ByVal this As IRunnable Ptr _
 	)As ULONG
 	
-	Dim Release As Function( _
+	Release As Function( _
 		ByVal this As IRunnable Ptr _
 	)As ULONG
 	
-	Dim Run As Function( _
+	Run As Function( _
 		ByVal this As IRunnable Ptr _
 	)As HRESULT
 	
-	Dim Stop As Function( _
+	Stop As Function( _
 		ByVal this As IRunnable Ptr _
 	)As HRESULT
 	
-	Dim IsRunning As Function( _
+	IsRunning As Function( _
 		ByVal this As IRunnable Ptr _
 	)As HRESULT
 	
-	Dim RegisterStatusHandler As Function( _
+	RegisterStatusHandler As Function( _
 		ByVal this As IRunnable Ptr, _
 		ByVal Context As Any Ptr, _
 		ByVal StatusHandler As RunnableStatusHandler _
@@ -54,7 +54,7 @@ Type IRunnableVirtualTable
 End Type
 
 Type IRunnable_
-	Dim lpVtbl As IRunnableVirtualTable Ptr
+	lpVtbl As IRunnableVirtualTable Ptr
 End Type
 
 #define IRunnable_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
