@@ -5,6 +5,14 @@
 #include once "win\winsock2.bi"
 #include once "win\ws2tcpip.bi"
 
+Type SocketNode
+	ClientSocket As SOCKET
+	AddressFamily As Long
+	SocketType As Long
+	Protocol As Long
+	pNext As SocketNode Ptr
+End Type
+
 Declare Function ResolveHostA Alias "ResolveHostA"( _
 	ByVal Host As PCSTR, _
 	ByVal Port As PCSTR, _
@@ -34,26 +42,26 @@ Declare Function ResolveHostW Alias "ResolveHostW"( _
 Declare Function CreateSocketAndBindA Alias "CreateSocketAndBindA"( _
 	ByVal LocalAddress As PCSTR, _
 	ByVal LocalPort As PCSTR, _
-	ByVal pSocket As SOCKET Ptr _
+	ByVal ppSocketList As SocketNode Ptr Ptr _
 )As HRESULT
 
 Declare Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	ByVal LocalAddress As PCWSTR, _
 	ByVal LocalPort As PCWSTR, _
-	ByVal pSocket As SOCKET Ptr _
+	ByVal ppSocketList As SocketNode Ptr Ptr _
 )As HRESULT
 
 #ifdef UNICODE
 	Declare Function CreateSocketAndBind Alias "CreateSocketAndBindW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
-		ByVal pSocket As SOCKET Ptr _
+		ByVal ppSocketList As SocketNode Ptr Ptr _
 	)As HRESULT
 #else
 	Declare Function CreateSocketAndBind Alias "CreateSocketAndBindA"( _
 		ByVal LocalAddress As PCSTR, _
 		ByVal LocalPort As PCSTR, _
-		ByVal pSocket As SOCKET Ptr _
+		ByVal ppSocketList As SocketNode Ptr Ptr _
 	)As HRESULT
 #endif
 
@@ -65,5 +73,65 @@ Declare Function SetReceiveTimeout Alias "SetReceiveTimeout"( _
 Declare Function CloseSocketConnection Alias "CloseSocketConnection"( _
 	ByVal ClientSocket As SOCKET _
 )As HRESULT
+
+Declare Function ConnectToServerA Alias "ConnectToServerA"( _
+	ByVal LocalAddress As PCSTR, _
+	ByVal LocalPort As PCSTR, _
+	ByVal RemoteAddress As PCSTR, _
+	ByVal RemotePort As PCSTR, _
+	ByVal pSocket As SOCKET Ptr _
+)As HRESULT
+
+Declare Function ConnectToServerW Alias "ConnectToServerW"( _
+	ByVal LocalAddress As PCWSTR, _
+	ByVal LocalPort As PCWSTR, _
+	ByVal RemoteAddress As PCWSTR, _
+	ByVal RemotePort As PCWSTR, _
+	ByVal pSocket As SOCKET Ptr _
+)As HRESULT
+
+#ifdef UNICODE
+	Declare Function ConnectToServer Alias "ConnectToServerW"( _
+		ByVal LocalAddress As PCWSTR, _
+		ByVal LocalPort As PCWSTR, _
+		ByVal RemoteAddress As PCWSTR, _
+		ByVal RemotePort As PCWSTR, _
+		ByVal pSocket As SOCKET Ptr _
+	)As HRESULT
+#else
+	Declare Function ConnectToServer Alias "ConnectToServerA"( _
+		ByVal LocalAddress As PCSTR, _
+		ByVal LocalPort As PCSTR, _
+		ByVal RemoteAddress As PCSTR, _
+		ByVal RemotePort As PCSTR, _
+		ByVal pSocket As SOCKET Ptr _
+	)As HRESULT
+#endif
+
+Declare Function CreateSocketAndListenA Alias "CreateSocketAndListenA"( _
+	ByVal LocalAddress As PCSTR, _
+	ByVal LocalPort As PCSTR, _
+	ByVal ppSocketList As SocketNode Ptr Ptr _
+)As HRESULT
+
+Declare Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
+	ByVal LocalAddress As PCWSTR, _
+	ByVal LocalPort As PCWSTR, _
+	ByVal ppSocketList As SocketNode Ptr Ptr _
+)As HRESULT
+
+#ifdef UNICODE
+	Declare Function CreateSocketAndListen Alias "CreateSocketAndListenW"( _
+		ByVal LocalAddress As PCWSTR, _
+		ByVal LocalPort As PCWSTR, _
+		ByVal ppSocketList As SocketNode Ptr Ptr _
+	)As HRESULT
+#else
+	Declare Function CreateSocketAndListen Alias "CreateSocketAndListenA"( _
+		ByVal LocalAddress As PCSTR, _
+		ByVal LocalPort As PCSTR, _
+		ByVal ppSocketList As SocketNode Ptr Ptr _
+	)As HRESULT
+#endif
 
 #endif

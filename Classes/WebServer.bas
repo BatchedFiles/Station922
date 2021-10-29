@@ -7,7 +7,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Network.bi"
-#include once "NetworkServer.bi"
 #include once "ReferenceCounter.bi"
 #include once "WorkerThread.bi"
 #include once "WriteHttpError.bi"
@@ -151,7 +150,9 @@ Type _WebServer
 	Dim ListenAddress As BSTR
 	Dim ListenPort As UINT
 	
-	Dim ListenSocket As SOCKET
+	Dim SocketList As SocketNode Ptr
+	Dim hEvents As WSAEVENT Ptr
+	Dim EventCount As Integer
 	Dim CurrentStatus As HRESULT
 	
 End Type
@@ -230,7 +231,8 @@ Sub InitializeWebServer( _
 	this->Context = NULL
 	this->StatusHandler = NULL
 	
-	this->ListenSocket = INVALID_SOCKET
+	this->SocketList = NULL
+	this->hEvents = NULL
 	this->CurrentStatus = RUNNABLE_S_STOPPED
 	
 	#ifdef PERFORMANCE_TESTING
@@ -263,9 +265,9 @@ Sub UnInitializeWebServer( _
 		IServerResponse_Release(this->pIResponse)
 	End If
 	
-	If this->ListenSocket <> INVALID_SOCKET Then
-		closesocket(this->ListenSocket)
-	End If
+	' If this->SocketList <> INVALID_SOCKET Then
+		' closesocket(this->SocketList)
+	' End If
 	
 	If this->hIOCompletionPort <> NULL Then
 		CloseHandle(this->hIOCompletionPort)
@@ -485,10 +487,10 @@ Function WebServerStop( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOP_PENDING)
 	
-	If this->ListenSocket <> INVALID_SOCKET Then
-		closesocket(this->ListenSocket)
-		this->ListenSocket = INVALID_SOCKET
-	End If
+	' If this->SocketList <> INVALID_SOCKET Then
+		' closesocket(this->SocketList)
+		' this->SocketList = INVALID_SOCKET
+	' End If
 	
 	If this->hIOCompletionPort <> NULL Then
 		CloseHandle(this->hIOCompletionPort)
@@ -541,31 +543,77 @@ Function AcceptConnection( _
 	)As HRESULT
 	
 	Scope
-		Dim RemoteAddress As SOCKADDR_STORAGE = Any
-		Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-		Dim ClientSocket As SOCKET = accept( _
-			this->ListenSocket, _
-			CPtr(SOCKADDR Ptr, @RemoteAddress), _
-			@RemoteAddressLength _
-		)
-		Dim dwErrorAccept As Long = WSAGetLastError()
 		
-		Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-			this, _
-			ClientSocket, _
-			pCachedContext, _
-			dwErrorAccept _
+		Dim dwIndex As DWORD = WSAWaitForMultipleEvents( _
+			Cast(DWORD, this->EventCount), _
+			this->hEvents, _
+			False, _
+			WSA_INFINITE, _
+			False _
 		)
-		If FAILED(hrAssociateWithIOCP) Then
-			Return E_FAIL
+		If dwIndex = WSA_WAIT_FAILED Then
+			Dim dwError As Long = WSAGetLastError()
+			Return HRESULT_FROM_WIN32(dwError)
 		End If
 		
-		IClientContext_SetRemoteAddress(pCachedContext->pIContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
+		' MessageBoxW(NULL, WStr("WSAWaitForMultipleEvents ending"), NULL, MB_OK)
 		
-		Dim pINetworkStream As INetworkStream Ptr = Any
-		IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
-		INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-		INetworkStream_Release(pINetworkStream)
+		Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
+		' Select Case EventIndex
+			' Case 0
+				' MessageBoxW(NULL, WStr("EventIndex 0"), NULL, MB_OK)
+			' Case 1
+				' MessageBoxW(NULL, WStr("EventIndex 1"), NULL, MB_OK)
+			' Case 2
+				' MessageBoxW(NULL, WStr("EventIndex 2"), NULL, MB_OK)
+			' Case Else
+				' MessageBoxW(NULL, WStr("EventIndex 3+"), NULL, MB_OK)
+		' End Select
+		
+		Dim pNode As SocketNode Ptr = this->SocketList
+		Scope
+			Dim i As Integer = 0
+			Do While i <> EventIndex
+				i += 1
+				pNode = pNode->pNext
+			Loop
+		End Scope
+		
+		Dim EventType As WSANETWORKEVENTS = Any
+		WSAEnumNetworkEvents( _
+			pNode->ClientSocket, _
+			this->hEvents[EventIndex], _
+			@EventType _
+		)
+		
+		If EventType.lNetworkEvents And FD_ACCEPT Then
+			' MessageBoxW(NULL, WStr("FD_ACCEPT"), NULL, MB_OK)
+			Dim RemoteAddress As SOCKADDR_STORAGE = Any
+			Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+			Dim ClientSocket As SOCKET = accept( _
+				pNode->ClientSocket, _
+				CPtr(SOCKADDR Ptr, @RemoteAddress), _
+				@RemoteAddressLength _
+			)
+			Dim dwErrorAccept As Long = WSAGetLastError()
+			
+			Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
+				this, _
+				ClientSocket, _
+				pCachedContext, _
+				dwErrorAccept _
+			)
+			If FAILED(hrAssociateWithIOCP) Then
+				Return E_FAIL
+			End If
+			
+			IClientContext_SetRemoteAddress(pCachedContext->pIContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
+			
+			Dim pINetworkStream As INetworkStream Ptr = Any
+			IClientContext_GetNetworkStream(pCachedContext->pIContext, @pINetworkStream)
+			INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+			INetworkStream_Release(pINetworkStream)
+		End If
 	End Scope
 	
 	Scope
@@ -706,11 +754,41 @@ Function CreateServerSocket( _
 	Dim hr As HRESULT = CreateSocketAndListenW( _
 		this->ListenAddress, _
 		wszListenPort, _
-		@this->ListenSocket _
+		@this->SocketList _
 	)
 	If FAILED(hr) Then
 		Return hr
 	End If
+	
+	this->EventCount = 0
+	
+	Scope
+		Dim pNode As SocketNode Ptr = this->SocketList
+		Do
+			this->EventCount += 1
+			pNode = pNode->pNext
+		Loop While pNode <> NULL
+	End Scope
+	
+	this->hEvents = IMalloc_Alloc(this->pIMemoryAllocator, SizeOf(WSAEVENT) * this->EventCount)
+	For i As Integer = 0 To this->EventCount - 1
+		this->hEvents[i] = WSACreateEvent()
+	Next
+	
+	Scope
+		Dim pNode As SocketNode Ptr = this->SocketList
+		Dim i As Integer = 0
+		Do
+			WSAEventSelect( _
+				pNode->ClientSocket, _
+				this->hEvents[i], _
+				FD_ACCEPT Or FD_CLOSE _
+			)
+			
+			i += 1
+			pNode = pNode->pNext
+		Loop While pNode <> NULL
+	End Scope
 	
 	Return S_OK
 	
