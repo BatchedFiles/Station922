@@ -24,7 +24,7 @@ Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSI
 
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
-Const CocketListCapacity As Integer = 10
+Const SocketListCapacity As Integer = 10
 
 Type CachedClientContext
 	pILogger As ILogger Ptr
@@ -52,15 +52,15 @@ Type _WebServer
 	CachedClientMemoryContextLength As Integer
 	CachedClientMemoryContextIndex As Integer
 	
+	SocketList(0 To SocketListCapacity - 1) As SocketNode
+	hEvents(0 To SocketListCapacity - 1) As WSAEVENT
+	SocketListLength As Integer
+	
 	Context As Any Ptr
 	StatusHandler As RunnableStatusHandler
 	
 	ListenAddress As BSTR
 	ListenPort As UINT
-	
-	SocketList(0 To CocketListCapacity - 1) As SocketNode
-	hEvents(0 To CocketListCapacity - 1) As WSAEVENT
-	SocketListLength As Integer
 	
 	CurrentStatus As HRESULT
 	
@@ -234,8 +234,8 @@ Sub InitializeWebServer( _
 	this->Context = NULL
 	this->StatusHandler = NULL
 	
-	' this->SocketList = NULL
-	' this->hEvents = NULL
+	' this->SocketList = {0}
+	' this->hEvents = {0}
 	this->CurrentStatus = RUNNABLE_S_STOPPED
 	
 	#ifdef PERFORMANCE_TESTING
@@ -247,6 +247,10 @@ End Sub
 Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
+	
+	For i As Integer = SocketListCapacity - 1 To 0 Step -1
+		WSACloseEvent(this->hEvents(i))
+	Next
 	
 	If this->ppCachedClientMemoryContext <> NULL Then
 		IMalloc_Free(this->pIMemoryAllocator, this->ppCachedClientMemoryContext)
@@ -327,13 +331,25 @@ Function CreateWebServer( _
 				)
 				If this <> NULL Then
 					
-					InitializeWebServer(this, pILogger, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
+					Dim EventsCreated As Boolean = True
 					
-					Dim vtEmpty As VARIANT = Any
-					vtEmpty.vt = VT_EMPTY
-					ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
+					For i As Integer = 0 To SocketListCapacity - 1
+						this->hEvents(i) = WSACreateEvent()
+						If this->hEvents(i) = NULL Then
+							EventsCreated = False
+							Exit For
+						End If
+					Next
 					
-					Return this
+					If EventsCreated Then
+						InitializeWebServer(this, pILogger, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
+						
+						Dim vtEmpty As VARIANT = Any
+						vtEmpty.vt = VT_EMPTY
+						ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
+						
+						Return this
+					End If
 				End If
 				
 				INetworkStream_Release(pINetworkStream)
@@ -749,7 +765,7 @@ Function CreateServerSocket( _
 		this->ListenAddress, _
 		wszListenPort, _
 		@this->SocketList(0), _
-		CocketListCapacity, _
+		SocketListCapacity, _
 		@this->SocketListLength _
 	)
 	If FAILED(hr) Then
@@ -757,7 +773,6 @@ Function CreateServerSocket( _
 	End If
 	
 	For i As Integer = 0 To this->SocketListLength - 1
-		this->hEvents(i) = WSACreateEvent()
 		WSAEventSelect( _
 			this->SocketList(i).ClientSocket, _
 			this->hEvents(i), _
