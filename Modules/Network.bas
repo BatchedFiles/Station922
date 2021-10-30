@@ -1,55 +1,5 @@
 #include once "Network.bi"
 
-Function SocketListCreateNode( _
-		ByVal ClientSocket As SOCKET, _
-		ByVal AddressFamily As Long, _
-		ByVal SocketType As Long, _
-		ByVal Protocol As Long _
-	)As SocketNode Ptr
-	
-	Dim pNode As SocketNode Ptr = Allocate(SizeOf(SocketNode))
-	If pNode = NULL Then
-		Return NULL
-	End If
-	
-	pNode->ClientSocket = ClientSocket
-	pNode->AddressFamily = AddressFamily
-	pNode->SocketType = SocketType
-	pNode->Protocol = Protocol
-	pNode->pNext = NULL
-	
-	Return pNode
-	
-End Function
-
-Sub SocketListAddNode( _
-		ByVal pList As SocketNode Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal AddressFamily As Long, _
-		ByVal SocketType As Long, _
-		ByVal Protocol As Long _
-	)
-	
-	If pList->pNext <> NULL Then
-		SocketListAddNode( _
-			pList->pNext, _
-			ClientSocket, _
-			AddressFamily, _
-			SocketType, _
-			Protocol _
-		)
-	Else
-		Dim pNode As SocketNode Ptr = SocketListCreateNode( _
-			ClientSocket, _
-			AddressFamily, _
-			SocketType, _
-			Protocol _
-		)
-		pList->pNext = pNode
-	End If
-	
-End Sub
-
 ' Function ResolveHostA Alias "ResolveHostA"( _
 		' ByVal Host As PCSTR, _
 		' ByVal Port As PCSTR, _
@@ -164,23 +114,29 @@ End Function
 Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 	
 	Dim pAddressList As ADDRINFOW Ptr = NULL
 	Dim hr As HRESULT = ResolveHostW(LocalAddress, LocalPort, @pAddressList)
 	If FAILED(hr) Then
-		*ppSocketList = NULL
+		*pSockets = 0
 		Return hr
 	End If
 	
 	Dim pAddressNode As ADDRINFOW Ptr = pAddressList
 	Dim BindResult As Long = 0
-	
-	Dim pSocketList As SocketNode Ptr = NULL
+	Dim SocketCount As Integer = 0
 	
 	Dim e As Long = 0
 	Do
+		If SocketCount > Count Then
+			e = ERROR_INSUFFICIENT_BUFFER
+			Exit Do
+		End If
+		
 		Dim ClientSocket As SOCKET = WSASocket( _
 			pAddressNode->ai_family, _
 			pAddressNode->ai_socktype, _
@@ -207,23 +163,12 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			Continue Do
 		End If
 		
-		If pSocketList = NULL Then
-			pSocketList = SocketListCreateNode( _
-				ClientSocket, _
-				pAddressNode->ai_family, _
-				pAddressNode->ai_socktype, _
-				pAddressNode->ai_protocol _
-			)
-		Else
-			SocketListAddNode( _
-				pSocketList, _
-				ClientSocket, _
-				pAddressNode->ai_family, _
-				pAddressNode->ai_socktype, _
-				pAddressNode->ai_protocol _
-			)
-		End If
+		pSocketList[SocketCount].ClientSocket = ClientSocket
+		pSocketList[SocketCount].AddressFamily = pAddressNode->ai_family
+		pSocketList[SocketCount].SocketType = pAddressNode->ai_socktype
+		pSocketList[SocketCount].Protocol = pAddressNode->ai_protocol
 		
+		SocketCount += 1
 		pAddressNode = pAddressNode->ai_next
 		
 	Loop While pAddressNode <> NULL
@@ -232,12 +177,12 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	
 	If BindResult <> 0 Then
 		
-		*ppSocketList = NULL
+		*pSockets = 0
 		Return HRESULT_FROM_WIN32(e)
 		
 	End If
 	
-	*ppSocketList = pSocketList
+	*pSockets = SocketCount
 	Return S_OK
 	
 End Function
@@ -444,31 +389,35 @@ End Function
 Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 	
-	Dim pSocketList As SocketNode Ptr = Any
-	Dim hr As HRESULT = CreateSocketAndBindW(LocalAddress, LocalPort, @pSocketList)
+	Dim hr As HRESULT = CreateSocketAndBindW( _
+		LocalAddress, _
+		LocalPort, _
+		pSocketList, _
+		Count, _
+		pSockets _
+	)
 	If FAILED(hr) Then
-		ppSocketList = NULL
+		*pSockets = 0
 		Return hr
 	End If
 	
-	Dim pNode As SocketNode Ptr = pSocketList
-	Do
-		If listen(pNode->ClientSocket, SOMAXCONN) <> 0 Then
-			
-			closesocket(pNode->ClientSocket)
-			
+	For i As Integer = 0 To *pSockets - 1
+		If listen(pSocketList[i].ClientSocket, SOMAXCONN) <> 0 Then
 			Dim dwError As Long = WSAGetLastError()
+			
+			closesocket(pSocketList[i].ClientSocket)
+			
 			Return HRESULT_FROM_WIN32(dwError)
 			
 		End If
 		
-		pNode = pNode->pNext
-	Loop While pNode <> NULL
+	Next
 	
-	*ppSocketList = pSocketList
 	Return S_OK
 	
 End Function

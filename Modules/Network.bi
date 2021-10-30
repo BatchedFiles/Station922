@@ -10,7 +10,6 @@ Type SocketNode
 	AddressFamily As Long
 	SocketType As Long
 	Protocol As Long
-	pNext As SocketNode Ptr
 End Type
 
 Declare Function ResolveHostA Alias "ResolveHostA"( _
@@ -42,26 +41,34 @@ Declare Function ResolveHostW Alias "ResolveHostW"( _
 Declare Function CreateSocketAndBindA Alias "CreateSocketAndBindA"( _
 	ByVal LocalAddress As PCSTR, _
 	ByVal LocalPort As PCSTR, _
-	ByVal ppSocketList As SocketNode Ptr Ptr _
+	ByVal pSocketList As SocketNode Ptr, _
+	ByVal Count As Integer, _
+	ByVal pSockets As Integer Ptr _
 )As HRESULT
 
 Declare Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	ByVal LocalAddress As PCWSTR, _
 	ByVal LocalPort As PCWSTR, _
-	ByVal ppSocketList As SocketNode Ptr Ptr _
+	ByVal pSocketList As SocketNode Ptr, _
+	ByVal Count As Integer, _
+	ByVal pSockets As Integer Ptr _
 )As HRESULT
 
 #ifdef UNICODE
 	Declare Function CreateSocketAndBind Alias "CreateSocketAndBindW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 #else
 	Declare Function CreateSocketAndBind Alias "CreateSocketAndBindA"( _
 		ByVal LocalAddress As PCSTR, _
 		ByVal LocalPort As PCSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 #endif
 
@@ -111,26 +118,34 @@ Declare Function ConnectToServerW Alias "ConnectToServerW"( _
 Declare Function CreateSocketAndListenA Alias "CreateSocketAndListenA"( _
 	ByVal LocalAddress As PCSTR, _
 	ByVal LocalPort As PCSTR, _
-	ByVal ppSocketList As SocketNode Ptr Ptr _
+	ByVal pSocketList As SocketNode Ptr, _
+	ByVal Count As Integer, _
+	ByVal pSockets As Integer Ptr _
 )As HRESULT
 
 Declare Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 	ByVal LocalAddress As PCWSTR, _
 	ByVal LocalPort As PCWSTR, _
-	ByVal ppSocketList As SocketNode Ptr Ptr _
+	ByVal pSocketList As SocketNode Ptr, _
+	ByVal Count As Integer, _
+	ByVal pSockets As Integer Ptr _
 )As HRESULT
 
 #ifdef UNICODE
 	Declare Function CreateSocketAndListen Alias "CreateSocketAndListenW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 #else
 	Declare Function CreateSocketAndListen Alias "CreateSocketAndListenA"( _
 		ByVal LocalAddress As PCSTR, _
 		ByVal LocalPort As PCSTR, _
-		ByVal ppSocketList As SocketNode Ptr Ptr _
+		ByVal pSocketList As SocketNode Ptr, _
+		ByVal Count As Integer, _
+		ByVal pSockets As Integer Ptr _
 	)As HRESULT
 #endif
 

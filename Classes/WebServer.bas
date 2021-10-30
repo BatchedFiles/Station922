@@ -24,6 +24,8 @@ Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSI
 
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
+Const CocketListCapacity As Integer = 10
+
 Type CachedClientContext
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
@@ -31,6 +33,37 @@ Type CachedClientContext
 	hrLogger As HRESULT
 	hrMemoryAllocator As HRESULT
 	hrClientContex As HRESULT
+End Type
+
+Type _WebServer
+	lpVtbl As Const IRunnableVirtualTable Ptr
+	RefCounter As ReferenceCounter
+	pILogger As ILogger Ptr
+	pIMemoryAllocator As IMalloc Ptr
+	
+	hIOCompletionPort As HANDLE
+	WorkerThreadsCount As Integer
+	pIWebSites As IWebSiteCollection Ptr
+	pINetworkStream As INetworkStream Ptr
+	pIRequest As IClientRequest Ptr
+	pIResponse As IServerResponse Ptr
+	
+	ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
+	CachedClientMemoryContextLength As Integer
+	CachedClientMemoryContextIndex As Integer
+	
+	Context As Any Ptr
+	StatusHandler As RunnableStatusHandler
+	
+	ListenAddress As BSTR
+	ListenPort As UINT
+	
+	SocketList(0 To CocketListCapacity - 1) As SocketNode
+	hEvents(0 To CocketListCapacity - 1) As WSAEVENT
+	SocketListLength As Integer
+	
+	CurrentStatus As HRESULT
+	
 End Type
 
 Function CreateClientMemoryContext( _
@@ -127,36 +160,6 @@ Sub DestroyClientMemoryContext( _
 	
 End Sub
 
-Type _WebServer
-	lpVtbl As Const IRunnableVirtualTable Ptr
-	RefCounter As ReferenceCounter
-	pILogger As ILogger Ptr
-	pIMemoryAllocator As IMalloc Ptr
-	
-	hIOCompletionPort As HANDLE
-	WorkerThreadsCount As Integer
-	pIWebSites As IWebSiteCollection Ptr
-	pINetworkStream As INetworkStream Ptr
-	pIRequest As IClientRequest Ptr
-	pIResponse As IServerResponse Ptr
-	
-	ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
-	CachedClientMemoryContextLength As Integer
-	CachedClientMemoryContextIndex As Integer
-	
-	Context As Any Ptr
-	StatusHandler As RunnableStatusHandler
-	
-	ListenAddress As BSTR
-	ListenPort As UINT
-	
-	SocketList As SocketNode Ptr
-	hEvents As WSAEVENT Ptr
-	EventCount As Integer
-	CurrentStatus As HRESULT
-	
-End Type
-
 Declare Function AcceptConnection( _
 	ByVal this As WebServer Ptr, _
 	ByVal pCachedContext As CachedClientContext Ptr _
@@ -231,8 +234,8 @@ Sub InitializeWebServer( _
 	this->Context = NULL
 	this->StatusHandler = NULL
 	
-	this->SocketList = NULL
-	this->hEvents = NULL
+	' this->SocketList = NULL
+	' this->hEvents = NULL
 	this->CurrentStatus = RUNNABLE_S_STOPPED
 	
 	#ifdef PERFORMANCE_TESTING
@@ -545,8 +548,8 @@ Function AcceptConnection( _
 	Scope
 		
 		Dim dwIndex As DWORD = WSAWaitForMultipleEvents( _
-			Cast(DWORD, this->EventCount), _
-			this->hEvents, _
+			Cast(DWORD, this->SocketListLength), _
+			@this->hEvents(0), _
 			False, _
 			WSA_INFINITE, _
 			False _
@@ -570,19 +573,10 @@ Function AcceptConnection( _
 				' MessageBoxW(NULL, WStr("EventIndex 3+"), NULL, MB_OK)
 		' End Select
 		
-		Dim pNode As SocketNode Ptr = this->SocketList
-		Scope
-			Dim i As Integer = 0
-			Do While i <> EventIndex
-				i += 1
-				pNode = pNode->pNext
-			Loop
-		End Scope
-		
 		Dim EventType As WSANETWORKEVENTS = Any
 		WSAEnumNetworkEvents( _
-			pNode->ClientSocket, _
-			this->hEvents[EventIndex], _
+			this->SocketList(EventIndex).ClientSocket, _
+			this->hEvents(EventIndex), _
 			@EventType _
 		)
 		
@@ -591,7 +585,7 @@ Function AcceptConnection( _
 			Dim RemoteAddress As SOCKADDR_STORAGE = Any
 			Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
 			Dim ClientSocket As SOCKET = accept( _
-				pNode->ClientSocket, _
+				this->SocketList(EventIndex).ClientSocket, _
 				CPtr(SOCKADDR Ptr, @RemoteAddress), _
 				@RemoteAddressLength _
 			)
@@ -754,41 +748,22 @@ Function CreateServerSocket( _
 	Dim hr As HRESULT = CreateSocketAndListenW( _
 		this->ListenAddress, _
 		wszListenPort, _
-		@this->SocketList _
+		@this->SocketList(0), _
+		CocketListCapacity, _
+		@this->SocketListLength _
 	)
 	If FAILED(hr) Then
 		Return hr
 	End If
 	
-	this->EventCount = 0
-	
-	Scope
-		Dim pNode As SocketNode Ptr = this->SocketList
-		Do
-			this->EventCount += 1
-			pNode = pNode->pNext
-		Loop While pNode <> NULL
-	End Scope
-	
-	this->hEvents = IMalloc_Alloc(this->pIMemoryAllocator, SizeOf(WSAEVENT) * this->EventCount)
-	For i As Integer = 0 To this->EventCount - 1
-		this->hEvents[i] = WSACreateEvent()
+	For i As Integer = 0 To this->SocketListLength - 1
+		this->hEvents(i) = WSACreateEvent()
+		WSAEventSelect( _
+			this->SocketList(i).ClientSocket, _
+			this->hEvents(i), _
+			FD_ACCEPT Or FD_CLOSE _
+		)
 	Next
-	
-	Scope
-		Dim pNode As SocketNode Ptr = this->SocketList
-		Dim i As Integer = 0
-		Do
-			WSAEventSelect( _
-				pNode->ClientSocket, _
-				this->hEvents[i], _
-				FD_ACCEPT Or FD_CLOSE _
-			)
-			
-			i += 1
-			pNode = pNode->pNext
-		Loop While pNode <> NULL
-	End Scope
 	
 	Return S_OK
 	
