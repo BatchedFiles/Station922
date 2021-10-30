@@ -39,9 +39,13 @@ Enum Characters
 	GreaterThanSign = &h3E  ' >
 	QuestionMark = &h3F     ' ?
 	
+	LeftSquareBracket = &h5B '[
 	ReverseSolidus = &h5C   ' \
+	RightSquareBracket = &h5D ']
 	
+	LeftCurlyBracket = &h7B ' {
 	VerticalLine = &h7C     ' |
+	RightCurlyBracket = &h7D '}
 End Enum
 
 #endif

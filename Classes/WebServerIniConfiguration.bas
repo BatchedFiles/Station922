@@ -405,7 +405,25 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	Dim lpwszHost As WString Ptr = @AllSections
 	Dim HostLength As Integer = lstrlenW(lpwszHost)
 	
-	Do While HostLength > 0	
+	Do While HostLength > 0
+		
+		Dim WebSiteName As WString * (MAX_PATH + 1) = Any
+		lstrcpyW(WebSiteName, lpwszHost)
+		
+		For i As Integer = 0 To HostLength - 1
+			
+			Dim character As Integer = WebSiteName[i]
+			
+			Select Case character
+				
+				Case Characters.LeftCurlyBracket
+					WebSiteName[i] = Characters.LeftSquareBracket
+					
+				Case Characters.RightCurlyBracket
+					WebSiteName[i] = Characters.RightSquareBracket
+					
+			End Select
+		Next
 		
 		Dim pIWebSite As IMutableWebSite Ptr = Any
 		Dim hr2 As HRESULT = CreateInstance( _
@@ -420,7 +438,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			Return E_OUTOFMEMORY
 		End If
 		
-		IMutableWebSite_SetHostName(pIWebSite, lpwszHost)
+		IMutableWebSite_SetHostName(pIWebSite, WebSiteName)
 		
 		Scope
 			Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
@@ -509,7 +527,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return hr3
 			End If
 			
-			IMutableWebSiteCollection_Add(pIWebSiteCollection, lpwszHost, pIWebSite2)
+			IMutableWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite2)
 			
 			IWebSite_Release(pIWebSite2)
 		End Scope
