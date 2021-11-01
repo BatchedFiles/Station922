@@ -173,7 +173,7 @@ Function HttpReaderReadAllBytes( _
 	
 	Do
 		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->ReadedData.cbLength
-		Dim cbReceived As Integer = Any
+		Dim cbReceived As DWORD = Any
 		Dim hrRead As HRESULT = IBaseStream_Read( _
 			this->pIStream, _
 			@this->ReadedData.Bytes(this->ReadedData.cbLength), _
@@ -438,7 +438,7 @@ Function HttpReaderEndReadLine( _
 		ByVal ppLine As WString Ptr Ptr _
 	)As HRESULT
 	
-	Dim cbReceived As Integer = Any
+	Dim cbReceived As DWORD = Any
 	Dim hrRead As HRESULT = IBaseStream_EndRead( _
 		this->pIStream, _
 		pIAsyncResult, _

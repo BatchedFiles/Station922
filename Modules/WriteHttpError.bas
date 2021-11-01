@@ -706,7 +706,7 @@ Sub WriteHttpResponse( _
 	Dim pIStream As INetworkStream Ptr = Any
 	IClientContext_GetNetworkStream(pIContext, @pIStream)
 	
-	Dim BytesWrited As Integer = Any
+	Dim BytesWrited As DWORD = Any
 	INetworkStream_Write(pIStream, @SendBuffer, SendBufferLength, @BytesWrited)
 	
 	INetworkStream_Release(pIStream)
