@@ -28,17 +28,17 @@ Type INetworkStreamVirtualTable
 	
 	CanRead As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As Boolean Ptr _
+		ByVal pResult As WINBOOLEAN Ptr _
 	)As HRESULT
 	
 	CanSeek As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As Boolean Ptr _
+		ByVal pResult As WINBOOLEAN Ptr _
 	)As HRESULT
 	
 	CanWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As Boolean Ptr _
+		ByVal pResult As WINBOOLEAN Ptr _
 	)As HRESULT
 	
 	Flush As Function( _
@@ -47,43 +47,43 @@ Type INetworkStreamVirtualTable
 	
 	GetLength As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As LongInt Ptr _
+		ByVal pResult As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
 	Position As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As LongInt Ptr _
+		ByVal pResult As LARGE_INTEGER Ptr _
 	)As HRESULT
 	
 	Read As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pReadedBytes As Integer Ptr _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
 	Seek As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Offset As LongInt, _
+		ByVal Offset As LARGE_INTEGER, _
 		ByVal Origin As SeekOrigin _
 	)As HRESULT
 	
 	SetLength As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Length As LongInt _
+		ByVal Length As LARGE_INTEGER _
 	)As HRESULT
 	
 	Write As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pWritedBytes As Integer Ptr _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	
 	BeginRead As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -91,8 +91,8 @@ Type INetworkStreamVirtualTable
 	
 	BeginWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -101,13 +101,13 @@ Type INetworkStreamVirtualTable
 	EndRead As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As Integer Ptr _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
 	EndWrite As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pWritedBytes As Integer Ptr _
+		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	
 	GetSocket As Function( _

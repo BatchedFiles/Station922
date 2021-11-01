@@ -35,17 +35,17 @@ Declare Function NetworkStreamRelease( _
 
 Declare Function NetworkStreamCanRead( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As Boolean Ptr _
+	ByVal pResult As WINBOOLEAN Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamCanSeek( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As Boolean Ptr _
+	ByVal pResult As WINBOOLEAN Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamCanWrite( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As Boolean Ptr _
+	ByVal pResult As WINBOOLEAN Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamFlush( _
@@ -54,43 +54,43 @@ Declare Function NetworkStreamFlush( _
 
 Declare Function NetworkStreamGetLength( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As LongInt Ptr _
+	ByVal pResult As LARGE_INTEGER Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamPosition( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As LongInt Ptr _
+	ByVal pResult As LARGE_INTEGER Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamRead( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal buffer As UByte Ptr, _
-	ByVal Count As Integer, _
-	ByVal pReadedBytes As LongInt Ptr _
+	ByVal buffer As LPVOID, _
+	ByVal Count As DWORD, _
+	ByVal pReadedBytes As DWORD Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamSeek( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal offset As LongInt, _
+	ByVal offset As LARGE_INTEGER, _
 	ByVal origin As SeekOrigin _
 )As HRESULT
 
 Declare Function NetworkStreamSetLength( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal length As LongInt _
+	ByVal length As LARGE_INTEGER _
 )As HRESULT
 
 Declare Function NetworkStreamWrite( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal buffer As UByte Ptr, _
-	ByVal Count As Integer, _
-	ByVal pWritedBytes As Integer Ptr _
+	ByVal buffer As LPVOID, _
+	ByVal Count As DWORD, _
+	ByVal pWritedBytes As DWORD Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamBeginRead( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal Buffer As UByte Ptr, _
-	ByVal Count As Integer, _
+	ByVal Buffer As LPVOID, _
+	ByVal Count As DWORD, _
 	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -98,8 +98,8 @@ Declare Function NetworkStreamBeginRead( _
 
 Declare Function NetworkStreamBeginWrite( _
 	ByVal this As NetworkStream Ptr, _
-	ByVal Buffer As UByte Ptr, _
-	ByVal Count As Integer, _
+	ByVal Buffer As LPVOID, _
+	ByVal Count As DWORD, _
 	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -108,13 +108,13 @@ Declare Function NetworkStreamBeginWrite( _
 Declare Function NetworkStreamEndRead( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pReadedBytes As Integer Ptr _
+	ByVal pReadedBytes As DWORD Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamEndWrite( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pWritedBytes As Integer Ptr _
+	ByVal pWritedBytes As DWORD Ptr _
 )As HRESULT
 
 Declare Function NetworkStreamGetSocket( _

@@ -155,7 +155,7 @@ End Function
 
 ' Function NetworkStreamCanRead( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	
 	' *pResult = True
@@ -166,7 +166,7 @@ End Function
 
 ' Function NetworkStreamCanSeek( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	
 	' *pResult = False
@@ -177,7 +177,7 @@ End Function
 
 ' Function NetworkStreamCanWrite( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	
 	' *pResult = True
@@ -196,7 +196,7 @@ End Function
 
 ' Function NetworkStreamGetLength( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As LongInt Ptr _
+		' ByVal pResult As LARGE_INTEGER Ptr _
 	' )As HRESULT
 	
 	' *pResult = 0
@@ -207,7 +207,7 @@ End Function
 
 ' Function NetworkStreamPosition( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As LongInt Ptr _
+		' ByVal pResult As LARGE_INTEGER Ptr _
 	' )As HRESULT
 	
 	' *pResult = 0
@@ -218,17 +218,17 @@ End Function
 
 Function NetworkStreamRead( _
 		ByVal this As NetworkStream Ptr, _
-		ByVal buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pReadedBytes As LongInt Ptr _
+		ByVal buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
-	Dim ReadedBytes As Integer = recv(this->ClientSocket, buffer, Count, 0)
+	Dim ReadedBytes As Long = recv(this->ClientSocket, buffer, Count, 0)
 	
 	Select Case ReadedBytes
 		
 		Case SOCKET_ERROR
-			Dim intError As Integer = WSAGetLastError()
+			Dim intError As Long = WSAGetLastError()
 			*pReadedBytes = 0
 			Return HRESULT_FROM_WIN32(intError)
 			
@@ -246,15 +246,15 @@ End Function
 
 Function NetworkStreamWrite( _
 		ByVal this As NetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pWritedBytes As Integer Ptr _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	
-	Dim WritedBytes As Integer = send(this->ClientSocket, Buffer, Count, 0)
+	Dim WritedBytes As Long = send(this->ClientSocket, Buffer, Count, 0)
 	
 	If WritedBytes = SOCKET_ERROR Then	
-		Dim intError As Integer = WSAGetLastError()
+		Dim intError As Long = WSAGetLastError()
 		*pWritedBytes = 0
 		Return HRESULT_FROM_WIN32(intError)
 	End If
@@ -267,7 +267,7 @@ End Function
 
 ' Function NetworkStreamSeek( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal offset As LongInt, _
+		' ByVal offset As LARGE_INTEGER, _
 		' ByVal origin As SeekOrigin _
 	' )As HRESULT
 	
@@ -277,7 +277,7 @@ End Function
 
 ' Function NetworkStreamSetLength( _
 		' ByVal this As NetworkStream Ptr, _
-		' ByVal length As LongInt _
+		' ByVal length As LARGE_INTEGER _
 	' )As HRESULT
 	
 	' Return S_FALSE
@@ -286,8 +286,8 @@ End Function
 
 Function NetworkStreamBeginRead( _
 		ByVal this As NetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -345,14 +345,13 @@ Function NetworkStreamBeginRead( _
 	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Const MaxReceiveBuffersCount As Integer = 1
-	Const lpNumberOfBytesRecvd As LPDWORD = NULL
 	Dim Flags As DWORD = 0
 	
 	Dim WSARecvResult As Long = WSARecv( _
 		this->ClientSocket, _
 		@ReceiveBuffer, _
 		MaxReceiveBuffersCount, _
-		lpNumberOfBytesRecvd, _
+		NULL, _
 		@Flags, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
 		lpReceiveCompletionROUTINE _
@@ -383,7 +382,7 @@ End Function
 Function NetworkStreamEndRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As Integer Ptr _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
 	*pReadedBytes = 0
@@ -394,18 +393,18 @@ Function NetworkStreamEndRead( _
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
 	
-	Const fNoWait As Boolean = False
+	Const fNoWait As BOOL = False
 	Dim cbTransfer As DWORD = Any
 	Dim dwFlags As DWORD = Any
 	
-	Dim OverlappedResult As Integer = WSAGetOverlappedResult( _
+	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
 		this->ClientSocket, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
 		@cbTransfer, _
 		fNoWait, _
 		@dwFlags _
 	)
-	If OverlappedResult = 0 Then
+	If OverlappedResult = False Then
 		
 		Dim intError As Long = WSAGetLastError()
 		
@@ -523,21 +522,21 @@ End Function
 
 ' Function INetworkStreamCanRead( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	' Return NetworkStreamCanRead(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
 
 ' Function INetworkStreamCanSeek( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	' Return NetworkStreamCanSeek(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
 
 ' Function INetworkStreamCanWrite( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As Boolean Ptr _
+		' ByVal pResult As WINBOOLEAN Ptr _
 	' )As HRESULT
 	' Return NetworkStreamCanWrite(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
@@ -550,30 +549,30 @@ End Function
 
 ' Function INetworkStreamGetLength( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As LongInt Ptr _
+		' ByVal pResult As LARGE_INTEGER Ptr _
 	' )As HRESULT
 	' Return NetworkStreamGetLength(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
 
 ' Function INetworkStreamPosition( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As LongInt Ptr _
+		' ByVal pResult As LARGE_INTEGER Ptr _
 	' )As HRESULT
 	' Return NetworkStreamPosition(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
 
 Function INetworkStreamRead( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pReadedBytes As Integer Ptr _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	Return NetworkStreamRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pReadedBytes)
 End Function
 
 ' Function INetworkStreamSeek( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal Offset As LongInt, _
+		' ByVal Offset As LARGE_INTEGER, _
 		' ByVal Origin As SeekOrigin _
 	' )As HRESULT
 	' Return NetworkStreamSeek(ContainerOf(this, NetworkStream, lpVtbl), Offset, Origin)
@@ -581,24 +580,24 @@ End Function
 
 ' Function INetworkStreamSetLength( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal Length As LongInt _
+		' ByVal Length As LARGE_INTEGER _
 	' )As HRESULT
 	' Return NetworkStreamSetLength(ContainerOf(this, NetworkStream, lpVtbl), Length)
 ' End Function
 
 Function INetworkStreamWrite( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
-		ByVal pWritedBytes As Integer Ptr _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	Return NetworkStreamWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pWritedBytes)
 End Function
 
 Function INetworkStreamBeginRead( _
 		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As UByte Ptr, _
-		ByVal Count As Integer, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -608,8 +607,8 @@ End Function
 
 ' Function INetworkStreamBeginWrite( _
 		' ByVal this As INetworkStream Ptr, _
-		' ByVal Buffer As UByte Ptr, _
-		' ByVal Count As Integer, _
+		' ByVal Buffer As LPVOID, _
+		' ByVal Count As DWORD, _
 		' ByVal callback As AsyncCallback, _
 		' ByVal StateObject As IUnknown Ptr, _
 		' ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -619,7 +618,7 @@ End Function
 Function INetworkStreamEndRead( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As Integer Ptr _
+		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	Return NetworkStreamEndRead(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
 End Function
@@ -627,7 +626,7 @@ End Function
 ' Function INetworkStreamEndWrite( _
 		' ByVal this As INetworkStream Ptr, _
 		' ByVal pIAsyncResult As IAsyncResult Ptr, _
-		' ByVal pWritedBytes As Integer Ptr _
+		' ByVal pWritedBytes As DWORD Ptr _
 	' )As HRESULT
 ' End Function
 
