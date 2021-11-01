@@ -12,7 +12,7 @@ Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
 
 Const DefaultContentLanguage = WStr("ru")
-Const HttpErrorHead1 = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>")
+Const HttpErrorHead1 = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>")
 Const HttpErrorHead2 = WStr("</title></head>")
 Const HttpErrorBody1 = WStr("<body><h1>")
 Const HttpErrorBody3 = WStr("</h1><h2>HTTP Status Code ")
