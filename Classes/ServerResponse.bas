@@ -503,21 +503,23 @@ Function ServerResponseStringableToString( _
 	
 	IArrayStringWriter_SetBuffer(pIWriter, @this->ResponseHeaderBufferStringable, MaxResponseBufferLength)
 	
-	Dim HttpVersionLength As Integer = Any
-	Dim pwHttpVersion As WString Ptr = HttpVersionToString(this->HttpVersion, @HttpVersionLength)
-	
-	IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
-	IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
-	IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
-	IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
-	
-	If this->StatusDescription = NULL Then
-		Dim BufferLength As Integer = Any
-		Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
-		IArrayStringWriter_WriteLengthStringLine(pIWriter, wBuffer, BufferLength)
-	Else
-		IArrayStringWriter_WriteStringLine(pIWriter, this->StatusDescription)
-	End If
+	Scope
+		Dim HttpVersionLength As Integer = Any
+		Dim pwHttpVersion As WString Ptr = HttpVersionToString(this->HttpVersion, @HttpVersionLength)
+		
+		IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
+		IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+		IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
+		IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+		
+		If this->StatusDescription = NULL Then
+			Dim BufferLength As Integer = Any
+			Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
+			IArrayStringWriter_WriteLengthStringLine(pIWriter, wBuffer, BufferLength)
+		Else
+			IArrayStringWriter_WriteStringLine(pIWriter, this->StatusDescription)
+		End If
+	End Scope
 	
 	Scope
 		Dim datNowF As FILETIME = Any
