@@ -487,8 +487,6 @@ Function ServerResponseStringableToString( _
 		Return hr
 	End If
 	
-	ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderServer, WStr(VER_HTTPSERVERVERSION_STR))
-	
 	If this->KeepAlive Then
 		If this->HttpVersion = HttpVersions.Http10 Then
 			ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderConnection, @KeepAliveString)
