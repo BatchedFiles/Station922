@@ -11,7 +11,9 @@ Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 ' Размер буфера в символах для записи в него кода html страницы с ошибкой
 Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
 
-Const DefaultContentLanguage = WStr("ru")
+Const DefaultContentLanguage = WStr("en")
+Const DefaultCacheControlNoCache = WStr("no-cache")
+
 Const HttpErrorHead1 = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>")
 Const HttpErrorHead2 = WStr("</title></head>")
 Const HttpErrorBody1 = WStr("<body><h1>")
@@ -631,6 +633,7 @@ Sub WriteHttpResponse( _
 	
 	IServerResponse_SetKeepAlive(pIResponse, False)
 	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderContentLanguage, @DefaultContentLanguage)
+	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderCacheControl, @DefaultCacheControlNoCache)
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	Scope
