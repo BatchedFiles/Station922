@@ -7,27 +7,21 @@ Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
-Type FastInteger As Integer
+Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte) - 1
 
-Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(FastInteger)) \ SizeOf(UByte) - 1
-
-Type _RawBuffer
-	cbUsed As FastInteger
-	cbLength As FastInteger
+Type RawBuffer
+	cbUsed As Integer
+	cbLength As Integer
 	Bytes(RAWBUFFER_CAPACITY) As UByte
 End Type
 
-Type RawBuffer As _RawBuffer
+Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(Integer)) \ SizeOf(WString) - 1
 
-Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(FastInteger)) \ SizeOf(WString) - 1
-
-Type _LinesBuffer
-	Start As FastInteger
-	Length As FastInteger
+Type LinesBuffer
+	Start As Integer
+	Length As Integer
 	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
 End Type
-
-Type LinesBuffer As _LinesBuffer
 
 Type _HttpReader
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
