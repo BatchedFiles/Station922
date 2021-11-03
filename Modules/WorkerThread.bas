@@ -211,7 +211,7 @@ Function PrepareRequestResponse( _
 		' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
 		Dim pHeaderHost As WString Ptr = Any
 		If HttpMethod = HttpMethods.HttpConnect Then
-			pHeaderHost = ClientURI.pUrl
+			pHeaderHost = ClientURI.Authority.Host
 		Else
 			IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @pHeaderHost)
 		End If
@@ -241,7 +241,7 @@ Function PrepareRequestResponse( _
 				
 				Dim IsSiteMoved As Boolean = Any
 				' TODO Грязный хак с robots.txt
-				Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.pUrl, WStr("/robots.txt"))
+				Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
 				If IsRobotsTxt = 0 Then
 					IsSiteMoved = False
 				Else
@@ -349,7 +349,7 @@ Function PrepareRequestResponse( _
 								Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
 									pIWebSite, _
 									pIFile, _
-									@ClientURI.Path, _
+									ClientURI.Path, _
 									RequestedFileAccess _
 								)
 								If FAILED(hrGetFile) Then

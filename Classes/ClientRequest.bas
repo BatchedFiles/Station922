@@ -29,96 +29,6 @@ Type _ClientRequest
 	ContentLength As LongInt
 End Type
 
-Function ContainsBadCharSequence( _
-		ByVal Buffer As WString Ptr, _
-		ByVal Length As Integer _
-	)As HRESULT
-	
-	' TODO Звёздочка в пути допустима при методе OPTIONS
-	
-	If Length = 0 Then
-		Return E_FAIL
-	End If
-	
-	If Buffer[Length - 1] = Characters.FullStop Then
-		Return E_FAIL
-	End If
-	
-	For i As Integer = 0 To Length - 1
-		
-		Dim c As wchar_t = Buffer[i]
-		
-		Select Case c
-			
-			Case Is < Characters.WhiteSpace
-				Return E_FAIL
-				
-			Case Characters.QuotationMark
-				' Кавычки нельзя
-				Return E_FAIL
-				
-			'Case Characters.DollarSign
-				' Нельзя доллар, потому что могут открыть $MFT
-				'Return E_FAIL
-				
-			'Case Characters.PercentSign
-				' TODO Уточнить, почему нельзя использовать знак процента
-				'Return E_FAIL
-				
-			'Case Characters.Ampersand
-				' Объединение команд в одну
-				'Return E_FAIL
-				
-			Case Characters.Asterisk
-				' Нельзя звёздочку
-				Return E_FAIL
-				
-			Case Characters.FullStop
-				' Разрешены .. потому что могут встретиться в имени файла
-				' Запрещены /.. потому что могут привести к смене каталога
-				Dim NextChar As wchar_t = Buffer[i + 1]
-				
-				If NextChar = Characters.FullStop Then
-					
-					If i > 0 Then
-						Dim PrevChar As wchar_t = Buffer[i - 1]
-						
-						If PrevChar = Characters.Solidus Then
-							Return E_FAIL
-						End If
-						
-					End If
-					
-				End If
-				
-			'Case Characters.Semicolon
-				' Разделитель путей
-				'Return E_FAIL
-				
-			Case Characters.LessThanSign
-				' Защита от перенаправлений ввода-вывода
-				Return E_FAIL
-				
-			Case Characters.GreaterThanSign
-				' Защита от перенаправлений ввода-вывода
-				Return E_FAIL
-				
-			Case Characters.QuestionMark
-				' Подстановочный знак
-				Return E_FAIL
-				
-			Case Characters.VerticalLine
-				' Символ конвейера
-				Return E_FAIL
-				
-		End Select
-		
-	Next
-	
-	Return S_OK
-	
-End Function
-
 Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
@@ -155,7 +65,7 @@ Sub InitializeClientRequest( _
 	this->pIReader = NULL
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpMethod = HttpMethods.HttpGet
-	InitializeURI(@this->ClientURI)
+	Station922UriInitialize(@this->ClientURI)
 	this->HttpVersion = HttpVersions.Http11
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
@@ -394,8 +304,13 @@ Function ClientRequestPrepare( _
 	
 	' Метод, запрошенный ресурс и версия протокола
 	' Первый пробел
-	Dim pSpace As WString Ptr = StrChrW(this->RequestedLine, Characters.WhiteSpace)
-	If pSpace = 0 Then
+	Dim pVerb As WString Ptr = this->RequestedLine
+	
+	Dim pSpace As WString Ptr = StrChrW( _
+		this->RequestedLine, _
+		Characters.WhiteSpace _
+	)
+	If pSpace = NULL Then
 		Return CLIENTREQUEST_E_BADREQUEST
 	End If
 	
@@ -405,36 +320,54 @@ Function ClientRequestPrepare( _
 		pSpace += 1
 	Loop While pSpace[0] = Characters.WhiteSpace
 	
-	' Теперь в RequestedLine содержится имя метода
-	Dim GetHttpMethodResult As Boolean = GetHttpMethodIndex(this->RequestedLine, @this->HttpMethod)
-	
+	' TODO Метод должен определять сервер
+	Dim GetHttpMethodResult As Boolean = GetHttpMethodIndex( _
+		pVerb, _
+		@this->HttpMethod _
+	)
 	If GetHttpMethodResult = False Then
 		Return CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
 	End If
 	
 	' Здесь начинается Url
-	this->ClientURI.pUrl = pSpace
+	Dim pUri As WString Ptr = pSpace
 	
 	' Второй пробел
-	pSpace = StrChrW(pSpace, Characters.WhiteSpace)
+	pSpace = StrChrW( _
+		pSpace, _
+		Characters.WhiteSpace _
+	)
 	
-	If pSpace <> 0 Then
+	Dim pVersion As WString Ptr = Any
+	
+	If pSpace = NULL Then
+		pVersion = NULL
+	Else
 		' Убрать пробел и найти начало непробела
 		pSpace[0] = 0
 		Do
 			pSpace += 1
 		Loop While pSpace[0] = Characters.WhiteSpace
 		
+		pVersion = pSpace
+		
 		' Третий пробел
-		If StrChrW(this->ClientURI.pUrl, Characters.WhiteSpace) <> 0 Then
+		pSpace = StrChrW( _
+			pSpace, _
+			Characters.WhiteSpace _
+		)
+		If pSpace <> NULL Then
 			' Слишком много пробелов
 			Return CLIENTREQUEST_E_BADREQUEST
 		End If
 		
 	End If
 	
-	Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex(pSpace, @this->HttpVersion)
-	
+	' TODO Версию протокола должен определять сервер
+	Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
+		pVersion, _
+		@this->HttpVersion _
+	)
 	If GetHttpVersionResult = False Then
 		Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 	End If
@@ -446,37 +379,23 @@ Function ClientRequestPrepare( _
 			
 	End Select
 	
-	Dim ClientURILength As Integer = lstrlenW(this->ClientURI.pUrl)
-	
-	If ClientURILength > Station922Uri.MaxUrlLength Then
-		Return CLIENTREQUEST_E_URITOOLARGE
-	End If
-	
-	' Если есть «?», значит там строка запроса
-	Dim wQS As WString Ptr = StrChrW(this->ClientURI.pUrl, Characters.QuestionMark)
-	If wQS = 0 Then
-		lstrcpyW(@this->ClientURI.Path, this->ClientURI.pUrl)
-	Else
-		this->ClientURI.pQueryString = wQS + 1
-		' Получение пути
-		wQS[0] = 0 ' убрать вопросительный знак
-		lstrcpyW(@this->ClientURI.Path, this->ClientURI.pUrl)
-		wQS[0] = Characters.QuestionMark ' вернуть, чтобы не портить Url
-	End If
-	
-	Dim PathLength As Integer = Any
-	
-	If StrChrW(@this->ClientURI.Path, PercentSign) = 0 Then
-		PathLength = ClientURILength
-	Else
-		' Раскодировка пути
-		Dim DecodedPath As WString * (Station922Uri.MaxUrlLength + 1) = Any
-		PathLength = this->ClientURI.PathDecode(@DecodedPath)
-		lstrcpyW(@this->ClientURI.Path, @DecodedPath)
-	End If
-	
-	If FAILED(ContainsBadCharSequence(@this->ClientURI.Path, PathLength)) Then
-		Return CLIENTREQUEST_E_BADPATH
+	Dim hrSetUri As HRESULT = Station922UriSetUri( _
+		@this->ClientURI, _
+		pUri _
+	)
+	If FAILED(hrSetUri) Then
+		Select Case hrSetUri
+			
+			Case STATION922URI_E_URITOOLARGE
+				Return CLIENTREQUEST_E_URITOOLARGE
+				
+			Case STATION922URI_E_BADPATH
+				Return CLIENTREQUEST_E_BADPATH
+				
+			Case Else
+				Return E_FAIL
+				
+		End Select
 	End If
 	
 	' Получить все заголовки запроса
@@ -720,7 +639,7 @@ Function ClientRequestClear( _
 	' TODO Удалить дублирование инициализации
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpMethod = HttpMethods.HttpGet
-	InitializeURI(@this->ClientURI)
+	Station922UriInitialize(@this->ClientURI)
 	this->HttpVersion = HttpVersions.Http11
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))

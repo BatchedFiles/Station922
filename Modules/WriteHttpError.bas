@@ -98,13 +98,13 @@ Sub WriteMovedPermanently( _
 	Dim MovedUrl As WString Ptr = Any
 	IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
 	
-	Dim buf As WString * (Station922Uri.MaxUrlLength * 2 + 1) = Any
+	Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
 	lstrcpyW(@buf, MovedUrl)
 	
 	Dim ClientURI As Station922Uri = Any
 	IClientRequest_GetUri(pIRequest, @ClientURI)
 	
-	lstrcatW(@buf, ClientURI.pUrl)
+	lstrcatW(@buf, ClientURI.Uri)
 	
 	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
 	
