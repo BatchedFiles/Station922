@@ -196,7 +196,7 @@ Declare Function AssociateWithIOCP( _
 )As HRESULT
 
 Declare Function ServerThread( _
-	ByVal lpParam As LPVOID _
+	ByVal this As WebServer Ptr _
 )As DWORD
 
 Declare Sub CreateCachedClientMemoryContext( _
@@ -472,25 +472,7 @@ Function WebServerRun( _
 	
 	CreateCachedClientMemoryContext(this)
 	
-	Const DefaultStackSize As SIZE_T_ = 0
-	Dim dwThreadId As DWORD = Any
-	Dim hThread As HANDLE = CreateThread( _
-		NULL, _
-		DefaultStackSize, _
-		@ServerThread, _
-		this, _
-		0, _
-		@dwThreadId _
-	)
-	If hThread = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	WebServerAddRef(this)
-	
-	CloseHandle(hThread)
+	ServerThread(this)
 	
 	Return S_OK
 	
@@ -896,10 +878,8 @@ Function AssociateWithIOCP( _
 End Function
 
 Function ServerThread( _
-		ByVal lpParam As LPVOID _
+		ByVal this As WebServer Ptr _
 	)As DWORD
-	
-	Dim this As WebServer Ptr = lpParam
 	
 	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
 	
@@ -931,8 +911,6 @@ Function ServerThread( _
 	Loop While this->CurrentStatus = RUNNABLE_S_RUNNING
 	
 	WebServerStop(this)
-	
-	WebServerRelease(this)
 	
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY

@@ -6,7 +6,6 @@ Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 
 Type ServerContext
-	hStopEvent As HANDLE
 	pILogger As ILogger Ptr
 	pIWebServer As IRunnable Ptr
 End Type
@@ -22,14 +21,6 @@ Function RunnableStatusHandler( _
 	vtSCode.vt = VT_ERROR
 	vtSCode.scode = Status
 	ILogger_LogDebug(pContext->pILogger, WStr(!"RunnableStatusHandler\t"), vtSCode)
-	
-	If FAILED(Status) Then
-		SetEvent(pContext->hStopEvent)
-	End If
-	
-	If Status = RUNNABLE_S_STOPPED Then
-		SetEvent(pContext->hStopEvent)
-	End If
 	
 	Return S_OK
 	
@@ -71,20 +62,8 @@ Function wMain()As Long
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
-	Dim hStopEvent As HANDLE = CreateEvent( _
-		NULL, _
-		TRUE, _
-		FALSE, _
-		NULL _
-	)
-	If hStopEvent = NULL Then
-		IRunnable_Release(pIWebServer)
-		Return 4
-	End If
-	
 	Dim Context As ServerContext = Any
 	With Context
-		.hStopEvent = hStopEvent
 		.pILogger = pILogger
 		.pIWebServer = pIWebServer
 	End With
@@ -95,8 +74,6 @@ Function wMain()As Long
 	If FAILED(hr) Then
 		Return 2
 	End If
-	
-	WaitForSingleObject(hStopEvent, INFINITE)
 	
 	hr = IRunnable_Stop(pIWebServer)
 	If FAILED(hr) Then
