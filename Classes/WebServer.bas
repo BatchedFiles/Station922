@@ -692,18 +692,10 @@ Function AcceptConnection( _
 			)
 			If ClientSocket = INVALID_SOCKET Then
 				Dim dwErrorAccept As Long = WSAGetLastError()
-' #if __FB_DEBUG__
-				' Dim vtErrorCode As VARIANT = Any
-				' vtErrorCode.vt = VT_UI4
-				' vtErrorCode.ulVal = dwErrorAccept
-				
-				' Dim pILogger As ILogger Ptr = Any
-				' IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
-				
-				' ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tClient connected\t"), vtErrorCode)
-				
-				' ILogger_Release(pILogger)
-' #endif
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_UI4
+				vtErrorCode.ulVal = dwErrorAccept
+				ILogger_LogError(this->pILogger, WStr(!"\t\t\t\tAccept failed\t"), vtErrorCode)
 				Return HRESULT_FROM_WIN32(dwErrorAccept)
 			End If
 	
