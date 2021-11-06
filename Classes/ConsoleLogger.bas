@@ -93,36 +93,36 @@ Function ConsoleLoggerWriteEntry( _
 	' VariantCopy(@Entry.vtData, pvtData)
 	
 	Select Case Reason
-' #if __FB_DEBUG__
-
+		
 		Case EntryType.Debug
-			Dim vtData As VARIANT = Any
-			VariantInit(@vtData)
 			
-			If pvtData->vt = VT_ERROR Then
-				Dim buf As WString * 255 = Any
-				_ultow(pvtData->scode, @buf, 16)
-				
-				vtData.vt = VT_BSTR
-				vtData.bstrVal = SysAllocString(buf)
-			Else
-				VariantChangeType( _
-					@vtData, _
-					pvtData, _
-					0, _
-					VT_BSTR _
-				)
-			End If
-			
-			ConsoleWriteColorStringW(pwszText)
-			ConsoleWriteColorStringW(vtData.bstrVal)
-			ConsoleWriteColorStringW(WStr(!"\r\n"))
-			
-			VariantClear(@vtData)
-' #endif
 		Case Else
 			
 	End Select
+	
+	Dim vtData As VARIANT = Any
+	VariantInit(@vtData)
+	
+	If pvtData->vt = VT_ERROR Then
+		Dim buf As WString * 255 = Any
+		_ultow(pvtData->scode, @buf, 16)
+		
+		vtData.vt = VT_BSTR
+		vtData.bstrVal = SysAllocString(buf)
+	Else
+		VariantChangeType( _
+			@vtData, _
+			pvtData, _
+			0, _
+			VT_BSTR _
+		)
+	End If
+	
+	ConsoleWriteColorStringW(pwszText)
+	ConsoleWriteColorStringW(vtData.bstrVal)
+	ConsoleWriteColorStringW(WStr(!"\r\n"))
+	
+	VariantClear(@vtData)
 	
 	Return S_OK
 	
@@ -242,6 +242,7 @@ Function ConsoleLoggerLogDebug( _
 		ByVal vtData As VARIANT _
 	)As HRESULT
 	
+#if __FB_DEBUG__
 	Dim hr As HRESULT = ConsoleLoggerWriteEntry( _
 		this, _
 		EntryType.Debug, _
@@ -250,6 +251,10 @@ Function ConsoleLoggerLogDebug( _
 	)
 	
 	Return hr
+#else
+	
+	Return S_FALSE
+#endif
 	
 End Function
 
