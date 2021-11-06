@@ -81,10 +81,12 @@ Function CreateWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSite Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(WebSite)
 	ILogger_LogDebug(pILogger, WStr(!"WebSite creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -96,9 +98,11 @@ Function CreateWebSite( _
 	
 	InitializeWebSite(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("WebSite created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -108,9 +112,11 @@ Sub DestroyWebSite( _
 		ByVal this As WebSite Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("WebSite destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -121,7 +127,9 @@ Sub DestroyWebSite( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("WebSite destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

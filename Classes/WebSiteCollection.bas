@@ -74,10 +74,12 @@ Function CreateWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSiteCollection Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(WebSiteCollection)
 	ILogger_LogDebug(pILogger, WStr(!"WebSiteCollection creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -89,9 +91,11 @@ Function CreateWebSiteCollection( _
 	
 	InitializeWebSiteCollection(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("WebSiteCollection created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -101,10 +105,11 @@ Sub DestroyWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
 	
-	' DebugPrintWString(WStr("WebSiteCollection destroying"))
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("WebSiteCollection destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -115,7 +120,9 @@ Sub DestroyWebSiteCollection( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("WebSiteCollection destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

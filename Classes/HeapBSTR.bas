@@ -58,10 +58,12 @@ Function CreateInternalHeapBSTR( _
 	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
 	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = cbBytes
 	ILogger_LogDebug(pILogger, WStr(!"InternalHeapBSTR creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -73,9 +75,11 @@ Function CreateInternalHeapBSTR( _
 	
 	InitializeInternalHeapBSTR(this, pILogger, pIMemoryAllocator, pwsz, Length)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -85,9 +89,11 @@ Sub DestroyInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("InternalHeapBSTR destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -98,7 +104,9 @@ Sub DestroyInternalHeapBSTR( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

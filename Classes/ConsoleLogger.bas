@@ -92,29 +92,37 @@ Function ConsoleLoggerWriteEntry( _
 	' VariantInit(@Entry.vtData)
 	' VariantCopy(@Entry.vtData, pvtData)
 	
-	Dim vtData As VARIANT = Any
-	VariantInit(@vtData)
-	
-	If pvtData->vt = VT_ERROR Then
-		Dim buf As WString * 255 = Any
-		_ultow(pvtData->scode, @buf, 16)
-		
-		vtData.vt = VT_BSTR
-		vtData.bstrVal = SysAllocString(buf)
-	Else
-		VariantChangeType( _
-			@vtData, _
-			pvtData, _
-			0, _
-			VT_BSTR _
-		)
-	End If
-	
-	ConsoleWriteColorStringW(pwszText)
-	ConsoleWriteColorStringW(vtData.bstrVal)
-	ConsoleWriteColorStringW(WStr(!"\r\n"))
-	
-	VariantClear(@vtData)
+	Select Case Reason
+' #if __FB_DEBUG__
+
+		Case EntryType.Debug
+			Dim vtData As VARIANT = Any
+			VariantInit(@vtData)
+			
+			If pvtData->vt = VT_ERROR Then
+				Dim buf As WString * 255 = Any
+				_ultow(pvtData->scode, @buf, 16)
+				
+				vtData.vt = VT_BSTR
+				vtData.bstrVal = SysAllocString(buf)
+			Else
+				VariantChangeType( _
+					@vtData, _
+					pvtData, _
+					0, _
+					VT_BSTR _
+				)
+			End If
+			
+			ConsoleWriteColorStringW(pwszText)
+			ConsoleWriteColorStringW(vtData.bstrVal)
+			ConsoleWriteColorStringW(WStr(!"\r\n"))
+			
+			VariantClear(@vtData)
+' #endif
+		Case Else
+			
+	End Select
 	
 	Return S_OK
 	

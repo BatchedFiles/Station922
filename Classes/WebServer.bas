@@ -320,10 +320,12 @@ Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServer Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(WebServer)
 	ILogger_LogDebug(pILogger, WStr(!"WebServer creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
@@ -371,9 +373,11 @@ Function CreateWebServer( _
 					If EventsCreated Then
 						InitializeWebServer(this, pILogger, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
 						
+#if __FB_DEBUG__
 						Dim vtEmpty As VARIANT = Any
 						vtEmpty.vt = VT_EMPTY
 						ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
+#endif
 						
 						Return this
 					End If
@@ -399,9 +403,11 @@ Sub DestroyWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("WebServer destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -412,7 +418,9 @@ Sub DestroyWebServer( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("WebServer destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -676,6 +684,7 @@ Function ProcessErrorAssociateWithIOCP( _
 		ByVal dwErrorAccept As Long _
 	)As HRESULT
 	
+#if __FB_DEBUG__
 	Scope
 		Dim vtErrorCode As VARIANT = Any
 		vtErrorCode.vt = VT_UI4
@@ -688,6 +697,7 @@ Function ProcessErrorAssociateWithIOCP( _
 		
 		ILogger_Release(pILogger)
 	End Scope
+#endif
 	
 	If ClientSocket = INVALID_SOCKET Then
 		' If pCachedContext->pIClientContext <> NULL Then

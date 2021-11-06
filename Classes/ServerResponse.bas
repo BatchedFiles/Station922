@@ -83,10 +83,12 @@ Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(ServerResponse)
 	ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -98,9 +100,11 @@ Function CreateServerResponse( _
 	
 	InitializeServerResponse(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -110,9 +114,11 @@ Sub DestroyServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("ServerResponse destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -123,7 +129,9 @@ Sub DestroyServerResponse( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("ServerResponse destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

@@ -69,10 +69,12 @@ Function CreateRequestedFile( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As RequestedFile Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(RequestedFile)
 	ILogger_LogDebug(pILogger, WStr(!"RequestedFile creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As RequestedFile Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -84,9 +86,11 @@ Function CreateRequestedFile( _
 	
 	InitializeRequestedFile(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -96,10 +100,11 @@ Sub DestroyRequestedFile( _
 		ByVal this As RequestedFile Ptr _
 	)
 	
-	' DebugPrintWString(WStr("RequestedFile destroying"))
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("RequestedFile destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -110,7 +115,9 @@ Sub DestroyRequestedFile( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("RequestedFile destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

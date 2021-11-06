@@ -79,10 +79,12 @@ Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServerIniConfiguration Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(WebServerIniConfiguration)
 	ILogger_LogDebug(pILogger, WStr(!"WebServerIniConfiguration creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 	Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
@@ -114,9 +116,11 @@ Function CreateWebServerIniConfiguration( _
 	
 	InitializeWebServerIniConfiguration(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("WebServerIniConfiguration created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -126,9 +130,11 @@ Sub DestroyWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("WebServerIniConfiguration destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -139,7 +145,9 @@ Sub DestroyWebServerIniConfiguration( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("WebServerIniConfiguration destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

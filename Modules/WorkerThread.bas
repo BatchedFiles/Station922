@@ -677,7 +677,7 @@ Function WorkerThread( _
 			Dim vtErrorCode As VARIANT = Any
 			vtErrorCode.vt = VT_UI4
 			vtErrorCode.ulVal = dwError
-			ILogger_LogDebug(pWorkerContext->pILogger, WStr(!"GetQueuedCompletionStatus Error\t"), vtErrorCode)
+			ILogger_LogError(pWorkerContext->pILogger, WStr(!"GetQueuedCompletionStatus Error\t"), vtErrorCode)
 			
 			If pOverlapped = NULL Then
 				Exit Do
@@ -690,10 +690,12 @@ Function WorkerThread( _
 			Dim pILogger As ILogger Ptr = Any
 			IClientContext_GetLogger(pIContext, @pILogger)
 			
+#if __FB_DEBUG__
 			Dim vtBytesTransferred As VARIANT = Any
 			vtBytesTransferred.vt = VT_UI4
 			vtBytesTransferred.ulVal = BytesTransferred
 			ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
+#endif
 			
 			If BytesTransferred <> 0 Then
 				Dim OpCode As OperationCodes = Any

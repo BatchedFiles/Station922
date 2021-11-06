@@ -102,19 +102,13 @@ Function CreateClientContext( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientContext Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(ClientContext)
 	ILogger_LogDebug(pILogger, WStr(!"ClientContext creating\t"), vtAllocatedBytes)
+#endif
 	
-	' Dim pIRequestedFile As IRequestedFile Ptr = Any
-	' Dim hr1 As HRESULT = CreateInstance( _
-		' pIMemoryAllocator, _
-		' @CLSID_REQUESTEDFILE, _
-		' @IID_IRequestedFile, _
-		' @pIRequestedFile _
-	' )
-	' If SUCCEEDED(hr) Then
 	Dim pIHttpReader As IHttpReader Ptr = Any
 	Dim hr2 As HRESULT = CreateInstance( _
 		pILogger, _
@@ -167,9 +161,11 @@ Function CreateClientContext( _
 							NULL _
 						)
 						
+#if __FB_DEBUG__
 						Dim vtEmpty As VARIANT = Any
 						vtEmpty.vt = VT_EMPTY
 						ILogger_LogDebug(pILogger, WStr("ClientContext created"), vtEmpty)
+#endif
 						
 						Return this
 						
@@ -191,10 +187,6 @@ Function CreateClientContext( _
 		
 	End If
 	
-	' IRequestedFile_Release(pIRequestedFile)
-	
-	' End If
-	
 	Return NULL
 	
 End Function
@@ -203,9 +195,11 @@ Sub DestroyClientContext( _
 		ByVal this As ClientContext Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("ClientContext destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -216,7 +210,9 @@ Sub DestroyClientContext( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("ClientContext destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

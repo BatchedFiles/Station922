@@ -57,10 +57,12 @@ Function CreateHeapMemoryAllocator( _
 		ByVal pILogger As ILogger Ptr _
 	)As HeapMemoryAllocator Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
 	ILogger_LogDebug(pILogger, WStr(!"HeapMemoryAllocator creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -83,9 +85,11 @@ Function CreateHeapMemoryAllocator( _
 	
 	InitializeHeapMemoryAllocator(this, pILogger, hHeap)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -95,9 +99,11 @@ Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("HeapMemoryAllocator destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -106,19 +112,19 @@ Sub DestroyHeapMemoryAllocator( _
 		Dim vtMemoryLeaksCount As VARIANT = Any
 		vtMemoryLeaksCount.vt = VT_I4
 		vtMemoryLeaksCount.lVal = this->MemoryAllocations
-		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
+		ILogger_LogError(pILogger, WStr(!"\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
 		
 		Dim vtMemoryLeaksSize As VARIANT = Any
 		vtMemoryLeaksSize.vt = VT_I8
 		vtMemoryLeaksSize.llVal = this->cbMemoryUsed
-		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
+		ILogger_LogError(pILogger, WStr(!"\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
 		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory <> 0 Then
 				Dim vtMemorySize As VARIANT = Any
 				vtMemorySize.vt = VT_I8
 				vtMemorySize.llVal = this->Memoryes(i).Size
-				ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tMemory Size\t"), vtMemorySize)
+				ILogger_LogError(pILogger, WStr(!"\t\t\t\tMemory Size\t"), vtMemorySize)
 			End If
 		Next
 	End If
@@ -131,7 +137,9 @@ Sub DestroyHeapMemoryAllocator( _
 		HeapDestroy(hHeap)
 	End If
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator destroyed"), vtEmpty)
+#endif
 	
 	ILogger_Release(pILogger)
 	
@@ -211,9 +219,11 @@ Function HeapMemoryAllocatorAlloc( _
 	)
 	
 	If pMemory = NULL Then
-		ILogger_LogDebug(this->pILogger, WStr(!"\t\t\t\tAllocMemory Failed\t"), vtAllocatedBytes)
+		ILogger_LogError(this->pILogger, WStr(!"\t\t\t\tAllocMemory Failed\t"), vtAllocatedBytes)
 	Else
+#if __FB_DEBUG__
 		ILogger_LogDebug(this->pILogger, WStr(!"\t\t\t\tAllocMemory Succeeded\t"), vtAllocatedBytes)
+#endif
 		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory = 0 Then

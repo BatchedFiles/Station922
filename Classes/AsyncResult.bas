@@ -56,10 +56,12 @@ Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AsyncResult Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(AsyncResult)
 	ILogger_LogDebug(pILogger, WStr(!"AsyncResult creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -71,9 +73,11 @@ Function CreateAsyncResult( _
 	
 	InitializeAsyncResult(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("AsyncResult created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -83,9 +87,11 @@ Sub DestroyAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("AsyncResult destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -96,7 +102,9 @@ Sub DestroyAsyncResult( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("AsyncResult destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

@@ -254,10 +254,12 @@ Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpReader Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(HttpReader)
 	ILogger_LogDebug(pILogger, WStr(!"HttpReader creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -269,9 +271,11 @@ Function CreateHttpReader( _
 	
 	InitializeHttpReader(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("HttpReader created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -281,10 +285,11 @@ Sub DestroyHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-	' DebugPrintWString(WStr("HttpReader destroying"))
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("HttpReader destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -295,7 +300,9 @@ Sub DestroyHttpReader( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("HttpReader destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)

@@ -95,10 +95,12 @@ Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientRequest Ptr
 	
+#if __FB_DEBUG__
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(ClientRequest)
 	ILogger_LogDebug(pILogger, WStr(!"ClientRequest creating\t"), vtAllocatedBytes)
+#endif
 	
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -110,9 +112,11 @@ Function CreateClientRequest( _
 	
 	InitializeClientRequest(this, pILogger, pIMemoryAllocator)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
+#endif
 	
 	Return this
 	
@@ -122,9 +126,11 @@ Sub DestroyClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
+#if __FB_DEBUG__
 	Dim vtEmpty As VARIANT = Any
 	vtEmpty.vt = VT_EMPTY
 	ILogger_LogDebug(this->pILogger, WStr("ClientRequest destroying"), vtEmpty)
+#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -135,7 +141,9 @@ Sub DestroyClientRequest( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
+#if __FB_DEBUG__
 	ILogger_LogDebug(pILogger, WStr("ClientRequest destroyed"), vtEmpty)
+#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
