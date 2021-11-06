@@ -159,6 +159,84 @@ Function CreateClientMemoryContext( _
 	
 End Function
 
+Sub InitializeClientMemoryContext( _
+		ByVal pCachedContext As CachedClientContext Ptr, _
+		ByVal pIServerMemoryAllocator As IMalloc Ptr _
+	)
+	
+	ZeroMemory(pCachedContext, SizeOf(CachedClientContext))
+	
+	pCachedContext->hrLogger = CreateLoggerInstance( _
+		pIServerMemoryAllocator, _
+		@CLSID_CONSOLELOGGER, _
+		@IID_ILogger, _
+		@pCachedContext->pIClientLogger _
+	)
+	
+	If SUCCEEDED(pCachedContext->hrLogger) Then
+		
+		pCachedContext->hrMemoryAllocator = CreateMemoryAllocatorInstance( _
+			pCachedContext->pIClientLogger, _
+			@CLSID_HEAPMEMORYALLOCATOR, _
+			@IID_IMalloc, _
+			@pCachedContext->pIClientMemoryAllocator _
+		)
+		
+		If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
+			
+			pCachedContext->hrClientContex = CreateInstance( _
+				pCachedContext->pIClientLogger, _
+				pCachedContext->pIClientMemoryAllocator, _
+				@CLSID_CLIENTCONTEXT, _
+				@IID_IClientContext, _
+				@pCachedContext->pIClientContext _
+			)
+			
+			If SUCCEEDED(pCachedContext->hrClientContex) Then
+				IClientContext_SetOperationCode(pCachedContext->pIClientContext, OperationCodes.ReadRequest)
+				
+				Dim pIReader As IHttpReader Ptr = Any
+				IClientContext_GetHttpReader(pCachedContext->pIClientContext, @pIReader)
+				
+				Scope
+					Dim pINetworkStream As INetworkStream Ptr = Any
+					IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
+					
+					' TODO Запросить интерфейс вместо конвертирования указателя
+					IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
+					
+					INetworkStream_Release(pINetworkStream)
+				End Scope
+				
+				Scope
+					Dim pIRequest As IClientRequest Ptr = Any
+					IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
+					
+					' TODO Запросить интерфейс вместо конвертирования указателя
+					IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
+					
+					IClientRequest_Release(pIRequest)
+				End Scope
+				
+				IHttpReader_Release(pIReader)
+				
+				' IMalloc_AddRef(pIServerMemoryAllocator)
+				' pCachedContext->pIServerMemoryAllocator = pIServerMemoryAllocator
+				
+				' IClientContext_Release(pCachedContext->pIClientContext)
+				
+			End If
+			
+			IMalloc_Release(pCachedContext->pIClientMemoryAllocator)
+			
+		End If
+		
+		ILogger_Release(pCachedContext->pIClientLogger)
+		
+	End If
+	
+End Sub
+
 Sub DestroyClientMemoryContext( _
 		ByVal pClientMemoryContext As CachedClientContext Ptr _
 	)
@@ -606,85 +684,78 @@ Function AcceptConnection( _
 		
 		If EventType.iErrorCode(FD_ACCEPT_BIT) = 0 Then
 			
-			Dim pCachedContext As CachedClientContext Ptr = CreateClientMemoryContext( _
+			Dim RemoteAddress As SOCKADDR_STORAGE = Any
+			Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+			Dim ClientSocket As SOCKET = accept( _
+				this->SocketList(EventIndex).ClientSocket, _
+				CPtr(SOCKADDR Ptr, @RemoteAddress), _
+				@RemoteAddressLength _
+			)
+			Dim dwErrorAccept As Long = WSAGetLastError()
+			
+			Dim CachedContext As CachedClientContext = Any
+			InitializeClientMemoryContext( _
+				@CachedContext, _
 				this->pIMemoryAllocator _
 			)
 			
-			If pCachedContext <> NULL Then
+			Scope
+				Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
+					this, _
+					ClientSocket, _
+					@CachedContext, _
+					dwErrorAccept _
+				)
+				If FAILED(hrAssociateWithIOCP) Then
+					IClientContext_Release(CachedContext.pIClientContext)
+					Return E_FAIL
+				End If
 				
-				Scope
-					Dim ClientSocket As SOCKET = Any
-					Scope
-						Dim RemoteAddress As SOCKADDR_STORAGE = Any
-						Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-						ClientSocket = accept( _
-							this->SocketList(EventIndex).ClientSocket, _
-							CPtr(SOCKADDR Ptr, @RemoteAddress), _
-							@RemoteAddressLength _
-						)
-						Dim dwErrorAccept As Long = WSAGetLastError()
-						
-						Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-							this, _
-							ClientSocket, _
-							pCachedContext, _
-							dwErrorAccept _
-						)
-						If FAILED(hrAssociateWithIOCP) Then
-							IClientContext_Release(pCachedContext->pIClientContext)
-							DestroyClientMemoryContext(pCachedContext)
-							Return E_FAIL
-						End If
-						
-						IClientContext_SetRemoteAddress(pCachedContext->pIClientContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
-					End Scope
+				IClientContext_SetRemoteAddress(CachedContext.pIClientContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
+			End Scope
+			
+			Scope
+				Dim pINetworkStream As INetworkStream Ptr = Any
+				IClientContext_GetNetworkStream(CachedContext.pIClientContext, @pINetworkStream)
+				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+				INetworkStream_Release(pINetworkStream)
+			End Scope
+			
+			Scope
+				Dim pIRequest As IClientRequest Ptr = Any
+				IClientContext_GetClientRequest(CachedContext.pIClientContext, @pIRequest)
+				
+				' TODO Запросить интерфейс вместо конвертирования указателя
+				Dim pIAsyncResult As IAsyncResult Ptr = Any
+				Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
+					pIRequest, _
+					CPtr(IUnknown Ptr, CachedContext.pIClientContext), _
+					@pIAsyncResult _
+				)
+				IClientRequest_Release(pIRequest)
+				
+				If FAILED(hrBeginReadRequest) Then
+					Dim vtSCode As VARIANT = Any
+					vtSCode.vt = VT_ERROR
+					vtSCode.scode = hrBeginReadRequest
 					
-					Scope
-						Dim pINetworkStream As INetworkStream Ptr = Any
-						IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
-						INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-						INetworkStream_Release(pINetworkStream)
-					End Scope
-				End Scope
-				
-				Scope
-					Dim pIRequest As IClientRequest Ptr = Any
-					IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
+					Dim pILogger As ILogger Ptr = Any
+					IClientContext_GetLogger(CachedContext.pIClientContext, @pILogger)
 					
-					' TODO Запросить интерфейс вместо конвертирования указателя
-					Dim pIAsyncResult As IAsyncResult Ptr = Any
-					Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-						pIRequest, _
-						CPtr(IUnknown Ptr, pCachedContext->pIClientContext), _
-						@pIAsyncResult _
-					)
-					IClientRequest_Release(pIRequest)
+					ILogger_LogError(pILogger, WStr(!"IClientRequest_BeginReadRequest\t"), vtSCode)
 					
-					If FAILED(hrBeginReadRequest) Then
-						Dim vtSCode As VARIANT = Any
-						vtSCode.vt = VT_ERROR
-						vtSCode.scode = hrBeginReadRequest
-						
-						Dim pILogger As ILogger Ptr = Any
-						IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
-						
-						ILogger_LogError(pILogger, WStr(!"IClientRequest_BeginReadRequest\t"), vtSCode)
-						
-						ILogger_Release(pILogger)
-						
-						' TODO Отправить клиенту Не могу начать асинхронное чтение
-						' Return S_FALSE
-					End If
+					ILogger_Release(pILogger)
 					
-				End Scope
+					' TODO Отправить клиенту Не могу начать асинхронное чтение
+					' Return S_FALSE
+				End If
 				
-				IClientContext_Release(pCachedContext->pIClientContext)
-				
-				DestroyClientMemoryContext(pCachedContext)
-				
-				' Ссылка на pIContext сохранена в pIAsyncResult
-				' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
-			End If
+			End Scope
+			
+			IClientContext_Release(CachedContext.pIClientContext)
+			
+			' Ссылка на pIContext сохранена в pIAsyncResult
+			' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
 			
 		End If
 		
