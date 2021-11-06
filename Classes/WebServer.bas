@@ -285,8 +285,7 @@ Declare Function InitializeIOCP( _
 Declare Function ProcessErrorAssociateWithIOCP( _
 	ByVal this As WebServer Ptr, _
 	ByVal ClientSocket As SOCKET, _
-	ByVal pCachedContext As CachedClientContext Ptr, _
-	ByVal dwErrorAccept As Long _
+	ByVal pCachedContext As CachedClientContext Ptr _
 )As HRESULT
 
 Declare Sub SetCurrentStatus( _
@@ -691,8 +690,23 @@ Function AcceptConnection( _
 				CPtr(SOCKADDR Ptr, @RemoteAddress), _
 				@RemoteAddressLength _
 			)
-			Dim dwErrorAccept As Long = WSAGetLastError()
-			
+			If ClientSocket = INVALID_SOCKET Then
+				Dim dwErrorAccept As Long = WSAGetLastError()
+' #if __FB_DEBUG__
+				' Dim vtErrorCode As VARIANT = Any
+				' vtErrorCode.vt = VT_UI4
+				' vtErrorCode.ulVal = dwErrorAccept
+				
+				' Dim pILogger As ILogger Ptr = Any
+				' IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
+				
+				' ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tClient connected\t"), vtErrorCode)
+				
+				' ILogger_Release(pILogger)
+' #endif
+				Return HRESULT_FROM_WIN32(dwErrorAccept)
+			End If
+	
 			Dim CachedContext As CachedClientContext = Any
 			InitializeClientMemoryContext( _
 				@CachedContext, _
@@ -703,16 +717,20 @@ Function AcceptConnection( _
 				Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
 					this, _
 					ClientSocket, _
-					@CachedContext, _
-					dwErrorAccept _
+					@CachedContext _
 				)
 				If FAILED(hrAssociateWithIOCP) Then
 					IClientContext_Release(CachedContext.pIClientContext)
+					CloseSocketConnection(ClientSocket)
 					Return E_FAIL
 				End If
-				
-				IClientContext_SetRemoteAddress(CachedContext.pIClientContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
 			End Scope
+			
+			IClientContext_SetRemoteAddress( _
+				CachedContext.pIClientContext, _
+				CPtr(SOCKADDR Ptr, @RemoteAddress), _
+				RemoteAddressLength _
+			)
 			
 			Scope
 				Dim pINetworkStream As INetworkStream Ptr = Any
@@ -768,37 +786,20 @@ End Function
 Function ProcessErrorAssociateWithIOCP( _
 		ByVal this As WebServer Ptr, _
 		ByVal ClientSocket As SOCKET, _
-		ByVal pCachedContext As CachedClientContext Ptr, _
-		ByVal dwErrorAccept As Long _
+		ByVal pCachedContext As CachedClientContext Ptr _
 	)As HRESULT
 	
-#if __FB_DEBUG__
-	Scope
-		Dim vtErrorCode As VARIANT = Any
-		vtErrorCode.vt = VT_UI4
-		vtErrorCode.ulVal = dwErrorAccept
-		
-		Dim pILogger As ILogger Ptr = Any
-		IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
-		
-		ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tClient connected\t"), vtErrorCode)
-		
-		ILogger_Release(pILogger)
-	End Scope
-#endif
-	
-	If ClientSocket = INVALID_SOCKET Then
-		' If pCachedContext->pIClientContext <> NULL Then
-			' IClientContext_Release(pCachedContext->pIClientContext)
-		' End If
-		Return HRESULT_FROM_WIN32(dwErrorAccept)
+	If FAILED(pCachedContext->hrLogger) Then
+		' TODO Отправить клиенту Не могу создать кучу памяти
+		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
+		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
+		Return pCachedContext->hrMemoryAllocator
 	End If
 	
 	If FAILED(pCachedContext->hrMemoryAllocator) Then
 		' TODO Отправить клиенту Не могу создать кучу памяти
 		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
 		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		' CloseSocketConnection(ClientSocket)
 		Return pCachedContext->hrMemoryAllocator
 	End If
 	
@@ -806,7 +807,6 @@ Function ProcessErrorAssociateWithIOCP( _
 		' TODO Отправить клиенту Не могу выделить память в куче
 		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
 		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		' CloseSocketConnection(ClientSocket)
 		Return pCachedContext->hrClientContex
 	End If
 	
@@ -820,7 +820,6 @@ Function ProcessErrorAssociateWithIOCP( _
 		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
 		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
 		' IClientContext_Release(pCachedContext->pIClientContext)
-		' CloseSocketConnection(ClientSocket)
 		Return hrAssociate
 	End If
 	
@@ -989,7 +988,8 @@ Function AssociateWithIOCP( _
 		0 _
 	)
 	If hPort = NULL Then
-		Return HRESULT_FROM_WIN32(GetLastError())
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
 	Return S_OK
