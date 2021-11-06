@@ -613,10 +613,11 @@ Function AcceptConnection( _
 			If pCachedContext <> NULL Then
 				
 				Scope
+					Dim ClientSocket As SOCKET = Any
 					Scope
 						Dim RemoteAddress As SOCKADDR_STORAGE = Any
 						Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-						Dim ClientSocket As SOCKET = accept( _
+						ClientSocket = accept( _
 							this->SocketList(EventIndex).ClientSocket, _
 							CPtr(SOCKADDR Ptr, @RemoteAddress), _
 							@RemoteAddressLength _
