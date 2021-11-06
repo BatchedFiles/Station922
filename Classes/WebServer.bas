@@ -592,85 +592,101 @@ Function AcceptConnection( _
 	Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
 	
 	Dim EventType As WSANETWORKEVENTS = Any
-	WSAEnumNetworkEvents( _
+	Dim dwEnumEventResult As Long = WSAEnumNetworkEvents( _
 		this->SocketList(EventIndex).ClientSocket, _
 		this->hEvents(EventIndex), _
 		@EventType _
 	)
+	If dwEnumEventResult = SOCKET_ERROR Then
+		Dim dwError As Long = WSAGetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
-	Dim pCachedContext As CachedClientContext Ptr = CreateClientMemoryContext( _
-		this->pIMemoryAllocator _
-	)
-	
-	If pCachedContext <> NULL Then
+	If EventType.lNetworkEvents And FD_ACCEPT Then
 		
-		If EventType.lNetworkEvents And FD_ACCEPT Then
-			Dim RemoteAddress As SOCKADDR_STORAGE = Any
-			Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-			Dim ClientSocket As SOCKET = accept( _
-				this->SocketList(EventIndex).ClientSocket, _
-				CPtr(SOCKADDR Ptr, @RemoteAddress), _
-				@RemoteAddressLength _
-			)
-			Dim dwErrorAccept As Long = WSAGetLastError()
+		If EventType.iErrorCode(FD_ACCEPT_BIT) = 0 Then
 			
-			Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-				this, _
-				ClientSocket, _
-				pCachedContext, _
-				dwErrorAccept _
+			Dim pCachedContext As CachedClientContext Ptr = CreateClientMemoryContext( _
+				this->pIMemoryAllocator _
 			)
-			If FAILED(hrAssociateWithIOCP) Then
+			
+			If pCachedContext <> NULL Then
+				
+				Scope
+					Scope
+						Dim RemoteAddress As SOCKADDR_STORAGE = Any
+						Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+						Dim ClientSocket As SOCKET = accept( _
+							this->SocketList(EventIndex).ClientSocket, _
+							CPtr(SOCKADDR Ptr, @RemoteAddress), _
+							@RemoteAddressLength _
+						)
+						Dim dwErrorAccept As Long = WSAGetLastError()
+						
+						Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
+							this, _
+							ClientSocket, _
+							pCachedContext, _
+							dwErrorAccept _
+						)
+						If FAILED(hrAssociateWithIOCP) Then
+							IClientContext_Release(pCachedContext->pIClientContext)
+							DestroyClientMemoryContext(pCachedContext)
+							Return E_FAIL
+						End If
+						
+						IClientContext_SetRemoteAddress(pCachedContext->pIClientContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
+					End Scope
+					
+					Scope
+						Dim pINetworkStream As INetworkStream Ptr = Any
+						IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
+						INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+						INetworkStream_Release(pINetworkStream)
+					End Scope
+				End Scope
+				
+				Scope
+					Dim pIRequest As IClientRequest Ptr = Any
+					IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
+					
+					' TODO Запросить интерфейс вместо конвертирования указателя
+					Dim pIAsyncResult As IAsyncResult Ptr = Any
+					Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
+						pIRequest, _
+						CPtr(IUnknown Ptr, pCachedContext->pIClientContext), _
+						@pIAsyncResult _
+					)
+					IClientRequest_Release(pIRequest)
+					
+					If FAILED(hrBeginReadRequest) Then
+						Dim vtSCode As VARIANT = Any
+						vtSCode.vt = VT_ERROR
+						vtSCode.scode = hrBeginReadRequest
+						
+						Dim pILogger As ILogger Ptr = Any
+						IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
+						
+						ILogger_LogError(pILogger, WStr(!"IClientRequest_BeginReadRequest\t"), vtSCode)
+						
+						ILogger_Release(pILogger)
+						
+						' TODO Отправить клиенту Не могу начать асинхронное чтение
+						' Return S_FALSE
+					End If
+					
+				End Scope
+				
 				IClientContext_Release(pCachedContext->pIClientContext)
+				
 				DestroyClientMemoryContext(pCachedContext)
-				Return E_FAIL
+				
+				' Ссылка на pIContext сохранена в pIAsyncResult
+				' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
 			End If
 			
-			IClientContext_SetRemoteAddress(pCachedContext->pIClientContext, CPtr(SOCKADDR Ptr, @RemoteAddress), RemoteAddressLength)
-			
-			Dim pINetworkStream As INetworkStream Ptr = Any
-			IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
-			INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-			INetworkStream_Release(pINetworkStream)
 		End If
 		
-		Scope
-			Dim pIRequest As IClientRequest Ptr = Any
-			IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
-			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			Dim pIAsyncResult As IAsyncResult Ptr = Any
-			Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-				pIRequest, _
-				CPtr(IUnknown Ptr, pCachedContext->pIClientContext), _
-				@pIAsyncResult _
-			)
-			IClientRequest_Release(pIRequest)
-			
-			If FAILED(hrBeginReadRequest) Then
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrBeginReadRequest
-				
-				Dim pILogger As ILogger Ptr = Any
-				IClientContext_GetLogger(pCachedContext->pIClientContext, @pILogger)
-				
-				ILogger_LogError(pILogger, WStr(!"IClientRequest_BeginReadRequest\t"), vtSCode)
-				
-				ILogger_Release(pILogger)
-				
-				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				' Return S_FALSE
-			End If
-			
-		End Scope
-		
-		IClientContext_Release(pCachedContext->pIClientContext)
-		
-		DestroyClientMemoryContext(pCachedContext)
-		
-		' Ссылка на pIContext сохранена в pIAsyncResult
-		' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
 	End If
 	
 	Return S_OK
