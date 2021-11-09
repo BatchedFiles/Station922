@@ -22,27 +22,29 @@ Type _ServerResponse
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	' Буфер заголовков ответа
-	ResponseHeaderBuffer As WString * (MaxResponseBufferLength + 1)
+	pResponseHeaderBuffer As WString Ptr
 	' Указатель на свободное место в буфере заголовков ответа
 	StartResponseHeadersPtr As WString Ptr
 	' Заголовки ответа
 	ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
+	pResponseHeaderBufferStringable As WString Ptr
 	HttpVersion As HttpVersions
 	StatusCode As HttpStatusCodes
 	StatusDescription As WString Ptr
-	SendOnlyHeaders As Boolean
-	KeepAlive As Boolean
-	' Сжатие данных, поддерживаемое сервером
-	ResponseZipEnable As Boolean
 	ResponseZipMode As ZipModes
 	Mime As MimeType
-	ResponseHeaderBufferStringable As WString * (MaxResponseBufferLength + 1)
+	' Сжатие данных, поддерживаемое сервером
+	ResponseZipEnable As Boolean
+	SendOnlyHeaders As Boolean
+	KeepAlive As Boolean
 End Type
 
 Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pILogger As ILogger Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pResponseHeaderBuffer As WString Ptr, _
+		ByVal pResponseHeaderBufferStringable As WString Ptr _
 	)
 	
 	this->lpVtbl = @GlobalServerResponseVirtualTable
@@ -53,9 +55,11 @@ Sub InitializeServerResponse( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	this->ResponseHeaderBuffer[0] = 0
-	this->StartResponseHeadersPtr = @this->ResponseHeaderBuffer
+	this->pResponseHeaderBuffer = pResponseHeaderBuffer
+	this->pResponseHeaderBuffer[0] = 0
+	this->StartResponseHeadersPtr = pResponseHeaderBuffer
 	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(WString Ptr))
+	this->pResponseHeaderBufferStringable = pResponseHeaderBufferStringable
 	this->HttpVersion = HttpVersions.Http11
 	this->StatusCode = HttpStatusCodes.OK
 	this->StatusDescription = NULL
@@ -72,6 +76,8 @@ Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
+	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBufferStringable)
+	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBuffer)
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
@@ -90,23 +96,50 @@ Function CreateServerResponse( _
 	ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
 #endif
 	
-	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
+	Dim pResponseHeaderBuffer As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(ServerResponse) _
+		SizeOf(WString) * (MaxResponseBufferLength + 1) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If pResponseHeaderBuffer <> NULL Then
+		
+		Dim pResponseHeaderBufferStringable As WString Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(WString) * (MaxResponseBufferLength + 1) _
+		)
+		
+		If pResponseHeaderBufferStringable <> NULL Then
+			Dim this As ServerResponse Ptr = IMalloc_Alloc( _
+				pIMemoryAllocator, _
+				SizeOf(ServerResponse) _
+			)
+			
+			If this <> NULL Then
+				
+				InitializeServerResponse( _
+					this, _
+					pILogger, _
+					pIMemoryAllocator, _
+					pResponseHeaderBuffer, _
+					pResponseHeaderBufferStringable _
+				)
+				
+#if __FB_DEBUG__
+				Dim vtEmpty As VARIANT = Any
+				vtEmpty.vt = VT_EMPTY
+				ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
+#endif
+				
+				Return this
+			End If
+			
+			IMalloc_Free(pIMemoryAllocator, pResponseHeaderBufferStringable)
+		End If
+		
+		IMalloc_Free(pIMemoryAllocator, pResponseHeaderBuffer)
 	End If
 	
-	InitializeServerResponse(this, pILogger, pIMemoryAllocator)
-	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
-#endif
-	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -429,8 +462,8 @@ Function ServerResponseClear( _
 	)As HRESULT
 	
 	' TODO Удалить дублирование инициализации
-	this->ResponseHeaderBuffer[0] = 0
-	this->StartResponseHeadersPtr = @this->ResponseHeaderBuffer
+	this->pResponseHeaderBuffer[0] = 0
+	this->StartResponseHeadersPtr = this->pResponseHeaderBuffer
 	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpVersion = HttpVersions.Http11
 	this->StatusCode = HttpStatusCodes.OK
@@ -506,7 +539,7 @@ Function ServerResponseStringableToString( _
 		ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderContentType, @wContentType)
 	End Scope
 	
-	IArrayStringWriter_SetBuffer(pIWriter, @this->ResponseHeaderBufferStringable, MaxResponseBufferLength)
+	IArrayStringWriter_SetBuffer(pIWriter, this->pResponseHeaderBufferStringable, MaxResponseBufferLength)
 	
 	Scope
 		Dim HttpVersionLength As Integer = Any
@@ -561,7 +594,7 @@ Function ServerResponseStringableToString( _
 	
 	IArrayStringWriter_Release(pIWriter)
 	
-	*ppResult = @this->ResponseHeaderBufferStringable
+	*ppResult = this->pResponseHeaderBufferStringable
 	
 	Return S_OK
 	
