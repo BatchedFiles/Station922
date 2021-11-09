@@ -12,17 +12,17 @@ Const MEMORYPAGE_SIZE As Integer = 4096
 Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte) - 1
 
 Type RawBuffer
+	Bytes(RAWBUFFER_CAPACITY) As UByte
 	cbUsed As Integer
 	cbLength As Integer
-	Bytes(RAWBUFFER_CAPACITY) As UByte
 End Type
 
 Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(Integer)) \ SizeOf(WString) - 1
 
 Type LinesBuffer
+	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
 	Start As Integer
 	Length As Integer
-	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
 End Type
 
 Type _HttpReader
@@ -32,8 +32,8 @@ Type _HttpReader
 	pIMemoryAllocator As IMalloc Ptr
 	crSection As CRITICAL_SECTION
 	pIStream As IBaseStream Ptr
-	ReadedData As RawBuffer
-	Lines As LinesBuffer
+	pReadedData As RawBuffer Ptr
+	pLines As LinesBuffer Ptr
 	IsAllBytesReaded As Boolean
 End Type
 
@@ -68,9 +68,11 @@ Function FindCrLfIndexW( _
 	
 	For i As Integer = 0 To BufferLength - NewLineStringLength
 		
-		If Buffer[i + 0] = 13 AndAlso Buffer[i + 1] = 10 Then
-			*pFindIndex = i
-			Return True
+		If Buffer[i + 0] = 13 Then
+			If Buffer[i + 1] = 10 Then
+				*pFindIndex = i
+				Return True
+			End If
 		End If
 		
 	Next
@@ -117,21 +119,21 @@ Function ConvertBytesToWString( _
 	Const dwFlags As DWORD = 0
 	
 	Dim CharsLength As Integer = MultiByteToWideChar( _
-		CP_UTF8, _
+		CP_ACP, _
 		dwFlags, _
 		@lpRaw->Bytes(0), _
 		lpRaw->cbUsed, _
 		@lpLines->wszLine[0], _
 		LINESBUFFER_CAPACITY _
 	)
+	If CharsLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	lpLines->Start = 0
 	lpLines->Length = CharsLength
 	lpLines->wszLine[CharsLength] = 0
-	
-	If CharsLength = 0 Then
-		Return HTTPREADER_E_INSUFFICIENT_BUFFER
-	End If
 	
 	Return S_OK
 	
@@ -142,13 +144,18 @@ Function GetLine( _
 		ByVal ppLine As WString Ptr Ptr _
 	)As Integer
 	
-	Dim CrLfIndex As Integer = Any
 	Dim cbUsedChars As Integer = lpLines->Length - lpLines->Start
+	Dim Index As Integer = lpLines->Start
+	Dim lpBuffer As WString Ptr = @lpLines->wszLine[Index]
+	Dim CrLfIndex As Integer = Any
 	FindCrLfIndexW( _
-		@lpLines->wszLine[lpLines->Start], _
+		lpBuffer, _
 		cbUsedChars, _
 		@CrLfIndex _
 	)
+	
+	' TODO Проверить, начинается ли строка за CrLf с пробела
+	' Если начинается — объединить обе строки
 	
 	Dim CrlfOrdinal As Integer = lpLines->Start + CrLfIndex
 	lpLines->wszLine[CrlfOrdinal] = 0
@@ -159,8 +166,6 @@ Function GetLine( _
 	lpLines->Start = NewStartIndex
 	
 	Return CrLfIndex
-	' TODO Проверить, начинается ли строка за CrLf с пробела
-	' Если начинается — сдвинуть до начала непробела
 	
 End Function
 
@@ -171,11 +176,13 @@ Function HttpReaderReadAllBytes( _
 	Dim DoubleCrLfIndex As Integer = Any
 	
 	Do
-		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->ReadedData.cbLength
+		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->pReadedData->cbLength
+		Dim Index As Integer = this->pReadedData->cbLength
+		Dim lpBuffer As Any Ptr = @this->pReadedData->Bytes(Index)
 		Dim cbReceived As DWORD = Any
 		Dim hrRead As HRESULT = IBaseStream_Read( _
 			this->pIStream, _
-			@this->ReadedData.Bytes(this->ReadedData.cbLength), _
+			lpBuffer, _
 			cbFreeSpace, _
 			@cbReceived _
 		)
@@ -190,15 +197,15 @@ Function HttpReaderReadAllBytes( _
 				
 		End Select
 		
-		this->ReadedData.cbLength += cbReceived
+		this->pReadedData->cbLength += cbReceived
 		
-		If this->ReadedData.cbLength >= RAWBUFFER_CAPACITY Then
+		If this->pReadedData->cbLength >= RAWBUFFER_CAPACITY Then
 			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 		End If
 		
 		Dim Finded As Boolean = FindDoubleCrLfIndexA( _
-			@this->ReadedData.Bytes(0), _
-			this->ReadedData.cbLength, _
+			@this->pReadedData->Bytes(0), _
+			this->pReadedData->cbLength, _
 			@DoubleCrLfIndex _
 		)
 		
@@ -209,7 +216,7 @@ Function HttpReaderReadAllBytes( _
 	Loop
 	
 	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
-	this->ReadedData.cbUsed = cbNewUsed
+	this->pReadedData->cbUsed = cbNewUsed
 	
 	this->IsAllBytesReaded = True
 	
@@ -220,7 +227,9 @@ End Function
 Sub InitializeHttpReader( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pILogger As ILogger Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pReadedData As RawBuffer Ptr, _
+		ByVal pLines As LinesBuffer Ptr _
 	)
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
@@ -234,12 +243,14 @@ Sub InitializeHttpReader( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->pIStream = NULL
-	this->ReadedData.cbUsed = 0
-	this->ReadedData.cbLength = 0
-	this->ReadedData.Bytes(RAWBUFFER_CAPACITY) = 0
-	this->Lines.Start = 0
-	this->Lines.Length = 0
-	this->Lines.wszLine[0] = 0
+	this->pReadedData = pReadedData
+	this->pReadedData->cbUsed = 0
+	this->pReadedData->cbLength = 0
+	this->pReadedData->Bytes(RAWBUFFER_CAPACITY) = 0
+	this->pLines = pLines
+	this->pLines->Start = 0
+	this->pLines->Length = 0
+	this->pLines->wszLine[0] = 0
 	this->IsAllBytesReaded = False
 	
 End Sub
@@ -247,6 +258,9 @@ End Sub
 Sub UnInitializeHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
+	
+	IMalloc_Free(this->pIMemoryAllocator, this->pLines)
+	IMalloc_Free(this->pIMemoryAllocator, this->pReadedData)
 	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
@@ -271,23 +285,49 @@ Function CreateHttpReader( _
 	ILogger_LogDebug(pILogger, WStr(!"HttpReader creating\t"), vtAllocatedBytes)
 #endif
 	
-	Dim this As HttpReader Ptr = IMalloc_Alloc( _
+	Dim pReadedData As RawBuffer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(HttpReader) _
+		SizeOf(RawBuffer) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If pReadedData <> NULL Then
+		
+		Dim pLines As LinesBuffer Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(LinesBuffer) _
+		)
+		
+		If pLines <> NULL Then
+			
+			Dim this As HttpReader Ptr = IMalloc_Alloc( _
+				pIMemoryAllocator, _
+				SizeOf(HttpReader) _
+			)
+			
+			If this <> NULL Then
+				InitializeHttpReader( _
+					this, _
+					pILogger, _
+					pIMemoryAllocator, _
+					pReadedData, _
+					pLines _
+				)
+				
+#if __FB_DEBUG__
+				Dim vtEmpty As VARIANT = Any
+				vtEmpty.vt = VT_EMPTY
+				ILogger_LogDebug(pILogger, WStr("HttpReader created"), vtEmpty)
+#endif
+				Return this
+			End If
+			
+			IMalloc_Free(pIMemoryAllocator, pLines)
+		End If
+		
+		IMalloc_Free(pIMemoryAllocator, pReadedData)
 	End If
 	
-	InitializeHttpReader(this, pILogger, pIMemoryAllocator)
-	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("HttpReader created"), vtEmpty)
-#endif
-	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -386,8 +426,8 @@ Function HttpReaderReadLine( _
 		End If
 		
 		Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
-			@this->Lines, _
-			@this->ReadedData _
+			this->pLines, _
+			this->pReadedData _
 		)
 		If FAILED(hrConvertBytes) Then
 			*pLineLength = 0
@@ -399,7 +439,7 @@ Function HttpReaderReadLine( _
 	
 	Dim pCurrentLine As WString Ptr = Any
 	Dim LineLength As Integer = GetLine( _
-		@this->Lines, _
+		this->pLines, _
 		@pCurrentLine  _
 	)
 	
@@ -419,10 +459,12 @@ Function HttpReaderBeginReadLine( _
 	
 	If this->IsAllBytesReaded = False Then
 		
-		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->ReadedData.cbLength
+		Dim cbFreeSpace As Integer = RAWBUFFER_CAPACITY - this->pReadedData->cbLength
+		Dim Index As Integer = this->pReadedData->cbLength
+		Dim lpBuffer As Any Ptr = @this->pReadedData->Bytes(Index)
 		Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
 			this->pIStream, _
-			@this->ReadedData.Bytes(this->ReadedData.cbLength), _
+			lpBuffer, _
 			cbFreeSpace, _
 			callback, _
 			StateObject, _
@@ -475,9 +517,9 @@ Function HttpReaderEndReadLine( _
 			
 	End Select
 	
-	this->ReadedData.cbLength += cbReceived
+	this->pReadedData->cbLength += cbReceived
 	
-	If this->ReadedData.cbLength >= RAWBUFFER_CAPACITY Then
+	If this->pReadedData->cbLength >= RAWBUFFER_CAPACITY Then
 		*pLineLength = 0
 		*ppLine = NULL
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
@@ -485,8 +527,8 @@ Function HttpReaderEndReadLine( _
 	
 	Dim DoubleCrLfIndex As Integer = Any
 	Dim Finded As Boolean = FindDoubleCrLfIndexA( _
-		@this->ReadedData.Bytes(0), _
-		this->ReadedData.cbLength, _
+		@this->pReadedData->Bytes(0), _
+		this->pReadedData->cbLength, _
 		@DoubleCrLfIndex _
 	)
 	If Finded = False Then
@@ -496,13 +538,13 @@ Function HttpReaderEndReadLine( _
 	End If
 	
 	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
-	this->ReadedData.cbUsed = cbNewUsed
+	this->pReadedData->cbUsed = cbNewUsed
 	
 	this->IsAllBytesReaded = True
 	
 	Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
-		@this->Lines, _
-		@this->ReadedData _
+		this->pLines, _
+		this->pReadedData _
 	)
 	If FAILED(hrConvertBytes) Then
 		*pLineLength = 0
@@ -512,7 +554,7 @@ Function HttpReaderEndReadLine( _
 	
 	Dim pCurrentLine As WString Ptr = Any
 	Dim LineLength As Integer = GetLine( _
-		@this->Lines, _
+		this->pLines, _
 		@pCurrentLine  _
 	)
 	
@@ -529,23 +571,24 @@ Function HttpReaderClear( _
 	
 	this->IsAllBytesReaded = False
 	
-	this->Lines.Start = 0
-	this->Lines.Length = 0
-	this->Lines.wszLine[0] = 0
+	this->pLines->Start = 0
+	this->pLines->Length = 0
+	this->pLines->wszLine[0] = 0
 	
-	Dim cbPreloadedBytes As Integer = this->ReadedData.cbLength - this->ReadedData.cbUsed
+	Dim cbPreloadedBytes As Integer = this->pReadedData->cbLength - this->pReadedData->cbUsed
 	
 	If cbPreloadedBytes > 0 Then
+		Dim Index As Integer = this->pReadedData->cbUsed
 		RtlMoveMemory( _
-			@this->ReadedData.Bytes(0), _
-			@this->ReadedData.Bytes(this->ReadedData.cbUsed), _
+			@this->pReadedData->Bytes(0), _
+			@this->pReadedData->Bytes(Index), _
 			cbPreloadedBytes _
 		)
-		this->ReadedData.cbUsed = 0
-		this->ReadedData.cbLength = cbPreloadedBytes
+		this->pReadedData->cbUsed = 0
+		this->pReadedData->cbLength = cbPreloadedBytes
 	Else
-		this->ReadedData.cbUsed = 0
-		this->ReadedData.cbLength = 0
+		this->pReadedData->cbUsed = 0
+		this->pReadedData->cbLength = 0
 	End If
 	
 	Return S_OK
@@ -594,10 +637,11 @@ Function HttpReaderGetPreloadedBytes( _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	Dim cbPreloadedBytes As Integer = this->ReadedData.cbLength - this->ReadedData.cbUsed
+	Dim cbPreloadedBytes As Integer = this->pReadedData->cbLength - this->pReadedData->cbUsed
 	
 	*pPreloadedBytesLength = cbPreloadedBytes
-	*ppPreloadedBytes = @this->ReadedData.Bytes(this->ReadedData.cbUsed)
+	Dim Index As Integer = this->pReadedData->cbUsed
+	*ppPreloadedBytes = @this->pReadedData->Bytes(Index)
 	
 	Return S_OK
 	
@@ -609,8 +653,8 @@ Function HttpReaderGetRequestedBytes( _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	*pRequestedBytesLength = this->ReadedData.cbLength
-	*ppRequestedBytes = @this->ReadedData.Bytes(0)
+	*pRequestedBytesLength = this->pReadedData->cbLength
+	*ppRequestedBytes = @this->pReadedData->Bytes(0)
 	
 	Return S_OK
 	
