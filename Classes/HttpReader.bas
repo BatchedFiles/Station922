@@ -5,6 +5,8 @@
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Const MEMORYPAGE_SIZE As Integer = 4096
 
 Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte) - 1
@@ -28,12 +30,14 @@ Type _HttpReader
 	RefCounter As ReferenceCounter
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
+	crSection As CRITICAL_SECTION
 	pIStream As IBaseStream Ptr
 	ReadedData As RawBuffer
 	Lines As LinesBuffer
 	IsAllBytesReaded As Boolean
 End Type
 
+/'
 Function FindCrLfIndexA( _
 		ByVal Buffer As ZString Ptr, _
 		ByVal BufferLength As Integer, _
@@ -54,6 +58,7 @@ Function FindCrLfIndexA( _
 	Return False
 	
 End Function
+'/
 
 Function FindCrLfIndexW( _
 		ByVal Buffer As WString Ptr, _
@@ -224,6 +229,10 @@ Sub InitializeHttpReader( _
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
 	this->pIStream = NULL
 	this->ReadedData.cbUsed = 0
 	this->ReadedData.cbLength = 0
@@ -243,6 +252,7 @@ Sub UnInitializeHttpReader( _
 		IBaseStream_Release(this->pIStream)
 	End If
 	
+	DeleteCriticalSection(@this->crSection)
 	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
@@ -378,7 +388,10 @@ Function HttpReaderReadLine( _
 			Return hrReadAllBytes
 		End If
 		
-		Dim hrConvertBytes As HRESULT = ConvertBytesToWString(@this->Lines, @this->ReadedData)
+		Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
+			@this->Lines, _
+			@this->ReadedData _
+		)
 		If FAILED(hrConvertBytes) Then
 			*pLineLength = 0
 			*ppLine = NULL
@@ -490,7 +503,10 @@ Function HttpReaderEndReadLine( _
 	
 	this->IsAllBytesReaded = True
 	
-	Dim hrConvertBytes As HRESULT = ConvertBytesToWString(@this->Lines, @this->ReadedData)
+	Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
+		@this->Lines, _
+		@this->ReadedData _
+	)
 	If FAILED(hrConvertBytes) Then
 		*pLineLength = 0
 		*ppLine = NULL
