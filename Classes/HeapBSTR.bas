@@ -150,16 +150,13 @@ Function InternalHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyInternalHeapBSTR(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyInternalHeapBSTR(this)
+	
+	Return 0
 	
 End Function
 

@@ -170,16 +170,13 @@ Function WebSiteCollectionRelease( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyWebSiteCollection(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyWebSiteCollection(this)
+	
+	Return 0
 	
 End Function
 

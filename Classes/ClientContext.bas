@@ -256,16 +256,13 @@ Function ClientContextRelease( _
 		ByVal this As ClientContext Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyClientContext(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyClientContext(this)
+	
+	Return 0
 	
 End Function
 

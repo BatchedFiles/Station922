@@ -288,16 +288,13 @@ Function HttpGetProcessorRelease( _
 		ByVal this As HttpGetProcessor Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyHttpGetProcessor(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyHttpGetProcessor(this)
+	
+	Return 0
 	
 End Function
 

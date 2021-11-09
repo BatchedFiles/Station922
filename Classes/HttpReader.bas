@@ -360,16 +360,13 @@ Function HttpReaderRelease( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyHttpReader(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyHttpReader(this)
+	
+	Return 0
 	
 End Function
 

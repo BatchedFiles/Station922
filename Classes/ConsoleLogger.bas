@@ -223,16 +223,13 @@ Function ConsoleLoggerRelease( _
 		ByVal this As ConsoleLogger Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyConsoleLogger(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyConsoleLogger(this)
+	
+	Return 0
 	
 End Function
 

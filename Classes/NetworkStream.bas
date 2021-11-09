@@ -148,16 +148,13 @@ Function NetworkStreamRelease( _
 		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	ReferenceCounterDecrement(@this->RefCounter)
-	
-	If this->RefCounter.Counter = 0 Then
-		
-		DestroyNetworkStream(this)
-		
-		Return 0
+	If ReferenceCounterDecrement(@this->RefCounter) Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyNetworkStream(this)
+	
+	Return 0
 	
 End Function
 
