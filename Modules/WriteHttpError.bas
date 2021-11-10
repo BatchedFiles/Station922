@@ -44,6 +44,7 @@ Const HttpError410Gone = WStr("File Gone.")
 Const HttpError411LengthRequired = WStr("Length Header Required.")
 Const HttpError413RequestEntityTooLarge = WStr("Request Entity Too Large.")
 Const HttpError414RequestUrlTooLarge = WStr("Request URL Too Large.")
+Const HttpError416RangeNotSatisfiable = WStr("Range Not Satisfiable.")
 Const HttpError431RequestRequestHeaderFieldsTooLarge = WStr("Request Header Fields Too Large")
 
 Const HttpError500InternalServerError = WStr("Internal Server Error.")
@@ -371,6 +372,22 @@ Sub WriteHttpRequestUrlTooLarge( _
 	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.RequestURITooLarge)
 	
 	WriteHttpResponse(pIContext, pIWebSite, @HttpError414RequestUrlTooLarge)
+	
+	IServerResponse_Release(pIResponse)
+	
+End Sub
+
+Sub WriteHttpRequestRangeNotSatisfiable( _
+		ByVal pIContext As IClientContext Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)
+	
+	Dim pIResponse As IServerResponse Ptr = Any
+	IClientContext_GetServerResponse(pIContext, @pIResponse)
+	
+	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.RangeNotSatisfiable)
+	
+	WriteHttpResponse(pIContext, pIWebSite, @HttpError416RangeNotSatisfiable)
 	
 	IServerResponse_Release(pIResponse)
 	

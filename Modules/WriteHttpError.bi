@@ -99,6 +99,11 @@ Declare Sub WriteHttpRequestUrlTooLarge( _
 	ByVal pIWebSite As IWebSite Ptr _
 )
 
+Declare Sub WriteHttpRequestRangeNotSatisfiable( _
+	ByVal pIContext As IClientContext Ptr, _
+	ByVal pIWebSite As IWebSite Ptr _
+)
+
 Declare Sub WriteHttpRequestHeaderFieldsTooLarge( _
 	ByVal pIContext As IClientContext Ptr, _
 	ByVal pIWebSite As IWebSite Ptr _

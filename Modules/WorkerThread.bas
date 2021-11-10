@@ -160,6 +160,9 @@ Sub ProcessBeginWriteError( _
 		Case REQUESTPROCESSOR_E_FORBIDDEN
 			WriteHttpForbidden(pIContext, pIWebSite)
 			
+		Case REQUESTPROCESSOR_E_RANGENOTSATISFIABLE
+			WriteHttpRequestRangeNotSatisfiable(pIContext, pIWebSite)
+			
 		Case Else
 			WriteHttpInternalServerError(pIContext, pIWebSite)
 			

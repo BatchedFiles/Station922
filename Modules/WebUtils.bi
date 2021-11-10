@@ -41,13 +41,6 @@ Declare Sub GetETag( _
 	ByVal ResponseZipMode As ZipModes _
 )
 
-Declare Sub MakeContentRangeHeader( _
-	ByVal pIWriter As ITextWriter Ptr, _
-	ByVal FirstBytePosition As ULongInt, _
-	ByVal LastBytePosition As ULongInt, _
-	ByVal TotalLength As ULongInt _
-)
-
 Declare Function AllResponseHeadersToBytes( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _

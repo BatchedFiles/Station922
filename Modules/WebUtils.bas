@@ -355,27 +355,6 @@ Sub GetETag( _
 	
 End Sub
 
-Sub MakeContentRangeHeader( _
-		ByVal pIWriter As ITextWriter Ptr, _
-		ByVal FirstBytePosition As ULongInt, _
-		ByVal LastBytePosition As ULongInt, _
-		ByVal TotalLength As ULongInt _
-	)
-	
-	'Content-Range: bytes 88080384-160993791/160993792
-	
-	ITextWriter_WriteLengthString(pIWriter, @BytesStringWithSpace, BytesStringWithSpaceLength)
-	
-	ITextWriter_WriteUInt64(pIWriter, FirstBytePosition)
-	ITextWriter_WriteChar(pIWriter, Characters.HyphenMinus)
-	
-	ITextWriter_WriteUInt64(pIWriter, LastBytePosition)
-	ITextWriter_WriteChar(pIWriter, Characters.Solidus)
-	
-	ITextWriter_WriteUInt64(pIWriter, TotalLength)
-	
-End Sub
-
 Function AllResponseHeadersToBytes( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _

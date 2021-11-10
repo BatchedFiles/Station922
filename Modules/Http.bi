@@ -60,7 +60,7 @@ Enum HttpStatusCodes
 	RequestEntityTooLarge = 413
 	RequestURITooLarge = 414
 	UnsupportedMediaType = 415
-	RequestedRangeNotSatisfiable = 416
+	RangeNotSatisfiable = 416
 	ExpectationFailed = 417
 	IAmTeapot = 418
 	UnprocessableEntity = 422

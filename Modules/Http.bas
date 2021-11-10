@@ -353,7 +353,7 @@ Dim Shared StatusCodeNodesVector(1 To HttpStatusCodesSize) As StatusCodeNode = {
 	Type<StatusCodeNode>(@HttpStatusCodeString413, HttpStatusCodeString413Length, HttpStatusCodes.RequestEntityTooLarge), _
 	Type<StatusCodeNode>(@HttpStatusCodeString414, HttpStatusCodeString414Length, HttpStatusCodes.RequestURITooLarge), _
 	Type<StatusCodeNode>(@HttpStatusCodeString415, HttpStatusCodeString415Length, HttpStatusCodes.UnsupportedMediaType), _
-	Type<StatusCodeNode>(@HttpStatusCodeString416, HttpStatusCodeString416Length, HttpStatusCodes.RequestedRangeNotSatisfiable), _
+	Type<StatusCodeNode>(@HttpStatusCodeString416, HttpStatusCodeString416Length, HttpStatusCodes.RangeNotSatisfiable), _
 	Type<StatusCodeNode>(@HttpStatusCodeString417, HttpStatusCodeString417Length, HttpStatusCodes.ExpectationFailed), _
 	Type<StatusCodeNode>(@HttpStatusCodeString418, HttpStatusCodeString418Length, HttpStatusCodes.IAmTeapot), _
 	Type<StatusCodeNode>(@HttpStatusCodeString422, HttpStatusCodeString422Length, HttpStatusCodes.UnprocessableEntity), _
