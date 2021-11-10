@@ -21,12 +21,12 @@ Type _ClientRequest
 	RequestedLineLength As Integer
 	RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
 	HttpMethod As HttpMethods
-	ClientURI As Station922Uri
+	pClientURI As Station922Uri Ptr
 	HttpVersion As HttpVersions
-	KeepAlive As Boolean
-	RequestZipModes(HttpZipModesMaximum - 1) As Boolean
 	RequestByteRange As ByteRange
 	ContentLength As LongInt
+	RequestZipModes(HttpZipModesMaximum - 1) As Boolean
+	KeepAlive As Boolean
 End Type
 
 Function ClientRequestAddRequestHeader( _
@@ -51,7 +51,8 @@ End Function
 Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pILogger As ILogger Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pClientURI As Station922Uri Ptr _
 	)
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
@@ -65,7 +66,8 @@ Sub InitializeClientRequest( _
 	this->pIReader = NULL
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpMethod = HttpMethods.HttpGet
-	Station922UriInitialize(@this->ClientURI)
+	this->pClientURI = pClientURI
+	Station922UriInitialize(this->pClientURI)
 	this->HttpVersion = HttpVersions.Http11
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
@@ -79,6 +81,8 @@ End Sub
 Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
+	
+	IMalloc_Free(this->pIMemoryAllocator, this->pClientURI)
 	
 	If this->pIReader <> NULL Then
 		ITextReader_Release(this->pIReader)
@@ -102,23 +106,38 @@ Function CreateClientRequest( _
 	ILogger_LogDebug(pILogger, WStr(!"ClientRequest creating\t"), vtAllocatedBytes)
 #endif
 	
-	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
+	Dim pClientURI As Station922Uri Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(ClientRequest) _
+		SizeOf(Station922Uri) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If pClientURI <> NULL Then
+		Dim this As ClientRequest Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(ClientRequest) _
+		)
+		
+		If this <> NULL Then
+			
+			InitializeClientRequest( _
+				this, _
+				pILogger, _
+				pIMemoryAllocator, _
+				pClientURI _
+			)
+			
+#if __FB_DEBUG__
+			Dim vtEmpty As VARIANT = Any
+			vtEmpty.vt = VT_EMPTY
+			ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
+#endif
+			Return this
+		End If
+		
+		IMalloc_Free(pIMemoryAllocator, pClientURI)
 	End If
 	
-	InitializeClientRequest(this, pILogger, pIMemoryAllocator)
-	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
-#endif
-	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -385,7 +404,7 @@ Function ClientRequestPrepare( _
 	End Select
 	
 	Dim hrSetUri As HRESULT = Station922UriSetUri( _
-		@this->ClientURI, _
+		this->pClientURI, _
 		pUri _
 	)
 	If FAILED(hrSetUri) Then
@@ -564,7 +583,7 @@ Function ClientRequestGetUri( _
 		ByVal pUri As Station922Uri Ptr _
 	)As HRESULT
 	
-	*pUri = this->ClientURI
+	CopyMemory(pUri, this->pClientURI, SizeOf(Station922Uri))
 	
 	Return S_OK
 	
@@ -644,7 +663,7 @@ Function ClientRequestClear( _
 	' TODO Удалить дублирование инициализации
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
 	this->HttpMethod = HttpMethods.HttpGet
-	Station922UriInitialize(@this->ClientURI)
+	Station922UriInitialize(this->pClientURI)
 	this->HttpVersion = HttpVersions.Http11
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
