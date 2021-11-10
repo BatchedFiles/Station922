@@ -15,8 +15,6 @@ scheme          authority                  path                 query           
 
 '/
 
-Const URI_BUFFER_CAPACITY As Integer = 4096 - 1
-
 Type UserInfo
 	UserName As WString Ptr
 	Password As WString Ptr
@@ -27,6 +25,8 @@ Type Authority
 	Host As WString Ptr
 	Port As WString Ptr
 End Type
+
+Const URI_BUFFER_CAPACITY As Integer = (2 * 4096) \ SizeOf(WString) - SizeOf(Authority) \ SizeOf(WString) - (4 * SizeOf(WString Ptr)) \ SizeOf(WString) - SizeOf(WString)
 
 Type Station922Uri
 	Uri As WString * (URI_BUFFER_CAPACITY + 1)
