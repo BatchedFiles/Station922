@@ -542,6 +542,25 @@ Function HttpReaderEndReadLine( _
 	
 	this->IsAllBytesReaded = True
 	
+#if __FB_DEBUG__
+	Dim psa As SAFEARRAY Ptr = SafeArrayCreateVector( _
+		VT_UI1, _
+		0, _
+		RAWBUFFER_CAPACITY _
+	)
+	Dim bytes As UByte Ptr = Any
+	SafeArrayAccessData(psa, @bytes)
+	CopyMemory(bytes, @this->pReadedData->Bytes(0), RAWBUFFER_CAPACITY)
+	SafeArrayUnaccessData(psa)
+	
+	Dim vtArrayBytes As VARIANT = Any
+	vtArrayBytes.vt = VT_ARRAY Or VT_UI1
+	vtArrayBytes.parray = psa
+	ILogger_LogDebug(this->pILogger, NULL, vtArrayBytes)
+	
+	SafeArrayDestroy(psa)
+#endif
+	
 	Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
 		this->pLines, _
 		this->pReadedData _
