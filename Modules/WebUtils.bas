@@ -165,26 +165,6 @@ Function GetHtmlSafeString( _
 	
 End Function
 
-Function GetDocumentCharset( _
-		ByVal bytes As ZString Ptr _
-	)As DocumentCharsets
-	
-	If bytes[0] = 239 AndAlso bytes[1] = 187 AndAlso bytes[2] = 191 Then
-		Return DocumentCharsets.Utf8BOM
-	End If
-	
-	If bytes[0] = 255 AndAlso bytes[1] = 254 Then
-		Return DocumentCharsets.Utf16LE
-	End If
-	
-	If bytes[0] = 254 AndAlso bytes[1] = 255 Then
-		Return DocumentCharsets.Utf16BE
-	End If
-	
-	Return DocumentCharsets.ASCII
-	
-End Function
-
 Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _

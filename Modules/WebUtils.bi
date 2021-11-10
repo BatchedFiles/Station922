@@ -15,11 +15,6 @@
 	' ByVal pHtmlSafeLength As Integer Ptr _
 ' )As Boolean
 
-' Определяет кодировку документа (массива байт)
-Declare Function GetDocumentCharset( _
-	ByVal b As ZString Ptr _
-)As DocumentCharsets
-
 ' Заполняет буфер датой и временем в http формате
 Declare Sub GetHttpDate Overload( _
 	ByVal Buffer As WString Ptr _

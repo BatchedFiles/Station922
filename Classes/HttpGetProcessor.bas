@@ -31,10 +31,47 @@ Type _HttpGetProcessor
 	pSendBuffer As ZString Ptr
 	HeadersLength As Integer
 	BodyLength As LongInt
+	FileBytesStartingIndex As LongInt
 	hTransmitFile As HANDLE
 	CurrentChunkIndex As LongInt
 	TransmitHeader As TRANSMIT_FILE_BUFFERS
 End Type
+
+' ќпредел€ет кодировку документа (массива байт)
+Function GetDocumentCharset( _
+		ByVal bytes As ZString Ptr _
+	)As DocumentCharsets
+	
+	Dim byte1 As UByte = bytes[0]
+	
+	Select Case byte1
+		
+		Case 239
+			Dim byte2 As UByte = bytes[1]
+			If byte2 = 187 Then
+				Dim byte3 As UByte = bytes[2]
+				If byte3 = 191 Then
+					Return DocumentCharsets.Utf8BOM
+				End If
+			End If
+			
+		Case 254
+			Dim byte2 As UByte = bytes[1]
+			If byte2 = 255 Then
+				Return DocumentCharsets.Utf16BE
+			End If
+			
+		Case 255
+			Dim byte2 As UByte = bytes[1]
+			If byte2 = 254 Then
+				Return DocumentCharsets.Utf16LE
+			End If
+			
+	End Select
+	
+	Return DocumentCharsets.ASCII
+	
+End Function
 
 Function GetFileBytesStartingIndex( _
 		ByVal mt As MimeType Ptr, _
@@ -48,7 +85,14 @@ Function GetFileBytesStartingIndex( _
 		Dim FileBytes As ZString * (MaxBytesRead + 1) = Any
 		Dim BytesReaded As DWORD = Any
 		
-		If ReadFile(hRequestedFile, @FileBytes, MaxBytesRead, @BytesReaded, 0) <> 0 Then
+		Dim ReadResult As Integer = ReadFile( _
+			hRequestedFile, _
+			@FileBytes, _
+			MaxBytesRead, _
+			@BytesReaded, _
+			0 _
+		)
+		If ReadResult <> 0 Then
 			
 			mt->Charset = GetDocumentCharset(@FileBytes)
 			
@@ -76,15 +120,14 @@ Function GetFileBytesStartingIndex( _
 				
 			End If
 			
-			Dim liDistanceToMove As LARGE_INTEGER = Any
-			liDistanceToMove.QuadPart = FileBytesStartIndex
-			SetFilePointerEx(hRequestedFile, liDistanceToMove, NULL, FILE_BEGIN)
-			
 			Return FileBytesStartIndex
+			
 		End If
+		
 	End If
 	
 	Return 0
+	
 End Function
 
 Sub AddExtendedHeaders( _
@@ -430,7 +473,7 @@ Function HttpGetProcessorPrepare( _
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	Dim FileBytesStartingIndex As LongInt = GetFileBytesStartingIndex( _
+	this->FileBytesStartingIndex = GetFileBytesStartingIndex( _
 		@Mime, _
 		this->FileHandle, _
 		this->ZipFileHandle _
@@ -475,7 +518,7 @@ Function HttpGetProcessorPrepare( _
 		
 	End If
 	
-	this->BodyLength = FileSize.QuadPart - FileBytesStartingIndex
+	this->BodyLength = FileSize.QuadPart - this->FileBytesStartingIndex
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
@@ -680,7 +723,16 @@ Function HttpGetProcessorBeginProcess( _
 	INetworkStream_GetSocket(pc->pINetworkStream, @ClientSocket)
 	
 	If this->hTransmitFile <> NULL Then
-		If SetFilePointerEx(this->hTransmitFile, FileOffsetPointer, NULL, FILE_BEGIN) = 0 Then
+		Dim CurrentOffsetPointer As LARGE_INTEGER = Any
+		CurrentOffsetPointer.QuadPart = FileOffsetPointer.QuadPart + this->FileBytesStartingIndex
+		
+		Dim OffsetResult As Integer = SetFilePointerEx( _
+			this->hTransmitFile, _
+			CurrentOffsetPointer, _
+			NULL, _
+			FILE_BEGIN _
+		)
+		If OffsetResult = 0 Then
 			Dim dwError As DWORD = GetLastError()
 			IMutableAsyncResult_Release(pINewAsyncResult)
 			Return HRESULT_FROM_WIN32(dwError)
