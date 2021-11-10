@@ -28,7 +28,7 @@ Type _HttpGetProcessor
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
-	SendBuffer As ZString * (MaxResponseBufferLength + 1)
+	pSendBuffer As ZString Ptr
 	HeadersLength As Integer
 	BodyLength As LongInt
 	hTransmitFile As HANDLE
@@ -158,7 +158,8 @@ End Sub
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
 		ByVal pILogger As ILogger Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pSendBuffer As ZString Ptr _
 	)
 	
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
@@ -169,6 +170,7 @@ Sub InitializeHttpGetProcessor( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
+	this->pSendBuffer = pSendBuffer
 	this->HeadersLength = 0
 	
 End Sub
@@ -176,6 +178,8 @@ End Sub
 Sub UnInitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
+	
+	IMalloc_Free(this->pIMemoryAllocator, this->pSendBuffer)
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		CloseHandle(this->FileHandle)
@@ -203,23 +207,39 @@ Function CreateHttpGetProcessor( _
 	ILogger_LogDebug(pILogger, WStr(!"HttpGetProcessor creating\t"), vtAllocatedBytes)
 #endif
 	
-	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
+	Dim pSendBuffer As ZString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(HttpGetProcessor) _
+		SizeOf(ZString) * (MaxResponseBufferLength + 1) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If pSendBuffer <> NULL Then
+		
+		Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(HttpGetProcessor) _
+		)
+		
+		If this <> NULL Then
+			
+			InitializeHttpGetProcessor( _
+				this, _
+				pILogger, _
+				pIMemoryAllocator, _
+				pSendBuffer _
+			)
+			
+#if __FB_DEBUG__
+			Dim vtEmpty As VARIANT = Any
+			vtEmpty.vt = VT_EMPTY
+			ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
+#endif
+			Return this
+		End If
+		
+		IMalloc_Free(pIMemoryAllocator, pSendBuffer)
 	End If
 	
-	InitializeHttpGetProcessor(this, pILogger, pIMemoryAllocator)
-	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
-#endif
-	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -582,7 +602,7 @@ Function HttpGetProcessorPrepare( _
 	this->HeadersLength = AllResponseHeadersToBytes( _
 		pc->pIRequest, _
 		pc->pIResponse, _
-		@this->SendBuffer, _
+		this->pSendBuffer, _
 		this->BodyLength _
 	)
 	
@@ -634,7 +654,7 @@ Function HttpGetProcessorBeginProcess( _
 	
 	Dim pTransmitHeader As TRANSMIT_FILE_BUFFERS Ptr = Any
 	If this->CurrentChunkIndex = 0 Then
-		this->TransmitHeader.Head = @this->SendBuffer
+		this->TransmitHeader.Head = this->pSendBuffer
 		this->TransmitHeader.HeadLength = Cast(DWORD, this->HeadersLength)
 		this->TransmitHeader.Tail = NULL
 		this->TransmitHeader.TailLength = Cast(DWORD, 0)

@@ -6,7 +6,7 @@
 #include once "Http.bi"
 #include once "Mime.bi"
 
-Const MaxResponseBufferLength As Integer = 32 * 1024 - 1
+Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
 
 Type IServerResponse As IServerResponse_
 

@@ -8,8 +8,8 @@ Extern GlobalRequestedFileSendableVirtualTable As Const ISendableVirtualTable
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
-Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - SizeOf(WString)
-Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - SizeOf(WString)
+Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
+Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 
 Type _RequestedFile
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
