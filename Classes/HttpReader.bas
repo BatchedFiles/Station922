@@ -9,15 +9,15 @@ Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
-Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte) - 1
+Const RAWBUFFER_CAPACITY As Integer = (4 * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte)
 
 Type RawBuffer
-	Bytes(RAWBUFFER_CAPACITY) As UByte
+	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
 	cbUsed As Integer
 	cbLength As Integer
 End Type
 
-Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(Integer)) \ SizeOf(WString) - 1
+Const LINESBUFFER_CAPACITY As Integer = (8 * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(Integer)) \ SizeOf(WString) - SizeOf(WString)
 
 Type LinesBuffer
 	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
