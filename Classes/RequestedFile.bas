@@ -6,8 +6,10 @@
 Extern GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable
 Extern GlobalRequestedFileSendableVirtualTable As Const ISendableVirtualTable
 
-Const REQUESTEDFILE_MAXPATHLENGTH As Integer = 4095 + 32
-Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = 4095 + 32
+Const MEMORYPAGE_SIZE As Integer = 4096
+
+Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - SizeOf(WString)
+Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - SizeOf(WString)
 
 Type _RequestedFile
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
@@ -15,16 +17,18 @@ Type _RequestedFile
 	RefCounter As ReferenceCounter
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
-	FilePath As WString * (REQUESTEDFILE_MAXPATHLENGTH + 1)
-	PathTranslated As WString * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
-	LastFileModifiedDate As FILETIME
+	pFilePath As WString Ptr
+	pPathTranslated As WString Ptr
 	FileHandle As Handle
+	LastFileModifiedDate As FILETIME
 End Type
 
 Sub InitializeRequestedFile( _
 		ByVal this As RequestedFile Ptr, _
 		ByVal pILogger As ILogger Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pFilePath As WString Ptr, _
+		ByVal pPathTranslated As WString Ptr _
 	)
 	
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
@@ -35,8 +39,10 @@ Sub InitializeRequestedFile( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	this->FilePath[0] = 0
-	this->PathTranslated[0] = 0
+	this->pFilePath = pFilePath
+	this->pFilePath[0] = 0
+	this->pPathTranslated = pPathTranslated
+	this->pPathTranslated[0] = 0
 	this->FileHandle = INVALID_HANDLE_VALUE
 	
 End Sub
@@ -45,8 +51,12 @@ Sub UnInitializeRequestedFile( _
 		ByVal this As RequestedFile Ptr _
 	)
 	
+	IMalloc_Free(this->pIMemoryAllocator, this->pPathTranslated)
+	IMalloc_Free(this->pIMemoryAllocator, this->pFilePath)
+	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		If CloseHandle(this->FileHandle) = 0 Then
+#if __FB_DEBUG__
 			Dim dwError As DWORD = GetLastError()
 			If dwError <> ERROR_SUCCESS Then
 				Dim vtErrorCode As VARIANT = Any
@@ -54,6 +64,7 @@ Sub UnInitializeRequestedFile( _
 				vtErrorCode.ulVal = dwError
 				ILogger_LogDebug(this->pILogger, WStr(!"RequestedFile Error Close FileHandle\t"), vtErrorCode)
 			End If
+#endif
 		End If
 		this->FileHandle = INVALID_HANDLE_VALUE
 	End If
@@ -76,23 +87,50 @@ Function CreateRequestedFile( _
 	ILogger_LogDebug(pILogger, WStr(!"RequestedFile creating\t"), vtAllocatedBytes)
 #endif
 	
-	Dim this As RequestedFile Ptr = IMalloc_Alloc( _
+	Dim pFilePath As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(RequestedFile) _
+		SizeOf(WString) * (REQUESTEDFILE_MAXPATHLENGTH + 1) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If pFilePath <> NULL Then
+		
+		Dim pPathTranslated As WString Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(WString) * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1) _
+		)
+		
+		If pPathTranslated <> NULL Then
+			
+			Dim this As RequestedFile Ptr = IMalloc_Alloc( _
+				pIMemoryAllocator, _
+				SizeOf(RequestedFile) _
+			)
+			If this <> NULL Then
+				
+				InitializeRequestedFile( _
+					this, _
+					pILogger, _
+					pIMemoryAllocator, _
+					pFilePath, _
+					pPathTranslated _
+				)
+				
+#if __FB_DEBUG__
+				Dim vtEmpty As VARIANT = Any
+				vtEmpty.vt = VT_EMPTY
+				ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
+#endif
+				Return this
+				
+			End If
+			
+			IMalloc_Free(pIMemoryAllocator, pPathTranslated)
+		End If
+		
+		IMalloc_Free(pIMemoryAllocator, pFilePath)
 	End If
 	
-	InitializeRequestedFile(this, pILogger, pIMemoryAllocator)
-	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
-#endif
-	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -180,7 +218,7 @@ Function RequestedFileGetFilePath( _
 		ByVal ppFilePath As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppFilePath = @this->FilePath
+	*ppFilePath = this->pFilePath
 	
 	Return S_OK
 	
@@ -191,7 +229,7 @@ Function RequestedFileSetFilePath( _
 		ByVal FilePath As WString Ptr _
 	)As HRESULT
 	
-	lstrcpynW(@this->FilePath, FilePath, REQUESTEDFILE_MAXPATHLENGTH + 1)
+	lstrcpynW(this->pFilePath, FilePath, REQUESTEDFILE_MAXPATHLENGTH + 1)
 	
 	Return S_OK
 	
@@ -202,7 +240,7 @@ Function RequestedFileGetPathTranslated( _
 		ByVal ppPathTranslated As WString Ptr Ptr _
 	)As HRESULT
 	
-	*ppPathTranslated = @this->PathTranslated
+	*ppPathTranslated = this->pPathTranslated
 	
 	Return S_OK
 	
@@ -213,7 +251,7 @@ Function RequestedFileSetPathTranslated( _
 		ByVal PathTranslated As WString Ptr _
 	)As HRESULT
 	
-	lstrcpynW(@this->PathTranslated, PathTranslated, REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
+	lstrcpynW(this->pPathTranslated, PathTranslated, REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
 	
 	Return S_OK
 	
@@ -227,7 +265,7 @@ Function RequestedFileFileExists( _
 	If this->FileHandle = INVALID_HANDLE_VALUE Then
 		' TODO Проверить код ошибки через GetLastError, могут быть не только File Not Found
 		Dim buf410 As WString * (MAX_PATH + 1) = Any
-		lstrcpyW(@buf410, @this->PathTranslated)
+		lstrcpyW(@buf410, this->pPathTranslated)
 		lstrcatW(@buf410, @FileGoneExtension)
 		
 		Dim hFile410 As HANDLE = CreateFileW( _
