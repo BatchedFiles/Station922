@@ -601,7 +601,7 @@ Function HttpGetProcessorPrepare( _
 				
 			Case ByteRangeIsSet.LastBytePositionIsSet
 				' Окончательные 500 байт (байтовые смещения 9500-9999, включительно): bytes=-500
-				' Только последний байтй (9999): bytes=-1
+				' Только последний байты (9999): bytes=-1
 				' Если указано больше чем длина файла
 				' то возвращаются все байты файла
 				If RequestedByteRange.LastBytePosition = 0 Then
@@ -626,7 +626,7 @@ Function HttpGetProcessorPrepare( _
 				this->ContentBodyLength = min(EncodingFileSize, RequestedByteRange.LastBytePosition)
 				this->FileBytesOffset = EncodingFileOffset + EncodingFileSize - this->ContentBodyLength
 				Dim FirstBytePosition As LongInt = EncodingFileSize - this->ContentBodyLength
-				Dim LastBytePosition As LongInt = this->ContentBodyLength - 1
+				Dim LastBytePosition As LongInt = FirstBytePosition + this->ContentBodyLength - 1
 				
 				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
 				
