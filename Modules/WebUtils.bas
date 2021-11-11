@@ -420,13 +420,8 @@ Function AllResponseHeadersToBytes( _
 		0 _
 	)
 	
-	' TODO Вывести в лог байты ответа
-	' Dim b As BSTR = SysAllocString(pHeadersBuffer)
-	' DebugPrintHttpStatusCode(pHeadersBuffer, StatusCode)
-	
 	IStringable_Release(pIStringable)
 	
-	' TODO Запись в лог
 	Return HeadersLength
 	
 End Function

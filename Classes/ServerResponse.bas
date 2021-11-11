@@ -596,6 +596,15 @@ Function ServerResponseStringableToString( _
 	
 	*ppResult = this->pResponseHeaderBufferStringable
 	
+#if __FB_DEBUG__
+	Dim vtResponse As VARIANT = Any
+	vtResponse.vt = VT_BSTR
+	vtResponse.bstrVal = SysAllocString(this->pResponseHeaderBufferStringable)
+	ILogger_LogDebug(this->pILogger, NULL, vtResponse)
+	
+	VariantClear(@vtResponse)
+#endif
+	
 	Return S_OK
 	
 End Function
