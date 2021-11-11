@@ -138,9 +138,7 @@ Function NetworkStreamAddRef( _
 		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

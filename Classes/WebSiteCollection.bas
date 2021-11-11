@@ -160,9 +160,7 @@ Function WebSiteCollectionAddRef( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

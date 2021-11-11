@@ -176,9 +176,7 @@ Function HeapMemoryAllocatorAddRef( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

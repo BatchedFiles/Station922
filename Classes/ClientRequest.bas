@@ -200,9 +200,7 @@ Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

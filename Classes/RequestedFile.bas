@@ -193,9 +193,7 @@ Function RequestedFileAddRef( _
 		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

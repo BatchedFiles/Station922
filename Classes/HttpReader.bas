@@ -390,9 +390,7 @@ Function HttpReaderAddRef( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

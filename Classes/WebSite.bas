@@ -167,9 +167,7 @@ Function WebSiteAddRef( _
 		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 

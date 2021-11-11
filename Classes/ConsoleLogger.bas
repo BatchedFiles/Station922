@@ -241,9 +241,7 @@ Function ConsoleLoggerAddRef( _
 		ByVal this As ConsoleLogger Ptr _
 	)As ULONG
 	
-	ReferenceCounterIncrement(@this->RefCounter)
-	
-	Return 1
+	Return ReferenceCounterIncrement(@this->RefCounter)
 	
 End Function
 
