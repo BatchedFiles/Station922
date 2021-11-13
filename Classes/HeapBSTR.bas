@@ -1,12 +1,14 @@
 #include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _InternalHeapBSTR
 	lpVtbl As Const IStringVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	cbBytes As UINT
@@ -21,7 +23,11 @@ Sub InitializeInternalHeapBSTR( _
 		ByVal Length As UINT _
 	)
 	this->lpVtbl = @GlobalInternalStringVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -41,9 +47,9 @@ Sub UnInitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -58,12 +64,14 @@ Function CreateInternalHeapBSTR( _
 	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
 	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = cbBytes
-	ILogger_LogDebug(pILogger, WStr(!"InternalHeapBSTR creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = cbBytes
+		ILogger_LogDebug(pILogger, WStr(!"InternalHeapBSTR creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -75,11 +83,13 @@ Function CreateInternalHeapBSTR( _
 	
 	InitializeInternalHeapBSTR(this, pILogger, pIMemoryAllocator, pwsz, Length)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR created"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR created"), vtEmpty)
+	End Scope
+	#endif
 	
 	Return this
 	
@@ -89,11 +99,13 @@ Sub DestroyInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("InternalHeapBSTR destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("InternalHeapBSTR destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -104,9 +116,13 @@ Sub DestroyInternalHeapBSTR( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("InternalHeapBSTR destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -140,7 +156,13 @@ Function InternalHeapBSTRAddRef( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -148,7 +170,13 @@ Function InternalHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

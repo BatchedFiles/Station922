@@ -445,13 +445,13 @@ Function ReadRequest( _
 		
 		hrEndReadRequest = IClientRequest_EndReadRequest(pIRequest, pIAsyncResult)
 		If FAILED(hrEndReadRequest) Then
-			Dim pIHttpReader2 As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader2)
+			Dim pIHttpReader As IHttpReader Ptr = Any
+			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
 			
 			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader2)
+			' DebugPrintHttpReader(pIHttpReader)
 			
-			IHttpReader_Release(pIHttpReader2)
+			IHttpReader_Release(pIHttpReader)
 			
 			ProcessEndReadError(pIContext, hrEndReadRequest)
 			IClientRequest_Release(pIRequest)
@@ -483,26 +483,27 @@ Function ReadRequest( _
 			
 			IClientRequest_Release(pIRequest)
 			
+			/'
 		Case S_FALSE
-			' Клиент закрыл соединение
-			Dim pIHttpReader2 As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader2)
+			Dim pIHttpReader As IHttpReader Ptr = Any
+			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
 			
 			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader2)
+			' DebugPrintHttpReader(pIHttpReader)
 			
-			IHttpReader_Release(pIHttpReader2)
+			IHttpReader_Release(pIHttpReader)
 			
 			hrResult = E_FAIL
+			'/
 			
 		Case S_OK
-			Dim pIHttpReader2 As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader2)
+			Dim pIHttpReader As IHttpReader Ptr = Any
+			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
 			
 			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader2)
+			' DebugPrintHttpReader(pIHttpReader)
 			
-			IHttpReader_Release(pIHttpReader2)
+			IHttpReader_Release(pIHttpReader)
 			
 			hrResult = PrepareRequestResponse( _
 				pIContext, _

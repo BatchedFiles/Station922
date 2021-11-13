@@ -1,7 +1,6 @@
 #include once "RequestedFile.bi"
 #include once "ContainerOf.bi"
 #include once "HttpConst.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable
 Extern GlobalRequestedFileSendableVirtualTable As Const ISendableVirtualTable
@@ -11,10 +10,13 @@ Const MEMORYPAGE_SIZE As Integer = 4096
 Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _RequestedFile
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
 	lpSendableVtbl As Const ISendableVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As WString Ptr
@@ -33,7 +35,11 @@ Sub InitializeRequestedFile( _
 	
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
 	this->lpSendableVtbl = @GlobalRequestedFileSendableVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -56,22 +62,24 @@ Sub UnInitializeRequestedFile( _
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		If CloseHandle(this->FileHandle) = 0 Then
-#if __FB_DEBUG__
-			Dim dwError As DWORD = GetLastError()
-			If dwError <> ERROR_SUCCESS Then
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_UI4
-				vtErrorCode.ulVal = dwError
-				ILogger_LogDebug(this->pILogger, WStr(!"RequestedFile Error Close FileHandle\t"), vtErrorCode)
-			End If
-#endif
+			#if __FB_DEBUG__
+			Scope
+				Dim dwError As DWORD = GetLastError()
+				If dwError <> ERROR_SUCCESS Then
+					Dim vtErrorCode As VARIANT = Any
+					vtErrorCode.vt = VT_UI4
+					vtErrorCode.ulVal = dwError
+					ILogger_LogDebug(this->pILogger, WStr(!"RequestedFile Error Close FileHandle\t"), vtErrorCode)
+				End If
+			End Scope
+			#endif
 		End If
 		this->FileHandle = INVALID_HANDLE_VALUE
 	End If
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -80,12 +88,14 @@ Function CreateRequestedFile( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As RequestedFile Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(RequestedFile)
-	ILogger_LogDebug(pILogger, WStr(!"RequestedFile creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(RequestedFile)
+		ILogger_LogDebug(pILogger, WStr(!"RequestedFile creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pFilePath As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -115,11 +125,14 @@ Function CreateRequestedFile( _
 					pPathTranslated _
 				)
 				
-#if __FB_DEBUG__
-				Dim vtEmpty As VARIANT = Any
-				vtEmpty.vt = VT_EMPTY
-				ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
-#endif
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit(@vtEmpty)
+					ILogger_LogDebug(pILogger, WStr("RequestedFile created"), vtEmpty)
+				End Scope
+				#endif
+				
 				Return this
 				
 			End If
@@ -138,11 +151,13 @@ Sub DestroyRequestedFile( _
 		ByVal this As RequestedFile Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("RequestedFile destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("RequestedFile destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -153,9 +168,13 @@ Sub DestroyRequestedFile( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("RequestedFile destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("RequestedFile destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -193,7 +212,13 @@ Function RequestedFileAddRef( _
 		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -201,7 +226,13 @@ Function RequestedFileRelease( _
 		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

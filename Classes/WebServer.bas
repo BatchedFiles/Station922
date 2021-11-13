@@ -7,7 +7,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Network.bi"
-#include once "ReferenceCounter.bi"
 #include once "WorkerThread.bi"
 #include once "WriteHttpError.bi"
 
@@ -26,6 +25,8 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type CachedClientContext
 	pIClientLogger As ILogger Ptr
 	pIClientMemoryAllocator As IMalloc Ptr
@@ -38,7 +39,8 @@ End Type
 
 Type _WebServer
 	lpVtbl As Const IRunnableVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	
@@ -321,7 +323,11 @@ Sub InitializeWebServer( _
 	)
 	
 	this->lpVtbl = @GlobalWebServerVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -386,9 +392,9 @@ Sub UnInitializeWebServer( _
 	
 	DestroyCachedClientMemoryContext(this)
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -397,12 +403,14 @@ Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServer Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(WebServer)
-	ILogger_LogDebug(pILogger, WStr(!"WebServer creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(WebServer)
+		ILogger_LogDebug(pILogger, WStr(!"WebServer creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
@@ -450,11 +458,13 @@ Function CreateWebServer( _
 					If EventsCreated Then
 						InitializeWebServer(this, pILogger, pIMemoryAllocator, pINetworkStream, pIRequest, pIResponse)
 						
-#if __FB_DEBUG__
-						Dim vtEmpty As VARIANT = Any
-						vtEmpty.vt = VT_EMPTY
-						ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
-#endif
+						#if __FB_DEBUG__
+						Scope
+							Dim vtEmpty As VARIANT = Any
+							VariantInit(@vtEmpty)
+							ILogger_LogDebug(pILogger, WStr("WebServer created"), vtEmpty)
+						End Scope
+						#endif
 						
 						Return this
 					End If
@@ -480,11 +490,13 @@ Sub DestroyWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("WebServer destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("WebServer destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -495,9 +507,13 @@ Sub DestroyWebServer( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("WebServer destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("WebServer destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -531,7 +547,13 @@ Function WebServerAddRef( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -539,7 +561,13 @@ Function WebServerRelease( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

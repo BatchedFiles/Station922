@@ -1,11 +1,12 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
 Const PRIVATEHEAP_INITIALSIZE As DWORD = 80 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
+
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 Type MemoryRegion
 	pMemory As Any Ptr
@@ -14,7 +15,8 @@ End Type
 
 Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pISpyObject As IMallocSpy Ptr
 	MemoryAllocations As Integer
@@ -30,7 +32,11 @@ Sub InitializeHeapMemoryAllocator( _
 	)
 	
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	this->pISpyObject = NULL
@@ -44,12 +50,13 @@ End Sub
 Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
+	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
 	End If
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -57,12 +64,14 @@ Function CreateHeapMemoryAllocator( _
 		ByVal pILogger As ILogger Ptr _
 	)As HeapMemoryAllocator Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
-	ILogger_LogDebug(pILogger, WStr(!"HeapMemoryAllocator creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
+		ILogger_LogDebug(pILogger, WStr(!"HeapMemoryAllocator creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE, _
@@ -85,11 +94,13 @@ Function CreateHeapMemoryAllocator( _
 	
 	InitializeHeapMemoryAllocator(this, pILogger, hHeap)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator created"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator created"), vtEmpty)
+	End Scope
+	#endif
 	
 	Return this
 	
@@ -99,11 +110,13 @@ Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("HeapMemoryAllocator destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("HeapMemoryAllocator destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -137,9 +150,13 @@ Sub DestroyHeapMemoryAllocator( _
 		HeapDestroy(hHeap)
 	End If
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_Release(pILogger)
 	
@@ -176,7 +193,13 @@ Function HeapMemoryAllocatorAddRef( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -184,7 +207,13 @@ Function HeapMemoryAllocatorRelease( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

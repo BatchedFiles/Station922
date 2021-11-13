@@ -1,12 +1,14 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTable
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _AsyncResult
 	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pState As IUnknown Ptr
@@ -23,7 +25,11 @@ Sub InitializeAsyncResult( _
 	)
 	
 	this->lpVtbl = @GlobalMutableAsyncResultVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -44,10 +50,9 @@ Sub UnInitializeAsyncResult( _
 		IUnknown_Release(this->pState)
 	End If
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
-	
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -56,12 +61,14 @@ Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AsyncResult Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(AsyncResult)
-	ILogger_LogDebug(pILogger, WStr(!"AsyncResult creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(AsyncResult)
+		ILogger_LogDebug(pILogger, WStr(!"AsyncResult creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -73,11 +80,13 @@ Function CreateAsyncResult( _
 	
 	InitializeAsyncResult(this, pILogger, pIMemoryAllocator)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("AsyncResult created"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("AsyncResult created"), vtEmpty)
+	End Scope
+	#endif
 	
 	Return this
 	
@@ -87,11 +96,13 @@ Sub DestroyAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("AsyncResult destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("AsyncResult destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -102,9 +113,13 @@ Sub DestroyAsyncResult( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("AsyncResult destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("AsyncResult destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -143,7 +158,13 @@ Function AsyncResultAddRef( _
 		ByVal this As AsyncResult Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -151,7 +172,13 @@ Function AsyncResultRelease( _
 		ByVal this As AsyncResult Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

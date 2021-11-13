@@ -4,16 +4,18 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HttpConst.bi"
-#include once "ReferenceCounter.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 Extern GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _ClientRequest
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pIReader As ITextReader Ptr
@@ -57,7 +59,11 @@ Sub InitializeClientRequest( _
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -88,9 +94,9 @@ Sub UnInitializeClientRequest( _
 		ITextReader_Release(this->pIReader)
 	End If
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -99,12 +105,14 @@ Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientRequest Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(ClientRequest)
-	ILogger_LogDebug(pILogger, WStr(!"ClientRequest creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(ClientRequest)
+		ILogger_LogDebug(pILogger, WStr(!"ClientRequest creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pClientURI As Station922Uri Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -126,11 +134,14 @@ Function CreateClientRequest( _
 				pClientURI _
 			)
 			
-#if __FB_DEBUG__
-			Dim vtEmpty As VARIANT = Any
-			vtEmpty.vt = VT_EMPTY
-			ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
-#endif
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				ILogger_LogDebug(pILogger, WStr("ClientRequest created"), vtEmpty)
+			End Scope
+			#endif
+			
 			Return this
 		End If
 		
@@ -145,11 +156,13 @@ Sub DestroyClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("ClientRequest destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("ClientRequest destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -160,9 +173,13 @@ Sub DestroyClientRequest( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("ClientRequest destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("ClientRequest destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -200,7 +217,13 @@ Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -208,7 +231,13 @@ Function ClientRequestRelease( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

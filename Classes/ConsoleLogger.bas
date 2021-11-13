@@ -1,8 +1,9 @@
 #include once "ConsoleLogger.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalConsoleLoggerVirtualTable As Const ILoggerVirtualTable
+
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 Enum EntryType
 	Debug
@@ -22,7 +23,8 @@ End Type
 
 Type _ConsoleLogger
 	lpVtbl As Const ILoggerVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	Entryes(MaxEntryes - 1) As LogEntry
 	EntryesCount As Integer
@@ -162,7 +164,11 @@ Sub InitializeConsoleLogger( _
 	)
 	
 	this->lpVtbl = @GlobalConsoleLoggerVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	' For i As Integer = 0 To MaxEntryes - 1
@@ -176,8 +182,8 @@ Sub UnInitializeConsoleLogger( _
 		ByVal this As ConsoleLogger Ptr _
 	)
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -241,7 +247,13 @@ Function ConsoleLoggerAddRef( _
 		ByVal this As ConsoleLogger Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -249,7 +261,13 @@ Function ConsoleLoggerRelease( _
 		ByVal this As ConsoleLogger Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

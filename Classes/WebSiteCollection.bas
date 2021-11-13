@@ -1,12 +1,16 @@
 #include once "WebSiteCollection.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 
 Extern GlobalMutableWebSiteCollectionVirtualTable As Const IMutableWebSiteCollectionVirtualTable
 
-Type WebSiteNode As _WebSiteNode
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
-Type LPWebSiteNode As _WebSiteNode Ptr
+Type WebSiteNode
+	HostName As BSTR
+	pIWebSite As IWebSite Ptr
+	LeftNode As WebSiteNode Ptr
+	RightNode As WebSiteNode Ptr
+End Type
 
 Declare Sub TreeAddNode( _
 	ByVal pTree As WebSiteNode Ptr, _
@@ -24,16 +28,10 @@ Declare Function CreateWebSiteNode( _
 	ByVal pValue As IWebSite Ptr _
 )As WebSiteNode Ptr
 
-Type _WebSiteNode
-	HostName As BSTR
-	pIWebSite As IWebSite Ptr
-	LeftNode As WebSiteNode Ptr
-	RightNode As WebSiteNode Ptr
-End Type
-
 Type _WebSiteCollection
 	lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pDefaultNode As WebSiteNode Ptr
@@ -48,7 +46,11 @@ Sub InitializeWebSiteCollection( _
 	)
 	
 	this->lpVtbl = @GlobalMutableWebSiteCollectionVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -63,9 +65,9 @@ Sub UnInitializeWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -74,12 +76,14 @@ Function CreateWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSiteCollection Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(WebSiteCollection)
-	ILogger_LogDebug(pILogger, WStr(!"WebSiteCollection creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(WebSiteCollection)
+		ILogger_LogDebug(pILogger, WStr(!"WebSiteCollection creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -91,11 +95,13 @@ Function CreateWebSiteCollection( _
 	
 	InitializeWebSiteCollection(this, pILogger, pIMemoryAllocator)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("WebSiteCollection created"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("WebSiteCollection created"), vtEmpty)
+	End Scope
+	#endif
 	
 	Return this
 	
@@ -105,11 +111,13 @@ Sub DestroyWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("WebSiteCollection destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("WebSiteCollection destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -120,9 +128,13 @@ Sub DestroyWebSiteCollection( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("WebSiteCollection destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("WebSiteCollection destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -160,7 +172,13 @@ Function WebSiteCollectionAddRef( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -168,7 +186,13 @@ Function WebSiteCollectionRelease( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

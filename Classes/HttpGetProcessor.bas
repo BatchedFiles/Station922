@@ -10,7 +10,6 @@
 #include once "Mime.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
-#include once "ReferenceCounter.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IRequestProcessorVirtualTable
@@ -21,9 +20,12 @@ Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 Const TRANSMIT_CHUNK_SIZE As DWORD = 1024 * 1024 * 265
 Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _HttpGetProcessor
 	lpVtbl As Const IRequestProcessorVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
@@ -229,7 +231,11 @@ Sub InitializeHttpGetProcessor( _
 	)
 	
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -255,9 +261,9 @@ Sub UnInitializeHttpGetProcessor( _
 		CloseHandle(this->ZipFileHandle)
 	End If
 	
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -266,12 +272,14 @@ Function CreateHttpGetProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpGetProcessor Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(HttpGetProcessor)
-	ILogger_LogDebug(pILogger, WStr(!"HttpGetProcessor creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(HttpGetProcessor)
+		ILogger_LogDebug(pILogger, WStr(!"HttpGetProcessor creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pSendBuffer As ZString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -294,11 +302,14 @@ Function CreateHttpGetProcessor( _
 				pSendBuffer _
 			)
 			
-#if __FB_DEBUG__
-			Dim vtEmpty As VARIANT = Any
-			vtEmpty.vt = VT_EMPTY
-			ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
-#endif
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
+			End Scope
+			#endif
+			
 			Return this
 		End If
 		
@@ -313,11 +324,13 @@ Sub DestroyHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("HttpGetProcessor destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("HttpGetProcessor destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -328,9 +341,13 @@ Sub DestroyHttpGetProcessor( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("HttpGetProcessor destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("HttpGetProcessor destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -364,7 +381,13 @@ Function HttpGetProcessorAddRef( _
 		ByVal this As HttpGetProcessor Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -372,7 +395,13 @@ Function HttpGetProcessorRelease( _
 		ByVal this As HttpGetProcessor Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	

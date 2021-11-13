@@ -1,6 +1,5 @@
 #include once "HttpReader.bi"
 #include once "ContainerOf.bi"
-#include once "ReferenceCounter.bi"
 #include once "StringConstants.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
@@ -27,38 +26,15 @@ End Type
 
 Type _HttpReader
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
-	crSection As CRITICAL_SECTION
 	pIStream As IBaseStream Ptr
 	pReadedData As RawBuffer Ptr
 	pLines As LinesBuffer Ptr
 	IsAllBytesReaded As Boolean
 End Type
-
-/'
-Function FindCrLfIndexA( _
-		ByVal Buffer As ZString Ptr, _
-		ByVal BufferLength As Integer, _
-		ByVal pFindIndex As Integer Ptr _
-	)As Boolean
-	
-	For i As Integer = 0 To BufferLength - NewLineStringLength
-		
-		If Buffer[i + 0] = 13 AndAlso Buffer[i + 1] = 10 Then
-			*pFindIndex = i
-			Return True
-		End If
-		
-	Next
-	
-	*pFindIndex = 0
-	
-	Return False
-	
-End Function
-'/
 
 Function FindCrLfIndexW( _
 		ByVal Buffer As WString Ptr, _
@@ -233,15 +209,15 @@ Sub InitializeHttpReader( _
 	)
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
 	InitializeCriticalSectionAndSpinCount( _
 		@this->crSection, _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
+	this->ReferenceCounter = 0
+	ILogger_AddRef(pILogger)
+	this->pILogger = pILogger
+	IMalloc_AddRef(pIMemoryAllocator)
+	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
 	this->pReadedData = pReadedData
 	this->pReadedData->cbUsed = 0
@@ -266,10 +242,9 @@ Sub UnInitializeHttpReader( _
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	DeleteCriticalSection(@this->crSection)
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -278,12 +253,14 @@ Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpReader Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(HttpReader)
-	ILogger_LogDebug(pILogger, WStr(!"HttpReader creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(HttpReader)
+		ILogger_LogDebug(pILogger, WStr(!"HttpReader creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pReadedData As RawBuffer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -313,11 +290,14 @@ Function CreateHttpReader( _
 					pLines _
 				)
 				
-#if __FB_DEBUG__
-				Dim vtEmpty As VARIANT = Any
-				vtEmpty.vt = VT_EMPTY
-				ILogger_LogDebug(pILogger, WStr("HttpReader created"), vtEmpty)
-#endif
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit(@vtEmpty)
+					ILogger_LogDebug(pILogger, WStr("HttpReader created"), vtEmpty)
+				End Scope
+				#endif
+				
 				Return this
 			End If
 			
@@ -335,11 +315,13 @@ Sub DestroyHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("HttpReader destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("HttpReader destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -350,9 +332,13 @@ Sub DestroyHttpReader( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("HttpReader destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("HttpReader destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -390,7 +376,13 @@ Function HttpReaderAddRef( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -398,7 +390,13 @@ Function HttpReaderRelease( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	
@@ -540,24 +538,26 @@ Function HttpReaderEndReadLine( _
 	
 	this->IsAllBytesReaded = True
 	
-#if __FB_DEBUG__
-	Dim psa As SAFEARRAY Ptr = SafeArrayCreateVector( _
-		VT_UI1, _
-		0, _
-		RAWBUFFER_CAPACITY _
-	)
-	Dim bytes As UByte Ptr = Any
-	SafeArrayAccessData(psa, @bytes)
-	CopyMemory(bytes, @this->pReadedData->Bytes(0), RAWBUFFER_CAPACITY)
-	SafeArrayUnaccessData(psa)
-	
-	Dim vtArrayBytes As VARIANT = Any
-	vtArrayBytes.vt = VT_ARRAY Or VT_UI1
-	vtArrayBytes.parray = psa
-	ILogger_LogDebug(this->pILogger, NULL, vtArrayBytes)
-	
-	SafeArrayDestroy(psa)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim psa As SAFEARRAY Ptr = SafeArrayCreateVector( _
+			VT_UI1, _
+			0, _
+			RAWBUFFER_CAPACITY _
+		)
+		Dim bytes As UByte Ptr = Any
+		SafeArrayAccessData(psa, @bytes)
+		CopyMemory(bytes, @this->pReadedData->Bytes(0), RAWBUFFER_CAPACITY)
+		SafeArrayUnaccessData(psa)
+		
+		Dim vtArrayBytes As VARIANT = Any
+		vtArrayBytes.vt = VT_ARRAY Or VT_UI1
+		vtArrayBytes.parray = psa
+		ILogger_LogDebug(this->pILogger, NULL, vtArrayBytes)
+		
+		SafeArrayDestroy(psa)
+	End Scope
+	#endif
 	
 	Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
 		this->pLines, _
@@ -612,22 +612,22 @@ Function HttpReaderClear( _
 	
 End Function
 
-Function HttpReaderGetBaseStream( _
-		ByVal this As HttpReader Ptr, _
-		ByVal ppResult As IBaseStream Ptr Ptr _
-	)As HRESULT
+' Function HttpReaderGetBaseStream( _
+		' ByVal this As HttpReader Ptr, _
+		' ByVal ppResult As IBaseStream Ptr Ptr _
+	' )As HRESULT
 	
-	If this->pIStream = NULL Then
-		*ppResult = NULL
-		Return S_FALSE
-	End If
+	' If this->pIStream = NULL Then
+		' *ppResult = NULL
+		' Return S_FALSE
+	' End If
 	
-	IBaseStream_AddRef(this->pIStream)
-	*ppResult = this->pIStream
+	' IBaseStream_AddRef(this->pIStream)
+	' *ppResult = this->pIStream
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
 Function HttpReaderSetBaseStream( _
 		ByVal this As HttpReader Ptr, _
@@ -677,16 +677,16 @@ Function HttpReaderGetRequestedBytes( _
 	
 End Function
 
-Function HttpReaderIsCompleted( _
-		ByVal this As HttpReader Ptr, _
-		ByVal pCompleted As Boolean Ptr _
-	)As HRESULT
+' Function HttpReaderIsCompleted( _
+		' ByVal this As HttpReader Ptr, _
+		' ByVal pCompleted As Boolean Ptr _
+	' )As HRESULT
 	
-	*pCompleted = this->IsAllBytesReaded
+	' *pCompleted = this->IsAllBytesReaded
 	
-	Return S_OK
+	' Return S_OK
 	
-End Function
+' End Function
 
 
 Function IHttpReaderQueryInterface( _
@@ -741,12 +741,12 @@ Function IHttpReaderClear( _
 	Return HttpReaderClear(ContainerOf(this, HttpReader, lpVtbl))
 End Function
 
-Function IHttpReaderGetBaseStream( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal ppResult As IBaseStream Ptr Ptr _
-	)As HRESULT
-	Return HttpReaderGetBaseStream(ContainerOf(this, HttpReader, lpVtbl), ppResult)
-End Function
+' Function IHttpReaderGetBaseStream( _
+		' ByVal this As IHttpReader Ptr, _
+		' ByVal ppResult As IBaseStream Ptr Ptr _
+	' )As HRESULT
+	' Return HttpReaderGetBaseStream(ContainerOf(this, HttpReader, lpVtbl), ppResult)
+' End Function
 
 Function IHttpReaderSetBaseStream( _
 		ByVal this As IHttpReader Ptr, _
@@ -771,12 +771,12 @@ Function IHttpReaderGetRequestedBytes( _
 	Return HttpReaderGetRequestedBytes(ContainerOf(this, HttpReader, lpVtbl), pRequestedBytesLength, ppRequestedBytes)
 End Function
 
-Function IHttpReaderIsCompleted( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pCompleted As Boolean Ptr _
-	)As HRESULT
-	Return HttpReaderIsCompleted(ContainerOf(this, HttpReader, lpVtbl), pCompleted)
-End Function
+' Function IHttpReaderIsCompleted( _
+		' ByVal this As IHttpReader Ptr, _
+		' ByVal pCompleted As Boolean Ptr _
+	' )As HRESULT
+	' Return HttpReaderIsCompleted(ContainerOf(this, HttpReader, lpVtbl), pCompleted)
+' End Function
 
 Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	@IHttpReaderQueryInterface, _
@@ -792,9 +792,9 @@ Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	NULL, _ /' BeginReadToEnd '/
 	NULL, _ /' EndReadToEnd '/
 	@IHttpReaderClear, _
-	@IHttpReaderGetBaseStream, _
+	NULL, _ /'@IHttpReaderGetBaseStream '/
 	@IHttpReaderSetBaseStream, _
 	@IHttpReaderGetPreloadedBytes, _
 	@IHttpReaderGetRequestedBytes, _
-	@IHttpReaderIsCompleted _
+	NULL _ /' @IHttpReaderIsCompleted'/
 )

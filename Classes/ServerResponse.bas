@@ -5,7 +5,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
-#include once "ReferenceCounter.bi"
 #include once "Resources.RH"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
@@ -15,10 +14,13 @@ Extern GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTab
 
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _ServerResponse
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
-	RefCounter As ReferenceCounter
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
 	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	' Буфер заголовков ответа
@@ -49,7 +51,11 @@ Sub InitializeServerResponse( _
 	
 	this->lpVtbl = @GlobalServerResponseVirtualTable
 	this->lpStringableVtbl = @GlobalServerResponseStringableVirtualTable
-	ReferenceCounterInitialize(@this->RefCounter)
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -78,9 +84,9 @@ Sub UnInitializeServerResponse( _
 	
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBufferStringable)
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBuffer)
-	ReferenceCounterUnInitialize(@this->RefCounter)
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -89,12 +95,14 @@ Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(ServerResponse)
-	ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(ServerResponse)
+		ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
+	End Scope
+	#endif
 	
 	Dim pResponseHeaderBuffer As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -124,11 +132,13 @@ Function CreateServerResponse( _
 					pResponseHeaderBufferStringable _
 				)
 				
-#if __FB_DEBUG__
-				Dim vtEmpty As VARIANT = Any
-				vtEmpty.vt = VT_EMPTY
-				ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
-#endif
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit(@vtEmpty)
+					ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
+				End Scope
+				#endif
 				
 				Return this
 			End If
@@ -147,11 +157,13 @@ Sub DestroyServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("ServerResponse destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(this->pILogger, WStr("ServerResponse destroying"), vtEmpty)
+	End Scope
+	#endif
 	
 	ILogger_AddRef(this->pILogger)
 	Dim pILogger As ILogger Ptr = this->pILogger
@@ -162,9 +174,13 @@ Sub DestroyServerResponse( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("ServerResponse destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		ILogger_LogDebug(pILogger, WStr("ServerResponse destroyed"), vtEmpty)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	ILogger_Release(pILogger)
@@ -202,7 +218,13 @@ Function ServerResponseAddRef( _
 		ByVal this As ServerResponse Ptr _
 	)As ULONG
 	
-	Return ReferenceCounterIncrement(@this->RefCounter)
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter += 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	Return this->ReferenceCounter
 	
 End Function
 
@@ -210,7 +232,13 @@ Function ServerResponseRelease( _
 		ByVal this As ServerResponse Ptr _
 	)As ULONG
 	
-	If ReferenceCounterDecrement(@this->RefCounter) Then
+	EnterCriticalSection(@this->crSection)
+	Scope
+		this->ReferenceCounter -= 1
+	End Scope
+	LeaveCriticalSection(@this->crSection)
+	
+	If this->ReferenceCounter Then
 		Return 1
 	End If
 	
