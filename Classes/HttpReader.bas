@@ -219,14 +219,14 @@ Sub InitializeHttpReader( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
+	pReadedData->cbUsed = 0
+	pReadedData->cbLength = 0
+	' ZeroMemory(@pReadedData->Bytes(0), RAWBUFFER_CAPACITY)
 	this->pReadedData = pReadedData
-	this->pReadedData->cbUsed = 0
-	this->pReadedData->cbLength = 0
-	this->pReadedData->Bytes(RAWBUFFER_CAPACITY) = 0
+	pLines->Start = 0
+	pLines->Length = 0
+	pLines->wszLine[0] = 0
 	this->pLines = pLines
-	this->pLines->Start = 0
-	this->pLines->Length = 0
-	this->pLines->wszLine[0] = 0
 	this->IsAllBytesReaded = False
 	
 End Sub
@@ -513,13 +513,15 @@ Function HttpReaderEndReadLine( _
 			
 	End Select
 	
-	this->pReadedData->cbLength += cbReceived
+	Dim cbNewLength As Integer = this->pReadedData->cbLength + cbReceived
 	
-	If this->pReadedData->cbLength >= RAWBUFFER_CAPACITY Then
+	If cbNewLength >= RAWBUFFER_CAPACITY Then
 		*pLineLength = 0
 		*ppLine = NULL
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 	End If
+	
+	this->pReadedData->cbLength = cbNewLength
 	
 	Dim DoubleCrLfIndex As Integer = Any
 	Dim Finded As Boolean = FindDoubleCrLfIndexA( _
