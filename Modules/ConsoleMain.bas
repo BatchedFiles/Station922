@@ -15,14 +15,16 @@ Function RunnableStatusHandler( _
 		ByVal Status As HRESULT _
 	)As HRESULT
 	
-#if __FB_DEBUG__
-	Dim pContext As ServerContext Ptr = Context
-	
-	Dim vtSCode As VARIANT = Any
-	vtSCode.vt = VT_ERROR
-	vtSCode.scode = Status
-	ILogger_LogDebug(pContext->pILogger, WStr(!"RunnableStatusHandler\t"), vtSCode)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim pContext As ServerContext Ptr = Context
+		
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = Status
+		ILogger_LogDebug(pContext->pILogger, WStr(!"RunnableStatusHandler\t"), vtSCode)
+	End Scope
+	#endif
 	
 	Return S_OK
 	
