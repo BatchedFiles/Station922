@@ -688,26 +688,27 @@ Function WorkerThread( _
 			End If
 			
 		Else
-			IAsyncResult_SetCompleted(pOverlapped->pIAsync, BytesTransferred, True)
-			
-			Dim pIContext As IClientContext Ptr = Any
-			IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim pILogger As ILogger Ptr = Any
-				IClientContext_GetLogger(pIContext, @pILogger)
-				
-				Dim vtBytesTransferred As VARIANT = Any
-				vtBytesTransferred.vt = VT_UI4
-				vtBytesTransferred.ulVal = BytesTransferred
-				ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
-				
-				ILogger_Release(pILogger)
-			End Scope
-			#endif
-			
 			If BytesTransferred <> 0 Then
+				IAsyncResult_SetCompleted(pOverlapped->pIAsync, BytesTransferred, True)
+			
+				Dim pIContext As IClientContext Ptr = Any
+				IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
+				
+				#if __FB_DEBUG__
+				Scope
+					Dim pILogger As ILogger Ptr = Any
+					IClientContext_GetLogger(pIContext, @pILogger)
+					
+					Dim vtBytesTransferred As VARIANT = Any
+					vtBytesTransferred.vt = VT_UI4
+					vtBytesTransferred.ulVal = BytesTransferred
+					ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
+					
+					ILogger_Release(pILogger)
+				End Scope
+				#endif
+				
+				
 				Dim OpCode As OperationCodes = Any
 				IClientContext_GetOperationCode(pIContext, @OpCode)
 				
@@ -729,9 +730,9 @@ Function WorkerThread( _
 						
 				End Select
 				
+				IClientContext_Release(pIContext)
+				
 			End If
-			
-			IClientContext_Release(pIContext)
 			
 		End If
 		
