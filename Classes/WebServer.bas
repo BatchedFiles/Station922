@@ -47,13 +47,9 @@ Type _WebServer
 	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As Integer
 	pIWebSites As IWebSiteCollection Ptr
-	pINetworkStream As INetworkStream Ptr
-	pIRequest As IClientRequest Ptr
-	pIResponse As IServerResponse Ptr
-	
-	ppCachedClientMemoryContext As CachedClientContext Ptr Ptr
-	CachedClientMemoryContextLength As Integer
-	CachedClientMemoryContextIndex As Integer
+	pDefaultStream As INetworkStream Ptr
+	pDefaultRequest As IClientRequest Ptr
+	pDefaultResponse As IServerResponse Ptr
 	
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
 	hEvents(0 To SocketListCapacity - 1) As WSAEVENT
@@ -68,98 +64,6 @@ Type _WebServer
 	CurrentStatus As HRESULT
 	
 End Type
-
-Function CreateClientMemoryContext( _
-		ByVal pIServerMemoryAllocator As IMalloc Ptr _
-	)As CachedClientContext Ptr
-	
-	Dim pCachedContext As CachedClientContext Ptr = IMalloc_Alloc( _
-		pIServerMemoryAllocator, _
-		SizeOf(CachedClientContext) _
-	)
-	
-	If pCachedContext <> NULL Then
-		ZeroMemory(pCachedContext, SizeOf(CachedClientContext))
-		
-		pCachedContext->hrLogger = CreateLoggerInstance( _
-			pIServerMemoryAllocator, _
-			@CLSID_CONSOLELOGGER, _
-			@IID_ILogger, _
-			@pCachedContext->pIClientLogger _
-		)
-		
-		If SUCCEEDED(pCachedContext->hrLogger) Then
-			
-			pCachedContext->hrMemoryAllocator = CreateMemoryAllocatorInstance( _
-				pCachedContext->pIClientLogger, _
-				@CLSID_HEAPMEMORYALLOCATOR, _
-				@IID_IMalloc, _
-				@pCachedContext->pIClientMemoryAllocator _
-			)
-			
-			If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
-				
-				pCachedContext->hrClientContex = CreateInstance( _
-					pCachedContext->pIClientLogger, _
-					pCachedContext->pIClientMemoryAllocator, _
-					@CLSID_CLIENTCONTEXT, _
-					@IID_IClientContext, _
-					@pCachedContext->pIClientContext _
-				)
-				
-				If SUCCEEDED(pCachedContext->hrClientContex) Then
-					IClientContext_SetOperationCode(pCachedContext->pIClientContext, OperationCodes.ReadRequest)
-					
-					Dim pIReader As IHttpReader Ptr = Any
-					IClientContext_GetHttpReader(pCachedContext->pIClientContext, @pIReader)
-					
-					Scope
-						Dim pINetworkStream As INetworkStream Ptr = Any
-						IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
-						
-						' TODO Запросить интерфейс вместо конвертирования указателя
-						IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
-						
-						INetworkStream_Release(pINetworkStream)
-					End Scope
-					
-					Scope
-						Dim pIRequest As IClientRequest Ptr = Any
-						IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
-						
-						' TODO Запросить интерфейс вместо конвертирования указателя
-						IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
-						
-						IClientRequest_Release(pIRequest)
-					End Scope
-					
-					IHttpReader_Release(pIReader)
-					
-					IMalloc_AddRef(pIServerMemoryAllocator)
-					pCachedContext->pIServerMemoryAllocator = pIServerMemoryAllocator
-					
-					' IClientContext_Release(pCachedContext->pIClientContext)
-					
-				End If
-				
-				IMalloc_Release(pCachedContext->pIClientMemoryAllocator)
-				
-			End If
-			
-			ILogger_Release(pCachedContext->pIClientLogger)
-			
-		End If
-		
-		' IMalloc_Free( _
-			' pIServerMemoryAllocator, _
-			' pCachedContext _
-		' )
-		
-	End If
-	
-	Return pCachedContext
-	
-End Function
 
 Sub InitializeClientMemoryContext( _
 		ByVal pCachedContext As CachedClientContext Ptr, _
@@ -239,35 +143,6 @@ Sub InitializeClientMemoryContext( _
 	
 End Sub
 
-Sub DestroyClientMemoryContext( _
-		ByVal pClientMemoryContext As CachedClientContext Ptr _
-	)
-	
-	If pClientMemoryContext <> NULL Then
-		
-		' If SUCCEEDED(pClientMemoryContext->hrClientContex) Then
-			' MessageBoxA(NULL, "pIClientContext", NULL, MB_OK)
-			' IMalloc_Release(pClientMemoryContext->pIClientContext)
-		' End If
-		
-		' If SUCCEEDED(pClientMemoryContext->hrMemoryAllocator) Then
-			' MessageBoxA(NULL, "pIClientMemoryAllocator", NULL, MB_OK)
-			' IMalloc_Release(pClientMemoryContext->pIClientMemoryAllocator)
-		' End If
-		
-		' If SUCCEEDED(pClientMemoryContext->hrLogger) Then
-			' MessageBoxA(NULL, "pIClientLogger", NULL, MB_OK)
-			' ILogger_Release(pClientMemoryContext->pIClientLogger)
-		' End If
-		
-		Dim allocator As IMalloc Ptr = pClientMemoryContext->pIServerMemoryAllocator
-		
-		IMalloc_Free(allocator, pClientMemoryContext)
-		IMalloc_Release(allocator)
-	End If
-	
-End Sub
-
 Declare Function AcceptConnection( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
@@ -305,14 +180,6 @@ Declare Function ServerThread( _
 	ByVal this As WebServer Ptr _
 )As DWORD
 
-Declare Sub CreateCachedClientMemoryContext( _
-	ByVal this As WebServer Ptr _
-)
-
-Declare Sub DestroyCachedClientMemoryContext( _
-	ByVal this As WebServer Ptr _
-)
-
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
 		ByVal pILogger As ILogger Ptr, _
@@ -328,18 +195,20 @@ Sub InitializeWebServer( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
+	
 	ILogger_AddRef(pILogger)
 	this->pILogger = pILogger
+	
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	
 	this->hIOCompletionPort = NULL
 	this->WorkerThreadsCount = 0
 	this->pIWebSites = NULL
-	this->pINetworkStream = pINetworkStream
-	this->pIRequest = pIRequest
-	this->pIResponse = pIResponse
-	this->ppCachedClientMemoryContext = NULL
-	this->CachedClientMemoryContextIndex  = 0
+	
+	this->pDefaultStream = pINetworkStream
+	this->pDefaultRequest = pIRequest
+	this->pDefaultResponse = pIResponse
 	
 	this->Context = NULL
 	this->StatusHandler = NULL
@@ -362,24 +231,20 @@ Sub UnInitializeWebServer( _
 		WSACloseEvent(this->hEvents(i))
 	Next
 	
-	If this->ppCachedClientMemoryContext <> NULL Then
-		IMalloc_Free(this->pIMemoryAllocator, this->ppCachedClientMemoryContext)
-	End If
-	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
 	End If
 	
-	If this->pINetworkStream <> NULL Then
-		INetworkStream_Release(this->pINetworkStream)
+	If this->pDefaultStream <> NULL Then
+		INetworkStream_Release(this->pDefaultStream)
 	End If
 	
-	If this->pIRequest <> NULL Then
-		IClientRequest_Release(this->pIRequest)
+	If this->pDefaultRequest <> NULL Then
+		IClientRequest_Release(this->pDefaultRequest)
 	End If
 	
-	If this->pIResponse <> NULL Then
-		IServerResponse_Release(this->pIResponse)
+	If this->pDefaultResponse <> NULL Then
+		IServerResponse_Release(this->pDefaultResponse)
 	End If
 	
 	' If this->SocketList <> INVALID_SOCKET Then
@@ -389,8 +254,6 @@ Sub UnInitializeWebServer( _
 	If this->hIOCompletionPort <> NULL Then
 		CloseHandle(this->hIOCompletionPort)
 	End If
-	
-	DestroyCachedClientMemoryContext(this)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	ILogger_Release(this->pILogger)
@@ -842,33 +705,6 @@ Function ProcessErrorAssociateWithIOCP( _
 	
 End Function
 
-Sub CreateCachedClientMemoryContext( _
-		ByVal this As WebServer Ptr _
-	)
-	
-	' TODO Асинхронное создание списка контекстов
-	For i As Integer = 0 To this->CachedClientMemoryContextLength - 1
-		
-		this->ppCachedClientMemoryContext[i] = CreateClientMemoryContext( _
-			this->pIMemoryAllocator _
-		)
-		
-	Next
-	
-End Sub
-
-Sub DestroyCachedClientMemoryContext( _
-		ByVal this As WebServer Ptr _
-	)
-	
-	For i As Integer = 0 To this->CachedClientMemoryContextLength - 1
-		DestroyClientMemoryContext( _
-			this->ppCachedClientMemoryContext[i] _
-		)
-	Next
-	
-End Sub
-
 Function CreateServerSocket( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
@@ -921,19 +757,11 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetWorkerThreadsCount(pIConfig, @this->WorkerThreadsCount)
 	
-	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
+	' IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
 	
 	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
 	
 	IWebServerConfiguration_Release(pIConfig)
-	
-	this->ppCachedClientMemoryContext = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
-		this->CachedClientMemoryContextLength * SizeOf(CachedClientContext Ptr Ptr) _
-	)
-	If this->ppCachedClientMemoryContext = NULL Then
-		Return E_OUTOFMEMORY
-	End If
 	
 	Return S_OK
 
@@ -1024,12 +852,12 @@ Function ServerThread( _
 			' CreateCachedClientMemoryContext(this)
 		' End If
 		
-		IClientRequest_Clear(this->pIRequest)
-		IServerResponse_Clear(this->pIResponse)
+		IClientRequest_Clear(this->pDefaultRequest)
+		IServerResponse_Clear(this->pDefaultResponse)
 		Dim hrAccept As HRESULT = AcceptConnection( _
 			this _
 		)
-		INetworkStream_Close(this->pINetworkStream)
+		INetworkStream_Close(this->pDefaultStream)
 		
 		' this->CachedClientMemoryContextIndex += 1
 		
