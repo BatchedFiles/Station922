@@ -694,12 +694,14 @@ Function WorkerThread( _
 			Dim pILogger As ILogger Ptr = Any
 			IClientContext_GetLogger(pIContext, @pILogger)
 			
-#if __FB_DEBUG__
-			Dim vtBytesTransferred As VARIANT = Any
-			vtBytesTransferred.vt = VT_UI4
-			vtBytesTransferred.ulVal = BytesTransferred
-			ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
-#endif
+			#if __FB_DEBUG__
+			Scope
+				Dim vtBytesTransferred As VARIANT = Any
+				vtBytesTransferred.vt = VT_UI4
+				vtBytesTransferred.ulVal = BytesTransferred
+				ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
+			End Scope
+			#endif
 			
 			If BytesTransferred <> 0 Then
 				Dim OpCode As OperationCodes = Any
