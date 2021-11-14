@@ -665,7 +665,7 @@ Function WorkerThread( _
 		
 		Dim BytesTransferred As DWORD = Any
 		Dim CompletionKey As ULONG_PTR = Any
-		Dim pOverlapped As LPASYNCRESULTOVERLAPPED = Any
+		Dim pOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 		
 		Dim res As Integer = GetQueuedCompletionStatus( _
 			pWorkerContext->hIOCompletionPort, _
@@ -688,18 +688,22 @@ Function WorkerThread( _
 			End If
 			
 		Else
+			IAsyncResult_SetCompleted(pOverlapped->pIAsync, BytesTransferred, True)
+			
 			Dim pIContext As IClientContext Ptr = Any
 			IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 			
-			Dim pILogger As ILogger Ptr = Any
-			IClientContext_GetLogger(pIContext, @pILogger)
-			
 			#if __FB_DEBUG__
 			Scope
+				Dim pILogger As ILogger Ptr = Any
+				IClientContext_GetLogger(pIContext, @pILogger)
+				
 				Dim vtBytesTransferred As VARIANT = Any
 				vtBytesTransferred.vt = VT_UI4
 				vtBytesTransferred.ulVal = BytesTransferred
 				ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
+				
+				ILogger_Release(pILogger)
 			End Scope
 			#endif
 			
@@ -727,7 +731,6 @@ Function WorkerThread( _
 				
 			End If
 			
-			ILogger_Release(pILogger)
 			IClientContext_Release(pIContext)
 			
 		End If

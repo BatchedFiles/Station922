@@ -42,14 +42,16 @@ Type IAsyncResultVirtualTable
 		ByVal ppState As IUnknown Ptr Ptr _
 	)As HRESULT
 	
-	GetWaitHandle As Function( _
+	GetCompleted As Function( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal pWaitHandle As HANDLE Ptr _
+		ByVal pBytesTransferred As DWORD Ptr, _
+		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
 	
-	GetCompletedSynchronously As Function( _
+	SetCompleted As Function( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal pCompletedSynchronously As Boolean Ptr _
+		ByVal BytesTransferred As DWORD, _
+		ByVal Completed As Boolean _
 	)As HRESULT
 	
 End Type
@@ -62,7 +64,7 @@ End Type
 #define IAsyncResult_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncResult_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncResult_GetAsyncState(this, ppState) (this)->lpVtbl->GetAsyncState(this, ppState)
-#define IAsyncResult_GetWaitHandle(this, pWaitHandle) (this)->lpVtbl->GetWaitHandle(this, pWaitHandle)
-#define IAsyncResult_GetCompletedSynchronously(this, pCompletedSynchronously) (this)->lpVtbl->GetCompletedSynchronously(this, pCompletedSynchronously)
+#define IAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted)
+#define IAsyncResult_SetCompleted(this, BytesTransferred, Completed) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed)
 
 #endif

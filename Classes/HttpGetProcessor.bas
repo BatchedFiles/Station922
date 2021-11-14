@@ -821,7 +821,6 @@ Function HttpGetProcessorBeginProcess( _
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError = ERROR_IO_PENDING OrElse intError = WSA_IO_PENDING Then
-			IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, False)
 			' TODO Запросить интерфейс вместо конвертирования указателя
 			*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 			Return REQUESTPROCESSOR_S_IO_PENDING
@@ -832,7 +831,6 @@ Function HttpGetProcessorBeginProcess( _
 		
 	End If
 	
-	IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, True)
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	

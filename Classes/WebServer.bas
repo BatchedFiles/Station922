@@ -468,8 +468,6 @@ Function WebServerRun( _
 		Return hr
 	End If
 	
-	' CreateCachedClientMemoryContext(this)
-	
 	ServerThread(this)
 	
 	Return S_OK
@@ -584,7 +582,7 @@ Function AcceptConnection( _
 				ILogger_LogError(this->pILogger, WStr(!"\t\t\t\tAccept failed\t"), vtErrorCode)
 				Return HRESULT_FROM_WIN32(dwErrorAccept)
 			End If
-	
+			
 			Dim CachedContext As CachedClientContext = Any
 			InitializeClientMemoryContext( _
 				@CachedContext, _

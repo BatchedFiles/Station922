@@ -13,9 +13,9 @@ Type _AsyncResult
 	pIMemoryAllocator As IMalloc Ptr
 	pState As IUnknown Ptr
 	callback As AsyncCallback
-	WaitHandle As HANDLE
 	OverLap As ASYNCRESULTOVERLAPPED
-	CompletedSynchronously As Boolean
+	BytesTransferred As DWORD
+	Completed As Boolean
 End Type
 
 Sub InitializeAsyncResult( _
@@ -36,9 +36,9 @@ Sub InitializeAsyncResult( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pState = NULL
 	this->callback = NULL
-	this->WaitHandle = NULL
 	ZeroMemory(@this->OverLap, SizeOf(WSAOVERLAPPED))
-	this->CompletedSynchronously = False
+	this->BytesTransferred = 0
+	this->Completed = False
 	
 End Sub
 
@@ -203,27 +203,32 @@ Function AsyncResultGetAsyncState( _
 	
 End Function
 
-Function AsyncResultGetWaitHandle( _
+Function AsyncResultGetCompleted( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal pWaitHandle As HANDLE Ptr _
+		ByVal pBytesTransferred As DWORD Ptr, _
+		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
 	
-	*pWaitHandle = this->WaitHandle
+	*pBytesTransferred = this->BytesTransferred
+	*pCompleted = this->Completed
 	
 	Return S_OK
 	
 End Function
 
-Function AsyncResultGetCompletedSynchronously( _
+Function AsyncResultSetCompleted( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal pCompletedSynchronously As Boolean Ptr _
+		ByVal BytesTransferred As DWORD, _
+		ByVal Completed As Boolean _
 	)As HRESULT
 	
-	*pCompletedSynchronously = this->CompletedSynchronously
+	this->BytesTransferred = BytesTransferred
+	this->Completed = Completed
 	
 	Return S_OK
 	
 End Function
+
 
 Function AsyncResultSetAsyncState( _
 		ByVal this As AsyncResult Ptr, _
@@ -239,28 +244,6 @@ Function AsyncResultSetAsyncState( _
 	End If
 	
 	this->pState = pState
-	
-	Return S_OK
-	
-End Function
-
-Function AsyncResultSetWaitHandle( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal WaitHandle As HANDLE _
-	)As HRESULT
-	
-	this->WaitHandle = WaitHandle
-	
-	Return S_OK
-	
-End Function
-
-Function AsyncResultSetCompletedSynchronously( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal CompletedSynchronously As Boolean _
-	)As HRESULT
-	
-	this->CompletedSynchronously = CompletedSynchronously
 	
 	Return S_OK
 	
@@ -327,18 +310,20 @@ Function IMutableAsyncResultGetAsyncState( _
 	Return AsyncResultGetAsyncState(ContainerOf(this, AsyncResult, lpVtbl), ppState)
 End Function
 
-Function IMutableAsyncResultGetWaitHandle( _
+Function IMutableAsyncResultGetCompleted( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal pWaitHandle As HANDLE Ptr _
+		ByVal pBytesTransferred As DWORD Ptr, _
+		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
-	Return AsyncResultGetWaitHandle(ContainerOf(this, AsyncResult, lpVtbl), pWaitHandle)
+	Return AsyncResultGetCompleted(ContainerOf(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted)
 End Function
 
-Function IMutableAsyncResultGetCompletedSynchronously( _
+Function IMutableAsyncResultSetCompleted( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal pCompletedSynchronously As Boolean Ptr _
+		ByVal BytesTransferred As DWORD, _
+		ByVal Completed As Boolean _
 	)As HRESULT
-	Return AsyncResultGetCompletedSynchronously(ContainerOf(this, AsyncResult, lpVtbl), pCompletedSynchronously)
+	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed)
 End Function
 
 Function IMutableAsyncResultSetAsyncState( _
@@ -346,20 +331,6 @@ Function IMutableAsyncResultSetAsyncState( _
 		ByVal pState As IUnknown Ptr _
 	)As HRESULT
 	Return AsyncResultSetAsyncState(ContainerOf(this, AsyncResult, lpVtbl), pState)
-End Function
-
-Function IMutableAsyncResultSetWaitHandle( _
-		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal WaitHandle As HANDLE _
-	)As HRESULT
-	Return AsyncResultSetWaitHandle(ContainerOf(this, AsyncResult, lpVtbl), WaitHandle)
-End Function
-
-Function IMutableAsyncResultSetCompletedSynchronously( _
-		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal CompletedSynchronously As Boolean _
-	)As HRESULT
-	Return AsyncResultSetCompletedSynchronously(ContainerOf(this, AsyncResult, lpVtbl), CompletedSynchronously)
 End Function
 
 Function IMutableAsyncResultGetAsyncCallback( _
@@ -388,11 +359,9 @@ Dim GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTabl
 	@IMutableAsyncResultAddRef, _
 	@IMutableAsyncResultRelease, _
 	@IMutableAsyncResultGetAsyncState, _
-	@IMutableAsyncResultGetWaitHandle, _
-	@IMutableAsyncResultGetCompletedSynchronously, _
+	@IMutableAsyncResultGetCompleted, _
+	@IMutableAsyncResultSetCompleted, _
 	@IMutableAsyncResultSetAsyncState, _
-	@IMutableAsyncResultSetWaitHandle, _
-	@IMutableAsyncResultSetCompletedSynchronously, _
 	@IMutableAsyncResultGetAsyncCallback, _
 	@IMutableAsyncResultSetAsyncCallback, _
 	@IMutableAsyncResultGetWsaOverlapped _

@@ -395,14 +395,12 @@ Function NetworkStreamBeginRead( _
 			Return HRESULT_FROM_WIN32(intError)
 		End If
 		
-		IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, False)
 		' TODO Запросить интерфейс вместо конвертирования указателя
 		*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 		
 		Return BASESTREAM_S_IO_PENDING
 	End If
 	
-	IMutableAsyncResult_SetCompletedSynchronously(pINewAsyncResult, True)
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
@@ -416,7 +414,22 @@ Function NetworkStreamEndRead( _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
-	*pReadedBytes = 0
+	Dim BytesTransferred As DWORD = Any
+	Dim Completed As Boolean = Any
+	IAsyncResult_GetCompleted( _
+		pIAsyncResult, _
+		@BytesTransferred, _
+		@Completed _
+	)
+	If Completed Then
+		*pReadedBytes = BytesTransferred
+		
+		If BytesTransferred = 0 Then
+			Return S_FALSE
+		End If
+		
+		Return S_OK
+	End If
 	
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = CPtr(IMutableAsyncResult Ptr, pIAsyncResult)
@@ -443,6 +456,7 @@ Function NetworkStreamEndRead( _
 			Return BASESTREAM_S_IO_PENDING
 		End If
 		
+		*pReadedBytes = 0
 		Return HRESULT_FROM_WIN32(intError)
 	End If
 	

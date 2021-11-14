@@ -38,29 +38,21 @@ Declare Function AsyncResultGetAsyncState( _
 	ByVal ppState As IUnknown Ptr Ptr _
 )As HRESULT
 
-Declare Function AsyncResultGetWaitHandle( _
+Declare Function AsyncResultGetCompleted( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal pWaitHandle As HANDLE Ptr _
+	ByVal pBytesTransferred As DWORD Ptr, _
+	ByVal pCompleted As Boolean Ptr _
 )As HRESULT
 
-Declare Function AsyncResultGetCompletedSynchronously( _
+Declare Function AsyncResultSetCompleted( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal pCompletedSynchronously As Boolean Ptr _
+	ByVal BytesTransferred As DWORD, _
+	ByVal Completed As Boolean _
 )As HRESULT
 
 Declare Function AsyncResultSetAsyncState( _
 	ByVal this As AsyncResult Ptr, _
 	ByVal pState As IUnknown Ptr _
-)As HRESULT
-
-Declare Function AsyncResultSetWaitHandle( _
-	ByVal this As AsyncResult Ptr, _
-	ByVal WaitHandle As HANDLE _
-)As HRESULT
-
-Declare Function AsyncResultSetCompletedSynchronously( _
-	ByVal this As AsyncResult Ptr, _
-	ByVal CompletedSynchronously As Boolean _
 )As HRESULT
 
 Declare Function AsyncResultGetAsyncCallback( _
