@@ -3,7 +3,6 @@
 
 #include once "IRequestedFile.bi"
 #include once "ISendable.bi"
-#include once "ILogger.bi"
 
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 
@@ -12,7 +11,6 @@ Type RequestedFile As _RequestedFile
 Type LPRequestedFile As _RequestedFile Ptr
 
 Declare Function CreateRequestedFile( _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As RequestedFile Ptr
 

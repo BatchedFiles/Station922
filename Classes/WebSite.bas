@@ -3,6 +3,7 @@
 #include once "IMutableWebSite.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
+#include once "Logger.bi"
 
 Extern GlobalMutableWebSiteVirtualTable As Const IMutableWebSiteVirtualTable
 
@@ -34,7 +35,6 @@ Type _WebSite
 	lpVtbl As Const IMutableWebSiteVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pHostName As BSTR
 	pPhysicalDirectory As BSTR
@@ -45,7 +45,6 @@ End Type
 
 Sub InitializeWebSite( _
 		ByVal this As WebSite Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
@@ -55,8 +54,6 @@ Sub InitializeWebSite( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pHostName = NULL
@@ -76,13 +73,11 @@ Sub UnInitializeWebSite( _
 	SysFreeString(this->pVirtualPath)
 	SysFreeString(this->pMovedUrl)
 	IMalloc_Release(this->pIMemoryAllocator)
-	ILogger_Release(this->pILogger)
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
 Function CreateWebSite( _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSite Ptr
 	
@@ -91,7 +86,11 @@ Function CreateWebSite( _
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
 		vtAllocatedBytes.lVal = SizeOf(WebSite)
-		ILogger_LogDebug(pILogger, WStr(!"WebSite creating\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"WebSite creating\t"), _
+			@vtAllocatedBytes _
+		)
 	End Scope
 	#endif
 	
@@ -103,13 +102,17 @@ Function CreateWebSite( _
 		Return NULL
 	End If
 	
-	InitializeWebSite(this, pILogger, pIMemoryAllocator)
+	InitializeWebSite(this, pIMemoryAllocator)
 	
 	#if __FB_DEBUG__
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("WebSite created"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebSite created"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
@@ -125,12 +128,14 @@ Sub DestroyWebSite( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(this->pILogger, WStr("WebSite destroying"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebSite destroying"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -142,12 +147,15 @@ Sub DestroyWebSite( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("WebSite destroyed"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebSite destroyed"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
-	ILogger_Release(pILogger)
 	
 End Sub
 

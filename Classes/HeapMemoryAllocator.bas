@@ -1,5 +1,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
+#include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
@@ -21,7 +22,6 @@ Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pISpyObject As IMallocSpy Ptr
 	MemoryAllocations As Integer
 	hHeap As HANDLE
@@ -31,7 +31,6 @@ End Type
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
@@ -41,8 +40,6 @@ Sub InitializeHeapMemoryAllocator( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
 	this->hHeap = hHeap
@@ -59,13 +56,11 @@ Sub UnInitializeHeapMemoryAllocator( _
 		IMallocSpy_Release(this->pISpyObject)
 	End If
 	
-	ILogger_Release(this->pILogger)
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
 Function CreateHeapMemoryAllocator( _
-		ByVal pILogger As ILogger Ptr _
 	)As HeapMemoryAllocator Ptr
 	
 	#if __FB_DEBUG__
@@ -73,7 +68,11 @@ Function CreateHeapMemoryAllocator( _
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
 		vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
-		ILogger_LogDebug(pILogger, WStr(!"HeapMemoryAllocator creating\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"HeapMemoryAllocator creating\t"), _
+			@vtAllocatedBytes _
+		)
 	End Scope
 	#endif
 	
@@ -96,13 +95,17 @@ Function CreateHeapMemoryAllocator( _
 		Return NULL
 	End If
 	
-	InitializeHeapMemoryAllocator(this, pILogger, hHeap)
+	InitializeHeapMemoryAllocator(this, hHeap)
 	
 	#if __FB_DEBUG__
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator created"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HeapMemoryAllocator created"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
@@ -118,30 +121,34 @@ Sub DestroyHeapMemoryAllocator( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(this->pILogger, WStr("HeapMemoryAllocator destroying"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HeapMemoryAllocator destroying"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
-	
 	If this->MemoryAllocations <> 0 Then
-		Dim vtMemoryLeaksCount As VARIANT = Any
-		vtMemoryLeaksCount.vt = VT_I4
-		vtMemoryLeaksCount.lVal = this->MemoryAllocations
-		ILogger_LogError(pILogger, WStr(!"\t\t\t\t\tMemory Leaks\t"), vtMemoryLeaksCount)
-		
 		Dim vtMemoryLeaksSize As VARIANT = Any
 		vtMemoryLeaksSize.vt = VT_I8
 		vtMemoryLeaksSize.llVal = this->cbMemoryUsed
-		ILogger_LogError(pILogger, WStr(!"\t\t\t\t\tMemoryLeaks Size\t"), vtMemoryLeaksSize)
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"\t\t\t\t\tMemoryLeak Bytes\t"), _
+			@vtMemoryLeaksSize _
+		)
 		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory <> 0 Then
 				Dim vtMemorySize As VARIANT = Any
 				vtMemorySize.vt = VT_I8
 				vtMemorySize.llVal = this->Memoryes(i).Size
-				ILogger_LogError(pILogger, WStr(!"\t\t\t\tMemory Size\t"), vtMemorySize)
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"\t\t\t\tLeak Size\t"), _
+					@vtMemorySize _
+				)
 			End If
 		Next
 	End If
@@ -158,11 +165,13 @@ Sub DestroyHeapMemoryAllocator( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("HeapMemoryAllocator destroyed"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HeapMemoryAllocator destroyed"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
-	
-	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -247,11 +256,19 @@ Function HeapMemoryAllocatorAlloc( _
 	)
 	
 	If pMemory = NULL Then
-		ILogger_LogError(this->pILogger, WStr(!"\t\t\t\tAllocMemory Failed\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
+			@vtAllocatedBytes _
+		)
 	Else
-#if __FB_DEBUG__
-		ILogger_LogDebug(this->pILogger, WStr(!"\t\t\t\tAllocMemory Succeeded\t"), vtAllocatedBytes)
-#endif
+		#if __FB_DEBUG__
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
+				@vtAllocatedBytes _
+			)
+		#endif
 		
 		For i As Integer = 0 To 19
 			If this->Memoryes(i).pMemory = 0 Then

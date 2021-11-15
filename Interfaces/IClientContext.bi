@@ -3,7 +3,6 @@
 
 #include once "IClientRequest.bi"
 #include once "IHttpReader.bi"
-#include once "ILogger.bi"
 #include once "INetworkStream.bi"
 #include once "IRequestedFile.bi"
 #include once "IRequestProcessor.bi"
@@ -153,11 +152,6 @@ Type IClientContextVirtualTable
 		ByVal Code As OperationCodes _
 	)As HRESULT
 	
-	GetLogger As Function( _
-		ByVal this As IClientContext Ptr, _
-		ByVal ppILogger As ILogger Ptr Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IClientContext_
@@ -188,6 +182,5 @@ End Type
 #define IClientContext_SetRequestProcessor(this, pIProcessor) (this)->lpVtbl->SetRequestProcessor(this, pIProcessor)
 #define IClientContext_GetOperationCode(this, pCode) (this)->lpVtbl->GetOperationCode(this, pCode)
 #define IClientContext_SetOperationCode(this, Code) (this)->lpVtbl->SetOperationCode(this, Code)
-#define IClientContext_GetLogger(this, ppILogger) (this)->lpVtbl->GetLogger(this, ppILogger)
 
 #endif

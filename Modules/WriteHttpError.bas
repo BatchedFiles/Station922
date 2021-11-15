@@ -658,13 +658,10 @@ Sub WriteHttpResponse( _
 	Scope
 		Dim pIWriter As IArrayStringWriter Ptr = Any
 		Scope
-			Dim pILogger As ILogger Ptr = Any
-			IClientContext_GetLogger(pIContext, @pILogger)
 			Dim pIMemoryAllocator As IMalloc Ptr = Any
 			IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
 			
 			Dim hr As HRESULT = CreateInstance( _
-				pILogger, _
 				pIMemoryAllocator, _
 				@CLSID_ARRAYSTRINGWRITER, _
 				@IID_IArrayStringWriter, _
@@ -672,12 +669,10 @@ Sub WriteHttpResponse( _
 			)
 			If FAILED(hr) Then
 				IMalloc_Release(pIMemoryAllocator)
-				ILogger_Release(pILogger)
 				Exit Sub
 			End If
 			
 			IMalloc_Release(pIMemoryAllocator)
-			ILogger_Release(pILogger)
 			
 		End Scope
 		

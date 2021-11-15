@@ -5,6 +5,7 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
+#include once "Logger.bi"
 #include once "Resources.RH"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
@@ -21,7 +22,6 @@ Type _ServerResponse
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	' Буфер заголовков ответа
 	pResponseHeaderBuffer As WString Ptr
@@ -43,7 +43,6 @@ End Type
 
 Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pResponseHeaderBuffer As WString Ptr, _
 		ByVal pResponseHeaderBufferStringable As WString Ptr _
@@ -56,8 +55,6 @@ Sub InitializeServerResponse( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -85,13 +82,11 @@ Sub UnInitializeServerResponse( _
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBufferStringable)
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBuffer)
 	IMalloc_Release(this->pIMemoryAllocator)
-	ILogger_Release(this->pILogger)
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
 Function CreateServerResponse( _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
@@ -100,7 +95,11 @@ Function CreateServerResponse( _
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
 		vtAllocatedBytes.lVal = SizeOf(ServerResponse)
-		ILogger_LogDebug(pILogger, WStr(!"ServerResponse creating\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"ServerResponse creating\t"), _
+			@vtAllocatedBytes _
+		)
 	End Scope
 	#endif
 	
@@ -126,7 +125,6 @@ Function CreateServerResponse( _
 				
 				InitializeServerResponse( _
 					this, _
-					pILogger, _
 					pIMemoryAllocator, _
 					pResponseHeaderBuffer, _
 					pResponseHeaderBufferStringable _
@@ -136,7 +134,11 @@ Function CreateServerResponse( _
 				Scope
 					Dim vtEmpty As VARIANT = Any
 					VariantInit(@vtEmpty)
-					ILogger_LogDebug(pILogger, WStr("ServerResponse created"), vtEmpty)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr("ServerResponse created"), _
+						@vtEmpty _
+					)
 				End Scope
 				#endif
 				
@@ -161,12 +163,14 @@ Sub DestroyServerResponse( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(this->pILogger, WStr("ServerResponse destroying"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("ServerResponse destroying"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -178,12 +182,15 @@ Sub DestroyServerResponse( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("ServerResponse destroyed"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("ServerResponse destroyed"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
-	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -541,7 +548,6 @@ Function ServerResponseStringableToString( _
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
-		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_ARRAYSTRINGWRITER, _
 		@IID_IArrayStringWriter, _
@@ -622,14 +628,19 @@ Function ServerResponseStringableToString( _
 	
 	*ppResult = this->pResponseHeaderBufferStringable
 	
-#if __FB_DEBUG__
-	Dim vtResponse As VARIANT = Any
-	vtResponse.vt = VT_BSTR
-	vtResponse.bstrVal = SysAllocString(this->pResponseHeaderBufferStringable)
-	ILogger_LogDebug(this->pILogger, NULL, vtResponse)
-	
-	VariantClear(@vtResponse)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtResponse As VARIANT = Any
+		vtResponse.vt = VT_BSTR
+		vtResponse.bstrVal = SysAllocString(this->pResponseHeaderBufferStringable)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			NULL, _
+			@vtResponse _
+		)
+		VariantClear(@vtResponse)
+	End Scope
+	#endif
 	
 	Return S_OK
 	

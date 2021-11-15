@@ -40,11 +40,6 @@ DEFINE_CLSID(CLSID_CLIENTREQUEST, _
 	&hfb96c7a7, &h1b31, &h4351, &ha3, &h0, &hc1, &h7f, &h30, &hd1, &haf, &h3c _
 )
 
-' {363C85EA-1464-4F17-9FC8-833C2229A119}
-DEFINE_CLSID(CLSID_CONSOLELOGGER, _
-	&h363c85ea, &h1464, &h4f17, &h9f, &hc8, &h83, &h3c, &h22, &h29, &ha1, &h19 _
-)
-
 ' {EAE5C3F4-50D3-4E0F-843D-A6F838C5FA5C}
 DEFINE_CLSID(CLSID_HEAPBSTR, _
 	&heae5c3f4, &h50d3, &h4e0f, &h84, &h3d, &ha6, &hf8, &h38, &hc5, &hfa, &h5c _
@@ -158,11 +153,6 @@ DEFINE_IID(IID_IFileStream, _
 ' {D34D026F-D057-422F-9B32-C6D9424336F2}
 DEFINE_IID(IID_IHttpReader, _
 	&hd34d026f, &hd057, &h422f, &h9b, &h32, &hc6, &hd9, &h42, &h43, &h36, &hf2 _
-)
-
-' {464946FD-BD0F-499C-A784-A6153F525DCD}
-DEFINE_IID(IID_ILogger, _
-	&h464946fd, &hbd0f, &h499c, &ha7, &h84, &ha6, &h15, &h3f, &h52, &h5d, &hcd _
 )
 
 ' {561C56F8-3D13-45C2-A10E-2C971347D8A7}

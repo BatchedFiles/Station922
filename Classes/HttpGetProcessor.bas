@@ -7,6 +7,7 @@
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
+#include once "Logger.bi"
 #include once "Mime.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
@@ -26,7 +27,6 @@ Type _HttpGetProcessor
 	lpVtbl As Const IRequestProcessorVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
@@ -225,7 +225,6 @@ End Sub
 
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pSendBuffer As ZString Ptr _
 	)
@@ -236,8 +235,6 @@ Sub InitializeHttpGetProcessor( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->FileHandle = INVALID_HANDLE_VALUE
@@ -262,13 +259,11 @@ Sub UnInitializeHttpGetProcessor( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	ILogger_Release(this->pILogger)
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
 Function CreateHttpGetProcessor( _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpGetProcessor Ptr
 	
@@ -277,7 +272,11 @@ Function CreateHttpGetProcessor( _
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
 		vtAllocatedBytes.lVal = SizeOf(HttpGetProcessor)
-		ILogger_LogDebug(pILogger, WStr(!"HttpGetProcessor creating\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"HttpGetProcessor creating\t"), _
+			@vtAllocatedBytes _
+		)
 	End Scope
 	#endif
 	
@@ -297,7 +296,6 @@ Function CreateHttpGetProcessor( _
 			
 			InitializeHttpGetProcessor( _
 				this, _
-				pILogger, _
 				pIMemoryAllocator, _
 				pSendBuffer _
 			)
@@ -306,7 +304,11 @@ Function CreateHttpGetProcessor( _
 			Scope
 				Dim vtEmpty As VARIANT = Any
 				VariantInit(@vtEmpty)
-				ILogger_LogDebug(pILogger, WStr("HttpGetProcessor created"), vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("HttpGetProcessor created"), _
+					@vtEmpty _
+				)
 			End Scope
 			#endif
 			
@@ -328,12 +330,14 @@ Sub DestroyHttpGetProcessor( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(this->pILogger, WStr("HttpGetProcessor destroying"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HttpGetProcessor destroying"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -345,12 +349,15 @@ Sub DestroyHttpGetProcessor( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("HttpGetProcessor destroyed"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HttpGetProcessor destroyed"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
-	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -575,7 +582,6 @@ Function HttpGetProcessorPrepare( _
 		
 		Dim pIWriter As IArrayStringWriter Ptr = Any
 		Dim hr As HRESULT = CreateInstance( _
-			this->pILogger, _
 			pc->pIMemoryAllocator, _
 			@CLSID_ARRAYSTRINGWRITER, _
 			@IID_IArrayStringWriter, _
@@ -734,7 +740,6 @@ Function HttpGetProcessorBeginProcess( _
 	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
-		this->pILogger, _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
 		@IID_IMutableAsyncResult, _
@@ -844,36 +849,6 @@ Function HttpGetProcessorEndProcess( _
 	)As HRESULT
 	
 	' TODO Приём и отправка данных через какой-нибудь объект
-	' Scope
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		' Dim pINetworkStreamAsyncResult As INetworkStreamAsyncResult Ptr = CPtr(INetworkStreamAsyncResult Ptr, pIAsyncResult)
-		
-		' Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-		' INetworkStreamAsyncResult_GetWsaOverlapped(pINetworkStreamAsyncResult, @lpRecvOverlapped)
-		
-		' Const fNoWait As Boolean = False
-		' Dim cbTransfer As DWORD = Any
-		' Dim dwFlags As DWORD = Any
-		
-		' Dim OverlappedResult As Integer = WSAGetOverlappedResult( _
-			' this->ClientSocket, _
-			' CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
-			' @cbTransfer, _
-			' fNoWait, _
-			' @dwFlags _
-		' )
-		' If OverlappedResult = 0 Then
-			
-			' Dim intError As Long = WSAGetLastError()
-			
-			' If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
-				' Return REQUESTPROCESSOR_S_IO_PENDING
-			' End If
-			
-			' Return HRESULT_FROM_WIN32(intError)
-		' End If
-		
-	' End Scope
 	
 	If this->hTransmitFile = NULL Then
 		If this->FileHandle <> INVALID_HANDLE_VALUE Then

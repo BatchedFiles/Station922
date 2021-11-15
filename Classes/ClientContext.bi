@@ -2,7 +2,6 @@
 #define CLIENTCONTEXT_BI
 
 #include once "IClientContext.bi"
-#include once "ILogger.bi"
 
 Extern CLSID_CLIENTCONTEXT Alias "CLSID_CLIENTCONTEXT" As Const CLSID
 
@@ -11,7 +10,6 @@ Type ClientContext As _ClientContext
 Type LPClientContext As _ClientContext Ptr
 
 Declare Function CreateClientContext( _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ClientContext Ptr
 
@@ -153,11 +151,6 @@ Declare Function ClientContextGetOperationCode( _
 Declare Function ClientContextSetOperationCode( _
 	ByVal this As ClientContext Ptr, _
 	ByVal Code As OperationCodes _
-)As HRESULT
-
-Declare Function ClientContextGetLogger( _
-	ByVal this As ClientContext Ptr, _
-	ByVal ppILogger As ILogger Ptr Ptr _
 )As HRESULT
 
 #endif

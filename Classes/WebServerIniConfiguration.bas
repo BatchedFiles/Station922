@@ -5,6 +5,7 @@
 #include once "ContainerOf.bi"
 #include once "IMutableWebSite.bi"
 #include once "IMutableWebSiteCollection.bi"
+#include once "Logger.bi"
 #include once "StringConstants.bi"
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
@@ -43,7 +44,6 @@ Const MaxSectionsLength As Integer = 32000 - 1
 Type _WebServerIniConfiguration
 	lpVtbl As Const IWebServerConfigurationVirtualTable Ptr
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	WebServerIniFileName As WString * (MAX_PATH + 1)
 	WebSitesIniFileName As WString * (MAX_PATH + 1)
@@ -52,14 +52,11 @@ End Type
 
 Sub InitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	this->lpVtbl = @GlobalWebServerIniConfigurationVirtualTable
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -70,21 +67,25 @@ Sub UnInitializeWebServerIniConfiguration( _
 	)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	ILogger_Release(this->pILogger)
 	
 End Sub
 
 Function CreateWebServerIniConfiguration( _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServerIniConfiguration Ptr
 	
-#if __FB_DEBUG__
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(WebServerIniConfiguration)
-	ILogger_LogDebug(pILogger, WStr(!"WebServerIniConfiguration creating\t"), vtAllocatedBytes)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(WebServerIniConfiguration)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"WebServerIniConfiguration creating\t"), _
+			@vtAllocatedBytes _
+		)
+	End Scope
+	#endif
 	
 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 	Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
@@ -114,13 +115,19 @@ Function CreateWebServerIniConfiguration( _
 		PathCombineW(@this->UsersIniFileName, @ExecutableDirectory, @UsersIniFileString)
 	End Scope
 	
-	InitializeWebServerIniConfiguration(this, pILogger, pIMemoryAllocator)
+	InitializeWebServerIniConfiguration(this, pIMemoryAllocator)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(pILogger, WStr("WebServerIniConfiguration created"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebServerIniConfiguration created"), _
+			@vtEmpty _
+		)
+	End Scope
+	#endif
 	
 	Return this
 	
@@ -130,14 +137,18 @@ Sub DestroyWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
-#if __FB_DEBUG__
-	Dim vtEmpty As VARIANT = Any
-	vtEmpty.vt = VT_EMPTY
-	ILogger_LogDebug(this->pILogger, WStr("WebServerIniConfiguration destroying"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebServerIniConfiguration destroying"), _
+			@vtEmpty _
+		)
+	End Scope
+	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -145,12 +156,19 @@ Sub DestroyWebServerIniConfiguration( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-#if __FB_DEBUG__
-	ILogger_LogDebug(pILogger, WStr("WebServerIniConfiguration destroyed"), vtEmpty)
-#endif
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("WebServerIniConfiguration destroyed"), _
+			@vtEmpty _
+		)
+	End Scope
+	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
-	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -378,7 +396,6 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	Dim pIWebSiteCollection As IMutableWebSiteCollection Ptr = Any
 	Scope
 		Dim hr As HRESULT = CreateInstance( _
-			this->pILogger, _
 			this->pIMemoryAllocator, _
 			@CLSID_WEBSITECOLLECTION, _
 			@IID_IMutableWebSiteCollection, _
@@ -435,7 +452,6 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		
 		Dim pIWebSite As IMutableWebSite Ptr = Any
 		Dim hr2 As HRESULT = CreateInstance( _
-			this->pILogger, _
 			this->pIMemoryAllocator, _
 			@CLSID_WEBSITE, _
 			@IID_IMutableWebSite, _

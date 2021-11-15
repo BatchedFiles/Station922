@@ -2,13 +2,11 @@
 #define WORKERTHREAD_BI
 
 #include once "IWebSiteCollection.bi"
-#include once "ILogger.bi"
 
 Type WorkerThreadContext As _WorkerThreadContext
 
 Declare Function CreateWorkerThreadContext( _
 	ByVal hIOCompletionPort As HANDLE, _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
 )As WorkerThreadContext Ptr
 

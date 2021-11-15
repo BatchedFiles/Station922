@@ -2,7 +2,6 @@
 #define WEBSITE_BI
 
 #include once "IWebSite.bi"
-#include once "ILogger.bi"
 
 Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
@@ -11,7 +10,6 @@ Type WebSite As _WebSite
 Type LPWebSite As _WebSite Ptr
 
 Declare Function CreateWebSite( _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebSite Ptr
 

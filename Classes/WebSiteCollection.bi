@@ -2,7 +2,6 @@
 #define WEBSITECOLLECTION_BI
 
 #include once "IMutableWebSiteCollection.bi"
-#include once "ILogger.bi"
 
 Extern CLSID_WEBSITECOLLECTION Alias "CLSID_WEBSITECOLLECTION" As Const CLSID
 
@@ -11,7 +10,6 @@ Type WebSiteCollection As _WebSiteCollection
 Type LPWebSiteCollection As _WebSiteCollection Ptr
 
 Declare Function CreateWebSiteCollection( _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebSiteCollection Ptr
 

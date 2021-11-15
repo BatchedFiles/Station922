@@ -1,6 +1,7 @@
 #include once "ClientContext.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "Logger.bi"
 
 Extern GlobalClientContextVirtualTable As Const IClientContextVirtualTable
 
@@ -16,7 +17,6 @@ Type _ClientContext
 	lpVtbl As Const IClientContextVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
-	pILogger As ILogger Ptr
 	pIMemoryAllocator As IMalloc Ptr
 	pINetworkStream As INetworkStream Ptr
 	pIRequest As IClientRequest Ptr
@@ -32,7 +32,6 @@ End Type
 
 Sub InitializeClientContext( _
 		ByVal this As ClientContext Ptr, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pINetworkStream As INetworkStream Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -47,8 +46,6 @@ Sub InitializeClientContext( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -98,13 +95,11 @@ Sub UnInitializeClientContext( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	ILogger_Release(this->pILogger)
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
 Function CreateClientContext( _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientContext Ptr
 	
@@ -113,13 +108,16 @@ Function CreateClientContext( _
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
 		vtAllocatedBytes.lVal = SizeOf(ClientContext)
-		ILogger_LogDebug(pILogger, WStr(!"ClientContext creating\t"), vtAllocatedBytes)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"ClientContext creating\t"), _
+			@vtAllocatedBytes _
+		)
 	End Scope
 	#endif
 	
 	Dim pIHttpReader As IHttpReader Ptr = Any
 	Dim hr2 As HRESULT = CreateInstance( _
-		pILogger, _
 		pIMemoryAllocator, _
 		@CLSID_HTTPREADER, _
 		@IID_IHttpReader, _
@@ -128,7 +126,6 @@ Function CreateClientContext( _
 	If SUCCEEDED(hr2) Then
 		Dim pIRequest As IClientRequest Ptr = Any
 		Dim hr3 As HRESULT = CreateInstance( _
-			pILogger, _
 			pIMemoryAllocator, _
 			@CLSID_CLIENTREQUEST, _
 			@IID_IClientRequest, _
@@ -137,7 +134,6 @@ Function CreateClientContext( _
 		If SUCCEEDED(hr3) Then
 			Dim pIResponse As IServerResponse Ptr = Any
 			Dim hr4 As HRESULT = CreateInstance( _
-				pILogger, _
 				pIMemoryAllocator, _
 				@CLSID_SERVERRESPONSE, _
 				@IID_IServerResponse, _
@@ -146,7 +142,6 @@ Function CreateClientContext( _
 			If SUCCEEDED(hr4) Then
 				Dim pINetworkStream As INetworkStream Ptr = Any
 				Dim hr5 As HRESULT = CreateInstance( _
-					pILogger, _
 					pIMemoryAllocator, _
 					@CLSID_NETWORKSTREAM, _
 					@IID_INetworkStream, _
@@ -160,7 +155,6 @@ Function CreateClientContext( _
 					If this <> NULL Then
 						InitializeClientContext( _
 							this, _
-							pILogger, _
 							pIMemoryAllocator, _
 							pINetworkStream, _
 							pIRequest, _
@@ -173,7 +167,11 @@ Function CreateClientContext( _
 						Scope
 							Dim vtEmpty As VARIANT = Any
 							VariantInit(@vtEmpty)
-							ILogger_LogDebug(pILogger, WStr("ClientContext created"), vtEmpty)
+							LogWriteEntry( _
+								LogEntryType.Debug, _
+								WStr("ClientContext created"), _
+								@vtEmpty _
+							)
 						End Scope
 						#endif
 						
@@ -209,12 +207,14 @@ Sub DestroyClientContext( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(this->pILogger, WStr("ClientContext destroying"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("ClientContext destroying"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
-	ILogger_AddRef(this->pILogger)
-	Dim pILogger As ILogger Ptr = this->pILogger
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -226,12 +226,15 @@ Sub DestroyClientContext( _
 	Scope
 		Dim vtEmpty As VARIANT = Any
 		VariantInit(@vtEmpty)
-		ILogger_LogDebug(pILogger, WStr("ClientContext destroyed"), vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("ClientContext destroyed"), _
+			@vtEmpty _
+		)
 	End Scope
 	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
-	ILogger_Release(pILogger)
 	
 End Sub
 
@@ -654,17 +657,6 @@ Function ClientContextSetOperationCode( _
 	
 End Function
 
-Function ClientContextGetLogger( _
-		ByVal this As ClientContext Ptr, _
-		ByVal ppILogger As ILogger Ptr Ptr _
-	)As HRESULT
-	
-	ILogger_AddRef(this->pILogger)
-	*ppILogger = this->pILogger
-	
-	Return S_OK
-	
-End Function
 
 Function IClientContextQueryInterface( _
 		ByVal this As IClientContext Ptr, _
@@ -856,13 +848,6 @@ Function IClientContextSetOperationCode( _
 	Return ClientContextSetOperationCode(ContainerOf(this, ClientContext, lpVtbl), Code)
 End Function
 
-Function IClientContextGetLogger( _
-		ByVal this As IClientContext Ptr, _
-		ByVal ppILogger As ILogger Ptr Ptr _
-	)As HRESULT
-	Return ClientContextGetLogger(ContainerOf(this, ClientContext, lpVtbl), ppILogger)
-End Function
-
 Dim GlobalClientContextVirtualTable As Const IClientContextVirtualTable = Type( _
 	@IClientContextQueryInterface, _
 	@IClientContextAddRef, _
@@ -889,6 +874,5 @@ Dim GlobalClientContextVirtualTable As Const IClientContextVirtualTable = Type( 
 	@IClientContextGetRequestProcessor, _
 	@IClientContextSetRequestProcessor, _
 	@IClientContextGetOperationCode, _
-	@IClientContextSetOperationCode, _
-	@IClientContextGetLogger _
+	@IClientContextSetOperationCode _
 )

@@ -4,6 +4,7 @@
 #include once "IRequestedFile.bi"
 #include once "IRequestProcessor.bi"
 #include once "CreateInstance.bi"
+#include once "Logger.bi"
 #include once "WriteHttpError.bi"
 
 Extern CLSID_HTTPGETPROCESSOR Alias "CLSID_HTTPGETPROCESSOR" As Const CLSID
@@ -19,13 +20,11 @@ End Enum
 
 Type _WorkerThreadContext
 	hIOCompletionPort As HANDLE
-	pILogger As ILogger Ptr
 	pIWebSites As IWebSiteCollection Ptr
 End Type
 
 Function CreateWorkerThreadContext( _
 		ByVal hIOCompletionPort As HANDLE, _
-		ByVal pILogger As ILogger Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As WorkerThreadContext Ptr
 	
@@ -35,9 +34,6 @@ Function CreateWorkerThreadContext( _
 	End If
 	
 	this->hIOCompletionPort = hIOCompletionPort
-	
-	ILogger_AddRef(pILogger)
-	this->pILogger = pILogger
 	
 	IWebSiteCollection_AddRef(pIWebSites)
 	this->pIWebSites = pIWebSites
@@ -50,7 +46,6 @@ Sub DestroyWorkerThreadContext( _
 		ByVal this As WorkerThreadContext Ptr _
 	)
 	
-	ILogger_Release(this->pILogger)
 	IWebSiteCollection_Release(this->pIWebSites)
 	
 	CoTaskMemFree(this)
@@ -258,8 +253,6 @@ Function PrepareRequestResponse( _
 					hrResult = E_FAIL
 				Else
 					
-					Dim pILogger As ILogger Ptr = Any
-					IClientContext_GetLogger(pIContext, @pILogger)
 					Dim pIMemoryAllocator As IMalloc Ptr = Any
 					IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
 					
@@ -274,7 +267,6 @@ Function PrepareRequestResponse( _
 							IsKnownHttpMethod = True
 							RequestedFileAccess = FileAccess.ReadAccess
 							hrCreateRequestProcessor = CreateInstance( _
-								pILogger, _
 								pIMemoryAllocator, _
 								@CLSID_HTTPGETPROCESSOR, _
 								@IID_IRequestProcessor, _
@@ -286,7 +278,6 @@ Function PrepareRequestResponse( _
 							IServerResponse_SetSendOnlyHeaders(pIResponse, True)
 							RequestedFileAccess = FileAccess.ReadAccess
 							hrCreateRequestProcessor = CreateInstance( _
-								pILogger, _
 								pIMemoryAllocator, _
 								@CLSID_HTTPGETPROCESSOR, _
 								@IID_IRequestProcessor, _
@@ -337,7 +328,6 @@ Function PrepareRequestResponse( _
 							
 							Dim pIFile As IRequestedFile Ptr = Any
 							Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-								pILogger, _
 								pIMemoryAllocator, _
 								@CLSID_REQUESTEDFILE, _
 								@IID_IRequestedFile, _
@@ -410,7 +400,6 @@ Function PrepareRequestResponse( _
 					End If
 					
 					IMalloc_Release(pIMemoryAllocator)
-					ILogger_Release(pILogger)
 					
 				End If
 				
@@ -542,12 +531,12 @@ Function WriteResponse( _
 		IClientContext_GetRequestProcessor(pIContext, @pIProcessor)
 		
 		hrEndProcess = IRequestProcessor_EndProcess(pIProcessor, pIAsyncResult)
-		IRequestProcessor_Release(pIProcessor)
-		
 		If FAILED(hrEndProcess) Then
 			ProcessEndWriteError(pIContext, hrEndProcess)
 			hrResult = E_FAIL
 		End If
+		
+		IRequestProcessor_Release(pIProcessor)
 	End Scope
 	
 	Select Case hrEndProcess
@@ -629,6 +618,17 @@ Function WriteResponse( _
 			End Scope
 			
 			If KeepAlive Then
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit@(vtEmpty)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr(!"KeepAlive = True"), _
+						@vtEmpty _
+					)
+				End Scope
+				#endif
 				IClientContext_SetOperationCode(pIContext, OperationCodes.ReadRequest)
 				
 				Scope
@@ -653,6 +653,17 @@ Function WriteResponse( _
 				End If
 				
 			Else
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit@(vtEmpty)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr(!"KeepAlive = False"), _
+						@vtEmpty _
+					)
+				End Scope
+				#endif
 				hrResult = E_FAIL
 			End If
 			
@@ -693,7 +704,11 @@ Function WorkerThread( _
 			Dim vtErrorCode As VARIANT = Any
 			vtErrorCode.vt = VT_UI4
 			vtErrorCode.ulVal = dwError
-			ILogger_LogError(pWorkerContext->pILogger, WStr(!"GetQueuedCompletionStatus Error\t"), vtErrorCode)
+			LogWriteEntry( _
+				LogEntryType.Error, _
+				WStr(!"GetQueuedCompletionStatus Error\t"), _
+				@vtErrorCode _
+			)
 			
 			If pOverlapped = NULL Then
 				Exit Do
@@ -708,18 +723,16 @@ Function WorkerThread( _
 				
 				#if __FB_DEBUG__
 				Scope
-					Dim pILogger As ILogger Ptr = Any
-					IClientContext_GetLogger(pIContext, @pILogger)
-					
 					Dim vtBytesTransferred As VARIANT = Any
 					vtBytesTransferred.vt = VT_UI4
 					vtBytesTransferred.ulVal = BytesTransferred
-					ILogger_LogDebug(pILogger, WStr(!"\t\t\t\tBytesTransferred\t"), vtBytesTransferred)
-					
-					ILogger_Release(pILogger)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr(!"\t\t\t\tBytesTransferred\t"), _
+						@vtBytesTransferred _
+					)
 				End Scope
 				#endif
-				
 				
 				Dim OpCode As OperationCodes = Any
 				IClientContext_GetOperationCode(pIContext, @OpCode)

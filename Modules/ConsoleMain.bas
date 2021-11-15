@@ -1,12 +1,11 @@
 #include once "IRunnable.bi"
 #include once "CreateInstance.bi"
-#include once "ILogger.bi"
+#include once "Logger.bi"
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
 
 Type ServerContext
-	pILogger As ILogger Ptr
 	pIWebServer As IRunnable Ptr
 End Type
 
@@ -17,12 +16,14 @@ Function RunnableStatusHandler( _
 	
 	#if __FB_DEBUG__
 	Scope
-		Dim pContext As ServerContext Ptr = Context
-		
 		Dim vtSCode As VARIANT = Any
 		vtSCode.vt = VT_ERROR
 		vtSCode.scode = Status
-		ILogger_LogDebug(pContext->pILogger, WStr(!"RunnableStatusHandler\t"), vtSCode)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"RunnableStatusHandler\t"), _
+			@vtSCode _
+		)
 	End Scope
 	#endif
 	
@@ -38,28 +39,14 @@ Function wMain()As Long
 		Return 1
 	End If
 	
-	Dim pILogger As ILogger Ptr = Any
-	hr = CreateLoggerInstance( _
-		pIMemoryAllocator, _
-		@CLSID_CONSOLELOGGER, _
-		@IID_ILogger, _
-		@pILogger _
-	)
-	If FAILED(hr) Then
-		IMalloc_Release(pIMemoryAllocator)
-		Return 1
-	End If
-	
 	Dim pIWebServer As IRunnable Ptr = Any
 	hr = CreateInstance( _
-		pILogger, _
 		pIMemoryAllocator, _
 		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
 		@pIWebServer _
 	)
 	If FAILED(hr) Then
-		ILogger_Release(pILogger)
 		IMalloc_Release(pIMemoryAllocator)
 		Return 1
 	End If
@@ -68,7 +55,6 @@ Function wMain()As Long
 	
 	Dim Context As ServerContext = Any
 	With Context
-		.pILogger = pILogger
 		.pIWebServer = pIWebServer
 	End With
 	
@@ -85,7 +71,6 @@ Function wMain()As Long
 	End If
 	
 	IRunnable_Release(pIWebServer)
-	ILogger_Release(pILogger)
 	
 	Return 0
 	

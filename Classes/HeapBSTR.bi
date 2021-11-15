@@ -2,7 +2,6 @@
 #define BATCHEDFILES_HEAPBSTR_BI
 
 #include once "IString.bi"
-#include once "ILogger.bi"
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
@@ -68,7 +67,6 @@ Type InternalHeapBSTR As _InternalHeapBSTR
 Type LPInternalHeapBSTR As _InternalHeapBSTR Ptr
 
 Declare Function CreateInternalHeapBSTR( _
-	ByVal pILogger As ILogger Ptr, _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	byval pwsz As Const WString Ptr, _
 	ByVal Length As UINT _

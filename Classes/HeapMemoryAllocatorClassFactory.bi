@@ -3,7 +3,6 @@
 
 #include once "windows.bi"
 #include once "win\ole2.bi"
-#include once "ReferenceCounter.bi"
 
 Type _ClassFactory
 	
