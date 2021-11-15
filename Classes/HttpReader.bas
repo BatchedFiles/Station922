@@ -539,16 +539,12 @@ Function HttpReaderEndReadLine( _
 		Return TEXTREADER_S_IO_PENDING
 	End If
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->pReadedData->cbLength = cbNewLength
-		
-		Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
-		this->pReadedData->cbUsed = cbNewUsed
-		
-		this->IsAllBytesReaded = True
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->pReadedData->cbLength = cbNewLength
+	
+	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
+	this->pReadedData->cbUsed = cbNewUsed
+	
+	this->IsAllBytesReaded = True
 	
 	#if __FB_DEBUG__
 	Scope
@@ -608,25 +604,21 @@ Function HttpReaderClear( _
 	
 	Dim cbPreloadedBytes As Integer = this->pReadedData->cbLength - this->pReadedData->cbUsed
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		If cbPreloadedBytes > 0 Then
-			Dim Index As Integer = this->pReadedData->cbUsed
-			Dim Destination As UByte Ptr = @this->pReadedData->Bytes(0)
-			Dim Source As UByte Ptr = @this->pReadedData->Bytes(Index)
-			MoveMemory( _
-				Destination, _
-				Source, _
-				cbPreloadedBytes _
-			)
-			this->pReadedData->cbUsed = 0
-			this->pReadedData->cbLength = cbPreloadedBytes
-		Else
-			this->pReadedData->cbUsed = 0
-			this->pReadedData->cbLength = 0
-		End If
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	If cbPreloadedBytes > 0 Then
+		Dim Index As Integer = this->pReadedData->cbUsed
+		Dim Destination As UByte Ptr = @this->pReadedData->Bytes(0)
+		Dim Source As UByte Ptr = @this->pReadedData->Bytes(Index)
+		MoveMemory( _
+			Destination, _
+			Source, _
+			cbPreloadedBytes _
+		)
+		this->pReadedData->cbUsed = 0
+		this->pReadedData->cbLength = cbPreloadedBytes
+	Else
+		this->pReadedData->cbUsed = 0
+		this->pReadedData->cbLength = 0
+	End If
 	
 	Return S_OK
 	
