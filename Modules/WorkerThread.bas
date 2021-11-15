@@ -436,6 +436,9 @@ Function ReadRequest( _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
+	IClientContext_AddRef(pIContext)
+	IAsyncResult_AddRef(pIAsyncResult)
+	
 	Dim hrResult As HRESULT = S_OK
 	Dim hrEndReadRequest As HRESULT = Any
 	
@@ -512,6 +515,9 @@ Function ReadRequest( _
 			
 	End Select
 	
+	IAsyncResult_Release(pIAsyncResult)
+	IClientContext_Release(pIContext)
+	
 	Return hrResult
 	
 End Function
@@ -521,6 +527,9 @@ Function WriteResponse( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
+	
+	IClientContext_AddRef(pIContext)
+	IAsyncResult_AddRef(pIAsyncResult)
 	
 	Dim hrResult As HRESULT = S_OK
 	Dim hrEndProcess As HRESULT = Any
@@ -651,6 +660,9 @@ Function WriteResponse( _
 	
 	IClientRequest_Release(pIRequest)
 	
+	IAsyncResult_Release(pIAsyncResult)
+	IClientContext_Release(pIContext)
+	
 	Return hrResult
 	
 End Function
@@ -690,7 +702,7 @@ Function WorkerThread( _
 		Else
 			If BytesTransferred <> 0 Then
 				IAsyncResult_SetCompleted(pOverlapped->pIAsync, BytesTransferred, True)
-			
+				
 				Dim pIContext As IClientContext Ptr = Any
 				IAsyncResult_GetAsyncState(pOverlapped->pIAsync, CPtr(IUnknown Ptr Ptr, @pIContext))
 				
