@@ -8,6 +8,10 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
+' TODO Ќайти способ использовать кучу без блокировки
+' Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
+Const HEAP_NO_SERIALIZE_FLAG = 0
+
 Type MemoryRegion
 	pMemory As Any Ptr
 	Size As Integer
@@ -74,7 +78,7 @@ Function CreateHeapMemoryAllocator( _
 	#endif
 	
 	Dim hHeap As HANDLE = HeapCreate( _
-		HEAP_NO_SERIALIZE, _
+		HEAP_NO_SERIALIZE_FLAG, _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
@@ -84,7 +88,7 @@ Function CreateHeapMemoryAllocator( _
 	
 	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 		hHeap, _
-		HEAP_NO_SERIALIZE, _
+		HEAP_NO_SERIALIZE_FLAG, _
 		SizeOf(HeapMemoryAllocator) _
 	)
 	If this = NULL Then
@@ -238,7 +242,7 @@ Function HeapMemoryAllocatorAlloc( _
 	
 	Dim pMemory As Any Ptr = HeapAlloc( _
 		this->hHeap, _
-		HEAP_NO_SERIALIZE, _
+		HEAP_NO_SERIALIZE_FLAG, _
 		cb _
 	)
 	
@@ -281,7 +285,7 @@ Function HeapMemoryAllocatorRealloc( _
 		cb = IMallocSpy_PreRealloc(this->pISpyObject, pv, cb, ppNewRequest, True)
 	End If
 	
-	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, HEAP_NO_SERIALIZE, ppNewRequest, cb)
+	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, HEAP_NO_SERIALIZE_FLAG, ppNewRequest, cb)
 	
 	If this->pISpyObject <> NULL Then
 		pMemory = IMallocSpy_PostRealloc(this->pISpyObject, pMemory, True)
@@ -302,7 +306,7 @@ Sub HeapMemoryAllocatorFree( _
 	
 	HeapFree( _
 		this->hHeap, _
-		HEAP_NO_SERIALIZE, _
+		HEAP_NO_SERIALIZE_FLAG, _
 		pMemory _
 	)
 	
@@ -332,7 +336,7 @@ Function HeapMemoryAllocatorGetSize( _
 	
 	Dim Size As SIZE_T_ = HeapSize( _
 		this->hHeap, _
-		HEAP_NO_SERIALIZE, _
+		HEAP_NO_SERIALIZE_FLAG, _
 		pMemory _
 	)
 	
@@ -379,7 +383,7 @@ Sub HeapMemoryAllocatorHeapMinimize( _
 		IMallocSpy_PreHeapMinimize(this->pISpyObject)
 	End If
 	
-	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE)
+	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE_FLAG)
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_PostHeapMinimize(this->pISpyObject)
