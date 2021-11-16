@@ -1,4 +1,5 @@
 ﻿IUnknown
+│
 ├───IAsyncResult
 │   ├───IMutableAsyncResult
 │   │   └───AsyncResult
@@ -46,8 +47,6 @@
 │   └───RequestedFile             — строки?
 │
 ├───IRequestProcessor
-│   ├───CgiProcessor          [ ]
-│   ├───DllProcessor          [ ]
 │   ├───HttpConnectProcessor  [ ]
 │   ├───HttpCopyProcessor     [ ]
 │   ├───HttpDeleteProcessor   [ ]
@@ -71,17 +70,11 @@
 │   └───IPauseable            [ ]
 │       └───WebServer         
 │
-├───ISendable
-│   └───RequestedFile         [ ]
-│
 ├───IServerResponse
 │   └───ServerResponse             — строки
 │
 ├───IServerState              [ ]
 │   └───ServerState           [ ]
-│
-├───IStopWatcher              [ ]
-│   └───StopWatcher           [ ]
 │
 ├───IString                       — строки
 │   └───HeapBSTR
@@ -91,16 +84,15 @@
 │   └───ServerResponse               — строки
 │
 ├───ITextReader                       — строки
-│   ├───IHttpReader
-│   │   └───HttpReader
-│   │
-│   └───IStreamReader                 — строки
+│   └───IHttpReader
+│       └───HttpReader
 │
 ├───ITextWriter                        — строки
 │   ├───IArrayStringWriter
 │   │   └───ArrayStringWriter
 │   │
-│   └───IStreamWriter                
+│   └───IHttpWriter
+│       └───HttpWriter
 │
 ├───IWebServer           [ ]
 │   └───WebServer
@@ -119,4 +111,3 @@
 Mime                          [ ]
 SafeHandle
 Station922Uri                 [ ]
-ReferenceCounter

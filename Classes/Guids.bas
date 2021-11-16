@@ -215,11 +215,6 @@ DEFINE_IID(IID_IServerState, _
 	&h226a7229, &h6122, &h45c4, &haf, &hfb, &hc7, &hde, &hb4, &h3, &ha1, &h3a _
 )
 
-' {F4A635DC-B692-47CF-8121-53CD300EE6CE}
-DEFINE_IID(IID_IStopWatcher, _
-	&hf4a635dc, &hb692, &h47cf, &h81, &h21, &h53, &hcd, &h30, &he, &he6, &hce _
-)
-
 ' {C34BFD65-8D8D-486A-97A3-85ADA013F83D}
 DEFINE_IID(IID_IStreamReader, _
 	&hc34bfd65, &h8d8d, &h486a, &h97, &ha3, &h85, &had, &ha0, &h13, &hf8, &h3d _

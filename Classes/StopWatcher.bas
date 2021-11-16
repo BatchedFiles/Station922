@@ -1,2 +1,0 @@
-#include once "StopWatcher.bi"
-

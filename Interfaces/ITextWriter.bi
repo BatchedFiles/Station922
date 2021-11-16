@@ -4,7 +4,6 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
-' IStreamWriter
 ' IArrayStringWriter
 
 Type ITextWriter As ITextWriter_

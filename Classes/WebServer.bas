@@ -32,7 +32,6 @@ Type CachedClientContext
 	pIClientMemoryAllocator As IMalloc Ptr
 	pIClientContext As IClientContext Ptr
 	pIServerMemoryAllocator As IMalloc Ptr
-	hrLogger As HRESULT
 	hrMemoryAllocator As HRESULT
 	hrClientContex As HRESULT
 End Type
@@ -65,8 +64,7 @@ Type _WebServer
 End Type
 
 Sub InitializeClientMemoryContext( _
-		ByVal pCachedContext As CachedClientContext Ptr, _
-		ByVal pIServerMemoryAllocator As IMalloc Ptr _
+		ByVal pCachedContext As CachedClientContext Ptr _
 	)
 	
 	ZeroMemory(pCachedContext, SizeOf(CachedClientContext))
@@ -114,11 +112,6 @@ Sub InitializeClientMemoryContext( _
 			End Scope
 			
 			IHttpReader_Release(pIReader)
-			
-			' IMalloc_AddRef(pIServerMemoryAllocator)
-			' pCachedContext->pIServerMemoryAllocator = pIServerMemoryAllocator
-			
-			' IClientContext_Release(pCachedContext->pIClientContext)
 			
 		End If
 		
@@ -584,8 +577,7 @@ Function AcceptConnection( _
 			
 			Dim CachedContext As CachedClientContext = Any
 			InitializeClientMemoryContext( _
-				@CachedContext, _
-				this->pIMemoryAllocator _
+				@CachedContext _
 			)
 			
 			Scope
@@ -661,13 +653,6 @@ Function ProcessErrorAssociateWithIOCP( _
 		ByVal ClientSocket As SOCKET, _
 		ByVal pCachedContext As CachedClientContext Ptr _
 	)As HRESULT
-	
-	If FAILED(pCachedContext->hrLogger) Then
-		' TODO Отправить клиенту Не могу создать кучу памяти
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		Return pCachedContext->hrMemoryAllocator
-	End If
 	
 	If FAILED(pCachedContext->hrMemoryAllocator) Then
 		' TODO Отправить клиенту Не могу создать кучу памяти
