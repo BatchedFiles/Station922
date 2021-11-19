@@ -447,6 +447,8 @@ Function WebServerStop( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOP_PENDING)
 	
+	IThreadPool_Stop(this->pIPool)
+	
 	' If this->SocketList <> INVALID_SOCKET Then
 		' closesocket(this->SocketList)
 		' this->SocketList = INVALID_SOCKET
