@@ -1,32 +1,22 @@
 #include once "WebServer.bi"
-#include once "IClientContext.bi"
-#include once "IClientRequest.bi"
-#include once "INetworkStream.bi"
-#include once "IServerResponse.bi"
-#include once "IWebServerConfiguration.bi"
+#include once "ClientContext.bi"
+#include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
-#include once "WorkerThread.bi"
+#include once "NetworkStream.bi"
+#include once "ServerResponse.bi"
+#include once "ThreadPool.bi"
+#include once "WebServerIniConfiguration.bi"
 #include once "WriteHttpError.bi"
 
 Extern GlobalWebServerVirtualTable As Const IRunnableVirtualTable
 
-Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
-Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
-Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
-Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
-
-Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
-Extern CLSID_CLIENTCONTEXT Alias "CLSID_CLIENTCONTEXT" As Const CLSID
-Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
-
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
-
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 Type CachedClientContext
 	pIClientMemoryAllocator As IMalloc Ptr
@@ -38,12 +28,11 @@ End Type
 
 Type _WebServer
 	lpVtbl As Const IRunnableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	
-	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As Integer
+	pIPool As IThreadPool Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	pDefaultStream As INetworkStream Ptr
 	pDefaultRequest As IClientRequest Ptr
@@ -133,51 +122,32 @@ Declare Function CreateServerSocket( _
 	ByVal this As WebServer Ptr _
 )As HRESULT
 
-Declare Function InitializeIOCP( _
-	ByVal this As WebServer Ptr _
-)As HRESULT
-
-Declare Function ProcessErrorAssociateWithIOCP( _
-	ByVal this As WebServer Ptr, _
-	ByVal ClientSocket As SOCKET, _
-	ByVal pCachedContext As CachedClientContext Ptr _
-)As HRESULT
-
 Declare Sub SetCurrentStatus( _
 	ByVal this As WebServer Ptr, _
 	ByVal Status As HRESULT _
 )
 
-Declare Function AssociateWithIOCP( _
-	ByVal this As WebServer Ptr, _
-	ByVal ClientSocket As SOCKET, _
-	ByVal CompletionKey As ULONG_PTR _
-)As HRESULT
-
-Declare Function ServerThread( _
+Declare Sub ServerThread( _
 	ByVal this As WebServer Ptr _
-)As DWORD
+)
 
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pIPool As IThreadPool Ptr, _
 		ByVal pINetworkStream As INetworkStream Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)
 	
 	this->lpVtbl = @GlobalWebServerVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	this->hIOCompletionPort = NULL
 	this->WorkerThreadsCount = 0
+	this->pIPool = pIPool
 	this->pIWebSites = NULL
 	
 	this->pDefaultStream = pINetworkStream
@@ -221,16 +191,15 @@ Sub UnInitializeWebServer( _
 		IServerResponse_Release(this->pDefaultResponse)
 	End If
 	
+	If this->pIPool <> NULL Then
+		IThreadPool_Release(this->pIPool)
+	End If
+	
 	' If this->SocketList <> INVALID_SOCKET Then
 		' closesocket(this->SocketList)
 	' End If
 	
-	If this->hIOCompletionPort <> NULL Then
-		CloseHandle(this->hIOCompletionPort)
-	End If
-	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -251,81 +220,93 @@ Function CreateWebServer( _
 	End Scope
 	#endif
 	
-	Dim pIRequest As IClientRequest Ptr = Any
+	Dim pIPool As IThreadPool Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
-		@CLSID_CLIENTREQUEST, _
-		@IID_IClientRequest, _
-		@pIRequest _
+		@CLSID_THREADPOOL, _
+		@IID_IThreadPool, _
+		@pIPool _
 	)
 	If SUCCEEDED(hr) Then
-		Dim pIResponse As IServerResponse Ptr = Any
+		Dim pIRequest As IClientRequest Ptr = Any
 		hr = CreateInstance( _
 			pIMemoryAllocator, _
-			@CLSID_SERVERRESPONSE, _
-			@IID_IServerResponse, _
-			@pIResponse _
+			@CLSID_CLIENTREQUEST, _
+			@IID_IClientRequest, _
+			@pIRequest _
 		)
 		If SUCCEEDED(hr) Then
-			Dim pINetworkStream As INetworkStream Ptr = Any
+			Dim pIResponse As IServerResponse Ptr = Any
 			hr = CreateInstance( _
 				pIMemoryAllocator, _
-				@CLSID_NETWORKSTREAM, _
-				@IID_INetworkStream, _
-				@pINetworkStream _
+				@CLSID_SERVERRESPONSE, _
+				@IID_IServerResponse, _
+				@pIResponse _
 			)
 			If SUCCEEDED(hr) Then
-				Dim this As WebServer Ptr = IMalloc_Alloc( _
+				Dim pINetworkStream As INetworkStream Ptr = Any
+				hr = CreateInstance( _
 					pIMemoryAllocator, _
-					SizeOf(WebServer) _
+					@CLSID_NETWORKSTREAM, _
+					@IID_INetworkStream, _
+					@pINetworkStream _
 				)
-				If this <> NULL Then
-					
-					Dim EventsCreated As Boolean = True
-					
-					For i As Integer = 0 To SocketListCapacity - 1
-						this->hEvents(i) = WSACreateEvent()
-						If this->hEvents(i) = NULL Then
-							EventsCreated = False
-							Exit For
-						End If
-					Next
-					
-					If EventsCreated Then
-						InitializeWebServer( _
-							this, _
-							pIMemoryAllocator, _
-							pINetworkStream, _
-							pIRequest, _
-							pIResponse _
-						)
+				If SUCCEEDED(hr) Then
+					Dim this As WebServer Ptr = IMalloc_Alloc( _
+						pIMemoryAllocator, _
+						SizeOf(WebServer) _
+					)
+					If this <> NULL Then
 						
-						#if __FB_DEBUG__
-						Scope
-							Dim vtEmpty As VARIANT = Any
-							VariantInit(@vtEmpty)
-							LogWriteEntry( _
-								LogEntryType.Debug, _
-								WStr("WebServer created"), _
-								@vtEmpty _
+						Dim EventsCreated As Boolean = True
+						
+						For i As Integer = 0 To SocketListCapacity - 1
+							this->hEvents(i) = WSACreateEvent()
+							If this->hEvents(i) = NULL Then
+								EventsCreated = False
+								Exit For
+							End If
+						Next
+						
+						If EventsCreated Then
+							InitializeWebServer( _
+								this, _
+								pIMemoryAllocator, _
+								pIPool, _
+								pINetworkStream, _
+								pIRequest, _
+								pIResponse _
 							)
-						End Scope
-						#endif
-						
-						Return this
+							
+							#if __FB_DEBUG__
+							Scope
+								Dim vtEmpty As VARIANT = Any
+								VariantInit(@vtEmpty)
+								LogWriteEntry( _
+									LogEntryType.Debug, _
+									WStr("WebServer created"), _
+									@vtEmpty _
+								)
+							End Scope
+							#endif
+							
+							Return this
+						End If
 					End If
+					
+					INetworkStream_Release(pINetworkStream)
+					
 				End If
 				
-				INetworkStream_Release(pINetworkStream)
+				IServerResponse_Release(pIResponse)
 				
 			End If
 			
-			IServerResponse_Release(pIResponse)
+			IClientRequest_Release(pIRequest)
 			
 		End If
 		
-		IClientRequest_Release(pIRequest)
-		
+		IThreadPool_Release(pIPool)
 	End If
 	
 	Return NULL
@@ -398,11 +379,7 @@ Function WebServerAddRef( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -412,11 +389,7 @@ Function WebServerRelease( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -438,22 +411,24 @@ Function WebServerRun( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_START_PENDING)
 	
-	Dim hr As HRESULT = ReadConfiguration(this)
-	If FAILED(hr) Then
+	Dim hrConfig As HRESULT = ReadConfiguration(this)
+	If FAILED(hrConfig) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
-		Return hr
+		Return hrConfig
 	End If
 	
-	hr = CreateServerSocket(this)
-	If FAILED(hr) Then
+	Dim hrSocket As HRESULT = CreateServerSocket(this)
+	If FAILED(hrSocket) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
-		Return hr
+		Return hrSocket
 	End If
 	
-	hr = InitializeIOCP(this)
-	If FAILED(hr) Then
+	IThreadPool_SetMaxThreads(this->pIPool, this->WorkerThreadsCount)
+	
+	Dim hrPool As HRESULT = IThreadPool_Run(this->pIPool)
+	If FAILED(hrPool) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
-		Return hr
+		Return hrPool
 	End If
 	
 	ServerThread(this)
@@ -476,11 +451,6 @@ Function WebServerStop( _
 		' closesocket(this->SocketList)
 		' this->SocketList = INVALID_SOCKET
 	' End If
-	
-	If this->hIOCompletionPort <> NULL Then
-		CloseHandle(this->hIOCompletionPort)
-		this->hIOCompletionPort = NULL
-	End If
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 	
@@ -581,16 +551,16 @@ Function AcceptConnection( _
 			)
 			
 			Scope
-				Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-					this, _
-					ClientSocket, _
-					@CachedContext _
-				)
-				If FAILED(hrAssociateWithIOCP) Then
-					IClientContext_Release(CachedContext.pIClientContext)
-					CloseSocketConnection(ClientSocket)
-					Return E_FAIL
-				End If
+				' Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
+					' this, _
+					' ClientSocket, _
+					' @CachedContext _
+				' )
+				' If FAILED(hrAssociateWithIOCP) Then
+					' IClientContext_Release(CachedContext.pIClientContext)
+					' CloseSocketConnection(ClientSocket)
+					' Return E_FAIL
+				' End If
 			End Scope
 			
 			IClientContext_SetRemoteAddress( _
@@ -668,18 +638,18 @@ Function ProcessErrorAssociateWithIOCP( _
 		Return pCachedContext->hrClientContex
 	End If
 	
-	Dim hrAssociate As HRESULT = AssociateWithIOCP( _
-		this, _
-		ClientSocket, _
-		0 _
-	)
-	If FAILED(hrAssociate) Then
+	' Dim hrAssociate As HRESULT = AssociateWithIOCP( _
+		' this, _
+		' ClientSocket, _
+		' 0 _
+	' )
+	' If FAILED(hrAssociate) Then
 		' TODO Отправить клиенту Не могу ассоциировать с портом завершения
 		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
 		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
 		' IClientContext_Release(pCachedContext->pIClientContext)
-		Return hrAssociate
-	End If
+		' Return hrAssociate
+	' End If
 	
 	Return S_OK
 	
@@ -746,80 +716,9 @@ Function ReadConfiguration( _
 
 End Function
 
-Function InitializeIOCP( _
+Sub ServerThread( _
 		ByVal this As WebServer Ptr _
-	)As HRESULT
-	
-	this->hIOCompletionPort = CreateIoCompletionPort( _
-		INVALID_HANDLE_VALUE, _
-		NULL, _
-		Cast(ULONG_PTR, 0), _
-		this->WorkerThreadsCount _
 	)
-	If this->hIOCompletionPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Const DefaultStackSize As SIZE_T_ = 0
-	
-	For i As Integer = 0 To this->WorkerThreadsCount - 1
-		
-		Dim pWorkerContext As WorkerThreadContext Ptr = CreateWorkerThreadContext( _
-			this->hIOCompletionPort, _
-			this->pIWebSites _
-		)
-		If pWorkerContext = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim ThreadId As DWORD = Any
-		Dim hThread As HANDLE = CreateThread( _
-			NULL, _
-			DefaultStackSize, _
-			@WorkerThread, _
-			pWorkerContext, _
-			0, _
-			@ThreadId _
-		)
-		If hThread = NULL Then
-			Dim dwError As DWORD = GetLastError()
-			DestroyWorkerThreadContext(pWorkerContext)
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-		CloseHandle(hThread)
-		
-	Next
-	
-	Return S_OK
-	
-End Function
-
-Function AssociateWithIOCP( _
-		ByVal this As WebServer Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal CompletionKey As ULONG_PTR _
-	)As HRESULT
-	
-	Dim hPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, ClientSocket), _
-		this->hIOCompletionPort, _
-		CompletionKey, _
-		0 _
-	)
-	If hPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function ServerThread( _
-		ByVal this As WebServer Ptr _
-	)As DWORD
 	
 	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
 	
@@ -832,9 +731,11 @@ Function ServerThread( _
 		
 		IClientRequest_Clear(this->pDefaultRequest)
 		IServerResponse_Clear(this->pDefaultResponse)
+		
 		Dim hrAccept As HRESULT = AcceptConnection( _
 			this _
 		)
+		
 		INetworkStream_Close(this->pDefaultStream)
 		
 		' this->CachedClientMemoryContextIndex += 1
@@ -851,9 +752,7 @@ Function ServerThread( _
 	
 	WebServerStop(this)
 	
-	Return 0
-	
-End Function
+End Sub
 
 
 Function IWebServerQueryInterface( _

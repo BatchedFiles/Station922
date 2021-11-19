@@ -3,12 +3,13 @@
 #include once "AsyncResult.bi"
 #include once "ClientContext.bi"
 #include once "ClientRequest.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
-#include once "HeapMemoryAllocator.bi"
 #include once "RequestedFile.bi"
 #include once "ServerResponse.bi"
+#include once "ThreadPool.bi"
 #include once "WebServer.bi"
 #include once "WebServerIniConfiguration.bi"
 #include once "WebSite.bi"
@@ -200,6 +201,20 @@ Function CreateInstance( _
 		Dim hr As HRESULT = HttpGetProcessorQueryInterface(pProcessor, riid, ppv)
 		If FAILED(hr) Then
 			DestroyHttpGetProcessor(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_THREADPOOL, rclsid) Then
+		Dim pPool As ThreadPool Ptr = CreateThreadPool(pIMemoryAllocator)
+		If pPool = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ThreadPoolQueryInterface(pPool, riid, ppv)
+		If FAILED(hr) Then
+			DestroyThreadPool(pPool)
 		End If
 		
 		Return hr
