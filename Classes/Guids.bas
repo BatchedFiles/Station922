@@ -120,6 +120,11 @@ DEFINE_IID(IID_IAsyncResult, _
 	&h1640f76, &h385, &h43d3, &h88, &h78, &hd6, &hde, &hd3, &hb4, &h68, &hd1 _
 )
 
+' {53989192-3F47-4309-A582-8AE24C03C9B3}
+DEFINE_IID(IID_IAsyncTask, _
+	&h53989192, &h3f47, &h4309, &ha5, &h82, &h8a, &he2, &h4c, &h3, &hc9, &hb3 _
+)
+
 ' {B6AC4CEF-9B3D-4B41-B2F6-DEA27D085EB7}
 DEFINE_IID(IID_IBaseStream, _
 	&hb6ac4cef, &h9b3d, &h4b41, &hb2, &hf6, &hde, &ha2, &h7d, &h8, &h5e, &hb7 _

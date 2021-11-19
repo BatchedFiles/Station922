@@ -1,7 +1,7 @@
 #include once "ThreadPool.bi"
+#include once "IAsyncTask.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "ITask.bi"
 #include once "Logger.bi"
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
@@ -25,7 +25,7 @@ Function WorkerThread( _
 		
 		Dim BytesTransferred As DWORD = Any
 		Dim CompletionKey As ULONG_PTR = Any
-		Dim pOverlapped As TASKOVERLAPPED Ptr = Any
+		Dim pOverlapped As ASYNCTASKOVERLAPPED Ptr = Any
 		
 		Dim res As Integer = GetQueuedCompletionStatus( _
 			this->hIOCompletionPort, _
@@ -63,7 +63,7 @@ Function WorkerThread( _
 			End Scope
 			#endif
 			
-			ITask_EndExecute( _
+			IAsyncTask_EndExecute( _
 				pOverlapped->pITask, _
 				BytesTransferred, _
 				CompletionKey _
@@ -71,7 +71,7 @@ Function WorkerThread( _
 			
 		End If
 		
-		ITask_Release(pOverlapped->pITask)
+		IAsyncTask_Release(pOverlapped->pITask)
 		
 	Loop
 	
