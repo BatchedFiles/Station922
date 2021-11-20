@@ -1,7 +1,7 @@
 #include once "ThreadPool.bi"
+#include once "IAsyncResult.bi"
 #include once "IAsyncTask.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "Logger.bi"
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
@@ -25,13 +25,13 @@ Function WorkerThread( _
 		
 		Dim BytesTransferred As DWORD = Any
 		Dim CompletionKey As ULONG_PTR = Any
-		Dim pOverlapped As ASYNCTASKOVERLAPPED Ptr = Any
+		Dim pOverlap As ASYNCRESULTOVERLAPPED Ptr = Any
 		
 		Dim res As Integer = GetQueuedCompletionStatus( _
 			this->hIOCompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
-			CPtr(LPOVERLAPPED Ptr, @pOverlapped), _
+			CPtr(LPOVERLAPPED Ptr, @pOverlap), _
 			INFINITE _
 		)
 		If res = 0 Then
@@ -45,7 +45,7 @@ Function WorkerThread( _
 				@vtErrorCode _
 			)
 			
-			If pOverlapped = NULL Then
+			If pOverlap = NULL Then
 				Exit Do
 			End If
 			
@@ -63,15 +63,24 @@ Function WorkerThread( _
 			End Scope
 			#endif
 			
+			Dim pTask As IAsyncTask Ptr = Any
+			IAsyncResult_GetAsyncState( _
+				pOverlap->pIAsync, _
+				CPtr(IUnknown Ptr Ptr, @pTask) _
+			)
+			
 			IAsyncTask_EndExecute( _
-				pOverlapped->pITask, _
+				pTask, _
+				CPtr(IThreadPool Ptr, @this->lpVtbl), _
 				BytesTransferred, _
 				CompletionKey _
 			)
 			
+			IAsyncTask_Release(pTask)
+			
 		End If
 		
-		IAsyncTask_Release(pOverlapped->pITask)
+		IAsyncResult_Release(pOverlap->pIAsync)
 		
 	Loop
 	

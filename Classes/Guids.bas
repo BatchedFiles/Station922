@@ -65,6 +65,11 @@ DEFINE_CLSID(CLSID_NETWORKSTREAM, _
 	&h361758f9, &h2f6a, &h414b, &hab, &h88, &h4d, &h7b, &h1e, &hc4, &h6c, &h5f _
 )
 
+' {54E0F796-8CAA-4F4B-8C5F-2C614207ED8E}
+DEFINE_GUID(CLSID_READREQUESTASYNCTASK, _
+	&h54e0f796, &h8caa, &h4f4b, &h8c, &h5f, &h2c, &h61, &h42, &h7, &hed, &h8e _
+)
+
 ' {9377B23F-E796-4CF9-9F36-3992C79F8A26}
 DEFINE_CLSID(CLSID_REQUESTEDFILE, _
 	&h9377b23f, &he796, &h4cf9, &h9f, &h36, &h39, &h92, &hc7, &h9f, &h8a, &h26 _
@@ -193,6 +198,11 @@ DEFINE_IID(IID_INetworkStream, _
 ' {277ECE2A-2962-467F-AF0E-B12B2F1D40AB}
 DEFINE_IID(IID_IPrivateHeapMemoryAllocatorClassFactory, _
 	&h277ece2a, &h2962, &h467f, &haf, &he, &hb1, &h2b, &h2f, &h1d, &h40, &hab _
+)
+
+' {82B525C1-E266-4317-9FA5-F8B19DF8C73C}
+DEFINE_IID(IID_IReadRequestAsyncTask, _
+	&h82b525c1, &he266, &h4317, &h9f, &ha5, &hf8, &hb1, &h9d, &hf8, &hc7, &h3c _
 )
 
 ' {A44A1AB3-A0D5-42E6-A4FF-ADBAE8CE3682}

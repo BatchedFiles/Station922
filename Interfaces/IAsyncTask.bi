@@ -5,17 +5,6 @@
 
 Type IAsyncTask As IAsyncTask_
 
-Type LPIASYNCTASK As IAsyncTask Ptr
-
-Type _ASYNCTASKOVERLAPPED
-	OverLap As OVERLAPPED
-	pITask As IAsyncTask Ptr
-End Type
-
-Type ASYNCTASKOVERLAPPED As _ASYNCTASKOVERLAPPED
-
-Type LPASYNCTASKOVERLAPPED As _ASYNCTASKOVERLAPPED Ptr
-
 Extern IID_IAsyncTask Alias "IID_IAsyncTask" As Const IID
 
 Type IAsyncTaskVirtualTable
@@ -41,6 +30,7 @@ Type IAsyncTaskVirtualTable
 	
 	EndExecute As Function( _
 		ByVal this As IAsyncTask Ptr, _
+		ByVal pPool As IThreadPool Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
@@ -55,6 +45,6 @@ End Type
 #define IAsyncTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncTask_BeginExecute(this, pPool) (this)->lpVtbl->BeginExecute(this, pPool)
-#define IAsyncTask_EndExecute(this, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, BytesTransferred, CompletionKey)
+#define IAsyncTask_EndExecute(this, pPool, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, BytesTransferred, CompletionKey)
 
 #endif

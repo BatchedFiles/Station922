@@ -7,6 +7,7 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
+#include once "ReadRequestAsyncTask.bi"
 #include once "RequestedFile.bi"
 #include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
@@ -215,6 +216,20 @@ Function CreateInstance( _
 		Dim hr As HRESULT = ThreadPoolQueryInterface(pPool, riid, ppv)
 		If FAILED(hr) Then
 			DestroyThreadPool(pPool)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_READREQUESTASYNCTASK, rclsid) Then
+		Dim pTask As ReadRequestAsyncTask Ptr = CreateReadRequestAsyncTask(pIMemoryAllocator)
+		If pTask = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ReadRequestAsyncTaskQueryInterface(pTask, riid, ppv)
+		If FAILED(hr) Then
+			DestroyReadRequestAsyncTask(pTask)
 		End If
 		
 		Return hr

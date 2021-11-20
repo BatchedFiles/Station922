@@ -3,9 +3,9 @@
 
 #include once "IThreadPool.bi"
 
-Type ThreadPool As _ThreadPool
-
 Extern CLSID_THREADPOOL Alias "CLSID_THREADPOOL" As Const CLSID
+
+Type ThreadPool As _ThreadPool
 
 Type LPThreadPool As _ThreadPool Ptr
 

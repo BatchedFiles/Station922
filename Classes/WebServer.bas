@@ -7,6 +7,7 @@
 #include once "Logger.bi"
 #include once "Network.bi"
 #include once "NetworkStream.bi"
+#include once "ReadRequestAsyncTask.bi"
 #include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
 #include once "WebServerIniConfiguration.bi"
@@ -17,14 +18,6 @@ Extern GlobalWebServerVirtualTable As Const IRunnableVirtualTable
 Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
-
-Type CachedClientContext
-	pIClientMemoryAllocator As IMalloc Ptr
-	pIClientContext As IClientContext Ptr
-	pIServerMemoryAllocator As IMalloc Ptr
-	hrMemoryAllocator As HRESULT
-	hrClientContex As HRESULT
-End Type
 
 Type _WebServer
 	lpVtbl As Const IRunnableVirtualTable Ptr
@@ -51,64 +44,6 @@ Type _WebServer
 	CurrentStatus As HRESULT
 	
 End Type
-
-Sub InitializeClientMemoryContext( _
-		ByVal pCachedContext As CachedClientContext Ptr _
-	)
-	
-	ZeroMemory(pCachedContext, SizeOf(CachedClientContext))
-	
-	
-	pCachedContext->hrMemoryAllocator = CreateMemoryAllocatorInstance( _
-		@CLSID_HEAPMEMORYALLOCATOR, _
-		@IID_IMalloc, _
-		@pCachedContext->pIClientMemoryAllocator _
-	)
-	
-	If SUCCEEDED(pCachedContext->hrMemoryAllocator) Then
-		
-		pCachedContext->hrClientContex = CreateInstance( _
-			pCachedContext->pIClientMemoryAllocator, _
-			@CLSID_CLIENTCONTEXT, _
-			@IID_IClientContext, _
-			@pCachedContext->pIClientContext _
-		)
-		
-		If SUCCEEDED(pCachedContext->hrClientContex) Then
-			IClientContext_SetOperationCode(pCachedContext->pIClientContext, OperationCodes.ReadRequest)
-			
-			Dim pIReader As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pCachedContext->pIClientContext, @pIReader)
-			
-			Scope
-				Dim pINetworkStream As INetworkStream Ptr = Any
-				IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
-				
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
-				
-				INetworkStream_Release(pINetworkStream)
-			End Scope
-			
-			Scope
-				Dim pIRequest As IClientRequest Ptr = Any
-				IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
-				
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
-				
-				IClientRequest_Release(pIRequest)
-			End Scope
-			
-			IHttpReader_Release(pIReader)
-			
-		End If
-		
-		IMalloc_Release(pCachedContext->pIClientMemoryAllocator)
-		
-	End If
-	
-End Sub
 
 Declare Function AcceptConnection( _
 	ByVal this As WebServer Ptr _
@@ -160,10 +95,6 @@ Sub InitializeWebServer( _
 	' this->SocketList = {0}
 	' this->hEvents = {0}
 	this->CurrentStatus = RUNNABLE_S_STOPPED
-	
-	#ifdef PERFORMANCE_TESTING
-		QueryPerformanceFrequency(@this->Frequency)
-	#endif
 	
 End Sub
 
@@ -547,111 +478,56 @@ Function AcceptConnection( _
 				Return HRESULT_FROM_WIN32(dwErrorAccept)
 			End If
 			
-			Dim CachedContext As CachedClientContext = Any
-			InitializeClientMemoryContext( _
-				@CachedContext _
+			Dim pIClientMemoryAllocator As IMalloc Ptr = Any
+			Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
+				@CLSID_HEAPMEMORYALLOCATOR, _
+				@IID_IMalloc, _
+				@pIClientMemoryAllocator _
 			)
+			If FAILED(hrCreateAllocator) Then
+				CloseSocketConnection(ClientSocket)
+				Return hrCreateAllocator
+			End If
 			
-			Scope
-				' Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-					' this, _
-					' ClientSocket, _
-					' @CachedContext _
-				' )
-				' If FAILED(hrAssociateWithIOCP) Then
-					' IClientContext_Release(CachedContext.pIClientContext)
-					' CloseSocketConnection(ClientSocket)
-					' Return E_FAIL
-				' End If
-			End Scope
-			
-			IClientContext_SetRemoteAddress( _
-				CachedContext.pIClientContext, _
-				CPtr(SOCKADDR Ptr, @RemoteAddress), _
-				RemoteAddressLength _
+			Dim pTask As IReadRequestAsyncTask Ptr = Any
+			Dim hrCreateTask As HRESULT = CreateInstance( _
+				pIClientMemoryAllocator, _
+				@CLSID_READREQUESTASYNCTASK, _
+				@IID_IReadRequestAsyncTask, _
+				@pTask _
 			)
+			If FAILED(hrCreateTask) Then
+				CloseSocketConnection(ClientSocket)
+				IMalloc_Release(pIClientMemoryAllocator)
+				Return hrCreateTask
+			End If
+			IMalloc_Release(pIClientMemoryAllocator)
 			
-			Scope
-				Dim pINetworkStream As INetworkStream Ptr = Any
-				IClientContext_GetNetworkStream(CachedContext.pIClientContext, @pINetworkStream)
-				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-				INetworkStream_Release(pINetworkStream)
-			End Scope
+			IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IReadRequestAsyncTask_SetSocket(pTask, ClientSocket)
 			
-			Scope
-				Dim pIRequest As IClientRequest Ptr = Any
-				IClientContext_GetClientRequest(CachedContext.pIClientContext, @pIRequest)
-				
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				Dim pIAsyncResult As IAsyncResult Ptr = Any
-				Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-					pIRequest, _
-					CPtr(IUnknown Ptr, CachedContext.pIClientContext), _
-					@pIAsyncResult _
+			Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+				pTask, _
+				this->pIPool _
+			)
+			If FAILED(hrBeginExecute) Then
+				Dim vtSCode As VARIANT = Any
+				vtSCode.vt = VT_ERROR
+				vtSCode.scode = hrBeginExecute
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"BeginExecute Error\t"), _
+					@vtSCode _
 				)
-				IClientRequest_Release(pIRequest)
 				
-				If FAILED(hrBeginReadRequest) Then
-					Dim vtSCode As VARIANT = Any
-					vtSCode.vt = VT_ERROR
-					vtSCode.scode = hrBeginReadRequest
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"IClientRequest_BeginReadRequest\t"), _
-						@vtSCode _
-					)
-					
-					' TODO Отправить клиенту Не могу начать асинхронное чтение
-					' Return S_FALSE
-				End If
-				
-			End Scope
-			
-			IClientContext_Release(CachedContext.pIClientContext)
-			
-			' Ссылка на pIContext сохранена в pIAsyncResult
-			' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
-			
+				' TODO Отправить клиенту Не могу начать асинхронное чтение
+				CloseSocketConnection(ClientSocket)
+				IReadRequestAsyncTask_Release(pTask)
+				Return hrBeginExecute
+			End If
 		End If
 		
 	End If
-	
-	Return S_OK
-	
-End Function
-
-Function ProcessErrorAssociateWithIOCP( _
-		ByVal this As WebServer Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal pCachedContext As CachedClientContext Ptr _
-	)As HRESULT
-	
-	If FAILED(pCachedContext->hrMemoryAllocator) Then
-		' TODO Отправить клиенту Не могу создать кучу памяти
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		Return pCachedContext->hrMemoryAllocator
-	End If
-	
-	If FAILED(pCachedContext->hrClientContex) Then
-		' TODO Отправить клиенту Не могу выделить память в куче
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		Return pCachedContext->hrClientContex
-	End If
-	
-	' Dim hrAssociate As HRESULT = AssociateWithIOCP( _
-		' this, _
-		' ClientSocket, _
-		' 0 _
-	' )
-	' If FAILED(hrAssociate) Then
-		' TODO Отправить клиенту Не могу ассоциировать с портом завершения
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		' IClientContext_Release(pCachedContext->pIClientContext)
-		' Return hrAssociate
-	' End If
 	
 	Return S_OK
 	
@@ -802,18 +678,6 @@ Function IWebServerRegisterStatusHandler( _
 	)As HRESULT
 	Return WebServerRegisterStatusHandler(ContainerOf(this, WebServer, lpVtbl), Context, StatusHandler)
 End Function
-
-' Function IWebServerSuspend( _
-		' ByVal this As IRunnable Ptr _
-	' )As HRESULT
-	' Return WebServerSuspend(ContainerOf(this, WebServer, lpVtbl))
-' End Function
-
-' Function IWebServerResume( _
-		' ByVal this As IRunnable Ptr _
-	' )As HRESULT
-	' Return WebServerResume(ContainerOf(this, WebServer, lpVtbl))
-' End Function
 
 Dim GlobalWebServerVirtualTable As Const IRunnableVirtualTable = Type( _
 	@IWebServerQueryInterface, _
