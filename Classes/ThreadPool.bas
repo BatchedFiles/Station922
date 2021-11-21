@@ -6,6 +6,8 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
+Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
+
 Type _ThreadPool
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
 	crSection As CRITICAL_SECTION
@@ -46,7 +48,16 @@ Function WorkerThread( _
 			)
 			
 			If pOverlap = NULL Then
+				' fprintf(stderr, "GetQueuedCompletionStatus завершилась ошибкой
+				' (ошибка %d)\n", GetLastError());
+				' exit(1);
 				Exit Do
+			Else
+				' fprintf(stderr, "GetQueuedCompletionStatus переместила 
+				' испорченный пакет I/O (ошибка %d)\n", GetLastError());
+				' // Не смотря на то, что вы можете здесь завершить работу
+				' // по ошибке этот пример продолжается.
+				
 			End If
 			
 		Else
@@ -72,15 +83,20 @@ Function WorkerThread( _
 			IAsyncTask_EndExecute( _
 				pTask, _
 				CPtr(IThreadPool Ptr, @this->lpVtbl), _
+				pOverlap->pIAsync, _
 				BytesTransferred, _
 				CompletionKey _
 			)
 			
 			IAsyncTask_Release(pTask)
 			
+			IAsyncResult_Release(pOverlap->pIAsync)
+			
+			' Уменьшаем счётчик ссылок на задачу
+			' Так как мы не сделали это при запуске задачи
+			IAsyncTask_Release(pTask)
+			
 		End If
-		
-		IAsyncResult_Release(pOverlap->pIAsync)
 		
 	Loop
 	
@@ -96,10 +112,10 @@ Sub InitializeThreadPool( _
 	)
 	
 	this->lpVtbl = @GlobalThreadPoolVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
 	this->ReferenceCounter = 0
 	
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -119,7 +135,7 @@ Sub UnInitializeThreadPool( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	' DeleteCriticalSection(@this->crSection)
+	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -235,11 +251,11 @@ Function ThreadPoolAddRef( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
+	EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter += 1
 	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	LeaveCriticalSection(@this->crSection)
 	
 	Return this->ReferenceCounter
 	
@@ -249,11 +265,11 @@ Function ThreadPoolRelease( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
+	EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter -= 1
 	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	LeaveCriticalSection(@this->crSection)
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -343,6 +359,16 @@ Function ThreadPoolStop( _
 	
 End Function
 
+Function ThreadPoolGetCompletionPort( _
+		ByVal this As ThreadPool Ptr, _
+		ByVal pPort As HANDLE Ptr _
+	)As HRESULT
+	
+	*pPort = this->hIOCompletionPort
+	
+	Return S_OK
+	
+End Function
 
 Function IThreadPoolQueryInterface( _
 		ByVal this As IThreadPool Ptr, _
@@ -390,6 +416,13 @@ Function IThreadPoolStop( _
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
+Function IThreadPoolGetCompletionPort( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal pPort As HANDLE Ptr _
+	)As HRESULT
+	Return ThreadPoolGetCompletionPort(ContainerOf(this, ThreadPool, lpVtbl), pPort)
+End Function
+
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolQueryInterface, _
 	@IThreadPoolAddRef, _
@@ -397,5 +430,6 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolGetMaxThreads, _
 	@IThreadPoolSetMaxThreads, _
 	@IThreadPoolRun, _
-	@IThreadPoolStop _
+	@IThreadPoolStop, _
+	@IThreadPoolGetCompletionPort _
 )

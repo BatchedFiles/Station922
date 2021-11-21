@@ -49,4 +49,9 @@ Declare Function ThreadPoolStop( _
 	ByVal this As ThreadPool Ptr _
 )As HRESULT
 
+Declare Function ThreadPoolGetCompletionPort( _
+	ByVal this As ThreadPool Ptr, _
+	ByVal pPort As HANDLE Ptr _
+)As HRESULT
+
 #endif
