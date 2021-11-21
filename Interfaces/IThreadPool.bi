@@ -44,6 +44,11 @@ Type IThreadPoolVirtualTable
 		ByVal this As IThreadPool Ptr _
 	)As HRESULT
 	
+	GetCompletionPort As Function( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal pPort As HANDLE Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IThreadPool_
@@ -57,5 +62,6 @@ End Type
 #define IThreadPool_SetMaxThreads(this, MaxThreads) (this)->lpVtbl->SetMaxThreads(this, MaxThreads)
 #define IThreadPool_Run(this) (this)->lpVtbl->Run(this)
 #define IThreadPool_Stop(this) (this)->lpVtbl->Stop(this)
+#define IThreadPool_GetCompletionPort(this, pPort) (this)->lpVtbl->GetCompletionPort(this, pPort)
 
 #endif
