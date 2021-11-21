@@ -516,7 +516,7 @@ Function AcceptConnection( _
 				vtSCode.scode = hrBeginExecute
 				LogWriteEntry( _
 					LogEntryType.Error, _
-					WStr(!"BeginExecute Error\t"), _
+					WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
 					@vtSCode _
 				)
 				
@@ -525,6 +525,10 @@ Function AcceptConnection( _
 				IReadRequestAsyncTask_Release(pTask)
 				Return hrBeginExecute
 			End If
+			
+			' Сейчас мы не уменьшаем счётчик ссылок на pTask
+			' Счётчик ссылок уменьшим в функции EndExecute
+			' Когда задача будет завершена
 		End If
 		
 	End If
