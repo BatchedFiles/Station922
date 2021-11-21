@@ -10,7 +10,7 @@ Type LPICLONEABLE As ICloneable Ptr
 
 Extern IID_ICloneable Alias "IID_ICloneable" As Const IID
 
-Type IHeapCloneableVirtualTable
+Type ICloneableVirtualTable
 	
 	QueryInterface As Function( _
 		ByVal this As ICloneable Ptr, _
@@ -29,13 +29,13 @@ Type IHeapCloneableVirtualTable
 	Clone As Function( _
 		ByVal this As ICloneable Ptr, _
 		ByVal pMalloc As IMalloc Ptr, _
-		ByVal ppv As Any Ptr Ptr _
+		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
 End Type
 
-Type IHeapCloneable_
-	lpVtbl As IHeapCloneableVirtualTable Ptr
+Type ICloneable_
+	lpVtbl As ICloneableVirtualTable Ptr
 End Type
 
 #define ICloneable_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
