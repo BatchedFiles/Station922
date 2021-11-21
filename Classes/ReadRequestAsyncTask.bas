@@ -2,8 +2,10 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "Logger.bi"
+#include once "Network.bi"
 #include once "NetworkStream.bi"
 
 Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
@@ -15,103 +17,73 @@ Type _ReadRequestAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	ClientSocket As SOCKET
+	RemoteAddress As SOCKADDR_STORAGE
+	RemoteAddressLength As Integer
 	pINetworkStream As INetworkStream Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIRequest As IClientRequest Ptr
 End Type
 
 /'
-Function ReadRequest( _
+Sub ProcessBeginReadError( _
 		ByVal pIContext As IClientContext Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
+		ByVal hrDataError As DataError _
+	)
 	
-	IClientContext_AddRef(pIContext)
-	IAsyncResult_AddRef(pIAsyncResult)
-	
-	Dim hrResult As HRESULT = S_OK
-	Dim hrEndReadRequest As HRESULT = Any
-	
-	Scope
-		Dim pIRequest As IClientRequest Ptr = Any
-		IClientContext_GetClientRequest(pIContext, @pIRequest)
+	Select Case hrDataError
 		
-		hrEndReadRequest = IClientRequest_EndReadRequest(pIRequest, pIAsyncResult)
-		If FAILED(hrEndReadRequest) Then
-			Dim pIHttpReader As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-			
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
-			IHttpReader_Release(pIHttpReader)
-			
-			ProcessEndReadError(pIContext, hrEndReadRequest)
-			IClientRequest_Release(pIRequest)
-			Return E_FAIL
-		End If
-		
-		IClientRequest_Release(pIRequest)
-	End Scope
-	
-	Select Case hrEndReadRequest
-		
-		Case CLIENTREQUEST_S_IO_PENDING
-			IClientContext_SetOperationCode(pIContext, OperationCodes.ReadRequest)
-			
-			Dim pIRequest As IClientRequest Ptr = Any
-			IClientContext_GetClientRequest(pIContext, @pIRequest)
-			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			Dim pINewAsyncResult As IAsyncResult Ptr = Any
-			Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-				pIRequest, _
-				CPtr(IUnknown Ptr, pIContext), _
-				@pINewAsyncResult _
-			)
-			If FAILED(hrBeginReadRequest) Then
-				ProcessBeginReadError(pIContext, hrBeginReadRequest)
-				hrResult = hrBeginReadRequest
-			End If
-			
-			IClientRequest_Release(pIRequest)
-			
-			
-		Case S_FALSE
-			Dim pIHttpReader As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-			
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
-			IHttpReader_Release(pIHttpReader)
-			
-			hrResult = E_FAIL
-			
-			
-		Case S_OK
-			Dim pIHttpReader As IHttpReader Ptr = Any
-			IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-			
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
-			IHttpReader_Release(pIHttpReader)
-			
-			hrResult = PrepareRequestResponse( _
-				pIContext, _
-				pIWebSites _
-			)
+		Case DataError.NotEnoughMemory
+			WriteHttpNotEnoughMemory(pIContext, NULL)
 			
 	End Select
 	
-	IAsyncResult_Release(pIAsyncResult)
-	IClientContext_Release(pIContext)
+End Sub
+
+Sub ProcessEndReadError( _
+		ByVal pIContext As IClientContext Ptr, _
+		ByVal hrEndReadRequest As HRESULT _
+	)
 	
-	Return hrResult
+	Select Case hrEndReadRequest
+		
+		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			WriteHttpVersionNotSupported(pIContext, NULL)
+			
+		Case CLIENTREQUEST_E_BADREQUEST
+			WriteHttpBadRequest(pIContext, NULL)
+			
+		Case CLIENTREQUEST_E_BADPATH
+			WriteHttpPathNotValid(pIContext, NULL)
+			
+		Case CLIENTREQUEST_E_EMPTYREQUEST
+			' Пустой запрос, клиент закрыл соединение
+			
+		Case CLIENTREQUEST_E_SOCKETERROR
+			' Ошибка сокета
+			
+		Case CLIENTREQUEST_E_URITOOLARGE
+			WriteHttpRequestUrlTooLarge(pIContext, NULL)
+			
+		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			WriteHttpRequestHeaderFieldsTooLarge(pIContext, NULL)
+			
+		Case CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
+			Dim pIResponse As IServerResponse Ptr = Any
+			IClientContext_GetServerResponse(pIContext, @pIResponse)
+			
+			IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderAllow, @AllSupportHttpMethods)
+			
+			WriteHttpNotImplemented(pIContext, NULL)
+			
+			IServerResponse_Release(pIResponse)
+			
+		Case Else
+			WriteHttpBadRequest(pIContext, NULL)
+			
+	End Select
 	
-End Function
+End Sub
+
 '/
 
 Function AssociateWithIOCP( _
@@ -153,6 +125,8 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
 	this->ClientSocket = INVALID_SOCKET
+	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
+	this->RemoteAddressLength = 0
 	this->pINetworkStream = pINetworkStream
 	this->pIHttpReader = pIHttpReader
 	this->pIRequest = pIRequest
@@ -380,14 +354,6 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal pPool As IThreadPool Ptr _
 	)As HRESULT
 	
-	/'
-	IClientContext_SetRemoteAddress( _
-		CachedContext.pIClientContext, _
-		CPtr(SOCKADDR Ptr, @RemoteAddress), _
-		RemoteAddressLength _
-	)
-	'/
-	
 	Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
 		pPool, _
 		this->ClientSocket, _
@@ -407,12 +373,13 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		@pIAsyncResult _
 	)
 	If FAILED(hrBeginReadRequest) Then
+		' ProcessBeginReadError(pIContext, hrBeginReadRequest)
 		Return hrBeginReadRequest
 	End If
 	
 	' Ссылка на this сохранена в pIAsyncResult
 	' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
-	' OVERLAPPED будет возвращена функцией GetQueuedCompletionStatus в пуле потоков
+	' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
 	
 	Return S_OK
 	
@@ -437,6 +404,110 @@ Function ReadRequestAsyncTaskEndExecute( _
 		)
 	End Scope
 	#endif
+	
+	Dim hrEndReadRequest As HRESULT = IClientRequest_EndReadRequest( _
+		this->pIRequest, _
+		pIResult _
+	)
+	If FAILED(hrEndReadRequest) Then
+		' TODO Вывести байты запроса HttpReader в лог
+		' DebugPrintHttpReader(pIHttpReader)
+		
+		' ProcessEndReadError(pIContext, hrEndReadRequest)
+		Return E_FAIL
+	End If
+	
+	Select Case hrEndReadRequest
+		
+		Case S_OK
+			/'
+			' TODO Вывести байты запроса в лог
+			' DebugPrintHttpReader(pIHttpReader)
+			hrResult = PrepareRequestResponse( _
+				pIContext, _
+				pIWebSites _
+			)
+			'/
+			
+		Case S_FALSE
+			' TODO Вывести байты запроса в лог
+			' DebugPrintHttpReader(pIHttpReader)
+			Return S_FALSE
+			
+		Case CLIENTREQUEST_S_IO_PENDING
+			' Создать задачу чтения
+			Dim pTask As IReadRequestAsyncTask Ptr = Any
+			
+			Scope
+				Dim pIClientMemoryAllocator As IMalloc Ptr = Any
+				Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
+					@CLSID_HEAPMEMORYALLOCATOR, _
+					@IID_IMalloc, _
+					@pIClientMemoryAllocator _
+				)
+				If FAILED(hrCreateAllocator) Then
+					CloseSocketConnection(this->ClientSocket)
+					Return hrCreateAllocator
+				End If
+				
+				Dim hrCreateTask As HRESULT = CreateInstance( _
+					pIClientMemoryAllocator, _
+					@CLSID_READREQUESTASYNCTASK, _
+					@IID_IReadRequestAsyncTask, _
+					@pTask _
+				)
+				If FAILED(hrCreateTask) Then
+					CloseSocketConnection(this->ClientSocket)
+					IMalloc_Release(pIClientMemoryAllocator)
+					Return hrCreateTask
+				End If
+				IMalloc_Release(pIClientMemoryAllocator)
+				
+			End Scope
+			
+			' Настроить задачу текущими параметрами
+			Scope
+				IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+				IReadRequestAsyncTask_SetSocket(pTask, this->ClientSocket)
+				IReadRequestAsyncTask_SetRemoteAddress( _
+					pTask, _
+					CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
+					this->RemoteAddressLength _
+				)
+				
+				' TODO Клонировать HttpReader и ClientRequest
+			End Scope
+			
+			' Запустить задачу
+			Scope
+				/'
+				Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+					pTask, _
+					pPool _
+				)
+				If FAILED(hrBeginExecute) Then
+					Dim vtSCode As VARIANT = Any
+					vtSCode.vt = VT_ERROR
+					vtSCode.scode = hrBeginExecute
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+						@vtSCode _
+					)
+					
+					' TODO Отправить клиенту Не могу начать асинхронное чтение
+					CloseSocketConnection(this->ClientSocket)
+					IReadRequestAsyncTask_Release(pTask)
+					Return hrBeginExecute
+				End If
+				'/
+			End Scope
+			
+			' Сейчас мы не уменьшаем счётчик ссылок на pTask
+			' Счётчик ссылок уменьшим в функции EndExecute
+			' Когда задача будет завершена
+			
+	End Select
 	
 	Return S_OK
 	
@@ -493,6 +564,32 @@ Function ReadRequestAsyncTaskSetWebSiteCollection( _
 	End If
 	
 	this->pIWebSites = pIWebSites
+	
+	Return S_OK
+	
+End Function
+
+Function ReadRequestAsyncTaskGetRemoteAddress( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	
+	*pRemoteAddressLength = this->RemoteAddressLength
+	CopyMemory(pRemoteAddress, @this->RemoteAddress, this->RemoteAddressLength)
+	
+	Return S_OK
+	
+End Function
+
+Function ReadRequestAsyncTaskSetRemoteAddress( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	
+	this->RemoteAddressLength = RemoteAddressLength
+	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
 	
 	Return S_OK
 	
@@ -564,6 +661,22 @@ Function IReadRequestAsyncTaskSetSocket( _
 	Return ReadRequestAsyncTaskSetSocket(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), sock)
 End Function
 
+Function IReadRequestAsyncTaskGetRemoteAddress( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	Return ReadRequestAsyncTaskGetRemoteAddress(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pRemoteAddress, pRemoteAddressLength)
+End Function
+
+Function IReadRequestAsyncTaskSetRemoteAddress( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	Return ReadRequestAsyncTaskSetRemoteAddress(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), RemoteAddress, RemoteAddressLength)
+End Function
+
 Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable = Type( _
 	@IReadRequestAsyncTaskQueryInterface, _
 	@IReadRequestAsyncTaskAddRef, _
@@ -573,5 +686,7 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskGetWebSiteCollection, _
 	@IReadRequestAsyncTaskSetWebSiteCollection, _
 	@IReadRequestAsyncTaskGetSocket, _
-	@IReadRequestAsyncTaskSetSocket _
+	@IReadRequestAsyncTaskSetSocket, _
+	@IReadRequestAsyncTaskGetRemoteAddress, _
+	@IReadRequestAsyncTaskSetRemoteAddress _
 )

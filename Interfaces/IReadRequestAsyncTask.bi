@@ -61,6 +61,18 @@ Type IReadRequestAsyncTaskVirtualTable
 		ByVal sock As SOCKET _
 	)As HRESULT
 	
+	GetRemoteAddress As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	
+	SetRemoteAddress As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	
 End Type
 
 Type IReadRequestAsyncTask_
@@ -76,5 +88,7 @@ End Type
 #define IReadRequestAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
 #define IReadRequestAsyncTask_GetSocket(this, pResult) (this)->lpVtbl->GetSocket(this, pResult)
 #define IReadRequestAsyncTask_SetSocket(this, sock) (this)->lpVtbl->SetSocket(this, sock)
+#define IReadRequestAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
+#define IReadRequestAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 
 #endif

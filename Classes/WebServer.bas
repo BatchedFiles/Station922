@@ -478,57 +478,71 @@ Function AcceptConnection( _
 				Return HRESULT_FROM_WIN32(dwErrorAccept)
 			End If
 			
-			Dim pIClientMemoryAllocator As IMalloc Ptr = Any
-			Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
-				@CLSID_HEAPMEMORYALLOCATOR, _
-				@IID_IMalloc, _
-				@pIClientMemoryAllocator _
-			)
-			If FAILED(hrCreateAllocator) Then
-				CloseSocketConnection(ClientSocket)
-				Return hrCreateAllocator
-			End If
-			
 			Dim pTask As IReadRequestAsyncTask Ptr = Any
-			Dim hrCreateTask As HRESULT = CreateInstance( _
-				pIClientMemoryAllocator, _
-				@CLSID_READREQUESTASYNCTASK, _
-				@IID_IReadRequestAsyncTask, _
-				@pTask _
-			)
-			If FAILED(hrCreateTask) Then
-				CloseSocketConnection(ClientSocket)
-				IMalloc_Release(pIClientMemoryAllocator)
-				Return hrCreateTask
-			End If
-			IMalloc_Release(pIClientMemoryAllocator)
 			
-			IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-			IReadRequestAsyncTask_SetSocket(pTask, ClientSocket)
-			
-			Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
-				pTask, _
-				this->pIPool _
-			)
-			If FAILED(hrBeginExecute) Then
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrBeginExecute
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-					@vtSCode _
+			Scope
+				Dim pIClientMemoryAllocator As IMalloc Ptr = Any
+				Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
+					@CLSID_HEAPMEMORYALLOCATOR, _
+					@IID_IMalloc, _
+					@pIClientMemoryAllocator _
 				)
+				If FAILED(hrCreateAllocator) Then
+					CloseSocketConnection(ClientSocket)
+					Return hrCreateAllocator
+				End If
 				
-				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				CloseSocketConnection(ClientSocket)
-				IReadRequestAsyncTask_Release(pTask)
-				Return hrBeginExecute
-			End If
+				Dim hrCreateTask As HRESULT = CreateInstance( _
+					pIClientMemoryAllocator, _
+					@CLSID_READREQUESTASYNCTASK, _
+					@IID_IReadRequestAsyncTask, _
+					@pTask _
+				)
+				If FAILED(hrCreateTask) Then
+					CloseSocketConnection(ClientSocket)
+					IMalloc_Release(pIClientMemoryAllocator)
+					Return hrCreateTask
+				End If
+				IMalloc_Release(pIClientMemoryAllocator)
+			End Scope
+			
+			Scope
+				IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+				IReadRequestAsyncTask_SetSocket(pTask, ClientSocket)
+				IReadRequestAsyncTask_SetRemoteAddress( _
+					pTask, _
+					CPtr(SOCKADDR Ptr, @RemoteAddress), _
+					RemoteAddressLength _
+				)
+			End Scope
+			
+			Scope
+				Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+					pTask, _
+					this->pIPool _
+				)
+				If FAILED(hrBeginExecute) Then
+					Dim vtSCode As VARIANT = Any
+					vtSCode.vt = VT_ERROR
+					vtSCode.scode = hrBeginExecute
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+						@vtSCode _
+					)
+					
+					' TODO Отправить клиенту Не могу начать асинхронное чтение
+					CloseSocketConnection(ClientSocket)
+					IReadRequestAsyncTask_Release(pTask)
+					Return hrBeginExecute
+				End If
+				
+			End Scope
 			
 			' Сейчас мы не уменьшаем счётчик ссылок на pTask
 			' Счётчик ссылок уменьшим в функции EndExecute
 			' Когда задача будет завершена
+			
 		End If
 		
 	End If

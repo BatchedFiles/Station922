@@ -64,4 +64,16 @@ Declare Function ReadRequestAsyncTaskSetWebSiteCollection( _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
 )As HRESULT
 
+Declare Function ReadRequestAsyncTaskGetRemoteAddress( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pRemoteAddress As SOCKADDR Ptr, _
+	ByVal pRemoteAddressLength As Integer Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetRemoteAddress( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal RemoteAddress As SOCKADDR Ptr, _
+	ByVal RemoteAddressLength As Integer _
+)As HRESULT
+
 #endif
