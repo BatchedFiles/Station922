@@ -2,6 +2,7 @@
 #define IASYNCTASK_BI
 
 #include once "IThreadPool.bi"
+#include once "IAsyncResult.bi"
 
 Type IAsyncTask As IAsyncTask_
 
@@ -31,6 +32,7 @@ Type IAsyncTaskVirtualTable
 	EndExecute As Function( _
 		ByVal this As IAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
+		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
@@ -45,6 +47,6 @@ End Type
 #define IAsyncTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncTask_BeginExecute(this, pPool) (this)->lpVtbl->BeginExecute(this, pPool)
-#define IAsyncTask_EndExecute(this, pPool, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, BytesTransferred, CompletionKey)
+#define IAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
 
 #endif

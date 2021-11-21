@@ -39,6 +39,7 @@ Declare Function ReadRequestAsyncTaskBeginExecute( _
 Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal pPool As IThreadPool Ptr, _
+	ByVal pIResult As IAsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
 	ByVal CompletionKey As ULONG_PTR _
 )As HRESULT

@@ -1,93 +1,26 @@
 #include once "ReadRequestAsyncTask.bi"
+#include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HttpReader.bi"
 #include once "Logger.bi"
+#include once "NetworkStream.bi"
 
 Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
 
+Type _ReadRequestAsyncTask
+	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
+	crSection As CRITICAL_SECTION
+	ReferenceCounter As Integer
+	pIMemoryAllocator As IMalloc Ptr
+	pIWebSites As IWebSiteCollection Ptr
+	ClientSocket As SOCKET
+	pINetworkStream As INetworkStream Ptr
+	pIHttpReader As IHttpReader Ptr
+	pIRequest As IClientRequest Ptr
+End Type
+
 /'
-Sub InitializeClientMemoryContext( _
-		ByVal pCachedContext As CachedClientContext Ptr _
-	)
-	
-	ZeroMemory(pCachedContext, SizeOf(CachedClientContext))
-	
-	pCachedContext->hrClientContex = CreateInstance( _
-		pCachedContext->pIClientMemoryAllocator, _
-		@CLSID_CLIENTCONTEXT, _
-		@IID_IClientContext, _
-		@pCachedContext->pIClientContext _
-	)
-	
-	If SUCCEEDED(pCachedContext->hrClientContex) Then
-		IClientContext_SetOperationCode(pCachedContext->pIClientContext, OperationCodes.ReadRequest)
-		
-		Dim pIReader As IHttpReader Ptr = Any
-		IClientContext_GetHttpReader(pCachedContext->pIClientContext, @pIReader)
-		
-		Scope
-			Dim pINetworkStream As INetworkStream Ptr = Any
-			IClientContext_GetNetworkStream(pCachedContext->pIClientContext, @pINetworkStream)
-			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			IHttpReader_SetBaseStream(pIReader, CPtr(IBaseStream Ptr, pINetworkStream))
-			
-			INetworkStream_Release(pINetworkStream)
-		End Scope
-		
-		Scope
-			Dim pIRequest As IClientRequest Ptr = Any
-			IClientContext_GetClientRequest(pCachedContext->pIClientContext, @pIRequest)
-			
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			IClientRequest_SetTextReader(pIRequest, CPtr(ITextReader Ptr, pIReader))
-			
-			IClientRequest_Release(pIRequest)
-		End Scope
-		
-		IHttpReader_Release(pIReader)
-		
-	End If
-	
-End Sub
-
-Function ProcessErrorAssociateWithIOCP( _
-		ByVal this As WebServer Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal pCachedContext As CachedClientContext Ptr _
-	)As HRESULT
-	
-	If FAILED(pCachedContext->hrMemoryAllocator) Then
-		' TODO Отправить клиенту Не могу создать кучу памяти
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		Return pCachedContext->hrMemoryAllocator
-	End If
-	
-	If FAILED(pCachedContext->hrClientContex) Then
-		' TODO Отправить клиенту Не могу выделить память в куче
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		Return pCachedContext->hrClientContex
-	End If
-	
-	' Dim hrAssociate As HRESULT = AssociateWithIOCP( _
-		' this, _
-		' ClientSocket, _
-		' 0 _
-	' )
-	' If FAILED(hrAssociate) Then
-		' TODO Отправить клиенту Не могу ассоциировать с портом завершения
-		' INetworkStream_SetSocket(this->pINetworkStream, ClientSocket)
-		' WriteHttpNotEnoughMemory(pCachedContext->pIClientContext, NULL)
-		' IClientContext_Release(pCachedContext->pIClientContext)
-		' Return hrAssociate
-	' End If
-	
-	Return S_OK
-	
-End Function
-
 Function ReadRequest( _
 		ByVal pIContext As IClientContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
@@ -181,18 +114,36 @@ Function ReadRequest( _
 End Function
 '/
 
-Type _ReadRequestAsyncTask
-	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
-	crSection As CRITICAL_SECTION
-	ReferenceCounter As Integer
-	pIMemoryAllocator As IMalloc Ptr
-	pIWebSites As IWebSiteCollection Ptr
-	ClientSocket As SOCKET
-End Type
+Function AssociateWithIOCP( _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal ClientSocket As SOCKET, _
+		ByVal CompletionKey As ULONG_PTR _
+	)As HRESULT
+	
+	Dim hIOCompletionPort As HANDLE = Any
+	IThreadPool_GetCompletionPort(pPool, @hIOCompletionPort)
+	
+	Dim hPort As HANDLE = CreateIoCompletionPort( _
+		Cast(HANDLE, ClientSocket), _
+		hIOCompletionPort, _
+		CompletionKey, _
+		0 _
+	)
+	If hPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
 
 Sub InitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pINetworkStream As INetworkStream Ptr, _
+		ByVal pIHttpReader As IHttpReader Ptr, _
+		ByVal pIRequest As IClientRequest Ptr _
 	)
 	
 	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
@@ -202,12 +153,37 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
 	this->ClientSocket = INVALID_SOCKET
+	this->pINetworkStream = pINetworkStream
+	this->pIHttpReader = pIHttpReader
+	this->pIRequest = pIRequest
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	IHttpReader_SetBaseStream( _
+		pIHttpReader, _
+		CPtr(IBaseStream Ptr, pINetworkStream) _
+	)
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	IClientRequest_SetTextReader( _
+		pIRequest, _
+		CPtr(ITextReader Ptr, pIHttpReader) _
+	)
 	
 End Sub
 
 Sub UnInitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)
+	
+	If this->pIRequest <> NULL Then
+		IClientRequest_Release(this->pIRequest)
+	End If
+	
+	If this->pIHttpReader <> NULL Then
+		IHttpReader_Release(this->pIHttpReader)
+	End If
+	
+	If this->pINetworkStream <> NULL Then
+		INetworkStream_Release(this->pINetworkStream)
+	End If
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
@@ -234,29 +210,69 @@ Function CreateReadRequestAsyncTask( _
 	End Scope
 	#endif
 	
-	Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
+	Dim pINetworkStream As INetworkStream Ptr = Any
+	Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
-		SizeOf(ReadRequestAsyncTask) _
+		@CLSID_NETWORKSTREAM, _
+		@IID_INetworkStream, _
+		@pINetworkStream _
 	)
-	If this <> NULL Then
-		InitializeReadRequestAsyncTask( _
-			this, _
-			pIMemoryAllocator _
+	
+	If SUCCEEDED(hrCreateNetworkStream) Then
+		Dim pIHttpReader As IHttpReader Ptr = Any
+		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
+			pIMemoryAllocator, _
+			@CLSID_HTTPREADER, _
+			@IID_IHttpReader, _
+			@pIHttpReader _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("ReadRequestAsyncTask created"), _
-				@vtEmpty _
+		If SUCCEEDED(hrCreateHttpReader) Then
+			Dim pIRequest As IClientRequest Ptr = Any
+			Dim hrCreateRequest As HRESULT = CreateInstance( _
+				pIMemoryAllocator, _
+				@CLSID_CLIENTREQUEST, _
+				@IID_IClientRequest, _
+				@pIRequest _
 			)
-		End Scope
-		#endif
+			
+			If SUCCEEDED(hrCreateRequest) Then
+				Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
+					pIMemoryAllocator, _
+					SizeOf(ReadRequestAsyncTask) _
+				)
+				
+				If this <> NULL Then
+					InitializeReadRequestAsyncTask( _
+						this, _
+						pIMemoryAllocator, _
+						pINetworkStream, _
+						pIHttpReader, _
+						pIRequest _
+					)
+					
+					#if __FB_DEBUG__
+					Scope
+						Dim vtEmpty As VARIANT = Any
+						VariantInit(@vtEmpty)
+						LogWriteEntry( _
+							LogEntryType.Debug, _
+							WStr("ReadRequestAsyncTask created"), _
+							@vtEmpty _
+						)
+					End Scope
+					#endif
+					
+					Return this
+				End If
+				
+				IClientRequest_Release(pIRequest)
+			End If
+			
+			IHttpReader_Release(pIHttpReader)
+		End If
 		
-		Return this
+		INetworkStream_Release(pINetworkStream)
 	End If
 	
 	Return NULL
@@ -365,66 +381,39 @@ Function ReadRequestAsyncTaskBeginExecute( _
 	)As HRESULT
 	
 	/'
-	Scope
-		' Dim hrAssociateWithIOCP As HRESULT = ProcessErrorAssociateWithIOCP( _
-			' this, _
-			' ClientSocket, _
-			' @CachedContext _
-		' )
-		' If FAILED(hrAssociateWithIOCP) Then
-			' IClientContext_Release(CachedContext.pIClientContext)
-			' CloseSocketConnection(ClientSocket)
-			' Return E_FAIL
-		' End If
-	End Scope
-	
 	IClientContext_SetRemoteAddress( _
 		CachedContext.pIClientContext, _
 		CPtr(SOCKADDR Ptr, @RemoteAddress), _
 		RemoteAddressLength _
 	)
-	
-	Scope
-		Dim pINetworkStream As INetworkStream Ptr = Any
-		IClientContext_GetNetworkStream(CachedContext.pIClientContext, @pINetworkStream)
-		INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-		INetworkStream_Release(pINetworkStream)
-	End Scope
-	
-	Scope
-		Dim pIRequest As IClientRequest Ptr = Any
-		IClientContext_GetClientRequest(CachedContext.pIClientContext, @pIRequest)
-		
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		Dim pIAsyncResult As IAsyncResult Ptr = Any
-		Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-			pIRequest, _
-			CPtr(IUnknown Ptr, CachedContext.pIClientContext), _
-			@pIAsyncResult _
-		)
-		IClientRequest_Release(pIRequest)
-		
-		If FAILED(hrBeginReadRequest) Then
-			Dim vtSCode As VARIANT = Any
-			vtSCode.vt = VT_ERROR
-			vtSCode.scode = hrBeginReadRequest
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				WStr(!"IClientRequest_BeginReadRequest\t"), _
-				@vtSCode _
-			)
-			
-			' TODO Отправить клиенту Не могу начать асинхронное чтение
-			' Return S_FALSE
-		End If
-		
-	End Scope
-	
-	IClientContext_Release(CachedContext.pIClientContext)
-	
-	' Ссылка на pIContext сохранена в pIAsyncResult
-	' Указатель на pIAsyncResult сохранён в структуре OVERLAPPED
 	'/
+	
+	Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
+		pPool, _
+		this->ClientSocket, _
+		Cast(ULONG_PTR, 0) _
+	)
+	If FAILED(hrAssociateWithIOCP) Then
+		Return hrAssociateWithIOCP
+	End If
+	
+	INetworkStream_SetSocket(this->pINetworkStream, this->ClientSocket)
+	
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	Dim pIAsyncResult As IAsyncResult Ptr = Any
+	Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
+		this->pIRequest, _
+		CPtr(IUnknown Ptr, @this->lpVtbl), _
+		@pIAsyncResult _
+	)
+	If FAILED(hrBeginReadRequest) Then
+		Return hrBeginReadRequest
+	End If
+	
+	' Ссылка на this сохранена в pIAsyncResult
+	' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
+	' OVERLAPPED будет возвращена функцией GetQueuedCompletionStatus в пуле потоков
+	
 	Return S_OK
 	
 End Function
@@ -432,9 +421,22 @@ End Function
 Function ReadRequestAsyncTaskEndExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
+		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("ReadRequestAsyncTaskEndExecute"), _
+			@vtEmpty _
+		)
+	End Scope
+	#endif
 	
 	Return S_OK
 	
@@ -527,10 +529,11 @@ End Function
 Function IReadRequestAsyncTaskEndExecute( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
+		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, BytesTransferred, CompletionKey)
+	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
 End Function
 
 Function IReadRequestAsyncTaskGetWebSiteCollection( _
@@ -572,4 +575,3 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskGetSocket, _
 	@IReadRequestAsyncTaskSetSocket _
 )
-
