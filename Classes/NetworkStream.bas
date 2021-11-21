@@ -40,10 +40,6 @@ Sub UnInitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
-	If this->ClientSocket <> INVALID_SOCKET Then
-		CloseSocketConnection(this->ClientSocket)
-	End If
-	
 	IMalloc_Release(this->pIMemoryAllocator)
 	DeleteCriticalSection(@this->crSection)
 	
@@ -492,10 +488,6 @@ Function NetworkStreamSetSocket( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal ClientSocket As SOCKET _
 	)As HRESULT
-	
-	If this->ClientSocket <> INVALID_SOCKET Then
-		CloseSocketConnection(this->ClientSocket)
-	End If
 	
 	this->ClientSocket = ClientSocket
 	
