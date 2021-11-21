@@ -22,6 +22,7 @@ Type _ReadRequestAsyncTask
 	pINetworkStream As INetworkStream Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIRequest As IClientRequest Ptr
+	Associated As Boolean
 End Type
 
 /'
@@ -130,6 +131,7 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pINetworkStream = pINetworkStream
 	this->pIHttpReader = pIHttpReader
 	this->pIRequest = pIRequest
+	this->Associated = False
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	IHttpReader_SetBaseStream( _
 		pIHttpReader, _
@@ -354,14 +356,18 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal pPool As IThreadPool Ptr _
 	)As HRESULT
 	
-	Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
-		pPool, _
-		this->ClientSocket, _
-		Cast(ULONG_PTR, 0) _
-	)
-	If FAILED(hrAssociateWithIOCP) Then
-		Return hrAssociateWithIOCP
+	If this->Associated = False Then
+		Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
+			pPool, _
+			this->ClientSocket, _
+			Cast(ULONG_PTR, 0) _
+		)
+		If FAILED(hrAssociateWithIOCP) Then
+			Return hrAssociateWithIOCP
+		End If
 	End If
+	
+	this->Associated = True
 	
 	INetworkStream_SetSocket(this->pINetworkStream, this->ClientSocket)
 	
@@ -474,7 +480,10 @@ Function ReadRequestAsyncTaskEndExecute( _
 					CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
 					this->RemoteAddressLength _
 				)
-				
+				IReadRequestAsyncTask_SetAssociatedWithIOCP( _
+					pTask, _
+					True _
+				)
 				' TODO Клонировать HttpReader и ClientRequest
 			End Scope
 			
@@ -508,6 +517,28 @@ Function ReadRequestAsyncTaskEndExecute( _
 			' Когда задача будет завершена
 			
 	End Select
+	
+	Return S_OK
+	
+End Function
+
+Function ReadRequestAsyncTaskGetAssociatedWithIOCP( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pAssociated As Boolean Ptr _
+	)As HRESULT
+	
+	*pAssociated = this->Associated
+	
+	Return S_OK
+	
+End Function
+
+Function ReadRequestAsyncTaskSetAssociatedWithIOCP( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal Associated As Boolean _
+	)As HRESULT
+	
+	this->Associated = Associated
 	
 	Return S_OK
 	
@@ -633,6 +664,20 @@ Function IReadRequestAsyncTaskEndExecute( _
 	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
 End Function
 
+Function IReadRequestAsyncTaskGetAssociatedWithIOCP( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal pAssociated As Boolean Ptr _
+	)As HRESULT
+	Return ReadRequestAsyncTaskGetAssociatedWithIOCP(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pAssociated)
+End Function
+
+Function IReadRequestAsyncTaskSetAssociatedWithIOCP( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal Associated As Boolean _
+	)As HRESULT
+	Return ReadRequestAsyncTaskSetAssociatedWithIOCP(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), Associated)
+End Function
+
 Function IReadRequestAsyncTaskGetWebSiteCollection( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
@@ -683,6 +728,8 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskRelease, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
+	@IReadRequestAsyncTaskGetAssociatedWithIOCP, _
+	@IReadRequestAsyncTaskSetAssociatedWithIOCP, _
 	@IReadRequestAsyncTaskGetWebSiteCollection, _
 	@IReadRequestAsyncTaskSetWebSiteCollection, _
 	@IReadRequestAsyncTaskGetSocket, _

@@ -44,6 +44,16 @@ Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal CompletionKey As ULONG_PTR _
 )As HRESULT
 
+Declare Function ReadRequestAsyncTaskGetAssociatedWithIOCP( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pAssociated As Boolean Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetAssociatedWithIOCP( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal Associated As Boolean _
+)As HRESULT
+
 Declare Function ReadRequestAsyncTaskGetSocket( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal pResult As SOCKET Ptr _
