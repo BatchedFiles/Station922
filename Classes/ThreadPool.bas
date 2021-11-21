@@ -74,23 +74,30 @@ Function WorkerThread( _
 			End Scope
 			#endif
 			
+			Dim pIAsync As IAsyncResult Ptr = pOverlap->pIAsync
+			IAsyncResult_SetCompleted( _
+				pIAsync, _
+				BytesTransferred, _
+				True _
+			)
+			
 			Dim pTask As IAsyncTask Ptr = Any
 			IAsyncResult_GetAsyncState( _
-				pOverlap->pIAsync, _
+				pIAsync, _
 				CPtr(IUnknown Ptr Ptr, @pTask) _
 			)
 			
 			IAsyncTask_EndExecute( _
 				pTask, _
 				CPtr(IThreadPool Ptr, @this->lpVtbl), _
-				pOverlap->pIAsync, _
+				pIAsync, _
 				BytesTransferred, _
 				CompletionKey _
 			)
 			
 			IAsyncTask_Release(pTask)
 			
-			IAsyncResult_Release(pOverlap->pIAsync)
+			IAsyncResult_Release(pIAsync)
 			
 			' Уменьшаем счётчик ссылок на задачу
 			' Так как мы не сделали это при запуске задачи
