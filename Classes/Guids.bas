@@ -150,6 +150,11 @@ DEFINE_IID(IID_IClientUri, _
 	&hfa6493da, &h9102, &h4ff6, &h82, &h2e, &h16, &h33, &h99, &hbf, &h9e, &h81 _
 )
 
+' {606E6533-1086-409E-A91C-93A88CF78B35}
+DEFINE_IID(IID_ICloneable, _
+	&h606e6533, &h1086, &h409e, &ha9, &h1c, &h93, &ha8, &h8c, &hf7, &h8b, &h35 _
+)
+
 ' {76A3EA34-6604-4126-9550-54280EAA291A}
 DEFINE_IID(IID_IEnumWebServerConfiguration, _
 	&h76a3ea34, &h6604, &h4126, &h95, &h50, &h54, &h28, &he, &haa, &h29, &h1a _
