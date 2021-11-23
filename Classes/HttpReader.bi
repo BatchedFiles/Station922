@@ -82,4 +82,25 @@ Declare Function HttpReaderIsCompleted( _
 	ByVal pCompleted As Boolean Ptr _
 )As HRESULT
 
+Declare Function HttpReaderCloneableQueryInterface( _
+	ByVal this As HttpReader Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppvObject As Any Ptr Ptr _
+)As HRESULT
+
+Declare Function HttpReaderCloneableAddRef( _
+	ByVal this As HttpReader Ptr _
+)As ULONG
+
+Declare Function HttpReaderCloneableRelease( _
+	ByVal this As HttpReader Ptr _
+)As ULONG
+
+Declare Function HttpReaderCloneableClone( _
+	ByVal this As HttpReader Ptr, _
+	ByVal pMalloc As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppvObject As Any Ptr Ptr _
+)As HRESULT
+
 #endif

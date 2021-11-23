@@ -1,9 +1,11 @@
 #include once "HttpReader.bi"
 #include once "ContainerOf.bi"
+#include once "ICloneable.bi"
 #include once "Logger.bi"
 #include once "StringConstants.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
+Extern GlobalHttpReaderCloneableVirtualTable As Const ICloneableVirtualTable
 
 Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
@@ -27,6 +29,7 @@ End Type
 
 Type _HttpReader
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
+	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -210,6 +213,7 @@ Sub InitializeHttpReader( _
 	)
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
+	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
 	InitializeCriticalSectionAndSpinCount( _
 		@this->crSection, _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
@@ -227,6 +231,37 @@ Sub InitializeHttpReader( _
 	pLines->wszLine[0] = 0
 	this->pLines = pLines
 	this->IsAllBytesReaded = False
+	
+End Sub
+
+Sub InitializeCloneHttpReader( _
+		ByVal this As HttpReader Ptr, _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pReadedData As RawBuffer Ptr, _
+		ByVal pLines As LinesBuffer Ptr, _
+		ByVal Source As HttpReader Ptr _
+	)
+	
+	this->lpVtbl = @GlobalHttpReaderVirtualTable
+	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
+	
+	IMalloc_AddRef(pIMemoryAllocator)
+	this->pIMemoryAllocator = pIMemoryAllocator
+	
+	this->pIStream = NULL
+	
+	CopyMemory(pReadedData, Source->pReadedData, SizeOf(RawBuffer))
+	this->pReadedData = pReadedData
+	
+	CopyMemory(pLines, Source->pLines, SizeOf(LinesBuffer))
+	this->pLines = pLines
+	
+	this->IsAllBytesReaded = Source->IsAllBytesReaded
 	
 End Sub
 
@@ -369,8 +404,12 @@ Function HttpReaderQueryInterface( _
 			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
+				If IsEqualIID(@IID_ICloneable, riid) Then
+					*ppv = @this->lpCloneableVtbl
+				Else
+					*ppv = NULL
+					Return E_NOINTERFACE
+				End If
 			End If
 		End If
 	End If
@@ -715,6 +754,89 @@ End Function
 	
 ' End Function
 
+Function HttpReaderCloneableClone( _
+		ByVal this As HttpReader Ptr, _
+		ByVal pMalloc As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(HttpReader)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"HttpReader cloning\t"), _
+			@vtAllocatedBytes _
+		)
+	End Scope
+	#endif
+	
+	Dim pReadedData As RawBuffer Ptr = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(RawBuffer) _
+	)
+	
+	If pReadedData <> NULL Then
+		
+		Dim pLines As LinesBuffer Ptr = IMalloc_Alloc( _
+			pMalloc, _
+			SizeOf(LinesBuffer) _
+		)
+		
+		If pLines <> NULL Then
+			
+			Dim pClone As HttpReader Ptr = IMalloc_Alloc( _
+				pMalloc, _
+				SizeOf(HttpReader) _
+			)
+			
+			If pClone <> NULL Then
+				InitializeCloneHttpReader( _
+					pClone, _
+					pMalloc, _
+					pReadedData, _
+					pLines, _
+					this _
+				)
+				
+				Dim hrClone As HRESULT = HttpReaderQueryInterface( _
+					pClone, _
+					riid, _
+					ppvObject _
+				)
+				
+				If SUCCEEDED(hrClone) Then
+					#if __FB_DEBUG__
+					Scope
+						Dim vtEmpty As VARIANT = Any
+						VariantInit(@vtEmpty)
+						LogWriteEntry( _
+							LogEntryType.Debug, _
+							WStr("HttpReader cloned"), _
+							@vtEmpty _
+						)
+					End Scope
+					#endif
+					
+					Return S_OK
+				End If
+				
+				DestroyHttpReader(pClone)
+			End If
+			
+			IMalloc_Free(pMalloc, pLines)
+		End If
+		
+		IMalloc_Free(pMalloc, pReadedData)
+	End If
+	
+	*ppvObject = NULL
+	Return E_OUTOFMEMORY
+	
+End Function
 
 Function IHttpReaderQueryInterface( _
 		ByVal this As IHttpReader Ptr, _
@@ -824,4 +946,40 @@ Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	@IHttpReaderGetPreloadedBytes, _
 	@IHttpReaderGetRequestedBytes, _
 	NULL _ /' @IHttpReaderIsCompleted'/
+)
+
+Function IHttpReaderCloneableQueryInterface( _
+		ByVal this As ICloneable Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return HttpReaderQueryInterface(ContainerOf(this, HttpReader, lpCloneableVtbl), riid, ppvObject)
+End Function
+
+Function IHttpReaderCloneableAddRef( _
+		ByVal this As ICloneable Ptr _
+	)As ULONG
+	Return HttpReaderAddRef(ContainerOf(this, HttpReader, lpCloneableVtbl))
+End Function
+
+Function IHttpReaderCloneableRelease( _
+		ByVal this As ICloneable Ptr _
+	)As ULONG
+	Return HttpReaderRelease(ContainerOf(this, HttpReader, lpCloneableVtbl))
+End Function
+
+Function IHttpReaderCloneableClone( _
+		ByVal this As ICloneable Ptr, _
+		ByVal pMalloc As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return HttpReaderCloneableClone(ContainerOf(this, HttpReader, lpCloneableVtbl), pMalloc, riid, ppvObject)
+End Function
+
+Dim GlobalHttpReaderCloneableVirtualTable As Const ICloneableVirtualTable = Type( _
+	@IHttpReaderCloneableQueryInterface, _
+	@IHttpReaderCloneableAddRef, _
+	@IHttpReaderCloneableRelease, _
+	@IHttpReaderCloneableClone _
 )

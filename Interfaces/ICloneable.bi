@@ -29,6 +29,7 @@ Type ICloneableVirtualTable
 	Clone As Function( _
 		ByVal this As ICloneable Ptr, _
 		ByVal pMalloc As IMalloc Ptr, _
+		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	
@@ -41,6 +42,6 @@ End Type
 #define ICloneable_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define ICloneable_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define ICloneable_Release(this) (this)->lpVtbl->Release(this)
-#define ICloneable_Clone(this, pMalloc, ppv) (this)->lpVtbl->Clone(this, pMalloc, ppv)
+#define ICloneable_Clone(this, pMalloc, riid, ppv) (this)->lpVtbl->Clone(this, pMalloc, riid, ppv)
 
 #endif
