@@ -1,4 +1,5 @@
 #include once "NetworkStream.bi"
+#include once "ICloneable.bi"
 #include once "IMutableAsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
@@ -6,6 +7,7 @@
 #include once "Network.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
+Extern GlobalNetworkStreamCloneableVirtualTable As Const ICloneableVirtualTable
 
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
@@ -13,6 +15,7 @@ Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 Type _NetworkStream
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
+	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -25,6 +28,25 @@ Sub InitializeNetworkStream( _
 	)
 	
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
+	this->lpCloneableVtbl = @GlobalNetworkStreamCloneableVirtualTable
+	InitializeCriticalSectionAndSpinCount( _
+		@this->crSection, _
+		MAX_CRITICAL_SECTION_SPIN_COUNT _
+	)
+	this->ReferenceCounter = 0
+	IMalloc_AddRef(pIMemoryAllocator)
+	this->pIMemoryAllocator = pIMemoryAllocator
+	this->ClientSocket = INVALID_SOCKET
+	
+End Sub
+
+Sub InitializeCloneNetworkStream( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
+	)
+	
+	this->lpVtbl = @GlobalNetworkStreamVirtualTable
+	this->lpCloneableVtbl = @GlobalNetworkStreamCloneableVirtualTable
 	InitializeCriticalSectionAndSpinCount( _
 		@this->crSection, _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
@@ -543,6 +565,67 @@ End Function
 	
 ' End Function
 
+Function NetworkStreamCloneableClone( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pMalloc As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(NetworkStream)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"NetworkStream cloning\t"), _
+			@vtAllocatedBytes _
+		)
+	End Scope
+	#endif
+	
+	Dim pClone As NetworkStream Ptr = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(NetworkStream) _
+	)
+	
+	If pClone <> NULL Then
+		InitializeCloneNetworkStream( _
+			pClone, _
+			pMalloc _
+		)
+		
+		Dim hrClone As HRESULT = NetworkStreamQueryInterface( _
+			pClone, _
+			riid, _
+			ppvObject _
+		)
+		
+		If SUCCEEDED(hrClone) Then
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("NetworkStream cloned"), _
+					@vtEmpty _
+				)
+			End Scope
+			#endif
+			
+			Return S_OK
+		End If
+		
+		DestroyNetworkStream(pClone)
+	End If
+	
+	*ppvObject = NULL
+	Return E_OUTOFMEMORY
+	
+End Function
+
 
 Function INetworkStreamQueryInterface( _
 		ByVal this As INetworkStream Ptr, _
@@ -715,4 +798,40 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
 	@INetworkStreamClose _
+)
+
+Function INetworkStreamCloneableQueryInterface( _
+		ByVal this As ICloneable Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return NetworkStreamQueryInterface(ContainerOf(this, NetworkStream, lpCloneableVtbl), riid, ppvObject)
+End Function
+
+Function INetworkStreamCloneableAddRef( _
+		ByVal this As ICloneable Ptr _
+	)As ULONG
+	Return NetworkStreamAddRef(ContainerOf(this, NetworkStream, lpCloneableVtbl))
+End Function
+
+Function INetworkStreamCloneableRelease( _
+		ByVal this As ICloneable Ptr _
+	)As ULONG
+	Return NetworkStreamRelease(ContainerOf(this, NetworkStream, lpCloneableVtbl))
+End Function
+
+Function INetworkStreamCloneableClone( _
+		ByVal this As ICloneable Ptr, _
+		ByVal pMalloc As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return NetworkStreamCloneableClone(ContainerOf(this, NetworkStream, lpCloneableVtbl), pMalloc, riid, ppvObject)
+End Function
+
+Dim GlobalNetworkStreamCloneableVirtualTable As Const ICloneableVirtualTable = Type( _
+	@INetworkStreamCloneableQueryInterface, _
+	@INetworkStreamCloneableAddRef, _
+	@INetworkStreamCloneableRelease, _
+	@INetworkStreamCloneableClone _
 )
