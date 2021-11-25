@@ -375,7 +375,7 @@ Function NetworkStreamBeginRead( _
 	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
 	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
-	Dim lpReceiveCompletionROUTINE As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
+	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
 	If callback = NULL Then
 		' Const ManualReset As Boolean = True
@@ -393,28 +393,29 @@ Function NetworkStreamBeginRead( _
 		
 		' lpRecvOverlapped->hEvent = pINewAsyncResult ' WSACreateEvent()  WSACloseEvent()
 		' INetworkStreamAsyncResult_SetWaitHandle(pINewAsyncResult, hEvent)
-		lpReceiveCompletionROUTINE = NULL
+		lpCompletionRoutine = NULL
 	Else
 		' TODO Реализовать для функции завершения ввода-вывода
 		' lpRecvOverlapped->hEvent = pINewAsyncResult
-		lpReceiveCompletionROUTINE = NULL
+		lpCompletionRoutine = NULL
 	End If
 	
 	Dim ReceiveBuffer As WSABUF = Any
 	ReceiveBuffer.len = Cast(ULONG, BufferLength)
 	ReceiveBuffer.buf = CPtr(ZString Ptr, Buffer)
 	
-	Const ReceiveBuffersCount As Integer = 1
+	Const BuffersCount As DWORD = 1
+	Const lpNumberOfBytesRecvd As LPDWORD = NULL
 	Dim Flags As DWORD = 0
 	
 	Dim WSARecvResult As Long = WSARecv( _
 		this->ClientSocket, _
 		@ReceiveBuffer, _
-		ReceiveBuffersCount, _
-		NULL, _
+		BuffersCount, _
+		lpNumberOfBytesRecvd, _
 		@Flags, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
-		lpReceiveCompletionROUTINE _
+		lpCompletionRoutine _
 	)
 	If WSARecvResult <> 0 Then
 		
