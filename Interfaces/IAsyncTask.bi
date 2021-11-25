@@ -4,6 +4,14 @@
 #include once "IThreadPool.bi"
 #include once "IAsyncResult.bi"
 
+' IAsyncTask.BeginExecute:
+' TEXTREADER_S_IO_PENDING, Any E_FAIL
+
+' IAsyncTask.EndExecute:
+' S_OK, S_FALSE, TEXTREADER_S_IO_PENDING, E_FAIL
+
+Const ASYNCTASK_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
+
 Type IAsyncTask As IAsyncTask_
 
 Extern IID_IAsyncTask Alias "IID_IAsyncTask" As Const IID

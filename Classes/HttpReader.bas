@@ -39,6 +39,27 @@ Type _HttpReader
 	IsAllBytesReaded As Boolean
 End Type
 
+Sub InitializeRawBuffer( _
+		ByVal pBufer As RawBuffer Ptr _
+	)
+	
+	' ZeroMemory(pBufer, SizeOf(RawBuffer))
+	pBufer->cbUsed = 0
+	pBufer->cbLength = 0
+	
+End Sub
+
+Sub InitializeLinesBuffer( _
+		ByVal pLines As LinesBuffer Ptr _
+	)
+	
+	' ZeroMemory(pLines, SizeOf(LinesBuffer))
+	pLines->Start = 0
+	pLines->Length = 0
+	pLines->wszLine[0] = 0
+	
+End Sub
+
 Function FindCrLfIndexW( _
 		ByVal Buffer As WString Ptr, _
 		ByVal BufferLength As Integer, _
@@ -222,14 +243,13 @@ Sub InitializeHttpReader( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
-	pReadedData->cbUsed = 0
-	pReadedData->cbLength = 0
-	' ZeroMemory(@pReadedData->Bytes(0), RAWBUFFER_CAPACITY)
+	
+	InitializeRawBuffer(pReadedData)
 	this->pReadedData = pReadedData
-	pLines->Start = 0
-	pLines->Length = 0
-	pLines->wszLine[0] = 0
+	
+	InitializeLinesBuffer(pLines)
 	this->pLines = pLines
+	
 	this->IsAllBytesReaded = False
 	
 End Sub
@@ -461,7 +481,7 @@ Function HttpReaderReadLine( _
 	)As HRESULT
 	
 	If this->IsAllBytesReaded = False Then
-		
+		/'
 		Dim hrReadAllBytes As HRESULT = HttpReaderReadAllBytes(this)
 		If FAILED(hrReadAllBytes) Then
 			*pLineLength = 0
@@ -478,7 +498,7 @@ Function HttpReaderReadLine( _
 			*ppLine = NULL
 			Return hrConvertBytes
 		End If
-		
+		'/
 	End If
 	
 	Dim pCurrentLine As WString Ptr = Any
@@ -515,16 +535,12 @@ Function HttpReaderBeginReadLine( _
 			ppIAsyncResult _
 		)
 		If FAILED(hrBeginRead) Then
-			Return HTTPREADER_E_SOCKETERROR
-		End If
-		
-		If hrBeginRead = BASESTREAM_S_IO_PENDING Then
-			Return TEXTREADER_S_IO_PENDING
+			Return hrBeginRead
 		End If
 		
 	End If
 	
-	Return S_OK
+	Return TEXTREADER_S_IO_PENDING
 	
 End Function
 
@@ -597,11 +613,11 @@ Function HttpReaderEndReadLine( _
 		Dim psa As SAFEARRAY Ptr = SafeArrayCreateVector( _
 			VT_UI1, _
 			0, _
-			RAWBUFFER_CAPACITY _
+			SizeOf(RawBuffer) _
 		)
 		Dim bytes As UByte Ptr = Any
 		SafeArrayAccessData(psa, @bytes)
-		CopyMemory(bytes, pStartBytes, RAWBUFFER_CAPACITY)
+		CopyMemory(bytes, pStartBytes, SizeOf(RawBuffer))
 		SafeArrayUnaccessData(psa)
 		
 		Dim vtArrayBytes As VARIANT = Any
@@ -648,9 +664,7 @@ Function HttpReaderClear( _
 	
 	this->IsAllBytesReaded = False
 	
-	this->pLines->Start = 0
-	this->pLines->Length = 0
-	this->pLines->wszLine[0] = 0
+	InitializeLinesBuffer(this->pLines)
 	
 	Dim cbPreloadedBytes As Integer = this->pReadedData->cbLength - this->pReadedData->cbUsed
 	

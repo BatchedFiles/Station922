@@ -13,9 +13,8 @@ Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 ' E_FAIL — readed error
 
 ' IClientRequest.BeginReadRequest:
-' S_OK — readed successful
 ' CLIENTREQUEST_S_IO_PENDING — read request add in queue
-' E_FAIL — read request add in queue
+' Any E_FAIL — error
 Const CLIENTREQUEST_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 ' IClientRequest.EndReadRequest:

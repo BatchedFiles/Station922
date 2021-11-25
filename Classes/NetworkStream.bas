@@ -348,7 +348,7 @@ End Function
 Function NetworkStreamBeginRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
+		ByVal BufferLength As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -366,12 +366,16 @@ Function NetworkStreamBeginRead( _
 		Return E_OUTOFMEMORY
 	End If
 	
-	Dim lpReceiveCompletionROUTINE As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
-	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	
+	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
+	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
+	
+	Dim lpReceiveCompletionROUTINE As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
 	If callback = NULL Then
 		' Const ManualReset As Boolean = True
@@ -397,19 +401,16 @@ Function NetworkStreamBeginRead( _
 	End If
 	
 	Dim ReceiveBuffer As WSABUF = Any
-	ReceiveBuffer.len = Cast(ULONG, Count)
-	ReceiveBuffer.buf = Buffer
+	ReceiveBuffer.len = Cast(ULONG, BufferLength)
+	ReceiveBuffer.buf = CPtr(ZString Ptr, Buffer)
 	
-	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
-	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
-	
-	Const MaxReceiveBuffersCount As Integer = 1
+	Const ReceiveBuffersCount As Integer = 1
 	Dim Flags As DWORD = 0
 	
 	Dim WSARecvResult As Long = WSARecv( _
 		this->ClientSocket, _
 		@ReceiveBuffer, _
-		MaxReceiveBuffersCount, _
+		ReceiveBuffersCount, _
 		NULL, _
 		@Flags, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
@@ -433,7 +434,7 @@ Function NetworkStreamBeginRead( _
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
-	Return S_OK
+	Return BASESTREAM_S_IO_PENDING
 	
 End Function
 

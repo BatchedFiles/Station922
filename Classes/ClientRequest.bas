@@ -292,19 +292,9 @@ Function ClientRequestBeginReadRequest( _
 	)
 	If FAILED(hrBeginReadLine) Then
 		Return CLIENTREQUEST_E_SOCKETERROR
-	Else
-		
-		Select Case hrBeginReadLine
-			
-			Case TEXTREADER_S_IO_PENDING
-				Return CLIENTREQUEST_S_IO_PENDING
-				
-			Case Else
-				Return S_OK
-				
-		End Select
-		
 	End If
+	
+	Return CLIENTREQUEST_S_IO_PENDING
 	
 End Function
 
@@ -313,15 +303,15 @@ Function ClientRequestEndReadRequest( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim EndReadLine As HRESULT = ITextReader_EndReadLine( _
+	Dim hrEndReadLine As HRESULT = ITextReader_EndReadLine( _
 		this->pIReader, _
 		pIAsyncResult, _
 		@this->RequestedLineLength, _
 		@this->RequestedLine _
 	)
-	If FAILED(EndReadLine) Then
+	If FAILED(hrEndReadLine) Then
 		
-		Select Case EndReadLine
+		Select Case hrEndReadLine
 			
 			Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
 				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
@@ -336,12 +326,12 @@ Function ClientRequestEndReadRequest( _
 				Return CLIENTREQUEST_E_EMPTYREQUEST
 				
 			Case Else
-				Return E_FAIL
+				Return hrEndReadLine
 				
 		End Select
 	End If
 	
-	Select Case EndReadLine
+	Select Case hrEndReadLine
 		
 		Case TEXTREADER_S_IO_PENDING
 			Return CLIENTREQUEST_S_IO_PENDING
@@ -654,6 +644,7 @@ Function ClientRequestGetKeepAlive( _
 	*pKeepAlive = this->KeepAlive
 	
 	Return S_OK
+	
 End Function
 
 Function ClientRequestGetContentLength( _
