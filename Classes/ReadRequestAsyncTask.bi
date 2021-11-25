@@ -86,4 +86,25 @@ Declare Function ReadRequestAsyncTaskSetRemoteAddress( _
 	ByVal RemoteAddressLength As Integer _
 )As HRESULT
 
+Declare Function ReadRequestAsyncTaskCloneableQueryInterface( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppvObject As Any Ptr Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskCloneableAddRef( _
+	ByVal this As ReadRequestAsyncTask Ptr _
+)As ULONG
+
+Declare Function ReadRequestAsyncTaskCloneableRelease( _
+	ByVal this As ReadRequestAsyncTask Ptr _
+)As ULONG
+
+Declare Function ReadRequestAsyncTaskCloneableClone( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pMalloc As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppvObject As Any Ptr Ptr _
+)As HRESULT
+
 #endif
