@@ -714,7 +714,7 @@ Function ReadRequestAsyncTaskBeginExecute( _
 	' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
 	' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
 	
-	Return S_OK
+	Return ASYNCTASK_S_IO_PENDING
 	
 End Function
 
@@ -754,7 +754,9 @@ Function ReadRequestAsyncTaskEndExecute( _
 		' DebugPrintHttpReader(pIHttpReader)
 		
 		' ProcessEndReadError(pIContext, hrEndReadRequest)
+		
 		CloseSocketConnection(this->ClientSocket)
+		
 		Return E_FAIL
 	End If
 	
@@ -771,12 +773,73 @@ Function ReadRequestAsyncTaskEndExecute( _
 				pIWebSites _
 			)
 			'/
+			Scope
+				Dim KeepAlive As Boolean = Any
+				IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
+				
+				If KeepAlive Then
+					Const Html = Str(!"HTTP/1.1 200 Ok\r\nContent-Length: 58\r\nContent-Type: text/html;charset=utf-8\r\n\r\n<htm><head></head><body><p>Test WebServer</p></body></htm>")
+					Dim WritedBytes As DWORD = Any
+					INetworkStream_Write( _
+						this->pINetworkStream, _
+						@Html, _
+						Len(Html), _
+						@WritedBytes _
+					)
+				Else
+					Const Html = Str(!"HTTP/1.1 200 Ok\r\nContent-Length: 58\r\nConnection: Close\r\nContent-Type: text/html;charset=utf-8\r\n\r\n<htm><head></head><body><p>Test WebServer</p></body></htm>")
+					Dim WritedBytes As DWORD = Any
+					INetworkStream_Write( _
+						this->pINetworkStream, _
+						@Html, _
+						Len(Html), _
+						@WritedBytes _
+					)
+					CloseSocketConnection(this->ClientSocket)
+					Return S_OK
+				End If
+			End Scope
+			
+			Scope
+				IHttpReader_Clear(this->pIHttpReader)
+				IClientRequest_Clear(this->pIRequest)
+				
+				ReadRequestAsyncTaskAddRef(this)
+				
+				Dim pIAsyncResult As IAsyncResult Ptr = Any
+				Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
+					this->pIRequest, _
+					CPtr(IUnknown Ptr, @this->lpVtbl), _
+					@pIAsyncResult _
+				)
+				If FAILED(hrBeginReadRequest) Then
+					ReadRequestAsyncTaskRelease(this)
+					
+					Dim vtSCode As VARIANT = Any
+					vtSCode.vt = VT_ERROR
+					vtSCode.scode = hrBeginReadRequest
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"IClientRequest_BeginReadRequest Error\t"), _
+						@vtSCode _
+					)
+					' TODO Отправить клиенту Не могу начать асинхронное чтение
+					' ProcessBeginReadError(pIContext, hrBeginReadRequest)
+					CloseSocketConnection(this->ClientSocket)
+					Return hrBeginReadRequest
+				End If
+			End Scope
+			
+			Return S_OK
 			
 		Case S_FALSE
+			' Received 0 bytes
 			' TODO Вывести байты запроса в лог
 			' DebugPrintHttpReader(pIHttpReader)
 			
 			CloseSocketConnection(this->ClientSocket)
+			
+			Return S_FALSE
 			
 		Case CLIENTREQUEST_S_IO_PENDING
 			' Создать задачу чтения
@@ -867,9 +930,9 @@ Function ReadRequestAsyncTaskEndExecute( _
 			' Счётчик ссылок уменьшим в функции EndExecute
 			' Когда задача будет завершена
 			
+			Return ASYNCTASK_S_IO_PENDING
+			
 	End Select
-	
-	Return S_OK
 	
 End Function
 
