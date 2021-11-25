@@ -164,8 +164,12 @@ Function NetworkStreamQueryInterface( _
 			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
+				If IsEqualIID(@IID_ICloneable, riid) Then
+					*ppv = @this->lpCloneableVtbl
+				Else
+					*ppv = NULL
+					Return E_NOINTERFACE
+				End If
 			End If
 		End If
 	End If
@@ -350,8 +354,6 @@ Function NetworkStreamBeginRead( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	*ppIAsyncResult = NULL
-	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
@@ -360,6 +362,7 @@ Function NetworkStreamBeginRead( _
 		@pINewAsyncResult _
 	)
 	If FAILED(hr) Then
+		*ppIAsyncResult = NULL
 		Return E_OUTOFMEMORY
 	End If
 	
@@ -416,6 +419,7 @@ Function NetworkStreamBeginRead( _
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then
+			*ppIAsyncResult = NULL
 			IMutableAsyncResult_Release(pINewAsyncResult)
 			Return HRESULT_FROM_WIN32(intError)
 		End If
