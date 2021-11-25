@@ -50,7 +50,6 @@ Type ITextReaderVirtualTable
 	ReadCharArray As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal Buffer As WString Ptr, _
-		ByVal Index As Integer, _
 		ByVal Count As Integer, _
 		ByVal pReadedChars As Integer Ptr _
 	)As HRESULT
@@ -106,7 +105,7 @@ End Type
 #define ITextReader_Release(this) (this)->lpVtbl->Release(this)
 ' #define ITextReader_Peek(this, pChar) (this)->lpVtbl->Peek(this, pChar)
 ' #define ITextReader_ReadChar(this, pChar) (this)->lpVtbl->ReadChar(this, pChar)
-' #define ITextReader_ReadCharArray(this, Buffer, Index, Count, pReadedChars) (this)->lpVtbl->ReadCharArray(this, Buffer, Index, Count, pReadedChars)
+' #define ITextReader_ReadCharArray(this, Buffer, Count, pReadedChars) (this)->lpVtbl->ReadCharArray(this, Buffer, Count, pReadedChars)
 #define ITextReader_ReadLine(this, pLineLength, pLine) (this)->lpVtbl->ReadLine(this, pLineLength, pLine)
 ' #define ITextReader_ReadToEnd(this, pLineLength, pLine) (this)->lpVtbl->ReadToEnd(this, pLineLength, pLine)
 #define ITextReader_BeginReadLine(this, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, callback, StateObject, ppIAsyncResult)

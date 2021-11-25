@@ -55,7 +55,6 @@ Type IHttpReaderVirtualTable
 	ReadCharArray As Function( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal Buffer As WString Ptr, _
-		ByVal Index As Integer, _
 		ByVal Count As Integer, _
 		ByVal pReadedChars As Integer Ptr _
 	)As HRESULT
