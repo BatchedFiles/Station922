@@ -572,6 +572,8 @@ Function HttpReaderEndReadLine( _
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 	End If
 	
+	this->pReadedData->cbLength = cbNewLength
+	
 	Dim pStartBytes As UByte Ptr = @this->pReadedData->Bytes(0)
 	Dim DoubleCrLfIndex As Integer = Any
 	Dim Finded As Boolean = FindDoubleCrLfIndexA( _
@@ -584,8 +586,6 @@ Function HttpReaderEndReadLine( _
 		*ppLine = NULL
 		Return TEXTREADER_S_IO_PENDING
 	End If
-	
-	this->pReadedData->cbLength = cbNewLength
 	
 	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
 	this->pReadedData->cbUsed = cbNewUsed
