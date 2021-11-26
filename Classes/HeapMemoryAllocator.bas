@@ -10,8 +10,8 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 
 ' TODO Ќайти способ использовать кучу без блокировки
-' Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
-Const HEAP_NO_SERIALIZE_FLAG = 0
+Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
+' Const HEAP_NO_SERIALIZE_FLAG = 0
 
 Type MemoryRegion
 	pMemory As Any Ptr
@@ -20,7 +20,7 @@ End Type
 
 Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
-	crSection As CRITICAL_SECTION
+	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pISpyObject As IMallocSpy Ptr
 	MemoryAllocations As Integer
@@ -35,10 +35,10 @@ Sub InitializeHeapMemoryAllocator( _
 	)
 	
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	' InitializeCriticalSectionAndSpinCount( _
+		' @this->crSection, _
+		' MAX_CRITICAL_SECTION_SPIN_COUNT _
+	' )
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 0
@@ -56,7 +56,7 @@ Sub UnInitializeHeapMemoryAllocator( _
 		IMallocSpy_Release(this->pISpyObject)
 	End If
 	
-	DeleteCriticalSection(@this->crSection)
+	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -206,11 +206,11 @@ Function HeapMemoryAllocatorAddRef( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter += 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	Return this->ReferenceCounter
 	
@@ -220,11 +220,11 @@ Function HeapMemoryAllocatorRelease( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter -= 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -249,11 +249,25 @@ Function HeapMemoryAllocatorAlloc( _
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = cb
 	
-	Dim pMemory As Any Ptr = HeapAlloc( _
-		this->hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		cb _
-	)
+	#if __FB_DEBUG__
+		Const BAADF00D = Str(!"\&hBA\&hAD\&hF0\&h0D")
+		Dim padding As SIZE_T_= (Len(BAADF00D) - (cb Mod Len(BAADF00D))) Mod Len(BAADF00D)
+		Dim bcAlign As SIZE_T_ = cb + padding
+		Dim pMemory As ZString Ptr = HeapAlloc( _
+			this->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			bcAlign _
+		)
+		For i As Integer = 0 To bcAlign - 1 Step Len(BAADF00D)
+			CopyMemory(@pMemory[i], @BAADF00D, Len(BAADF00D) * SizeOf(ZString))
+		Next
+	#else
+		Dim pMemory As Any Ptr = HeapAlloc( _
+			this->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			cb _
+		)
+	#endif
 	
 	If pMemory = NULL Then
 		LogWriteEntry( _
