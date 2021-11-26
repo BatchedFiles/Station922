@@ -1,36 +1,18 @@
 #include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
-#include once "ICloneable.bi"
 #include once "Logger.bi"
 
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
-/'
-typedef struct {
-#ifdef _WIN64
-    DWORD pad;
-#endif
-    DWORD size;
-    union {
-        char ptr[1];
-        WCHAR str[1];
-        DWORD dwptr[1];
-    } u;
-} bstr_t;
-'/
-
 Type _InternalHeapBSTR
 	lpVtbl As Const IStringVirtualTable Ptr
-	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	#ifdef __FB_64BIT__
 		Padding As DWORD
 	#endif
 	cbBytes As DWORD
-	wszNullChar As OLECHAR
+	wszNullChar(0) As OLECHAR
 End Type
 
 Function HeapSysCopyString( _
@@ -42,34 +24,15 @@ Function HeapSysCopyString( _
 		Return NULL
 	End If
 	
-	Dim pIString As IString Ptr = GetIStringFromHeapBSTR(source)
+	Dim this As InternalHeapBSTR Ptr = ContainerOf(source, InternalHeapBSTR, wszNullChar(0))
 	
-	Dim pICloneable As ICloneable Ptr = Any
-	Dim hrCreateCloneable As HRESULT = IString_QueryInterface( _
-		pIString, _
-		@IID_ICloneable, _
-		@pICloneable _
-	)
-	If FAILED(hrCreateCloneable) Then
-		Return NULL
-	End If
+	Dim Length As UINT = SysStringLen(source)
 	
-	Dim copy As IString Ptr = Any
-	Dim hr As HRESULT = ICloneable_Clone( _
-		pICloneable, _
+	Dim pHeapBstr As HeapBSTR = HeapSysAllocStringLen( _
 		pIMemoryAllocator, _
-		@IID_IString, _
-		@copy _
+		@this->wszNullChar(0), _
+		Length _
 	)
-	If FAILED(hr) Then
-		ICloneable_Release(pICloneable)
-		Return NULL
-	End If
-	
-	ICloneable_Release(pICloneable)
-	
-	Dim pHeapBstr As HeapBSTR = Any
-	IString_GetHeapBSTR(copy, @pHeapBstr)
 	
 	Return pHeapBstr
 	
@@ -92,28 +55,28 @@ Function HeapSysAllocStringLen( _
 		ByVal Length As UINT _
 	)As HeapBSTR
 	
-	Dim pInternalHeapBstr As InternalHeapBSTR Ptr = CreateInternalHeapBSTR( _
+	Dim this As InternalHeapBSTR Ptr = CreateInternalHeapBSTR( _
 		pIMemoryAllocator, _
 		pwsz, _
 		Length _
 	)
-	If pInternalHeapBstr = NULL Then
+	If this = NULL Then
 		Return NULL
 	End If
 	
 	Dim pIString As IString Ptr = Any
 	Dim hr As HRESULT = InternalHeapBSTRQueryInterface( _
-		pInternalHeapBstr, _
+		this, _
 		@IID_IString, _
 		@pIString _
 	)
 	If FAILED(hr) Then
-		DestroyInternalHeapBSTR(pInternalHeapBstr)
+		DestroyInternalHeapBSTR(this)
 		Return NULL
 	End If
 	
 	Dim pHeapBstr As HeapBSTR = Any
-	IString_GetHeapBSTR(pIString, @pHeapBstr)
+	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
 	
 	Return pHeapBstr
 	
@@ -137,24 +100,25 @@ Sub InitializeInternalHeapBSTR( _
 		ByVal Length As UINT _
 	)
 	this->lpVtbl = @GlobalInternalStringVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
+	#ifdef __FB_64BIT__
+		this->Padding = 0
+	#endif
+	
 	If Length = 0 Then
 		this->cbBytes = 0
-		this->wszNullChar = 0
+		this->wszNullChar(0) = 0
 	Else
 		this->cbBytes = Length * SizeOf(OLECHAR)
 		CopyMemory( _
-			@this->wszNullChar, _
+			@this->wszNullChar(0), _
 			pwsz, _
-			(Length + 1) * SizeOf(OLECHAR) _
+			(Length) * SizeOf(OLECHAR) _
 		)
+		this->wszNullChar(Length) = 0
 	End If
 	
 End Sub
@@ -164,7 +128,6 @@ Sub UnInitializeInternalHeapBSTR( _
 	)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -174,7 +137,7 @@ Function CreateInternalHeapBSTR( _
 		ByVal Length As UINT _
 	)As InternalHeapBSTR Ptr
 	
-	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR)
+	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
 	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
 	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
 	
@@ -288,11 +251,7 @@ Function InternalHeapBSTRAddRef( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -302,11 +261,7 @@ Function InternalHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -323,7 +278,7 @@ Function InternalHeapBSTRGetHeapBSTR( _
 		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
 	)As HRESULT
 	
-	*pcHeapBSTR = @this->wszNullChar
+	*pcHeapBSTR = @this->wszNullChar(0)
 	
 	Return S_OK
 	
@@ -333,7 +288,7 @@ Function GetIStringFromHeapBSTR( _
 		ByVal bs As HeapBSTR _
 	)As IString Ptr
 	
-	Dim this As InternalHeapBSTR Ptr = ContainerOf(bs, InternalHeapBSTR, wszNullChar)
+	Dim this As InternalHeapBSTR Ptr = ContainerOf(bs, InternalHeapBSTR, wszNullChar(0))
 	
 	Dim pIString As IString Ptr = CPtr(IString Ptr, @this->lpVtbl)
 	
