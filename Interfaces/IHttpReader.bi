@@ -61,14 +61,12 @@ Type IHttpReaderVirtualTable
 	
 	ReadLine As Function( _
 		ByVal this As IHttpReader Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal pLine As WString Ptr Ptr _
+		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	ReadToEnd As Function( _
 		ByVal this As IHttpReader Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
+		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	BeginReadLine As Function( _
@@ -81,8 +79,7 @@ Type IHttpReaderVirtualTable
 	EndReadLine As Function( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
+		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	BeginReadToEnd As Function( _
@@ -95,8 +92,7 @@ Type IHttpReaderVirtualTable
 	EndReadToEnd As Function( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLinesLength As Integer Ptr, _
-		ByVal pLines As WString Ptr Ptr _
+		ByVal pLines As HeapBSTR Ptr _
 	)As HRESULT
 	
 	Clear As Function( _
@@ -139,9 +135,9 @@ End Type
 #define IHttpReader_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IHttpReader_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpReader_Release(this) (this)->lpVtbl->Release(this)
-#define IHttpReader_ReadLine(this, pLineLength, pLine) (this)->lpVtbl->ReadLine(this, pLineLength, pLine)
+#define IHttpReader_ReadLine(this, pLine) (this)->lpVtbl->ReadLine(this, pLine)
 #define IHttpReader_BeginReadLine(this, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, callback, StateObject, ppIAsyncResult)
-#define IHttpReader_EndReadLine(this, pIAsyncResult, pLineLength, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLineLength, pLine)
+#define IHttpReader_EndReadLine(this, pIAsyncResult, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLine)
 #define IHttpReader_Clear(this) (this)->lpVtbl->Clear(this)
 ' #define IHttpReader_GetBaseStream(this, ppResult) (this)->lpVtbl->GetBaseStream(this, ppResult)
 #define IHttpReader_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)

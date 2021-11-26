@@ -3,6 +3,7 @@
 
 #include once "windows.bi"
 #include once "win\ole2.bi"
+#include once "IString.bi"
 
 ' ITextReader.ReadLine:
 ' S_OK, S_FALSE, E_FAIL
@@ -56,14 +57,12 @@ Type ITextReaderVirtualTable
 	
 	ReadLine As Function( _
 		ByVal this As ITextReader Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal pLine As WString Ptr Ptr _
+		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	ReadToEnd As Function( _
 		ByVal this As ITextReader Ptr, _
-		ByVal pLinesLength As Integer Ptr, _
-		ByVal pLines As WString Ptr Ptr _
+		ByVal pLines As HeapBSTR Ptr _
 	)As HRESULT
 	
 	BeginReadLine As Function( _
@@ -76,8 +75,7 @@ Type ITextReaderVirtualTable
 	EndReadLine As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal pLine As WString Ptr Ptr _
+		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	BeginReadToEnd As Function( _
@@ -90,8 +88,7 @@ Type ITextReaderVirtualTable
 	EndReadToEnd As Function( _
 		ByVal this As ITextReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLinesLength As Integer Ptr, _
-		ByVal pLines As WString Ptr Ptr _
+		ByVal pLines As HeapBSTR Ptr _
 	)As HRESULT
 	
 End Type
@@ -106,9 +103,9 @@ End Type
 ' #define ITextReader_Peek(this, pChar) (this)->lpVtbl->Peek(this, pChar)
 ' #define ITextReader_ReadChar(this, pChar) (this)->lpVtbl->ReadChar(this, pChar)
 ' #define ITextReader_ReadCharArray(this, Buffer, Count, pReadedChars) (this)->lpVtbl->ReadCharArray(this, Buffer, Count, pReadedChars)
-#define ITextReader_ReadLine(this, pLineLength, pLine) (this)->lpVtbl->ReadLine(this, pLineLength, pLine)
-' #define ITextReader_ReadToEnd(this, pLineLength, pLine) (this)->lpVtbl->ReadToEnd(this, pLineLength, pLine)
+#define ITextReader_ReadLine(this, pLine) (this)->lpVtbl->ReadLine(this, pLine)
+' #define ITextReader_ReadToEnd(this, pLine) (this)->lpVtbl->ReadToEnd(this, pLine)
 #define ITextReader_BeginReadLine(this, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, callback, StateObject, ppIAsyncResult)
-#define ITextReader_EndReadLine(this, pIAsyncResult, pLineLength, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLineLength, pLine)
+#define ITextReader_EndReadLine(this, pIAsyncResult, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLine)
 
 #endif

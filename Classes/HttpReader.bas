@@ -1,8 +1,8 @@
 #include once "HttpReader.bi"
 #include once "ContainerOf.bi"
+#include once "HeapBSTR.bi"
 #include once "ICloneable.bi"
 #include once "Logger.bi"
-#include once "StringConstants.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
 Extern GlobalHttpReaderCloneableVirtualTable As Const ICloneableVirtualTable
@@ -30,7 +30,7 @@ End Type
 Type _HttpReader
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
+	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
@@ -59,6 +59,35 @@ Function RawBufferGetFreeSpaceLength( _
 	
 End Function
 
+Function FindDoubleCrLfIndexA( _
+		ByVal Buffer As UByte Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal pFindIndex As Integer Ptr _
+	)As Boolean
+	
+	Const DoubleNewLineStringA = Str(!"\r\n\r\n")
+	
+	For i As Integer = 0 To BufferLength - Len(DoubleNewLineStringA)
+		
+		Dim Destination As UByte Ptr = @Buffer[i]
+		Dim Finded As BOOL = RtlEqualMemory( _
+			Destination, _
+			@DoubleNewLineStringA, _
+			Len(DoubleNewLineStringA) * SizeOf(ZString) _
+		)
+		
+		If Finded Then
+			*pFindIndex = i
+			Return True
+		End If
+		
+	Next
+	
+	*pFindIndex = 0
+	Return False
+	
+End Function
+
 Sub InitializeLinesBuffer( _
 		ByVal pLines As LinesBuffer Ptr _
 	)
@@ -76,48 +105,57 @@ Function FindCrLfIndexW( _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
 	
-	For i As Integer = 0 To BufferLength - NewLineStringLength
+	Const NewLineStringW = WStr(!"\r\n")
+	
+	For i As Integer = 0 To BufferLength - Len(NewLineStringW)
 		
-		If Buffer[i + 0] = 13 Then
-			If Buffer[i + 1] = 10 Then
-				*pFindIndex = i
-				Return True
-			End If
+		Dim Destination As WString Ptr = @Buffer[i]
+		Dim Finded As BOOL = RtlEqualMemory( _
+			Destination, _
+			@NewLineStringW, _
+			Len(NewLineStringW) * SizeOf(WString) _
+		)
+		
+		If Finded Then
+			*pFindIndex = i
+			Return True
 		End If
 		
 	Next
 	
 	*pFindIndex = 0
-	
 	Return False
 	
 End Function
 
-Function FindDoubleCrLfIndexA( _
-		ByVal Buffer As ZString Ptr, _
-		ByVal BufferLength As Integer, _
-		ByVal pFindIndex As Integer Ptr _
-	)As Boolean
+Function LinesBufferGetLine( _
+		ByVal lpLines As LinesBuffer Ptr, _
+		ByVal ppLine As WString Ptr Ptr _
+	)As Integer
 	
-	For i As Integer = 0 To BufferLength - NewLineStringLength * 2
-		
-		If Buffer[i + 0] = 13 Then
-			If Buffer[i + 1] = 10  Then
-				If Buffer[i + 2] = 13 Then
-					If Buffer[i + 3] = 10 Then
-						
-						*pFindIndex = i
-						Return True
-						
-					End If
-				End If
-			End If
-		End If
-		
-	Next
+	Dim Index As Integer = lpLines->Start
+	Dim cbUsedChars As Integer = lpLines->Length - Index
+	Dim lpBuffer As WString Ptr = @lpLines->wszLine[Index]
+	Dim CrLfIndex As Integer = Any
+	FindCrLfIndexW( _
+		lpBuffer, _
+		cbUsedChars, _
+		@CrLfIndex _
+	)
 	
-	*pFindIndex = 0
-	Return False
+	' TODO Проверить, начинается ли строка за CrLf с пробела
+	' Если начинается — объединить обе строки
+	
+	Dim CrlfOrdinal As Integer = Index + CrLfIndex
+	lpLines->wszLine[CrlfOrdinal] = 0
+	
+	*ppLine = @lpLines->wszLine[Index]
+	
+	Const NewLineStringW = WStr(!"\r\n")
+	Dim NewStartIndex As Integer = Index + CrLfIndex + Len(NewLineStringW)
+	lpLines->Start = NewStartIndex
+	
+	Return CrLfIndex
 	
 End Function
 
@@ -146,36 +184,6 @@ Function ConvertBytesToWString( _
 	lpLines->wszLine[CharsLength] = 0
 	
 	Return S_OK
-	
-End Function
-
-Function GetLine( _
-		ByVal lpLines As LinesBuffer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
-	)As Integer
-	
-	Dim Index As Integer = lpLines->Start
-	Dim cbUsedChars As Integer = lpLines->Length - Index
-	Dim lpBuffer As WString Ptr = @lpLines->wszLine[Index]
-	Dim CrLfIndex As Integer = Any
-	FindCrLfIndexW( _
-		lpBuffer, _
-		cbUsedChars, _
-		@CrLfIndex _
-	)
-	
-	' TODO Проверить, начинается ли строка за CrLf с пробела
-	' Если начинается — объединить обе строки
-	
-	Dim CrlfOrdinal As Integer = Index + CrLfIndex
-	lpLines->wszLine[CrlfOrdinal] = 0
-	
-	*ppLine = @lpLines->wszLine[Index]
-	
-	Dim NewStartIndex As Integer = Index + CrLfIndex + NewLineStringLength
-	lpLines->Start = NewStartIndex
-	
-	Return CrLfIndex
 	
 End Function
 
@@ -241,16 +249,15 @@ End Function
 Sub InitializeHttpReader( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pReadedData As RawBuffer Ptr, _
-		ByVal pLines As LinesBuffer Ptr _
+		ByVal pReadedData As RawBuffer Ptr _
 	)
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	' InitializeCriticalSectionAndSpinCount( _
+		' @this->crSection, _
+		' MAX_CRITICAL_SECTION_SPIN_COUNT _
+	' )
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -259,8 +266,8 @@ Sub InitializeHttpReader( _
 	InitializeRawBuffer(pReadedData)
 	this->pReadedData = pReadedData
 	
-	InitializeLinesBuffer(pLines)
-	this->pLines = pLines
+	' InitializeLinesBuffer(pLines)
+	this->pLines = NULL
 	
 	this->IsAllBytesReaded = False
 	
@@ -276,10 +283,10 @@ Sub InitializeCloneHttpReader( _
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	' InitializeCriticalSectionAndSpinCount( _
+		' @this->crSection, _
+		' MAX_CRITICAL_SECTION_SPIN_COUNT _
+	' )
 	this->ReferenceCounter = 0
 	
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -290,7 +297,9 @@ Sub InitializeCloneHttpReader( _
 	CopyMemory(pReadedData, Source->pReadedData, SizeOf(RawBuffer))
 	this->pReadedData = pReadedData
 	
-	CopyMemory(pLines, Source->pLines, SizeOf(LinesBuffer))
+	If pLines <> NULL Then
+		CopyMemory(pLines, Source->pLines, SizeOf(LinesBuffer))
+	End If
 	this->pLines = pLines
 	
 	this->IsAllBytesReaded = Source->IsAllBytesReaded
@@ -301,7 +310,10 @@ Sub UnInitializeHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-	IMalloc_Free(this->pIMemoryAllocator, this->pLines)
+	If this->pLines <> NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, this->pLines)
+	End If
+	
 	IMalloc_Free(this->pIMemoryAllocator, this->pReadedData)
 	
 	If this->pIStream <> NULL Then
@@ -309,7 +321,7 @@ Sub UnInitializeHttpReader( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
+	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -337,42 +349,31 @@ Function CreateHttpReader( _
 	
 	If pReadedData <> NULL Then
 		
-		Dim pLines As LinesBuffer Ptr = IMalloc_Alloc( _
+		Dim this As HttpReader Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
-			SizeOf(LinesBuffer) _
+			SizeOf(HttpReader) _
 		)
 		
-		If pLines <> NULL Then
-			
-			Dim this As HttpReader Ptr = IMalloc_Alloc( _
+		If this <> NULL Then
+			InitializeHttpReader( _
+				this, _
 				pIMemoryAllocator, _
-				SizeOf(HttpReader) _
+				pReadedData _
 			)
 			
-			If this <> NULL Then
-				InitializeHttpReader( _
-					this, _
-					pIMemoryAllocator, _
-					pReadedData, _
-					pLines _
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("HttpReader created"), _
+					@vtEmpty _
 				)
-				
-				#if __FB_DEBUG__
-				Scope
-					Dim vtEmpty As VARIANT = Any
-					VariantInit(@vtEmpty)
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr("HttpReader created"), _
-						@vtEmpty _
-					)
-				End Scope
-				#endif
-				
-				Return this
-			End If
+			End Scope
+			#endif
 			
-			IMalloc_Free(pIMemoryAllocator, pLines)
+			Return this
 		End If
 		
 		IMalloc_Free(pIMemoryAllocator, pReadedData)
@@ -456,11 +457,11 @@ Function HttpReaderAddRef( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter += 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	Return this->ReferenceCounter
 	
@@ -470,11 +471,11 @@ Function HttpReaderRelease( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter -= 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -488,8 +489,7 @@ End Function
 
 Function HttpReaderReadLine( _
 		ByVal this As HttpReader Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
+		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	If this->IsAllBytesReaded = False Then
@@ -511,16 +511,34 @@ Function HttpReaderReadLine( _
 			Return hrConvertBytes
 		End If
 		'/
+		
+		*ppLine = NULL
+		Return E_FAIL
 	End If
 	
 	Dim pCurrentLine As WString Ptr = Any
-	Dim LineLength As Integer = GetLine( _
+	Dim LineLength As Integer = LinesBufferGetLine( _
 		this->pLines, _
 		@pCurrentLine  _
 	)
 	
-	*pLineLength = LineLength
-	*ppLine = pCurrentLine
+	Dim bstrLine As HeapBSTR = HeapSysAllocStringLen( _
+		this->pIMemoryAllocator, _
+		pCurrentLine, _
+		LineLength _
+	)
+	
+	If SysStringLen(bstrLine) = 0 Then
+		If this->pLines <> NULL Then
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				this->pLines _
+			)
+			this->pLines = NULL
+		End If
+	End If
+	
+	*ppLine = bstrLine
 	
 	Return S_OK
 	
@@ -559,8 +577,7 @@ End Function
 Function HttpReaderEndReadLine( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
+		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	Dim cbReceived As DWORD = Any
@@ -572,7 +589,6 @@ Function HttpReaderEndReadLine( _
 			@cbReceived _
 		)
 		If FAILED(hrRead) Then
-			*pLineLength = 0
 			*ppLine = NULL
 			Return hrRead
 		End If
@@ -580,12 +596,10 @@ Function HttpReaderEndReadLine( _
 		Select Case hrRead
 			
 			Case BASESTREAM_S_IO_PENDING
-				*pLineLength = 0
 				*ppLine = NULL
 				Return TEXTREADER_S_IO_PENDING
 				
 			Case S_FALSE
-				*pLineLength = 0
 				*ppLine = NULL
 				Return S_FALSE
 				
@@ -595,7 +609,6 @@ Function HttpReaderEndReadLine( _
 	Dim cbNewLength As Integer = this->pReadedData->cbLength + cbReceived
 	
 	If cbNewLength >= RAWBUFFER_CAPACITY Then
-		*pLineLength = 0
 		*ppLine = NULL
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 	End If
@@ -610,12 +623,12 @@ Function HttpReaderEndReadLine( _
 		@DoubleCrLfIndex _
 	)
 	If Finded = False Then
-		*pLineLength = 0
 		*ppLine = NULL
 		Return TEXTREADER_S_IO_PENDING
 	End If
 	
-	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
+	Const NewLineStringW = WStr(!"\r\n")
+	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * Len(NewLineStringW)
 	this->pReadedData->cbUsed = cbNewUsed
 	
 	this->IsAllBytesReaded = True
@@ -646,25 +659,48 @@ Function HttpReaderEndReadLine( _
 	#endif
 	
 	Scope
+		If this->pLines <> NULL Then
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				this->pLines _
+			)
+		End If
+		
+		Dim pLines As LinesBuffer Ptr = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			SizeOf(LinesBuffer) _
+		)
+		If pLines = NULL Then
+			*ppLine = NULL
+			Return E_OUTOFMEMORY
+		End If
+		
+		InitializeLinesBuffer(pLines)
+		this->pLines = pLines
+		
 		Dim hrConvertBytes As HRESULT = ConvertBytesToWString( _
 			this->pLines, _
 			this->pReadedData _
 		)
 		If FAILED(hrConvertBytes) Then
-			*pLineLength = 0
 			*ppLine = NULL
 			Return hrConvertBytes
 		End If
 	End Scope
 	
 	Dim pCurrentLine As WString Ptr = Any
-	Dim LineLength As Integer = GetLine( _
+	Dim LineLength As Integer = LinesBufferGetLine( _
 		this->pLines, _
 		@pCurrentLine  _
 	)
 	
-	*pLineLength = LineLength
-	*ppLine = pCurrentLine
+	Dim bstrLine As HeapBSTR = HeapSysAllocStringLen( _
+		this->pIMemoryAllocator, _
+		pCurrentLine, _
+		LineLength _
+	)
+	
+	*ppLine = bstrLine
 	
 	Return S_OK
 	
@@ -675,8 +711,6 @@ Function HttpReaderClear( _
 	)As HRESULT
 	
 	this->IsAllBytesReaded = False
-	
-	InitializeLinesBuffer(this->pLines)
 	
 	Dim cbPreloadedBytes As Integer = this->pReadedData->cbLength - this->pReadedData->cbUsed
 	
@@ -886,10 +920,9 @@ End Function
 
 Function IHttpReaderReadLine( _
 		ByVal this As IHttpReader Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal pLine As WString Ptr Ptr _
+		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
-	Return HttpReaderReadLine(ContainerOf(this, HttpReader, lpVtbl), pLineLength, pLine)
+	Return HttpReaderReadLine(ContainerOf(this, HttpReader, lpVtbl), pLine)
 End Function
 
 Function IHttpReaderBeginReadLine( _
@@ -904,10 +937,9 @@ End Function
 Function IHttpReaderEndReadLine( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLineLength As Integer Ptr, _
-		ByVal ppLine As WString Ptr Ptr _
+		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
-	Return HttpReaderEndReadLine(ContainerOf(this, HttpReader, lpVtbl), pIAsyncResult, pLineLength, ppLine)
+	Return HttpReaderEndReadLine(ContainerOf(this, HttpReader, lpVtbl), pIAsyncResult, ppLine)
 End Function
 
 Function IHttpReaderClear( _

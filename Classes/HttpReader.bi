@@ -33,8 +33,7 @@ Declare Function HttpReaderRelease( _
 
 Declare Function HttpReaderReadLine( _
 	ByVal this As HttpReader Ptr, _
-	ByVal pLineLength As Integer Ptr, _
-	ByVal pLine As WString Ptr Ptr _
+	ByVal pLine As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function HttpReaderBeginReadLine( _
@@ -47,8 +46,7 @@ Declare Function HttpReaderBeginReadLine( _
 Declare Function HttpReaderEndReadLine( _
 	ByVal this As HttpReader Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pLineLength As Integer Ptr, _
-	ByVal ppLine As WString Ptr Ptr _
+	ByVal ppLine As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function HttpReaderClear( _
