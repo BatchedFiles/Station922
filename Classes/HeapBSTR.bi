@@ -5,34 +5,6 @@
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
-' Declare Function HeapSysAllocString( _
-	' ByVal pIMemoryAllocator As IMalloc Ptr, _
-	' ByVal psz As Const WString Ptr _
-' )As HeapBSTR
-
-' Declare Function HeapSysAllocStringLen( _
-	' ByVal pIMemoryAllocator As IMalloc Ptr, _
-	' ByVal psz As Const WString Ptr, _
-	' ByVal ui As UINT _
-' )As HeapBSTR
-
-' Declare Sub HeapSysFreeString( _
-	' ByVal bstrString As HeapBSTR _ 
-' )
-/'
-typedef struct {
-#ifdef _WIN64
-    DWORD pad;
-#endif
-    DWORD size;
-    union {
-        char ptr[1];
-        WCHAR str[1];
-        DWORD dwptr[1];
-    } u;
-} bstr_t;
-'/
-
 Type HeapWideString
 	Dim pIString As IString Ptr
 	Declare Constructor(ByVal pIMemoryAllocator As IMalloc Ptr, ByVal psz As Const WString Ptr)
@@ -66,6 +38,26 @@ Type InternalHeapBSTR As _InternalHeapBSTR
 
 Type LPInternalHeapBSTR As _InternalHeapBSTR Ptr
 
+Declare Function HeapSysCopyString( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal source As HeapBSTR _
+)As HeapBSTR
+
+Declare Function HeapSysAllocString( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal psz As Const WString Ptr _
+)As HeapBSTR
+
+Declare Function HeapSysAllocStringLen( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal psz As Const WString Ptr, _
+	ByVal ui As UINT _
+)As HeapBSTR
+
+Declare Sub HeapSysFreeString( _
+	ByVal bstrString As HeapBSTR _ 
+)
+
 Declare Function CreateInternalHeapBSTR( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	byval pwsz As Const WString Ptr, _
@@ -94,5 +86,9 @@ Declare Function InternalHeapBSTRGetHeapBSTR( _
 	ByVal this As InternalHeapBSTR Ptr, _
 	ByVal pcHeapBSTR As HeapBSTR Const Ptr _
 )As HRESULT
+
+Declare Function GetIStringFromHeapBSTR( _
+	ByVal bs As HeapBSTR _
+)As IString Ptr
 
 #endif
