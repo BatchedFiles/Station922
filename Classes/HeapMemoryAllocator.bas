@@ -4,7 +4,7 @@
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
-Const PRIVATEHEAP_INITIALSIZE As DWORD = 80 * 4096
+Const PRIVATEHEAP_INITIALSIZE As DWORD = 70 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
@@ -25,8 +25,8 @@ Type _HeapMemoryAllocator
 	pISpyObject As IMallocSpy Ptr
 	MemoryAllocations As Integer
 	hHeap As HANDLE
-	Memoryes(19) As MemoryRegion
 	cbMemoryUsed As Integer
+	Memoryes(19) As MemoryRegion
 End Type
 
 Sub InitializeHeapMemoryAllocator( _
@@ -41,16 +41,22 @@ Sub InitializeHeapMemoryAllocator( _
 	' )
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL
-	this->MemoryAllocations = 0
+	this->MemoryAllocations = 1
 	this->hHeap = hHeap
-	ZeroMemory(@this->Memoryes(0), SizeOf(MemoryRegion) * 20)
-	this->cbMemoryUsed = 0
+	this->cbMemoryUsed = SizeOf(HeapMemoryAllocator)
+	this->Memoryes(0).pMemory = this
+	this->Memoryes(0).Size = SizeOf(HeapMemoryAllocator)
+	ZeroMemory(@this->Memoryes(1), SizeOf(MemoryRegion) * 19)
 	
 End Sub
 
 Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
+	
+	this->MemoryAllocations -= 1
+	this->Memoryes(0).pMemory = 0
+	this->cbMemoryUsed -= SizeOf(HeapMemoryAllocator)
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
@@ -63,11 +69,12 @@ End Sub
 Function CreateHeapMemoryAllocator( _
 	)As HeapMemoryAllocator Ptr
 	
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
+	
 	#if __FB_DEBUG__
 	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
 			WStr(!"HeapMemoryAllocator creating\t"), _
@@ -81,35 +88,50 @@ Function CreateHeapMemoryAllocator( _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
-	If hHeap = NULL Then
-		Return NULL
-	End If
 	
-	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-		hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		SizeOf(HeapMemoryAllocator) _
-	)
-	If this = NULL Then
-		HeapDestroy(hHeap)
-		Return NULL
-	End If
-	
-	InitializeHeapMemoryAllocator(this, hHeap)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapMemoryAllocator created"), _
-			@vtEmpty _
+	If hHeap <> NULL Then
+		
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+			hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			SizeOf(HeapMemoryAllocator) _
 		)
-	End Scope
-	#endif
+		
+		If this <> NULL Then
+			#if __FB_DEBUG__
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
+					@vtAllocatedBytes _
+				)
+			#endif
+			
+			InitializeHeapMemoryAllocator(this, hHeap)
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("HeapMemoryAllocator created"), _
+					@vtEmpty _
+				)
+			End Scope
+			#endif
+			
+			Return this
+		End If
+		
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
+			@vtAllocatedBytes _
+		)
+		HeapDestroy(hHeap)
+	End If
 	
-	Return this
+	Return NULL
 	
 End Function
 
@@ -128,6 +150,10 @@ Sub DestroyHeapMemoryAllocator( _
 		)
 	End Scope
 	#endif
+	
+	Dim hHeap As HANDLE = this->hHeap
+	
+	UnInitializeHeapMemoryAllocator(this)
 	
 	If this->MemoryAllocations <> 0 Then
 		Dim vtMemoryLeaksSize As VARIANT = Any
@@ -153,11 +179,12 @@ Sub DestroyHeapMemoryAllocator( _
 		Next
 	End If
 	
-	Dim hHeap As HANDLE = this->hHeap
-	
-	UnInitializeHeapMemoryAllocator(this)
-	
 	If hHeap <> NULL Then
+		HeapFree( _
+			this->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			this _
+		)
 		HeapDestroy(hHeap)
 	End If
 	
@@ -250,7 +277,7 @@ Function HeapMemoryAllocatorAlloc( _
 	vtAllocatedBytes.lVal = cb
 	
 	#if __FB_DEBUG__
-		Const BAADF00D = Str(!"\&hBA\&hAD\&hF0\&h0D")
+		Const BAADF00D = Str(!"\&hBA\&hAD\&hF0\&h0D\&hBA\&hAD\&hF0\&h0D\&hBA\&hAD\&hF0\&h0D\&hBA\&hAD\&hF0\&h0D")
 		Dim padding As SIZE_T_= (Len(BAADF00D) - (cb Mod Len(BAADF00D))) Mod Len(BAADF00D)
 		Dim bcAlign As SIZE_T_ = cb + padding
 		Dim pMemory As ZString Ptr = HeapAlloc( _
