@@ -16,7 +16,7 @@ Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 Type _NetworkStream
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
+	'crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	ClientSocket As SOCKET
@@ -29,10 +29,10 @@ Sub InitializeNetworkStream( _
 	
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	this->lpCloneableVtbl = @GlobalNetworkStreamCloneableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	'InitializeCriticalSectionAndSpinCount( _
+	'	@this->crSection, _
+	'	MAX_CRITICAL_SECTION_SPIN_COUNT _
+	')
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -47,10 +47,10 @@ Sub InitializeCloneNetworkStream( _
 	
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	this->lpCloneableVtbl = @GlobalNetworkStreamCloneableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	'InitializeCriticalSectionAndSpinCount( _
+	'	@this->crSection, _
+	'	MAX_CRITICAL_SECTION_SPIN_COUNT _
+	')
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -62,8 +62,11 @@ Sub UnInitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
+	If this->ClientSocket <> INVALID_SOCKET Then
+		CloseSocketConnection(this->ClientSocket)
+	End If
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
+	'DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -184,11 +187,11 @@ Function NetworkStreamAddRef( _
 		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	'EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter += 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	'LeaveCriticalSection(@this->crSection)
 	
 	Return this->ReferenceCounter
 	
@@ -198,11 +201,11 @@ Function NetworkStreamRelease( _
 		ByVal this As NetworkStream Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	'EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter -= 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	'LeaveCriticalSection(@this->crSection)
 	
 	If this->ReferenceCounter Then
 		Return 1
