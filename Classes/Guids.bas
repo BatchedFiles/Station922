@@ -65,6 +65,11 @@ DEFINE_CLSID(CLSID_NETWORKSTREAM, _
 	&h361758f9, &h2f6a, &h414b, &hab, &h88, &h4d, &h7b, &h1e, &hc4, &h6c, &h5f _
 )
 
+' {BBA17F8D-AC89-4491-898A-72F3BBF80552}
+DEFINE_CLSID(CLSID_PREPARERESPONSEASYNCTASK, _
+	&hbba17f8d, &hac89, &h4491, &h89, &h8a, &h72, &hf3, &hbb, &hf8, &h5, &h52 _
+)
+
 ' {54E0F796-8CAA-4F4B-8C5F-2C614207ED8E}
 DEFINE_GUID(CLSID_READREQUESTASYNCTASK, _
 	&h54e0f796, &h8caa, &h4f4b, &h8c, &h5f, &h2c, &h61, &h42, &h7, &hed, &h8e _
@@ -198,6 +203,11 @@ DEFINE_IID(IID_IMutableWebSiteCollection, _
 ' {A4C7EAED-5EC0-4B7C-81D2-05BE69E63A1F}
 DEFINE_IID(IID_INetworkStream, _
 	&ha4c7eaed, &h5ec0, &h4b7c, &h81, &hd2, &h5, &hbe, &h69, &he6, &h3a, &h1f _
+)
+
+' {6964B4FE-BDAE-4B3B-BDF8-6C467BF35BFA}
+DEFINE_IID(IID_IPrepareResponseAsyncTask, _
+	&h6964b4fe, &hbdae, &h4b3b, &hbd, &hf8, &h6c, &h46, &h7b, &hf3, &h5b, &hfa _
 )
 
 ' {277ECE2A-2962-467F-AF0E-B12B2F1D40AB}
