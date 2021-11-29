@@ -3,6 +3,8 @@
 
 #include once "IAsyncTask.bi"
 #include once "IAsyncResult.bi"
+#include once "IBaseStream.bi"
+#include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
 #include once "win\winsock2.bi"
 
@@ -41,16 +43,6 @@ Type IReadRequestAsyncTaskVirtualTable
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
 	
-	GetAssociatedWithIOCP As Function( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pAssociated As Boolean Ptr _
-	)As HRESULT
-	
-	SetAssociatedWithIOCP As Function( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal Associated As Boolean _
-	)As HRESULT
-	
 	GetWebSiteCollection As Function( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
@@ -59,16 +51,6 @@ Type IReadRequestAsyncTaskVirtualTable
 	SetWebSiteCollection As Function( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	GetSocket As Function( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pResult As SOCKET Ptr _
-	)As HRESULT
-	
-	SetSocket As Function( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal sock As SOCKET _
 	)As HRESULT
 	
 	GetRemoteAddress As Function( _
@@ -83,6 +65,26 @@ Type IReadRequestAsyncTaskVirtualTable
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
+	GetBaseStream As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal ppStream As IBaseStream Ptr Ptr _
+	)As HRESULT
+	
+	SetBaseStream As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		byVal pStream As IBaseStream Ptr _
+	)As HRESULT
+	
+	GetHttpReader As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal ppReader As IHttpReader Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpReader As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		byVal pReader As IHttpReader Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IReadRequestAsyncTask_
@@ -94,13 +96,13 @@ End Type
 #define IReadRequestAsyncTask_Release(this) (this)->lpVtbl->Release(this)
 #define IReadRequestAsyncTask_BeginExecute(this, pPool) (this)->lpVtbl->BeginExecute(this, pPool)
 #define IReadRequestAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
-#define IReadRequestAsyncTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
-#define IReadRequestAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)
 #define IReadRequestAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
 #define IReadRequestAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
-#define IReadRequestAsyncTask_GetSocket(this, pResult) (this)->lpVtbl->GetSocket(this, pResult)
-#define IReadRequestAsyncTask_SetSocket(this, sock) (this)->lpVtbl->SetSocket(this, sock)
 #define IReadRequestAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
 #define IReadRequestAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
+#define IReadRequestAsyncTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
+#define IReadRequestAsyncTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
+#define IReadRequestAsyncTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
+#define IReadRequestAsyncTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
 
 #endif

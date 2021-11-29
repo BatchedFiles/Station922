@@ -45,16 +45,6 @@ Type IAsyncTaskVirtualTable
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
 	
-	GetAssociatedWithIOCP As Function( _
-		ByVal this As IAsyncTask Ptr, _
-		ByVal pAssociated As Boolean Ptr _
-	)As HRESULT
-	
-	SetAssociatedWithIOCP As Function( _
-		ByVal this As IAsyncTask Ptr, _
-		ByVal Associated As Boolean _
-	)As HRESULT
-	
 End Type
 
 Type IAsyncTask_
@@ -66,7 +56,5 @@ End Type
 #define IAsyncTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncTask_BeginExecute(this, pPool) (this)->lpVtbl->BeginExecute(this, pPool)
 #define IAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
-#define IAsyncTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
-#define IAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)
 
 #endif

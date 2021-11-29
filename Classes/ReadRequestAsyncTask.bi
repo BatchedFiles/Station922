@@ -44,26 +44,6 @@ Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal CompletionKey As ULONG_PTR _
 )As HRESULT
 
-Declare Function ReadRequestAsyncTaskGetAssociatedWithIOCP( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pAssociated As Boolean Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskSetAssociatedWithIOCP( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal Associated As Boolean _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskGetSocket( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pResult As SOCKET Ptr _
-)As HRESULT
-	
-Declare Function ReadRequestAsyncTaskSetSocket( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal sock As SOCKET _
-)As HRESULT
-
 Declare Function ReadRequestAsyncTaskGetWebSiteCollection( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
@@ -84,6 +64,26 @@ Declare Function ReadRequestAsyncTaskSetRemoteAddress( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal RemoteAddress As SOCKADDR Ptr, _
 	ByVal RemoteAddressLength As Integer _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskGetBaseStream( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal ppStream As IBaseStream Ptr Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetBaseStream( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	byVal pStream As IBaseStream Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskGetHttpReader( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal ppReader As IHttpReader Ptr Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetHttpReader( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	byVal pReader As IHttpReader Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskCloneableQueryInterface( _
