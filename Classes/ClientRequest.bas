@@ -3,6 +3,7 @@
 #include once "IStringable.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
+#include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "WebUtils.bi"
@@ -15,13 +16,12 @@ Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
 Type _ClientRequest
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
+	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIReader As ITextReader Ptr
-	RequestedLine As WString Ptr
-	RequestedLineLength As Integer
-	RequestHeaders(HttpRequestHeadersMaximum - 1) As WString Ptr
+	RequestedLine As HeapBSTR
+	RequestHeaders(HttpRequestHeadersMaximum - 1) As HeapBSTR
 	HttpMethod As HttpMethods
 	pClientURI As Station922Uri Ptr
 	HttpVersion As HttpVersions
@@ -33,8 +33,8 @@ End Type
 
 Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal Header As WString Ptr, _
-		ByVal Value As WString Ptr _
+		ByVal Header As HeapBSTR, _
+		ByVal Value As HeapBSTR _
 	)As Integer
 	
 	Dim HeaderIndex As HttpRequestHeaders = Any
@@ -58,16 +58,17 @@ Sub InitializeClientRequest( _
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
+	' InitializeCriticalSectionAndSpinCount( _
+		' @this->crSection, _
+		' MAX_CRITICAL_SECTION_SPIN_COUNT _
+	' )
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
 	this->pIReader = NULL
-	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(WString Ptr))
+	this->RequestedLine = NULL
+	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
 	this->HttpMethod = HttpMethods.HttpGet
 	this->pClientURI = pClientURI
 	Station922UriInitialize(this->pClientURI)
@@ -85,6 +86,12 @@ Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
+	HeapSysFreeString(this->RequestedLine)
+	
+	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
+		HeapSysFreeString(this->RequestHeaders(i))
+	Next
+	
 	IMalloc_Free(this->pIMemoryAllocator, this->pClientURI)
 	
 	If this->pIReader <> NULL Then
@@ -92,7 +99,7 @@ Sub UnInitializeClientRequest( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
+	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -224,11 +231,11 @@ Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter += 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	Return this->ReferenceCounter
 	
@@ -238,11 +245,11 @@ Function ClientRequestRelease( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
+	' EnterCriticalSection(@this->crSection)
 	Scope
 		this->ReferenceCounter -= 1
 	End Scope
-	LeaveCriticalSection(@this->crSection)
+	' LeaveCriticalSection(@this->crSection)
 	
 	If this->ReferenceCounter Then
 		Return 1
@@ -258,19 +265,16 @@ End Function
 		' ByVal this As ClientRequest Ptr _
 	' )As HRESULT
 	
-	' Dim pRequestedLine As WString Ptr = Any
-	' Dim RequestedLineLength As Integer = Any
+	' Dim pRequestedLine As HeapBSTR = Any
 	
 	' Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
 		' this->pIReader, _
-		' @RequestedLineLength, _
 		' @pRequestedLine _
 	' )
 	
 	' Return ReadRequestedLines( _
 		' this, _
 		' pRequestedLine, _
-		' RequestedLineLength, _
 		' hrReadLine _
 	' )
 	
@@ -306,7 +310,6 @@ Function ClientRequestEndReadRequest( _
 	Dim hrEndReadLine As HRESULT = ITextReader_EndReadLine( _
 		this->pIReader, _
 		pIAsyncResult, _
-		@this->RequestedLineLength, _
 		@this->RequestedLine _
 	)
 	If FAILED(hrEndReadLine) Then
@@ -351,53 +354,86 @@ Function ClientRequestPrepare( _
 	)As HRESULT
 	
 	' Метод, запрошенный ресурс и версия протокола
-	' Первый пробел
-	Dim pVerb As WString Ptr = this->RequestedLine
 	
-	Dim pSpace As WString Ptr = StrChrW( _
-		this->RequestedLine, _
-		Characters.WhiteSpace _
-	)
-	If pSpace = NULL Then
-		Return CLIENTREQUEST_E_BADREQUEST
-	End If
+	Dim pSpace As WString Ptr = Any
 	
-	' Удалить пробел и найти начало непробела
-	pSpace[0] = 0
-	Do
-		pSpace += 1
-	Loop While pSpace[0] = Characters.WhiteSpace
+	Dim bstrVerb As HeapBSTR = Any
+	Scope
+		Dim pVerb As WString Ptr = this->RequestedLine
+		
+		' Первый пробел
+		pSpace = StrChrW( _
+			this->RequestedLine, _
+			Characters.WhiteSpace _
+		)
+		If pSpace = NULL Then
+			Return CLIENTREQUEST_E_BADREQUEST
+		End If
+		
+		Dim VerbLength As Integer = pSpace - pVerb
+		bstrVerb = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pVerb, _
+			VerbLength _
+		)
+		
+		MessageBoxW(NULL, bstrVerb, "Verb", MB_OK)
+		
+		' TODO Метод должен определять сервер
+		Dim GetHttpMethodResult As Boolean = GetHttpMethodIndex( _
+			bstrVerb, _
+			@this->HttpMethod _
+		)
+		If GetHttpMethodResult = False Then
+			Return CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
+		End If
+		
+	End Scope
+	HeapSysFreeString(bstrVerb)
 	
-	' TODO Метод должен определять сервер
-	Dim GetHttpMethodResult As Boolean = GetHttpMethodIndex( _
-		pVerb, _
-		@this->HttpMethod _
-	)
-	If GetHttpMethodResult = False Then
-		Return CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
-	End If
-	
-	' Здесь начинается Url
-	Dim pUri As WString Ptr = pSpace
-	
-	' Второй пробел
-	pSpace = StrChrW( _
-		pSpace, _
-		Characters.WhiteSpace _
-	)
-	
-	Dim pVersion As WString Ptr = Any
-	
-	If pSpace = NULL Then
-		pVersion = NULL
-	Else
-		' Убрать пробел и найти начало непробела
-		pSpace[0] = 0
+	Dim bstrUri As HeapBSTR = Any
+	Scope
+		' Найти начало непробела
 		Do
 			pSpace += 1
 		Loop While pSpace[0] = Characters.WhiteSpace
 		
-		pVersion = pSpace
+		' Здесь начинается Url
+		Dim pUri As WString Ptr = pSpace
+		
+		' Второй пробел
+		pSpace = StrChrW( _
+			pSpace, _
+			Characters.WhiteSpace _
+		)
+		If pSpace = NULL Then
+			bstrUri = HeapSysAllocString( _
+				this->pIMemoryAllocator, _
+				pUri _
+			)
+		Else
+			Dim UriLength As Integer = pSpace - pUri
+			bstrUri = HeapSysAllocStringLen( _
+				this->pIMemoryAllocator, _
+				pUri, _
+				UriLength _
+			)
+		End If
+		
+		MessageBoxW(NULL, bstrUri, "Uri", MB_OK)
+	End Scope
+	HeapSysFreeString(bstrUri)
+	
+	Dim bstrVersion As HeapBSTR = Any
+	If pSpace = NULL Then
+		bstrVersion = NULL
+	Else
+		' Найти начало непробела
+		Do
+			pSpace += 1
+		Loop While pSpace[0] = Characters.WhiteSpace
+		
+		Dim pVersion As WString Ptr = pSpace
 		
 		' Третий пробел
 		pSpace = StrChrW( _
@@ -409,24 +445,32 @@ Function ClientRequestPrepare( _
 			Return CLIENTREQUEST_E_BADREQUEST
 		End If
 		
-	End If
-	
-	' TODO Версию протокола должен определять сервер
-	Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
-		pVersion, _
-		@this->HttpVersion _
-	)
-	If GetHttpVersionResult = False Then
-		Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-	End If
-	
-	Select Case this->HttpVersion
+		bstrVersion = HeapSysAllocString( _
+			this->pIMemoryAllocator, _
+			pVersion _
+		)
 		
-		Case HttpVersions.Http11
-			this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+		MessageBoxW(NULL, bstrVersion, "Version", MB_OK)
+		
+		' TODO Версию протокола должен определять сервер
+		Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
+			bstrVersion, _
+			@this->HttpVersion _
+		)
+		If GetHttpVersionResult = False Then
+			Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+		End If
+		
+		Select Case this->HttpVersion
 			
-	End Select
+			Case HttpVersions.Http11
+				this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+				
+		End Select
+	End If
+	HeapSysFreeString(bstrVersion)
 	
+	/'
 	Dim hrSetUri As HRESULT = Station922UriSetUri( _
 		this->pClientURI, _
 		pUri _
@@ -441,22 +485,18 @@ Function ClientRequestPrepare( _
 				Return CLIENTREQUEST_E_BADPATH
 				
 			Case Else
-				Return E_FAIL
+				Return hrSetUri
 				
 		End Select
 	End If
 	
 	' Получить все заголовки запроса
 	Do
-		Dim pLine As WString Ptr = Any
-		Dim LineLength As Integer = Any
-		
+		Dim pLine As HeapBSTR = Any
 		Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
 			this->pIReader, _
-			@LineLength, _
 			@pLine _
 		)
-		
 		If FAILED(hrReadLine) Then
 			
 			Select Case hrReadLine
@@ -482,7 +522,7 @@ Function ClientRequestPrepare( _
 		
 		' this->RequestHeaderBufferLength += LineLength + 1
 		
-		If LineLength = 0 Then
+		If SysStringLen(pLine) = 0 Then
 			' Клиент отправил все данные, можно приступать к обработке
 			Exit Do
 		End If
@@ -586,7 +626,7 @@ Function ClientRequestPrepare( _
 	If pHeaderContentLength <> NULL Then
 		StrToInt64ExW(pHeaderContentLength, STIF_DEFAULT, @this->ContentLength)
 	End If
-	
+	'/
 	Return S_OK
 	
 End Function
@@ -627,10 +667,15 @@ End Function
 Function ClientRequestGetHttpHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppHeader = this->RequestHeaders(HeaderIndex)
+	Dim copy As HeapBSTR = HeapSysCopyString( _
+		this->pIMemoryAllocator, _
+		this->RequestHeaders(HeaderIndex) _
+	)
+	
+	*ppHeader = copy
 	
 	Return S_OK
 	
@@ -851,7 +896,7 @@ End Function
 Function IClientRequestGetHttpHeader( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	Return ClientRequestGetHttpHeader(ContainerOf(this, ClientRequest, lpVtbl), HeaderIndex, ppHeader)
 End Function

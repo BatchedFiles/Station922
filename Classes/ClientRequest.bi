@@ -68,7 +68,7 @@ Declare Function ClientRequestGetHttpVersion( _
 Declare Function ClientRequestGetHttpHeader( _
 	ByVal this As ClientRequest Ptr, _
 	ByVal HeaderIndex As HttpRequestHeaders, _
-	ByVal ppHeader As WString Ptr Ptr _
+	ByVal ppHeader As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function ClientRequestGetKeepAlive( _

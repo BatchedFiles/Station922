@@ -108,7 +108,7 @@ Type IClientRequestVirtualTable
 	GetHttpHeader As Function( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetKeepAlive As Function( _
