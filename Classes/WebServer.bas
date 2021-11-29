@@ -4,6 +4,7 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapMemoryAllocator.bi"
+#include once "HttpReader.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
 #include once "NetworkStream.bi"
@@ -45,26 +46,347 @@ Type _WebServer
 	
 End Type
 
-Declare Function AcceptConnection( _
-	ByVal this As WebServer Ptr _
-)As HRESULT
+Function GetNetworkEventType( _
+		ByVal EventType As WSANETWORKEVENTS Ptr _
+	)As Integer
+	
+	If EventType->lNetworkEvents And FD_ACCEPT Then
+		Return FD_ACCEPT
+	End If
+	
+	If EventType->lNetworkEvents And FD_CLOSE Then
+		Return FD_CLOSE
+	End If
+	
+	Return 0
+	
+End Function
 
-Declare Function ReadConfiguration( _
-	ByVal this As WebServer Ptr _
-)As HRESULT
+Function AssociateWithIOCP( _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal ClientSocket As SOCKET, _
+		ByVal CompletionKey As ULONG_PTR _
+	)As HRESULT
+	
+	Dim hIOCompletionPort As HANDLE = Any
+	IThreadPool_GetCompletionPort(pPool, @hIOCompletionPort)
+	
+	Dim hPort As HANDLE = CreateIoCompletionPort( _
+		Cast(HANDLE, ClientSocket), _
+		hIOCompletionPort, _
+		CompletionKey, _
+		0 _
+	)
+	If hPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
 
-Declare Function CreateServerSocket( _
-	ByVal this As WebServer Ptr _
-)As HRESULT
+Function AcceptConnection( _
+		ByVal this As WebServer Ptr _
+	)As HRESULT
+	
+	Dim pIClientMemoryAllocator As IMalloc Ptr = Any
+	Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
+		@CLSID_HEAPMEMORYALLOCATOR, _
+		@IID_IMalloc, _
+		@pIClientMemoryAllocator _
+	)
+	
+	If SUCCEEDED(hrCreateAllocator) Then
+		
+		Dim pINetworkStream As INetworkStream Ptr = Any
+		Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
+			pIClientMemoryAllocator, _
+			@CLSID_NETWORKSTREAM, _
+			@IID_INetworkStream, _
+			@pINetworkStream _
+		)
+		
+		If SUCCEEDED(hrCreateNetworkStream) Then
+			
+			Dim pIHttpReader As IHttpReader Ptr = Any
+			Dim hrCreateHttpReader As HRESULT = CreateInstance( _
+				pIClientMemoryAllocator, _
+				@CLSID_HTTPREADER, _
+				@IID_IHttpReader, _
+				@pIHttpReader _
+			)
+			
+			If SUCCEEDED(hrCreateHttpReader) Then
+				
+				' TODO Запросить интерфейс вместо конвертирования указателя
+				IHttpReader_SetBaseStream( _
+					pIHttpReader, _
+					CPtr(IBaseStream Ptr, pINetworkStream) _
+				)
+				
+				Dim dwIndex As DWORD = WSAWaitForMultipleEvents( _
+					Cast(DWORD, this->SocketListLength), _
+					@this->hEvents(0), _
+					False, _
+					WSA_INFINITE, _
+					False _
+				)
+				
+				If dwIndex <> WSA_WAIT_FAILED Then
+					
+					Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
+					
+					Dim EventType As WSANETWORKEVENTS = Any
+					Dim dwEnumEventResult As Long = WSAEnumNetworkEvents( _
+						this->SocketList(EventIndex).ClientSocket, _
+						this->hEvents(EventIndex), _
+						@EventType _
+					)
+					
+					If dwEnumEventResult <> SOCKET_ERROR Then
+						
+						Dim ne As Integer = GetNetworkEventType(@EventType)
+						
+						Select Case ne
+							
+							Case FD_ACCEPT
+								Dim errorCode As Integer = EventType.iErrorCode(FD_ACCEPT_BIT)
+								
+								If errorCode = 0 Then
+									
+									Dim RemoteAddress As SOCKADDR_STORAGE = Any
+									Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+									Dim ClientSocket As SOCKET = accept( _
+										this->SocketList(EventIndex).ClientSocket, _
+										CPtr(SOCKADDR Ptr, @RemoteAddress), _
+										@RemoteAddressLength _
+									)
+									
+									If ClientSocket <> INVALID_SOCKET Then
+										
+										Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
+											this->pIPool, _
+											ClientSocket, _
+											Cast(ULONG_PTR, 0) _
+										)
+										
+										If SUCCEEDED(hrAssociateWithIOCP) Then
+											
+											INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+											
+											Dim pTask As IReadRequestAsyncTask Ptr = Any
+											Dim hrCreateTask As HRESULT = CreateInstance( _
+												pIClientMemoryAllocator, _
+												@CLSID_READREQUESTASYNCTASK, _
+												@IID_IReadRequestAsyncTask, _
+												@pTask _
+											)
+											
+											If SUCCEEDED(hrCreateTask) Then
+												IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
+												IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
+												IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+												'IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+												IReadRequestAsyncTask_SetRemoteAddress( _
+													pTask, _
+													CPtr(SOCKADDR Ptr, @RemoteAddress), _
+													RemoteAddressLength _
+												)
+												
+												IMalloc_Release(pIClientMemoryAllocator)
+												INetworkStream_Release(pINetworkStream)
+												IHttpReader_Release(pIHttpReader)
+												
+												Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+													pTask, _
+													this->pIPool _
+												)
+												
+												If SUCCEEDED(hrBeginExecute) Then
+													' Сейчас мы не уменьшаем счётчик ссылок на pTask
+													' Счётчик ссылок уменьшим в функции EndExecute
+													' Когда задача будет завершена
+													Return S_OK
+												Else
+													pIClientMemoryAllocator = NULL
+													pINetworkStream = NULL
+													pIHttpReader = NULL
+												End If
+												
+												Dim vtSCode As VARIANT = Any
+												vtSCode.vt = VT_ERROR
+												vtSCode.scode = hrBeginExecute
+												LogWriteEntry( _
+													LogEntryType.Error, _
+													WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+													@vtSCode _
+												)
+												
+												' TODO Отправить клиенту Не могу начать асинхронное чтение
+												IReadRequestAsyncTask_Release(pTask)
+											End If
+											
+										End If
+										
+										'CloseSocketConnection(ClientSocket)
+									End If
+									
+									'Dim dwErrorAccept As Long = WSAGetLastError()
+									'Dim vtErrorCode As VARIANT = Any
+									'vtErrorCode.vt = VT_UI4
+									'vtErrorCode.ulVal = dwErrorAccept
+									'LogWriteEntry( _
+									'	LogEntryType.Error, _
+									'	WStr(!"\t\t\t\tAccept failed\t"), _
+									'	@vtErrorCode _
+									')
+									'Return HRESULT_FROM_WIN32(dwErrorAccept)
+									
+								End If
+								
+								'Return HRESULT_FROM_WIN32(errorCode)
+						End Select
+						
+						'Dim dwError As Long = WSAGetLastError()
+						'Return HRESULT_FROM_WIN32(dwError)
+						
+					End If
+					
+					'Dim dwError As Long = WSAGetLastError()
+					
+				End If
+				
+				If pIHttpReader <> NULL Then
+					IHttpReader_Release(pIHttpReader)
+				End If
+			End If
+			
+			If pINetworkStream <> NULL Then
+				INetworkStream_Release(pINetworkStream)
+			End If
+		End If
+		
+		If pIClientMemoryAllocator <> NULL Then
+			IMalloc_Release(pIClientMemoryAllocator)
+		End If
+	End If
+	
+	Return E_FAIL
+	
+End Function
 
-Declare Sub SetCurrentStatus( _
-	ByVal this As WebServer Ptr, _
-	ByVal Status As HRESULT _
-)
+Function ReadConfiguration( _
+		ByVal this As WebServer Ptr _
+	)As HRESULT
+	
+	Dim pIConfig As IWebServerConfiguration Ptr = Any
+	Dim hr As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_WEBSERVERINICONFIGURATION, _
+		@IID_IWebServerConfiguration, _
+		@pIConfig _
+	)
+	If FAILED(hr) Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	IWebServerConfiguration_GetListenAddress(pIConfig, @this->ListenAddress)
+	
+	IWebServerConfiguration_GetListenPort(pIConfig, @this->ListenPort)
+	
+	IWebServerConfiguration_GetWorkerThreadsCount(pIConfig, @this->WorkerThreadsCount)
+	
+	' IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
+	
+	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
+	
+	IWebServerConfiguration_Release(pIConfig)
+	
+	Return S_OK
+	
+End Function
 
-Declare Sub ServerThread( _
-	ByVal this As WebServer Ptr _
-)
+Function CreateServerSocket( _
+		ByVal this As WebServer Ptr _
+	)As HRESULT
+	
+	Dim wszListenPort As WString * (255 + 1) = Any
+	_itow(this->ListenPort, @wszListenPort, 10)
+	
+	Dim hr As HRESULT = CreateSocketAndListenW( _
+		this->ListenAddress, _
+		wszListenPort, _
+		@this->SocketList(0), _
+		SocketListCapacity, _
+		@this->SocketListLength _
+	)
+	If FAILED(hr) Then
+		Return hr
+	End If
+	
+	For i As Integer = 0 To this->SocketListLength - 1
+		WSAEventSelect( _
+			this->SocketList(i).ClientSocket, _
+			this->hEvents(i), _
+			FD_ACCEPT Or FD_CLOSE _
+		)
+	Next
+	
+	Return S_OK
+	
+End Function
+
+Sub SetCurrentStatus( _
+		ByVal this As WebServer Ptr, _
+		ByVal Status As HRESULT _
+	)
+	
+	this->CurrentStatus = Status
+	
+	If this->StatusHandler <> NULL Then
+		this->StatusHandler(this->Context, Status)
+	End If
+	
+End Sub
+
+Sub ServerThread( _
+		ByVal this As WebServer Ptr _
+	)
+	
+	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
+	
+	Do
+		' If this->CachedClientMemoryContextIndex >= this->CachedClientMemoryContextLength Then
+			' this->CachedClientMemoryContextIndex = 0
+			' DestroyCachedClientMemoryContext(this)
+			' CreateCachedClientMemoryContext(this)
+		' End If
+		
+		IClientRequest_Clear(this->pDefaultRequest)
+		IServerResponse_Clear(this->pDefaultResponse)
+		
+		Dim hrAccept As HRESULT = AcceptConnection( _
+			this _
+		)
+		
+		INetworkStream_Close(this->pDefaultStream)
+		
+		' this->CachedClientMemoryContextIndex += 1
+		
+		If FAILED(hrAccept) Then
+			If this->CurrentStatus = RUNNABLE_S_RUNNING Then
+				Sleep_(THREAD_SLEEPING_TIME)
+			Else
+				Exit Do
+			End If
+		End If
+		
+	Loop While this->CurrentStatus = RUNNABLE_S_RUNNING
+	
+	WebServerStop(this)
+	
+End Sub
 
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
@@ -411,244 +733,6 @@ Function WebServerRegisterStatusHandler( _
 	Return S_OK
 	
 End Function
-
-Sub SetCurrentStatus( _
-		ByVal this As WebServer Ptr, _
-		ByVal Status As HRESULT _
-	)
-	
-	this->CurrentStatus = Status
-	
-	If this->StatusHandler <> NULL Then
-		this->StatusHandler(this->Context, Status)
-	End If
-	
-End Sub
-
-Function AcceptConnection( _
-		ByVal this As WebServer Ptr _
-	)As HRESULT
-	
-	Dim dwIndex As DWORD = WSAWaitForMultipleEvents( _
-		Cast(DWORD, this->SocketListLength), _
-		@this->hEvents(0), _
-		False, _
-		WSA_INFINITE, _
-		False _
-	)
-	If dwIndex = WSA_WAIT_FAILED Then
-		Dim dwError As Long = WSAGetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
-	
-	Dim EventType As WSANETWORKEVENTS = Any
-	Dim dwEnumEventResult As Long = WSAEnumNetworkEvents( _
-		this->SocketList(EventIndex).ClientSocket, _
-		this->hEvents(EventIndex), _
-		@EventType _
-	)
-	If dwEnumEventResult = SOCKET_ERROR Then
-		Dim dwError As Long = WSAGetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	If EventType.lNetworkEvents And FD_ACCEPT Then
-		
-		If EventType.iErrorCode(FD_ACCEPT_BIT) = 0 Then
-			
-			Dim RemoteAddress As SOCKADDR_STORAGE = Any
-			Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-			Dim ClientSocket As SOCKET = accept( _
-				this->SocketList(EventIndex).ClientSocket, _
-				CPtr(SOCKADDR Ptr, @RemoteAddress), _
-				@RemoteAddressLength _
-			)
-			If ClientSocket = INVALID_SOCKET Then
-				Dim dwErrorAccept As Long = WSAGetLastError()
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_UI4
-				vtErrorCode.ulVal = dwErrorAccept
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"\t\t\t\tAccept failed\t"), _
-					@vtErrorCode _
-				)
-				Return HRESULT_FROM_WIN32(dwErrorAccept)
-			End If
-			
-			Dim pTask As IReadRequestAsyncTask Ptr = Any
-			
-			Scope
-				Dim pIClientMemoryAllocator As IMalloc Ptr = Any
-				Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
-					@CLSID_HEAPMEMORYALLOCATOR, _
-					@IID_IMalloc, _
-					@pIClientMemoryAllocator _
-				)
-				If FAILED(hrCreateAllocator) Then
-					CloseSocketConnection(ClientSocket)
-					Return hrCreateAllocator
-				End If
-				
-				Dim hrCreateTask As HRESULT = CreateInstance( _
-					pIClientMemoryAllocator, _
-					@CLSID_READREQUESTASYNCTASK, _
-					@IID_IReadRequestAsyncTask, _
-					@pTask _
-				)
-				If FAILED(hrCreateTask) Then
-					CloseSocketConnection(ClientSocket)
-					IMalloc_Release(pIClientMemoryAllocator)
-					Return hrCreateTask
-				End If
-				IMalloc_Release(pIClientMemoryAllocator)
-			End Scope
-			
-			Scope
-				IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-				IReadRequestAsyncTask_SetSocket(pTask, ClientSocket)
-				IReadRequestAsyncTask_SetRemoteAddress( _
-					pTask, _
-					CPtr(SOCKADDR Ptr, @RemoteAddress), _
-					RemoteAddressLength _
-				)
-			End Scope
-			
-			Scope
-				Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
-					pTask, _
-					this->pIPool _
-				)
-				If FAILED(hrBeginExecute) Then
-					Dim vtSCode As VARIANT = Any
-					vtSCode.vt = VT_ERROR
-					vtSCode.scode = hrBeginExecute
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-						@vtSCode _
-					)
-					
-					' TODO Отправить клиенту Не могу начать асинхронное чтение
-					CloseSocketConnection(ClientSocket)
-					IReadRequestAsyncTask_Release(pTask)
-					Return hrBeginExecute
-				End If
-				
-			End Scope
-			
-			' Сейчас мы не уменьшаем счётчик ссылок на pTask
-			' Счётчик ссылок уменьшим в функции EndExecute
-			' Когда задача будет завершена
-			
-		End If
-		
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function CreateServerSocket( _
-		ByVal this As WebServer Ptr _
-	)As HRESULT
-	
-	Dim wszListenPort As WString * (255 + 1) = Any
-	_itow(this->ListenPort, @wszListenPort, 10)
-	
-	Dim hr As HRESULT = CreateSocketAndListenW( _
-		this->ListenAddress, _
-		wszListenPort, _
-		@this->SocketList(0), _
-		SocketListCapacity, _
-		@this->SocketListLength _
-	)
-	If FAILED(hr) Then
-		Return hr
-	End If
-	
-	For i As Integer = 0 To this->SocketListLength - 1
-		WSAEventSelect( _
-			this->SocketList(i).ClientSocket, _
-			this->hEvents(i), _
-			FD_ACCEPT Or FD_CLOSE _
-		)
-	Next
-	
-	Return S_OK
-	
-End Function
-
-Function ReadConfiguration( _
-		ByVal this As WebServer Ptr _
-	)As HRESULT
-	
-	Dim pIConfig As IWebServerConfiguration Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_WEBSERVERINICONFIGURATION, _
-		@IID_IWebServerConfiguration, _
-		@pIConfig _
-	)
-	If FAILED(hr) Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	IWebServerConfiguration_GetListenAddress(pIConfig, @this->ListenAddress)
-	
-	IWebServerConfiguration_GetListenPort(pIConfig, @this->ListenPort)
-	
-	IWebServerConfiguration_GetWorkerThreadsCount(pIConfig, @this->WorkerThreadsCount)
-	
-	' IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
-	
-	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
-	
-	IWebServerConfiguration_Release(pIConfig)
-	
-	Return S_OK
-
-End Function
-
-Sub ServerThread( _
-		ByVal this As WebServer Ptr _
-	)
-	
-	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
-	
-	Do
-		' If this->CachedClientMemoryContextIndex >= this->CachedClientMemoryContextLength Then
-			' this->CachedClientMemoryContextIndex = 0
-			' DestroyCachedClientMemoryContext(this)
-			' CreateCachedClientMemoryContext(this)
-		' End If
-		
-		IClientRequest_Clear(this->pDefaultRequest)
-		IServerResponse_Clear(this->pDefaultResponse)
-		
-		Dim hrAccept As HRESULT = AcceptConnection( _
-			this _
-		)
-		
-		INetworkStream_Close(this->pDefaultStream)
-		
-		' this->CachedClientMemoryContextIndex += 1
-		
-		If FAILED(hrAccept) Then
-			If this->CurrentStatus = RUNNABLE_S_RUNNING Then
-				Sleep_(THREAD_SLEEPING_TIME)
-			Else
-				Exit Do
-			End If
-		End If
-		
-	Loop While this->CurrentStatus = RUNNABLE_S_RUNNING
-	
-	WebServerStop(this)
-	
-End Sub
 
 
 Function IWebServerQueryInterface( _
