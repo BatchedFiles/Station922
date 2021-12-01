@@ -3,7 +3,7 @@
 
 #include once "Http.bi"
 #include once "IHttpReader.bi"
-#include once "Station922Uri.bi"
+#include once "IClientUri.bi"
 
 Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 
@@ -94,10 +94,9 @@ Type IClientRequestVirtualTable
 		ByVal pHttpMethod As HttpMethods Ptr _
 	)As HRESULT
 	
-	' TODO Get IClientUri Interface
 	GetUri As Function( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pUri As Station922Uri Ptr _
+		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
 	
 	GetHttpVersion As Function( _
@@ -130,10 +129,6 @@ Type IClientRequestVirtualTable
 		ByVal this As IClientRequest Ptr, _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
-	)As HRESULT
-	
-	Clear As Function( _
-		ByVal this As IClientRequest Ptr _
 	)As HRESULT
 	
 	GetTextReader As Function( _

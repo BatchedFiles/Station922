@@ -57,7 +57,7 @@ Declare Function ClientRequestGetHttpMethod( _
 
 Declare Function ClientRequestGetUri( _
 	ByVal this As ClientRequest Ptr, _
-	ByVal pUri As Station922Uri Ptr _
+	ByVal ppUri As IClientUri Ptr Ptr _
 )As HRESULT
 
 Declare Function ClientRequestGetHttpVersion( _
@@ -91,11 +91,6 @@ Declare Function ClientRequestGetZipMode( _
 	ByVal ZipIndex As ZipModes, _
 	ByVal pSupported As Boolean Ptr _
 )As HRESULT
-
-Declare Function ClientRequestClear( _
-	ByVal this As ClientRequest Ptr _
-)As HRESULT
-
 
 Declare Function ClientRequestGetTextReader( _
 	ByVal this As ClientRequest Ptr, _
