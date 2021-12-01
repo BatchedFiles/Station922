@@ -7,8 +7,6 @@
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
 Extern GlobalHttpReaderCloneableVirtualTable As Const ICloneableVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Const MEMORYPAGE_SIZE As Integer = 4096
 
 #if __FB_DEBUG__
@@ -38,7 +36,6 @@ End Type
 Type _HttpReader
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
-	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
@@ -51,7 +48,7 @@ Sub InitializeRawBuffer( _
 		ByVal pBufer As RawBuffer Ptr _
 	)
 	
-	' ZeroMemory(pBufer, SizeOf(RawBuffer))
+	' No Need ZeroMemory pBufer.Bytes
 	pBufer->cbUsed = 0
 	pBufer->cbLength = 0
 	
@@ -100,7 +97,7 @@ Sub InitializeLinesBuffer( _
 		ByVal pLines As LinesBuffer Ptr _
 	)
 	
-	' ZeroMemory(pLines, SizeOf(LinesBuffer))
+	' No need ZeroMemory pLines.wszLine
 	pLines->Start = 0
 	pLines->Length = 0
 	pLines->wszLine[0] = 0
@@ -262,10 +259,6 @@ Sub InitializeHttpReader( _
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -291,10 +284,6 @@ Sub InitializeCloneHttpReader( _
 	
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
 	this->ReferenceCounter = 0
 	
 	IMalloc_AddRef(pIMemoryAllocator)
@@ -329,7 +318,6 @@ Sub UnInitializeHttpReader( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -465,11 +453,7 @@ Function HttpReaderAddRef( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -479,11 +463,7 @@ Function HttpReaderRelease( _
 		ByVal this As HttpReader Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

@@ -7,6 +7,7 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
+#include once "PrepareResponseAsyncTask.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "RequestedFile.bi"
 #include once "ServerResponse.bi"

@@ -11,11 +11,8 @@ Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _ClientContext
 	lpVtbl As Const IClientContextVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pINetworkStream As INetworkStream Ptr
@@ -41,10 +38,6 @@ Sub InitializeClientContext( _
 	)
 	
 	this->lpVtbl = @GlobalClientContextVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -95,7 +88,6 @@ Sub UnInitializeClientContext( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -265,11 +257,7 @@ Function ClientContextAddRef( _
 		ByVal this As ClientContext Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -279,11 +267,7 @@ Function ClientContextRelease( _
 		ByVal this As ClientContext Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

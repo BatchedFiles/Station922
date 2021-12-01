@@ -7,9 +7,6 @@ Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtua
 Const PRIVATEHEAP_INITIALSIZE As DWORD = 70 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
-' TODO Ќайти способ использовать кучу без блокировки
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 ' Const HEAP_NO_SERIALIZE_FLAG = 0
 
@@ -20,7 +17,6 @@ End Type
 
 Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
-	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pISpyObject As IMallocSpy Ptr
 	MemoryAllocations As Integer
@@ -35,10 +31,6 @@ Sub InitializeHeapMemoryAllocator( _
 	)
 	
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL
 	this->MemoryAllocations = 1
@@ -61,8 +53,6 @@ Sub UnInitializeHeapMemoryAllocator( _
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
 	End If
-	
-	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -233,11 +223,7 @@ Function HeapMemoryAllocatorAddRef( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -247,11 +233,7 @@ Function HeapMemoryAllocatorRelease( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

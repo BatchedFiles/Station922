@@ -13,7 +13,6 @@ Extern GlobalReadRequestAsyncTaskCloneableVirtualTable As Const ICloneableVirtua
 Type _ReadRequestAsyncTask
 	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
-	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
@@ -95,7 +94,6 @@ Sub InitializeReadRequestAsyncTask( _
 	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
 	this->lpCloneableVtbl = @GlobalReadRequestAsyncTaskCloneableVirtualTable
 	this->ReferenceCounter = 0
-	
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
@@ -305,9 +303,7 @@ Function ReadRequestAsyncTaskAddRef( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)As ULONG
 	
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -317,9 +313,7 @@ Function ReadRequestAsyncTaskRelease( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)As ULONG
 	
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

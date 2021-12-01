@@ -21,11 +21,8 @@ Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 Const TRANSMIT_CHUNK_SIZE As DWORD = 1024 * 1024 * 265
 Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _HttpGetProcessor
 	lpVtbl As Const IRequestProcessorVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
@@ -230,10 +227,6 @@ Sub InitializeHttpGetProcessor( _
 	)
 	
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -259,7 +252,6 @@ Sub UnInitializeHttpGetProcessor( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -388,11 +380,7 @@ Function HttpGetProcessorAddRef( _
 		ByVal this As HttpGetProcessor Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -402,11 +390,7 @@ Function HttpGetProcessorRelease( _
 		ByVal this As HttpGetProcessor Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

@@ -15,12 +15,9 @@ Extern GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTab
 
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _ServerResponse
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	' Буфер заголовков ответа
@@ -50,14 +47,9 @@ Sub InitializeServerResponse( _
 	
 	this->lpVtbl = @GlobalServerResponseVirtualTable
 	this->lpStringableVtbl = @GlobalServerResponseStringableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	
 	this->pResponseHeaderBuffer = pResponseHeaderBuffer
 	this->pResponseHeaderBuffer[0] = 0
 	this->StartResponseHeadersPtr = pResponseHeaderBuffer
@@ -82,7 +74,6 @@ Sub UnInitializeServerResponse( _
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBufferStringable)
 	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBuffer)
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -225,11 +216,7 @@ Function ServerResponseAddRef( _
 		ByVal this As ServerResponse Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -239,11 +226,7 @@ Function ServerResponseRelease( _
 		ByVal this As ServerResponse Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

@@ -11,12 +11,9 @@
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 Extern GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _ClientRequest
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
-	' crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIReader As ITextReader Ptr
@@ -57,10 +54,6 @@ Sub InitializeClientRequest( _
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
-	' InitializeCriticalSectionAndSpinCount( _
-		' @this->crSection, _
-		' MAX_CRITICAL_SECTION_SPIN_COUNT _
-	' )
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -99,7 +92,6 @@ Sub UnInitializeClientRequest( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	' DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -221,11 +213,7 @@ Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -235,11 +223,7 @@ Function ClientRequestRelease( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	' EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	' LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

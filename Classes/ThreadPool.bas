@@ -124,10 +124,8 @@ Sub InitializeThreadPool( _
 		MAX_CRITICAL_SECTION_SPIN_COUNT _
 	)
 	this->ReferenceCounter = 0
-	
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	
 	this->hIOCompletionPort = NULL
 	this->WorkerThreadsCount = 0
 	
@@ -142,6 +140,7 @@ Sub UnInitializeThreadPool( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
+	
 	DeleteCriticalSection(@this->crSection)
 	
 End Sub

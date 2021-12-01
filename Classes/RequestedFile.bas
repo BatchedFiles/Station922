@@ -11,12 +11,9 @@ Const MEMORYPAGE_SIZE As Integer = 4096
 Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _RequestedFile
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
 	lpSendableVtbl As Const ISendableVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As WString Ptr
@@ -34,14 +31,9 @@ Sub InitializeRequestedFile( _
 	
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
 	this->lpSendableVtbl = @GlobalRequestedFileSendableVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	
 	this->pFilePath = pFilePath
 	this->pFilePath[0] = 0
 	this->pPathTranslated = pPathTranslated
@@ -79,7 +71,6 @@ Sub UnInitializeRequestedFile( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -223,11 +214,7 @@ Function RequestedFileAddRef( _
 		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -237,11 +224,7 @@ Function RequestedFileRelease( _
 		ByVal this As RequestedFile Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1

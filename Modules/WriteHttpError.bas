@@ -95,6 +95,7 @@ Sub WriteMovedPermanently( _
 	
 	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.MovedPermanently)
 	
+	' TODO Добавить заголовок
 	/'
 	Dim MovedUrl As WString Ptr = Any
 	IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)

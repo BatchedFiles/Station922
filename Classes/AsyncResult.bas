@@ -4,11 +4,8 @@
 
 Extern GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _AsyncResult
 	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pState As IUnknown Ptr
@@ -24,10 +21,6 @@ Sub InitializeAsyncResult( _
 	)
 	
 	this->lpVtbl = @GlobalMutableAsyncResultVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -48,7 +41,6 @@ Sub UnInitializeAsyncResult( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -166,11 +158,7 @@ Function AsyncResultAddRef( _
 		ByVal this As AsyncResult Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter += 1
 	
 	Return this->ReferenceCounter
 	
@@ -180,11 +168,7 @@ Function AsyncResultRelease( _
 		ByVal this As AsyncResult Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	this->ReferenceCounter -= 1
 	
 	If this->ReferenceCounter Then
 		Return 1
