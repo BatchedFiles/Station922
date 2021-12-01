@@ -363,8 +363,8 @@ Sub ServerThread( _
 			' CreateCachedClientMemoryContext(this)
 		' End If
 		
-		IClientRequest_Clear(this->pDefaultRequest)
-		IServerResponse_Clear(this->pDefaultResponse)
+		' IClientRequest_Clear(this->pDefaultRequest)
+		' IServerResponse_Clear(this->pDefaultResponse)
 		
 		Dim hrAccept As HRESULT = AcceptConnection( _
 			this _

@@ -1,10 +1,9 @@
 #include once "WriteHttpError.bi"
-#include once "IArrayStringWriter.bi"
+#include once "ArrayStringWriter.bi"
 #include once "CreateInstance.bi"
 #include once "HttpConst.bi"
+#include once "IClientUri.bi"
 #include once "WebUtils.bi"
-
-Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
 ' TODO Описания ошибок перевести на эсперанто
 
@@ -96,6 +95,7 @@ Sub WriteMovedPermanently( _
 	
 	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.MovedPermanently)
 	
+	/'
 	Dim MovedUrl As WString Ptr = Any
 	IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
 	
@@ -108,6 +108,7 @@ Sub WriteMovedPermanently( _
 	lstrcatW(@buf, ClientURI.Uri)
 	
 	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
+	'/
 	
 	WriteHttpResponse(pIContext, pIWebSite, @MovedPermanently)
 	

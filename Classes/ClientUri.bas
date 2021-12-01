@@ -1,4 +1,4 @@
-#include once "Station922Uri.bi"
+#include once "ClientUri.bi"
 #include once "win\shlwapi.bi"
 #include once "CharacterConstants.bi"
 
