@@ -27,7 +27,12 @@ Type IClientUriVirtualTable
 	
 	UriFromString As Function( _
 		ByVal this As IClientUri Ptr, _
-		ByVal bstrUri As HeapBSTR _
+		ByVal bstrUri As BSTR _
+	)As HRESULT
+	
+	GetOriginalString As Function( _
+		ByVal this As IClientUri Ptr, _
+		ByVal ppOriginalString As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetUserName As Function( _
@@ -79,6 +84,8 @@ End Type
 #define IClientUri_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IClientUri_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IClientUri_Release(this) (this)->lpVtbl->Release(this)
+#define IClientUri_UriFromString(this, bstrUri) (this)->lpVtbl->UriFromString(this, bstrUri)
+#define IClientUri_GetOriginalString(this, ppOriginalString) (this)->lpVtbl->GetOriginalString(this, ppOriginalString)
 #define IClientUri_GetUserName(this, ppUserName) (this)->lpVtbl->GetUserName(this, ppUserName)
 #define IClientUri_GetPassword(this, ppPassword) (this)->lpVtbl->GetPassword(this, ppPassword)
 #define IClientUri_GetHost(this, ppHost) (this)->lpVtbl->GetHost(this, ppHost)
