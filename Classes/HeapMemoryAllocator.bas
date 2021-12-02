@@ -4,7 +4,7 @@
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
-Const PRIVATEHEAP_INITIALSIZE As DWORD = 70 * 4096
+Const PRIVATEHEAP_INITIALSIZE As DWORD = 64 * 4096
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
@@ -80,6 +80,19 @@ Function CreateHeapMemoryAllocator( _
 	)
 	
 	If hHeap <> NULL Then
+		
+		#if __FB_DEBUG__
+		Scope
+			Dim vtHeapBytes As VARIANT = Any
+			vtHeapBytes.vt = VT_I4
+			vtHeapBytes.lVal = PRIVATEHEAP_MAXIMUMSIZE
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				WStr(!"\t\t\t\tPrivateHeap created, maximum size:\t"), _
+				@vtHeapBytes _
+			)
+		End Scope
+		#endif
 		
 		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 			hHeap, _
