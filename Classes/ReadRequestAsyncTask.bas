@@ -376,12 +376,13 @@ Function ReadRequestAsyncTaskEndExecute( _
 		pIResult _
 	)
 	If FAILED(hrEndReadRequest) Then
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrEndReadRequest
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"E_FAIL"), _
-			@vtEmpty _
+			WStr(!"IClientRequest_EndReadRequest Error\t"), _
+			@vtSCode _
 		)
 		' TODO Вывести байты запроса HttpReader в лог
 		' DebugPrintHttpReader(pIHttpReader)
@@ -427,7 +428,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 				vtSCode.scode = hrCreateTask
 				LogWriteEntry( _
 					LogEntryType.Error, _
-					WStr(!"hrCreateTask Error\t"), _
+					WStr(!"CreateTask Error\t"), _
 					@vtSCode _
 				)
 				Return hrCreateTask
