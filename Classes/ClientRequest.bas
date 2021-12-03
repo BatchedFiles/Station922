@@ -604,12 +604,11 @@ Function ClientRequestGetHttpMethod( _
 		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
 	
-	Dim copy As HeapBSTR = HeapSysCopyString( _
-		this->pIMemoryAllocator, _
+	HeapSysAddRefString( _
 		this->pHttpMethod _
 	)
 	
-	*ppHttpMethod = copy
+	*ppHttpMethod = this->pHttpMethod
 	
 	Return S_OK
 	
@@ -635,12 +634,11 @@ Function ClientRequestGetHttpVersion( _
 		ByVal ppHttpVersion As HeapBSTR Ptr _
 	)As HRESULT
 	
-	Dim copy As HeapBSTR = HeapSysCopyString( _
-		this->pIMemoryAllocator, _
+	HeapSysAddRefString( _
 		this->pHttpVersion _
 	)
 	
-	*ppHttpVersion = copy
+	*ppHttpVersion = this->pHttpVersion
 	
 	Return S_OK
 	
@@ -652,12 +650,11 @@ Function ClientRequestGetHttpHeader( _
 		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	
-	Dim copy As HeapBSTR = HeapSysCopyString( _
-		this->pIMemoryAllocator, _
+	HeapSysAddRefString( _
 		this->RequestHeaders(HeaderIndex) _
 	)
 	
-	*ppHeader = copy
+	*ppHeader = this->RequestHeaders(HeaderIndex)
 	
 	Return S_OK
 	
