@@ -19,9 +19,9 @@ Type _ClientRequest
 	pIReader As ITextReader Ptr
 	RequestedLine As HeapBSTR
 	RequestHeaders(HttpRequestHeadersMaximum - 1) As HeapBSTR
-	HttpMethod As HttpMethods
+	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
-	HttpVersion As HttpVersions
+	pHttpVersion As HeapBSTR
 	RequestByteRange As ByteRange
 	ContentLength As LongInt
 	RequestZipModes(HttpZipModesMaximum - 1) As Boolean
@@ -61,9 +61,9 @@ Sub InitializeClientRequest( _
 	this->pIReader = NULL
 	this->RequestedLine = NULL
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
-	this->HttpMethod = HttpMethods.HttpGet
+	this->pHttpMethod = NULL
 	this->pClientURI = NULL
-	this->HttpVersion = HttpVersions.Http11
+	this->pHttpVersion = NULL
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
 	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
@@ -78,6 +78,8 @@ Sub UnInitializeClientRequest( _
 	)
 	
 	HeapSysFreeString(this->RequestedLine)
+	HeapSysFreeString(this->pHttpMethod)
+	HeapSysFreeString(this->pHttpVersion)
 	
 	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
 		HeapSysFreeString(this->RequestHeaders(i))
@@ -331,7 +333,6 @@ Function ClientRequestPrepare( _
 	
 	Dim pSpace As WString Ptr = Any
 	
-	Dim bstrVerb As HeapBSTR = Any
 	Scope
 		Dim pVerb As WString Ptr = this->RequestedLine
 		
@@ -345,25 +346,15 @@ Function ClientRequestPrepare( _
 		End If
 		
 		Dim VerbLength As Integer = pSpace - pVerb
-		bstrVerb = HeapSysAllocStringLen( _
+		this->pHttpMethod = HeapSysAllocStringLen( _
 			this->pIMemoryAllocator, _
 			pVerb, _
 			VerbLength _
 		)
 		
-		MessageBoxW(NULL, bstrVerb, "Verb", MB_OK)
-		
-		' TODO Метод должен определять сервер
-		Dim GetHttpMethodResult As Boolean = GetHttpMethodIndex( _
-			bstrVerb, _
-			@this->HttpMethod _
-		)
-		If GetHttpMethodResult = False Then
-			Return CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
-		End If
+		MessageBoxW(NULL, this->pHttpMethod, "Verb", MB_OK)
 		
 	End Scope
-	HeapSysFreeString(bstrVerb)
 	
 	Dim bstrUri As HeapBSTR = Any
 	Scope
@@ -398,9 +389,8 @@ Function ClientRequestPrepare( _
 	End Scope
 	HeapSysFreeString(bstrUri)
 	
-	Dim bstrVersion As HeapBSTR = Any
 	If pSpace = NULL Then
-		bstrVersion = NULL
+		this->pHttpVersion = NULL
 	Else
 		' Найти начало непробела
 		Do
@@ -419,17 +409,18 @@ Function ClientRequestPrepare( _
 			Return CLIENTREQUEST_E_BADREQUEST
 		End If
 		
-		bstrVersion = HeapSysAllocString( _
+		this->pHttpVersion = HeapSysAllocString( _
 			this->pIMemoryAllocator, _
 			pVersion _
 		)
 		
-		MessageBoxW(NULL, bstrVersion, "Version", MB_OK)
+		MessageBoxW(NULL, this->pHttpVersion, "Version", MB_OK)
 		
 		' TODO Версию протокола должен определять сервер
+		/'
 		Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
 			bstrVersion, _
-			@this->HttpVersion _
+			@ _
 		)
 		If GetHttpVersionResult = False Then
 			Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
@@ -441,8 +432,8 @@ Function ClientRequestPrepare( _
 				this->KeepAlive = True ' Для версии 1.1 это по умолчанию
 				
 		End Select
+		'/
 	End If
-	HeapSysFreeString(bstrVersion)
 	
 	/'
 	Dim hrSetUri As HRESULT = Station922UriSetUri( _
@@ -607,10 +598,15 @@ End Function
 
 Function ClientRequestGetHttpMethod( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal pHttpMethod As HttpMethods Ptr _
+		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*pHttpMethod = this->HttpMethod
+	Dim copy As HeapBSTR = HeapSysCopyString( _
+		this->pIMemoryAllocator, _
+		this->pHttpMethod _
+	)
+	
+	*ppHttpMethod = copy
 	
 	Return S_OK
 	
@@ -633,10 +629,15 @@ End Function
 
 Function ClientRequestGetHttpVersion( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal pHttpVersion As HttpVersions Ptr _
+		ByVal ppHttpVersion As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*pHttpVersion = this->HttpVersion
+	Dim copy As HeapBSTR = HeapSysCopyString( _
+		this->pIMemoryAllocator, _
+		this->pHttpVersion _
+	)
+	
+	*ppHttpVersion = copy
 	
 	Return S_OK
 	
@@ -832,9 +833,9 @@ End Function
 
 Function IClientRequestGetHttpMethod( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pHttpMethod As HttpMethods Ptr _
+		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpMethod(ContainerOf(this, ClientRequest, lpVtbl), pHttpMethod)
+	Return ClientRequestGetHttpMethod(ContainerOf(this, ClientRequest, lpVtbl), ppHttpMethod)
 End Function
 
 Function IClientRequestGetUri( _
@@ -846,9 +847,9 @@ End Function
 
 Function IClientRequestGetHttpVersion( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pHttpVersions As HttpVersions Ptr _
+		ByVal ppHttpVersions As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), pHttpVersions)
+	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), ppHttpVersions)
 End Function
 
 Function IClientRequestGetHttpHeader( _
