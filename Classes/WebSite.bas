@@ -19,8 +19,6 @@ Const DefaultFileNameIndexHtml = WStr("index.html")
 Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Declare Function OpenFileForReading( _
 	ByVal PathTranslated As WString Ptr, _
 	ByVal ForReading As FileAccess _
@@ -33,7 +31,6 @@ Declare Function GetDefaultFileName( _
 
 Type _WebSite
 	lpVtbl As Const IMutableWebSiteVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pHostName As BSTR
@@ -49,10 +46,6 @@ Sub InitializeWebSite( _
 	)
 	
 	this->lpVtbl = @GlobalMutableWebSiteVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -73,7 +66,6 @@ Sub UnInitializeWebSite( _
 	SysFreeString(this->pVirtualPath)
 	SysFreeString(this->pMovedUrl)
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -190,13 +182,13 @@ Function WebSiteAddRef( _
 		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	#ifdef __FB_64BIT__
+		InterlockedIncrement64(@this->ReferenceCounter)
+	#else
+		InterlockedIncrement(@this->ReferenceCounter)
+	#endif
 	
-	Return this->ReferenceCounter
+	Return 1
 	
 End Function
 
@@ -204,15 +196,15 @@ Function WebSiteRelease( _
 		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
+	#ifdef __FB_64BIT__
+		If InterlockedDecrement64(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#else
+		If InterlockedDecrement(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#endif
 	
 	DestroyWebSite(this)
 	
@@ -318,7 +310,7 @@ Function WebSiteOpenRequestedFile( _
 	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
 	
 	If FilePath[lstrlenW(FilePath) - 1] <> Characters.Solidus Then
-		' FilePath содержит имя конкретного файла
+		' FilePath пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 		
 		WebSiteMapPath(this, FilePath, @PathTranslated)
 		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
@@ -359,7 +351,7 @@ Function WebSiteOpenRequestedFile( _
 		
 	Loop While GetDefaultFileNameResult
 	
-	' Файл по умолчанию не найден
+	' пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	GetDefaultFileName(DefaultFilename, 0)
 	
 	lstrcpyW(@FullDefaultFilename, FilePath)

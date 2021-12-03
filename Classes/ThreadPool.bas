@@ -6,11 +6,8 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type _ThreadPool
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	hIOCompletionPort As HANDLE
@@ -119,10 +116,6 @@ Sub InitializeThreadPool( _
 	)
 	
 	this->lpVtbl = @GlobalThreadPoolVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -140,8 +133,6 @@ Sub UnInitializeThreadPool( _
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -257,13 +248,13 @@ Function ThreadPoolAddRef( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	#ifdef __FB_64BIT__
+		InterlockedIncrement64(@this->ReferenceCounter)
+	#else
+		InterlockedIncrement(@this->ReferenceCounter)
+	#endif
 	
-	Return this->ReferenceCounter
+	Return 1
 	
 End Function
 
@@ -271,15 +262,15 @@ Function ThreadPoolRelease( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
+	#ifdef __FB_64BIT__
+		If InterlockedDecrement64(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#else
+		If InterlockedDecrement(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#endif
 	
 	DestroyThreadPool(this)
 	

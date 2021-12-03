@@ -4,8 +4,6 @@
 
 Extern GlobalMutableWebSiteCollectionVirtualTable As Const IMutableWebSiteCollectionVirtualTable
 
-Const MAX_CRITICAL_SECTION_SPIN_COUNT As DWORD = 4000
-
 Type WebSiteNode
 	HostName As BSTR
 	pIWebSite As IWebSite Ptr
@@ -31,7 +29,6 @@ Declare Function CreateWebSiteNode( _
 
 Type _WebSiteCollection
 	lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
-	crSection As CRITICAL_SECTION
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pDefaultNode As WebSiteNode Ptr
@@ -45,10 +42,6 @@ Sub InitializeWebSiteCollection( _
 	)
 	
 	this->lpVtbl = @GlobalMutableWebSiteCollectionVirtualTable
-	InitializeCriticalSectionAndSpinCount( _
-		@this->crSection, _
-		MAX_CRITICAL_SECTION_SPIN_COUNT _
-	)
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -63,7 +56,6 @@ Sub UnInitializeWebSiteCollection( _
 	)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
-	DeleteCriticalSection(@this->crSection)
 	
 End Sub
 
@@ -180,13 +172,13 @@ Function WebSiteCollectionAddRef( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter += 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
+	#ifdef __FB_64BIT__
+		InterlockedIncrement64(@this->ReferenceCounter)
+	#else
+		InterlockedIncrement(@this->ReferenceCounter)
+	#endif
 	
-	Return this->ReferenceCounter
+	Return 1
 	
 End Function
 
@@ -194,15 +186,15 @@ Function WebSiteCollectionRelease( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	EnterCriticalSection(@this->crSection)
-	Scope
-		this->ReferenceCounter -= 1
-	End Scope
-	LeaveCriticalSection(@this->crSection)
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
+	#ifdef __FB_64BIT__
+		If InterlockedDecrement64(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#else
+		If InterlockedDecrement(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#endif
 	
 	DestroyWebSiteCollection(this)
 	
