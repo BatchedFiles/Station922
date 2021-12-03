@@ -7,6 +7,8 @@ Extern CLSID_CLIENTURI Alias "CLSID_CLIENTURI" As Const CLSID
 
 Type ClientUri As _ClientUri
 
+Type LPClientUri As _ClientUri Ptr
+
 Declare Function CreateClientUri( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ClientUri Ptr
