@@ -3,47 +3,80 @@
 
 #include once "IClientUri.bi"
 
-Const STATION922URI_E_URITOOLARGE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0201)
-Const STATION922URI_E_BADPATH As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0202)
+Extern CLSID_CLIENTURI Alias "CLSID_CLIENTURI" As Const CLSID
 
-/'
-        userinfo       host      port
-        ┌──┴───┐ ┌──────┴──────┐ ┌┴┐
-https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top
-└─┬─┘   └───────────┬──────────────┘└───────┬───────┘ └───────────┬─────────────┘ └┬┘
-scheme          authority                  path                 query           fragment
+Type ClientUri As _ClientUri
 
-'/
+Declare Function CreateClientUri( _
+	ByVal pIMemoryAllocator As IMalloc Ptr _
+)As ClientUri Ptr
 
-Type UserInfo
-	UserName As WString Ptr
-	Password As WString Ptr
-End Type
-
-Type Authority
-	Info As UserInfo
-	Host As WString Ptr
-	Port As WString Ptr
-End Type
-
-Const URI_BUFFER_CAPACITY As Integer = (2 * 4096) \ SizeOf(WString) - SizeOf(Authority) \ SizeOf(WString) - (4 * SizeOf(WString Ptr)) \ SizeOf(WString) - SizeOf(WString)
-
-Type Station922Uri
-	Uri As WString * (URI_BUFFER_CAPACITY + 1)
-	Scheme As WString Ptr
-	Authority As Authority
-	Path As WString Ptr
-	Query As WString Ptr
-	Fragment As WString Ptr
-End Type
-
-Declare Sub Station922UriInitialize( _
-	ByVal pURI As Station922Uri Ptr _
+Declare Sub DestroyClientUri( _
+	ByVal this As ClientUri Ptr _
 )
 
-Declare Function Station922UriSetUri( _
-	ByVal pURI As Station922Uri Ptr, _
-	ByVal UriString As WString Ptr _
+Declare Function ClientUriQueryInterface( _
+	ByVal this As ClientUri Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppvObject As Any Ptr Ptr _
+)As HRESULT
+
+Declare Function ClientUriAddRef( _
+	ByVal this As ClientUri Ptr _
+)As ULONG
+
+Declare Function ClientUriRelease( _
+	ByVal this As ClientUri Ptr _
+)As ULONG
+
+Declare Function ClientUriUriFromString( _
+	ByVal this As ClientUri Ptr, _
+	ByVal bstrUri As BSTR _
+)As HRESULT
+
+Declare Function ClientUriGetOriginalString( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppOriginalString As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetUserName( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppUserName As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetPassword( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppPassword As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetHost( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppHost As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetPort( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppPort As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetScheme( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppScheme As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetPath( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppPath As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetQuery( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppQuery As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function ClientUriGetFragment( _
+	ByVal this As ClientUri Ptr, _
+	ByVal ppFragment As HeapBSTR Ptr _
 )As HRESULT
 
 #endif

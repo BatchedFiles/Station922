@@ -40,6 +40,11 @@ DEFINE_CLSID(CLSID_CLIENTREQUEST, _
 	&hfb96c7a7, &h1b31, &h4351, &ha3, &h0, &hc1, &h7f, &h30, &hd1, &haf, &h3c _
 )
 
+' {345FC692-3557-487B-8986-F4D0E85C079E}
+DEFINE_CLSID(CLSID_CLIENTURI, _
+	&h345fc692, &h3557, &h487b, &h89, &h86, &hf4, &hd0, &he8, &h5c, &h7, &h9e _
+)
+
 ' {EAE5C3F4-50D3-4E0F-843D-A6F838C5FA5C}
 DEFINE_CLSID(CLSID_HEAPBSTR, _
 	&heae5c3f4, &h50d3, &h4e0f, &h84, &h3d, &ha6, &hf8, &h38, &hc5, &hfa, &h5c _
