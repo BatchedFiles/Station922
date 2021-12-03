@@ -27,6 +27,10 @@ Declare Function HeapSysConcatString( _
 	ByVal rhs As HeapBSTR _
 )As HeapBSTR
 
+Declare Function HeapSysAddRefString( _
+	ByVal bstrString As HeapBSTR _
+)As HRESULT
+
 Declare Sub HeapSysFreeString( _
 	ByVal bstrString As HeapBSTR _ 
 )

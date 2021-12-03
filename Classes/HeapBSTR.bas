@@ -82,13 +82,26 @@ Function HeapSysAllocStringLen( _
 	
 End Function
 
+Function HeapSysAddRefString( _
+		ByVal bstrString As HeapBSTR _
+	)As HRESULT
+	
+	If bstrString <> NULL Then
+		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
+		InternalHeapBSTRAddRef(this)
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Sub HeapSysFreeString( _
 		byval bstrString As HeapBSTR _ 
 	)
 	
 	If bstrString <> NULL Then
-		Dim pIString As IString Ptr = GetIStringFromHeapBSTR(bstrString)
-		IString_Release(pIString)
+		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
+		InternalHeapBSTRRelease(this)
 	End If
 	
 End Sub
