@@ -360,8 +360,6 @@ Function ClientRequestPrepare( _
 			VerbLength _
 		)
 		
-		MessageBoxW(NULL, this->pHttpMethod, "Verb", MB_OK)
-		
 	End Scope
 	
 	Dim bstrUri As HeapBSTR = Any
@@ -393,7 +391,6 @@ Function ClientRequestPrepare( _
 			)
 		End If
 		
-		MessageBoxW(NULL, bstrUri, "Uri", MB_OK)
 	End Scope
 	HeapSysFreeString(bstrUri)
 	
@@ -421,8 +418,6 @@ Function ClientRequestPrepare( _
 			this->pIMemoryAllocator, _
 			pVersion _
 		)
-		
-		MessageBoxW(NULL, this->pHttpVersion, "Version", MB_OK)
 		
 		' TODO ¬ерсию протокола должен определ€ть сервер
 		/'
