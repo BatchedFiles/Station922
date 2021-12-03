@@ -329,7 +329,7 @@ Function CreateServerSocket( _
 		WSAEventSelect( _
 			this->SocketList(i).ClientSocket, _
 			this->hEvents(i), _
-			FD_ACCEPT Or FD_CLOSE _
+			FD_ACCEPT _
 		)
 	Next
 	
@@ -370,11 +370,20 @@ Sub ServerThread( _
 			this _
 		)
 		
-		INetworkStream_Close(this->pDefaultStream)
+		' INetworkStream_Close(this->pDefaultStream)
 		
 		' this->CachedClientMemoryContextIndex += 1
 		
 		If FAILED(hrAccept) Then
+			Dim vtSCode As VARIANT = Any
+			vtSCode.vt = VT_ERROR
+			vtSCode.scode = hrAccept
+			LogWriteEntry( _
+				LogEntryType.Error, _
+				WStr(!"AcceptConnection Error\t"), _
+				@vtSCode _
+			)
+			
 			If this->CurrentStatus = RUNNABLE_S_RUNNING Then
 				Sleep_(THREAD_SLEEPING_TIME)
 			Else
