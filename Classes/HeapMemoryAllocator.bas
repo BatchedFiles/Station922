@@ -236,9 +236,13 @@ Function HeapMemoryAllocatorAddRef( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter += 1
+	#ifdef __FB_64BIT__
+		InterlockedIncrement64(@this->ReferenceCounter)
+	#else
+		InterlockedIncrement(@this->ReferenceCounter)
+	#endif
 	
-	Return this->ReferenceCounter
+	Return 1
 	
 End Function
 
@@ -246,11 +250,15 @@ Function HeapMemoryAllocatorRelease( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
+	#ifdef __FB_64BIT__
+		If InterlockedDecrement64(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#else
+		If InterlockedDecrement(@this->ReferenceCounter) Then
+			Return 1
+		End If
+	#endif
 	
 	DestroyHeapMemoryAllocator(this)
 	
