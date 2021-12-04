@@ -3,6 +3,7 @@
 #include once "AsyncResult.bi"
 #include once "ClientContext.bi"
 #include once "ClientRequest.bi"
+#include once "ClientUri.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
@@ -231,6 +232,20 @@ Function CreateInstance( _
 		Dim hr As HRESULT = ReadRequestAsyncTaskQueryInterface(pTask, riid, ppv)
 		If FAILED(hr) Then
 			DestroyReadRequestAsyncTask(pTask)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_CLIENTURI, rclsid) Then
+		Dim pUri As ClientUri Ptr = CreateClientUri(pIMemoryAllocator)
+		If pUri = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ClientUriQueryInterface(pUri, riid, ppv)
+		If FAILED(hr) Then
+			DestroyClientUri(pUri)
 		End If
 		
 		Return hr
