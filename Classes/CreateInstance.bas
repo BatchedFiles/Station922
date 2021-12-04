@@ -251,16 +251,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	Return CLASS_E_CLASSNOTAVAILABLE
-	
-End Function
-
-Function CreateMemoryAllocatorInstance( _
-		ByVal rclsid As REFCLSID, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
 	If IsEqualCLSID(@CLSID_HEAPMEMORYALLOCATOR, rclsid) Then
 		Dim pAllocator As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator()
 		If pAllocator = NULL Then
@@ -276,5 +266,31 @@ Function CreateMemoryAllocatorInstance( _
 	End If
 	
 	Return CLASS_E_CLASSNOTAVAILABLE
+	
+End Function
+
+Function GetHeapMemoryAllocatorInstance( _
+	)As IMalloc Ptr
+	
+	/'
+	' TODO Реализовать механизм пула объектов
+	Потеребитель запрашивает интерфейс IMalloc
+	Ему выдаётся уже заранее созданный IMalloc из пула
+	Когда счётчик ссылок на IMalloc падает до нуля
+	то объект не уничтожается, а возвращается в пул
+	Не тратится время на создание новых куч памяти
+	'/
+	Dim pMalloc As IMalloc Ptr = Any
+	Dim hrCreateMalloc As HRESULT = CreateInstance( _
+		NULL, _
+		@CLSID_HEAPMEMORYALLOCATOR, _
+		@IID_IMALLOC, _
+		@pMalloc _
+	)
+	If FAILED(hrCreateMalloc) Then
+		Return NULL
+	End If
+	
+	Return pMalloc
 	
 End Function

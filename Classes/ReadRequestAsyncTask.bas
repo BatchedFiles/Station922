@@ -2,7 +2,6 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "HeapMemoryAllocator.bi"
 #include once "ICloneable.bi"
 #include once "Logger.bi"
 #include once "PrepareResponseAsyncTask.bi"

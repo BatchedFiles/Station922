@@ -3,7 +3,6 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
@@ -90,14 +89,9 @@ Function AcceptConnection( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
-	Dim pIClientMemoryAllocator As IMalloc Ptr = Any
-	Dim hrCreateAllocator As HRESULT = CreateMemoryAllocatorInstance( _
-		@CLSID_HEAPMEMORYALLOCATOR, _
-		@IID_IMalloc, _
-		@pIClientMemoryAllocator _
-	)
+	Dim pIClientMemoryAllocator As IMalloc Ptr = GetHeapMemoryAllocatorInstance()
 	
-	If SUCCEEDED(hrCreateAllocator) Then
+	If pIClientMemoryAllocator <> NULL Then
 		
 		Dim pINetworkStream As INetworkStream Ptr = Any
 		Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
