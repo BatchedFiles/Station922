@@ -4,8 +4,6 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
-' IArrayStringWriter
-
 Type ITextWriter As ITextWriter_
 
 Type LPITEXTWRITER As ITextWriter Ptr
