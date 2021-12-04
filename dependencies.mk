@@ -1,3 +1,8 @@
+$(OBJ_RELEASE_DIR)\Guids$(FILE_SUFFIX_BASE).c: Classes\Guids.bas
+
+$(OBJ_DEBUG_DIR)\Guids$(FILE_SUFFIX_BASE).c: Classes\Guids.bas
+
+
 $(OBJ_RELEASE_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c: Classes\ArrayStringWriter.bas Classes\ArrayStringWriter.bi Interfaces\IArrayStringWriter.bi Interfaces\ITextWriter.bi Classes\ContainerOf.bi Modules\Logger.bi Headers\StringConstants.bi
 
 $(OBJ_DEBUG_DIR)\ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c:   Classes\ArrayStringWriter.bas Classes\ArrayStringWriter.bi Interfaces\IArrayStringWriter.bi Interfaces\ITextWriter.bi Classes\ContainerOf.bi Modules\Logger.bi Headers\StringConstants.bi
@@ -362,3 +367,17 @@ $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   EntryPoint.bas
 $(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: EntryPoint.bas
 
 $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   EntryPoint.bas
+
+
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources\Resources.RC Resources\Resources.RH
+
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources\Resources.RC Resources\Resources.RH
+
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources\Resources.RC Resources\Resources.RH
+
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_SERVICE).obj: Resources\Resources.RC Resources\Resources.RH
+
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources\Resources.RC Resources\Resources.RH
+
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_TEST).obj: Resources\Resources.RC Resources\Resources.RH
+
