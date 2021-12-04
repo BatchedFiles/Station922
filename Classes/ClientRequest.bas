@@ -2,7 +2,9 @@
 #include once "win\shlwapi.bi"
 #include once "IStringable.bi"
 #include once "CharacterConstants.bi"
+#include once "ClientUri.bi"
 #include once "ContainerOf.bi"
+#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
@@ -362,8 +364,17 @@ Function ClientRequestPrepare( _
 		
 	End Scope
 	
-	Dim bstrUri As HeapBSTR = Any
 	Scope
+		Dim hrCreateUri As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_CLIENTURI, _
+			@IID_IClientUri, _
+			@this->pClientURI _
+		)
+		If FAILED(hrCreateUri) Then
+			Return hrCreateUri
+		End If
+		
 		' Найти начало непробела
 		Do
 			pSpace += 1
@@ -373,6 +384,7 @@ Function ClientRequestPrepare( _
 		Dim pUri As WString Ptr = pSpace
 		
 		' Второй пробел
+		Dim bstrUri As HeapBSTR = Any
 		pSpace = StrChrW( _
 			pSpace, _
 			Characters.WhiteSpace _
@@ -391,8 +403,17 @@ Function ClientRequestPrepare( _
 			)
 		End If
 		
+		Dim hrUriFromString As HRESULT = IClientUri_UriFromString( _
+			this->pClientURI, _
+			bstrUri _
+		)
+		HeapSysFreeString(bstrUri)
+		
+		If FAILED(hrUriFromString) Then
+			Return hrUriFromString
+		End If
+		
 	End Scope
-	HeapSysFreeString(bstrUri)
 	
 	If pSpace = NULL Then
 		this->pHttpVersion = NULL
