@@ -43,7 +43,12 @@ Function HeapSysAllocString( _
 		byval pwsz As Const WString Ptr _
 	)As HeapBSTR
 	
-	Dim pszlen As UINT = lstrlenW(pwsz)
+	Dim pszlen As UINT = Any
+	If pwsz = NULL Then
+		pszlen = 0
+	Else
+		pszlen = lstrlenW(pwsz)
+	End If
 	
 	Return HeapSysAllocStringLen(pIMemoryAllocator, pwsz, pszlen)
 	
