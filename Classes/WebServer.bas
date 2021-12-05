@@ -45,22 +45,6 @@ Type _WebServer
 	
 End Type
 
-Function GetNetworkEventType( _
-		ByVal EventType As WSANETWORKEVENTS Ptr _
-	)As Integer
-	
-	If EventType->lNetworkEvents And FD_ACCEPT Then
-		Return FD_ACCEPT
-	End If
-	
-	If EventType->lNetworkEvents And FD_CLOSE Then
-		Return FD_CLOSE
-	End If
-	
-	Return 0
-	
-End Function
-
 Function AssociateWithIOCP( _
 		ByVal pPool As IThreadPool Ptr, _
 		ByVal ClientSocket As SOCKET, _
@@ -140,107 +124,106 @@ Function AcceptConnection( _
 					
 					If dwEnumEventResult <> SOCKET_ERROR Then
 						
-						Dim ne As Integer = GetNetworkEventType(@EventType)
+						Dim AcceptFlag As Integer = EventType.lNetworkEvents And FD_ACCEPT
 						
-						Select Case ne
+						If AcceptFlag Then
 							
-							Case FD_ACCEPT
-								Dim errorCode As Integer = EventType.iErrorCode(FD_ACCEPT_BIT)
+							Dim errorCode As Integer = EventType.iErrorCode(FD_ACCEPT_BIT)
+							
+							If errorCode = 0 Then
 								
-								If errorCode = 0 Then
+								Dim RemoteAddress As SOCKADDR_STORAGE = Any
+								Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
+								Dim ClientSocket As SOCKET = accept( _
+									this->SocketList(EventIndex).ClientSocket, _
+									CPtr(SOCKADDR Ptr, @RemoteAddress), _
+									@RemoteAddressLength _
+								)
+								
+								If ClientSocket <> INVALID_SOCKET Then
 									
-									Dim RemoteAddress As SOCKADDR_STORAGE = Any
-									Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-									Dim ClientSocket As SOCKET = accept( _
-										this->SocketList(EventIndex).ClientSocket, _
-										CPtr(SOCKADDR Ptr, @RemoteAddress), _
-										@RemoteAddressLength _
+									Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
+										this->pIPool, _
+										ClientSocket, _
+										Cast(ULONG_PTR, 0) _
 									)
 									
-									If ClientSocket <> INVALID_SOCKET Then
+									If SUCCEEDED(hrAssociateWithIOCP) Then
 										
-										Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
-											this->pIPool, _
-											ClientSocket, _
-											Cast(ULONG_PTR, 0) _
+										INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+										
+										Dim pTask As IReadRequestAsyncTask Ptr = Any
+										Dim hrCreateTask As HRESULT = CreateInstance( _
+											pIClientMemoryAllocator, _
+											@CLSID_READREQUESTASYNCTASK, _
+											@IID_IReadRequestAsyncTask, _
+											@pTask _
 										)
 										
-										If SUCCEEDED(hrAssociateWithIOCP) Then
-											
-											INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-											
-											Dim pTask As IReadRequestAsyncTask Ptr = Any
-											Dim hrCreateTask As HRESULT = CreateInstance( _
-												pIClientMemoryAllocator, _
-												@CLSID_READREQUESTASYNCTASK, _
-												@IID_IReadRequestAsyncTask, _
-												@pTask _
+										If SUCCEEDED(hrCreateTask) Then
+											IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
+											IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
+											IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+											'IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+											IReadRequestAsyncTask_SetRemoteAddress( _
+												pTask, _
+												CPtr(SOCKADDR Ptr, @RemoteAddress), _
+												RemoteAddressLength _
 											)
 											
-											If SUCCEEDED(hrCreateTask) Then
-												IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
-												IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
-												IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-												'IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
-												IReadRequestAsyncTask_SetRemoteAddress( _
-													pTask, _
-													CPtr(SOCKADDR Ptr, @RemoteAddress), _
-													RemoteAddressLength _
-												)
-												
-												IMalloc_Release(pIClientMemoryAllocator)
-												INetworkStream_Release(pINetworkStream)
-												IHttpReader_Release(pIHttpReader)
-												
-												Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
-													pTask, _
-													this->pIPool _
-												)
-												
-												If SUCCEEDED(hrBeginExecute) Then
-													' Сейчас мы не уменьшаем счётчик ссылок на pTask
-													' Счётчик ссылок уменьшим в функции EndExecute
-													' Когда задача будет завершена
-													Return S_OK
-												Else
-													pIClientMemoryAllocator = NULL
-													pINetworkStream = NULL
-													pIHttpReader = NULL
-												End If
-												
-												Dim vtSCode As VARIANT = Any
-												vtSCode.vt = VT_ERROR
-												vtSCode.scode = hrBeginExecute
-												LogWriteEntry( _
-													LogEntryType.Error, _
-													WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-													@vtSCode _
-												)
-												
-												' TODO Отправить клиенту Не могу начать асинхронное чтение
-												IReadRequestAsyncTask_Release(pTask)
+											IMalloc_Release(pIClientMemoryAllocator)
+											INetworkStream_Release(pINetworkStream)
+											IHttpReader_Release(pIHttpReader)
+											
+											Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+												pTask, _
+												this->pIPool _
+											)
+											
+											If SUCCEEDED(hrBeginExecute) Then
+												' Сейчас мы не уменьшаем счётчик ссылок на pTask
+												' Счётчик ссылок уменьшим в функции EndExecute
+												' Когда задача будет завершена
+												Return S_OK
+											Else
+												pIClientMemoryAllocator = NULL
+												pINetworkStream = NULL
+												pIHttpReader = NULL
 											End If
 											
+											Dim vtSCode As VARIANT = Any
+											vtSCode.vt = VT_ERROR
+											vtSCode.scode = hrBeginExecute
+											LogWriteEntry( _
+												LogEntryType.Error, _
+												WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+												@vtSCode _
+											)
+											
+											' TODO Отправить клиенту Не могу начать асинхронное чтение
+											IReadRequestAsyncTask_Release(pTask)
 										End If
 										
-										'CloseSocketConnection(ClientSocket)
 									End If
 									
-									'Dim dwErrorAccept As Long = WSAGetLastError()
-									'Dim vtErrorCode As VARIANT = Any
-									'vtErrorCode.vt = VT_UI4
-									'vtErrorCode.ulVal = dwErrorAccept
-									'LogWriteEntry( _
-									'	LogEntryType.Error, _
-									'	WStr(!"\t\t\t\tAccept failed\t"), _
-									'	@vtErrorCode _
-									')
-									'Return HRESULT_FROM_WIN32(dwErrorAccept)
-									
+									'CloseSocketConnection(ClientSocket)
 								End If
 								
-								'Return HRESULT_FROM_WIN32(errorCode)
-						End Select
+								'Dim dwErrorAccept As Long = WSAGetLastError()
+								'Dim vtErrorCode As VARIANT = Any
+								'vtErrorCode.vt = VT_UI4
+								'vtErrorCode.ulVal = dwErrorAccept
+								'LogWriteEntry( _
+								'	LogEntryType.Error, _
+								'	WStr(!"\t\t\t\tAccept failed\t"), _
+								'	@vtErrorCode _
+								')
+								'Return HRESULT_FROM_WIN32(dwErrorAccept)
+								
+							End If
+							
+							'Return HRESULT_FROM_WIN32(errorCode)
+						End If
 						
 						'Dim dwError As Long = WSAGetLastError()
 						'Return HRESULT_FROM_WIN32(dwError)
