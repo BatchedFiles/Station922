@@ -33,7 +33,7 @@ Declare Function ClientUriRelease( _
 
 Declare Function ClientUriUriFromString( _
 	ByVal this As ClientUri Ptr, _
-	ByVal bstrUri As BSTR _
+	ByVal bstrUri As HeapBSTR _
 )As HRESULT
 
 Declare Function ClientUriGetOriginalString( _
