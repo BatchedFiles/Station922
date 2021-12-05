@@ -485,7 +485,7 @@ Function ClientUriUriFromString( _
 				QueryLength = pNullChar - pQuestionMark - 1
 			Else
 				pQuery = @pQuestionMark[1]
-				QueryLength = pNumberSign - pQuestionMark
+				QueryLength = pNumberSign - pQuestionMark - 1
 				pFragment = @pNumberSign[1]
 				
 				Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
