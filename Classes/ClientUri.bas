@@ -394,7 +394,7 @@ Function ClientUriUriFromString( _
 	Dim UriLength As Integer = SysStringLen(bstrUri)
 	
 	If UriLength > MaxUrlLength Then
-		Return STATION922URI_E_URITOOLARGE
+		Return CLIENTURI_E_URITOOLARGE
 	End If
 	
 	Dim wszDecodedUri As WString * (MaxUrlLength + 1) = Any
@@ -493,7 +493,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 	Else
-		Return STATION922URI_E_PATHNOTFOUND
+		Return CLIENTURI_E_PATHNOTFOUND
 		
 		' Dim pSolidusChar As WString Ptr = StrChrW( _
 		' 	pFirstChar, _
@@ -541,7 +541,7 @@ Function ClientUriUriFromString( _
 		PathLength _
 	)
 	If FAILED(hrContainsBadChar) Then
-		Return STATION922URI_E_CONTAINSBADCHAR
+		Return CLIENTURI_E_CONTAINSBADCHAR
 	End If
 	
 	this->Uri = HeapSysCopyString(this->pIMemoryAllocator, bstrUri)

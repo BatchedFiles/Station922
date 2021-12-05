@@ -341,19 +341,18 @@ Function ClientRequestPrepare( _
 	
 	' Метод, запрошенный ресурс и версия протокола
 	
-	Dim pSpace As WString Ptr = Any
+	' Первый пробел
+	Dim pSpace As WString Ptr = StrChrW( _
+		this->RequestedLine, _
+		Characters.WhiteSpace _
+	)
+	If pSpace = NULL Then
+		Return CLIENTREQUEST_E_BADREQUEST
+	End If
 	
+	' Verb
 	Scope
 		Dim pVerb As WString Ptr = this->RequestedLine
-		
-		' Первый пробел
-		pSpace = StrChrW( _
-			this->RequestedLine, _
-			Characters.WhiteSpace _
-		)
-		If pSpace = NULL Then
-			Return CLIENTREQUEST_E_BADREQUEST
-		End If
 		
 		Dim VerbLength As Integer = pSpace - pVerb
 		this->pHttpMethod = HeapSysAllocStringLen( _
@@ -361,9 +360,9 @@ Function ClientRequestPrepare( _
 			pVerb, _
 			VerbLength _
 		)
-		
 	End Scope
 	
+	' Uri
 	Scope
 		Dim hrCreateUri As HRESULT = CreateInstance( _
 			this->pIMemoryAllocator, _
@@ -410,75 +409,73 @@ Function ClientRequestPrepare( _
 		HeapSysFreeString(bstrUri)
 		
 		If FAILED(hrUriFromString) Then
-			Return hrUriFromString
+			Select Case hrUriFromString
+				
+				Case CLIENTURI_E_URITOOLARGE
+					Return CLIENTREQUEST_E_URITOOLARGE
+					
+				Case CLIENTURI_E_CONTAINSBADCHAR
+					Return CLIENTREQUEST_E_BADPATH
+					
+				Case CLIENTURI_E_PATHNOTFOUND
+					Return CLIENTREQUEST_E_PATHNOTFOUND
+					
+				Case Else
+					Return hrUriFromString
+					
+			End Select
 		End If
 		
 	End Scope
 	
-	If pSpace = NULL Then
-		this->pHttpVersion = NULL
-	Else
-		' Найти начало непробела
-		Do
-			pSpace += 1
-		Loop While pSpace[0] = Characters.WhiteSpace
-		
-		Dim pVersion As WString Ptr = pSpace
-		
-		' Третий пробел
-		pSpace = StrChrW( _
-			pSpace, _
-			Characters.WhiteSpace _
-		)
-		If pSpace <> NULL Then
-			' Слишком много пробелов
-			Return CLIENTREQUEST_E_BADREQUEST
-		End If
-		
-		this->pHttpVersion = HeapSysAllocString( _
-			this->pIMemoryAllocator, _
-			pVersion _
-		)
-		
-		' TODO Версию протокола должен определять сервер
-		/'
-		Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
-			bstrVersion, _
-			@ _
-		)
-		If GetHttpVersionResult = False Then
-			Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-		End If
-		
-		Select Case this->HttpVersion
+	' Version
+	Scope
+		If pSpace = NULL Then
+			this->pHttpVersion = NULL
+		Else
+			' Найти начало непробела
+			Do
+				pSpace += 1
+			Loop While pSpace[0] = Characters.WhiteSpace
 			
-			Case HttpVersions.Http11
-				this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+			Dim pVersion As WString Ptr = pSpace
+			
+			' Третий пробел
+			pSpace = StrChrW( _
+				pSpace, _
+				Characters.WhiteSpace _
+			)
+			If pSpace <> NULL Then
+				' Слишком много пробелов
+				Return CLIENTREQUEST_E_BADREQUEST
+			End If
+			
+			this->pHttpVersion = HeapSysAllocString( _
+				this->pIMemoryAllocator, _
+				pVersion _
+			)
+			
+			' TODO Версию протокола должен определять сервер
+			/'
+			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
+				bstrVersion, _
+				@ _
+			)
+			If GetHttpVersionResult = False Then
+				Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			End If
+			
+			Select Case this->HttpVersion
 				
-		End Select
-		'/
-	End If
+				Case HttpVersions.Http11
+					this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+					
+			End Select
+			'/
+		End If
+	End Scope
 	
 	/'
-	Dim hrSetUri As HRESULT = Station922UriSetUri( _
-		this->pClientURI, _
-		pUri _
-	)
-	If FAILED(hrSetUri) Then
-		Select Case hrSetUri
-			
-			Case STATION922URI_E_URITOOLARGE
-				Return CLIENTREQUEST_E_URITOOLARGE
-				
-			Case STATION922URI_E_BADPATH
-				Return CLIENTREQUEST_E_BADPATH
-				
-			Case Else
-				Return hrSetUri
-				
-		End Select
-	End If
-	
 	' Получить все заголовки запроса
 	Do
 		Dim pLine As HeapBSTR = Any
