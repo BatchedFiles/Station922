@@ -371,8 +371,8 @@ Sub InitializeClientRequest( _
 	this->pClientURI = NULL
 	this->HttpVersion = HttpVersions.Http11
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
-	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
+	this->KeepAlive = False
 	
 End Sub
 
