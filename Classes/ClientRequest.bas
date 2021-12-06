@@ -8,7 +8,6 @@
 #include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
-#include once "WebUtils.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 
@@ -195,6 +194,30 @@ Function ClientRequestAddRequestHeader( _
 	
 End Function
 
+Function TranslateHresultFromTextReader( _
+		ByVal hrTextReader As HRESULT _
+	)As HRESULT
+	
+	Select Case hrTextReader
+		
+		Case TEXTREADER_E_INTERNALBUFFEROVERFLOW
+			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			
+		Case TEXTREADER_E_SOCKETERROR
+			Return CLIENTREQUEST_E_SOCKETERROR
+			
+		Case TEXTREADER_E_CLIENTCLOSEDCONNECTION
+			Return CLIENTREQUEST_E_EMPTYREQUEST
+			
+		Case TEXTREADER_E_INSUFFICIENT_BUFFER
+			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			
+	End Select
+	
+	Return E_FAIL
+	
+End Function
+
 Function ClientRequestAddRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
@@ -206,31 +229,14 @@ Function ClientRequestAddRequestHeaders( _
 			@pLine _
 		)
 		If FAILED(hrReadLine) Then
-			
-			Select Case hrReadLine
-				
-				Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
-					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-					
-				Case HTTPREADER_E_SOCKETERROR
-					Return CLIENTREQUEST_E_SOCKETERROR
-					
-				Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-					Return CLIENTREQUEST_E_EMPTYREQUEST
-					
-				Case HTTPREADER_E_INSUFFICIENT_BUFFER
-					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-					
-				Case Else
-					Return E_FAIL
-					
-			End Select
-			
+			Dim hrTextReader As HRESULT = TranslateHresultFromTextReader(hrReadLine)
+			Return hrTextReader
 		End If
 		
 		' this->RequestHeaderBufferLength += LineLength + 1
 		
-		If SysStringLen(pLine) = 0 Then
+		Dim Length As Integer = SysStringLen(pLine)
+		If Length = 0 Then
 			' Клиент отправил все данные, можно приступать к обработке
 			Return S_OK
 		End If
@@ -592,25 +598,8 @@ Function ClientRequestEndReadRequest( _
 		@this->RequestedLine _
 	)
 	If FAILED(hrEndReadLine) Then
-		
-		Select Case hrEndReadLine
-			
-			Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
-				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-				
-			Case HTTPREADER_E_INSUFFICIENT_BUFFER
-				Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-				
-			Case HTTPREADER_E_SOCKETERROR
-				Return CLIENTREQUEST_E_SOCKETERROR
-				
-			Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-				Return CLIENTREQUEST_E_EMPTYREQUEST
-				
-			Case Else
-				Return hrEndReadLine
-				
-		End Select
+		Dim hrTextReader As HRESULT = TranslateHresultFromTextReader(hrEndReadLine)
+		Return hrTextReader
 	End If
 	
 	Select Case hrEndReadLine
