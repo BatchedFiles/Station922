@@ -18,9 +18,9 @@ Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
 Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (2 * SizeOf(Integer)) \ SizeOf(UByte)
 
 Type RawBuffer
-	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
-	cbUsed As Integer
 	cbLength As Integer
+	cbUsed As Integer
+	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
 End Type
 
 Const LINESBUFFER_MEMORYPAGE_COUNT As Integer = RAWBUFFER_MEMORYPAGE_COUNT * 2
@@ -28,9 +28,9 @@ Const LINESBUFFER_MEMORYPAGE_COUNT As Integer = RAWBUFFER_MEMORYPAGE_COUNT * 2
 Const LINESBUFFER_CAPACITY As Integer = (LINESBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) \ SizeOf(WString) - (2 * SizeOf(Integer)) \ SizeOf(WString) - SizeOf(WString)
 
 Type LinesBuffer
-	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
-	Start As Integer
 	Length As Integer
+	Start As Integer
+	wszLine As WString * (LINESBUFFER_CAPACITY + 1)
 End Type
 
 Type _HttpReader
@@ -49,8 +49,8 @@ Sub InitializeRawBuffer( _
 	)
 	
 	' No Need ZeroMemory pBufer.Bytes
-	pBufer->cbUsed = 0
 	pBufer->cbLength = 0
+	pBufer->cbUsed = 0
 	
 End Sub
 
@@ -98,8 +98,8 @@ Sub InitializeLinesBuffer( _
 	)
 	
 	' No need ZeroMemory pLines.wszLine
-	pLines->Start = 0
 	pLines->Length = 0
+	pLines->Start = 0
 	pLines->wszLine[0] = 0
 	
 End Sub
