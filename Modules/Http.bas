@@ -521,7 +521,12 @@ Function GetKnownRequestHeaderIndex( _
 	)As Boolean
 	
 	For i As Integer = 1 To HttpRequestHeadersSize
-		If lstrcmpiW(RequestHeaderNodesVector(i).pHeader, pHeader) = 0 Then
+		Dim CompareResult As Long = memcmp( _
+			RequestHeaderNodesVector(i).pHeader, _
+			pHeader, _
+			RequestHeaderNodesVector(i).HeaderLength * SizeOf(WString) _
+		)
+		If CompareResult = 0 Then
 			*pIndex = RequestHeaderNodesVector(i).HeaderIndex
 			Return True
 		End If
@@ -544,7 +549,12 @@ Function GetKnownResponseHeaderIndex( _
 	)As Boolean
 	
 	For i As Integer = 1 To HttpResponseHeadersSize
-		If lstrcmpiW(ResponseHeaderNodesVector(i).pHeader, pHeader) = 0 Then
+		Dim CompareResult As Long = memcmp( _
+			ResponseHeaderNodesVector(i).pHeader, _
+			pHeader, _
+			ResponseHeaderNodesVector(i).HeaderLength * SizeOf(WString) _
+		)
+		If CompareResult = 0 Then
 			*pIndex = ResponseHeaderNodesVector(i).HeaderIndex
 			Return True
 		End If
