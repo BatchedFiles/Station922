@@ -544,7 +544,8 @@ Function ClientUriUriFromString( _
 		Return CLIENTURI_E_CONTAINSBADCHAR
 	End If
 	
-	this->Uri = HeapSysCopyString(this->pIMemoryAllocator, bstrUri)
+	HeapSysAddRefString(bstrUri)
+	this->Uri = bstrUri
 	this->Scheme = HeapSysAllocStringLen(this->pIMemoryAllocator, pScheme, SchemeLength)
 	this->UserName = HeapSysAllocStringLen(this->pIMemoryAllocator, pUserName, UserNameLength)
 	this->Password = HeapSysAllocStringLen(this->pIMemoryAllocator, pPassword, PasswordLength)
