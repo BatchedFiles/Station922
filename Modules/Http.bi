@@ -200,18 +200,6 @@ End Enum
 
 Const ZipModesSize As Integer = 2
 
-Declare Function GetHttpMethodIndex( _
-	ByVal s As WString Ptr, _
-	ByVal pHttpMethod As HttpMethods Ptr _
-)As Boolean
-
-' ¬озвращает указатель на строку с именем метода Http
-' ќчищать пам€ть дл€ строки не нужно
-Declare Function HttpMethodToString( _
-	ByVal HttpMethod As HttpMethods, _
-	ByVal pBufferLength As Integer Ptr _
-)As WString Ptr
-
 ' ¬озвращает указатель на строку с описанием кода состо€ни€
 ' ќчищать пам€ть дл€ строки не нужно
 Declare Function GetStatusDescription( _

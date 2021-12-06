@@ -512,55 +512,6 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"), 23, HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
-Function GetHttpMethodIndex( _
-		ByVal s As WString Ptr, _
-		ByVal pHttpMethod As HttpMethods Ptr _
-	)As Boolean
-	
-	If lstrcmpW(s, HttpMethodGet) = 0 Then
-		*pHttpMethod = HttpMethods.HttpGet
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodPost) = 0 Then
-		*pHttpMethod = HttpMethods.HttpPost
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodHead) = 0 Then
-		*pHttpMethod = HttpMethods.HttpHead
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodPut) = 0 Then
-		*pHttpMethod = HttpMethods.HttpPut
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodConnect) = 0 Then
-		*pHttpMethod = HttpMethods.HttpConnect
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodDelete) = 0 Then
-		*pHttpMethod = HttpMethods.HttpDelete
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodOptions) = 0 Then
-		*pHttpMethod = HttpMethods.HttpOptions
-		Return True
-	End If
-	
-	If lstrcmpW(s, HttpMethodTrace) = 0 Then
-		*pHttpMethod = HttpMethods.HttpTrace
-		Return True
-	End If
-	
-	Return False
-	
-End Function
-
 Function HttpMethodToString( _
 		ByVal HttpMethod As HttpMethods, _
 		ByVal pBufferLength As Integer Ptr _
