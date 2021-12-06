@@ -14,21 +14,172 @@ Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 Extern GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable
 
 Type _ClientRequest
+	ContentLength As LongInt
+	RequestByteRange As ByteRange
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIReader As ITextReader Ptr
 	RequestedLine As HeapBSTR
-	RequestHeaders(HttpRequestHeadersMaximum - 1) As HeapBSTR
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
 	pHttpVersion As HeapBSTR
-	RequestByteRange As ByteRange
-	ContentLength As LongInt
-	RequestZipModes(HttpZipModesMaximum - 1) As Boolean
+	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
+	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
 End Type
+
+Function ClientRequestParseRequestedLine( _
+		ByVal this As ClientRequest Ptr _
+	)As HRESULT
+	
+	' Метод, запрошенный ресурс и версия протокола
+	
+	Dim pFirstChar As WString Ptr = this->RequestedLine
+	
+	Dim FirstChar As Integer = pFirstChar[0]
+	If FirstChar = Characters.WhiteSpace Then
+		Return CLIENTREQUEST_E_BADREQUEST
+	End If
+	
+	' Первый пробел
+	Dim pSpace As WString Ptr = StrChrW( _
+		pFirstChar, _
+		Characters.WhiteSpace _
+	)
+	If pSpace = NULL Then
+		Return CLIENTREQUEST_E_BADREQUEST
+	End If
+	
+	' Verb
+	Scope
+		Dim pVerb As WString Ptr = pFirstChar
+		
+		Dim VerbLength As Integer = pSpace - pVerb
+		this->pHttpMethod = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pVerb, _
+			VerbLength _
+		)
+	End Scope
+	
+	' Uri
+	Scope
+		Dim hrCreateUri As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_CLIENTURI, _
+			@IID_IClientUri, _
+			@this->pClientURI _
+		)
+		If FAILED(hrCreateUri) Then
+			Return hrCreateUri
+		End If
+		
+		' Найти начало непробела
+		Do
+			pSpace += 1
+		Loop While pSpace[0] = Characters.WhiteSpace
+		
+		' Здесь начинается Url
+		Dim pUri As WString Ptr = pSpace
+		
+		' Второй пробел
+		Dim bstrUri As HeapBSTR = Any
+		pSpace = StrChrW( _
+			pSpace, _
+			Characters.WhiteSpace _
+		)
+		If pSpace = NULL Then
+			bstrUri = HeapSysAllocString( _
+				this->pIMemoryAllocator, _
+				pUri _
+			)
+		Else
+			Dim UriLength As Integer = pSpace - pUri
+			bstrUri = HeapSysAllocStringLen( _
+				this->pIMemoryAllocator, _
+				pUri, _
+				UriLength _
+			)
+		End If
+		
+		Dim hrUriFromString As HRESULT = IClientUri_UriFromString( _
+			this->pClientURI, _
+			bstrUri _
+		)
+		HeapSysFreeString(bstrUri)
+		
+		If FAILED(hrUriFromString) Then
+			Select Case hrUriFromString
+				
+				Case CLIENTURI_E_URITOOLARGE
+					Return CLIENTREQUEST_E_URITOOLARGE
+					
+				Case CLIENTURI_E_CONTAINSBADCHAR
+					Return CLIENTREQUEST_E_BADPATH
+					
+				Case CLIENTURI_E_PATHNOTFOUND
+					Return CLIENTREQUEST_E_PATHNOTFOUND
+					
+				Case Else
+					Return hrUriFromString
+					
+			End Select
+		End If
+		
+	End Scope
+	
+	' Version
+	Scope
+		If pSpace = NULL Then
+			this->pHttpVersion = NULL
+		Else
+			' Найти начало непробела
+			Do
+				pSpace += 1
+			Loop While pSpace[0] = Characters.WhiteSpace
+			
+			Dim pVersion As WString Ptr = pSpace
+			
+			' Третий пробел
+			pSpace = StrChrW( _
+				pSpace, _
+				Characters.WhiteSpace _
+			)
+			If pSpace <> NULL Then
+				' Слишком много пробелов
+				Return CLIENTREQUEST_E_BADREQUEST
+			End If
+			
+			this->pHttpVersion = HeapSysAllocString( _
+				this->pIMemoryAllocator, _
+				pVersion _
+			)
+			
+			' TODO Версию протокола должен определять сервер
+			/'
+			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
+				bstrVersion, _
+				@ _
+			)
+			If GetHttpVersionResult = False Then
+				Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			End If
+			
+			Select Case this->HttpVersion
+				
+				Case HttpVersions.Http11
+					this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+					
+			End Select
+			'/
+		End If
+	End Scope
+	
+	Return S_OK
+	
+End Function
 
 Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
@@ -37,8 +188,8 @@ Function ClientRequestAddRequestHeader( _
 	)As Integer
 	
 	Dim HeaderIndex As HttpRequestHeaders = Any
-	
-	If GetKnownRequestHeaderIndex(Header, @HeaderIndex) = False Then
+	Dim Finded As Boolean = GetKnownRequestHeaderIndex(Header, @HeaderIndex)
+	If Finded = False Then
 		' TODO Добавить в нераспознанные заголовки запроса
 		Return -1
 	End If
@@ -49,10 +200,167 @@ Function ClientRequestAddRequestHeader( _
 	
 End Function
 
+Function ClientRequestAddRequestHeaders( _
+		ByVal this As ClientRequest Ptr _
+	)As HRESULT
+	
+	Do
+		Dim pLine As HeapBSTR = Any
+		Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
+			this->pIReader, _
+			@pLine _
+		)
+		If FAILED(hrReadLine) Then
+			
+			Select Case hrReadLine
+				
+				Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
+					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+					
+				Case HTTPREADER_E_SOCKETERROR
+					Return CLIENTREQUEST_E_SOCKETERROR
+					
+				Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
+					Return CLIENTREQUEST_E_EMPTYREQUEST
+					
+				Case HTTPREADER_E_INSUFFICIENT_BUFFER
+					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+					
+				Case Else
+					Return E_FAIL
+					
+			End Select
+			
+		End If
+		
+		' this->RequestHeaderBufferLength += LineLength + 1
+		
+		If SysStringLen(pLine) = 0 Then
+			' Клиент отправил все данные, можно приступать к обработке
+			Return S_OK
+		End If
+		
+		/'
+		Dim pColon As WString Ptr = StrChrW(pLine, Characters.Colon)
+		
+		If pColon <> 0 Then
+			pColon[0] = 0
+			Do
+				pColon += 1
+			Loop While pColon[0] = Characters.WhiteSpace
+			
+			ClientRequestAddRequestHeader(this, pLine, pColon)
+			
+		End If
+		'/
+	Loop
+	
+End Function
+
+Function ClientRequestParseRequestHeaders( _
+		ByVal this As ClientRequest Ptr _
+	)As HRESULT
+	
+	/'
+	Scope
+		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @CloseString) <> 0 Then
+			this->KeepAlive = False
+		Else
+			If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @KeepAliveString) <> 0 Then
+				this->KeepAlive = True
+			End If
+		End If
+			
+		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @GzipString) <> 0 Then
+			this->RequestZipModes(ZipModes.GZip) = True
+		End If
+		
+		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @DeflateString) <> 0 Then
+			this->RequestZipModes(ZipModes.Deflate) = True
+		End If
+		
+		' Убрать UTC и заменить на GMT
+		'If-Modified-Since: Thu, 24 Mar 2016 16:10:31 UTC
+		'If-Modified-Since: Tue, 11 Mar 2014 20:07:57 GMT
+		Dim wUTC As WString Ptr = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), "UTC")
+		
+		If wUTC <> 0 Then
+			lstrcpyW(wUTC, "GMT")
+		End If
+		
+		wUTC = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), "UTC")
+		
+		If wUTC <> 0 Then
+			lstrcpyW(wUTC, "GMT")
+		End If
+		
+		If lstrlenW(this->RequestHeaders(HttpRequestHeaders.HeaderRange)) > 0 Then
+			Dim wHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
+			
+			' TODO Обрабатывать несколько байтовых диапазонов
+			Dim wCommaChar As WString Ptr = StrChrW(wHeaderRange, Characters.Comma)
+			
+			If wCommaChar <> 0 Then
+				wCommaChar[0] = 0
+			End If
+			
+			Dim wStart As WString Ptr = StrStrW(wHeaderRange, "bytes=")
+			
+			If wStart = wHeaderRange Then
+				wStart = @wHeaderRange[6]
+				Dim wStartIndex As WString Ptr = wStart
+				
+				Dim wHyphenMinusChar As WString Ptr = StrChrW(wStart, Characters.HyphenMinus)
+				
+				If wHyphenMinusChar <> 0 Then
+					wHyphenMinusChar[0] = 0
+					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
+					
+					If StrToInt64ExW(wStartIndex, STIF_DEFAULT, @this->RequestByteRange.FirstBytePosition) <> 0 Then
+						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
+					End If
+					
+					If StrToInt64ExW(wEndIndex, STIF_DEFAULT, @this->RequestByteRange.LastBytePosition) <> 0 Then
+						
+						If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
+							this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
+						Else
+							this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
+						End If
+						
+					End If
+					
+				Else
+					Return CLIENTREQUEST_E_BADREQUEST
+				End If
+				
+			Else
+				Return CLIENTREQUEST_E_BADREQUEST
+			End If
+			
+		End If
+		
+	End Scope
+	
+	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
+	
+	If pHeaderContentLength <> NULL Then
+		StrToInt64ExW(pHeaderContentLength, STIF_DEFAULT, @this->ContentLength)
+	End If
+	'/
+	Return S_OK
+	
+End Function
+
 Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
+	
+	this->ContentLength = 0
+	this->RequestByteRange.FirstBytePosition = 0
+	this->RequestByteRange.LastBytePosition = 0
+	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
@@ -62,16 +370,12 @@ Sub InitializeClientRequest( _
 	
 	this->pIReader = NULL
 	this->RequestedLine = NULL
-	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
 	this->pHttpMethod = NULL
 	this->pClientURI = NULL
 	this->pHttpVersion = NULL
+	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
-	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
-	this->RequestByteRange.FirstBytePosition = 0
-	this->RequestByteRange.LastBytePosition = 0
-	this->ContentLength = 0
 	
 End Sub
 
@@ -339,280 +643,21 @@ Function ClientRequestPrepare( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
-	' Метод, запрошенный ресурс и версия протокола
-	
-	' Первый пробел
-	Dim pSpace As WString Ptr = StrChrW( _
-		this->RequestedLine, _
-		Characters.WhiteSpace _
-	)
-	If pSpace = NULL Then
-		Return CLIENTREQUEST_E_BADREQUEST
+	Dim hrParseRequestedLine As HRESULT = ClientRequestParseRequestedLine(this)
+	If FAILED(hrParseRequestedLine) Then
+		Return hrParseRequestedLine
 	End If
 	
-	' Verb
-	Scope
-		Dim pVerb As WString Ptr = this->RequestedLine
-		
-		Dim VerbLength As Integer = pSpace - pVerb
-		this->pHttpMethod = HeapSysAllocStringLen( _
-			this->pIMemoryAllocator, _
-			pVerb, _
-			VerbLength _
-		)
-	End Scope
-	
-	' Uri
-	Scope
-		Dim hrCreateUri As HRESULT = CreateInstance( _
-			this->pIMemoryAllocator, _
-			@CLSID_CLIENTURI, _
-			@IID_IClientUri, _
-			@this->pClientURI _
-		)
-		If FAILED(hrCreateUri) Then
-			Return hrCreateUri
-		End If
-		
-		' Найти начало непробела
-		Do
-			pSpace += 1
-		Loop While pSpace[0] = Characters.WhiteSpace
-		
-		' Здесь начинается Url
-		Dim pUri As WString Ptr = pSpace
-		
-		' Второй пробел
-		Dim bstrUri As HeapBSTR = Any
-		pSpace = StrChrW( _
-			pSpace, _
-			Characters.WhiteSpace _
-		)
-		If pSpace = NULL Then
-			bstrUri = HeapSysAllocString( _
-				this->pIMemoryAllocator, _
-				pUri _
-			)
-		Else
-			Dim UriLength As Integer = pSpace - pUri
-			bstrUri = HeapSysAllocStringLen( _
-				this->pIMemoryAllocator, _
-				pUri, _
-				UriLength _
-			)
-		End If
-		
-		Dim hrUriFromString As HRESULT = IClientUri_UriFromString( _
-			this->pClientURI, _
-			bstrUri _
-		)
-		HeapSysFreeString(bstrUri)
-		
-		If FAILED(hrUriFromString) Then
-			Select Case hrUriFromString
-				
-				Case CLIENTURI_E_URITOOLARGE
-					Return CLIENTREQUEST_E_URITOOLARGE
-					
-				Case CLIENTURI_E_CONTAINSBADCHAR
-					Return CLIENTREQUEST_E_BADPATH
-					
-				Case CLIENTURI_E_PATHNOTFOUND
-					Return CLIENTREQUEST_E_PATHNOTFOUND
-					
-				Case Else
-					Return hrUriFromString
-					
-			End Select
-		End If
-		
-	End Scope
-	
-	' Version
-	Scope
-		If pSpace = NULL Then
-			this->pHttpVersion = NULL
-		Else
-			' Найти начало непробела
-			Do
-				pSpace += 1
-			Loop While pSpace[0] = Characters.WhiteSpace
-			
-			Dim pVersion As WString Ptr = pSpace
-			
-			' Третий пробел
-			pSpace = StrChrW( _
-				pSpace, _
-				Characters.WhiteSpace _
-			)
-			If pSpace <> NULL Then
-				' Слишком много пробелов
-				Return CLIENTREQUEST_E_BADREQUEST
-			End If
-			
-			this->pHttpVersion = HeapSysAllocString( _
-				this->pIMemoryAllocator, _
-				pVersion _
-			)
-			
-			' TODO Версию протокола должен определять сервер
-			/'
-			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
-				bstrVersion, _
-				@ _
-			)
-			If GetHttpVersionResult = False Then
-				Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			End If
-			
-			Select Case this->HttpVersion
-				
-				Case HttpVersions.Http11
-					this->KeepAlive = True ' Для версии 1.1 это по умолчанию
-					
-			End Select
-			'/
-		End If
-	End Scope
-	
-	/'
-	' Получить все заголовки запроса
-	Do
-		Dim pLine As HeapBSTR = Any
-		Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
-			this->pIReader, _
-			@pLine _
-		)
-		If FAILED(hrReadLine) Then
-			
-			Select Case hrReadLine
-				
-				Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
-					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-					
-				Case HTTPREADER_E_SOCKETERROR
-					Return CLIENTREQUEST_E_SOCKETERROR
-					
-				Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-					Return CLIENTREQUEST_E_EMPTYREQUEST
-					
-				Case HTTPREADER_E_INSUFFICIENT_BUFFER
-					Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-					
-				Case Else
-					Return E_FAIL
-					
-			End Select
-			
-		End If
-		
-		' this->RequestHeaderBufferLength += LineLength + 1
-		
-		If SysStringLen(pLine) = 0 Then
-			' Клиент отправил все данные, можно приступать к обработке
-			Exit Do
-		End If
-		
-		Dim pColon As WString Ptr = StrChrW(pLine, Characters.Colon)
-		
-		If pColon <> 0 Then
-			pColon[0] = 0
-			Do
-				pColon += 1
-			Loop While pColon[0] = Characters.WhiteSpace
-			
-			ClientRequestAddRequestHeader(this, pLine, pColon)
-			
-		End If
-		
-	Loop
-	
-	Scope
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @CloseString) <> 0 Then
-			this->KeepAlive = False
-		Else
-			If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @KeepAliveString) <> 0 Then
-				this->KeepAlive = True
-			End If
-		End If
-			
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @GzipString) <> 0 Then
-			this->RequestZipModes(ZipModes.GZip) = True
-		End If
-		
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @DeflateString) <> 0 Then
-			this->RequestZipModes(ZipModes.Deflate) = True
-		End If
-		
-		' Убрать UTC и заменить на GMT
-		'If-Modified-Since: Thu, 24 Mar 2016 16:10:31 UTC
-		'If-Modified-Since: Tue, 11 Mar 2014 20:07:57 GMT
-		Dim wUTC As WString Ptr = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), "UTC")
-		
-		If wUTC <> 0 Then
-			lstrcpyW(wUTC, "GMT")
-		End If
-		
-		wUTC = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), "UTC")
-		
-		If wUTC <> 0 Then
-			lstrcpyW(wUTC, "GMT")
-		End If
-		
-		If lstrlenW(this->RequestHeaders(HttpRequestHeaders.HeaderRange)) > 0 Then
-			Dim wHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
-			
-			' TODO Обрабатывать несколько байтовых диапазонов
-			Dim wCommaChar As WString Ptr = StrChrW(wHeaderRange, Characters.Comma)
-			
-			If wCommaChar <> 0 Then
-				wCommaChar[0] = 0
-			End If
-			
-			Dim wStart As WString Ptr = StrStrW(wHeaderRange, "bytes=")
-			
-			If wStart = wHeaderRange Then
-				wStart = @wHeaderRange[6]
-				Dim wStartIndex As WString Ptr = wStart
-				
-				Dim wHyphenMinusChar As WString Ptr = StrChrW(wStart, Characters.HyphenMinus)
-				
-				If wHyphenMinusChar <> 0 Then
-					wHyphenMinusChar[0] = 0
-					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
-					
-					If StrToInt64ExW(wStartIndex, STIF_DEFAULT, @this->RequestByteRange.FirstBytePosition) <> 0 Then
-						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
-					End If
-					
-					If StrToInt64ExW(wEndIndex, STIF_DEFAULT, @this->RequestByteRange.LastBytePosition) <> 0 Then
-						
-						If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
-							this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
-						Else
-							this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
-						End If
-						
-					End If
-					
-				Else
-					Return CLIENTREQUEST_E_BADREQUEST
-				End If
-				
-			Else
-				Return CLIENTREQUEST_E_BADREQUEST
-			End If
-			
-		End If
-		
-	End Scope
-	
-	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
-	
-	If pHeaderContentLength <> NULL Then
-		StrToInt64ExW(pHeaderContentLength, STIF_DEFAULT, @this->ContentLength)
+	Dim hrAddHeaders As HRESULT = ClientRequestAddRequestHeaders(this)
+	If FAILED(hrAddHeaders) Then
+		Return hrAddHeaders
 	End If
-	'/
+	
+	Dim hrParseHeaders As HRESULT = ClientRequestParseRequestHeaders(this)
+	If FAILED(hrParseHeaders) Then
+		Return hrParseHeaders
+	End If
+	
 	Return S_OK
 	
 End Function
