@@ -3,7 +3,7 @@
 
 #include once "IClientUri.bi"
 #include once "Http.bi"
-#include once "IHttpReader.bi"
+#include once "ITextReader.bi"
 
 Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 
