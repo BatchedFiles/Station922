@@ -62,7 +62,7 @@ Declare Function ClientRequestGetUri( _
 
 Declare Function ClientRequestGetHttpVersion( _
 	ByVal this As ClientRequest Ptr, _
-	ByVal ppHttpVersion As HeapBSTR Ptr _
+	ByVal pHttpVersion As HttpVersions Ptr _
 )As HRESULT
 
 Declare Function ClientRequestGetHttpHeader( _

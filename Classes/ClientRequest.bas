@@ -24,7 +24,7 @@ Type _ClientRequest
 	RequestedLine As HeapBSTR
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
-	pHttpVersion As HeapBSTR
+	HttpVersion As HttpVersions
 	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
@@ -133,7 +133,7 @@ Function ClientRequestParseRequestedLine( _
 	' Version
 	Scope
 		If pSpace = NULL Then
-			this->pHttpVersion = NULL
+			this->HttpVersion = HttpVersions.Http09
 		Else
 			' Найти начало непробела
 			Do
@@ -152,28 +152,25 @@ Function ClientRequestParseRequestedLine( _
 				Return CLIENTREQUEST_E_BADREQUEST
 			End If
 			
-			this->pHttpVersion = HeapSysAllocString( _
+			Dim bstrVersion As HeapBSTR = HeapSysAllocString( _
 				this->pIMemoryAllocator, _
 				pVersion _
 			)
 			
-			' TODO Версию протокола должен определять сервер
-			/'
 			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
 				bstrVersion, _
-				@ _
+				@this->HttpVersion _
 			)
+			HeapSysFreeString(bstrVersion)
+			
 			If GetHttpVersionResult = False Then
 				Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			End If
 			
-			Select Case this->HttpVersion
-				
-				Case HttpVersions.Http11
-					this->KeepAlive = True ' Для версии 1.1 это по умолчанию
-					
-			End Select
-			'/
+			If this->HttpVersion = HttpVersions.Http11 Then
+				this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+			End If
+			
 		End If
 	End Scope
 	
@@ -372,7 +369,7 @@ Sub InitializeClientRequest( _
 	this->RequestedLine = NULL
 	this->pHttpMethod = NULL
 	this->pClientURI = NULL
-	this->pHttpVersion = NULL
+	this->HttpVersion = HttpVersions.Http11
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
 	this->KeepAlive = False
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
@@ -385,7 +382,6 @@ Sub UnInitializeClientRequest( _
 	
 	HeapSysFreeString(this->RequestedLine)
 	HeapSysFreeString(this->pHttpMethod)
-	HeapSysFreeString(this->pHttpVersion)
 	
 	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
 		HeapSysFreeString(this->RequestHeaders(i))
@@ -694,14 +690,10 @@ End Function
 
 Function ClientRequestGetHttpVersion( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal ppHttpVersion As HeapBSTR Ptr _
+		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
 	
-	HeapSysAddRefString( _
-		this->pHttpVersion _
-	)
-	
-	*ppHttpVersion = this->pHttpVersion
+	*pHttpVersion = this->HttpVersion
 	
 	Return S_OK
 	
@@ -910,9 +902,9 @@ End Function
 
 Function IClientRequestGetHttpVersion( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal ppHttpVersions As HeapBSTR Ptr _
+		ByVal pHttpVersions As HttpVersions Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), ppHttpVersions)
+	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), pHttpVersions)
 End Function
 
 Function IClientRequestGetHttpHeader( _
