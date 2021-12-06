@@ -11,13 +11,11 @@
 #include once "WebUtils.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
-Extern GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable
 
 Type _ClientRequest
 	ContentLength As LongInt
 	RequestByteRange As ByteRange
 	lpVtbl As Const IClientRequestVirtualTable Ptr
-	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIReader As ITextReader Ptr
@@ -360,7 +358,6 @@ Sub InitializeClientRequest( _
 	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
 	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
-	this->lpStringableVtbl = @GlobalClientRequestStringableVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -495,15 +492,11 @@ Function ClientRequestQueryInterface( _
 	If IsEqualIID(@IID_IClientRequest, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IStringable, riid) Then
-			*ppv = @this->lpStringableVtbl
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -976,39 +969,4 @@ Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( 
 	@IClientRequestGetZipMode, _
 	@IClientRequestGetTextReader, _
 	@IClientRequestSetTextReader _
-)
-
-' Function IClientRequestStringableQueryInterface( _
-		' ByVal this As IStringable Ptr, _
-		' ByVal riid As REFIID, _
-		' ByVal ppvObject As Any Ptr Ptr _
-	' )As HRESULT
-	' Return ClientRequestStringableQueryInterface(ContainerOf(this, ClientRequest, lpStringableVtbl), riid, ppvObject)
-' End Function
-
-' Function IClientRequestStringableAddRef( _
-		' ByVal this As IStringable Ptr _
-	' )As ULONG
-	' Return ClientRequestStringableAddRef(ContainerOf(this, ClientRequest, lpStringableVtbl))
-' End Function
-
-' Function IClientRequestStringableRelease( _
-		' ByVal this As IStringable Ptr _
-	' )As ULONG
-	' Return ClientRequestStringableRelease(ContainerOf(this, ClientRequest, lpStringableVtbl))
-' End Function
-
-' Function IClientRequestStringableToString( _
-		' ByVal this As IStringable Ptr, _
-		' ByVal pLength As Integer Ptr, _
-		' ByVal ppResult As WString Ptr Ptr _
-	' )As HRESULT
-	' Return ClientRequestStringableToString(ContainerOf(this, ClientRequest, lpStringableVtbl), pLength, ppResult)
-' End Function
-
-Dim GlobalClientRequestStringableVirtualTable As Const IStringableVirtualTable = Type( _
-	NULL, _ /' @IClientRequestStringableQueryInterface, _ '/
-	NULL, _ /' @IClientRequestStringableAddRef, _ '/
-	NULL, _ /' @IClientRequestStringableRelease, _ '/
-	NULL _ /' @IClientRequestStringableToString _ '/
 )
