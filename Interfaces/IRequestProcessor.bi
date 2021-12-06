@@ -12,7 +12,7 @@ Type _ProcessorContext
 	pIResponse As IServerResponse Ptr
 	pINetworkStream As INetworkStream Ptr
 	pIWebSite As IWebSite Ptr
-	pIClientReader As IHttpReader Ptr
+	pIClientReader As ITextReader Ptr
 	pIRequestedFile As IRequestedFile Ptr
 	pIMemoryAllocator As IMalloc Ptr
 End Type

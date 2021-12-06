@@ -2,6 +2,7 @@
 #define WEBUTILS_BI
 
 #include once "IClientRequest.bi"
+#include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
 #include once "ITextWriter.bi"
 #include once "IWebSite.bi"
