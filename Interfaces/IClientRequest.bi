@@ -42,9 +42,9 @@ Enum ByteRangeIsSet
 End Enum
 
 Type ByteRange
-	IsSet As ByteRangeIsSet
 	FirstBytePosition As LongInt
 	LastBytePosition As LongInt
+	IsSet As ByteRangeIsSet
 End Type
 
 Type IClientRequest As IClientRequest_
