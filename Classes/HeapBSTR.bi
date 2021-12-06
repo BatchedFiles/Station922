@@ -5,6 +5,12 @@
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
+#MACRO LET_HEAPSYSSTRING(lhs, rhs)
+	HeapSysFreeString(lhs)
+	HeapSysAddRefString(rhs)
+	lhs = rhs
+#ENDMACRO
+
 Declare Function HeapSysAllocString( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal psz As Const WString Ptr _
