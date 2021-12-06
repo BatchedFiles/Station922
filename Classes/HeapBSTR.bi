@@ -16,11 +16,6 @@ Declare Function HeapSysAllocStringLen( _
 	ByVal ui As UINT _
 )As HeapBSTR
 
-Declare Function HeapSysCopyString( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	ByVal source As HeapBSTR _
-)As HeapBSTR
-
 Declare Function HeapSysConcatString( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal lhs As HeapBSTR, _

@@ -15,29 +15,6 @@ Type _InternalHeapBSTR
 	wszNullChar(0) As OLECHAR
 End Type
 
-Function HeapSysCopyString( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal source As HeapBSTR _
-	)As HeapBSTR
-	
-	If source = NULL Then
-		Return NULL
-	End If
-	
-	Dim this As InternalHeapBSTR Ptr = ContainerOf(source, InternalHeapBSTR, wszNullChar(0))
-	
-	Dim Length As UINT = SysStringLen(source)
-	
-	Dim pHeapBstr As HeapBSTR = HeapSysAllocStringLen( _
-		pIMemoryAllocator, _
-		@this->wszNullChar(0), _
-		Length _
-	)
-	
-	Return pHeapBstr
-	
-End Function
-
 Function HeapSysAllocString( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr _
