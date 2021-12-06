@@ -98,71 +98,6 @@ Const HeaderWebSocketOriginString =    WStr("WebSocket-Origin")
 Const HeaderWebSocketProtocolString =  WStr("WebSocket-Protocol")
 Const HeaderWWWAuthenticateString =    WStr("WWW-Authenticate")
 
-Const HeaderAcceptStringLength As Integer =      6
-Const HeaderAcceptCharsetStringLength As Integer = 14
-Const HeaderAcceptEncodingStringLength As Integer = 15
-Const HeaderAcceptLanguageStringLength As Integer = 15
-Const HeaderAcceptRangesStringLength As Integer =      13
-Const HeaderAgeStringLength As Integer =               3
-Const HeaderAllowStringLength As Integer =             5
-Const HeaderAuthorizationStringLength As Integer = 13
-Const HeaderCacheControlStringLength As Integer =      13
-Const HeaderConnectionStringLength As Integer =        10
-Const HeaderContentEncodingStringLength As Integer =   16
-Const HeaderContentLengthStringLength As Integer =     14
-Const HeaderContentLanguageStringLength As Integer =   16
-Const HeaderContentLocationStringLength As Integer =   16
-Const HeaderContentMd5StringLength As Integer =        11
-Const HeaderContentRangeStringLength As Integer =      13
-Const HeaderContentTypeStringLength As Integer =       12
-Const HeaderCookieStringLength As Integer = 6
-Const HeaderDateStringLength As Integer =              4
-Const HeaderDNTStringLength As Integer = 3
-Const HeaderETagStringLength As Integer =              4
-Const HeaderExpectStringLength As Integer = 6
-Const HeaderExpiresStringLength As Integer =           7
-Const HeaderFromStringLength As Integer = 4
-Const HeaderHostStringLength As Integer = 4
-Const HeaderIfMatchStringLength As Integer = 8
-Const HeaderIfModifiedSinceStringLength As Integer = 17
-Const HeaderIfNoneMatchStringLength As Integer = 13
-Const HeaderIfRangeStringLength As Integer = 8
-Const HeaderIfUnmodifiedSinceStringLength As Integer = 19
-Const HeaderKeepAliveStringLength As Integer =         10
-Const HeaderLastModifiedStringLength As Integer =      13
-Const HeaderLocationStringLength As Integer =          8
-Const HeaderMaxForwardsStringLength As Integer = 12
-Const HeaderOriginStringLength As Integer = 6
-Const HeaderPragmaStringLength As Integer =            6
-Const HeaderProxyAuthenticateStringLength As Integer = 18
-Const HeaderProxyAuthorizationStringLength As Integer = 19
-Const HeaderRangeStringLength As Integer = 5
-Const HeaderRefererStringLength As Integer = 7
-Const HeaderRetryAfterStringLength As Integer =        11
-Const HeaderSecWebSocketAcceptStringLength As Integer =             20
-Const HeaderSecWebSocketKeyStringLength As Integer = 17
-Const HeaderSecWebSocketKey1StringLength As Integer = 18
-Const HeaderSecWebSocketKey2StringLength As Integer = 18
-Const HeaderSecWebSocketLocationStringLength As Integer =             22
-Const HeaderSecWebSocketOriginStringLength As Integer =             20
-Const HeaderSecWebSocketProtocolStringLength As Integer =             22
-Const HeaderSecWebSocketVersionStringLength As Integer = 21
-Const HeaderServerStringLength As Integer =            6
-Const HeaderSetCookieStringLength As Integer =         10
-Const HeaderTeStringLength As Integer = 2
-Const HeaderTrailerStringLength As Integer =           7
-Const HeaderTransferEncodingStringLength As Integer =  17
-Const HeaderUpgradeStringLength As Integer =           7
-Const HeaderUpgradeInsecureRequestsStringLength As Integer = 25
-Const HeaderUserAgentStringLength As Integer = 10
-Const HeaderVaryStringLength As Integer =              4
-Const HeaderViaStringLength As Integer =               3
-Const HeaderWarningStringLength As Integer =           7
-Const HeaderWebSocketLocationStringLength As Integer =    18
-Const HeaderWebSocketOriginStringLength As Integer=    16
-Const HeaderWebSocketProtocolStringLength As Integer =    18
-Const HeaderWWWAuthenticateStringLength As Integer =   16
-
 Const HttpStatusCodeString100 = WStr("Continue")
 Const HttpStatusCodeString101 = WStr("Switching Protocols")
 Const HttpStatusCodeString102 = WStr("Processing")
@@ -228,71 +163,6 @@ Const HttpStatusCodeString509 = WStr("Bandwidth Limit Exceeded")
 Const HttpStatusCodeString510 = WStr("Not Extended")
 Const HttpStatusCodeString511 = WStr("Network Authentication Required")
 
-Const HttpStatusCodeString100Length As Integer = 8
-Const HttpStatusCodeString101Length As Integer = 19
-Const HttpStatusCodeString102Length As Integer = 10
-
-Const HttpStatusCodeString200Length As Integer = 2
-Const HttpStatusCodeString201Length As Integer = 7
-Const HttpStatusCodeString202Length As Integer = 8
-Const HttpStatusCodeString203Length As Integer = 29
-Const HttpStatusCodeString204Length As Integer = 10
-Const HttpStatusCodeString205Length As Integer = 13
-Const HttpStatusCodeString206Length As Integer = 15
-Const HttpStatusCodeString207Length As Integer = 12
-Const HttpStatusCodeString226Length As Integer = 7
-
-Const HttpStatusCodeString300Length As Integer = 16
-Const HttpStatusCodeString301Length As Integer = 17
-Const HttpStatusCodeString302Length As Integer = 5
-Const HttpStatusCodeString303Length As Integer = 9
-Const HttpStatusCodeString304Length As Integer = 12
-Const HttpStatusCodeString305Length As Integer = 9
-Const HttpStatusCodeString307Length As Integer = 18
-
-Const HttpStatusCodeString400Length As Integer = 11
-Const HttpStatusCodeString401Length As Integer = 12
-Const HttpStatusCodeString402Length As Integer = 16
-Const HttpStatusCodeString403Length As Integer = 9
-Const HttpStatusCodeString404Length As Integer = 9
-Const HttpStatusCodeString405Length As Integer = 18
-Const HttpStatusCodeString406Length As Integer = 14
-Const HttpStatusCodeString407Length As Integer = 29
-Const HttpStatusCodeString408Length As Integer = 15
-Const HttpStatusCodeString409Length As Integer = 8
-Const HttpStatusCodeString410Length As Integer = 4
-Const HttpStatusCodeString411Length As Integer = 15
-Const HttpStatusCodeString412Length As Integer = 19
-Const HttpStatusCodeString413Length As Integer = 24
-Const HttpStatusCodeString414Length As Integer = 21
-Const HttpStatusCodeString415Length As Integer = 22
-Const HttpStatusCodeString416Length As Integer = 31
-Const HttpStatusCodeString417Length As Integer = 18
-Const HttpStatusCodeString418Length As Integer = 13
-Const HttpStatusCodeString422Length As Integer = 20
-Const HttpStatusCodeString423Length As Integer = 6
-Const HttpStatusCodeString424Length As Integer = 17
-Const HttpStatusCodeString425Length As Integer = 20
-Const HttpStatusCodeString426Length As Integer = 16
-Const HttpStatusCodeString428Length As Integer = 21
-Const HttpStatusCodeString429Length As Integer = 17
-Const HttpStatusCodeString431Length As Integer = 31
-Const HttpStatusCodeString449Length As Integer = 10
-Const HttpStatusCodeString451Length As Integer = 29
-
-Const HttpStatusCodeString500Length As Integer = 21
-Const HttpStatusCodeString501Length As Integer = 15
-Const HttpStatusCodeString502Length As Integer = 11
-Const HttpStatusCodeString503Length As Integer = 19
-Const HttpStatusCodeString504Length As Integer = 15
-Const HttpStatusCodeString505Length As Integer = 26
-Const HttpStatusCodeString506Length As Integer = 23
-Const HttpStatusCodeString507Length As Integer = 20
-Const HttpStatusCodeString508Length As Integer = 13
-Const HttpStatusCodeString509Length As Integer = 24
-Const HttpStatusCodeString510Length As Integer = 12
-Const HttpStatusCodeString511Length As Integer = 31
-
 Type StatusCodeNode
 	pDescription As WString Ptr
 	DescriptionLength As Integer
@@ -318,198 +188,198 @@ Type CgiHeaderNode
 End Type
 
 Dim Shared StatusCodeNodesVector(1 To HttpStatusCodesSize) As StatusCodeNode = { _
-	Type<StatusCodeNode>(@HttpStatusCodeString100, HttpStatusCodeString100Length, HttpStatusCodes.CodeContinue), _
-	Type<StatusCodeNode>(@HttpStatusCodeString101, HttpStatusCodeString101Length, HttpStatusCodes.SwitchingProtocols), _
-	Type<StatusCodeNode>(@HttpStatusCodeString102, HttpStatusCodeString102Length, HttpStatusCodes.Processing), _
-	Type<StatusCodeNode>(@HttpStatusCodeString200, HttpStatusCodeString200Length, HttpStatusCodes.OK), _
-	Type<StatusCodeNode>(@HttpStatusCodeString201, HttpStatusCodeString201Length, HttpStatusCodes.Created), _
-	Type<StatusCodeNode>(@HttpStatusCodeString202, HttpStatusCodeString202Length, HttpStatusCodes.Accepted), _
-	Type<StatusCodeNode>(@HttpStatusCodeString203, HttpStatusCodeString203Length, HttpStatusCodes.NonAuthoritativeInformation), _
-	Type<StatusCodeNode>(@HttpStatusCodeString204, HttpStatusCodeString204Length, HttpStatusCodes.NoContent), _
-	Type<StatusCodeNode>(@HttpStatusCodeString205, HttpStatusCodeString205Length, HttpStatusCodes.ResetContent), _
-	Type<StatusCodeNode>(@HttpStatusCodeString206, HttpStatusCodeString206Length, HttpStatusCodes.PartialContent), _
-	Type<StatusCodeNode>(@HttpStatusCodeString207, HttpStatusCodeString207Length, HttpStatusCodes.MultiStatus), _
-	Type<StatusCodeNode>(@HttpStatusCodeString226, HttpStatusCodeString226Length, HttpStatusCodes.IAmUsed), _
-	Type<StatusCodeNode>(@HttpStatusCodeString300, HttpStatusCodeString300Length, HttpStatusCodes.MultipleChoices), _
-	Type<StatusCodeNode>(@HttpStatusCodeString301, HttpStatusCodeString301Length, HttpStatusCodes.MovedPermanently), _
-	Type<StatusCodeNode>(@HttpStatusCodeString302, HttpStatusCodeString302Length, HttpStatusCodes.Found), _
-	Type<StatusCodeNode>(@HttpStatusCodeString303, HttpStatusCodeString303Length, HttpStatusCodes.SeeOther), _
-	Type<StatusCodeNode>(@HttpStatusCodeString304, HttpStatusCodeString304Length, HttpStatusCodes.NotModified), _
-	Type<StatusCodeNode>(@HttpStatusCodeString305, HttpStatusCodeString305Length, HttpStatusCodes.UseProxy), _
-	Type<StatusCodeNode>(@HttpStatusCodeString307, HttpStatusCodeString307Length, HttpStatusCodes.TemporaryRedirect), _
-	Type<StatusCodeNode>(@HttpStatusCodeString400, HttpStatusCodeString400Length, HttpStatusCodes.BadRequest), _
-	Type<StatusCodeNode>(@HttpStatusCodeString401, HttpStatusCodeString401Length, HttpStatusCodes.Unauthorized), _
-	Type<StatusCodeNode>(@HttpStatusCodeString402, HttpStatusCodeString402Length, HttpStatusCodes.PaymentRequired), _
-	Type<StatusCodeNode>(@HttpStatusCodeString403, HttpStatusCodeString403Length, HttpStatusCodes.Forbidden), _
-	Type<StatusCodeNode>(@HttpStatusCodeString404, HttpStatusCodeString404Length, HttpStatusCodes.NotFound), _
-	Type<StatusCodeNode>(@HttpStatusCodeString405, HttpStatusCodeString405Length, HttpStatusCodes.MethodNotAllowed), _
-	Type<StatusCodeNode>(@HttpStatusCodeString406, HttpStatusCodeString406Length, HttpStatusCodes.NotAcceptable), _
-	Type<StatusCodeNode>(@HttpStatusCodeString407, HttpStatusCodeString407Length, HttpStatusCodes.ProxyAuthenticationRequired), _
-	Type<StatusCodeNode>(@HttpStatusCodeString408, HttpStatusCodeString408Length, HttpStatusCodes.RequestTimeout), _
-	Type<StatusCodeNode>(@HttpStatusCodeString409, HttpStatusCodeString409Length, HttpStatusCodes.Conflict), _
-	Type<StatusCodeNode>(@HttpStatusCodeString410, HttpStatusCodeString410Length, HttpStatusCodes.Gone), _
-	Type<StatusCodeNode>(@HttpStatusCodeString411, HttpStatusCodeString411Length, HttpStatusCodes.LengthRequired), _
-	Type<StatusCodeNode>(@HttpStatusCodeString412, HttpStatusCodeString412Length, HttpStatusCodes.PreconditionFailed), _
-	Type<StatusCodeNode>(@HttpStatusCodeString413, HttpStatusCodeString413Length, HttpStatusCodes.RequestEntityTooLarge), _
-	Type<StatusCodeNode>(@HttpStatusCodeString414, HttpStatusCodeString414Length, HttpStatusCodes.RequestURITooLarge), _
-	Type<StatusCodeNode>(@HttpStatusCodeString415, HttpStatusCodeString415Length, HttpStatusCodes.UnsupportedMediaType), _
-	Type<StatusCodeNode>(@HttpStatusCodeString416, HttpStatusCodeString416Length, HttpStatusCodes.RangeNotSatisfiable), _
-	Type<StatusCodeNode>(@HttpStatusCodeString417, HttpStatusCodeString417Length, HttpStatusCodes.ExpectationFailed), _
-	Type<StatusCodeNode>(@HttpStatusCodeString418, HttpStatusCodeString418Length, HttpStatusCodes.IAmTeapot), _
-	Type<StatusCodeNode>(@HttpStatusCodeString422, HttpStatusCodeString422Length, HttpStatusCodes.UnprocessableEntity), _
-	Type<StatusCodeNode>(@HttpStatusCodeString423, HttpStatusCodeString423Length, HttpStatusCodes.Locked), _
-	Type<StatusCodeNode>(@HttpStatusCodeString424, HttpStatusCodeString424Length, HttpStatusCodes.FailedDependency), _
-	Type<StatusCodeNode>(@HttpStatusCodeString425, HttpStatusCodeString425Length, HttpStatusCodes.UnorderedCollection), _
-	Type<StatusCodeNode>(@HttpStatusCodeString426, HttpStatusCodeString426Length, HttpStatusCodes.UpgradeRequired), _
-	Type<StatusCodeNode>(@HttpStatusCodeString428, HttpStatusCodeString428Length, HttpStatusCodes.PreconditionRequired), _
-	Type<StatusCodeNode>(@HttpStatusCodeString429, HttpStatusCodeString429Length, HttpStatusCodes.TooManyRequests), _
-	Type<StatusCodeNode>(@HttpStatusCodeString431, HttpStatusCodeString431Length, HttpStatusCodes.RequestHeaderFieldsTooLarge), _
-	Type<StatusCodeNode>(@HttpStatusCodeString449, HttpStatusCodeString449Length, HttpStatusCodes.RetryWith), _
-	Type<StatusCodeNode>(@HttpStatusCodeString451, HttpStatusCodeString451Length, HttpStatusCodes.UnavailableForLegalReasons), _
-	Type<StatusCodeNode>(@HttpStatusCodeString500, HttpStatusCodeString500Length, HttpStatusCodes.InternalServerError), _
-	Type<StatusCodeNode>(@HttpStatusCodeString501, HttpStatusCodeString501Length, HttpStatusCodes.NotImplemented), _
-	Type<StatusCodeNode>(@HttpStatusCodeString502, HttpStatusCodeString502Length, HttpStatusCodes.BadGateway), _
-	Type<StatusCodeNode>(@HttpStatusCodeString503, HttpStatusCodeString503Length, HttpStatusCodes.ServiceUnavailable), _
-	Type<StatusCodeNode>(@HttpStatusCodeString504, HttpStatusCodeString504Length, HttpStatusCodes.GatewayTimeout), _
-	Type<StatusCodeNode>(@HttpStatusCodeString505, HttpStatusCodeString505Length, HttpStatusCodes.HTTPVersionNotSupported), _
-	Type<StatusCodeNode>(@HttpStatusCodeString506, HttpStatusCodeString506Length, HttpStatusCodes.VariantAlsoNegotiates), _
-	Type<StatusCodeNode>(@HttpStatusCodeString507, HttpStatusCodeString507Length, HttpStatusCodes.InsufficientStorage), _
-	Type<StatusCodeNode>(@HttpStatusCodeString508, HttpStatusCodeString508Length, HttpStatusCodes.LoopDetected), _
-	Type<StatusCodeNode>(@HttpStatusCodeString509, HttpStatusCodeString509Length, HttpStatusCodes.BandwidthLimitExceeded), _
-	Type<StatusCodeNode>(@HttpStatusCodeString510, HttpStatusCodeString510Length, HttpStatusCodes.NotExtended), _
-	Type<StatusCodeNode>(@HttpStatusCodeString511, HttpStatusCodeString511Length, HttpStatusCodes.NetworkAuthenticationRequired) _
+	Type<StatusCodeNode>(@HttpStatusCodeString100, Len(HttpStatusCodeString100), HttpStatusCodes.CodeContinue), _
+	Type<StatusCodeNode>(@HttpStatusCodeString101, Len(HttpStatusCodeString101), HttpStatusCodes.SwitchingProtocols), _
+	Type<StatusCodeNode>(@HttpStatusCodeString102, Len(HttpStatusCodeString102), HttpStatusCodes.Processing), _
+	Type<StatusCodeNode>(@HttpStatusCodeString200, Len(HttpStatusCodeString200), HttpStatusCodes.OK), _
+	Type<StatusCodeNode>(@HttpStatusCodeString201, Len(HttpStatusCodeString201), HttpStatusCodes.Created), _
+	Type<StatusCodeNode>(@HttpStatusCodeString202, Len(HttpStatusCodeString202), HttpStatusCodes.Accepted), _
+	Type<StatusCodeNode>(@HttpStatusCodeString203, Len(HttpStatusCodeString203), HttpStatusCodes.NonAuthoritativeInformation), _
+	Type<StatusCodeNode>(@HttpStatusCodeString204, Len(HttpStatusCodeString204), HttpStatusCodes.NoContent), _
+	Type<StatusCodeNode>(@HttpStatusCodeString205, Len(HttpStatusCodeString205), HttpStatusCodes.ResetContent), _
+	Type<StatusCodeNode>(@HttpStatusCodeString206, Len(HttpStatusCodeString206), HttpStatusCodes.PartialContent), _
+	Type<StatusCodeNode>(@HttpStatusCodeString207, Len(HttpStatusCodeString207), HttpStatusCodes.MultiStatus), _
+	Type<StatusCodeNode>(@HttpStatusCodeString226, Len(HttpStatusCodeString226), HttpStatusCodes.IAmUsed), _
+	Type<StatusCodeNode>(@HttpStatusCodeString300, Len(HttpStatusCodeString300), HttpStatusCodes.MultipleChoices), _
+	Type<StatusCodeNode>(@HttpStatusCodeString301, Len(HttpStatusCodeString301), HttpStatusCodes.MovedPermanently), _
+	Type<StatusCodeNode>(@HttpStatusCodeString302, Len(HttpStatusCodeString302), HttpStatusCodes.Found), _
+	Type<StatusCodeNode>(@HttpStatusCodeString303, Len(HttpStatusCodeString303), HttpStatusCodes.SeeOther), _
+	Type<StatusCodeNode>(@HttpStatusCodeString304, Len(HttpStatusCodeString304), HttpStatusCodes.NotModified), _
+	Type<StatusCodeNode>(@HttpStatusCodeString305, Len(HttpStatusCodeString305), HttpStatusCodes.UseProxy), _
+	Type<StatusCodeNode>(@HttpStatusCodeString307, Len(HttpStatusCodeString307), HttpStatusCodes.TemporaryRedirect), _
+	Type<StatusCodeNode>(@HttpStatusCodeString400, Len(HttpStatusCodeString400), HttpStatusCodes.BadRequest), _
+	Type<StatusCodeNode>(@HttpStatusCodeString401, Len(HttpStatusCodeString401), HttpStatusCodes.Unauthorized), _
+	Type<StatusCodeNode>(@HttpStatusCodeString402, Len(HttpStatusCodeString402), HttpStatusCodes.PaymentRequired), _
+	Type<StatusCodeNode>(@HttpStatusCodeString403, Len(HttpStatusCodeString403), HttpStatusCodes.Forbidden), _
+	Type<StatusCodeNode>(@HttpStatusCodeString404, Len(HttpStatusCodeString404), HttpStatusCodes.NotFound), _
+	Type<StatusCodeNode>(@HttpStatusCodeString405, Len(HttpStatusCodeString405), HttpStatusCodes.MethodNotAllowed), _
+	Type<StatusCodeNode>(@HttpStatusCodeString406, Len(HttpStatusCodeString406), HttpStatusCodes.NotAcceptable), _
+	Type<StatusCodeNode>(@HttpStatusCodeString407, Len(HttpStatusCodeString407), HttpStatusCodes.ProxyAuthenticationRequired), _
+	Type<StatusCodeNode>(@HttpStatusCodeString408, Len(HttpStatusCodeString408), HttpStatusCodes.RequestTimeout), _
+	Type<StatusCodeNode>(@HttpStatusCodeString409, Len(HttpStatusCodeString409), HttpStatusCodes.Conflict), _
+	Type<StatusCodeNode>(@HttpStatusCodeString410, Len(HttpStatusCodeString410), HttpStatusCodes.Gone), _
+	Type<StatusCodeNode>(@HttpStatusCodeString411, Len(HttpStatusCodeString411), HttpStatusCodes.LengthRequired), _
+	Type<StatusCodeNode>(@HttpStatusCodeString412, Len(HttpStatusCodeString412), HttpStatusCodes.PreconditionFailed), _
+	Type<StatusCodeNode>(@HttpStatusCodeString413, Len(HttpStatusCodeString413), HttpStatusCodes.RequestEntityTooLarge), _
+	Type<StatusCodeNode>(@HttpStatusCodeString414, Len(HttpStatusCodeString414), HttpStatusCodes.RequestURITooLarge), _
+	Type<StatusCodeNode>(@HttpStatusCodeString415, Len(HttpStatusCodeString415), HttpStatusCodes.UnsupportedMediaType), _
+	Type<StatusCodeNode>(@HttpStatusCodeString416, Len(HttpStatusCodeString416), HttpStatusCodes.RangeNotSatisfiable), _
+	Type<StatusCodeNode>(@HttpStatusCodeString417, Len(HttpStatusCodeString417), HttpStatusCodes.ExpectationFailed), _
+	Type<StatusCodeNode>(@HttpStatusCodeString418, Len(HttpStatusCodeString418), HttpStatusCodes.IAmTeapot), _
+	Type<StatusCodeNode>(@HttpStatusCodeString422, Len(HttpStatusCodeString422), HttpStatusCodes.UnprocessableEntity), _
+	Type<StatusCodeNode>(@HttpStatusCodeString423, Len(HttpStatusCodeString423), HttpStatusCodes.Locked), _
+	Type<StatusCodeNode>(@HttpStatusCodeString424, Len(HttpStatusCodeString424), HttpStatusCodes.FailedDependency), _
+	Type<StatusCodeNode>(@HttpStatusCodeString425, Len(HttpStatusCodeString425), HttpStatusCodes.UnorderedCollection), _
+	Type<StatusCodeNode>(@HttpStatusCodeString426, Len(HttpStatusCodeString426), HttpStatusCodes.UpgradeRequired), _
+	Type<StatusCodeNode>(@HttpStatusCodeString428, Len(HttpStatusCodeString428), HttpStatusCodes.PreconditionRequired), _
+	Type<StatusCodeNode>(@HttpStatusCodeString429, Len(HttpStatusCodeString429), HttpStatusCodes.TooManyRequests), _
+	Type<StatusCodeNode>(@HttpStatusCodeString431, Len(HttpStatusCodeString431), HttpStatusCodes.RequestHeaderFieldsTooLarge), _
+	Type<StatusCodeNode>(@HttpStatusCodeString449, Len(HttpStatusCodeString449), HttpStatusCodes.RetryWith), _
+	Type<StatusCodeNode>(@HttpStatusCodeString451, Len(HttpStatusCodeString451), HttpStatusCodes.UnavailableForLegalReasons), _
+	Type<StatusCodeNode>(@HttpStatusCodeString500, Len(HttpStatusCodeString500), HttpStatusCodes.InternalServerError), _
+	Type<StatusCodeNode>(@HttpStatusCodeString501, Len(HttpStatusCodeString501), HttpStatusCodes.NotImplemented), _
+	Type<StatusCodeNode>(@HttpStatusCodeString502, Len(HttpStatusCodeString502), HttpStatusCodes.BadGateway), _
+	Type<StatusCodeNode>(@HttpStatusCodeString503, Len(HttpStatusCodeString503), HttpStatusCodes.ServiceUnavailable), _
+	Type<StatusCodeNode>(@HttpStatusCodeString504, Len(HttpStatusCodeString504), HttpStatusCodes.GatewayTimeout), _
+	Type<StatusCodeNode>(@HttpStatusCodeString505, Len(HttpStatusCodeString505), HttpStatusCodes.HTTPVersionNotSupported), _
+	Type<StatusCodeNode>(@HttpStatusCodeString506, Len(HttpStatusCodeString506), HttpStatusCodes.VariantAlsoNegotiates), _
+	Type<StatusCodeNode>(@HttpStatusCodeString507, Len(HttpStatusCodeString507), HttpStatusCodes.InsufficientStorage), _
+	Type<StatusCodeNode>(@HttpStatusCodeString508, Len(HttpStatusCodeString508), HttpStatusCodes.LoopDetected), _
+	Type<StatusCodeNode>(@HttpStatusCodeString509, Len(HttpStatusCodeString509), HttpStatusCodes.BandwidthLimitExceeded), _
+	Type<StatusCodeNode>(@HttpStatusCodeString510, Len(HttpStatusCodeString510), HttpStatusCodes.NotExtended), _
+	Type<StatusCodeNode>(@HttpStatusCodeString511, Len(HttpStatusCodeString511), HttpStatusCodes.NetworkAuthenticationRequired) _
 }
 
 Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeaderNode = { _
-	Type<RequestHeaderNode>(@HeaderHostString, HeaderHostStringLength, HttpRequestHeaders.HeaderHost), _
-	Type<RequestHeaderNode>(@HeaderAcceptLanguageString, HeaderAcceptLanguageStringLength, HttpRequestHeaders.HeaderAcceptLanguage), _
-	Type<RequestHeaderNode>(@HeaderUserAgentString, HeaderUserAgentStringLength, HttpRequestHeaders.HeaderUserAgent), _
-	Type<RequestHeaderNode>(@HeaderAcceptEncodingString, HeaderAcceptEncodingStringLength, HttpRequestHeaders.HeaderAcceptEncoding), _
-	Type<RequestHeaderNode>(@HeaderAcceptString, HeaderAcceptStringLength, HttpRequestHeaders.HeaderAccept), _
-	Type<RequestHeaderNode>(@HeaderConnectionString, HeaderConnectionStringLength, HttpRequestHeaders.HeaderConnection), _
-	Type<RequestHeaderNode>(@HeaderCacheControlString, HeaderCacheControlStringLength, HttpRequestHeaders.HeaderCacheControl), _
-	Type<RequestHeaderNode>(@HeaderIfModifiedSinceString, HeaderIfModifiedSinceStringLength, HttpRequestHeaders.HeaderIfModifiedSince), _
-	Type<RequestHeaderNode>(@HeaderRefererString, HeaderRefererStringLength, HttpRequestHeaders.HeaderReferer), _
-	Type<RequestHeaderNode>(@HeaderIfNoneMatchString, HeaderIfNoneMatchStringLength, HttpRequestHeaders.HeaderIfNoneMatch), _
-	Type<RequestHeaderNode>(@HeaderDNTString, HeaderDNTStringLength, HttpRequestHeaders.HeaderDNT), _
-	Type<RequestHeaderNode>(@HeaderUpgradeInsecureRequestsString, HeaderUpgradeInsecureRequestsStringLength, HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
-	Type<RequestHeaderNode>(@HeaderRangeString, HeaderRangeStringLength, HttpRequestHeaders.HeaderRange), _
-	Type<RequestHeaderNode>(@HeaderAuthorizationString, HeaderAuthorizationStringLength, HttpRequestHeaders.HeaderAuthorization), _
-	Type<RequestHeaderNode>(@HeaderContentLengthString, HeaderContentLengthStringLength, HttpRequestHeaders.HeaderContentLength), _
-	Type<RequestHeaderNode>(@HeaderContentTypeString, HeaderContentTypeStringLength, HttpRequestHeaders.HeaderContentType), _
-	Type<RequestHeaderNode>(@HeaderCookieString, HeaderCookieStringLength, HttpRequestHeaders.HeaderCookie), _
-	Type<RequestHeaderNode>(@HeaderContentLanguageString, HeaderContentLanguageStringLength, HttpRequestHeaders.HeaderContentLanguage), _
-	Type<RequestHeaderNode>(@HeaderAcceptCharsetString, HeaderAcceptCharsetStringLength, HttpRequestHeaders.HeaderAcceptCharset), _
-	Type<RequestHeaderNode>(@HeaderContentEncodingString, HeaderContentEncodingStringLength, HttpRequestHeaders.HeaderContentEncoding), _
-	Type<RequestHeaderNode>(@HeaderKeepAliveString, HeaderKeepAliveStringLength, HttpRequestHeaders.HeaderKeepAlive), _
-	Type<RequestHeaderNode>(@HeaderExpectString, HeaderExpectStringLength, HttpRequestHeaders.HeaderExpect), _
-	Type<RequestHeaderNode>(@HeaderContentMd5String, HeaderContentMd5StringLength, HttpRequestHeaders.HeaderContentMd5), _
-	Type<RequestHeaderNode>(@HeaderContentRangeString, HeaderContentRangeStringLength, HttpRequestHeaders.HeaderContentRange), _
-	Type<RequestHeaderNode>(@HeaderFromString, HeaderFromStringLength, HttpRequestHeaders.HeaderFrom), _
-	Type<RequestHeaderNode>(@HeaderIfMatchString, HeaderIfMatchStringLength, HttpRequestHeaders.HeaderIfMatch), _
-	Type<RequestHeaderNode>(@HeaderIfRangeString, HeaderIfRangeStringLength, HttpRequestHeaders.HeaderIfRange), _
-	Type<RequestHeaderNode>(@HeaderIfUnmodifiedSinceString, HeaderIfUnmodifiedSinceStringLength, HttpRequestHeaders.HeaderIfUnmodifiedSince), _
-	Type<RequestHeaderNode>(@HeaderMaxForwardsString, HeaderMaxForwardsStringLength, HttpRequestHeaders.HeaderMaxForwards), _
-	Type<RequestHeaderNode>(@HeaderOriginString, HeaderOriginStringLength, HttpRequestHeaders.HeaderOrigin), _
-	Type<RequestHeaderNode>(@HeaderPragmaString, HeaderPragmaStringLength, HttpRequestHeaders.HeaderPragma), _
-	Type<RequestHeaderNode>(@HeaderProxyAuthorizationString, HeaderProxyAuthorizationStringLength, HttpRequestHeaders.HeaderProxyAuthorization), _
-	Type<RequestHeaderNode>(@HeaderSecWebSocketKeyString, HeaderSecWebSocketKeyStringLength, HttpRequestHeaders.HeaderSecWebSocketKey), _
-	Type<RequestHeaderNode>(@HeaderSecWebSocketKey1String, HeaderSecWebSocketKey1StringLength, HttpRequestHeaders.HeaderSecWebSocketKey1), _
-	Type<RequestHeaderNode>(@HeaderSecWebSocketKey2String, HeaderSecWebSocketKey2StringLength, HttpRequestHeaders.HeaderSecWebSocketKey2), _
-	Type<RequestHeaderNode>(@HeaderUpgradeString, HeaderUpgradeStringLength, HttpRequestHeaders.HeaderUpgrade), _
-	Type<RequestHeaderNode>(@HeaderSecWebSocketVersionString, HeaderSecWebSocketVersionStringLength, HttpRequestHeaders.HeaderSecWebSocketVersion), _
-	Type<RequestHeaderNode>(@HeaderTeString, HeaderTeStringLength, HttpRequestHeaders.HeaderTe), _
-	Type<RequestHeaderNode>(@HeaderTrailerString, HeaderTrailerStringLength, HttpRequestHeaders.HeaderTrailer), _
-	Type<RequestHeaderNode>(@HeaderTransferEncodingString, HeaderTransferEncodingStringLength, HttpRequestHeaders.HeaderTransferEncoding), _
-	Type<RequestHeaderNode>(@HeaderViaString, HeaderViaStringLength, HttpRequestHeaders.HeaderVia), _
-	Type<RequestHeaderNode>(@HeaderWarningString, HeaderWarningStringLength, HttpRequestHeaders.HeaderWarning), _
-	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString, HeaderWebSocketProtocolStringLength, HttpRequestHeaders.HeaderWebSocketProtocol) _
+	Type<RequestHeaderNode>(@HeaderHostString,                    Len(HeaderHostString),                    HttpRequestHeaders.HeaderHost), _
+	Type<RequestHeaderNode>(@HeaderAcceptLanguageString,          Len(HeaderAcceptLanguageString),          HttpRequestHeaders.HeaderAcceptLanguage), _
+	Type<RequestHeaderNode>(@HeaderUserAgentString,               Len(HeaderUserAgentString),               HttpRequestHeaders.HeaderUserAgent), _
+	Type<RequestHeaderNode>(@HeaderAcceptEncodingString,          Len(HeaderAcceptEncodingString),          HttpRequestHeaders.HeaderAcceptEncoding), _
+	Type<RequestHeaderNode>(@HeaderAcceptString,                  Len(HeaderAcceptString),                  HttpRequestHeaders.HeaderAccept), _
+	Type<RequestHeaderNode>(@HeaderConnectionString,              Len(HeaderConnectionString),              HttpRequestHeaders.HeaderConnection), _
+	Type<RequestHeaderNode>(@HeaderCacheControlString,            Len(HeaderCacheControlString),            HttpRequestHeaders.HeaderCacheControl), _
+	Type<RequestHeaderNode>(@HeaderIfModifiedSinceString,         Len(HeaderIfModifiedSinceString),         HttpRequestHeaders.HeaderIfModifiedSince), _
+	Type<RequestHeaderNode>(@HeaderRefererString,                 Len(HeaderRefererString),                 HttpRequestHeaders.HeaderReferer), _
+	Type<RequestHeaderNode>(@HeaderIfNoneMatchString,             Len(HeaderIfNoneMatchString),             HttpRequestHeaders.HeaderIfNoneMatch), _
+	Type<RequestHeaderNode>(@HeaderDNTString,                     Len(HeaderDNTString),                     HttpRequestHeaders.HeaderDNT), _
+	Type<RequestHeaderNode>(@HeaderUpgradeInsecureRequestsString, Len(HeaderUpgradeInsecureRequestsString), HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
+	Type<RequestHeaderNode>(@HeaderRangeString,                   Len(HeaderRangeString),                   HttpRequestHeaders.HeaderRange), _
+	Type<RequestHeaderNode>(@HeaderAuthorizationString,           Len(HeaderAuthorizationString),           HttpRequestHeaders.HeaderAuthorization), _
+	Type<RequestHeaderNode>(@HeaderContentLengthString,           Len(HeaderContentLengthString),           HttpRequestHeaders.HeaderContentLength), _
+	Type<RequestHeaderNode>(@HeaderContentTypeString,             Len(HeaderContentTypeString),             HttpRequestHeaders.HeaderContentType), _
+	Type<RequestHeaderNode>(@HeaderCookieString,                  Len(HeaderCookieString),                  HttpRequestHeaders.HeaderCookie), _
+	Type<RequestHeaderNode>(@HeaderContentLanguageString,         Len(HeaderContentLanguageString),         HttpRequestHeaders.HeaderContentLanguage), _
+	Type<RequestHeaderNode>(@HeaderAcceptCharsetString,           Len(HeaderAcceptCharsetString),           HttpRequestHeaders.HeaderAcceptCharset), _
+	Type<RequestHeaderNode>(@HeaderContentEncodingString,         Len(HeaderContentEncodingString),         HttpRequestHeaders.HeaderContentEncoding), _
+	Type<RequestHeaderNode>(@HeaderKeepAliveString,               Len(HeaderKeepAliveString),               HttpRequestHeaders.HeaderKeepAlive), _
+	Type<RequestHeaderNode>(@HeaderExpectString,                  Len(HeaderExpectString),                  HttpRequestHeaders.HeaderExpect), _
+	Type<RequestHeaderNode>(@HeaderContentMd5String,              Len(HeaderContentMd5String),              HttpRequestHeaders.HeaderContentMd5), _
+	Type<RequestHeaderNode>(@HeaderContentRangeString,            Len(HeaderContentRangeString),            HttpRequestHeaders.HeaderContentRange), _
+	Type<RequestHeaderNode>(@HeaderFromString,                    Len(HeaderFromString),                    HttpRequestHeaders.HeaderFrom), _
+	Type<RequestHeaderNode>(@HeaderIfMatchString,                 Len(HeaderIfMatchString),                 HttpRequestHeaders.HeaderIfMatch), _
+	Type<RequestHeaderNode>(@HeaderIfRangeString,                 Len(HeaderIfRangeString),                 HttpRequestHeaders.HeaderIfRange), _
+	Type<RequestHeaderNode>(@HeaderIfUnmodifiedSinceString,       Len(HeaderIfUnmodifiedSinceString),       HttpRequestHeaders.HeaderIfUnmodifiedSince), _
+	Type<RequestHeaderNode>(@HeaderMaxForwardsString,             Len(HeaderMaxForwardsString),             HttpRequestHeaders.HeaderMaxForwards), _
+	Type<RequestHeaderNode>(@HeaderOriginString,                  Len(HeaderOriginString),                  HttpRequestHeaders.HeaderOrigin), _
+	Type<RequestHeaderNode>(@HeaderPragmaString,                  Len(HeaderPragmaString),                  HttpRequestHeaders.HeaderPragma), _
+	Type<RequestHeaderNode>(@HeaderProxyAuthorizationString,      Len(HeaderProxyAuthorizationString),      HttpRequestHeaders.HeaderProxyAuthorization), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKeyString,         Len(HeaderSecWebSocketKeyString),         HttpRequestHeaders.HeaderSecWebSocketKey), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKey1String,        Len(HeaderSecWebSocketKey1String),        HttpRequestHeaders.HeaderSecWebSocketKey1), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKey2String,        Len(HeaderSecWebSocketKey2String),        HttpRequestHeaders.HeaderSecWebSocketKey2), _
+	Type<RequestHeaderNode>(@HeaderUpgradeString,                 Len(HeaderUpgradeString),                 HttpRequestHeaders.HeaderUpgrade), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketVersionString,     Len(HeaderSecWebSocketVersionString),     HttpRequestHeaders.HeaderSecWebSocketVersion), _
+	Type<RequestHeaderNode>(@HeaderTeString,                      Len(HeaderTeString),                      HttpRequestHeaders.HeaderTe), _
+	Type<RequestHeaderNode>(@HeaderTrailerString,                 Len(HeaderTrailerString),                 HttpRequestHeaders.HeaderTrailer), _
+	Type<RequestHeaderNode>(@HeaderTransferEncodingString,        Len(HeaderTransferEncodingString),        HttpRequestHeaders.HeaderTransferEncoding), _
+	Type<RequestHeaderNode>(@HeaderViaString,                     Len(HeaderViaString),                     HttpRequestHeaders.HeaderVia), _
+	Type<RequestHeaderNode>(@HeaderWarningString,                 Len(HeaderWarningString),                 HttpRequestHeaders.HeaderWarning), _
+	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString,       Len(HeaderWebSocketProtocolString),       HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
 Dim Shared ResponseHeaderNodesVector(1 To HttpResponseHeadersSize) As ResponseHeaderNode = { _
-	Type<ResponseHeaderNode>(@HeaderAcceptRangesString, HeaderAcceptRangesStringLength, HttpResponseHeaders.HeaderAcceptRanges), _
-	Type<ResponseHeaderNode>(@HeaderAgeString, HeaderAgeStringLength, HttpResponseHeaders.HeaderAge), _
-	Type<ResponseHeaderNode>(@HeaderAllowString, HeaderAllowStringLength, HttpResponseHeaders.HeaderAllow), _
-	Type<ResponseHeaderNode>(@HeaderCacheControlString, HeaderCacheControlStringLength, HttpResponseHeaders.HeaderCacheControl), _
-	Type<ResponseHeaderNode>(@HeaderConnectionString, HeaderConnectionStringLength, HttpResponseHeaders.HeaderConnection), _
-	Type<ResponseHeaderNode>(@HeaderContentEncodingString, HeaderContentEncodingStringLength, HttpResponseHeaders.HeaderContentEncoding), _
-	Type<ResponseHeaderNode>(@HeaderContentLanguageString, HeaderContentLanguageStringLength, HttpResponseHeaders.HeaderContentLanguage), _
-	Type<ResponseHeaderNode>(@HeaderContentLengthString, HeaderContentLengthStringLength, HttpResponseHeaders.HeaderContentLength), _
-	Type<ResponseHeaderNode>(@HeaderContentLocationString, HeaderContentLocationStringLength, HttpResponseHeaders.HeaderContentLocation), _
-	Type<ResponseHeaderNode>(@HeaderContentMd5String, HeaderContentMd5StringLength, HttpResponseHeaders.HeaderContentMd5), _
-	Type<ResponseHeaderNode>(@HeaderContentRangeString, HeaderContentRangeStringLength, HttpResponseHeaders.HeaderContentRange), _
-	Type<ResponseHeaderNode>(@HeaderContentTypeString, HeaderContentTypeStringLength, HttpResponseHeaders.HeaderContentType), _
-	Type<ResponseHeaderNode>(@HeaderDateString, HeaderDateStringLength, HttpResponseHeaders.HeaderDate), _
-	Type<ResponseHeaderNode>(@HeaderETagString, HeaderETagStringLength, HttpResponseHeaders.HeaderETag), _
-	Type<ResponseHeaderNode>(@HeaderExpiresString, HeaderExpiresStringLength, HttpResponseHeaders.HeaderExpires), _
-	Type<ResponseHeaderNode>(@HeaderKeepAliveString, HeaderKeepAliveStringLength, HttpResponseHeaders.HeaderKeepAlive), _
-	Type<ResponseHeaderNode>(@HeaderLastModifiedString, HeaderLastModifiedStringLength, HttpResponseHeaders.HeaderLastModified), _
-	Type<ResponseHeaderNode>(@HeaderLocationString, HeaderLocationStringLength, HttpResponseHeaders.HeaderLocation), _
-	Type<ResponseHeaderNode>(@HeaderPragmaString, HeaderPragmaStringLength, HttpResponseHeaders.HeaderPragma), _
-	Type<ResponseHeaderNode>(@HeaderProxyAuthenticateString, HeaderProxyAuthenticateStringLength, HttpResponseHeaders.HeaderProxyAuthenticate), _
-	Type<ResponseHeaderNode>(@HeaderRetryAfterString, HeaderRetryAfterStringLength, HttpResponseHeaders.HeaderRetryAfter), _
-	Type<ResponseHeaderNode>(@HeaderSecWebSocketAcceptString, HeaderSecWebSocketAcceptStringLength, HttpResponseHeaders.HeaderSecWebSocketAccept), _
-	Type<ResponseHeaderNode>(@HeaderSecWebSocketLocationString, HeaderSecWebSocketLocationStringLength, HttpResponseHeaders.HeaderSecWebSocketLocation), _
-	Type<ResponseHeaderNode>(@HeaderSecWebSocketOriginString, HeaderSecWebSocketOriginStringLength, HttpResponseHeaders.HeaderSecWebSocketOrigin), _
-	Type<ResponseHeaderNode>(@HeaderSecWebSocketProtocolString, HeaderSecWebSocketProtocolStringLength, HttpResponseHeaders.HeaderSecWebSocketProtocol), _
-	Type<ResponseHeaderNode>(@HeaderServerString, HeaderServerStringLength, HttpResponseHeaders.HeaderServer), _
-	Type<ResponseHeaderNode>(@HeaderSetCookieString, HeaderSetCookieStringLength, HttpResponseHeaders.HeaderSetCookie), _
-	Type<ResponseHeaderNode>(@HeaderTrailerString, HeaderTrailerStringLength, HttpResponseHeaders.HeaderTrailer), _
-	Type<ResponseHeaderNode>(@HeaderTransferEncodingString, HeaderTransferEncodingStringLength, HttpResponseHeaders.HeaderTransferEncoding), _
-	Type<ResponseHeaderNode>(@HeaderUpgradeString, HeaderUpgradeStringLength, HttpResponseHeaders.HeaderUpgrade), _
-	Type<ResponseHeaderNode>(@HeaderVaryString, HeaderVaryStringLength, HttpResponseHeaders.HeaderVary), _
-	Type<ResponseHeaderNode>(@HeaderViaString, HeaderViaStringLength, HttpResponseHeaders.HeaderVia), _
-	Type<ResponseHeaderNode>(@HeaderWarningString, HeaderWarningStringLength, HttpResponseHeaders.HeaderWarning), _
-	Type<ResponseHeaderNode>(@HeaderWebSocketLocationString, HeaderWebSocketLocationStringLength, HttpResponseHeaders.HeaderWebSocketLocation), _
-	Type<ResponseHeaderNode>(@HeaderWebSocketOriginString, HeaderWebSocketOriginStringLength, HttpResponseHeaders.HeaderWebSocketOrigin), _
-	Type<ResponseHeaderNode>(@HeaderWebSocketProtocolString, HeaderWebSocketProtocolStringLength, HttpResponseHeaders.HeaderWebSocketProtocol), _
-	Type<ResponseHeaderNode>(@HeaderWWWAuthenticateString, HeaderWWWAuthenticateStringLength, HttpResponseHeaders.HeaderWwwAuthenticate) _
+	Type<ResponseHeaderNode>(@HeaderAcceptRangesString,         Len(HeaderAcceptRangesString),         HttpResponseHeaders.HeaderAcceptRanges), _
+	Type<ResponseHeaderNode>(@HeaderAgeString,                  Len(HeaderAgeString),                  HttpResponseHeaders.HeaderAge), _
+	Type<ResponseHeaderNode>(@HeaderAllowString,                Len(HeaderAllowString),                HttpResponseHeaders.HeaderAllow), _
+	Type<ResponseHeaderNode>(@HeaderCacheControlString,         Len(HeaderCacheControlString),         HttpResponseHeaders.HeaderCacheControl), _
+	Type<ResponseHeaderNode>(@HeaderConnectionString,           Len(HeaderConnectionString),           HttpResponseHeaders.HeaderConnection), _
+	Type<ResponseHeaderNode>(@HeaderContentEncodingString,      Len(HeaderContentEncodingString),      HttpResponseHeaders.HeaderContentEncoding), _
+	Type<ResponseHeaderNode>(@HeaderContentLanguageString,      Len(HeaderContentLanguageString),      HttpResponseHeaders.HeaderContentLanguage), _
+	Type<ResponseHeaderNode>(@HeaderContentLengthString,        Len(HeaderContentLengthString),        HttpResponseHeaders.HeaderContentLength), _
+	Type<ResponseHeaderNode>(@HeaderContentLocationString,      Len(HeaderContentLocationString),      HttpResponseHeaders.HeaderContentLocation), _
+	Type<ResponseHeaderNode>(@HeaderContentMd5String,           Len(HeaderContentMd5String),           HttpResponseHeaders.HeaderContentMd5), _
+	Type<ResponseHeaderNode>(@HeaderContentRangeString,         Len(HeaderContentRangeString),         HttpResponseHeaders.HeaderContentRange), _
+	Type<ResponseHeaderNode>(@HeaderContentTypeString,          Len(HeaderContentTypeString),          HttpResponseHeaders.HeaderContentType), _
+	Type<ResponseHeaderNode>(@HeaderDateString,                 Len(HeaderDateString),                 HttpResponseHeaders.HeaderDate), _
+	Type<ResponseHeaderNode>(@HeaderETagString,                 Len(HeaderETagString),                 HttpResponseHeaders.HeaderETag), _
+	Type<ResponseHeaderNode>(@HeaderExpiresString,              Len(HeaderExpiresString),              HttpResponseHeaders.HeaderExpires), _
+	Type<ResponseHeaderNode>(@HeaderKeepAliveString,            Len(HeaderKeepAliveString),            HttpResponseHeaders.HeaderKeepAlive), _
+	Type<ResponseHeaderNode>(@HeaderLastModifiedString,         Len(HeaderLastModifiedString),         HttpResponseHeaders.HeaderLastModified), _
+	Type<ResponseHeaderNode>(@HeaderLocationString,             Len(HeaderLocationString),             HttpResponseHeaders.HeaderLocation), _
+	Type<ResponseHeaderNode>(@HeaderPragmaString,               Len(HeaderPragmaString),               HttpResponseHeaders.HeaderPragma), _
+	Type<ResponseHeaderNode>(@HeaderProxyAuthenticateString,    Len(HeaderProxyAuthenticateString),    HttpResponseHeaders.HeaderProxyAuthenticate), _
+	Type<ResponseHeaderNode>(@HeaderRetryAfterString,           Len(HeaderRetryAfterString),           HttpResponseHeaders.HeaderRetryAfter), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketAcceptString,   Len(HeaderSecWebSocketAcceptString),   HttpResponseHeaders.HeaderSecWebSocketAccept), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketLocationString, Len(HeaderSecWebSocketLocationString), HttpResponseHeaders.HeaderSecWebSocketLocation), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketOriginString,   Len(HeaderSecWebSocketOriginString),   HttpResponseHeaders.HeaderSecWebSocketOrigin), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketProtocolString, Len(HeaderSecWebSocketProtocolString), HttpResponseHeaders.HeaderSecWebSocketProtocol), _
+	Type<ResponseHeaderNode>(@HeaderServerString,               Len(HeaderServerString),               HttpResponseHeaders.HeaderServer), _
+	Type<ResponseHeaderNode>(@HeaderSetCookieString,            Len(HeaderSetCookieString),            HttpResponseHeaders.HeaderSetCookie), _
+	Type<ResponseHeaderNode>(@HeaderTrailerString,              Len(HeaderTrailerString),              HttpResponseHeaders.HeaderTrailer), _
+	Type<ResponseHeaderNode>(@HeaderTransferEncodingString,     Len(HeaderTransferEncodingString),     HttpResponseHeaders.HeaderTransferEncoding), _
+	Type<ResponseHeaderNode>(@HeaderUpgradeString,              Len(HeaderUpgradeString),              HttpResponseHeaders.HeaderUpgrade), _
+	Type<ResponseHeaderNode>(@HeaderVaryString,                 Len(HeaderVaryString),                 HttpResponseHeaders.HeaderVary), _
+	Type<ResponseHeaderNode>(@HeaderViaString,                  Len(HeaderViaString),                  HttpResponseHeaders.HeaderVia), _
+	Type<ResponseHeaderNode>(@HeaderWarningString,              Len(HeaderWarningString),              HttpResponseHeaders.HeaderWarning), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketLocationString,    Len(HeaderWebSocketLocationString),    HttpResponseHeaders.HeaderWebSocketLocation), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketOriginString,      Len(HeaderWebSocketOriginString),      HttpResponseHeaders.HeaderWebSocketOrigin), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketProtocolString,    Len(HeaderWebSocketProtocolString),    HttpResponseHeaders.HeaderWebSocketProtocol), _
+	Type<ResponseHeaderNode>(@HeaderWWWAuthenticateString,      Len(HeaderWWWAuthenticateString),      HttpResponseHeaders.HeaderWwwAuthenticate) _
 }
 
 Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = { _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT"), 11, HttpRequestHeaders.HeaderAccept), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_CHARSET"), 19, HttpRequestHeaders.HeaderAcceptCharset), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_ENCODING"), 20, HttpRequestHeaders.HeaderAcceptEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_LANGUAGE"), 20, HttpRequestHeaders.HeaderAcceptLanguage), _
-	Type<CgiHeaderNode>(@WStr("AUTH_TYPE"), 9, HttpRequestHeaders.HeaderAuthorization), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CACHE_CONTROL"), 18, HttpRequestHeaders.HeaderCacheControl), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONNECTION"), 15, HttpRequestHeaders.HeaderConnection), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_ENCODING"), 21, HttpRequestHeaders.HeaderContentEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_LANGUAGE"), 21, HttpRequestHeaders.HeaderContentLanguage), _
-	Type<CgiHeaderNode>(@WStr("CONTENT_LENGTH"), 14, HttpRequestHeaders.HeaderContentLength), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_MD5"), 16, HttpRequestHeaders.HeaderContentMd5), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_RANGE"), 18, HttpRequestHeaders.HeaderContentRange), _
-	Type<CgiHeaderNode>(@WStr("CONTENT_TYPE"), 12, HttpRequestHeaders.HeaderContentType), _
-	Type<CgiHeaderNode>(@WStr("HTTP_COOKIE"), 11, HttpRequestHeaders.HeaderCookie), _
-	Type<CgiHeaderNode>(@WStr("HTTP_DNT"), 8, HttpRequestHeaders.HeaderDNT), _
-	Type<CgiHeaderNode>(@WStr("HTTP_EXPECT"), 11, HttpRequestHeaders.HeaderExpect), _
-	Type<CgiHeaderNode>(@WStr("HTTP_FROM"), 9, HttpRequestHeaders.HeaderFrom), _
-	Type<CgiHeaderNode>(@WStr("HTTP_HOST"), 9, HttpRequestHeaders.HeaderHost), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_MATCH"), 13, HttpRequestHeaders.HeaderIfMatch), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_MODIFIED_SINCE"), 22, HttpRequestHeaders.HeaderIfModifiedSince), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_NONE_MATCH"), 18, HttpRequestHeaders.HeaderIfNoneMatch), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_RANGE"), 13, HttpRequestHeaders.HeaderIfRange), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_UNMODIFIED_SINCE"), 24, HttpRequestHeaders.HeaderIfUnmodifiedSince), _
-	Type<CgiHeaderNode>(@WStr("HTTP_KEEP_ALIVE"), 15, HttpRequestHeaders.HeaderKeepAlive), _
-	Type<CgiHeaderNode>(@WStr("HTTP_MAX_FORWARDS"), 17, HttpRequestHeaders.HeaderMaxForwards), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ORIGIN"), 11, HttpRequestHeaders.HeaderOrigin), _
-	Type<CgiHeaderNode>(@WStr("HTTP_PRAGMA"), 11, HttpRequestHeaders.HeaderPragma), _
-	Type<CgiHeaderNode>(@WStr("HTTP_PROXY_AUTHORIZATION"), 24, HttpRequestHeaders.HeaderProxyAuthorization), _
-	Type<CgiHeaderNode>(@WStr("HTTP_RANGE"), 10, HttpRequestHeaders.HeaderRange), _
-	Type<CgiHeaderNode>(@WStr("HTTP_REFERER"), 12, HttpRequestHeaders.HeaderReferer), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY"), 22, HttpRequestHeaders.HeaderSecWebSocketKey), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY1"), 23, HttpRequestHeaders.HeaderSecWebSocketKey1), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY2"), 23, HttpRequestHeaders.HeaderSecWebSocketKey2), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_VERSION"), 26, HttpRequestHeaders.HeaderSecWebSocketVersion), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TE"), 7, HttpRequestHeaders.HeaderTe), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TRAILER"), 12, HttpRequestHeaders.HeaderTrailer), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TRANSFER_ENCODING"), 22, HttpRequestHeaders.HeaderTransferEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE"), 12, HttpRequestHeaders.HeaderUpgrade), _
+	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT"),                    11, HttpRequestHeaders.HeaderAccept), _
+	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_CHARSET"),            19, HttpRequestHeaders.HeaderAcceptCharset), _
+	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_ENCODING"),           20, HttpRequestHeaders.HeaderAcceptEncoding), _
+	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_LANGUAGE"),           20, HttpRequestHeaders.HeaderAcceptLanguage), _
+	Type<CgiHeaderNode>(@WStr("AUTH_TYPE"),                      9, HttpRequestHeaders.HeaderAuthorization), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CACHE_CONTROL"),             18, HttpRequestHeaders.HeaderCacheControl), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CONNECTION"),                15, HttpRequestHeaders.HeaderConnection), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_ENCODING"),          21, HttpRequestHeaders.HeaderContentEncoding), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_LANGUAGE"),          21, HttpRequestHeaders.HeaderContentLanguage), _
+	Type<CgiHeaderNode>(@WStr("CONTENT_LENGTH"),                 14, HttpRequestHeaders.HeaderContentLength), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_MD5"),               16, HttpRequestHeaders.HeaderContentMd5), _
+	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_RANGE"),             18, HttpRequestHeaders.HeaderContentRange), _
+	Type<CgiHeaderNode>(@WStr("CONTENT_TYPE"),                   12, HttpRequestHeaders.HeaderContentType), _
+	Type<CgiHeaderNode>(@WStr("HTTP_COOKIE"),                    11, HttpRequestHeaders.HeaderCookie), _
+	Type<CgiHeaderNode>(@WStr("HTTP_DNT"),                       8, HttpRequestHeaders.HeaderDNT), _
+	Type<CgiHeaderNode>(@WStr("HTTP_EXPECT"),                    11, HttpRequestHeaders.HeaderExpect), _
+	Type<CgiHeaderNode>(@WStr("HTTP_FROM"),                      9, HttpRequestHeaders.HeaderFrom), _
+	Type<CgiHeaderNode>(@WStr("HTTP_HOST"),                      9, HttpRequestHeaders.HeaderHost), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_MATCH"),                  13, HttpRequestHeaders.HeaderIfMatch), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_MODIFIED_SINCE"),         22, HttpRequestHeaders.HeaderIfModifiedSince), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_NONE_MATCH"),             18, HttpRequestHeaders.HeaderIfNoneMatch), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_RANGE"),                  13, HttpRequestHeaders.HeaderIfRange), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_UNMODIFIED_SINCE"),       24, HttpRequestHeaders.HeaderIfUnmodifiedSince), _
+	Type<CgiHeaderNode>(@WStr("HTTP_KEEP_ALIVE"),                15, HttpRequestHeaders.HeaderKeepAlive), _
+	Type<CgiHeaderNode>(@WStr("HTTP_MAX_FORWARDS"),              17, HttpRequestHeaders.HeaderMaxForwards), _
+	Type<CgiHeaderNode>(@WStr("HTTP_ORIGIN"),                    11, HttpRequestHeaders.HeaderOrigin), _
+	Type<CgiHeaderNode>(@WStr("HTTP_PRAGMA"),                    11, HttpRequestHeaders.HeaderPragma), _
+	Type<CgiHeaderNode>(@WStr("HTTP_PROXY_AUTHORIZATION"),       24, HttpRequestHeaders.HeaderProxyAuthorization), _
+	Type<CgiHeaderNode>(@WStr("HTTP_RANGE"),                     10, HttpRequestHeaders.HeaderRange), _
+	Type<CgiHeaderNode>(@WStr("HTTP_REFERER"),                   12, HttpRequestHeaders.HeaderReferer), _
+	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY"),         22, HttpRequestHeaders.HeaderSecWebSocketKey), _
+	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY1"),        23, HttpRequestHeaders.HeaderSecWebSocketKey1), _
+	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY2"),        23, HttpRequestHeaders.HeaderSecWebSocketKey2), _
+	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_VERSION"),     26, HttpRequestHeaders.HeaderSecWebSocketVersion), _
+	Type<CgiHeaderNode>(@WStr("HTTP_TE"),                        7,                 HttpRequestHeaders.HeaderTe), _
+	Type<CgiHeaderNode>(@WStr("HTTP_TRAILER"),                   12, HttpRequestHeaders.HeaderTrailer), _
+	Type<CgiHeaderNode>(@WStr("HTTP_TRANSFER_ENCODING"),         22, HttpRequestHeaders.HeaderTransferEncoding), _
+	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE"),                   12, HttpRequestHeaders.HeaderUpgrade), _
 	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE_INSECURE_REQUESTS"), 30, HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
-	Type<CgiHeaderNode>(@WStr("HTTP_USER_AGENT"), 15, HttpRequestHeaders.HeaderUserAgent), _
-	Type<CgiHeaderNode>(@WStr("HTTP_VIA"), 8, HttpRequestHeaders.HeaderVia), _
-	Type<CgiHeaderNode>(@WStr("HTTP_WARNING"), 12, HttpRequestHeaders.HeaderWarning), _
-	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"), 23, HttpRequestHeaders.HeaderWebSocketProtocol) _
+	Type<CgiHeaderNode>(@WStr("HTTP_USER_AGENT"),                15, HttpRequestHeaders.HeaderUserAgent), _
+	Type<CgiHeaderNode>(@WStr("HTTP_VIA"),                       8, HttpRequestHeaders.HeaderVia), _
+	Type<CgiHeaderNode>(@WStr("HTTP_WARNING"),                   12, HttpRequestHeaders.HeaderWarning), _
+	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"),        23, HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
 Function HttpMethodToString( _
