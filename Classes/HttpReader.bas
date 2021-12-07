@@ -241,7 +241,8 @@ Function HttpReaderReadAllBytes( _
 		
 	Loop
 	
-	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * NewLineStringLength
+	Const NewLineStringW = WStr(!"\r\n")
+	Dim cbNewUsed As Integer = DoubleCrLfIndex + 2 * Len(NewLineStringW)
 	this->pReadedData->cbUsed = cbNewUsed
 	
 	this->IsAllBytesReaded = True
