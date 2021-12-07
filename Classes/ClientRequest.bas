@@ -27,6 +27,51 @@ Type _ClientRequest
 	KeepAlive As Boolean
 End Type
 
+Function TranslateHresultFromTextReader( _
+		ByVal hrTextReader As HRESULT _
+	)As HRESULT
+	
+	Select Case hrTextReader
+		
+		Case TEXTREADER_E_INTERNALBUFFEROVERFLOW
+			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			
+		Case TEXTREADER_E_SOCKETERROR
+			Return CLIENTREQUEST_E_SOCKETERROR
+			
+		Case TEXTREADER_E_CLIENTCLOSEDCONNECTION
+			Return CLIENTREQUEST_E_EMPTYREQUEST
+			
+		Case TEXTREADER_E_INSUFFICIENT_BUFFER
+			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			
+	End Select
+	
+	Return hrTextReader
+	
+End Function
+
+Function TranslateHresultFromClientUri( _
+		ByVal hrClientUri As HRESULT _
+	)As HRESULT
+	
+	Select Case hrClientUri
+		
+		Case CLIENTURI_E_URITOOLARGE
+			Return CLIENTREQUEST_E_URITOOLARGE
+			
+		Case CLIENTURI_E_CONTAINSBADCHAR
+			Return CLIENTREQUEST_E_BADPATH
+			
+		Case CLIENTURI_E_PATHNOTFOUND
+			Return CLIENTREQUEST_E_PATHNOTFOUND
+			
+	End Select
+	
+	Return hrClientUri
+	
+End Function
+
 Function ClientRequestParseRequestedLine( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
@@ -108,21 +153,8 @@ Function ClientRequestParseRequestedLine( _
 		HeapSysFreeString(bstrUri)
 		
 		If FAILED(hrUriFromString) Then
-			Select Case hrUriFromString
-				
-				Case CLIENTURI_E_URITOOLARGE
-					Return CLIENTREQUEST_E_URITOOLARGE
-					
-				Case CLIENTURI_E_CONTAINSBADCHAR
-					Return CLIENTREQUEST_E_BADPATH
-					
-				Case CLIENTURI_E_PATHNOTFOUND
-					Return CLIENTREQUEST_E_PATHNOTFOUND
-					
-				Case Else
-					Return hrUriFromString
-					
-			End Select
+			Dim hrUri As HRESULT = TranslateHresultFromClientUri(hrUriFromString)
+			Return hrUri
 		End If
 		
 	End Scope
@@ -177,12 +209,15 @@ End Function
 
 Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal Header As HeapBSTR, _
+		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
 	)As Integer
 	
 	Dim HeaderIndex As HttpRequestHeaders = Any
-	Dim Finded As Boolean = GetKnownRequestHeaderIndex(Header, @HeaderIndex)
+	Dim Finded As Boolean = GetKnownRequestHeaderIndex( _
+		Header, _
+		@HeaderIndex _
+	)
 	If Finded = False Then
 		' TODO Добавить в нераспознанные заголовки запроса
 		Return -1
@@ -191,30 +226,6 @@ Function ClientRequestAddRequestHeader( _
 	this->RequestHeaders(HeaderIndex) = Value
 	
 	Return HeaderIndex
-	
-End Function
-
-Function TranslateHresultFromTextReader( _
-		ByVal hrTextReader As HRESULT _
-	)As HRESULT
-	
-	Select Case hrTextReader
-		
-		Case TEXTREADER_E_INTERNALBUFFEROVERFLOW
-			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			
-		Case TEXTREADER_E_SOCKETERROR
-			Return CLIENTREQUEST_E_SOCKETERROR
-			
-		Case TEXTREADER_E_CLIENTCLOSEDCONNECTION
-			Return CLIENTREQUEST_E_EMPTYREQUEST
-			
-		Case TEXTREADER_E_INSUFFICIENT_BUFFER
-			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			
-	End Select
-	
-	Return E_FAIL
 	
 End Function
 
@@ -233,27 +244,35 @@ Function ClientRequestAddRequestHeaders( _
 			Return hrTextReader
 		End If
 		
-		' this->RequestHeaderBufferLength += LineLength + 1
-		
-		Dim Length As Integer = SysStringLen(pLine)
-		If Length = 0 Then
-			' Клиент отправил все данные, можно приступать к обработке
+		Dim LineLength As Integer = SysStringLen(pLine)
+		If LineLength = 0 Then
+			HeapSysFreeString(pLine)
 			Return S_OK
 		End If
 		
-		/'
 		Dim pColon As WString Ptr = StrChrW(pLine, Characters.Colon)
 		
 		If pColon <> 0 Then
 			pColon[0] = 0
-			Do
-				pColon += 1
-			Loop While pColon[0] = Characters.WhiteSpace
 			
-			ClientRequestAddRequestHeader(this, pLine, pColon)
+			Dim pwszValue As WString Ptr = @pColon[0]
+			
+			Do
+				pwszValue += 1
+			Loop While pwszValue[0] = Characters.WhiteSpace
+			
+			Dim pNullChar As WString Ptr = @pLine[LineLength]
+			Dim ValueLength As Integer = pNullChar - pwszValue
+			Dim Value As HeapBSTR = HeapSysAllocStringLen( _
+				this->pIMemoryAllocator, _
+				pwszValue, _
+				ValueLength _
+			)
+			ClientRequestAddRequestHeader(this, pLine, Value)
 			
 		End If
-		'/
+		
+		HeapSysFreeString(pLine)
 	Loop
 	
 End Function
@@ -546,25 +565,6 @@ Function ClientRequestRelease( _
 	
 End Function
 
-' Function ClientRequestReadRequest( _
-		' ByVal this As ClientRequest Ptr _
-	' )As HRESULT
-	
-	' Dim pRequestedLine As HeapBSTR = Any
-	
-	' Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
-		' this->pIReader, _
-		' @pRequestedLine _
-	' )
-	
-	' Return ReadRequestedLines( _
-		' this, _
-		' pRequestedLine, _
-		' hrReadLine _
-	' )
-	
-' End Function
-
 Function ClientRequestBeginReadRequest( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -625,6 +625,9 @@ Function ClientRequestPrepare( _
 	If FAILED(hrParseRequestedLine) Then
 		Return hrParseRequestedLine
 	End If
+	
+	HeapSysFreeString(this->RequestedLine)
+	this->RequestedLine = NULL
 	
 	Dim hrAddHeaders As HRESULT = ClientRequestAddRequestHeaders(this)
 	If FAILED(hrAddHeaders) Then
