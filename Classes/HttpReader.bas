@@ -34,6 +34,9 @@ Type LinesBuffer
 End Type
 
 Type _HttpReader
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	ReferenceCounter As Integer
@@ -258,6 +261,9 @@ Sub InitializeHttpReader( _
 		ByVal pReadedData As RawBuffer Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("HttpReaderReader"), 16)
+	#endif
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->lpCloneableVtbl = @GlobalHttpReaderCloneableVirtualTable
 	this->ReferenceCounter = 0

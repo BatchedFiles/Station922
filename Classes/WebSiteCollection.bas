@@ -28,6 +28,9 @@ Declare Function CreateWebSiteNode( _
 )As WebSiteNode Ptr
 
 Type _WebSiteCollection
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -41,6 +44,9 @@ Sub InitializeWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("WebSiteCollectio"), 16)
+	#endif
 	this->lpVtbl = @GlobalMutableWebSiteCollectionVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)

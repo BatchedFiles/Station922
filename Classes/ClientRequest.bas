@@ -12,6 +12,9 @@
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 
 Type _ClientRequest
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	ContentLength As LongInt
 	RequestByteRange As ByteRange
 	lpVtbl As Const IClientRequestVirtualTable Ptr
@@ -377,6 +380,9 @@ Sub InitializeClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("Client___Request"), 16)
+	#endif
 	this->ContentLength = 0
 	this->RequestByteRange.FirstBytePosition = 0
 	this->RequestByteRange.LastBytePosition = 0

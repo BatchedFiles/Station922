@@ -22,6 +22,9 @@ Const TRANSMIT_CHUNK_SIZE As DWORD = 1024 * 1024 * 265
 Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
 Type _HttpGetProcessor
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IRequestProcessorVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -226,6 +229,9 @@ Sub InitializeHttpGetProcessor( _
 		ByVal pSendBuffer As ZString Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("HttpGetProcessor"), 16)
+	#endif
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)

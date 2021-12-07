@@ -12,6 +12,9 @@ Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
 Type _ClientContext
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IClientContextVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -37,6 +40,9 @@ Sub InitializeClientContext( _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("Client___Context"), 16)
+	#endif
 	this->lpVtbl = @GlobalClientContextVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)

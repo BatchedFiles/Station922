@@ -20,6 +20,9 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 Const SocketListCapacity As Integer = 10
 
 Type _WebServer
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IRunnableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -383,6 +386,9 @@ Sub InitializeWebServer( _
 		ByVal pIResponse As IServerResponse Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("WebServerWebServ"), 16)
+	#endif
 	this->lpVtbl = @GlobalWebServerVirtualTable
 	this->ReferenceCounter = 0
 	

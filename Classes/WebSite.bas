@@ -30,6 +30,9 @@ Declare Function GetDefaultFileName( _
 )As Boolean
 
 Type _WebSite
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IMutableWebSiteVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -45,6 +48,9 @@ Sub InitializeWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("WebSiteWebSiteWe"), 16)
+	#endif
 	this->lpVtbl = @GlobalMutableWebSiteVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)

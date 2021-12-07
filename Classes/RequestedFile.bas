@@ -12,6 +12,9 @@ Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WStrin
 Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 
 Type _RequestedFile
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
 	lpSendableVtbl As Const ISendableVirtualTable Ptr
 	ReferenceCounter As Integer
@@ -29,6 +32,9 @@ Sub InitializeRequestedFile( _
 		ByVal pPathTranslated As WString Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("Requested___File"), 16)
+	#endif
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
 	this->lpSendableVtbl = @GlobalRequestedFileSendableVirtualTable
 	this->ReferenceCounter = 0

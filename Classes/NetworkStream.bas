@@ -12,6 +12,9 @@ Extern GlobalNetworkStreamCloneableVirtualTable As Const ICloneableVirtualTable
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
 Type _NetworkStream
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	ReferenceCounter As Integer
@@ -24,6 +27,9 @@ Sub InitializeNetworkStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("Network___Stream"), 16)
+	#endif
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	this->lpCloneableVtbl = @GlobalNetworkStreamCloneableVirtualTable
 	this->ReferenceCounter = 0

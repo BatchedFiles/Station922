@@ -16,6 +16,9 @@ Extern GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTab
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
 Type _ServerResponse
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	ReferenceCounter As Integer
@@ -45,6 +48,9 @@ Sub InitializeServerResponse( _
 		ByVal pResponseHeaderBufferStringable As WString Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("Server__Response"), 16)
+	#endif
 	this->lpVtbl = @GlobalServerResponseVirtualTable
 	this->lpStringableVtbl = @GlobalServerResponseStringableVirtualTable
 	this->ReferenceCounter = 0

@@ -10,6 +10,9 @@ Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
 Const MaxUrlLength As Integer = 2048 - 1
 
 Type _ClientUri
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IClientUriVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -208,6 +211,9 @@ Sub InitializeClientUri( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("ClientUriClientU"), 16)
+	#endif
 	this->lpVtbl = @GlobalClientUriVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)

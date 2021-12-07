@@ -11,6 +11,9 @@ Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 ' Const HEAP_NO_SERIALIZE_FLAG = 0
 
 Type _HeapMemoryAllocator
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	ReferenceCounter As Integer
 	pISpyObject As IMallocSpy Ptr
@@ -23,6 +26,9 @@ Sub InitializeHeapMemoryAllocator( _
 		ByVal hHeap As HANDLE _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("HMemoryAllocator"), 16)
+	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL

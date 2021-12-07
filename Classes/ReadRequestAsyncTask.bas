@@ -10,6 +10,9 @@ Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirt
 Extern GlobalReadRequestAsyncTaskCloneableVirtualTable As Const ICloneableVirtualTable
 
 Type _ReadRequestAsyncTask
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
 	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	ReferenceCounter As Integer
@@ -90,6 +93,9 @@ Sub InitializeReadRequestAsyncTask( _
 		ByVal pIRequest As IClientRequest Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("ReadRequest_Task"), 16)
+	#endif
 	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
 	this->lpCloneableVtbl = @GlobalReadRequestAsyncTaskCloneableVirtualTable
 	this->ReferenceCounter = 0
