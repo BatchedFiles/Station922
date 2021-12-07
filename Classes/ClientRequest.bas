@@ -284,40 +284,69 @@ Function ClientRequestParseRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
-	/'
 	Scope
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @CloseString) <> 0 Then
+		Dim pCloseString As PCWSTR = StrStrIW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
+			@CloseString _
+		)
+		If pCloseString <> NULL Then
 			this->KeepAlive = False
 		Else
-			If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderConnection), @KeepAliveString) <> 0 Then
+			Dim pKeepAliveString As PCWSTR = StrStrIW( _
+				this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
+				@KeepAliveString _
+			)
+			If pKeepAliveString <> NULL Then
 				this->KeepAlive = True
 			End If
 		End If
-			
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @GzipString) <> 0 Then
+	End Scope
+	
+	Scope
+		Dim pGzipString As PCWSTR = StrStrIW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
+			@GzipString _
+		)
+		If pGzipString <> NULL Then
 			this->RequestZipModes(ZipModes.GZip) = True
 		End If
 		
-		If StrStrIW(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), @DeflateString) <> 0 Then
+		Dim pDeflateString As PCWSTR = StrStrIW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
+			@DeflateString _
+		)
+		If pDeflateString <> 0 Then
 			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
-		
+	End Scope
+	
+	Scope
 		' Убрать UTC и заменить на GMT
 		'If-Modified-Since: Thu, 24 Mar 2016 16:10:31 UTC
 		'If-Modified-Since: Tue, 11 Mar 2014 20:07:57 GMT
-		Dim wUTC As WString Ptr = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), "UTC")
-		
-		If wUTC <> 0 Then
-			lstrcpyW(wUTC, "GMT")
+		Dim pUTCInModifiedSince As WString Ptr = StrStrW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), _
+			WStr("UTC") _
+		)
+		If pUTCInModifiedSince <> 0 Then
+			lstrcpyW(pUTCInModifiedSince, WStr("GMT"))
 		End If
 		
-		wUTC = StrStrW(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), "UTC")
-		
-		If wUTC <> 0 Then
-			lstrcpyW(wUTC, "GMT")
+		Dim pUTCInUnModifiedSince As WString Ptr = StrStrW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), _
+			WStr("UTC") _
+		)
+		If pUTCInUnModifiedSince <> 0 Then
+			lstrcpyW(pUTCInUnModifiedSince, "GMT")
 		End If
-		
-		If lstrlenW(this->RequestHeaders(HttpRequestHeaders.HeaderRange)) > 0 Then
+	End Scope
+	
+	Scope
+		Dim HeaderRangeLength As Integer = SysStringLen( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
+		)
+		If HeaderRangeLength <> 0 Then
+		/'
 			Dim wHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 			
 			' TODO Обрабатывать несколько байтовых диапазонов
@@ -361,16 +390,23 @@ Function ClientRequestParseRequestHeaders( _
 				Return CLIENTREQUEST_E_BADREQUEST
 			End If
 			
+		'/
 		End If
-		
 	End Scope
 	
-	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
+	Scope
+		Dim HeaderContentLength As Integer = SysStringLen( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) _
+		)
+		If HeaderContentLength <> NULL Then
+			StrToInt64ExW( _
+				this->RequestHeaders(HttpRequestHeaders.HeaderContentLength), _
+				STIF_DEFAULT, _
+				@this->ContentLength _
+			)
+		End If
+	End Scope
 	
-	If pHeaderContentLength <> NULL Then
-		StrToInt64ExW(pHeaderContentLength, STIF_DEFAULT, @this->ContentLength)
-	End If
-	'/
 	Return S_OK
 	
 End Function
