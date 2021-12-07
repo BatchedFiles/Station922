@@ -167,6 +167,7 @@ Type StatusCodeNode
 	pDescription As WString Ptr
 	DescriptionLength As Integer
 	StatusCodeIndex As HttpStatusCodes
+	Padding As Integer
 End Type
 
 Type RequestHeaderNode
@@ -341,7 +342,7 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_CHARSET"),            19, HttpRequestHeaders.HeaderAcceptCharset), _
 	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_ENCODING"),           20, HttpRequestHeaders.HeaderAcceptEncoding), _
 	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_LANGUAGE"),           20, HttpRequestHeaders.HeaderAcceptLanguage), _
-	Type<CgiHeaderNode>(@WStr("AUTH_TYPE"),                      9, HttpRequestHeaders.HeaderAuthorization), _
+	Type<CgiHeaderNode>(@WStr("AUTH_TYPE"),                      9,  HttpRequestHeaders.HeaderAuthorization), _
 	Type<CgiHeaderNode>(@WStr("HTTP_CACHE_CONTROL"),             18, HttpRequestHeaders.HeaderCacheControl), _
 	Type<CgiHeaderNode>(@WStr("HTTP_CONNECTION"),                15, HttpRequestHeaders.HeaderConnection), _
 	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_ENCODING"),          21, HttpRequestHeaders.HeaderContentEncoding), _
@@ -351,10 +352,10 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_RANGE"),             18, HttpRequestHeaders.HeaderContentRange), _
 	Type<CgiHeaderNode>(@WStr("CONTENT_TYPE"),                   12, HttpRequestHeaders.HeaderContentType), _
 	Type<CgiHeaderNode>(@WStr("HTTP_COOKIE"),                    11, HttpRequestHeaders.HeaderCookie), _
-	Type<CgiHeaderNode>(@WStr("HTTP_DNT"),                       8, HttpRequestHeaders.HeaderDNT), _
+	Type<CgiHeaderNode>(@WStr("HTTP_DNT"),                       8,  HttpRequestHeaders.HeaderDNT), _
 	Type<CgiHeaderNode>(@WStr("HTTP_EXPECT"),                    11, HttpRequestHeaders.HeaderExpect), _
-	Type<CgiHeaderNode>(@WStr("HTTP_FROM"),                      9, HttpRequestHeaders.HeaderFrom), _
-	Type<CgiHeaderNode>(@WStr("HTTP_HOST"),                      9, HttpRequestHeaders.HeaderHost), _
+	Type<CgiHeaderNode>(@WStr("HTTP_FROM"),                      9,  HttpRequestHeaders.HeaderFrom), _
+	Type<CgiHeaderNode>(@WStr("HTTP_HOST"),                      9,  HttpRequestHeaders.HeaderHost), _
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_MATCH"),                  13, HttpRequestHeaders.HeaderIfMatch), _
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_MODIFIED_SINCE"),         22, HttpRequestHeaders.HeaderIfModifiedSince), _
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_NONE_MATCH"),             18, HttpRequestHeaders.HeaderIfNoneMatch), _
@@ -371,13 +372,13 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY1"),        23, HttpRequestHeaders.HeaderSecWebSocketKey1), _
 	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY2"),        23, HttpRequestHeaders.HeaderSecWebSocketKey2), _
 	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_VERSION"),     26, HttpRequestHeaders.HeaderSecWebSocketVersion), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TE"),                        7,                 HttpRequestHeaders.HeaderTe), _
+	Type<CgiHeaderNode>(@WStr("HTTP_TE"),                        7,  HttpRequestHeaders.HeaderTe), _
 	Type<CgiHeaderNode>(@WStr("HTTP_TRAILER"),                   12, HttpRequestHeaders.HeaderTrailer), _
 	Type<CgiHeaderNode>(@WStr("HTTP_TRANSFER_ENCODING"),         22, HttpRequestHeaders.HeaderTransferEncoding), _
 	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE"),                   12, HttpRequestHeaders.HeaderUpgrade), _
 	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE_INSECURE_REQUESTS"), 30, HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
 	Type<CgiHeaderNode>(@WStr("HTTP_USER_AGENT"),                15, HttpRequestHeaders.HeaderUserAgent), _
-	Type<CgiHeaderNode>(@WStr("HTTP_VIA"),                       8, HttpRequestHeaders.HeaderVia), _
+	Type<CgiHeaderNode>(@WStr("HTTP_VIA"),                       8,  HttpRequestHeaders.HeaderVia), _
 	Type<CgiHeaderNode>(@WStr("HTTP_WARNING"),                   12, HttpRequestHeaders.HeaderWarning), _
 	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"),        23, HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
@@ -521,10 +522,9 @@ Function GetKnownRequestHeaderIndex( _
 	)As Boolean
 	
 	For i As Integer = 1 To HttpRequestHeadersSize
-		Dim CompareResult As Long = memcmp( _
+		Dim CompareResult As Long = lstrcmpW( _
 			RequestHeaderNodesVector(i).pHeader, _
-			pHeader, _
-			RequestHeaderNodesVector(i).HeaderLength * SizeOf(WString) _
+			pHeader _
 		)
 		If CompareResult = 0 Then
 			*pIndex = RequestHeaderNodesVector(i).HeaderIndex
