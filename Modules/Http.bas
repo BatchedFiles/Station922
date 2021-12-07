@@ -522,7 +522,7 @@ Function GetKnownRequestHeaderIndex( _
 	)As Boolean
 	
 	For i As Integer = 1 To HttpRequestHeadersSize
-		Dim CompareResult As Long = lstrcmpW( _
+		Dim CompareResult As Long = lstrcmpiW( _
 			RequestHeaderNodesVector(i).pHeader, _
 			pHeader _
 		)
