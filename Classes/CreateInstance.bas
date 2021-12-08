@@ -154,7 +154,7 @@ Function CreateInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_PREPAREERRORRESPONSEASYNCTASK, rclsid) Then
-		Dim pTask As IPrepareErrorResponseAsyncTask Ptr = CreatePrepareErrorResponseAsyncTask(pIMemoryAllocator)
+		Dim pTask As PrepareErrorResponseAsyncTask Ptr = CreatePrepareErrorResponseAsyncTask(pIMemoryAllocator)
 		If pTask = NULL Then
 			Return E_OUTOFMEMORY
 		End If
