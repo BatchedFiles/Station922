@@ -341,7 +341,7 @@ Function ClientRequestParseRequestHeaders( _
 			WStr("UTC") _
 		)
 		If pUTCInUnModifiedSince <> 0 Then
-			lstrcpyW(pUTCInUnModifiedSince, "GMT")
+			lstrcpyW(pUTCInUnModifiedSince, WStr("GMT"))
 		End If
 	End Scope
 	
