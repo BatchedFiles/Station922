@@ -7,6 +7,7 @@
 #include once "IClientRequest.bi"
 #include once "IHttpReader.bi"
 #include once "IWebSite.bi"
+#include once "win\winsock2.bi"
 
 Type IPrepareErrorResponseAsyncTask As IPrepareErrorResponseAsyncTask_
 
@@ -32,7 +33,8 @@ Type IPrepareErrorResponseAsyncTaskVirtualTable
 	
 	BeginExecute As Function( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
 	EndExecute As Function( _
@@ -104,7 +106,7 @@ End Type
 #define IPrepareErrorResponseAsyncTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IPrepareErrorResponseAsyncTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IPrepareErrorResponseAsyncTask_Release(this) (this)->lpVtbl->Release(this)
-#define IPrepareErrorResponseAsyncTask_BeginExecute(this, pPool) (this)->lpVtbl->BeginExecute(this, pPool)
+#define IPrepareErrorResponseAsyncTask_BeginExecute(this, pPool, ppIResult) (this)->lpVtbl->BeginExecute(this, pPool, ppIResult)
 #define IPrepareErrorResponseAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
 #define IPrepareErrorResponseAsyncTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
 #define IPrepareErrorResponseAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)

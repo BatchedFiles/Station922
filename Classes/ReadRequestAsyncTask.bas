@@ -340,15 +340,15 @@ End Function
 
 Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
 	' TODO Запросить интерфейс вместо конвертирования указателя
-	Dim pIAsyncResult As IAsyncResult Ptr = Any
 	Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
 		this->pIRequest, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
-		@pIAsyncResult _
+		@ppIResult _
 	)
 	If FAILED(hrBeginReadRequest) Then
 		' TODO Отправить клиенту Не могу начать асинхронное чтение
@@ -805,9 +805,10 @@ End Function
 
 Function IReadRequestAsyncTaskBeginExecute( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskBeginExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool)
+	Return ReadRequestAsyncTaskBeginExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, ppIResult)
 End Function
 
 Function IReadRequestAsyncTaskEndExecute( _

@@ -33,7 +33,8 @@ Declare Function ReadRequestAsyncTaskRelease( _
 
 Declare Function ReadRequestAsyncTaskBeginExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr _
+	ByVal pPool As IThreadPool Ptr, _
+	ByVal ppIResult As IAsyncResult Ptr Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskEndExecute( _

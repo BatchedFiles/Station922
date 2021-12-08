@@ -178,9 +178,11 @@ Function AcceptConnection( _
 											INetworkStream_Release(pINetworkStream)
 											IHttpReader_Release(pIHttpReader)
 											
+											Dim ppIResult As IAsyncResult Ptr = Any
 											Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
 												pTask, _
-												this->pIPool _
+												this->pIPool, _
+												@ppIResult _
 											)
 											
 											If SUCCEEDED(hrBeginExecute) Then
