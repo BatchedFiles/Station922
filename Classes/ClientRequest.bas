@@ -300,6 +300,8 @@ Function ClientRequestParseRequestHeaders( _
 				this->KeepAlive = True
 			End If
 		End If
+		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
+		this->RequestHeaders(HttpRequestHeaders.HeaderConnection) = NULL
 	End Scope
 	
 	Scope
@@ -318,6 +320,8 @@ Function ClientRequestParseRequestHeaders( _
 		If pDeflateString <> 0 Then
 			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
+		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
+		this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding) = NULL
 	End Scope
 	
 	Scope
@@ -342,56 +346,64 @@ Function ClientRequestParseRequestHeaders( _
 	End Scope
 	
 	Scope
+		Const BytesEqualString = WStr("bytes=")
+		
 		Dim HeaderRangeLength As Integer = SysStringLen( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
 		)
 		If HeaderRangeLength <> 0 Then
-		/'
-			Dim wHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
+			Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 			
 			' TODO ќбрабатывать несколько байтовых диапазонов
-			Dim wCommaChar As WString Ptr = StrChrW(wHeaderRange, Characters.Comma)
-			
-			If wCommaChar <> 0 Then
-				wCommaChar[0] = 0
+			Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
+			If pCommaChar <> 0 Then
+				pCommaChar[0] = 0
 			End If
 			
-			Dim wStart As WString Ptr = StrStrW(wHeaderRange, "bytes=")
-			
-			If wStart = wHeaderRange Then
-				wStart = @wHeaderRange[6]
-				Dim wStartIndex As WString Ptr = wStart
+			Dim pwszBytesString As WString Ptr = StrStrW(pwszHeaderRange, BytesEqualString)
+			If pwszBytesString = pwszHeaderRange Then
+				Dim wStartIntegerData As WString Ptr = @pwszHeaderRange[Len(BytesEqualString)]
 				
-				Dim wHyphenMinusChar As WString Ptr = StrChrW(wStart, Characters.HyphenMinus)
+				Dim wStartIndex As WString Ptr = wStartIntegerData
 				
+				Dim wHyphenMinusChar As WString Ptr = StrChrW( _
+					wStartIndex, _
+					Characters.HyphenMinus _
+				)
 				If wHyphenMinusChar <> 0 Then
 					wHyphenMinusChar[0] = 0
+					
 					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
 					
-					If StrToInt64ExW(wStartIndex, STIF_DEFAULT, @this->RequestByteRange.FirstBytePosition) <> 0 Then
+					Dim FirstConverted As BOOL = StrToInt64ExW( _
+						wStartIndex, _
+						STIF_DEFAULT, _
+						@this->RequestByteRange.FirstBytePosition _
+					)
+					If FirstConverted Then
 						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
 					End If
 					
-					If StrToInt64ExW(wEndIndex, STIF_DEFAULT, @this->RequestByteRange.LastBytePosition) <> 0 Then
-						
+					Dim LastConverted As BOOL = StrToInt64ExW( _
+						wEndIndex, _
+						STIF_DEFAULT, _
+						@this->RequestByteRange.LastBytePosition _
+					)
+					If LastConverted Then
 						If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
 							this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
 						Else
 							this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
 						End If
-						
 					End If
 					
-				Else
-					Return CLIENTREQUEST_E_BADREQUEST
 				End If
 				
-			Else
-				Return CLIENTREQUEST_E_BADREQUEST
 			End If
 			
-		'/
 		End If
+		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderRange))
+		this->RequestHeaders(HttpRequestHeaders.HeaderRange) = NULL
 	End Scope
 	
 	Scope
@@ -405,6 +417,8 @@ Function ClientRequestParseRequestHeaders( _
 				@this->ContentLength _
 			)
 		End If
+		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderContentLength))
+		this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
 	End Scope
 	
 	Return S_OK
