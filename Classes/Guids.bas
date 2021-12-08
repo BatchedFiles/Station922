@@ -71,7 +71,7 @@ DEFINE_CLSID(CLSID_NETWORKSTREAM, _
 )
 
 ' {BBA17F8D-AC89-4491-898A-72F3BBF80552}
-DEFINE_CLSID(CLSID_PREPARERESPONSEASYNCTASK, _
+DEFINE_CLSID(CLSID_PREPAREERRORRESPONSEASYNCTASK, _
 	&hbba17f8d, &hac89, &h4491, &h89, &h8a, &h72, &hf3, &hbb, &hf8, &h5, &h52 _
 )
 
@@ -211,7 +211,7 @@ DEFINE_IID(IID_INetworkStream, _
 )
 
 ' {6964B4FE-BDAE-4B3B-BDF8-6C467BF35BFA}
-DEFINE_IID(IID_IPrepareResponseAsyncTask, _
+DEFINE_IID(IID_IPrepareErrorResponseAsyncTask, _
 	&h6964b4fe, &hbdae, &h4b3b, &hbd, &hf8, &h6c, &h46, &h7b, &hf3, &h5b, &hfa _
 )
 
