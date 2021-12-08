@@ -4,7 +4,7 @@
 #include once "CreateInstance.bi"
 #include once "ICloneable.bi"
 #include once "Logger.bi"
-#include once "PrepareResponseAsyncTask.bi"
+#include once "PrepareErrorResponseAsyncTask.bi"
 
 Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
 Extern GlobalReadRequestAsyncTaskCloneableVirtualTable As Const ICloneableVirtualTable
@@ -372,18 +372,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ReadRequestAsyncTaskEndExecute"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim hrEndReadRequest As HRESULT = IClientRequest_EndReadRequest( _
 		this->pIRequest, _
 		pIResult _
@@ -401,7 +389,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 		' DebugPrintHttpReader(pIHttpReader)
 		
 		' ProcessEndReadError(pIContext, hrEndReadRequest)
-		Return E_FAIL
+		Return hrEndReadRequest
 	End If
 	
 	Select Case hrEndReadRequest
@@ -425,10 +413,9 @@ Function ReadRequestAsyncTaskEndExecute( _
 				Return hrPrepare
 			End If
 			
-			MessageBoxW(NULL, "Create Task", NULL, MB_OK)
-			
+			/'
 			' Создать и запустить задачу подготовки запроса к ответу
-			Dim pTask As IPrepareResponseAsyncTask Ptr = Any
+			Dim pTask As IPrepareErrorResponseAsyncTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
 				@CLSID_PREPARERESPONSEASYNCTASK, _
@@ -475,8 +462,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 				IPrepareResponseAsyncTask_Release(pTask)
 				Return hrBeginExecute
 			End If
-			
-			Return S_OK
+			'/
+			Return E_FAIL
 			
 		Case S_FALSE
 			' Received 0 bytes
