@@ -87,13 +87,16 @@ Function WorkerThread( _
 				CPtr(IUnknown Ptr Ptr, @pTask) _
 			)
 			
-			IAsyncTask_EndExecute( _
+			Dim hrEndExecute As HRESULT = IAsyncTask_EndExecute( _
 				pTask, _
 				CPtr(IThreadPool Ptr, @this->lpVtbl), _
 				pIAsync, _
 				BytesTransferred, _
 				CompletionKey _
 			)
+			If FAILED(hrEndExecute) Then
+				MessageBoxW(NULL, "IAsyncTask_EndExecute Error", NULL, MB_OK)
+			End If
 			
 			IAsyncTask_Release(pTask)
 			
