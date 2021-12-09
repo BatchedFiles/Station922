@@ -25,36 +25,75 @@ Type _ReadRequestAsyncTask
 	pIRequest As IClientRequest Ptr
 End Type
 
-/'
-Sub ProcessBeginReadError( _
-		ByVal pIContext As IClientContext Ptr, _
-		ByVal hrDataError As DataError _
+Function ProcessReadError( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pPool As IThreadPool Ptr, _
+		ByVal hrReadError As HRESULT _
+	)As HRESULT
+	
+	' Создать и запустить задачу подготовки ответа ошибки
+	Dim pTask As IPrepareErrorResponseAsyncTask Ptr = Any
+	Dim hrCreateTask As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_PREPAREERRORRESPONSEASYNCTASK, _
+		@IID_IPrepareErrorResponseAsyncTask, _
+		@pTask _
+	)
+	If FAILED(hrCreateTask) Then
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrCreateTask
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"CreateTask Error\t"), _
+			@vtSCode _
+		)
+		Return hrCreateTask
+	End If
+	
+	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
+	IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+	IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
+	IPrepareErrorResponseAsyncTask_SetRemoteAddress( _
+		pTask, _
+		CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
+		this->RemoteAddressLength _
 	)
 	
-	Select Case hrDataError
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IPrepareErrorResponseAsyncTask_BeginExecute( _
+		pTask, _
+		pPool, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IPrepareErrorResponseAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
 		
-		Case DataError.NotEnoughMemory
-			WriteHttpNotEnoughMemory(pIContext, NULL)
+		' TODO Отправить клиенту Не могу начать асинхронное чтение
+		IPrepareErrorResponseAsyncTask_Release(pTask)
+		Return hrBeginExecute
+	End If
+	
+	Select Case hrReadError
+		
+		Case E_OUTOFMEMORY
+			' WriteHttpNotEnoughMemory(pIContext, NULL)
 			
-	End Select
-	
-End Sub
-
-Sub ProcessEndReadError( _
-		ByVal pIContext As IClientContext Ptr, _
-		ByVal hrEndReadRequest As HRESULT _
-	)
-	
-	Select Case hrEndReadRequest
-		
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			WriteHttpVersionNotSupported(pIContext, NULL)
+			' WriteHttpVersionNotSupported(pIContext, NULL)
 			
 		Case CLIENTREQUEST_E_BADREQUEST
-			WriteHttpBadRequest(pIContext, NULL)
+			' WriteHttpBadRequest(pIContext, NULL)
 			
 		Case CLIENTREQUEST_E_BADPATH
-			WriteHttpPathNotValid(pIContext, NULL)
+			' WriteHttpPathNotValid(pIContext, NULL)
 			
 		Case CLIENTREQUEST_E_EMPTYREQUEST
 			' Пустой запрос, клиент закрыл соединение
@@ -63,29 +102,19 @@ Sub ProcessEndReadError( _
 			' Ошибка сокета
 			
 		Case CLIENTREQUEST_E_URITOOLARGE
-			WriteHttpRequestUrlTooLarge(pIContext, NULL)
+			' WriteHttpRequestUrlTooLarge(pIContext, NULL)
 			
 		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			WriteHttpRequestHeaderFieldsTooLarge(pIContext, NULL)
-			
-		Case CLIENTREQUEST_E_HTTPMETHODNOTSUPPORTED
-			Dim pIResponse As IServerResponse Ptr = Any
-			IClientContext_GetServerResponse(pIContext, @pIResponse)
-			
-			IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderAllow, @AllSupportHttpMethods)
-			
-			WriteHttpNotImplemented(pIContext, NULL)
-			
-			IServerResponse_Release(pIResponse)
+			' WriteHttpRequestHeaderFieldsTooLarge(pIContext, NULL)
 			
 		Case Else
-			WriteHttpBadRequest(pIContext, NULL)
+			' WriteHttpBadRequest(pIContext, NULL)
 			
 	End Select
 	
-End Sub
-
-'/
+	Return S_OK
+	
+End Function
 
 Sub InitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
@@ -348,11 +377,14 @@ Function ReadRequestAsyncTaskBeginExecute( _
 	Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
 		this->pIRequest, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
-		@ppIResult _
+		ppIResult _
 	)
 	If FAILED(hrBeginReadRequest) Then
-		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		' ProcessBeginReadError(pIContext, hrBeginReadRequest)
+		ProcessReadError( _
+			this, _
+			pPool, _
+			hrBeginReadRequest _
+		)
 		Return hrBeginReadRequest
 	End If
 	
@@ -388,7 +420,12 @@ Function ReadRequestAsyncTaskEndExecute( _
 		' TODO Вывести байты запроса HttpReader в лог
 		' DebugPrintHttpReader(pIHttpReader)
 		
-		' ProcessEndReadError(pIContext, hrEndReadRequest)
+		ProcessReadError( _
+			this, _
+			pPool, _
+			hrEndReadRequest _
+		)
+		
 		Return hrEndReadRequest
 	End If
 	
@@ -401,7 +438,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 			
 			Dim hrPrepare As HRESULT = IClientRequest_Prepare(this->pIRequest)
 			If FAILED(hrPrepare) Then
-				' ProcessEndReadError(pIContext, hrResult)
 				Dim vtSCode As VARIANT = Any
 				vtSCode.vt = VT_ERROR
 				vtSCode.scode = hrPrepare
@@ -410,16 +446,29 @@ Function ReadRequestAsyncTaskEndExecute( _
 					WStr(!"IClientRequest_Prepare Error\t"), _
 					@vtSCode _
 				)
+				
+				ProcessReadError( _
+					this, _
+					pPool, _
+					hrPrepare _
+				)
+					
 				Return hrPrepare
 			End If
 			
+			ProcessReadError( _
+				this, _
+				pPool, _
+				E_FAIL _
+			)
+			
 			/'
 			' Создать и запустить задачу подготовки запроса к ответу
-			Dim pTask As IPrepareErrorResponseAsyncTask Ptr = Any
+			Dim pTask As IPrepareSuccessResponseAsyncTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
-				@CLSID_PREPARERESPONSEASYNCTASK, _
-				@IID_IPrepareResponseAsyncTask, _
+				@CLSID_PREPARESUCCESSRESPONSEASYNCTASK, _
+				@IID_IPrepareSuccessResponseAsyncTask, _
 				@pTask _
 			)
 			If FAILED(hrCreateTask) Then
@@ -463,7 +512,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 				Return hrBeginExecute
 			End If
 			'/
-			Return E_FAIL
+			
+			Return S_OK
 			
 		Case S_FALSE
 			' Received 0 bytes
@@ -492,8 +542,13 @@ Function ReadRequestAsyncTaskEndExecute( _
 					WStr(!"IClientRequest_BeginReadRequest Error\t"), _
 					@vtSCode _
 				)
-				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				' ProcessBeginReadError(pIContext, hrBeginReadRequest)
+				
+				ProcessReadError( _
+					this, _
+					pPool, _
+					hrBeginReadRequest _
+				)
+				
 				Return hrBeginReadRequest
 			End If
 			
