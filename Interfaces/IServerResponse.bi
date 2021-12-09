@@ -4,6 +4,7 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 #include once "Http.bi"
+#include once "IString.bi"
 #include once "Mime.bi"
 
 Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
@@ -52,12 +53,12 @@ Type IServerResponseVirtualTable
 	
 	GetStatusDescription As Function( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal ppStatusDescription As WString Ptr Ptr _
+		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
 	
 	SetStatusDescription As Function( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal pStatusDescription As WString Ptr _
+		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
 	
 	GetKeepAlive As Function( _
@@ -93,13 +94,13 @@ Type IServerResponseVirtualTable
 	GetHttpHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	
 	SetHttpHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal pHeader As WString Ptr _
+		ByVal pHeader As HeapBSTR _
 	)As HRESULT
 	
 	GetZipEnabled As Function( _
@@ -124,18 +125,14 @@ Type IServerResponseVirtualTable
 	
 	AddResponseHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal HeaderName As WString Ptr, _
-		ByVal Value As WString Ptr _
+		ByVal HeaderName As HeapBSTR, _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
 	AddKnownResponseHeader As Function( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr _
-	)As HRESULT
-	
-	Clear As Function( _
-		ByVal this As IServerResponse Ptr _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
 End Type
@@ -167,6 +164,5 @@ End Type
 #define IServerResponse_SetZipMode(this, ZipMode) (this)->lpVtbl->SetZipMode(this, ZipMode)
 #define IServerResponse_AddResponseHeader(this, HeaderName, Value) (this)->lpVtbl->AddResponseHeader(this, HeaderName, Value)
 #define IServerResponse_AddKnownResponseHeader(this, HeaderIndex, Value) (this)->lpVtbl->AddKnownResponseHeader(this, HeaderIndex, Value)
-#define IServerResponse_Clear(this) (this)->lpVtbl->Clear(this)
 
 #endif

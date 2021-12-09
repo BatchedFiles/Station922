@@ -53,12 +53,12 @@ Declare Function ServerResponseSetStatusCode( _
 
 Declare Function ServerResponseGetStatusDescription( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal ppStatusDescription As WString Ptr Ptr _
+	ByVal ppStatusDescription As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function ServerResponseSetStatusDescription( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal pStatusDescription As WString Ptr _
+	ByVal pStatusDescription As HeapBSTR _
 )As HRESULT
 
 Declare Function ServerResponseGetKeepAlive( _
@@ -94,13 +94,13 @@ Declare Function ServerResponseSetMimeType( _
 Declare Function ServerResponseGetHttpHeader( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal HeaderIndex As HttpResponseHeaders, _
-	ByVal ppHeader As WString Ptr Ptr _
+	ByVal ppHeader As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function ServerResponseSetHttpHeader( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal HeaderIndex As HttpResponseHeaders, _
-	ByVal pHeader As WString Ptr _
+	ByVal pHeader As HeapBSTR _
 )As HRESULT
 
 Declare Function ServerResponseGetZipEnabled( _
@@ -125,18 +125,14 @@ Declare Function ServerResponseSetZipMode( _
 
 Declare Function ServerResponseAddResponseHeader( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal HeaderName As WString Ptr, _
-	ByVal Value As WString Ptr _
+	ByVal HeaderName As HeapBSTR, _
+	ByVal Value As HeapBSTR _
 )As HRESULT
 
 Declare Function ServerResponseAddKnownResponseHeader( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal HeaderIndex As HttpResponseHeaders, _
-	ByVal Value As WString Ptr _
-)As HRESULT
-
-Declare Function ServerResponseClear( _
-	ByVal this As ServerResponse Ptr _
+	ByVal Value As HeapBSTR _
 )As HRESULT
 
 Declare Function ServerResponseStringableQueryInterface( _

@@ -4,9 +4,9 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
-#include once "Resources.RH"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
@@ -23,16 +23,11 @@ Type _ServerResponse
 	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	' Буфер заголовков ответа
-	pResponseHeaderBuffer As WString Ptr
-	' Указатель на свободное место в буфере заголовков ответа
-	StartResponseHeadersPtr As WString Ptr
-	' Заголовки ответа
-	ResponseHeaders(HttpResponseHeadersMaximum - 1) As WString Ptr
-	pResponseHeaderBufferStringable As WString Ptr
+	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
+	pResponseHeaderBufferStringable As HeapBSTR
 	HttpVersion As HttpVersions
 	StatusCode As HttpStatusCodes
-	StatusDescription As WString Ptr
+	StatusDescription As HeapBSTR
 	ResponseZipMode As ZipModes
 	Mime As MimeType
 	' Сжатие данных, поддерживаемое сервером
@@ -43,9 +38,7 @@ End Type
 
 Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pResponseHeaderBuffer As WString Ptr, _
-		ByVal pResponseHeaderBufferStringable As WString Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -56,11 +49,8 @@ Sub InitializeServerResponse( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pResponseHeaderBuffer = pResponseHeaderBuffer
-	this->pResponseHeaderBuffer[0] = 0
-	this->StartResponseHeadersPtr = pResponseHeaderBuffer
-	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(WString Ptr))
-	this->pResponseHeaderBufferStringable = pResponseHeaderBufferStringable
+	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(HeapBSTR))
+	this->pResponseHeaderBufferStringable = NULL
 	this->HttpVersion = HttpVersions.Http11
 	this->StatusCode = HttpStatusCodes.OK
 	this->StatusDescription = NULL
@@ -77,8 +67,11 @@ Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBufferStringable)
-	IMalloc_Free(this->pIMemoryAllocator, this->pResponseHeaderBuffer)
+	For i As Integer = 0 To HttpResponseHeadersMaximum - 1
+		HeapSysFreeString(this->ResponseHeaders(i))
+	Next
+	HeapSysFreeString(this->StatusDescription)
+	HeapSysFreeString(this->pResponseHeaderBufferStringable)
 	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
@@ -100,52 +93,31 @@ Function CreateServerResponse( _
 	End Scope
 	#endif
 	
-	Dim pResponseHeaderBuffer As WString Ptr = IMalloc_Alloc( _
+	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(WString) * (MaxResponseBufferLength + 1) _
+		SizeOf(ServerResponse) _
 	)
 	
-	If pResponseHeaderBuffer <> NULL Then
+	If this <> NULL Then
 		
-		Dim pResponseHeaderBufferStringable As WString Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(WString) * (MaxResponseBufferLength + 1) _
+		InitializeServerResponse( _
+			this, _
+			pIMemoryAllocator _
 		)
 		
-		If pResponseHeaderBufferStringable <> NULL Then
-			Dim this As ServerResponse Ptr = IMalloc_Alloc( _
-				pIMemoryAllocator, _
-				SizeOf(ServerResponse) _
+		#if __FB_DEBUG__
+		Scope
+			Dim vtEmpty As VARIANT = Any
+			VariantInit(@vtEmpty)
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				WStr("ServerResponse created"), _
+				@vtEmpty _
 			)
-			
-			If this <> NULL Then
-				
-				InitializeServerResponse( _
-					this, _
-					pIMemoryAllocator, _
-					pResponseHeaderBuffer, _
-					pResponseHeaderBufferStringable _
-				)
-				
-				#if __FB_DEBUG__
-				Scope
-					Dim vtEmpty As VARIANT = Any
-					VariantInit(@vtEmpty)
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr("ServerResponse created"), _
-						@vtEmpty _
-					)
-				End Scope
-				#endif
-				
-				Return this
-			End If
-			
-			IMalloc_Free(pIMemoryAllocator, pResponseHeaderBufferStringable)
-		End If
+		End Scope
+		#endif
 		
-		IMalloc_Free(pIMemoryAllocator, pResponseHeaderBuffer)
+		Return this
 	End If
 	
 	Return NULL
@@ -298,7 +270,7 @@ End Function
 
 Function ServerResponseGetStatusDescription( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal ppStatusDescription As WString Ptr Ptr _
+		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
 	
 	*ppStatusDescription = this->StatusDescription
@@ -309,7 +281,7 @@ End Function
 
 Function ServerResponseSetStatusDescription( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal pStatusDescription As WString Ptr _
+		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
 	
 	this->StatusDescription = pStatusDescription
@@ -387,7 +359,7 @@ End Function
 Function ServerResponseGetHttpHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	
 	*ppHeader = this->ResponseHeaders(HeaderIndex)
@@ -399,7 +371,7 @@ End Function
 Function ServerResponseSetHttpHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal pHeader As WString Ptr _
+		ByVal pHeader As HeapBSTR _
 	)As HRESULT
 	
 	this->ResponseHeaders(HeaderIndex) = pHeader
@@ -454,14 +426,19 @@ End Function
 
 Function ServerResponseAddResponseHeader( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal HeaderName As WString Ptr, _
-		ByVal Value As WString Ptr _
+		ByVal HeaderName As HeapBSTR, _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
 	Dim HeaderIndex As HttpResponseHeaders = Any
-	
-	If GetKnownResponseHeaderIndex(HeaderName, @HeaderIndex) Then
-		Return ServerResponseAddKnownResponseHeader(this, HeaderIndex, Value)
+	Dim Finded As Boolean = GetKnownResponseHeaderIndex(HeaderName, @HeaderIndex)
+	If Finded Then
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeader( _
+			this, _
+			HeaderIndex, _
+			Value _
+		)
+		Return hrAddHeader
 	End If
 	
 	Return S_FALSE
@@ -471,69 +448,13 @@ End Function
 Function ServerResponseAddKnownResponseHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
-	' TODO Избежать многократного добавления заголовка
 	
-	' TODO Устранить переполнение буфера
-	lstrcpyW(this->StartResponseHeadersPtr, Value)
-	
-	this->ResponseHeaders(HeaderIndex) = this->StartResponseHeadersPtr
-	
-	this->StartResponseHeadersPtr += lstrlenW(Value) + 2
+	LET_HEAPSYSSTRING(this->ResponseHeaders(HeaderIndex), Value)
 	
 	Return S_OK
-	
-End Function
-
-Function ServerResponseClear( _
-		ByVal this As ServerResponse Ptr _
-	)As HRESULT
-	
-	' TODO Удалить дублирование инициализации
-	this->pResponseHeaderBuffer[0] = 0
-	this->StartResponseHeadersPtr = this->pResponseHeaderBuffer
-	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(WString Ptr))
-	this->HttpVersion = HttpVersions.Http11
-	this->StatusCode = HttpStatusCodes.OK
-	this->StatusDescription = NULL
-	this->SendOnlyHeaders = False
-	this->KeepAlive = True
-	this->ResponseZipEnable = False
-	this->Mime.ContentType = ContentTypes.AnyAny
-	this->Mime.IsTextFormat = False
-	this->Mime.Charset = DocumentCharsets.ASCII
-	
-	Return S_OK
-	
-End Function
-
-Function ServerResponseStringableQueryInterface( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	Return ServerResponseQueryInterface( _
-		this, riid, ppv _
-	)
-	
-End Function
-
-Function ServerResponseStringableAddRef( _
-		ByVal this As ServerResponse Ptr _
-	)As ULONG
-	
-	Return ServerResponseAddRef(this)
-	
-End Function
-
-Function ServerResponseStringableRelease( _
-		ByVal this As ServerResponse Ptr _
-	)As ULONG
-	
-	Return ServerResponseRelease(this)
 	
 End Function
 
@@ -693,14 +614,14 @@ End Function
 
 Function IServerResponseGetStatusDescription( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal ppStatusDescription As WString Ptr Ptr _
+		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
 	Return ServerResponseGetStatusDescription(ContainerOf(this, ServerResponse, lpVtbl), ppStatusDescription)
 End Function
 
 Function IServerResponseSetStatusDescription( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal pStatusDescription As WString Ptr _
+		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
 	Return ServerResponseSetStatusDescription(ContainerOf(this, ServerResponse, lpVtbl), pStatusDescription)
 End Function
@@ -750,7 +671,7 @@ End Function
 Function IServerResponseGetHttpHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal ppHeader As WString Ptr Ptr _
+		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 	Return ServerResponseGetHttpHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, ppHeader)
 End Function
@@ -758,7 +679,7 @@ End Function
 Function IServerResponseSetHttpHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal pHeader As WString Ptr _
+		ByVal pHeader As HeapBSTR _
 	)As HRESULT
 	Return ServerResponseSetHttpHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, pHeader)
 End Function
@@ -793,8 +714,8 @@ End Function
 
 Function IServerResponseAddResponseHeader( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal HeaderName As WString Ptr, _
-		ByVal Value As WString Ptr _
+		ByVal HeaderName As HeapBSTR, _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	Return ServerResponseAddResponseHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderName, Value)
 End Function
@@ -802,15 +723,9 @@ End Function
 Function IServerResponseAddKnownResponseHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr _
+		ByVal Value As HeapBSTR _
 	)As HRESULT
 	Return ServerResponseAddKnownResponseHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
-End Function
-
-Function IServerResponseClear( _
-		ByVal this As IServerResponse Ptr _
-	)As HRESULT
-	Return ServerResponseClear(ContainerOf(this, ServerResponse, lpVtbl))
 End Function
 
 Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type( _
@@ -836,8 +751,7 @@ Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type
 	@IServerResponseGetZipMode, _
 	@IServerResponseSetZipMode, _
 	@IServerResponseAddResponseHeader, _
-	@IServerResponseAddKnownResponseHeader, _
-	@IServerResponseClear _
+	@IServerResponseAddKnownResponseHeader _
 )
 
 Function IServerResponseStringableQueryInterface( _
@@ -845,19 +759,19 @@ Function IServerResponseStringableQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return ServerResponseStringableQueryInterface(ContainerOf(this, ServerResponse, lpStringableVtbl), riid, ppvObject)
+	Return ServerResponseQueryInterface(ContainerOf(this, ServerResponse, lpStringableVtbl), riid, ppvObject)
 End Function
 
 Function IServerResponseStringableAddRef( _
 		ByVal this As IStringable Ptr _
 	)As ULONG
-	Return ServerResponseStringableAddRef(ContainerOf(this, ServerResponse, lpStringableVtbl))
+	Return ServerResponseAddRef(ContainerOf(this, ServerResponse, lpStringableVtbl))
 End Function
 
 Function IServerResponseStringableRelease( _
 		ByVal this As IStringable Ptr _
 	)As ULONG
-	Return ServerResponseStringableRelease(ContainerOf(this, ServerResponse, lpStringableVtbl))
+	Return ServerResponseRelease(ContainerOf(this, ServerResponse, lpStringableVtbl))
 End Function
 
 Function IServerResponseStringableToString( _
