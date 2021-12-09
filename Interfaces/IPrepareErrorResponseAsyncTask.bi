@@ -9,6 +9,40 @@
 #include once "IWebSite.bi"
 #include once "win\winsock2.bi"
 
+Enum ResponseErrorCode
+	MovedPermanently
+	BadRequest
+	PathNotValid
+	HostNotFound
+	SiteNotFound
+	NeedAuthenticate
+	BadAuthenticateParam
+	NeedBasicAuthenticate
+	EmptyPassword
+	BadUserNamePassword
+	Forbidden
+	FileNotFound
+	MethodNotAllowed
+	FileGone
+	LengthRequired
+	RequestEntityTooLarge
+	RequestUrlTooLarge
+	RequestRangeNotSatisfiable
+	RequestHeaderFieldsTooLarge
+	InternalServerError
+	FileNotAvailable
+	CannotCreateChildProcess
+	CannotCreatePipe
+	NotImplemented
+	ContentTypeEmpty
+	ContentEncodingNotEmpty
+	BadGateway
+	NotEnoughMemory
+	CannotCreateThread
+	GatewayTimeout
+	VersionNotSupported
+End Enum
+
 Type IPrepareErrorResponseAsyncTask As IPrepareErrorResponseAsyncTask_
 
 Type LPIPREPAREERRORRESPONSEASYNCTASK As IPrepareErrorResponseAsyncTask Ptr
@@ -96,7 +130,13 @@ Type IPrepareErrorResponseAsyncTaskVirtualTable
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
-
+	
+	SetErrorCode As Function( _
+		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+		ByVal HttpError As ResponseErrorCode, _
+		ByVal hrCode As HRESULT _
+	)As HRESULT
+	
 End Type
 
 Type IPrepareErrorResponseAsyncTask_
@@ -120,5 +160,6 @@ End Type
 #define IPrepareErrorResponseAsyncTask_SetHttpReader(this, pIHttpReader) (this)->lpVtbl->SetHttpReader(this, pIHttpReader)
 #define IPrepareErrorResponseAsyncTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IPrepareErrorResponseAsyncTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
+#define IPrepareErrorResponseAsyncTask_SetErrorCode(this, HttpError, hrCode) (this)->lpVtbl->SetErrorCode(this, HttpError, hrCode)
 
 #endif
