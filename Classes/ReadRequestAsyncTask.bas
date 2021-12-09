@@ -51,45 +51,49 @@ Function ProcessReadError( _
 		Return hrCreateTask
 	End If
 	
-	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
-	IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-	IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
 	IPrepareErrorResponseAsyncTask_SetRemoteAddress( _
 		pTask, _
 		CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
 		this->RemoteAddressLength _
 	)
+	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
+	IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+	IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
+	
+	Dim HttpError As ResponseErrorCode = Any
 	
 	Select Case hrReadError
 		
 		Case E_OUTOFMEMORY
-			' WriteHttpNotEnoughMemory(pIContext, NULL)
+			HttpError = ResponseErrorCode.NotEnoughMemory
 			
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			' WriteHttpVersionNotSupported(pIContext, NULL)
+			HttpError = ResponseErrorCode.VersionNotSupported
 			
 		Case CLIENTREQUEST_E_BADREQUEST
-			' WriteHttpBadRequest(pIContext, NULL)
+			HttpError = ResponseErrorCode.BadRequest
 			
 		Case CLIENTREQUEST_E_BADPATH
-			' WriteHttpPathNotValid(pIContext, NULL)
+			HttpError = ResponseErrorCode.PathNotValid
 			
 		Case CLIENTREQUEST_E_EMPTYREQUEST
-			' Пустой запрос, клиент закрыл соединение
+			HttpError = ResponseErrorCode.BadRequest
 			
 		Case CLIENTREQUEST_E_SOCKETERROR
-			' Ошибка сокета
+			HttpError = ResponseErrorCode.BadRequest
 			
 		Case CLIENTREQUEST_E_URITOOLARGE
-			' WriteHttpRequestUrlTooLarge(pIContext, NULL)
+			HttpError = ResponseErrorCode.RequestUrlTooLarge
 			
 		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			' WriteHttpRequestHeaderFieldsTooLarge(pIContext, NULL)
+			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
 			
 		Case Else
-			' WriteHttpBadRequest(pIContext, NULL)
+			HttpError = ResponseErrorCode.InternalServerError
 			
 	End Select
+	
+	IPrepareErrorResponseAsyncTask_SetErrorCode(pTask, HttpError, hrReadError)
 	
 	Dim pIResult As IAsyncResult Ptr = Any
 	Dim hrBeginExecute As HRESULT = IPrepareErrorResponseAsyncTask_BeginExecute( _
