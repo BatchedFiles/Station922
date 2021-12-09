@@ -8,7 +8,6 @@
 #include once "HttpConst.bi"
 #include once "Mime.bi"
 #include once "StringConstants.bi"
-#include once "WriteHttpError.bi"
 
 Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
 

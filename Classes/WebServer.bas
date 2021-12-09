@@ -11,7 +11,6 @@
 #include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
 #include once "WebServerIniConfiguration.bi"
-#include once "WriteHttpError.bi"
 
 Extern GlobalWebServerVirtualTable As Const IRunnableVirtualTable
 
