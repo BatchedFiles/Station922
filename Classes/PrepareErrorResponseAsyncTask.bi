@@ -97,4 +97,10 @@ Declare Function PrepareErrorResponseAsyncTaskSetClientRequest( _
 	ByVal pIRequest As IClientRequest Ptr _
 )As HRESULT
 
+Declare Function PrepareErrorResponseAsyncTaskSetErrorCode( _
+	ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+	ByVal HttpError As ResponseErrorCode, _
+	ByVal hrCode As HRESULT _
+)As HRESULT
+
 #endif
