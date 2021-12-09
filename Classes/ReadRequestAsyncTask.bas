@@ -60,27 +60,6 @@ Function ProcessReadError( _
 		this->RemoteAddressLength _
 	)
 	
-	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IPrepareErrorResponseAsyncTask_BeginExecute( _
-		pTask, _
-		pPool, _
-		@pIResult _
-	)
-	If FAILED(hrBeginExecute) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrBeginExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IPrepareErrorResponseAsyncTask_BeginExecute Error\t"), _
-			@vtSCode _
-		)
-		
-		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		IPrepareErrorResponseAsyncTask_Release(pTask)
-		Return hrBeginExecute
-	End If
-	
 	Select Case hrReadError
 		
 		Case E_OUTOFMEMORY
@@ -111,6 +90,27 @@ Function ProcessReadError( _
 			' WriteHttpBadRequest(pIContext, NULL)
 			
 	End Select
+	
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IPrepareErrorResponseAsyncTask_BeginExecute( _
+		pTask, _
+		pPool, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IPrepareErrorResponseAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
+		
+		' TODO Отправить клиенту Не могу начать асинхронное чтение
+		IPrepareErrorResponseAsyncTask_Release(pTask)
+		Return hrBeginExecute
+	End If
 	
 	Return S_OK
 	
@@ -380,11 +380,6 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		ppIResult _
 	)
 	If FAILED(hrBeginReadRequest) Then
-		ProcessReadError( _
-			this, _
-			pPool, _
-			hrBeginReadRequest _
-		)
 		Return hrBeginReadRequest
 	End If
 	
@@ -420,13 +415,13 @@ Function ReadRequestAsyncTaskEndExecute( _
 		' TODO Вывести байты запроса HttpReader в лог
 		' DebugPrintHttpReader(pIHttpReader)
 		
-		ProcessReadError( _
+		Dim hrProcessReadError As HRESULT = ProcessReadError( _
 			this, _
 			pPool, _
 			hrEndReadRequest _
 		)
 		
-		Return hrEndReadRequest
+		Return hrProcessReadError
 	End If
 	
 	Select Case hrEndReadRequest
@@ -447,20 +442,14 @@ Function ReadRequestAsyncTaskEndExecute( _
 					@vtSCode _
 				)
 				
-				ProcessReadError( _
+				Dim hrProcessReadError As HRESULT = ProcessReadError( _
 					this, _
 					pPool, _
 					hrPrepare _
 				)
-					
-				Return hrPrepare
+				
+				Return hrProcessReadError
 			End If
-			
-			ProcessReadError( _
-				this, _
-				pPool, _
-				E_FAIL _
-			)
 			
 			/'
 			' Создать и запустить задачу подготовки запроса к ответу
@@ -513,6 +502,12 @@ Function ReadRequestAsyncTaskEndExecute( _
 			End If
 			'/
 			
+			ProcessReadError( _
+				this, _
+				pPool, _
+				E_FAIL _
+			)
+			
 			Return S_OK
 			
 		Case S_FALSE
@@ -533,28 +528,12 @@ Function ReadRequestAsyncTaskEndExecute( _
 			)
 			If FAILED(hrBeginReadRequest) Then
 				ReadRequestAsyncTaskRelease(this)
-				
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrBeginReadRequest
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IClientRequest_BeginReadRequest Error\t"), _
-					@vtSCode _
-				)
-				
-				ProcessReadError( _
-					this, _
-					pPool, _
-					hrBeginReadRequest _
-				)
-				
 				Return hrBeginReadRequest
 			End If
 			
-			' Сейчас мы не уменьшаем счётчик ссылок на pTask
-			' Счётчик ссылок уменьшим в функции EndExecute
-			' Когда задача будет завершена
+			' Ссылка на this сохранена в pIAsyncResult
+			' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
+			' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
 			
 			Return ASYNCTASK_S_IO_PENDING
 			
