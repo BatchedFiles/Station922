@@ -54,7 +54,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	
+	/'
 	If IsEqualCLSID(@CLSID_CLIENTCONTEXT, rclsid) Then
 		Dim pContext As ClientContext Ptr = CreateClientContext(pIMemoryAllocator)
 		If pContext = NULL Then
@@ -68,7 +68,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	
+	'/
 	If IsEqualCLSID(@CLSID_CLIENTREQUEST, rclsid) Then
 		Dim pRequest As ClientRequest Ptr = CreateClientRequest(pIMemoryAllocator)
 		If pRequest = NULL Then
@@ -110,7 +110,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	
+	/'
 	If IsEqualCLSID(@CLSID_HTTPGETPROCESSOR, rclsid) Then
 		Dim pProcessor As HttpGetProcessor Ptr = CreateHttpGetProcessor(pIMemoryAllocator)
 		If pProcessor = NULL Then
@@ -124,7 +124,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	
+	'/
 	If IsEqualCLSID(@CLSID_HTTPREADER, rclsid) Then
 		Dim pReader As HttpReader Ptr = CreateHttpReader(pIMemoryAllocator)
 		If pReader = NULL Then
