@@ -1,4 +1,5 @@
 #include once "PrepareErrorResponseAsyncTask.bi"
+#include once "ArrayStringWriter.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
@@ -86,6 +87,55 @@ Type _PrepareErrorResponseAsyncTask
 	HttpError As ResponseErrorCode
 	hrCode As HRESULT
 End Type
+
+Sub FormatErrorMessageBody( _
+		ByVal pIWriter As IArrayStringWriter Ptr, _
+		ByVal StatusCode As HttpStatusCodes, _
+		ByVal VirtualPath As WString Ptr, _
+		ByVal BodyText As WString Ptr _
+	)
+	
+	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead1)
+	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead2)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody1)
+	
+	' Заголовок <h1>
+	Select Case StatusCode
+		
+		Case 300 To 399
+			IArrayStringWriter_WriteString(pIWriter, ClientMovedString)
+			
+		Case 400 To 499
+			IArrayStringWriter_WriteString(pIWriter, ClientErrorString)
+			
+		Case 500 To 599
+			IArrayStringWriter_WriteString(pIWriter, ServerErrorString)
+			
+	End Select
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody2)
+	
+	' Имя приложения в заголовке <h1>
+	IArrayStringWriter_WriteString(pIWriter, VirtualPath)
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody3)
+	
+	' Код статуса в заголовке <h2>
+	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody4)
+	
+	' Описание ошибки в заголовке <h2>
+	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody5)
+	
+	' Текст сообщения между <p></p>
+	IArrayStringWriter_WriteString(pIWriter, BodyText)
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody6)
+	
+End Sub
 
 /'
 
@@ -192,61 +242,6 @@ Sub WriteHttpResponse( _
 	End Scope
 	
 	IServerResponse_Release(pIResponse)
-	
-End Sub
-
-Sub FormatErrorMessageBody( _
-		ByVal pIWriter As IArrayStringWriter Ptr, _
-		ByVal StatusCode As HttpStatusCodes, _
-		ByVal VirtualPath As WString Ptr, _
-		ByVal BodyText As WString Ptr _
-	)
-	
-	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead1)
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead2)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody1)
-	
-	' Заголовок <h1>
-	Select Case StatusCode
-		
-		Case 200
-			IArrayStringWriter_WriteString(pIWriter, ClientUpdatedString)
-			
-		Case 201 To 299
-			IArrayStringWriter_WriteString(pIWriter, ClientCreatedString)
-			
-		Case 300 To 399
-			IArrayStringWriter_WriteString(pIWriter, ClientMovedString)
-			
-		Case 400 To 499
-			IArrayStringWriter_WriteString(pIWriter, ClientErrorString)
-			
-		Case 500 To 599
-			IArrayStringWriter_WriteString(pIWriter, ServerErrorString)
-			
-	End Select
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody2)
-	
-	' Имя приложения в заголовке <h1>
-	IArrayStringWriter_WriteString(pIWriter, VirtualPath)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody3)
-	
-	' Код статуса в заголовке <h2>
-	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody4)
-	
-	' Описание ошибки в заголовке <h2>
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody5)
-	
-	' Текст сообщения между <p></p>
-	IArrayStringWriter_WriteString(pIWriter, BodyText)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody6)
 	
 End Sub
 
