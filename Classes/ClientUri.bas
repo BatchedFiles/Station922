@@ -552,14 +552,38 @@ Function ClientUriUriFromString( _
 	
 	HeapSysAddRefString(bstrUri)
 	this->Uri = bstrUri
-	this->Scheme = HeapSysAllocStringLen(this->pIMemoryAllocator, pScheme, SchemeLength)
-	this->UserName = HeapSysAllocStringLen(this->pIMemoryAllocator, pUserName, UserNameLength)
-	this->Password = HeapSysAllocStringLen(this->pIMemoryAllocator, pPassword, PasswordLength)
-	this->Host = HeapSysAllocStringLen(this->pIMemoryAllocator, pHost, HostLength)
-	this->Port = HeapSysAllocStringLen(this->pIMemoryAllocator, pPort, PortLength)
-	this->Path = HeapSysAllocStringLen(this->pIMemoryAllocator, pPath, PathLength)
-	this->Query = HeapSysAllocStringLen(this->pIMemoryAllocator, pQuery, QueryLength)
-	this->Fragment = HeapSysAllocStringLen(this->pIMemoryAllocator, pFragment, FragmentLength)
+	
+	If SchemeLength <> 0 Then
+		this->Scheme = HeapSysAllocStringLen(this->pIMemoryAllocator, pScheme, SchemeLength)
+	End If
+	
+	If UserNameLength <> 0 Then
+		this->UserName = HeapSysAllocStringLen(this->pIMemoryAllocator, pUserName, UserNameLength)
+	End If
+	
+	If PasswordLength <> 0 Then
+		this->Password = HeapSysAllocStringLen(this->pIMemoryAllocator, pPassword, PasswordLength)
+	End If
+	
+	If HostLength <> 0 Then
+		this->Host = HeapSysAllocStringLen(this->pIMemoryAllocator, pHost, HostLength)
+	End If
+	
+	If PortLength <> 0 Then
+		this->Port = HeapSysAllocStringLen(this->pIMemoryAllocator, pPort, PortLength)
+	End If
+	
+	If PathLength <> 0 Then
+		this->Path = HeapSysAllocStringLen(this->pIMemoryAllocator, pPath, PathLength)
+	End If
+	
+	If QueryLength <> 0 Then
+		this->Query = HeapSysAllocStringLen(this->pIMemoryAllocator, pQuery, QueryLength)
+	End If
+	
+	If FragmentLength <> 0 Then
+		this->Fragment = HeapSysAllocStringLen(this->pIMemoryAllocator, pFragment, FragmentLength)
+	End If
 	
 	Return S_OK
 	

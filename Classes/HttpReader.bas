@@ -525,13 +525,15 @@ Function HttpReaderReadLine( _
 		@pCurrentLine  _
 	)
 	
-	Dim bstrLine As HeapBSTR = HeapSysAllocStringLen( _
-		this->pIMemoryAllocator, _
-		pCurrentLine, _
-		LineLength _
-	)
-	
-	If SysStringLen(bstrLine) = 0 Then
+	Dim bstrLine As HeapBSTR = Any
+	If LineLength <> 0 Then
+		bstrLine = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pCurrentLine, _
+			LineLength _
+		)
+	Else
+		bstrLine = NULL
 		If this->pLines <> NULL Then
 			IMalloc_Free( _
 				this->pIMemoryAllocator, _
