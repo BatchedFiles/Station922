@@ -362,41 +362,58 @@ Function AllResponseHeadersToBytes( _
 	
 	' TODO Найти способ откатывать изменения буфера заголовков ответа
 	
-	Dim StatusCode As HttpStatusCodes = Any
-	IServerResponse_GetStatusCode(pIResponse, @StatusCode)
+	IServerResponse_AddKnownResponseHeaderWstrLen( _
+		pIResponse, _
+		HttpResponseHeaders.HeaderAcceptRanges, _
+		@BytesString, _
+		Len(BytesString) _
+	)
 	
-	If StatusCode <> HttpStatusCodes.PartialContent Then
-		IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderAcceptRanges, @BytesString)
+	/'
+	Dim KeepAlive As Boolean = Any
+	If pIRequest = NULL Then
+		KeepAlive = False
+	Else
+		IClientRequest_GetKeepAlive(pIRequest, @KeepAlive)
 	End If
 	
-	' Dim KeepAlive As Boolean = Any
-	' If pIRequest = NULL Then
-		' KeepAlive = False
-	' Else
-		' IClientRequest_GetKeepAlive(pIRequest, @KeepAlive)
-	' End If
-	
-	' If KeepAlive Then
-		' Dim HttpVersion As HttpVersions = Any
-		' If pIRequest = NULL Then
-			' HttpVersion = HttpVersions.Http10
-		' Else
-			' IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
-		' End If
+	If KeepAlive Then
+		Dim HttpVersion As HttpVersions = Any
+		If pIRequest = NULL Then
+			HttpVersion = HttpVersions.Http10
+		Else
+			IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
+		End If
 		
-	' Else
-		' IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderConnection, @CloseString)
-	' End If
+	Else
+		IServerResponse_AddKnownResponseHeader( _
+			pIResponse, _
+			HttpResponseHeaders.HeaderConnection, _
+			@CloseString _
+		)
+	End If
+	'/
+	
+	Dim StatusCode As HttpStatusCodes = Any
+	IServerResponse_GetStatusCode(pIResponse, @StatusCode)
 	
 	Select Case StatusCode
 		
 		Case HttpStatusCodes.CodeContinue, HttpStatusCodes.SwitchingProtocols, HttpStatusCodes.Processing, HttpStatusCodes.NoContent
-			IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderContentLength, NULL)
+			IServerResponse_AddKnownResponseHeader( _
+				pIResponse, _
+				HttpResponseHeaders.HeaderContentLength, _
+				NULL _
+			)
 			
 		Case Else
 			Dim strContentLength As WString * (64) = Any
 			_ui64tow(ContentLength, @strContentLength, 10)
-			IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderContentLength, @strContentLength)
+			IServerResponse_AddKnownResponseHeaderWstr( _
+				pIResponse, _
+				HttpResponseHeaders.HeaderContentLength, _
+				@strContentLength _
+			)
 			
 	End Select
 	
