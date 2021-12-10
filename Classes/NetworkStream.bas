@@ -424,10 +424,97 @@ Function NetworkStreamBeginRead( _
 			Return HRESULT_FROM_WIN32(intError)
 		End If
 		
-		' TODO Запросить интерфейс вместо конвертирования указателя
-		*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	End If
+	
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	
+	Return BASESTREAM_S_IO_PENDING
+	
+End Function
+
+Function NetworkStreamBeginWrite( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
+	Dim hr As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_ASYNCRESULT, _
+		@IID_IMutableAsyncResult, _
+		@pINewAsyncResult _
+	)
+	If FAILED(hr) Then
+		*ppIAsyncResult = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
+	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	
+	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
+	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
+	
+	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
+	
+	If callback = NULL Then
+		' Const ManualReset As Boolean = True
+		' Const NonsignaledState As Boolean = False
 		
-		Return BASESTREAM_S_IO_PENDING
+		' hEvent = NULL
+		'hEvent = CreateEvent(NULL, ManualReset, NonsignaledState, NULL)
+		'
+		'If hEvent = NULL Then
+		'	Dim dwError As DWORD = GetLastError()
+		'	INetworkStreamAsyncResult_Release(pINewAsyncResult)
+		'	
+		'	Return HRESULT_FROM_WIN32(dwError)
+		'End If
+		
+		' lpRecvOverlapped->hEvent = pINewAsyncResult ' WSACreateEvent()  WSACloseEvent()
+		' INetworkStreamAsyncResult_SetWaitHandle(pINewAsyncResult, hEvent)
+		lpCompletionRoutine = NULL
+	Else
+		' TODO Реализовать для функции завершения ввода-вывода
+		' lpRecvOverlapped->hEvent = pINewAsyncResult
+		lpCompletionRoutine = NULL
+	End If
+	
+	Dim SendBuffer As WSABUF = Any
+	SendBuffer.len = Cast(ULONG, Count)
+	SendBuffer.buf = CPtr(ZString Ptr, Buffer)
+	
+	Const BuffersCount As DWORD = 1
+	Const lpNumberOfBytesSend As LPDWORD = NULL
+	Dim Flags As DWORD = 0
+	
+	Dim WSASendResult As Long = WSASend( _
+		this->ClientSocket, _
+		@SendBuffer, _
+		BuffersCount, _
+		lpNumberOfBytesSend, _
+		Flags, _
+		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		lpCompletionRoutine _
+	)
+	
+	If WSASendResult <> 0 Then
+		
+		Dim intError As Long = WSAGetLastError()
+		If intError <> WSA_IO_PENDING Then
+			*ppIAsyncResult = NULL
+			IMutableAsyncResult_Release(pINewAsyncResult)
+			Return HRESULT_FROM_WIN32(intError)
+		End If
+		
 	End If
 	
 	' TODO Запросить интерфейс вместо конвертирования указателя
@@ -490,6 +577,68 @@ Function NetworkStreamEndRead( _
 	End If
 	
 	*pReadedBytes = cbTransfer
+	
+	If cbTransfer = 0 Then
+		Return S_FALSE
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function NetworkStreamEndWrite( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pWritedBytes As DWORD Ptr _
+	)As HRESULT
+	
+	Dim BytesTransferred As DWORD = Any
+	Dim Completed As Boolean = Any
+	IAsyncResult_GetCompleted( _
+		pIAsyncResult, _
+		@BytesTransferred, _
+		@Completed _
+	)
+	If Completed Then
+		*pWritedBytes = BytesTransferred
+		
+		If BytesTransferred = 0 Then
+			Return S_FALSE
+		End If
+		
+		Return S_OK
+	End If
+	
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	Dim pINewAsyncResult As IMutableAsyncResult Ptr = CPtr(IMutableAsyncResult Ptr, pIAsyncResult)
+	
+	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
+	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	
+	Const fNoWait As BOOL = False
+	Dim cbTransfer As DWORD = Any
+	Dim dwFlags As DWORD = Any
+	
+	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
+		this->ClientSocket, _
+		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		@cbTransfer, _
+		fNoWait, _
+		@dwFlags _
+	)
+	If OverlappedResult = False Then
+		
+		Dim intError As Long = WSAGetLastError()
+		
+		If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
+			Return BASESTREAM_S_IO_PENDING
+		End If
+		
+		*pWritedBytes = 0
+		Return HRESULT_FROM_WIN32(intError)
+	End If
+	
+	*pWritedBytes = cbTransfer
 	
 	If cbTransfer = 0 Then
 		Return S_FALSE
@@ -736,15 +885,16 @@ Function INetworkStreamBeginRead( _
 	Return NetworkStreamBeginRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, callback, StateObject, ppIAsyncResult)
 End Function
 
-' Function INetworkStreamBeginWrite( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal Buffer As LPVOID, _
-		' ByVal Count As DWORD, _
-		' ByVal callback As AsyncCallback, _
-		' ByVal StateObject As IUnknown Ptr, _
-		' ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	' )As HRESULT
-' End Function
+Function INetworkStreamBeginWrite( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	Return NetworkStreamBeginWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, callback, StateObject, ppIAsyncResult)
+End Function
 
 Function INetworkStreamEndRead( _
 		ByVal this As INetworkStream Ptr, _
@@ -754,12 +904,13 @@ Function INetworkStreamEndRead( _
 	Return NetworkStreamEndRead(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
 End Function
 
-' Function INetworkStreamEndWrite( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pIAsyncResult As IAsyncResult Ptr, _
-		' ByVal pWritedBytes As DWORD Ptr _
-	' )As HRESULT
-' End Function
+Function INetworkStreamEndWrite( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pWritedBytes As DWORD Ptr _
+	)As HRESULT
+	Return NetworkStreamEndWrite(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
+End Function
 
 Function INetworkStreamGetSocket( _
 		ByVal this As INetworkStream Ptr, _
@@ -796,9 +947,9 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	NULL, _ /' @INetworkStreamSetLength, _ '/
 	NULL, _ /' @INetworkStreamWrite, _ '/
 	@INetworkStreamBeginRead, _
-	NULL, _ /' INetworkStreamBeginWrite '/
+	@INetworkStreamBeginWrite, _ 
 	@INetworkStreamEndRead, _
-	NULL, _ /' INetworkStreamEndWrite '/
+	@INetworkStreamEndWrite, _
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
 	@INetworkStreamClose _
