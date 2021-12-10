@@ -106,10 +106,6 @@ Sub InitializeInternalHeapBSTR( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	#ifdef __FB_64BIT__
-		this->Padding = 0
-	#endif
-	
 	If Length = 0 Then
 		this->cbBytes = 0
 		this->wszNullChar(0) = 0
