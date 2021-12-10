@@ -6,6 +6,7 @@
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorResponseAsyncTaskVirtualTable
 
@@ -137,16 +138,11 @@ Sub FormatErrorMessageBody( _
 	
 End Sub
 
-/'
-
 Sub WriteHttpResponse( _
-		ByVal pIContext As IClientContext Ptr, _
+		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
 		ByVal pIWebSite As IWebSite Ptr, _
 		ByVal BodyText As WString Ptr _
 	)
-	
-	Dim pIResponse As IServerResponse Ptr = Any
-	IClientContext_GetServerResponse(pIContext, @pIResponse)
 	
 	Scope
 		Dim Mime As MimeType = Any
@@ -155,95 +151,97 @@ Sub WriteHttpResponse( _
 			.IsTextFormat = True
 			.Charset = DocumentCharsets.Utf8BOM
 		End With
-		IServerResponse_SetMimeType(pIResponse, @Mime)
+		IServerResponse_SetMimeType(this->pIResponse, @Mime)
 	End Scope
 	
-	IServerResponse_SetKeepAlive(pIResponse, False)
-	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderContentLanguage, @DefaultContentLanguage)
-	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderCacheControl, @DefaultCacheControlNoCache)
+	IServerResponse_AddKnownResponseHeader( _
+		this->pIResponse, _
+		HttpResponseHeaders.HeaderContentLanguage, _
+		@DefaultContentLanguage _
+	)
+	IServerResponse_AddKnownResponseHeader( _
+		this->pIResponse, _
+		HttpResponseHeaders.HeaderCacheControl, _
+		@DefaultCacheControlNoCache _
+	)
 	
 	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
 	Dim ContentBodyLength As Integer = Any
 	
 	Scope
 		Dim pIWriter As IArrayStringWriter Ptr = Any
-		Scope
-			Dim pIMemoryAllocator As IMalloc Ptr = Any
-			IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
-			
-			Dim hr As HRESULT = CreateInstance( _
-				pIMemoryAllocator, _
-				@CLSID_ARRAYSTRINGWRITER, _
-				@IID_IArrayStringWriter, _
-				@pIWriter _
-			)
-			If FAILED(hr) Then
-				IMalloc_Release(pIMemoryAllocator)
-				Exit Sub
-			End If
-			
-			IMalloc_Release(pIMemoryAllocator)
-			
-		End Scope
+		Dim hr As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_ARRAYSTRINGWRITER, _
+			@IID_IArrayStringWriter, _
+			@pIWriter _
+		)
+		If FAILED(hr) Then
+			Exit Sub
+		End If
+		
+		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
+		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
 		
 		Scope
-			Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
-			IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
 			
-			Scope
-				
-				Dim VirtualPath As WString Ptr = Any
-				
-				If pIWebSite = NULL Then
-					VirtualPath = @DefaultVirtualPath
-				Else
-					IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
-				End If
-				
-				Dim StatusCode As HttpStatusCodes = Any
-				IServerResponse_GetStatusCode(pIResponse, @StatusCode)
-				
-				FormatErrorMessageBody(pIWriter, StatusCode, VirtualPath, BodyText)
-				
-			End Scope
+			Dim VirtualPath As WString Ptr = Any
+			If pIWebSite = NULL Then
+				VirtualPath = @WStr("/")
+			Else
+				IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
+			End If
 			
-			ContentBodyLength = WideCharToMultiByte( _
-				CP_UTF8, _
-				0, _
-				@BodyBuffer, _
-				-1, _
-				@Utf8Body, _
-				MaxResponseBufferLength + 1, _
-				0, _
-				0 _
-			) - 1
+			Dim StatusCode As HttpStatusCodes = Any
+			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
+			
+			FormatErrorMessageBody( _
+				pIWriter, _
+				StatusCode, _
+				VirtualPath, _
+				BodyText _
+			)
 		End Scope
+		
+		ContentBodyLength = WideCharToMultiByte( _
+			CP_ACP, _
+			0, _
+			@BodyBuffer, _
+			-1, _
+			@Utf8Body, _
+			MaxResponseBufferLength + 1, _
+			0, _
+			0 _
+		) - 1
+		
 		IArrayStringWriter_Release(pIWriter)
 	End Scope
 	
 	Scope
-		Dim pIRequest As IClientRequest Ptr = Any
-		IClientContext_GetClientRequest(pIContext, @pIRequest)
-		
 		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
-		Dim SendBufferLength As Integer = AllResponseHeadersToBytes(pIRequest, pIResponse, @SendBuffer, ContentBodyLength)
+		Dim SendBufferLength As Integer = AllResponseHeadersToBytes( _
+			this->pIRequest, _
+			this->pIResponse, _
+			@SendBuffer, _
+			ContentBodyLength _
+		)
 		
-		RtlCopyMemory(@SendBuffer + SendBufferLength, @Utf8Body, ContentBodyLength)
+		CopyMemory(@SendBuffer + SendBufferLength, @Utf8Body, ContentBodyLength)
 		SendBufferLength += ContentBodyLength
 		
-		Dim pIStream As INetworkStream Ptr = Any
-		IClientContext_GetNetworkStream(pIContext, @pIStream)
-		
 		Dim BytesWrited As DWORD = Any
-		INetworkStream_Write(pIStream, @SendBuffer, SendBufferLength, @BytesWrited)
+		IBaseStream_Write( _
+			this->pIStream, _
+			@SendBuffer, _
+			SendBufferLength, _
+			@BytesWrited _
+		)
 		
-		INetworkStream_Release(pIStream)
-		IClientRequest_Release(pIRequest)
 	End Scope
 	
-	IServerResponse_Release(pIResponse)
-	
 End Sub
+
+/'
 
 Sub WriteMovedPermanently( _
 		ByVal pIContext As IClientContext Ptr, _
