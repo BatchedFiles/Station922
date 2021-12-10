@@ -135,6 +135,19 @@ Type IServerResponseVirtualTable
 		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
+	AddKnownResponseHeaderWstr As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr _
+	)As HRESULT
+	
+	AddKnownResponseHeaderWstrLen As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr, _
+		ByVal Length As Integer _
+	)As HRESULT
+	
 End Type
 
 Type IServerResponse_
@@ -164,5 +177,7 @@ End Type
 #define IServerResponse_SetZipMode(this, ZipMode) (this)->lpVtbl->SetZipMode(this, ZipMode)
 #define IServerResponse_AddResponseHeader(this, HeaderName, Value) (this)->lpVtbl->AddResponseHeader(this, HeaderName, Value)
 #define IServerResponse_AddKnownResponseHeader(this, HeaderIndex, Value) (this)->lpVtbl->AddKnownResponseHeader(this, HeaderIndex, Value)
+#define IServerResponse_AddKnownResponseHeaderWstr(this, HeaderIndex, Value) (this)->lpVtbl->AddKnownResponseHeaderWstr(this, HeaderIndex, Value)
+#define IServerResponse_AddKnownResponseHeaderWstrLen(this, HeaderIndex, Value, Length) (this)->lpVtbl->AddKnownResponseHeaderWstrLen(this, HeaderIndex, Value, Length)
 
 #endif

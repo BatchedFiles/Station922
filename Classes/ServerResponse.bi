@@ -135,6 +135,19 @@ Declare Function ServerResponseAddKnownResponseHeader( _
 	ByVal Value As HeapBSTR _
 )As HRESULT
 
+Declare Function ServerResponseAddKnownResponseHeaderWstr( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal HeaderIndex As HttpResponseHeaders, _
+	ByVal Value As WString Ptr _
+)As HRESULT
+
+Declare Function ServerResponseAddKnownResponseHeaderWstrLen( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal HeaderIndex As HttpResponseHeaders, _
+	ByVal Value As WString Ptr, _
+	ByVal Length As Integer _
+)As HRESULT
+
 Declare Function ServerResponseStringableQueryInterface( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal riid As REFIID, _

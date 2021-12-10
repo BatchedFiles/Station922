@@ -477,72 +477,102 @@ Function ServerResponseStringableToString( _
 	
 	If this->KeepAlive Then
 		If this->HttpVersion = HttpVersions.Http10 Then
-			ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderConnection, @KeepAliveString)
+			ServerResponseAddKnownResponseHeaderWstrLen( _
+				this, _
+				HttpResponseHeaders.HeaderConnection, _
+				@KeepAliveString, _
+				Len(KeepAliveString) _
+			)
 		End If
 	Else
-		ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderConnection, @CloseString)
+		ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderConnection, _
+			@CloseString, _
+			Len(CloseString) _
+		)
 	End If
 	
 	Scope
 		Dim wContentType As WString * (MaxContentTypeLength + 1) = Any
 		GetContentTypeOfMimeType(@wContentType, @this->Mime)
-		ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderContentType, @wContentType)
+		ServerResponseAddKnownResponseHeaderWstr( _
+			this, _
+			HttpResponseHeaders.HeaderContentType, _
+			@wContentType _
+		)
 	End Scope
 	
-	IArrayStringWriter_SetBuffer(pIWriter, this->pResponseHeaderBufferStringable, MaxResponseBufferLength)
-	
+	Dim HeadersBuffer As WString * (MaxResponseBufferLength + 1) = Any
 	Scope
-		Dim HttpVersionLength As Integer = Any
-		Dim pwHttpVersion As WString Ptr = HttpVersionToString(this->HttpVersion, @HttpVersionLength)
+		IArrayStringWriter_SetBuffer(pIWriter, @HeadersBuffer, MaxResponseBufferLength)
 		
-		IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
-		IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
-		IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
-		IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+		Scope
+			Dim HttpVersionLength As Integer = Any
+			Dim pwHttpVersion As WString Ptr = HttpVersionToString( _
+				this->HttpVersion, _
+				@HttpVersionLength _
+			)
+			
+			IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
+			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+			IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
+			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+			
+			If this->StatusDescription = NULL Then
+				Dim BufferLength As Integer = Any
+				Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
+				IArrayStringWriter_WriteLengthStringLine(pIWriter, wBuffer, BufferLength)
+			Else
+				IArrayStringWriter_WriteStringLine(pIWriter, this->StatusDescription)
+			End If
+		End Scope
 		
-		If this->StatusDescription = NULL Then
-			Dim BufferLength As Integer = Any
-			Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
-			IArrayStringWriter_WriteLengthStringLine(pIWriter, wBuffer, BufferLength)
-		Else
-			IArrayStringWriter_WriteStringLine(pIWriter, this->StatusDescription)
-		End If
+		Scope
+			Dim datNowF As FILETIME = Any
+			GetSystemTimeAsFileTime(@datNowF)
+			
+			Dim datNowS As SYSTEMTIME = Any
+			FileTimeToSystemTime(@datNowF, @datNowS)
+			
+			Dim dtBuffer As WString * (32) = Any
+			GetHttpDate(@dtBuffer, @datNowS)
+			
+			ServerResponseAddKnownResponseHeaderWstr( _
+				this, _
+				HttpResponseHeaders.HeaderDate, _
+				@dtBuffer _
+			)
+		End Scope
+		
+		For i As Integer = 0 To HttpResponseHeadersMaximum - 1
+			
+			Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
+			
+			If this->ResponseHeaders(HeaderIndex) <> NULL Then
+				
+				Dim BufferLength As Integer = Any
+				Dim wBuffer As WString Ptr = KnownResponseHeaderToString(HeaderIndex, @BufferLength)
+				
+				IArrayStringWriter_WriteLengthString(pIWriter, wBuffer, BufferLength)
+				IArrayStringWriter_WriteLengthString(pIWriter, @ColonWithSpaceString, 2)
+				IArrayStringWriter_WriteStringLine(pIWriter, this->ResponseHeaders(HeaderIndex))
+			End If
+			
+		Next
+		
+		IArrayStringWriter_WriteNewLine(pIWriter)
+		
+		IArrayStringWriter_GetBufferLength(pIWriter, pLength)
+		
+		IArrayStringWriter_Release(pIWriter)
 	End Scope
 	
-	Scope
-		Dim datNowF As FILETIME = Any
-		GetSystemTimeAsFileTime(@datNowF)
-		
-		Dim datNowS As SYSTEMTIME = Any
-		FileTimeToSystemTime(@datNowF, @datNowS)
-		
-		Dim dtBuffer As WString * (32) = Any
-		GetHttpDate(@dtBuffer, @datNowS)
-		
-		ServerResponseAddKnownResponseHeader(this, HttpResponseHeaders.HeaderDate, @dtBuffer)
-	End Scope
-	
-	For i As Integer = 0 To HttpResponseHeadersMaximum - 1
-		
-		Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
-		
-		If this->ResponseHeaders(HeaderIndex) <> NULL Then
-			
-			Dim BufferLength As Integer = Any
-			Dim wBuffer As WString Ptr = KnownResponseHeaderToString(HeaderIndex, @BufferLength)
-			
-			IArrayStringWriter_WriteLengthString(pIWriter, wBuffer, BufferLength)
-			IArrayStringWriter_WriteLengthString(pIWriter, @ColonWithSpaceString, 2)
-			IArrayStringWriter_WriteStringLine(pIWriter, this->ResponseHeaders(HeaderIndex))
-		End If
-		
-	Next
-	
-	IArrayStringWriter_WriteNewLine(pIWriter)
-	
-	IArrayStringWriter_GetBufferLength(pIWriter, pLength)
-	
-	IArrayStringWriter_Release(pIWriter)
+	this->pResponseHeaderBufferStringable = HeapSysAllocStringLen( _
+		this->pIMemoryAllocator, _
+		@HeadersBuffer, _
+		*pLength _
+	)
 	
 	*ppResult = this->pResponseHeaderBufferStringable
 	
@@ -563,6 +593,51 @@ Function ServerResponseStringableToString( _
 	Return S_OK
 	
 End Function
+
+Function ServerResponseAddKnownResponseHeaderWstr( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr _
+	)As HRESULT
+	
+	Dim Length As Integer = lstrlenW(Value)
+	
+	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HeaderIndex, _
+		Value, _
+		Length _
+	)
+	
+	Return hr
+	
+End Function
+
+Function ServerResponseAddKnownResponseHeaderWstrLen( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr, _
+		ByVal Length As Integer _
+	)As HRESULT
+	
+	Dim hBstr As HeapBSTR = HeapSysAllocStringLen( _
+		this->pIMemoryAllocator, _
+		Value, _
+		Length _
+	)
+	
+	Dim hr As HRESULT = ServerResponseAddKnownResponseHeader( _
+		this, _
+		HeaderIndex, _
+		hBstr _
+	)
+	
+	HeapSysFreeString(hBstr)
+	
+	Return hr
+	
+End Function
+
 
 Function IServerResponseQueryInterface( _
 		ByVal this As IServerResponse Ptr, _
@@ -728,6 +803,23 @@ Function IServerResponseAddKnownResponseHeader( _
 	Return ServerResponseAddKnownResponseHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
+Function IServerResponseAddKnownResponseHeaderWstr( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As HeapBSTR _
+	)As HRESULT
+	Return ServerResponseAddKnownResponseHeaderWstr(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
+End Function
+
+Function IServerResponseAddKnownResponseHeaderWstrLen( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As HeapBSTR, _
+		ByVal Length As Integer _
+	)As HRESULT
+	Return ServerResponseAddKnownResponseHeaderWstrLen(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value, Length)
+End Function
+
 Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type( _
 	@IServerResponseQueryInterface, _
 	@IServerResponseAddRef, _
@@ -751,7 +843,9 @@ Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type
 	@IServerResponseGetZipMode, _
 	@IServerResponseSetZipMode, _
 	@IServerResponseAddResponseHeader, _
-	@IServerResponseAddKnownResponseHeader _
+	@IServerResponseAddKnownResponseHeader, _
+	@IServerResponseAddKnownResponseHeaderWstr, _
+	@IServerResponseAddKnownResponseHeaderWstrLen _
 )
 
 Function IServerResponseStringableQueryInterface( _
