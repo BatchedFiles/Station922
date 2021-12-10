@@ -275,54 +275,54 @@ End Function
 	
 ' End Function
 
-Function NetworkStreamRead( _
-		ByVal this As NetworkStream Ptr, _
-		ByVal buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pReadedBytes As DWORD Ptr _
-	)As HRESULT
+' Function NetworkStreamRead( _
+' 		ByVal this As NetworkStream Ptr, _
+' 		ByVal buffer As LPVOID, _
+' 		ByVal Count As DWORD, _
+' 		ByVal pReadedBytes As DWORD Ptr _
+' 	)As HRESULT
 	
-	Dim ReadedBytes As Long = recv(this->ClientSocket, buffer, Count, 0)
+' 	Dim ReadedBytes As Long = recv(this->ClientSocket, buffer, Count, 0)
 	
-	Select Case ReadedBytes
+' 	Select Case ReadedBytes
 		
-		Case SOCKET_ERROR
-			Dim intError As Long = WSAGetLastError()
-			*pReadedBytes = 0
-			Return HRESULT_FROM_WIN32(intError)
+' 		Case SOCKET_ERROR
+' 			Dim intError As Long = WSAGetLastError()
+' 			*pReadedBytes = 0
+' 			Return HRESULT_FROM_WIN32(intError)
 			
-		Case 0
-			*pReadedBytes = 0
-			Return S_FALSE
+' 		Case 0
+' 			*pReadedBytes = 0
+' 			Return S_FALSE
 			
-		Case Else
-			*pReadedBytes = ReadedBytes
-			Return S_OK
+' 		Case Else
+' 			*pReadedBytes = ReadedBytes
+' 			Return S_OK
 			
-	End Select
+' 	End Select
 	
-End Function
+' End Function
 
-Function NetworkStreamWrite( _
-		ByVal this As NetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pWritedBytes As DWORD Ptr _
-	)As HRESULT
+' Function NetworkStreamWrite( _
+' 		ByVal this As NetworkStream Ptr, _
+' 		ByVal Buffer As LPVOID, _
+' 		ByVal Count As DWORD, _
+' 		ByVal pWritedBytes As DWORD Ptr _
+' 	)As HRESULT
 	
-	Dim WritedBytes As Long = send(this->ClientSocket, Buffer, Count, 0)
+' 	Dim WritedBytes As Long = send(this->ClientSocket, Buffer, Count, 0)
 	
-	If WritedBytes = SOCKET_ERROR Then	
-		Dim intError As Long = WSAGetLastError()
-		*pWritedBytes = 0
-		Return HRESULT_FROM_WIN32(intError)
-	End If
+' 	If WritedBytes = SOCKET_ERROR Then	
+' 		Dim intError As Long = WSAGetLastError()
+' 		*pWritedBytes = 0
+' 		Return HRESULT_FROM_WIN32(intError)
+' 	End If
 	
-	*pWritedBytes = WritedBytes
+' 	*pWritedBytes = WritedBytes
 	
-	Return S_OK
+' 	Return S_OK
 	
-End Function
+' End Function
 
 ' Function NetworkStreamSeek( _
 		' ByVal this As NetworkStream Ptr, _
@@ -692,14 +692,14 @@ End Function
 	' Return NetworkStreamPosition(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 ' End Function
 
-Function INetworkStreamRead( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pReadedBytes As DWORD Ptr _
-	)As HRESULT
-	Return NetworkStreamRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pReadedBytes)
-End Function
+' Function INetworkStreamRead( _
+' 		ByVal this As INetworkStream Ptr, _
+' 		ByVal Buffer As LPVOID, _
+' 		ByVal Count As DWORD, _
+' 		ByVal pReadedBytes As DWORD Ptr _
+' 	)As HRESULT
+' 	Return NetworkStreamRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pReadedBytes)
+' End Function
 
 ' Function INetworkStreamSeek( _
 		' ByVal this As INetworkStream Ptr, _
@@ -716,14 +716,14 @@ End Function
 	' Return NetworkStreamSetLength(ContainerOf(this, NetworkStream, lpVtbl), Length)
 ' End Function
 
-Function INetworkStreamWrite( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pWritedBytes As DWORD Ptr _
-	)As HRESULT
-	Return NetworkStreamWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pWritedBytes)
-End Function
+' Function INetworkStreamWrite( _
+' 		ByVal this As INetworkStream Ptr, _
+' 		ByVal Buffer As LPVOID, _
+' 		ByVal Count As DWORD, _
+' 		ByVal pWritedBytes As DWORD Ptr _
+' 	)As HRESULT
+' 	Return NetworkStreamWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pWritedBytes)
+' End Function
 
 Function INetworkStreamBeginRead( _
 		ByVal this As INetworkStream Ptr, _
@@ -791,10 +791,10 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	NULL, _ /' @INetworkStreamFlush, _ '/
 	NULL, _ /' @INetworkStreamGetLength, _ '/
 	NULL, _ /' @INetworkStreamPosition, _ '/
-	@INetworkStreamRead, _
+	NULL, _ /' @INetworkStreamRead, _ '/
 	NULL, _ /' @INetworkStreamSeek, _ '/
 	NULL, _ /' @INetworkStreamSetLength, _ '/
-	@INetworkStreamWrite, _
+	NULL, _ /' @INetworkStreamWrite, _ '/
 	@INetworkStreamBeginRead, _
 	NULL, _ /' INetworkStreamBeginWrite '/
 	@INetworkStreamEndRead, _
