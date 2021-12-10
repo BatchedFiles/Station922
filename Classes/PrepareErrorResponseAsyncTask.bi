@@ -45,14 +45,14 @@ Declare Function PrepareErrorResponseAsyncTaskEndExecute( _
 	ByVal CompletionKey As ULONG_PTR _
 )As HRESULT
 
-Declare Function PrepareErrorResponseAsyncTaskGetWebSite( _
+Declare Function PrepareErrorResponseAsyncTaskGetWebSiteCollection( _
 	ByVal this As PrepareErrorResponseAsyncTask Ptr, _
-	ByVal ppIWebSite As IWebSite Ptr Ptr _
+	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 )As HRESULT
 
-Declare Function PrepareErrorResponseAsyncTaskSetWebSite( _
+Declare Function PrepareErrorResponseAsyncTaskSetWebSiteCollection( _
 	ByVal this As PrepareErrorResponseAsyncTask Ptr, _
-	ByVal pIWebSite As IWebSite Ptr _
+	ByVal pIWebSites As IWebSiteCollection Ptr _
 )As HRESULT
 
 Declare Function PrepareErrorResponseAsyncTaskGetRemoteAddress( _

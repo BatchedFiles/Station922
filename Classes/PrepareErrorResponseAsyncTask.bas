@@ -4,6 +4,7 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
@@ -78,13 +79,14 @@ Type _PrepareErrorResponseAsyncTask
 	lpVtbl As Const IPrepareErrorResponseAsyncTaskVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pIWebSite As IWebSite Ptr
+	pIWebSites As IWebSiteCollection Ptr
 	RemoteAddress As SOCKADDR_STORAGE
 	RemoteAddressLength As Integer
 	pIStream As IBaseStream Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
+	pSendBuffer As ZString Ptr
 	HttpError As ResponseErrorCode
 	hrCode As HRESULT
 End Type
@@ -140,8 +142,8 @@ End Sub
 
 Sub WriteHttpResponse( _
 		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
-		ByVal pIWebSite As IWebSite Ptr, _
-		ByVal BodyText As WString Ptr _
+		ByVal BodyText As WString Ptr, _
+		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)
 	
 	Scope
@@ -154,16 +156,20 @@ Sub WriteHttpResponse( _
 		IServerResponse_SetMimeType(this->pIResponse, @Mime)
 	End Scope
 	
-	IServerResponse_AddKnownResponseHeader( _
-		this->pIResponse, _
-		HttpResponseHeaders.HeaderContentLanguage, _
-		@DefaultContentLanguage _
-	)
-	IServerResponse_AddKnownResponseHeader( _
-		this->pIResponse, _
-		HttpResponseHeaders.HeaderCacheControl, _
-		@DefaultCacheControlNoCache _
-	)
+	Scope
+		IServerResponse_AddKnownResponseHeaderWstrLen( _
+			this->pIResponse, _
+			HttpResponseHeaders.HeaderContentLanguage, _
+			@DefaultContentLanguage, _
+			Len(DefaultContentLanguage) _
+		)
+		IServerResponse_AddKnownResponseHeaderWstrLen( _
+			this->pIResponse, _
+			HttpResponseHeaders.HeaderCacheControl, _
+			@DefaultCacheControlNoCache, _
+			Len(DefaultCacheControlNoCache) _
+		)
+	End Scope
 	
 	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
 	Dim ContentBodyLength As Integer = Any
@@ -186,11 +192,11 @@ Sub WriteHttpResponse( _
 		Scope
 			
 			Dim VirtualPath As WString Ptr = Any
-			If pIWebSite = NULL Then
+			' If this->pIWebSites = NULL Then
 				VirtualPath = @WStr("/")
-			Else
-				IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
-			End If
+			' Else
+				' IWebSite_GetVirtualPath(this->pIWebSite, @VirtualPath)
+			' End If
 			
 			Dim StatusCode As HttpStatusCodes = Any
 			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
@@ -219,24 +225,44 @@ Sub WriteHttpResponse( _
 	
 	Scope
 		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
-		Dim SendBufferLength As Integer = AllResponseHeadersToBytes( _
+		Dim HeadersBufferLength As Integer = AllResponseHeadersToBytes( _
 			this->pIRequest, _
 			this->pIResponse, _
 			@SendBuffer, _
 			ContentBodyLength _
 		)
 		
-		CopyMemory(@SendBuffer + SendBufferLength, @Utf8Body, ContentBodyLength)
-		SendBufferLength += ContentBodyLength
+		Dim SendBufferLength As Integer = HeadersBufferLength + ContentBodyLength
 		
-		Dim BytesWrited As DWORD = Any
-		IBaseStream_Write( _
-			this->pIStream, _
-			@SendBuffer, _
-			SendBufferLength, _
-			@BytesWrited _
+		this->pSendBuffer = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			SendBufferLength _
 		)
 		
+		If this->pSendBuffer <> NULL Then
+			
+			CopyMemory( _
+				@SendBuffer[HeadersBufferLength], _
+				@Utf8Body, _
+				ContentBodyLength _
+			)
+			
+			CopyMemory( _
+				this->pSendBuffer, _
+				@SendBuffer[0], _
+				SendBufferLength _
+			)
+			
+			IBaseStream_BeginWrite( _
+				this->pIStream, _
+				this->pSendBuffer, _
+				Cast(DWORD, SendBufferLength), _
+				NULL, _
+				CPtr(IUnknown Ptr, @this->lpVtbl), _
+				ppIResult _
+			)
+			MessageBoxW(NULL, WStr("IBaseStream_BeginWrite"), NULL, MB_OK)
+		End If
 	End Scope
 	
 End Sub
@@ -749,24 +775,7 @@ Sub WriteHttpGatewayTimeout( _
 	
 End Sub
 
-Sub WriteHttpVersionNotSupported( _
-		ByVal pIContext As IClientContext Ptr, _
-		ByVal pIWebSite As IWebSite Ptr _
-	)
-	
-	Dim pIResponse As IServerResponse Ptr = Any
-	IClientContext_GetServerResponse(pIContext, @pIResponse)
-	
-	IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.HTTPVersionNotSupported)
-	
-	WriteHttpResponse(pIContext, pIWebSite, @HttpError505VersionNotSupported)
-	
-	IServerResponse_Release(pIResponse)
-	
-End Sub
-
 '/
-
 
 Sub InitializePrepareErrorResponseAsyncTask( _
 		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
@@ -781,13 +790,14 @@ Sub InitializePrepareErrorResponseAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSite = NULL
+	this->pIWebSites = NULL
 	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
 	this->RemoteAddressLength = 0
 	this->pIStream = NULL
 	this->pIHttpReader = NULL
 	this->pIRequest = NULL
 	this->pIResponse = pIResponse
+	this->pSendBuffer = NULL
 	this->HttpError = ResponseErrorCode.InternalServerError
 	this->hrCode = S_OK
 	
@@ -796,6 +806,10 @@ End Sub
 Sub UnInitializePrepareErrorResponseAsyncTask( _
 		ByVal this As PrepareErrorResponseAsyncTask Ptr _
 	)
+	
+	If this->pSendBuffer <> NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, this->pSendBuffer)
+	End If
 	
 	If this->pIResponse <> NULL Then
 		IServerResponse_Release(this->pIResponse)
@@ -813,8 +827,8 @@ Sub UnInitializePrepareErrorResponseAsyncTask( _
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If this->pIWebSite <> NULL Then
-		IWebSite_Release(this->pIWebSite)
+	If this->pIWebSites <> NULL Then
+		IWebSiteCollection_Release(this->pIWebSites)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
@@ -988,6 +1002,91 @@ Function PrepareErrorResponseAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	Dim pBodyText As WString Ptr = Any
+	
+	Select Case this->HttpError
+		
+		' Case ResponseErrorCode.MovedPermanently
+			
+		' Case ResponseErrorCode.BadRequest
+			
+		' Case ResponseErrorCode.PathNotValid
+			
+		' Case ResponseErrorCode.HostNotFound
+			
+		' Case ResponseErrorCode.SiteNotFound
+			
+		' Case ResponseErrorCode.NeedAuthenticate
+			
+		' Case ResponseErrorCode.BadAuthenticateParam
+			
+		' Case ResponseErrorCode.NeedBasicAuthenticate
+			
+		' Case ResponseErrorCode.EmptyPassword
+			
+		' Case ResponseErrorCode.BadUserNamePassword
+			
+		' Case ResponseErrorCode.Forbidden
+			
+		' Case ResponseErrorCode.FileNotFound
+			
+		' Case ResponseErrorCode.MethodNotAllowed
+			
+		' Case ResponseErrorCode.FileGone
+			
+		' Case ResponseErrorCode.LengthRequired
+			
+		' Case ResponseErrorCode.RequestEntityTooLarge
+			
+		' Case ResponseErrorCode.RequestUrlTooLarge
+			
+		' Case ResponseErrorCode.RequestRangeNotSatisfiable
+			
+		' Case ResponseErrorCode.RequestHeaderFieldsTooLarge
+			
+		' Case ResponseErrorCode.InternalServerError
+			
+		' Case ResponseErrorCode.FileNotAvailable
+			
+		' Case ResponseErrorCode.CannotCreateChildProcess
+			
+		' Case ResponseErrorCode.CannotCreatePipe
+			
+		' Case ResponseErrorCode.NotImplemented
+			
+		' Case ResponseErrorCode.ContentTypeEmpty
+			
+		' Case ResponseErrorCode.ContentEncodingNotEmpty
+			
+		' Case ResponseErrorCode.BadGateway
+			
+		' Case ResponseErrorCode.NotEnoughMemory
+			
+		' Case ResponseErrorCode.CannotCreateThread
+			
+		' Case ResponseErrorCode.GatewayTimeout
+			
+		Case ResponseErrorCode.VersionNotSupported
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.HTTPVersionNotSupported _
+			)
+			pBodyText = @HttpError505VersionNotSupported
+			
+		Case Else
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			pBodyText = @HttpError500InternalServerError
+			
+	End Select
+	
+	WriteHttpResponse( _
+		this, _
+		pBodyText, _
+		ppIResult _
+	)
 	
 	Return S_OK
 	
@@ -1039,35 +1138,35 @@ Function PrepareErrorResponseAsyncTaskSetClientRequest( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetWebSite( _
+Function PrepareErrorResponseAsyncTaskGetWebSiteCollection( _
 		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIWebSite <> NULL Then
-		IWebSite_AddRef(this->pIWebSite)
+	If this->pIWebSites <> NULL Then
+		IWebSiteCollection_AddRef(this->pIWebSites)
 	End If
 	
-	*ppIWebSite = this->pIWebSite
+	*ppIWebSites = this->pIWebSites
 	
 	Return S_OK
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetWebSite( _
+Function PrepareErrorResponseAsyncTaskSetWebSiteCollection( _
 		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
-		ByVal pIWebSite As IWebSite Ptr _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
-	If pIWebSite <> NULL Then
-		IWebSite_AddRef(pIWebSite)
+	If pIWebSites <> NULL Then
+		IWebSiteCollection_AddRef(pIWebSites)
 	End If
 	
-	If this->pIWebSite <> NULL Then
-		IWebSite_Release(this->pIWebSite)
+	If this->pIWebSites <> NULL Then
+		IWebSiteCollection_Release(this->pIWebSites)
 	End If
 	
-	this->pIWebSite = pIWebSite
+	this->pIWebSites = pIWebSites
 	
 	Return S_OK
 	
@@ -1218,18 +1317,18 @@ Function IPrepareErrorResponseAsyncTaskEndExecute( _
 	Return PrepareErrorResponseAsyncTaskEndExecute(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetWebSite( _
+Function IPrepareErrorResponseAsyncTaskGetWebSiteCollection( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetWebSite(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIWebSite)
+	Return PrepareErrorResponseAsyncTaskGetWebSiteCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIWebSites)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetWebSite( _
+Function IPrepareErrorResponseAsyncTaskSetWebSiteCollection( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
-		ByVal pIWebSite As IWebSite Ptr _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetWebSite(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIWebSite)
+	Return PrepareErrorResponseAsyncTaskSetWebSiteCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIWebSites)
 End Function
 
 Function IPrepareErrorResponseAsyncTaskGetRemoteAddress( _
@@ -1304,8 +1403,8 @@ Dim GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorRespon
 	@IPrepareErrorResponseAsyncTaskRelease, _
 	@IPrepareErrorResponseAsyncTaskBeginExecute, _
 	@IPrepareErrorResponseAsyncTaskEndExecute, _
-	@IPrepareErrorResponseAsyncTaskGetWebSite, _
-	@IPrepareErrorResponseAsyncTaskSetWebSite, _
+	@IPrepareErrorResponseAsyncTaskGetWebSiteCollection, _
+	@IPrepareErrorResponseAsyncTaskSetWebSiteCollection, _
 	@IPrepareErrorResponseAsyncTaskGetRemoteAddress, _
 	@IPrepareErrorResponseAsyncTaskSetRemoteAddress, _
 	@IPrepareErrorResponseAsyncTaskGetBaseStream, _

@@ -6,7 +6,7 @@
 #include once "IBaseStream.bi"
 #include once "IClientRequest.bi"
 #include once "IHttpReader.bi"
-#include once "IWebSite.bi"
+#include once "IWebSiteCollection.bi"
 #include once "win\winsock2.bi"
 
 Enum ResponseErrorCode
@@ -79,14 +79,14 @@ Type IPrepareErrorResponseAsyncTaskVirtualTable
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
 	
-	GetWebSite As Function( _
+	GetWebSiteCollection As Function( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	SetWebSite As Function( _
+	SetWebSiteCollection As Function( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
-		ByVal pIWebSite As IWebSite Ptr _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
 	GetRemoteAddress As Function( _
@@ -150,8 +150,8 @@ End Type
 #define IPrepareErrorResponseAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
 #define IPrepareErrorResponseAsyncTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
 #define IPrepareErrorResponseAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)
-#define IPrepareErrorResponseAsyncTask_GetWebSite(this, ppIWebSites) (this)->lpVtbl->GetWebSite(this, ppIWebSite)
-#define IPrepareErrorResponseAsyncTask_SetWebSite(this, pIWebSites) (this)->lpVtbl->SetWebSite(this, pIWebSite)
+#define IPrepareErrorResponseAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSite)
+#define IPrepareErrorResponseAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSite)
 #define IPrepareErrorResponseAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
 #define IPrepareErrorResponseAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 #define IPrepareErrorResponseAsyncTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
