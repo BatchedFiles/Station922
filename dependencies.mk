@@ -357,17 +357,17 @@ $(OBJ_RELEASE_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c: Modules\WindowsSe
 $(OBJ_DEBUG_DIR)\WindowsServiceMain$(FILE_SUFFIX_SERVICE).c:   Modules\WindowsServiceMain.bas
 
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c: EntryPoint.bas
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c: Modules\EntryPoint.bas
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c:   EntryPoint.bas
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).c:   Modules\EntryPoint.bas
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c: EntryPoint.bas
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c: Modules\EntryPoint.bas
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   EntryPoint.bas
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_SERVICE).c:   Modules\EntryPoint.bas
 
-$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: EntryPoint.bas
+$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c: Modules\EntryPoint.bas
 
-$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   EntryPoint.bas
+$(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_TEST).c:   Modules\EntryPoint.bas
 
 
 $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources\Resources.RC Resources\Resources.RH
