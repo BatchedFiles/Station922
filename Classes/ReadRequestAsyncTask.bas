@@ -60,6 +60,8 @@ Function ProcessReadError( _
 	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
 	IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
 	IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
+	IPrepareErrorResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+	IPrepareErrorResponseAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 	
 	Dim HttpError As ResponseErrorCode = Any
 	

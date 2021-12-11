@@ -5,6 +5,7 @@
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
 #include once "IClientRequest.bi"
+#include once "IHttpProcessorCollection.bi"
 #include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
 #include once "win\winsock2.bi"
@@ -137,6 +138,16 @@ Type IPrepareErrorResponseAsyncTaskVirtualTable
 		ByVal hrCode As HRESULT _
 	)As HRESULT
 	
+	GetHttpProcessorCollection As Function( _
+		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpProcessorCollection As Function( _
+		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IPrepareErrorResponseAsyncTask_
@@ -150,8 +161,8 @@ End Type
 #define IPrepareErrorResponseAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
 #define IPrepareErrorResponseAsyncTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
 #define IPrepareErrorResponseAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)
-#define IPrepareErrorResponseAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSite)
-#define IPrepareErrorResponseAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSite)
+#define IPrepareErrorResponseAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
+#define IPrepareErrorResponseAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
 #define IPrepareErrorResponseAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
 #define IPrepareErrorResponseAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 #define IPrepareErrorResponseAsyncTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
@@ -161,5 +172,7 @@ End Type
 #define IPrepareErrorResponseAsyncTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IPrepareErrorResponseAsyncTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IPrepareErrorResponseAsyncTask_SetErrorCode(this, HttpError, hrCode) (this)->lpVtbl->SetErrorCode(this, HttpError, hrCode)
+#define IPrepareErrorResponseAsyncTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
+#define IPrepareErrorResponseAsyncTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 
 #endif
