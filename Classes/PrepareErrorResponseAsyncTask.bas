@@ -80,6 +80,7 @@ Type _PrepareErrorResponseAsyncTask
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
+	pIProcessors As IHttpProcessorCollection Ptr
 	RemoteAddress As SOCKADDR_STORAGE
 	RemoteAddressLength As Integer
 	pIStream As IBaseStream Ptr
@@ -261,7 +262,7 @@ Sub WriteHttpResponse( _
 				CPtr(IUnknown Ptr, @this->lpVtbl), _
 				ppIResult _
 			)
-			MessageBoxW(NULL, WStr("IBaseStream_BeginWrite"), NULL, MB_OK)
+			
 		End If
 	End Scope
 	
@@ -791,6 +792,7 @@ Sub InitializePrepareErrorResponseAsyncTask( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
+	this->pIProcessors = NULL
 	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
 	this->RemoteAddressLength = 0
 	this->pIStream = NULL
@@ -825,6 +827,10 @@ Sub UnInitializePrepareErrorResponseAsyncTask( _
 	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
+	End If
+	
+	If this->pIProcessors <> NULL Then
+		IHttpProcessorCollection_Release(this->pIProcessors)
 	End If
 	
 	If this->pIWebSites <> NULL Then
@@ -1100,8 +1106,90 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 		ByVal CompletionKey As ULONG_PTR _
 	)As HRESULT
 	
-	Return E_FAIL
+	Dim dwBytes As DWORD = Any
+	Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
+		this->pIStream, _
+		pIResult, _
+		@dwBytes _
+	)
+	If FAILED(hrEndWrite) Then
+		Return E_FAIL
+	End If
+	
+	Select Case hrEndWrite
+		
+		Case S_OK
 			
+			Dim pTask As IReadRequestAsyncTask Ptr = Any
+			Dim hrCreateTask As HRESULT = CreateInstance( _
+				this->pIMemoryAllocator, _
+				@CLSID_READREQUESTASYNCTASK, _
+				@IID_IReadRequestAsyncTask, _
+				@pTask _
+			)
+			If FAILED(hrCreateTask) Then
+				Return hrCreateTask
+			End If
+			
+			IHttpReader_Clear(this->pIHttpReader)
+			IReadRequestAsyncTask_SetBaseStream(pTask, this->pIStream)
+			IReadRequestAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+			IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+			IReadRequestAsyncTask_SetRemoteAddress( _
+				pTask, _
+				CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
+				this->RemoteAddressLength _
+			)
+			
+			Dim ppIResult As IAsyncResult Ptr = Any
+			Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
+				pTask, _
+				pPool, _
+				@ppIResult _
+			)
+			If FAILED(hrBeginExecute) Then
+				IReadRequestAsyncTask_Release(pTask)
+				MessageBoxW(NULL, WStr("hrBeginExecute"), NULL, MB_OK)
+				Return hrBeginExecute
+			End If
+			
+			' Сейчас мы не уменьшаем счётчик ссылок на pTask
+			' Счётчик ссылок уменьшим в функции EndExecute
+			' Когда задача будет завершена
+			
+			Return S_OK
+			
+		Case S_FALSE
+			' Received 0 bytes
+			' TODO Вывести байты запроса в лог
+			' DebugPrintHttpReader(pIHttpReader)
+			
+			Return S_FALSE
+			
+		Case BASESTREAM_S_IO_PENDING
+			' PrepareErrorResponseAsyncTaskAddRef(this)
+			/'
+			Dim pIAsyncResult As IAsyncResult Ptr = Any
+			Dim hrBeginWrite As HRESULT = IBaseStream_BeginWrite( _
+				this->pIRequest, _
+				CPtr(IUnknown Ptr, @this->lpVtbl), _
+				@pIAsyncResult _
+			)
+			If FAILED(hrBeginWrite) Then
+				PrepareErrorResponseAsyncTaskRelease(this)
+				Return hrBeginWrite
+			End If
+			
+			' Ссылка на this сохранена в pIAsyncResult
+			' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
+			' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
+			'/
+			MessageBoxW(NULL, WStr("BASESTREAM_S_IO_PENDING"), NULL, MB_OK)
+			Return ASYNCTASK_S_IO_PENDING
+			
+	End Select
+	
 End Function
 
 Function PrepareErrorResponseAsyncTaskGetClientRequest( _
@@ -1279,6 +1367,41 @@ Function PrepareErrorResponseAsyncTaskSetErrorCode( _
 	
 End Function
 
+Function PrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIProcessors <> NULL Then
+		IHttpReader_AddRef(this->pIProcessors)
+	End If
+	
+	*ppIProcessors = this->pIProcessors
+	
+	Return S_OK
+	
+End Function
+
+Function PrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
+	If this->pIProcessors <> NULL Then
+		IBaseStream_Release(this->pIProcessors)
+	End If
+	
+	If pIProcessors <> NULL Then
+		IBaseStream_AddRef(pIProcessors)
+	End If
+	
+	this->pIProcessors = pIProcessors
+	
+	Return S_OK
+	
+End Function
+
+
 Function IPrepareErrorResponseAsyncTaskQueryInterface( _
 		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
 		ByVal riid As REFIID, _
@@ -1397,6 +1520,20 @@ Function IPrepareErrorResponseAsyncTaskSetErrorCode( _
 	Return PrepareErrorResponseAsyncTaskSetErrorCode(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), HttpError, hrCode)
 End Function
 
+Function IPrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	Return PrepareErrorResponseAsyncTaskGetHttpProcessorCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIProcessors)
+End Function
+
+Function IPrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	Return PrepareErrorResponseAsyncTaskSetHttpProcessorCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIProcessors)
+End Function
+
 Dim GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorResponseAsyncTaskVirtualTable = Type( _
 	@IPrepareErrorResponseAsyncTaskQueryInterface, _
 	@IPrepareErrorResponseAsyncTaskAddRef, _
@@ -1413,5 +1550,7 @@ Dim GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorRespon
 	@IPrepareErrorResponseAsyncTaskSetHttpReader, _
 	@IPrepareErrorResponseAsyncTaskGetClientRequest, _
 	@IPrepareErrorResponseAsyncTaskSetClientRequest, _
-	@IPrepareErrorResponseAsyncTaskSetErrorCode _
+	@IPrepareErrorResponseAsyncTaskSetErrorCode, _
+	@IPrepareErrorResponseAsyncTaskGetHttpProcessorCollection, _
+	@IPrepareErrorResponseAsyncTaskSetHttpProcessorCollection _
 )

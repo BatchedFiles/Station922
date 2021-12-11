@@ -103,4 +103,14 @@ Declare Function PrepareErrorResponseAsyncTaskSetErrorCode( _
 	ByVal hrCode As HRESULT _
 )As HRESULT
 
+Declare Function PrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
+	ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
+Declare Function PrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
+	ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr _
+)As HRESULT
+
 #endif
