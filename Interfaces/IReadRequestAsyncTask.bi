@@ -4,6 +4,7 @@
 #include once "IAsyncTask.bi"
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
+#include once "IHttpProcessorCollection.bi"
 #include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
 #include once "win\winsock2.bi"
@@ -86,6 +87,16 @@ Type IReadRequestAsyncTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	GetHttpProcessorCollection As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpProcessorCollection As Function( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IReadRequestAsyncTask_
@@ -105,5 +116,7 @@ End Type
 #define IReadRequestAsyncTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IReadRequestAsyncTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IReadRequestAsyncTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
+#define IReadRequestAsyncTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
+#define IReadRequestAsyncTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 
 #endif

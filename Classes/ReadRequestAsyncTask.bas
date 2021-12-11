@@ -18,6 +18,7 @@ Type _ReadRequestAsyncTask
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
+	pIProcessors As IHttpProcessorCollection Ptr
 	RemoteAddress As SOCKADDR_STORAGE
 	RemoteAddressLength As Integer
 	pIStream As IBaseStream Ptr
@@ -135,6 +136,7 @@ Sub InitializeReadRequestAsyncTask( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
+	this->pIProcessors = NULL
 	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
 	this->RemoteAddressLength = 0
 	this->pIStream = NULL
@@ -197,6 +199,10 @@ Sub UnInitializeReadRequestAsyncTask( _
 	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
+	End If
+	
+	If this->pIProcessors <> NULL Then
+		IHttpProcessorCollection_Release(this->pIProcessors)
 	End If
 	
 	If this->pIWebSites <> NULL Then
@@ -812,6 +818,40 @@ Function ReadRequestAsyncTaskSetHttpReader( _
 	
 End Function
 
+Function ReadRequestAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIProcessors <> NULL Then
+		IHttpReader_AddRef(this->pIProcessors)
+	End If
+	
+	*ppIProcessors = this->pIProcessors
+	
+	Return S_OK
+	
+End Function
+
+Function ReadRequestAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
+	If this->pIProcessors <> NULL Then
+		IBaseStream_Release(this->pIProcessors)
+	End If
+	
+	If pIProcessors <> NULL Then
+		IBaseStream_AddRef(pIProcessors)
+	End If
+	
+	this->pIProcessors = pIProcessors
+	
+	Return S_OK
+	
+End Function
+
 
 Function IReadRequestAsyncTaskQueryInterface( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
@@ -909,6 +949,20 @@ Function IReadRequestAsyncTaskSetHttpReader( _
 	Return ReadRequestAsyncTaskSetHttpReader(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pReader)
 End Function
 
+Function IReadRequestAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	Return ReadRequestAsyncTaskGetHttpProcessorCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIProcessors)
+End Function
+
+Function IReadRequestAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	Return ReadRequestAsyncTaskSetHttpProcessorCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIProcessors)
+End Function
+
 Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable = Type( _
 	@IReadRequestAsyncTaskQueryInterface, _
 	@IReadRequestAsyncTaskAddRef, _
@@ -922,7 +976,9 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskGetBaseStream, _
 	@IReadRequestAsyncTaskSetBaseStream, _
 	@IReadRequestAsyncTaskGetHttpReader, _
-	@IReadRequestAsyncTaskSetHttpReader _
+	@IReadRequestAsyncTaskSetHttpReader, _
+	@IReadRequestAsyncTaskGetHttpProcessorCollection, _
+	@IReadRequestAsyncTaskSetHttpProcessorCollection _
 )
 
 Function IReadRequestAsyncTaskCloneableQueryInterface( _

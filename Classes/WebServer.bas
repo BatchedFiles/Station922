@@ -166,7 +166,7 @@ Function AcceptConnection( _
 											IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 											IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
 											IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-											'IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+											IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, NULL)
 											IReadRequestAsyncTask_SetRemoteAddress( _
 												pTask, _
 												CPtr(SOCKADDR Ptr, @RemoteAddress), _

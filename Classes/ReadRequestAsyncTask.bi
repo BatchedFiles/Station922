@@ -87,6 +87,16 @@ Declare Function ReadRequestAsyncTaskSetHttpReader( _
 	byVal pReader As IHttpReader Ptr _
 )As HRESULT
 
+Declare Function ReadRequestAsyncTaskGetHttpProcessorCollection( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetHttpProcessorCollection( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr _
+)As HRESULT
+
 Declare Function ReadRequestAsyncTaskCloneableQueryInterface( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal riid As REFIID, _
