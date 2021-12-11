@@ -15,7 +15,7 @@ Type _InternalHeapBSTR
 		Padding As DWORD
 	#endif
 	cbBytes As DWORD
-	wszNullChar(0) As OLECHAR
+	wszNullChar(0 To 7) As OLECHAR
 End Type
 
 Function HeapSysAllocString( _
