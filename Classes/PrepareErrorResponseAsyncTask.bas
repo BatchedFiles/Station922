@@ -1120,6 +1120,13 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 		
 		Case S_OK
 			
+			Dim KeepAlive As Boolean = Any
+			IServerResponse_GetKeepAlive(this->pIResponse, @KeepAlive)
+			
+			If KeepAlive = False Then
+				Return S_FALSE
+			End If
+			
 			Dim pTask As IReadRequestAsyncTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
