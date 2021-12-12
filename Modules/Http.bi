@@ -131,6 +131,7 @@ Enum HttpRequestHeaders
 	HeaderOrigin
 	HeaderPragma
 	HeaderProxyAuthorization
+	HeaderPurpose
 	HeaderRange
 	HeaderReferer
 	HeaderSecWebSocketKey
@@ -148,7 +149,7 @@ Enum HttpRequestHeaders
 	HeaderWebSocketProtocol
 End Enum
 
-Const HttpRequestHeadersSize As Integer = 43
+Const HttpRequestHeadersSize As Integer = 44
 
 ' Помечены заголовки, которые клиент не может переопределить черз файл *.headers
 Enum HttpResponseHeaders

@@ -71,6 +71,7 @@ Const HeaderOriginString =             WStr("Origin")
 Const HeaderPragmaString =             WStr("Pragma")
 Const HeaderProxyAuthenticateString =  WStr("Proxy-Authenticate")
 Const HeaderProxyAuthorizationString = WStr("Proxy-Authorization")
+Const HeaderPurposeString            = WStr("Purpose")
 Const HeaderRangeString =              WStr("Range")
 Const HeaderRefererString =            WStr("Referer")
 Const HeaderRetryAfterString =         WStr("Retry-After")
@@ -294,7 +295,8 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 	Type<RequestHeaderNode>(@HeaderTransferEncodingString,        Len(HeaderTransferEncodingString),        HttpRequestHeaders.HeaderTransferEncoding), _
 	Type<RequestHeaderNode>(@HeaderViaString,                     Len(HeaderViaString),                     HttpRequestHeaders.HeaderVia), _
 	Type<RequestHeaderNode>(@HeaderWarningString,                 Len(HeaderWarningString),                 HttpRequestHeaders.HeaderWarning), _
-	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString,       Len(HeaderWebSocketProtocolString),       HttpRequestHeaders.HeaderWebSocketProtocol) _
+	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString,       Len(HeaderWebSocketProtocolString),       HttpRequestHeaders.HeaderWebSocketProtocol), _
+	Type<RequestHeaderNode>(@HeaderPurposeString,                 Len(HeaderPurposeString),                 HttpRequestHeaders.HeaderPurpose) _
 }
 
 Dim Shared ResponseHeaderNodesVector(1 To HttpResponseHeadersSize) As ResponseHeaderNode = { _
