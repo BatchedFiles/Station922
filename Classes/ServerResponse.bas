@@ -475,14 +475,12 @@ Function ServerResponseStringableToString( _
 	End If
 	
 	If this->KeepAlive Then
-		If this->HttpVersion = HttpVersions.Http10 Then
-			ServerResponseAddKnownResponseHeaderWstrLen( _
-				this, _
-				HttpResponseHeaders.HeaderConnection, _
-				@KeepAliveString, _
-				Len(KeepAliveString) _
-			)
-		End If
+		ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderConnection, _
+			@KeepAliveString, _
+			Len(KeepAliveString) _
+		)
 	Else
 		ServerResponseAddKnownResponseHeaderWstrLen( _
 			this, _
