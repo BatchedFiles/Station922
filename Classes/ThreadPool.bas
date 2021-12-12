@@ -95,7 +95,14 @@ Function WorkerThread( _
 				CompletionKey _
 			)
 			If FAILED(hrEndExecute) Then
-				MessageBoxW(NULL, "IAsyncTask_EndExecute Error", NULL, MB_OK)
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_ERROR
+				vtErrorCode.scode = hrEndExecute
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"IAsyncTask_EndExecute Error\t"), _
+					@vtErrorCode _
+				)
 			End If
 			
 			IAsyncTask_Release(pTask)

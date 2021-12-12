@@ -1157,7 +1157,6 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 			)
 			If FAILED(hrBeginExecute) Then
 				IReadRequestAsyncTask_Release(pTask)
-				MessageBoxW(NULL, WStr("hrBeginExecute"), NULL, MB_OK)
 				Return hrBeginExecute
 			End If
 			
@@ -1192,7 +1191,6 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 			' —сылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
 			' —сылку на OVERLAPPED возвратит функци€ GetQueuedCompletionStatus бассейну потоков
 			'/
-			MessageBoxW(NULL, WStr("BASESTREAM_S_IO_PENDING"), NULL, MB_OK)
 			Return ASYNCTASK_S_IO_PENDING
 			
 	End Select
