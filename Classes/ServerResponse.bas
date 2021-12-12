@@ -30,7 +30,6 @@ Type _ServerResponse
 	StatusDescription As HeapBSTR
 	ResponseZipMode As ZipModes
 	Mime As MimeType
-	' —жатие данных, поддерживаемое сервером
 	ResponseZipEnable As Boolean
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean

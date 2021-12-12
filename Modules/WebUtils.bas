@@ -360,8 +360,6 @@ Function AllResponseHeadersToBytes( _
 		ByVal ContentLength As ULongInt _
 	)As Integer
 	
-	' TODO Найти способ откатывать изменения буфера заголовков ответа
-	
 	IServerResponse_AddKnownResponseHeaderWstrLen( _
 		pIResponse, _
 		HttpResponseHeaders.HeaderAcceptRanges, _
@@ -369,7 +367,6 @@ Function AllResponseHeadersToBytes( _
 		Len(BytesString) _
 	)
 	
-	/'
 	Dim KeepAlive As Boolean = Any
 	If pIRequest = NULL Then
 		KeepAlive = False
@@ -377,22 +374,21 @@ Function AllResponseHeadersToBytes( _
 		IClientRequest_GetKeepAlive(pIRequest, @KeepAlive)
 	End If
 	
-	If KeepAlive Then
+	If KeepAlive = False Then
+		IServerResponse_SetKeepAlive( _
+			pIResponse, _
+			False _
+		)
+		/'
+	Else
 		Dim HttpVersion As HttpVersions = Any
 		If pIRequest = NULL Then
 			HttpVersion = HttpVersions.Http10
 		Else
 			IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
 		End If
-		
-	Else
-		IServerResponse_AddKnownResponseHeader( _
-			pIResponse, _
-			HttpResponseHeaders.HeaderConnection, _
-			@CloseString _
-		)
+		'/
 	End If
-	'/
 	
 	Dim StatusCode As HttpStatusCodes = Any
 	IServerResponse_GetStatusCode(pIResponse, @StatusCode)
