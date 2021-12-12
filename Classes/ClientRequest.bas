@@ -214,7 +214,7 @@ Function ClientRequestAddRequestHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
-	)As Integer
+	)As Boolean
 	
 	Dim HeaderIndex As HttpRequestHeaders = Any
 	Dim Finded As Boolean = GetKnownRequestHeaderIndex( _
@@ -223,12 +223,13 @@ Function ClientRequestAddRequestHeader( _
 	)
 	If Finded = False Then
 		' TODO ƒобавить в нераспознанные заголовки запроса
-		Return -1
+		HeapSysFreeString(Value)
+		Return False
 	End If
 	
 	this->RequestHeaders(HeaderIndex) = Value
 	
-	Return HeaderIndex
+	Return True
 	
 End Function
 
