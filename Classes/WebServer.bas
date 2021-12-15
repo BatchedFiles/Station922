@@ -190,6 +190,14 @@ Function AcceptConnection( _
 												' Когда задача будет завершена
 												Return S_OK
 											Else
+												' Dim vtSCode As VARIANT = Any
+												' vtSCode.vt = VT_ERROR
+												' vtSCode.scode = hrCreateTask
+												' LogWriteEntry( _
+												' 	LogEntryType.Error, _
+												' 	WStr(!"CreateTask Error\t"), _
+												' 	@vtSCode _
+												' )
 												pIClientMemoryAllocator = NULL
 												pINetworkStream = NULL
 												pIHttpReader = NULL

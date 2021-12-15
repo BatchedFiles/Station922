@@ -41,14 +41,6 @@ Function ProcessReadError( _
 		@pTask _
 	)
 	If FAILED(hrCreateTask) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrCreateTask
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"CreateTask Error\t"), _
-			@vtSCode _
-		)
 		Return hrCreateTask
 	End If
 	
