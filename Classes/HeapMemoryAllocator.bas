@@ -23,7 +23,6 @@ Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	ReferenceCounter As Integer
 	pISpyObject As IMallocSpy Ptr
-	cbMemoryUsed As SIZE_T_
 	hHeap As HANDLE
 End Type
 
@@ -38,7 +37,6 @@ Sub InitializeHeapMemoryAllocator( _
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL
-	this->cbMemoryUsed = SizeOf(HeapMemoryAllocator)
 	this->hHeap = hHeap
 	
 End Sub
@@ -46,8 +44,6 @@ End Sub
 Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
-	
-	this->cbMemoryUsed -= SizeOf(HeapMemoryAllocator)
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
@@ -157,23 +153,35 @@ Sub DestroyHeapMemoryAllocator( _
 	
 	UnInitializeHeapMemoryAllocator(this)
 	
-	If this->cbMemoryUsed <> 0 Then
-		Dim vtMemoryLeaksSize As VARIANT = Any
-		vtMemoryLeaksSize.vt = VT_I8
-		vtMemoryLeaksSize.llVal = CInt(this->cbMemoryUsed)
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"\t\t\t\tMemoryLeak Bytes\t"), _
-			@vtMemoryLeaksSize _
-		)
-	End If
-	
 	If hHeap <> NULL Then
 		HeapFree( _
 			this->hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
 			this _
 		)
+		
+		Dim bLock As BOOL = HeapLock(hHeap)
+		If bLock Then
+			Dim phe As PROCESS_HEAP_ENTRY = Any
+			phe.lpData = NULL
+			' Dim res As Long = 0
+			Do While HeapWalk(hHeap, @phe)
+				Dim AllocatedFlag As Boolean = phe.wFlags And PROCESS_HEAP_ENTRY_BUSY
+				If AllocatedFlag Then
+					Dim vtMemoryLeaksSize As VARIANT = Any
+					vtMemoryLeaksSize.vt = VT_I8
+					vtMemoryLeaksSize.llVal = phe.cbData
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"\t\t\t\tMemoryLeak Bytes\t"), _
+						@vtMemoryLeaksSize _
+					)
+				End If
+			Loop
+			
+			HeapUnlock(hHeap)
+		End If
+		
 		HeapDestroy(hHeap)
 	End If
 	
@@ -288,14 +296,6 @@ Function HeapMemoryAllocatorAlloc( _
 			)
 		#endif
 		
-		Dim Size As SIZE_T_ = HeapSize( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			pMemory _
-		)
-		
-		this->cbMemoryUsed += Size
-		
 	End If
 	
 	If this->pISpyObject <> NULL Then
@@ -336,19 +336,11 @@ Sub HeapMemoryAllocatorFree( _
 		pMemory = IMallocSpy_PreFree(this->pISpyObject, pMemory, True)
 	End If
 	
-	Dim Size As SIZE_T_ = HeapSize( _
-		this->hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		pMemory _
-	)
-	
 	HeapFree( _
 		this->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
 		pMemory _
 	)
-	
-	this->cbMemoryUsed -= Size
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_PostFree(this->pISpyObject, True)
