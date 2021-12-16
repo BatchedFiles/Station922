@@ -131,7 +131,6 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
 	this->pIProcessors = NULL
-	ZeroMemory(@this->RemoteAddress, SizeOf(SOCKADDR_STORAGE))
 	this->RemoteAddressLength = 0
 	this->pIStream = NULL
 	this->pIHttpReader = NULL
