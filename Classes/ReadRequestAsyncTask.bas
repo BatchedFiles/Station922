@@ -2,19 +2,16 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "ICloneable.bi"
 #include once "Logger.bi"
 #include once "PrepareErrorResponseAsyncTask.bi"
 
 Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
-Extern GlobalReadRequestAsyncTaskCloneableVirtualTable As Const ICloneableVirtualTable
 
 Type _ReadRequestAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
-	lpCloneableVtbl As Const ICloneableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
@@ -125,7 +122,6 @@ Sub InitializeReadRequestAsyncTask( _
 		CopyMemory(@this->IdString, @Str("ReadRequest_Task"), 16)
 	#endif
 	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
-	this->lpCloneableVtbl = @GlobalReadRequestAsyncTaskCloneableVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -135,46 +131,6 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIStream = NULL
 	this->pIHttpReader = NULL
 	this->pIRequest = pIRequest
-	
-End Sub
-
-Sub InitializeCloneReadRequestAsyncTask( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIStream As IBaseStream Ptr, _
-		ByVal pIHttpReader As IHttpReader Ptr, _
-		ByVal pIRequest As IClientRequest Ptr, _
-		ByVal pWebSites As IWebSiteCollection Ptr, _
-		ByVal RemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
-	)
-	
-	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
-	this->lpCloneableVtbl = @GlobalReadRequestAsyncTaskCloneableVirtualTable
-	this->ReferenceCounter = 0
-	
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	
-	IWebSiteCollection_AddRef(pWebSites)
-	this->pIWebSites = pWebSites
-	
-	this->RemoteAddressLength = RemoteAddressLength
-	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
-	
-	this->pIStream = pIStream
-	this->pIHttpReader = pIHttpReader
-	this->pIRequest = pIRequest
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	IHttpReader_SetBaseStream( _
-		pIHttpReader, _
-		pIStream _
-	)
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	IClientRequest_SetTextReader( _
-		pIRequest, _
-		CPtr(ITextReader Ptr, pIHttpReader) _
-	)
 	
 End Sub
 
@@ -320,12 +276,8 @@ Function ReadRequestAsyncTaskQueryInterface( _
 			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				If IsEqualIID(@IID_ICloneable, riid) Then
-					*ppv = @this->lpCloneableVtbl
-				Else
-					*ppv = NULL
-					Return E_NOINTERFACE
-				End If
+				*ppv = NULL
+				Return E_NOINTERFACE
 			End If
 		End If
 	End If
@@ -596,147 +548,6 @@ Function ReadRequestAsyncTaskSetRemoteAddress( _
 	
 End Function
 
-Function ReadRequestAsyncTaskCloneableClone( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pMalloc As IMalloc Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ReadRequestAsyncTask)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ReadRequestAsyncTask cloning\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
-	Dim pClone As ICloneable Ptr = Any
-	IBaseStream_QueryInterface( _
-		this->pIStream, _
-		@IID_ICloneable, _
-		@pClone _
-	)
-	Dim pIBaseStream As IBaseStream Ptr = Any
-	Dim hrCreateNetworkStreamClone As HRESULT = ICloneable_Clone( _
-		pClone, _
-		pMalloc, _
-		@IID_IBaseStream, _
-		@pIBaseStream _
-	)
-	
-	ICloneable_Release(pClone)
-	
-	If SUCCEEDED(hrCreateNetworkStreamClone) Then
-		
-		Dim pHttpReaderClone As ICloneable Ptr = Any
-		IHttpReader_QueryInterface( _
-			this->pIHttpReader, _
-			@IID_ICloneable, _
-			@pHttpReaderClone _
-		)
-		
-		Dim pReader As IHttpReader Ptr = Any
-		Dim hrCreateHttpReaderClone As HRESULT = ICloneable_Clone( _
-			pHttpReaderClone, _
-			pMalloc, _
-			@IID_IHttpReader, _
-			@pReader _
-		)
-		
-		ICloneable_Release(pHttpReaderClone)
-		
-		If SUCCEEDED(hrCreateHttpReaderClone) Then
-			
-			Dim pClientRequestClone As ICloneable Ptr = Any
-			IClientRequest_QueryInterface( _
-				this->pIRequest, _
-				@IID_ICloneable, _
-				@pClientRequestClone _
-			)
-			
-			Dim pRequest As IClientRequest Ptr = Any
-			Dim hrCreateClientRequestClone As HRESULT = ICloneable_Clone( _
-				pClientRequestClone, _
-				pMalloc, _
-				@IID_IClientRequest, _
-				@pRequest _
-			)
-			
-			If SUCCEEDED(hrCreateClientRequestClone) Then
-				
-				Dim pClone As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
-					pMalloc, _
-					SizeOf(ReadRequestAsyncTask) _
-				)
-				
-				If pClone <> NULL Then
-					
-					InitializeCloneReadRequestAsyncTask( _
-						pClone, _
-						pMalloc, _
-						pIBaseStream, _
-						pReader, _
-						pRequest, _
-						this->pIWebSites, _
-						CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
-						this->RemoteAddressLength _
-					)
-					
-					Dim hrClone As HRESULT = ReadRequestAsyncTaskQueryInterface( _
-						pClone, _
-						riid, _
-						ppvObject _
-					)
-					
-					If SUCCEEDED(hrClone) Then
-						
-						#if __FB_DEBUG__
-						Scope
-							Dim vtEmpty As VARIANT = Any
-							VariantInit(@vtEmpty)
-							LogWriteEntry( _
-								LogEntryType.Debug, _
-								WStr("ReadRequestAsyncTask cloned"), _
-								@vtEmpty _
-							)
-						End Scope
-						#endif
-						
-						Return S_OK
-						
-					End If
-					
-					*ppvObject = NULL
-					IMalloc_Free(pMalloc, pClone)
-					Return hrClone
-				End If
-				
-				*ppvObject = NULL
-				IClientRequest_Release(pRequest)
-				Return E_OUTOFMEMORY
-			End If
-			
-			*ppvObject = NULL
-			IHttpReader_Release(pReader)
-			Return hrCreateClientRequestClone
-		End If
-		
-		*ppvObject = NULL
-		IBaseStream_Release(pIBaseStream)
-		Return hrCreateHttpReaderClone
-	End If
-	
-	*ppvObject = NULL
-	Return hrCreateNetworkStreamClone
-	
-End Function
-
 Function ReadRequestAsyncTaskGetBaseStream( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -972,40 +783,4 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskSetHttpReader, _
 	@IReadRequestAsyncTaskGetHttpProcessorCollection, _
 	@IReadRequestAsyncTaskSetHttpProcessorCollection _
-)
-
-Function IReadRequestAsyncTaskCloneableQueryInterface( _
-		ByVal this As ICloneable Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskQueryInterface(ContainerOf(this, ReadRequestAsyncTask, lpCloneableVtbl), riid, ppvObject)
-End Function
-
-Function IReadRequestAsyncTaskCloneableAddRef( _
-		ByVal this As ICloneable Ptr _
-	)As ULONG
-	Return ReadRequestAsyncTaskAddRef(ContainerOf(this, ReadRequestAsyncTask, lpCloneableVtbl))
-End Function
-
-Function IReadRequestAsyncTaskCloneableRelease( _
-		ByVal this As ICloneable Ptr _
-	)As ULONG
-	Return ReadRequestAsyncTaskRelease(ContainerOf(this, ReadRequestAsyncTask, lpCloneableVtbl))
-End Function
-
-Function IReadRequestAsyncTaskCloneableClone( _
-		ByVal this As ICloneable Ptr, _
-		ByVal pMalloc As IMalloc Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskCloneableClone(ContainerOf(this, ReadRequestAsyncTask, lpCloneableVtbl), pMalloc, riid, ppvObject)
-End Function
-
-Dim GlobalReadRequestAsyncTaskCloneableVirtualTable As Const ICloneableVirtualTable = Type( _
-	@IReadRequestAsyncTaskCloneableQueryInterface, _
-	@IReadRequestAsyncTaskCloneableAddRef, _
-	@IReadRequestAsyncTaskCloneableRelease, _
-	@IReadRequestAsyncTaskCloneableClone _
 )

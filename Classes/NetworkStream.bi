@@ -129,25 +129,4 @@ Declare Function NetworkStreamClose( _
 	ByVal this As NetworkStream Ptr _
 )As HRESULT
 
-Declare Function NetworkStreamCloneableQueryInterface( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppvObject As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamCloneableAddRef( _
-	ByVal this As NetworkStream Ptr _
-)As ULONG
-
-Declare Function NetworkStreamCloneableRelease( _
-	ByVal this As NetworkStream Ptr _
-)As ULONG
-
-Declare Function NetworkStreamCloneableClone( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pMalloc As IMalloc Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppvObject As Any Ptr Ptr _
-)As HRESULT
-
 #endif
