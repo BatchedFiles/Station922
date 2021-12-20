@@ -177,6 +177,7 @@ Function HeapSysAllocZStringLen( _
 		Length _
 	)
 	
+	this->cbBytes = Length * SizeOf(OLECHAR)
 	this->wszNullChar(Length) = 0
 	
 	#if __FB_DEBUG__
