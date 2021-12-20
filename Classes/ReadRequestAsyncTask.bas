@@ -359,8 +359,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 		pIResult _
 	)
 	If FAILED(hrEndReadRequest) Then
-		' TODO Вывести байты запроса HttpReader в лог
-		' DebugPrintHttpReader(pIHttpReader)
 		
 		Dim hrProcessReadError As HRESULT = ProcessReadError( _
 			this, _
