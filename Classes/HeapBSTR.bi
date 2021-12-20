@@ -19,7 +19,13 @@ Declare Function HeapSysAllocString( _
 Declare Function HeapSysAllocStringLen( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal psz As Const WString Ptr, _
-	ByVal ui As UINT _
+	ByVal Length As UINT _
+)As HeapBSTR
+
+Declare Function HeapSysAllocZStringLen( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal psz As Const ZString Ptr, _
+	ByVal Length As UINT _
 )As HeapBSTR
 
 Declare Function HeapSysConcatString( _

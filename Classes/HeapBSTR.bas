@@ -129,6 +129,75 @@ Sub UnInitializeInternalHeapBSTR( _
 	
 End Sub
 
+Function HeapSysAllocZStringLen( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal psz As Const ZString Ptr, _
+		ByVal Length As UINT _
+	)As HeapBSTR
+	
+	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
+	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
+	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = cbBytes
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"HeapBSTR creating\t"), _
+			@vtAllocatedBytes _
+		)
+	End Scope
+	#endif
+	
+	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		cbBytes _
+	)
+	If this = NULL Then
+		Return NULL
+	End If
+	
+	InitializeInternalHeapBSTR( _
+		this, _
+		pIMemoryAllocator, _
+		NULL, _
+		0 _
+	)
+	
+	Const dwFlags As DWORD = 0
+	MultiByteToWideChar( _
+		CP_ACP, _
+		dwFlags, _
+		psz, _
+		Length, _
+		@this->wszNullChar(0), _
+		Length _
+	)
+	
+	this->wszNullChar(Length) = 0
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtEmpty As VARIANT = Any
+		VariantInit(@vtEmpty)
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr("HeapBSTR created"), _
+			@vtEmpty _
+		)
+	End Scope
+	#endif
+	
+	Dim pHeapBstr As HeapBSTR = Any
+	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
+	
+	Return pHeapBstr
+	
+End Function
+
 Function CreateInternalHeapBSTR( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
