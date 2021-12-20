@@ -167,6 +167,17 @@ Function HeapSysAllocZStringLen( _
 		0 _
 	)
 	
+	Dim pIString As IString Ptr = Any
+	Dim hr As HRESULT = InternalHeapBSTRQueryInterface( _
+		this, _
+		@IID_IString, _
+		@pIString _
+	)
+	If FAILED(hr) Then
+		DestroyInternalHeapBSTR(this)
+		Return NULL
+	End If
+	
 	Const dwFlags As DWORD = 0
 	MultiByteToWideChar( _
 		CP_ACP, _
