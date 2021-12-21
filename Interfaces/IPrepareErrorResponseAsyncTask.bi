@@ -12,6 +12,7 @@
 
 Enum ResponseErrorCode
 	MovedPermanently
+	
 	BadRequest
 	PathNotValid
 	HostNotFound
@@ -30,6 +31,7 @@ Enum ResponseErrorCode
 	RequestUrlTooLarge
 	RequestRangeNotSatisfiable
 	RequestHeaderFieldsTooLarge
+	
 	InternalServerError
 	FileNotAvailable
 	CannotCreateChildProcess

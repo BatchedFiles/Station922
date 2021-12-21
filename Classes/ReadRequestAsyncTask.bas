@@ -46,11 +46,6 @@ Function ProcessReadError( _
 		CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
 		this->RemoteAddressLength _
 	)
-	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
-	IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-	IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
-	IPrepareErrorResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-	IPrepareErrorResponseAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 	
 	Dim HttpError As ResponseErrorCode = Any
 	
@@ -85,6 +80,14 @@ Function ProcessReadError( _
 			
 	End Select
 	
+	If HttpError < ResponseErrorCode.InternalServerError Then
+		IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+		IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
+		IPrepareErrorResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+		IPrepareErrorResponseAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+	End If
+	
+	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
 	IPrepareErrorResponseAsyncTask_SetErrorCode(pTask, HttpError, hrReadError)
 	
 	Dim pIResult As IAsyncResult Ptr = Any
