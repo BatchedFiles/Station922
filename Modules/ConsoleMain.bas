@@ -33,14 +33,13 @@ End Function
 
 Function wMain()As Long
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = Any
-	Dim hr As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)
-	If FAILED(hr) Then
+	Dim pIMemoryAllocator As IMalloc Ptr = GetHeapMemoryAllocatorInstance()
+	If pIMemoryAllocator = NULL Then
 		Return 1
 	End If
 	
 	Dim pIWebServer As IRunnable Ptr = Any
-	hr = CreateInstance( _
+	Dim hr As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
 		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
@@ -60,13 +59,13 @@ Function wMain()As Long
 	
 	IRunnable_RegisterStatusHandler(pIWebServer, @Context, @RunnableStatusHandler)
 	
-	hr = IRunnable_Run(pIWebServer)
-	If FAILED(hr) Then
+	Dim hrRun As HRESULT = IRunnable_Run(pIWebServer)
+	If FAILED(hrRun) Then
 		Return 2
 	End If
 	
-	hr = IRunnable_Stop(pIWebServer)
-	If FAILED(hr) Then
+	Dim hrStop As HRESULT = IRunnable_Stop(pIWebServer)
+	If FAILED(hrStop) Then
 		Return 3
 	End If
 	
