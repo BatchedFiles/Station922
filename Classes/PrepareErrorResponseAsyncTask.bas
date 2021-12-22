@@ -17,24 +17,6 @@ Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
 Const DefaultContentLanguage = WStr("en")
 Const DefaultCacheControlNoCache = WStr("no-cache")
 
-Const HttpErrorHead1 = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>")
-Const HttpErrorHead2 = WStr("</title></head>")
-
-Const HttpErrorBody1 = WStr("<body><h1>")
-Const HttpErrorBody3 = WStr("</h1><h2>HTTP Status Code ")
-Const HttpErrorBody4 = WStr(" - ")
-Const HttpErrorBody5 = WStr("</h2><p>")
-Const HttpErrorBody6 = WStr("</p><p>Visit <a href=""/"">website main page</a>.</p></body></html>")
-
-' 300
-Const ClientMovedString = WStr("Redirection")
-' 400
-Const ClientErrorString = WStr("Client Error")
-' 500
-Const ServerErrorString = WStr("Server Error")
-
-Const HttpErrorBody2 = WStr(" in application ")
-
 Const MovedPermanently = WStr("Moved Permanently.")
 Const HttpError400BadRequest = WStr("Bad Request.")
 Const HttpError400BadPath = WStr("Bad Path.")
@@ -96,18 +78,51 @@ Sub FormatErrorMessageBody( _
 		ByVal pIWriter As IArrayStringWriter Ptr, _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal VirtualPath As WString Ptr, _
-		ByVal BodyText As WString Ptr _
+		ByVal BodyText As WString Ptr, _
+		ByVal hrErrorCode As HRESULT _
 	)
+	
+	Const HttpStartHeadTag = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" />")
+	Const HttpStartTitleTag = WStr("<title>")
+	Const HttpEndTitleTag = WStr("</title>")
+	Const HttpEndHeadTag = WStr("</head>")
+	Const HttpStartBodyTag = WStr("<body>")
+	Const HttpStartH1Tag = WStr("<h1>")
+	Const HttpEndH1Tag = WStr("</h1>")
+	
+	' 300
+	Const ClientMovedString = WStr("Redirection")
+	' 400
+	Const ClientErrorString = WStr("Client Error")
+	' 500
+	Const ServerErrorString = WStr("Server Error")
+	Const HttpErrorInApplicationString = WStr(" in application ")
+	
+	Const HttpStartH2Tag = WStr("<h2>")
+	Const HttpStatusCodeString = WStr("HTTP Status Code ")
+	Const HttpEndH2Tag = WStr("</h2>")
+	Const HttpHresultErrorCodeString = WStr("HRESULT Error Code")
+	Const HttpStartPTag = WStr("<p>")
+	Const HttpEndPTag = WStr("</p>")
+	
+	'<p>Visit <a href=""/"">website main page</a>.</p>
+	
+	Const HttpEndBodyTag = WStr("</body></html>")
 	
 	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead1)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartHeadTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartTitleTag)
 	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorHead2)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndTitleTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndHeadTag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody1)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartBodyTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH1Tag)
+	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH1Tag)
 	
-	' Заголовок <h1>
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
 	Select Case StatusCode
 		
 		Case 300 To 399
@@ -121,23 +136,47 @@ Sub FormatErrorMessageBody( _
 			
 	End Select
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody2)
-	
-	' Имя приложения в заголовке <h1>
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorInApplicationString)
 	IArrayStringWriter_WriteString(pIWriter, VirtualPath)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody3)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
 	
-	' Код статуса в заголовке <h2>
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStatusCodeString)
 	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody4)
-	
-	' Описание ошибки в заголовке <h2>
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody5)
-	
-	' Текст сообщения между <p></p>
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+
+
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
 	IArrayStringWriter_WriteString(pIWriter, BodyText)
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorBody6)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
+	IArrayStringWriter_WriteString(pIWriter, HttpHresultErrorCodeString)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	IArrayStringWriter_WriteUInt32(pIWriter, hrErrorCode)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	
+	Dim wBuffer As WString * 256 = Any
+	Dim CharsCount As DWORD = FormatMessageW( _
+		FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
+		NULL, _
+		hrErrorCode, _
+		MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
+		@wBuffer, _
+		256 - 1, _
+		NULL _
+	)
+	If CharsCount <> 0 Then
+		IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+		IArrayStringWriter_WriteString(pIWriter, wBuffer)
+		IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	End If
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpEndBodyTag)
 	
 End Sub
 
@@ -206,12 +245,13 @@ Sub WriteHttpResponse( _
 				pIWriter, _
 				StatusCode, _
 				VirtualPath, _
-				BodyText _
+				BodyText, _
+				this->hrCode _
 			)
 		End Scope
 		
 		ContentBodyLength = WideCharToMultiByte( _
-			CP_ACP, _
+			CP_UTF8, _
 			0, _
 			@BodyBuffer, _
 			-1, _
@@ -800,7 +840,7 @@ Sub InitializePrepareErrorResponseAsyncTask( _
 	this->pIResponse = pIResponse
 	this->pSendBuffer = NULL
 	this->HttpError = ResponseErrorCode.InternalServerError
-	this->hrCode = S_OK
+	this->hrCode = E_UNEXPECTED
 	
 End Sub
 
