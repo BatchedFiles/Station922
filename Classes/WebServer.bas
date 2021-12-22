@@ -82,27 +82,27 @@ Function CreateReadTask( _
 	
 	If pIClientMemoryAllocator <> NULL Then
 		
-		Dim pINetworkStream As INetworkStream Ptr = Any
-		Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
+		Dim pIHttpReader As IHttpReader Ptr = Any
+		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
 			pIClientMemoryAllocator, _
-			@CLSID_NETWORKSTREAM, _
-			@IID_INetworkStream, _
-			@pINetworkStream _
+			@CLSID_HTTPREADER, _
+			@IID_IHttpReader, _
+			@pIHttpReader _
 		)
 		
-		If SUCCEEDED(hrCreateNetworkStream) Then
+		If SUCCEEDED(hrCreateHttpReader) Then
 			
-			INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-			
-			Dim pIHttpReader As IHttpReader Ptr = Any
-			Dim hrCreateHttpReader As HRESULT = CreateInstance( _
+			Dim pINetworkStream As INetworkStream Ptr = Any
+			Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
 				pIClientMemoryAllocator, _
-				@CLSID_HTTPREADER, _
-				@IID_IHttpReader, _
-				@pIHttpReader _
+				@CLSID_NETWORKSTREAM, _
+				@IID_INetworkStream, _
+				@pINetworkStream _
 			)
 			
-			If SUCCEEDED(hrCreateHttpReader) Then
+			If SUCCEEDED(hrCreateNetworkStream) Then
+				
+				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
 				
 				' TODO Запросить интерфейс вместо конвертирования указателя
 				IHttpReader_SetBaseStream( _
@@ -140,13 +140,13 @@ Function CreateReadTask( _
 					Return pTask
 				End If
 				
-				If pIHttpReader <> NULL Then
-					IHttpReader_Release(pIHttpReader)
+				If pINetworkStream <> NULL Then
+					INetworkStream_Release(pINetworkStream)
 				End If
 			End If
 			
-			If pINetworkStream <> NULL Then
-				INetworkStream_Release(pINetworkStream)
+			If pIHttpReader <> NULL Then
+				IHttpReader_Release(pIHttpReader)
 			End If
 		End If
 		
