@@ -125,6 +125,10 @@ DEFINE_CLSID(CLSID_WORKERTHREADCONTEXT, _
 	&hd1185fae, &h8a30, &h4519, &ha5, &h32, &h5a, &h37, &hbe, &ha6, &had, &h4d _
 )
 
+' {6D9085B7-2309-4C33-AB53-9D8ECAB607C3}
+DEFINE_GUID(CLSID_WRITERESPONSEASYNCTASK, _
+	&h6d9085b7, &h2309, &h4c33, &hab, &h53, &h9d, &h8e, &hca, &hb6, &h7, &hc3 _
+)
 ' {BC192A6D-7ACC-4219-A7AB-2900107366A4}
 DEFINE_IID(IID_IArrayStringWriter, _
 	&hbc192a6d, &h7acc, &h4219, &ha7, &hab, &h29, &h0, &h10, &h73, &h66, &ha4 _
@@ -308,4 +312,9 @@ DEFINE_IID(IID_IWebSiteCollection, _
 ' {263066C6-31B4-42EF-8982-6B58994E2D8F}
 DEFINE_IID(IID_IWorkerThreadContext, _
 	&h263066c6, &h31b4, &h42ef, &h89, &h82, &h6b, &h58, &h99, &h4e, &h2d, &h8f _
+)
+
+' {7BCB2D1D-0AA0-47EE-8420-594AD4378C94}
+DEFINE_GUID(IID_IWriteResponseAsyncTask, _
+	&h7bcb2d1d, &haa0, &h47ee, &h84, &h20, &h59, &h4a, &hd4, &h37, &h8c, &h94 _
 )
