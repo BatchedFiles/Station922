@@ -67,6 +67,11 @@ Declare Function ArrayStringWriterWriteInt32( _
 	ByVal Value As Long _
 )As HRESULT
 
+Declare Function ArrayStringWriterWriteUInt32( _
+	ByVal this As ArrayStringWriter Ptr, _
+	ByVal Value As ULong _
+)As HRESULT
+
 Declare Function ArrayStringWriterWriteInt64( _
 	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Value As LongInt _

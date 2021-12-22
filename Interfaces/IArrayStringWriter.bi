@@ -71,6 +71,11 @@ Type IArrayStringWriterVirtualTable
 		ByVal Value As Long _
 	)As HRESULT
 	
+	WriteUInt32 As Function( _
+		ByVal this As IArrayStringWriter Ptr, _
+		ByVal Value As ULong _
+	)As HRESULT
+	
 	WriteInt64 As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Value As LongInt _
@@ -113,6 +118,7 @@ End Type
 #define IArrayStringWriter_WriteLengthString(this, w, Length) (this)->lpVtbl->WriteLengthString(this, w, Length)
 #define IArrayStringWriter_WriteChar(this, wc) (this)->lpVtbl->WriteChar(this, wc)
 #define IArrayStringWriter_WriteInt32(this, Value) (this)->lpVtbl->WriteInt32(this, Value)
+#define IArrayStringWriter_WriteUInt32(this, Value) (this)->lpVtbl->WriteUInt32(this, Value)
 #define IArrayStringWriter_WriteInt64(this, Value) (this)->lpVtbl->WriteInt64(this, Value)
 #define IArrayStringWriter_WriteUInt64(this, Value) (this)->lpVtbl->WriteUInt64(this, Value)
 #define IArrayStringWriter_SetBuffer(this, Buffer, MaxBufferLength) (this)->lpVtbl->SetBuffer(this, Buffer, MaxBufferLength)
