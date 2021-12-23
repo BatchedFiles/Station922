@@ -8,7 +8,6 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
-#include once "PrepareErrorResponseAsyncTask.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "RequestedFile.bi"
 #include once "ServerResponse.bi"
@@ -17,6 +16,7 @@
 #include once "WebServerIniConfiguration.bi"
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
+#include once "WriteErrorAsyncTask.bi"
 
 Function CreateInstance( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -153,20 +153,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_PREPAREERRORRESPONSEASYNCTASK, rclsid) Then
-		Dim pTask As PrepareErrorResponseAsyncTask Ptr = CreatePrepareErrorResponseAsyncTask(pIMemoryAllocator)
-		If pTask = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = PrepareErrorResponseAsyncTaskQueryInterface(pTask, riid, ppv)
-		If FAILED(hr) Then
-			DestroyPrepareErrorResponseAsyncTask(pTask)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_READREQUESTASYNCTASK, rclsid) Then
 		Dim pTask As ReadRequestAsyncTask Ptr = CreateReadRequestAsyncTask(pIMemoryAllocator)
 		If pTask = NULL Then
@@ -274,6 +260,20 @@ Function CreateInstance( _
 		Dim hr As HRESULT = WebSiteCollectionQueryInterface(pWebSites, riid, ppv)
 		If FAILED(hr) Then
 			DestroyWebSiteCollection(pWebSites)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_WRITEERRORASYNCTASK, rclsid) Then
+		Dim pTask As WriteErrorAsyncTask Ptr = CreateWriteErrorAsyncTask(pIMemoryAllocator)
+		If pTask = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WriteErrorAsyncTaskQueryInterface(pTask, riid, ppv)
+		If FAILED(hr) Then
+			DestroyWriteErrorAsyncTask(pTask)
 		End If
 		
 		Return hr

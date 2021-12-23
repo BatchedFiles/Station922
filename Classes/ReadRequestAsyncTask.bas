@@ -3,7 +3,8 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
-#include once "PrepareErrorResponseAsyncTask.bi"
+#include once "WriteErrorAsyncTask.bi"
+#include once "WriteResponseAsyncTask.bi"
 
 Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
 
@@ -30,18 +31,18 @@ Function ProcessReadError( _
 	)As HRESULT
 	
 	' Создать и запустить задачу подготовки ответа ошибки
-	Dim pTask As IPrepareErrorResponseAsyncTask Ptr = Any
+	Dim pTask As IWriteErrorAsyncTask Ptr = Any
 	Dim hrCreateTask As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
-		@CLSID_PREPAREERRORRESPONSEASYNCTASK, _
-		@IID_IPrepareErrorResponseAsyncTask, _
+		@CLSID_WRITEERRORASYNCTASK, _
+		@IID_IWriteErrorAsyncTask, _
 		@pTask _
 	)
 	If FAILED(hrCreateTask) Then
 		Return hrCreateTask
 	End If
 	
-	IPrepareErrorResponseAsyncTask_SetRemoteAddress( _
+	IWriteErrorAsyncTask_SetRemoteAddress( _
 		pTask, _
 		CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
 		this->RemoteAddressLength _
@@ -81,17 +82,17 @@ Function ProcessReadError( _
 	End Select
 	
 	If HttpError < ResponseErrorCode.InternalServerError Then
-		IPrepareErrorResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-		IPrepareErrorResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
-		IPrepareErrorResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-		IPrepareErrorResponseAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+		IWriteErrorAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+		IWriteErrorAsyncTask_SetClientRequest(pTask, this->pIRequest)
+		IWriteErrorAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+		IWriteErrorAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 	End If
 	
-	IPrepareErrorResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
-	IPrepareErrorResponseAsyncTask_SetErrorCode(pTask, HttpError, hrReadError)
+	IWriteErrorAsyncTask_SetBaseStream(pTask, this->pIStream)
+	IWriteErrorAsyncTask_SetErrorCode(pTask, HttpError, hrReadError)
 	
 	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IPrepareErrorResponseAsyncTask_BeginExecute( _
+	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncTask_BeginExecute( _
 		pTask, _
 		pPool, _
 		@pIResult _
@@ -102,12 +103,12 @@ Function ProcessReadError( _
 		vtSCode.scode = hrBeginExecute
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IPrepareErrorResponseAsyncTask_BeginExecute Error\t"), _
+			WStr(!"IWriteErrorAsyncTask_BeginExecute Error\t"), _
 			@vtSCode _
 		)
 		
 		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		IPrepareErrorResponseAsyncTask_Release(pTask)
+		IWriteErrorAsyncTask_Release(pTask)
 		Return hrBeginExecute
 	End If
 	
@@ -376,9 +377,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 		
 		Case S_OK
 			
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
 			Dim hrPrepare As HRESULT = IClientRequest_Prepare(this->pIRequest)
 			If FAILED(hrPrepare) Then
 				Dim vtSCode As VARIANT = Any
@@ -399,40 +397,39 @@ Function ReadRequestAsyncTaskEndExecute( _
 				Return hrProcessReadError
 			End If
 			
-			/'
 			' Создать и запустить задачу подготовки запроса к ответу
-			Dim pTask As IPrepareSuccessResponseAsyncTask Ptr = Any
+			Dim pTask As IWriteResponseAsyncTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
-				@CLSID_PREPARESUCCESSRESPONSEASYNCTASK, _
-				@IID_IPrepareSuccessResponseAsyncTask, _
+				@CLSID_WRITERESPONSEASYNCTASK, _
+				@IID_IWriteResponseAsyncTask, _
 				@pTask _
 			)
 			If FAILED(hrCreateTask) Then
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrCreateTask
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"CreateTask Error\t"), _
-					@vtSCode _
+				Dim hrProcessReadError As HRESULT = ProcessReadError( _
+					this, _
+					pPool, _
+					hrCreateTask _
 				)
-				Return hrCreateTask
+				
+				Return hrProcessReadError
 			End If
-			
-			IPrepareResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
-			IPrepareResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-			IPrepareResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
-			IPrepareResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-			IPrepareResponseAsyncTask_SetRemoteAddress( _
+			/'
+			IWriteResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
+			IWriteResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
+			IWriteResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
+			IWriteResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IWriteResponseAsyncTask_SetRemoteAddress( _
 				pTask, _
 				CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
 				this->RemoteAddressLength _
 			)
 			
-			Dim hrBeginExecute As HRESULT = IPrepareResponseAsyncTask_BeginExecute( _
+			Dim pIResult As IAsyncResult Ptr = Any
+			Dim hrBeginExecute As HRESULT = IWriteResponseAsyncTask_BeginExecute( _
 				pTask, _
-				pPool _
+				pPool, _
+				@pIResult _
 			)
 			If FAILED(hrBeginExecute) Then
 				Dim vtSCode As VARIANT = Any
@@ -440,22 +437,15 @@ Function ReadRequestAsyncTaskEndExecute( _
 				vtSCode.scode = hrBeginExecute
 				LogWriteEntry( _
 					LogEntryType.Error, _
-					WStr(!"IPrepareResponseAsyncTask_BeginExecute Error\t"), _
+					WStr(!"IWriteResponseAsyncTask_BeginExecute Error\t"), _
 					@vtSCode _
 				)
 				
 				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				IPrepareResponseAsyncTask_Release(pTask)
+				IWriteResponseAsyncTask_Release(pTask)
 				Return hrBeginExecute
 			End If
 			'/
-			
-			ProcessReadError( _
-				this, _
-				pPool, _
-				E_FAIL _
-			)
-			
 			Return S_OK
 			
 		Case S_FALSE

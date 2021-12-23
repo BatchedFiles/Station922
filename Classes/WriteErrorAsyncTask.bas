@@ -1,4 +1,4 @@
-#include once "PrepareErrorResponseAsyncTask.bi"
+#include once "WriteErrorAsyncTask.bi"
 #include once "ArrayStringWriter.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
@@ -9,7 +9,7 @@
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 
-Extern GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorResponseAsyncTaskVirtualTable
+Extern GlobalWriteErrorAsyncTaskVirtualTable As Const IWriteErrorAsyncTaskVirtualTable
 
 ' Размер буфера в символах для записи в него кода html страницы с ошибкой
 Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
@@ -55,11 +55,11 @@ Const DefaultHeaderWwwAuthenticate = WStr("Basic realm=""Need username and passw
 Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 
-Type _PrepareErrorResponseAsyncTask
+Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IPrepareErrorResponseAsyncTaskVirtualTable Ptr
+	lpVtbl As Const IWriteErrorAsyncTaskVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
@@ -182,7 +182,7 @@ Sub FormatErrorMessageBody( _
 End Sub
 
 Sub WriteHttpResponse( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal BodyText As WString Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)
@@ -309,16 +309,16 @@ Sub WriteHttpResponse( _
 	
 End Sub
 
-Sub InitializePrepareErrorResponseAsyncTask( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Sub InitializeWriteErrorAsyncTask( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WriteHttpErrorRs"), 16)
+		CopyMemory(@this->IdString, @Str("WriteError__Task"), 16)
 	#endif
-	this->lpVtbl = @GlobalPrepareErrorResponseAsyncTaskVirtualTable
+	this->lpVtbl = @GlobalWriteErrorAsyncTaskVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -335,8 +335,8 @@ Sub InitializePrepareErrorResponseAsyncTask( _
 	
 End Sub
 
-Sub UnInitializePrepareErrorResponseAsyncTask( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr _
+Sub UnInitializeWriteErrorAsyncTask( _
+		ByVal this As WriteErrorAsyncTask Ptr _
 	)
 	
 	If this->pSendBuffer <> NULL Then
@@ -371,18 +371,18 @@ Sub UnInitializePrepareErrorResponseAsyncTask( _
 	
 End Sub
 
-Function CreatePrepareErrorResponseAsyncTask( _
+Function CreateWriteErrorAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As PrepareErrorResponseAsyncTask Ptr
+	)As WriteErrorAsyncTask Ptr
 	
 	#if __FB_DEBUG__
 	Scope
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(PrepareErrorResponseAsyncTask)
+		vtAllocatedBytes.lVal = SizeOf(WriteErrorAsyncTask)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr(!"PrepareErrorResponseAsyncTask creating\t"), _
+			WStr(!"WriteErrorAsyncTask creating\t"), _
 			@vtAllocatedBytes _
 		)
 	End Scope
@@ -398,13 +398,13 @@ Function CreatePrepareErrorResponseAsyncTask( _
 	
 	If SUCCEEDED(hrCreateRequest) Then
 		
-		Dim this As PrepareErrorResponseAsyncTask Ptr = IMalloc_Alloc( _
+		Dim this As WriteErrorAsyncTask Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
-			SizeOf(PrepareErrorResponseAsyncTask) _
+			SizeOf(WriteErrorAsyncTask) _
 		)
 		
 		If this <> NULL Then
-			InitializePrepareErrorResponseAsyncTask( _
+			InitializeWriteErrorAsyncTask( _
 				this, _
 				pIMemoryAllocator, _
 				pIResponse _
@@ -416,7 +416,7 @@ Function CreatePrepareErrorResponseAsyncTask( _
 				VariantInit(@vtEmpty)
 				LogWriteEntry( _
 					LogEntryType.Debug, _
-					WStr("PrepareErrorResponseAsyncTask created"), _
+					WStr("WriteErrorAsyncTask created"), _
 					@vtEmpty _
 				)
 			End Scope
@@ -432,8 +432,8 @@ Function CreatePrepareErrorResponseAsyncTask( _
 	
 End Function
 
-Sub DestroyPrepareErrorResponseAsyncTask( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr _
+Sub DestroyWriteErrorAsyncTask( _
+		ByVal this As WriteErrorAsyncTask Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -442,7 +442,7 @@ Sub DestroyPrepareErrorResponseAsyncTask( _
 		VariantInit(@vtEmpty)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr("PrepareErrorResponseAsyncTask destroying"), _
+			WStr("WriteErrorAsyncTask destroying"), _
 			@vtEmpty _
 		)
 	End Scope
@@ -451,7 +451,7 @@ Sub DestroyPrepareErrorResponseAsyncTask( _
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
-	UnInitializePrepareErrorResponseAsyncTask(this)
+	UnInitializeWriteErrorAsyncTask(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
@@ -461,7 +461,7 @@ Sub DestroyPrepareErrorResponseAsyncTask( _
 		VariantInit(@vtEmpty)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr("PrepareErrorResponseAsyncTask destroyed"), _
+			WStr("WriteErrorAsyncTask destroyed"), _
 			@vtEmpty _
 		)
 	End Scope
@@ -471,13 +471,13 @@ Sub DestroyPrepareErrorResponseAsyncTask( _
 	
 End Sub
 
-Function PrepareErrorResponseAsyncTaskQueryInterface( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskQueryInterface( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IPrepareErrorResponseAsyncTask, riid) Then
+	If IsEqualIID(@IID_IWriteErrorAsyncTask, riid) Then
 		*ppv = @this->lpVtbl
 	Else
 		If IsEqualIID(@IID_IAsyncTask, riid) Then
@@ -492,14 +492,14 @@ Function PrepareErrorResponseAsyncTaskQueryInterface( _
 		End If
 	End If
 	
-	PrepareErrorResponseAsyncTaskAddRef(this)
+	WriteErrorAsyncTaskAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskAddRef( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr _
+Function WriteErrorAsyncTaskAddRef( _
+		ByVal this As WriteErrorAsyncTask Ptr _
 	)As ULONG
 	
 	#ifdef __FB_64BIT__
@@ -512,8 +512,8 @@ Function PrepareErrorResponseAsyncTaskAddRef( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskRelease( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr _
+Function WriteErrorAsyncTaskRelease( _
+		ByVal this As WriteErrorAsyncTask Ptr _
 	)As ULONG
 	
 	#ifdef __FB_64BIT__
@@ -526,14 +526,14 @@ Function PrepareErrorResponseAsyncTaskRelease( _
 		End If
 	#endif
 	
-	DestroyPrepareErrorResponseAsyncTask(this)
+	DestroyWriteErrorAsyncTask(this)
 	
 	Return 0
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskBeginExecute( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskBeginExecute( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -833,8 +833,8 @@ Function PrepareErrorResponseAsyncTaskBeginExecute( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskEndExecute( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskEndExecute( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
@@ -909,7 +909,7 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 			Return S_FALSE
 			
 		Case BASESTREAM_S_IO_PENDING
-			' PrepareErrorResponseAsyncTaskAddRef(this)
+			' WriteErrorAsyncTaskAddRef(this)
 			/'
 			Dim pIAsyncResult As IAsyncResult Ptr = Any
 			Dim hrBeginWrite As HRESULT = IBaseStream_BeginWrite( _
@@ -918,7 +918,7 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 				@pIAsyncResult _
 			)
 			If FAILED(hrBeginWrite) Then
-				PrepareErrorResponseAsyncTaskRelease(this)
+				WriteErrorAsyncTaskRelease(this)
 				Return hrBeginWrite
 			End If
 			
@@ -932,8 +932,8 @@ Function PrepareErrorResponseAsyncTaskEndExecute( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetClientRequest( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetClientRequest( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	
@@ -947,8 +947,8 @@ Function PrepareErrorResponseAsyncTaskGetClientRequest( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetClientRequest( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetClientRequest( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
@@ -966,8 +966,8 @@ Function PrepareErrorResponseAsyncTaskSetClientRequest( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetWebSiteCollection( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetWebSiteCollection( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
@@ -981,8 +981,8 @@ Function PrepareErrorResponseAsyncTaskGetWebSiteCollection( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetWebSiteCollection( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetWebSiteCollection( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
@@ -1000,8 +1000,8 @@ Function PrepareErrorResponseAsyncTaskSetWebSiteCollection( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetRemoteAddress( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetRemoteAddress( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
@@ -1013,8 +1013,8 @@ Function PrepareErrorResponseAsyncTaskGetRemoteAddress( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetRemoteAddress( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetRemoteAddress( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
@@ -1026,8 +1026,8 @@ Function PrepareErrorResponseAsyncTaskSetRemoteAddress( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetBaseStream( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetBaseStream( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
@@ -1041,8 +1041,8 @@ Function PrepareErrorResponseAsyncTaskGetBaseStream( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetBaseStream( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetBaseStream( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	
@@ -1060,8 +1060,8 @@ Function PrepareErrorResponseAsyncTaskSetBaseStream( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetHttpReader( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetHttpReader( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
@@ -1075,8 +1075,8 @@ Function PrepareErrorResponseAsyncTaskGetHttpReader( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetHttpReader( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetHttpReader( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
@@ -1094,8 +1094,8 @@ Function PrepareErrorResponseAsyncTaskSetHttpReader( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetErrorCode( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetErrorCode( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrCode As HRESULT _
 	)As HRESULT
@@ -1107,8 +1107,8 @@ Function PrepareErrorResponseAsyncTaskSetErrorCode( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	
@@ -1122,8 +1122,8 @@ Function PrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
 	
 End Function
 
-Function PrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As PrepareErrorResponseAsyncTask Ptr, _
+Function WriteErrorAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
@@ -1142,155 +1142,155 @@ Function PrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
 End Function
 
 
-Function IPrepareErrorResponseAsyncTaskQueryInterface( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskQueryInterface( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskQueryInterface(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), riid, ppv)
+	Return WriteErrorAsyncTaskQueryInterface(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), riid, ppv)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskAddRef( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr _
+Function IWriteErrorAsyncTaskAddRef( _
+		ByVal this As IWriteErrorAsyncTask Ptr _
 	)As ULONG
-	Return PrepareErrorResponseAsyncTaskAddRef(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl))
+	Return WriteErrorAsyncTaskAddRef(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
-Function IPrepareErrorResponseAsyncTaskRelease( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr _
+Function IWriteErrorAsyncTaskRelease( _
+		ByVal this As IWriteErrorAsyncTask Ptr _
 	)As ULONG
-	Return PrepareErrorResponseAsyncTaskRelease(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl))
+	Return WriteErrorAsyncTaskRelease(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
-Function IPrepareErrorResponseAsyncTaskBeginExecute( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskBeginExecute( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return PrepareErrorResponseAsyncTaskBeginExecute(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pPool, ppIResult)
+	Return WriteErrorAsyncTaskBeginExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pPool, ppIResult)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskEndExecute( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskEndExecute( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR _
 	)As ULONG
-	Return PrepareErrorResponseAsyncTaskEndExecute(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
+	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetWebSiteCollection( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetWebSiteCollection( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetWebSiteCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIWebSites)
+	Return WriteErrorAsyncTaskGetWebSiteCollection(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIWebSites)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetWebSiteCollection( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetWebSiteCollection( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetWebSiteCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIWebSites)
+	Return WriteErrorAsyncTaskSetWebSiteCollection(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIWebSites)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetRemoteAddress( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetRemoteAddress( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetRemoteAddress(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pRemoteAddress, pRemoteAddressLength)
+	Return WriteErrorAsyncTaskGetRemoteAddress(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pRemoteAddress, pRemoteAddressLength)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetRemoteAddress( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetRemoteAddress( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetRemoteAddress(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), RemoteAddress, RemoteAddressLength)
+	Return WriteErrorAsyncTaskSetRemoteAddress(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), RemoteAddress, RemoteAddressLength)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetBaseStream( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetBaseStream( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetBaseStream(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppStream)
+	Return WriteErrorAsyncTaskGetBaseStream(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppStream)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetBaseStream( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetBaseStream( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		byVal pStream As IBaseStream Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetBaseStream(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pStream)
+	Return WriteErrorAsyncTaskSetBaseStream(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pStream)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetHttpReader( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetHttpReader( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetHttpReader(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppReader)
+	Return WriteErrorAsyncTaskGetHttpReader(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppReader)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetHttpReader( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetHttpReader( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetHttpReader(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pReader)
+	Return WriteErrorAsyncTaskSetHttpReader(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pReader)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetClientRequest( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetClientRequest( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetClientRequest(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIRequest)
+	Return WriteErrorAsyncTaskGetClientRequest(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIRequest)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetClientRequest( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetClientRequest( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetClientRequest(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIRequest)
+	Return WriteErrorAsyncTaskSetClientRequest(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIRequest)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetErrorCode( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetErrorCode( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrCode As HRESULT _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetErrorCode(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), HttpError, hrCode)
+	Return WriteErrorAsyncTaskSetErrorCode(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), HttpError, hrCode)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskGetHttpProcessorCollection( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskGetHttpProcessorCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), ppIProcessors)
+	Return WriteErrorAsyncTaskGetHttpProcessorCollection(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIProcessors)
 End Function
 
-Function IPrepareErrorResponseAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As IPrepareErrorResponseAsyncTask Ptr, _
+Function IWriteErrorAsyncTaskSetHttpProcessorCollection( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
-	Return PrepareErrorResponseAsyncTaskSetHttpProcessorCollection(ContainerOf(this, PrepareErrorResponseAsyncTask, lpVtbl), pIProcessors)
+	Return WriteErrorAsyncTaskSetHttpProcessorCollection(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIProcessors)
 End Function
 
-Dim GlobalPrepareErrorResponseAsyncTaskVirtualTable As Const IPrepareErrorResponseAsyncTaskVirtualTable = Type( _
-	@IPrepareErrorResponseAsyncTaskQueryInterface, _
-	@IPrepareErrorResponseAsyncTaskAddRef, _
-	@IPrepareErrorResponseAsyncTaskRelease, _
-	@IPrepareErrorResponseAsyncTaskBeginExecute, _
-	@IPrepareErrorResponseAsyncTaskEndExecute, _
-	@IPrepareErrorResponseAsyncTaskGetWebSiteCollection, _
-	@IPrepareErrorResponseAsyncTaskSetWebSiteCollection, _
-	@IPrepareErrorResponseAsyncTaskGetRemoteAddress, _
-	@IPrepareErrorResponseAsyncTaskSetRemoteAddress, _
-	@IPrepareErrorResponseAsyncTaskGetBaseStream, _
-	@IPrepareErrorResponseAsyncTaskSetBaseStream, _
-	@IPrepareErrorResponseAsyncTaskGetHttpReader, _
-	@IPrepareErrorResponseAsyncTaskSetHttpReader, _
-	@IPrepareErrorResponseAsyncTaskGetClientRequest, _
-	@IPrepareErrorResponseAsyncTaskSetClientRequest, _
-	@IPrepareErrorResponseAsyncTaskSetErrorCode, _
-	@IPrepareErrorResponseAsyncTaskGetHttpProcessorCollection, _
-	@IPrepareErrorResponseAsyncTaskSetHttpProcessorCollection _
+Dim GlobalWriteErrorAsyncTaskVirtualTable As Const IWriteErrorAsyncTaskVirtualTable = Type( _
+	@IWriteErrorAsyncTaskQueryInterface, _
+	@IWriteErrorAsyncTaskAddRef, _
+	@IWriteErrorAsyncTaskRelease, _
+	@IWriteErrorAsyncTaskBeginExecute, _
+	@IWriteErrorAsyncTaskEndExecute, _
+	@IWriteErrorAsyncTaskGetWebSiteCollection, _
+	@IWriteErrorAsyncTaskSetWebSiteCollection, _
+	@IWriteErrorAsyncTaskGetRemoteAddress, _
+	@IWriteErrorAsyncTaskSetRemoteAddress, _
+	@IWriteErrorAsyncTaskGetBaseStream, _
+	@IWriteErrorAsyncTaskSetBaseStream, _
+	@IWriteErrorAsyncTaskGetHttpReader, _
+	@IWriteErrorAsyncTaskSetHttpReader, _
+	@IWriteErrorAsyncTaskGetClientRequest, _
+	@IWriteErrorAsyncTaskSetClientRequest, _
+	@IWriteErrorAsyncTaskSetErrorCode, _
+	@IWriteErrorAsyncTaskGetHttpProcessorCollection, _
+	@IWriteErrorAsyncTaskSetHttpProcessorCollection _
 )
