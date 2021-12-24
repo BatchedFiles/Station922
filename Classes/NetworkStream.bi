@@ -125,6 +125,18 @@ Declare Function NetworkStreamSetSocket( _
 	ByVal sock As SOCKET _
 )As HRESULT
 
+Declare Function NetworkStreamGetRemoteAddress( _
+	ByVal this As NetworkStream Ptr, _
+	ByVal pRemoteAddress As SOCKADDR Ptr, _
+	ByVal pRemoteAddressLength As Integer Ptr _
+)As HRESULT
+
+Declare Function NetworkStreamSetRemoteAddress( _
+	ByVal this As NetworkStream Ptr, _
+	ByVal RemoteAddress As SOCKADDR Ptr, _
+	ByVal RemoteAddressLength As Integer _
+)As HRESULT
+
 Declare Function NetworkStreamClose( _
 	ByVal this As NetworkStream Ptr _
 )As HRESULT

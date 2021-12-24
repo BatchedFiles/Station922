@@ -103,6 +103,11 @@ Function CreateReadTask( _
 			If SUCCEEDED(hrCreateNetworkStream) Then
 				
 				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+				INetworkStream_SetRemoteAddress( _
+					pINetworkStream, _
+					pRemoteAddress, _
+					RemoteAddressLength _
+				)
 				
 				' TODO Запросить интерфейс вместо конвертирования указателя
 				IHttpReader_SetBaseStream( _
@@ -123,11 +128,6 @@ Function CreateReadTask( _
 					IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
 					IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
 					IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, NULL)
-					IReadRequestAsyncTask_SetRemoteAddress( _
-						pTask, _
-						pRemoteAddress, _
-						RemoteAddressLength _
-					)
 					
 					IMalloc_Release(pIClientMemoryAllocator)
 					INetworkStream_Release(pINetworkStream)

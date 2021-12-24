@@ -16,6 +16,8 @@ Type _NetworkStream
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
+	RemoteAddress As SOCKADDR_STORAGE
+	RemoteAddressLength As Integer
 	ClientSocket As SOCKET
 End Type
 
@@ -31,6 +33,7 @@ Sub InitializeNetworkStream( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->RemoteAddressLength = 0
 	this->ClientSocket = INVALID_SOCKET
 	
 End Sub
@@ -648,6 +651,32 @@ Function NetworkStreamSetSocket( _
 	
 End Function
 
+Function NetworkStreamGetRemoteAddress( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	
+	*pRemoteAddressLength = this->RemoteAddressLength
+	CopyMemory(pRemoteAddress, @this->RemoteAddress, this->RemoteAddressLength)
+	
+	Return S_OK
+	
+End Function
+
+Function NetworkStreamSetRemoteAddress( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	
+	this->RemoteAddressLength = RemoteAddressLength
+	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
+	
+	Return S_OK
+	
+End Function
+
 Function NetworkStreamClose( _
 		ByVal this As NetworkStream Ptr _
 	)As HRESULT
@@ -660,41 +689,6 @@ Function NetworkStreamClose( _
 	Return S_OK
 	
 End Function
-
-' Function StartRecvOverlapped( _
-		' ByVal this As NetworkStream Ptr _
-	' )As HRESULT
-	
-	' memset(@pIrcClient->RecvOverlapped, 0, SizeOf(WSAOVERLAPPED))
-	' pIrcClient->RecvOverlapped.hEvent = pIrcClient
-	' pIrcClient->RecvBuf(0).len = IRCPROTOCOL_BYTESPERMESSAGEMAXIMUM - pIrcClient->ClientRawBufferLength
-	' pIrcClient->RecvBuf(0).buf = @pIrcClient->ClientRawBuffer[pIrcClient->ClientRawBufferLength]
-	
-	' Const lpNumberOfBytesRecvd As LPDWORD = NULL
-	' Dim Flags As DWORD = 0
-	
-	' Dim WSARecvResult As Integer = WSARecv( _
-		' pIrcClient->ClientSocket, _
-		' @pIrcClient->RecvBuf(0), _
-		' IrcClient.MaxReceivedBuffersCount, _
-		' lpNumberOfBytesRecvd, _
-		' @Flags, _
-		' @pIrcClient->RecvOverlapped, _
-		' @ReceiveCompletionROUTINE _
-	' )
-	
-	' If WSARecvResult <> 0 Then
-		
-		' If WSAGetLastError() <> WSA_IO_PENDING Then
-			' CloseIrcClient(pIrcClient)
-			' Return E_FAIL
-		' End If
-		
-	' End If
-	
-	' Return S_OK
-	
-' End Function
 
 
 Function INetworkStreamQueryInterface( _
@@ -716,80 +710,6 @@ Function INetworkStreamRelease( _
 	)As ULONG
 	Return NetworkStreamRelease(ContainerOf(this, NetworkStream, lpVtbl))
 End Function
-
-' Function INetworkStreamCanRead( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	' Return NetworkStreamCanRead(ContainerOf(this, NetworkStream, lpVtbl), pResult)
-' End Function
-
-' Function INetworkStreamCanSeek( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	' Return NetworkStreamCanSeek(ContainerOf(this, NetworkStream, lpVtbl), pResult)
-' End Function
-
-' Function INetworkStreamCanWrite( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	' Return NetworkStreamCanWrite(ContainerOf(this, NetworkStream, lpVtbl), pResult)
-' End Function
-
-' Function INetworkStreamFlush( _
-		' ByVal this As INetworkStream Ptr _
-	' )As HRESULT
-	' Return NetworkStreamFlush(ContainerOf(this, NetworkStream, lpVtbl))
-' End Function
-
-' Function INetworkStreamGetLength( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As LARGE_INTEGER Ptr _
-	' )As HRESULT
-	' Return NetworkStreamGetLength(ContainerOf(this, NetworkStream, lpVtbl), pResult)
-' End Function
-
-' Function INetworkStreamPosition( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal pResult As LARGE_INTEGER Ptr _
-	' )As HRESULT
-	' Return NetworkStreamPosition(ContainerOf(this, NetworkStream, lpVtbl), pResult)
-' End Function
-
-' Function INetworkStreamRead( _
-' 		ByVal this As INetworkStream Ptr, _
-' 		ByVal Buffer As LPVOID, _
-' 		ByVal Count As DWORD, _
-' 		ByVal pReadedBytes As DWORD Ptr _
-' 	)As HRESULT
-' 	Return NetworkStreamRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pReadedBytes)
-' End Function
-
-' Function INetworkStreamSeek( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal Offset As LARGE_INTEGER, _
-		' ByVal Origin As SeekOrigin _
-	' )As HRESULT
-	' Return NetworkStreamSeek(ContainerOf(this, NetworkStream, lpVtbl), Offset, Origin)
-' End Function
-
-' Function INetworkStreamSetLength( _
-		' ByVal this As INetworkStream Ptr, _
-		' ByVal Length As LARGE_INTEGER _
-	' )As HRESULT
-	' Return NetworkStreamSetLength(ContainerOf(this, NetworkStream, lpVtbl), Length)
-' End Function
-
-' Function INetworkStreamWrite( _
-' 		ByVal this As INetworkStream Ptr, _
-' 		ByVal Buffer As LPVOID, _
-' 		ByVal Count As DWORD, _
-' 		ByVal pWritedBytes As DWORD Ptr _
-' 	)As HRESULT
-' 	Return NetworkStreamWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pWritedBytes)
-' End Function
 
 Function INetworkStreamBeginRead( _
 		ByVal this As INetworkStream Ptr, _
@@ -843,6 +763,22 @@ Function INetworkStreamSetSocket( _
 	Return NetworkStreamSetSocket(ContainerOf(this, NetworkStream, lpVtbl), sock)
 End Function
 
+Function INetworkStreamGetRemoteAddress( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	Return NetworkStreamGetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
+End Function
+
+Function INetworkStreamSetRemoteAddress( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	Return NetworkStreamSetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
+End Function
+
 Function INetworkStreamClose( _
 		ByVal this As INetworkStream Ptr _
 	)As HRESULT
@@ -869,5 +805,7 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamEndWrite, _
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
+	@INetworkStreamGetRemoteAddress, _
+	@INetworkStreamSetRemoteAddress, _
 	@INetworkStreamClose _
 )

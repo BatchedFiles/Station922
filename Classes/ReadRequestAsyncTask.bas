@@ -17,8 +17,6 @@ Type _ReadRequestAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	pIProcessors As IHttpProcessorCollection Ptr
-	RemoteAddress As SOCKADDR_STORAGE
-	RemoteAddressLength As Integer
 	pIStream As IBaseStream Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIRequest As IClientRequest Ptr
@@ -41,12 +39,6 @@ Function ProcessReadError( _
 	If FAILED(hrCreateTask) Then
 		Return hrCreateTask
 	End If
-	
-	IWriteErrorAsyncTask_SetRemoteAddress( _
-		pTask, _
-		CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
-		this->RemoteAddressLength _
-	)
 	
 	Dim HttpError As ResponseErrorCode = Any
 	
@@ -131,7 +123,6 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
 	this->pIProcessors = NULL
-	this->RemoteAddressLength = 0
 	this->pIStream = NULL
 	this->pIHttpReader = NULL
 	this->pIRequest = pIRequest
@@ -513,32 +504,6 @@ Function ReadRequestAsyncTaskSetWebSiteCollection( _
 	
 End Function
 
-Function ReadRequestAsyncTaskGetRemoteAddress( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	
-	*pRemoteAddressLength = this->RemoteAddressLength
-	CopyMemory(pRemoteAddress, @this->RemoteAddress, this->RemoteAddressLength)
-	
-	Return S_OK
-	
-End Function
-
-Function ReadRequestAsyncTaskSetRemoteAddress( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal RemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
-	)As HRESULT
-	
-	this->RemoteAddressLength = RemoteAddressLength
-	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
-	
-	Return S_OK
-	
-End Function
-
 Function ReadRequestAsyncTaskGetBaseStream( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -700,22 +665,6 @@ Function IReadRequestAsyncTaskSetWebSiteCollection( _
 	Return ReadRequestAsyncTaskSetWebSiteCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIWebSites)
 End Function
 
-Function IReadRequestAsyncTaskGetRemoteAddress( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskGetRemoteAddress(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pRemoteAddress, pRemoteAddressLength)
-End Function
-
-Function IReadRequestAsyncTaskSetRemoteAddress( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal RemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
-	)As HRESULT
-	Return ReadRequestAsyncTaskSetRemoteAddress(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), RemoteAddress, RemoteAddressLength)
-End Function
-
 Function IReadRequestAsyncTaskGetBaseStream( _
 		ByVal this As IReadRequestAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -766,8 +715,6 @@ Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtual
 	@IReadRequestAsyncTaskEndExecute, _
 	@IReadRequestAsyncTaskGetWebSiteCollection, _
 	@IReadRequestAsyncTaskSetWebSiteCollection, _
-	@IReadRequestAsyncTaskGetRemoteAddress, _
-	@IReadRequestAsyncTaskSetRemoteAddress, _
 	@IReadRequestAsyncTaskGetBaseStream, _
 	@IReadRequestAsyncTaskSetBaseStream, _
 	@IReadRequestAsyncTaskGetHttpReader, _

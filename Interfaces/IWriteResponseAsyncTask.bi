@@ -4,7 +4,6 @@
 #include once "IAsyncTask.bi"
 #include once "IAsyncResult.bi"
 #include once "IWebSiteCollection.bi"
-#include once "win\winsock2.bi"
 
 Type IWriteResponseAsyncTask As IWriteResponseAsyncTask_
 
@@ -50,18 +49,6 @@ Type IWriteResponseAsyncTaskVirtualTable
 	SetWebSiteCollection As Function( _
 		ByVal this As IWriteResponseAsyncTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	GetRemoteAddress As Function( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	
-	SetRemoteAddress As Function( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal RemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
 	GetBaseStream As Function( _
@@ -117,8 +104,6 @@ End Type
 #define IWriteResponseAsyncTask_EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred, CompletionKey)
 #define IWriteResponseAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
 #define IWriteResponseAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
-#define IWriteResponseAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
-#define IWriteResponseAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 #define IWriteResponseAsyncTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IWriteResponseAsyncTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteResponseAsyncTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)

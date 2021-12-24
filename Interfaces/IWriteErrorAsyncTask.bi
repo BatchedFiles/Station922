@@ -8,7 +8,6 @@
 #include once "IHttpProcessorCollection.bi"
 #include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
-#include once "win\winsock2.bi"
 
 Enum ResponseErrorCode
 	MovedPermanently
@@ -92,18 +91,6 @@ Type IWriteErrorAsyncTaskVirtualTable
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
-	GetRemoteAddress As Function( _
-		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal pRemoteAddressLength As Integer Ptr _
-	)As HRESULT
-	
-	SetRemoteAddress As Function( _
-		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal RemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
-	)As HRESULT
-	
 	GetBaseStream As Function( _
 		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -165,8 +152,6 @@ End Type
 #define IWriteErrorAsyncTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)
 #define IWriteErrorAsyncTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
 #define IWriteErrorAsyncTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
-#define IWriteErrorAsyncTask_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
-#define IWriteErrorAsyncTask_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 #define IWriteErrorAsyncTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IWriteErrorAsyncTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteErrorAsyncTask_GetHttpReader(this, ppIHttpReader) (this)->lpVtbl->GetHttpReader(this, ppIHttpReader)

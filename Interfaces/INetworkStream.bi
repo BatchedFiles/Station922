@@ -120,6 +120,18 @@ Type INetworkStreamVirtualTable
 		ByVal sock As SOCKET _
 	)As HRESULT
 	
+	GetRemoteAddress As Function( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pRemoteAddress As SOCKADDR Ptr, _
+		ByVal pRemoteAddressLength As Integer Ptr _
+	)As HRESULT
+	
+	SetRemoteAddress As Function( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal RemoteAddress As SOCKADDR Ptr, _
+		ByVal RemoteAddressLength As Integer _
+	)As HRESULT
+	
 	Close As Function( _
 		ByVal this As INetworkStream Ptr _
 	)As HRESULT
@@ -149,6 +161,8 @@ End Type
 #define INetworkStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
 #define INetworkStream_GetSocket(this, pResult) (this)->lpVtbl->GetSocket(this, pResult)
 #define INetworkStream_SetSocket(this, sock) (this)->lpVtbl->SetSocket(this, sock)
+#define INetworkStream_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
+#define INetworkStream_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
 #define INetworkStream_Close(this) (this)->lpVtbl->Close(this)
 
 #endif

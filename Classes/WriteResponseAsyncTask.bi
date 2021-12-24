@@ -55,18 +55,6 @@ Declare Function WriteResponseAsyncTaskSetWebSiteCollection( _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
 )As HRESULT
 
-Declare Function WriteResponseAsyncTaskGetRemoteAddress( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pRemoteAddress As SOCKADDR Ptr, _
-	ByVal pRemoteAddressLength As Integer Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskSetRemoteAddress( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal RemoteAddress As SOCKADDR Ptr, _
-	ByVal RemoteAddressLength As Integer _
-)As HRESULT
-
 Declare Function WriteResponseAsyncTaskGetBaseStream( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal ppStream As IBaseStream Ptr Ptr _
