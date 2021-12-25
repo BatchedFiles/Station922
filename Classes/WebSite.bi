@@ -33,17 +33,17 @@ Declare Function WebSiteRelease( _
 
 Declare Function WebSiteGetHostName( _
 	ByVal this As WebSite Ptr, _
-	ByVal ppHost As WString Ptr Ptr _
+	ByVal ppHost As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebSiteGetSitePhysicalDirectory( _
 	ByVal this As WebSite Ptr, _
-	ByVal ppPhysicalDirectory As WString Ptr Ptr _
+	ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebSiteGetVirtualPath( _
 	ByVal this As WebSite Ptr, _
-	ByVal ppVirtualPath As WString Ptr Ptr _
+	ByVal ppVirtualPath As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebSiteGetIsMoved( _
@@ -53,47 +53,47 @@ Declare Function WebSiteGetIsMoved( _
 
 Declare Function WebSiteGetMovedUrl( _
 	ByVal this As WebSite Ptr, _
-	ByVal ppMovedUrl As WString Ptr Ptr _
+	ByVal ppMovedUrl As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebSiteMapPath( _
 	ByVal this As WebSite Ptr, _
-	ByVal Path As WString Ptr, _
-	ByVal pResult As WString Ptr _
+	ByVal Path As HeapBSTR, _
+	ByVal pResult As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebSiteOpenRequestedFile( _
 	ByVal this As WebSite Ptr, _
 	ByVal pRequestedFile As IRequestedFile Ptr, _
-	ByVal FilePath As WString Ptr, _
+	ByVal FilePath As HeapBSTR, _
 	ByVal fAccess As FileAccess _
 )As HRESULT
 
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
-	ByVal path As WString Ptr, _
+	ByVal path As HeapBSTR, _
 	ByVal pResult As Boolean Ptr _
 )As HRESULT
 
 Declare Function WebSiteNeedDllProcessing( _
 	ByVal this As WebSite Ptr, _
-	ByVal path As WString Ptr, _
+	ByVal path As HeapBSTR, _
 	ByVal pResult As Boolean Ptr _
 )As HRESULT
 
 Declare Function WebSiteSetHostName( _
 	ByVal this As WebSite Ptr, _
-	ByVal pHost As WString Ptr _
+	ByVal pHost As HeapBSTR _
 )As HRESULT
 
 Declare Function WebSiteSetSitePhysicalDirectory( _
 	ByVal this As WebSite Ptr, _
-	ByVal pPhysicalDirectory As WString Ptr _
+	ByVal pPhysicalDirectory As HeapBSTR _
 )As HRESULT
 
 Declare Function WebSiteSetVirtualPath( _
 	ByVal this As WebSite Ptr, _
-	ByVal pVirtualPath As WString Ptr _
+	ByVal pVirtualPath As HeapBSTR _
 )As HRESULT
 
 Declare Function WebSiteSetIsMoved( _
@@ -103,7 +103,7 @@ Declare Function WebSiteSetIsMoved( _
 
 Declare Function WebSiteSetMovedUrl( _
 	ByVal this As WebSite Ptr, _
-	ByVal pMovedUrl As WString Ptr _
+	ByVal pMovedUrl As HeapBSTR _
 )As HRESULT
 
 #endif

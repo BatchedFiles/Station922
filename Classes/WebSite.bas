@@ -2,6 +2,7 @@
 #include once "win\shlwapi.bi"
 #include once "IMutableWebSite.bi"
 #include once "CharacterConstants.bi"
+#include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
@@ -19,16 +20,6 @@ Const DefaultFileNameIndexHtml = WStr("index.html")
 Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
 
-Declare Function OpenFileForReading( _
-	ByVal PathTranslated As WString Ptr, _
-	ByVal ForReading As FileAccess _
-)As HANDLE
-
-Declare Function GetDefaultFileName( _
-	ByVal Buffer As WString Ptr, _
-	ByVal Index As Integer _
-)As Boolean
-
 Type _WebSite
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -36,10 +27,10 @@ Type _WebSite
 	lpVtbl As Const IMutableWebSiteVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pHostName As BSTR
-	pPhysicalDirectory As BSTR
-	pVirtualPath As BSTR
-	pMovedUrl As BSTR
+	pHostName As HeapBSTR
+	pPhysicalDirectory As HeapBSTR
+	pVirtualPath As HeapBSTR
+	pMovedUrl As HeapBSTR
 	IsMoved As Boolean
 End Type
 
@@ -67,10 +58,10 @@ Sub UnInitializeWebSite( _
 		ByVal this As WebSite Ptr _
 	)
 	
-	SysFreeString(this->pHostName)
-	SysFreeString(this->pPhysicalDirectory)
-	SysFreeString(this->pVirtualPath)
-	SysFreeString(this->pMovedUrl)
+	HeapSysFreeString(this->pHostName)
+	HeapSysFreeString(this->pPhysicalDirectory)
+	HeapSysFreeString(this->pVirtualPath)
+	HeapSysFreeString(this->pMovedUrl)
 	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
@@ -220,10 +211,11 @@ End Function
 
 Function WebSiteGetHostName( _
 		ByVal this As WebSite Ptr, _
-		ByVal ppHost As WString Ptr Ptr _
+		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppHost = CPtr(WString Ptr, this->pHostName)
+	HeapSysAddRefString(this->pHostName)
+	*ppHost = this->pHostName
 	
 	Return S_OK
 	
@@ -231,10 +223,11 @@ End Function
 
 Function WebSiteGetSitePhysicalDirectory( _
 		ByVal this As WebSite Ptr, _
-		ByVal ppPhysicalDirectory As WString Ptr Ptr _
+		ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppPhysicalDirectory = CPtr(WString Ptr, this->pPhysicalDirectory)
+	HeapSysAddRefString(this->pPhysicalDirectory)
+	*ppPhysicalDirectory = this->pPhysicalDirectory
 	
 	Return S_OK
 	
@@ -242,10 +235,11 @@ End Function
 
 Function WebSiteGetVirtualPath( _
 		ByVal this As WebSite Ptr, _
-		ByVal ppVirtualPath As WString Ptr Ptr _
+		ByVal ppVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppVirtualPath = CPtr(WString Ptr, this->pVirtualPath)
+	HeapSysAddRefString(this->pVirtualPath)
+	*ppVirtualPath = this->pVirtualPath
 	
 	Return S_OK
 	
@@ -264,10 +258,11 @@ End Function
 
 Function WebSiteGetMovedUrl( _
 		ByVal this As WebSite Ptr, _
-		ByVal ppMovedUrl As WString Ptr Ptr _
+		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppMovedUrl = CPtr(WString Ptr, this->pMovedUrl)
+	HeapSysAddRefString(this->pMovedUrl)
+	*ppMovedUrl = this->pMovedUrl
 	
 	Return S_OK
 	
@@ -275,10 +270,10 @@ End Function
 
 Function WebSiteMapPath( _
 		ByVal this As WebSite Ptr, _
-		ByVal Path As WString Ptr, _
-		ByVal pResult As WString Ptr _
+		ByVal Path As HeapBSTR, _
+		ByVal pResult As HeapBSTR Ptr _
 	)As HRESULT
-	
+	/'
 	lstrcpyW(pResult, this->pPhysicalDirectory)
 	Dim BufferLength As Integer = lstrlenW(pResult)
 	
@@ -301,7 +296,7 @@ Function WebSiteMapPath( _
 			pResult[i] = Characters.ReverseSolidus
 		End If
 	Next
-	
+	'/
 	Return S_OK
 	
 End Function
@@ -309,14 +304,13 @@ End Function
 Function WebSiteOpenRequestedFile( _
 		ByVal this As WebSite Ptr, _
 		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As WString Ptr, _
+		ByVal FilePath As HeapBSTR, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
-	
+	/'
 	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
 	
 	If FilePath[lstrlenW(FilePath) - 1] <> Characters.Solidus Then
-		' FilePath �������� ��� ����������� �����
 		
 		WebSiteMapPath(this, FilePath, @PathTranslated)
 		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
@@ -357,7 +351,6 @@ Function WebSiteOpenRequestedFile( _
 		
 	Loop While GetDefaultFileNameResult
 	
-	' ���� �� ��������� �� ������
 	GetDefaultFileName(DefaultFilename, 0)
 	
 	lstrcpyW(@FullDefaultFilename, FilePath)
@@ -368,21 +361,21 @@ Function WebSiteOpenRequestedFile( _
 	IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
 	IRequestedFile_SetFilePath(pRequestedFile, FullDefaultFilename)
 	IRequestedFile_SetFileHandle(pRequestedFile, INVALID_HANDLE_VALUE)
-	
+	'/
 	Return S_FALSE
 	
 End Function
 
 Function WebSiteNeedCgiProcessing( _
 		ByVal this As WebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	If StrStrIW(Path, WStr("/cgi-bin/")) = Path Then
-		*pResult = True
-	Else
+	If StrStrIW(Path, WStr("/cgi-bin/")) = NULL Then
 		*pResult = False
+	Else
+		*pResult = True
 	End If
 	
 	Return S_OK
@@ -391,14 +384,14 @@ End Function
 
 Function WebSiteNeedDllProcessing( _
 		ByVal this As WebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	If StrStrIW(Path, WStr("/cgi-dll/")) = Path Then
-		*pResult = True
-	Else
+	If StrStrIW(Path, WStr("/cgi-dll/")) = NULL Then
 		*pResult = False
+	Else
+		*pResult = True
 	End If
 	
 	Return S_OK
@@ -489,10 +482,10 @@ End Function
 
 Function MutableWebSiteSetHostName( _
 		ByVal this As WebSite Ptr, _
-		ByVal pHost As WString Ptr _
+		ByVal pHost As HeapBSTR _
 	)As HRESULT
 	
-	this->pHostName = SysAllocString(pHost)
+	LET_HEAPSYSSTRING(this->pHostName, pHost)
 	
 	Return S_OK
 	
@@ -500,10 +493,10 @@ End Function
 
 Function MutableWebSiteSetSitePhysicalDirectory( _
 		ByVal this As WebSite Ptr, _
-		ByVal pPhysicalDirectory As WString Ptr _
+		ByVal pPhysicalDirectory As HeapBSTR _
 	)As HRESULT
 	
-	this->pPhysicalDirectory = SysAllocString(pPhysicalDirectory)
+	LET_HEAPSYSSTRING(this->pPhysicalDirectory, pPhysicalDirectory)
 	
 	Return S_OK
 	
@@ -511,10 +504,10 @@ End Function
 
 Function MutableWebSiteSetVirtualPath( _
 		ByVal this As WebSite Ptr, _
-		ByVal pVirtualPath As WString Ptr _
+		ByVal pVirtualPath As HeapBSTR _
 	)As HRESULT
 	
-	this->pVirtualPath = SysAllocString(pVirtualPath)
+	LET_HEAPSYSSTRING(this->pVirtualPath, pVirtualPath)
 	
 	Return S_OK
 	
@@ -533,10 +526,10 @@ End Function
 
 Function MutableWebSiteSetMovedUrl( _
 		ByVal this As WebSite Ptr, _
-		ByVal pMovedUrl As WString Ptr _
+		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	
-	this->pMovedUrl = SysAllocString(pMovedUrl)
+	LET_HEAPSYSSTRING(this->pMovedUrl, pMovedUrl)
 	
 	Return S_OK
 	
@@ -565,21 +558,21 @@ End Function
 
 Function IMutableWebSiteGetHostName( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal ppHost As WString Ptr Ptr _
+		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetHostName(ContainerOf(this, WebSite, lpVtbl), ppHost)
 End Function
 
 Function IMutableWebSiteGetSitePhysicalDirectory( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal ppPhysicalDirectory As WString Ptr Ptr _
+		ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetSitePhysicalDirectory(ContainerOf(this, WebSite, lpVtbl), ppPhysicalDirectory)
 End Function
 
 Function IMutableWebSiteGetVirtualPath( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal ppVirtualPath As WString Ptr Ptr _
+		ByVal ppVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetVirtualPath(ContainerOf(this, WebSite, lpVtbl), ppVirtualPath)
 End Function
@@ -593,15 +586,15 @@ End Function
 
 Function IMutableWebSiteGetMovedUrl( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal ppMovedUrl As WString Ptr Ptr _
+		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetMovedUrl(ContainerOf(this, WebSite, lpVtbl), ppMovedUrl)
 End Function
 
 Function IMutableWebSiteMapPath( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal Path As WString Ptr, _
-		ByVal pResult As WString Ptr _
+		ByVal Path As HeapBSTR, _
+		ByVal pResult As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteMapPath(ContainerOf(this, WebSite, lpVtbl), Path, pResult)
 End Function
@@ -609,7 +602,7 @@ End Function
 Function IMutableWebSiteOpenRequestedFile( _
 		ByVal this As IMutableWebSite Ptr, _
 		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As WString Ptr, _
+		ByVal FilePath As HeapBSTR, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
 	Return WebSiteOpenRequestedFile(ContainerOf(this, WebSite, lpVtbl), pRequestedFile, FilePath, fAccess)
@@ -617,7 +610,7 @@ End Function
 
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	Return WebSiteNeedCgiProcessing(ContainerOf(this, WebSite, lpVtbl), path, pResult)
@@ -625,7 +618,7 @@ End Function
 
 Function IMutableWebSiteNeedDllProcessing( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	Return WebSiteNeedDllProcessing(ContainerOf(this, WebSite, lpVtbl), path, pResult)
@@ -633,21 +626,21 @@ End Function
 
 Function IMutableWebSiteSetHostName( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal pHost As WString Ptr _
+		ByVal pHost As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetHostName(ContainerOf(this, WebSite, lpVtbl), pHost)
 End Function
 
 Function IMutableWebSiteSetSitePhysicalDirectory( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal pPhysicalDirectory As WString Ptr _
+		ByVal pPhysicalDirectory As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetSitePhysicalDirectory(ContainerOf(this, WebSite, lpVtbl), pPhysicalDirectory)
 End Function
 
 Function IMutableWebSiteSetVirtualPath( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal pVirtualPath As WString Ptr _
+		ByVal pVirtualPath As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetVirtualPath(ContainerOf(this, WebSite, lpVtbl), pVirtualPath)
 End Function
@@ -661,7 +654,7 @@ End Function
 
 Function IMutableWebSiteSetMovedUrl( _
 		ByVal this As IMutableWebSite Ptr, _
-		ByVal pMovedUrl As WString Ptr _
+		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetMovedUrl(ContainerOf(this, WebSite, lpVtbl), pMovedUrl)
 End Function

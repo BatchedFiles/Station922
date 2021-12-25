@@ -2,6 +2,7 @@
 #define IWEBSITE_BI
 
 #include once "IRequestedFile.bi"
+#include once "IString.bi"
 
 Enum FileAccess
 	CreateAccess
@@ -34,17 +35,17 @@ Type IWebSiteVirtualTable
 	
 	GetHostName As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ppHost As WString Ptr Ptr _
+		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetSitePhysicalDirectory As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ppPhysicalDirectory As WString Ptr Ptr _
+		ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetVirtualPath As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ppVirtualPath As WString Ptr Ptr _
+		ByVal ppVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetIsMoved As Function( _
@@ -54,31 +55,31 @@ Type IWebSiteVirtualTable
 	
 	GetMovedUrl As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ppMovedUrl As WString Ptr Ptr _
+		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
 	MapPath As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal Path As WString Ptr, _
-		ByVal pResult As WString Ptr _
+		ByVal Path As HeapBSTR, _
+		ByVal pResult As HeapBSTR Ptr _
 	)As HRESULT
 	
 	OpenRequestedFile As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As WString Ptr, _
+		ByVal FilePath As HeapBSTR, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
 	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
 	NeedDllProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal path As WString Ptr, _
+		ByVal path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
