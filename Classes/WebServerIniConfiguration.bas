@@ -667,6 +667,17 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	
 End Function
 
+Function WebServerIniConfigurationGetHttpProcessorCollection( _
+		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	*ppIHttpProcessorCollection = NULL
+	
+	Return S_OK
+	
+End Function
+
 
 Function IWebServerConfigurationQueryInterface( _
 		ByVal this As IWebServerConfiguration Ptr, _
@@ -746,6 +757,13 @@ Function IWebServerConfigurationGetWebSiteCollection( _
 	Return WebServerIniConfigurationGetWebSiteCollection(ContainerOf(this, WebServerIniConfiguration, lpVtbl), ppIWebSiteCollection)
 End Function
 
+Function IWebServerConfigurationGetHttpProcessorCollection( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	Return WebServerIniConfigurationGetHttpProcessorCollection(ContainerOf(this, WebServerIniConfiguration, lpVtbl), ppIHttpProcessorCollection)
+End Function
+
 Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable = Type( _
 	@IWebServerConfigurationQueryInterface, _
 	@IWebServerConfigurationAddRef, _
@@ -757,5 +775,6 @@ Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfiguration
 	@IWebServerConfigurationGetWorkerThreadsCount, _
 	@IWebServerConfigurationGetCachedClientMemoryContextCount, _
 	@IWebServerConfigurationGetIsPasswordValid, _
-	@IWebServerConfigurationGetWebSiteCollection _
+	@IWebServerConfigurationGetWebSiteCollection, _
+	@IWebServerConfigurationGetHttpProcessorCollection _
 )

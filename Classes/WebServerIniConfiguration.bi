@@ -73,4 +73,9 @@ Declare Function WebServerIniConfigurationGetWebSiteCollection( _
 	ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
 )As HRESULT
 
+Declare Function WebServerIniConfigurationGetHttpProcessorCollection( _
+	ByVal this As WebServerIniConfiguration Ptr, _
+	ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
 #endif

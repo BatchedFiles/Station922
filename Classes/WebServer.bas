@@ -29,6 +29,7 @@ Type _WebServer
 	WorkerThreadsCount As Integer
 	pIPool As IThreadPool Ptr
 	pIWebSites As IWebSiteCollection Ptr
+	pIProcessors As IHttpProcessorCollection Ptr
 	pDefaultStream As INetworkStream Ptr
 	pDefaultRequest As IClientRequest Ptr
 	pDefaultResponse As IServerResponse Ptr
@@ -127,7 +128,7 @@ Function CreateReadTask( _
 					IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 					IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
 					IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-					IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, NULL)
+					IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 					
 					IMalloc_Release(pIClientMemoryAllocator)
 					INetworkStream_Release(pINetworkStream)
@@ -298,6 +299,8 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
 	
+	IWebServerConfiguration_GetHttpProcessorCollection(pIConfig, @this->pIProcessors)
+	
 	IWebServerConfiguration_Release(pIConfig)
 	
 	Return S_OK
@@ -415,6 +418,7 @@ Sub InitializeWebServer( _
 	this->WorkerThreadsCount = 0
 	this->pIPool = pIPool
 	this->pIWebSites = NULL
+	this->pIProcessors = NULL
 	
 	this->pDefaultStream = pINetworkStream
 	this->pDefaultRequest = pIRequest
@@ -439,6 +443,10 @@ Sub UnInitializeWebServer( _
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
+	End If
+	
+	If this->pIProcessors <> NULL Then
+		IHttpProcessorCollection_Release(this->pIProcessors)
 	End If
 	
 	If this->pDefaultStream <> NULL Then

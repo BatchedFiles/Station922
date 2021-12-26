@@ -2,6 +2,7 @@
 #define IWEBSERVERCONFIGURATION_BI
 
 #include once "IWebSiteCollection.bi"
+#include once "IHttpProcessorCollection.bi"
 
 Type IWebServerConfiguration As IWebServerConfiguration_
 
@@ -67,6 +68,11 @@ Type IWebServerConfigurationVirtualTable
 		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
+	GetHttpProcessorCollection As Function( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IWebServerConfiguration_
@@ -85,5 +91,6 @@ End Type
 #define IWebServerConfiguration_GetDefaultWebSite(this, ppIWebSite) (this)->lpVtbl->GetDefaultWebSite(this, ppIWebSite)
 #define IWebServerConfiguration_GetIsPasswordValid(this, pUserName, pPassword, pIsPasswordValid) (this)->lpVtbl->GetIsPasswordValid(this, pUserName, pPassword, pIsPasswordValid)
 #define IWebServerConfiguration_GetWebSiteCollection(this, ppIWebSiteCollection) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSiteCollection)
+#define IWebServerConfiguration_GetHttpProcessorCollection(this, ppIHttpProcessorCollection) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIHttpProcessorCollection)
 
 #endif
