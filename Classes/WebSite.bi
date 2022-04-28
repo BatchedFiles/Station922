@@ -1,7 +1,7 @@
 #ifndef WEBSITE_BI
 #define WEBSITE_BI
 
-#include once "IWebSite.bi"
+#include once "IMutableWebSite.bi"
 
 Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 

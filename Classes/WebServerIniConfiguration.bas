@@ -4,15 +4,14 @@
 #include once "CreateInstance.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "IMutableWebSite.bi"
-#include once "IMutableWebSiteCollection.bi"
+' #include once "HttpProcessor.bi"
+#include once "HttpProcessorCollection.bi"
 #include once "Logger.bi"
 #include once "StringConstants.bi"
+#include once "WebSite.bi"
+#include once "WebSiteCollection.bi"
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
-
-Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
-Extern CLSID_WEBSITECOLLECTION Alias "CLSID_WEBSITECOLLECTION" As Const CLSID
 
 Const WebServerIniFileString = WStr("WebServer.ini")
 Const WebServerSectionString = WStr("WebServer")
@@ -464,7 +463,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			@pIWebSiteCollection _
 		)
 		If FAILED(hr) Then
-			Return E_OUTOFMEMORY
+			Return hr
 		End If
 	End Scope
 	
@@ -521,7 +520,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		)
 		If FAILED(hr2) Then
 			IMutableWebSiteCollection_Release(pIWebSiteCollection)
-			Return E_OUTOFMEMORY
+			Return hr2
 		End If
 		
 		Dim bstrWebSite As HeapBSTR = HeapSysAllocString( _
@@ -673,6 +672,37 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	)As HRESULT
 	
 	*ppIHttpProcessorCollection = NULL
+	
+	Dim pIProcessorCollection As IMutableHttpProcessorCollection Ptr = Any
+	Scope
+		Dim hr As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_HTTPPROCESSORCOLLECTION, _
+			@IID_IMutableHttpProcessorCollection, _
+			@pIProcessorCollection _
+		)
+		If FAILED(hr) Then
+			Return hr
+		End If
+	End Scope
+	
+	Scope
+		Dim pIProcessorCollection2 As IHttpProcessorCollection Ptr = Any
+		Dim hr4 As HRESULT = IHttpProcessorCollection_QueryInterface( _
+			pIProcessorCollection, _
+			@IID_IHttpProcessorCollection, _
+			@pIProcessorCollection2 _
+		)
+		If FAILED(hr4) Then
+			IMutableHttpProcessorCollection_Release(pIProcessorCollection)
+			Return hr4
+		End If
+		
+		*ppIHttpProcessorCollection = pIProcessorCollection2
+		
+	End Scope
+	
+	IMutableHttpProcessorCollection_Release(pIProcessorCollection)
 	
 	Return S_OK
 	

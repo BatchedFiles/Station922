@@ -60,6 +60,11 @@ DEFINE_CLSID(CLSID_HTTPGETPROCESSOR, _
 	&hecf4a262, &h2cfc, &h4fb3, &h91, &hf0, &h67, &hd2, &h94, &h5a, &hdf, &ha6 _
 )
 
+' {D040BF22-34E8-489F-9914-0A5C77FDCD44}
+DEFINE_CLSID(CLSID_HTTPPROCESSORCOLLECTION, _
+	&hd040bf22, &h34e8, &h489f, &h99, &h14, &ha, &h5c, &h77, &hfd, &hcd, &h44 _
+)
+
 ' {080EB706-1D70-428E-819E-4BCA42154212}
 DEFINE_CLSID(CLSID_HTTPREADER, _
 	&h80eb706, &h1d70, &h428e, &h81, &h9e, &h4b, &hca, &h42, &h15, &h42, &h12 _
@@ -71,7 +76,7 @@ DEFINE_CLSID(CLSID_NETWORKSTREAM, _
 )
 
 ' {54E0F796-8CAA-4F4B-8C5F-2C614207ED8E}
-DEFINE_GUID(CLSID_READREQUESTASYNCTASK, _
+DEFINE_CLSID(CLSID_READREQUESTASYNCTASK, _
 	&h54e0f796, &h8caa, &h4f4b, &h8c, &h5f, &h2c, &h61, &h42, &h7, &hed, &h8e _
 )
 
@@ -126,7 +131,7 @@ DEFINE_CLSID(CLSID_WRITEERRORASYNCTASK, _
 )
 
 ' {6D9085B7-2309-4C33-AB53-9D8ECAB607C3}
-DEFINE_GUID(CLSID_WRITERESPONSEASYNCTASK, _
+DEFINE_CLSID(CLSID_WRITERESPONSEASYNCTASK, _
 	&h6d9085b7, &h2309, &h4c33, &hab, &h53, &h9d, &h8e, &hca, &hb6, &h7, &hc3 _
 )
 ' {BC192A6D-7ACC-4219-A7AB-2900107366A4}
@@ -189,6 +194,11 @@ DEFINE_IID(IID_IHeapMemoryAllocator, _
 	&h6c7428a7, &h2e13, &h453c, &h90, &he9, &h53, &h42, &h81, &h71, &hb, &h85 _
 )
 
+' {7C6F76B6-989B-4995-B312-AAC3DEEC673D}
+DEFINE_IID(IID_IHttpProcessorCollection, _
+	&h7c6f76b6, &h989b, &h4995, &hb3, &h12, &haa, &hc3, &hde, &hec, &h67, &h3d _
+)
+
 ' {D34D026F-D057-422F-9B32-C6D9424336F2}
 DEFINE_IID(IID_IHttpReader, _
 	&hd34d026f, &hd057, &h422f, &h9b, &h32, &hc6, &hd9, &h42, &h43, &h36, &hf2 _
@@ -197,6 +207,11 @@ DEFINE_IID(IID_IHttpReader, _
 ' {561C56F8-3D13-45C2-A10E-2C971347D8A7}
 DEFINE_IID(IID_IMutableAsyncResult, _
 	&h561c56f8, &h3d13, &h45c2, &ha1, &he, &h2c, &h97, &h13, &h47, &hd8, &ha7 _
+)
+
+' {3B2C4524-DB79-4D15-ACF5-576A7FE343B7}
+DEFINE_IID(IID_IMutableHttpProcessorCollection, _
+	&h3b2c4524, &hdb79, &h4d15, &hac, &hf5, &h57, &h6a, &h7f, &he3, &h43, &hb7 _
 )
 
 ' {FD8CC1E3-E4E0-4E11-87DF-903D193D1F84}
@@ -315,6 +330,6 @@ DEFINE_IID(IID_IWriteErrorAsyncTask, _
 )
 
 ' {7BCB2D1D-0AA0-47EE-8420-594AD4378C94}
-DEFINE_GUID(IID_IWriteResponseAsyncTask, _
+DEFINE_IID(IID_IWriteResponseAsyncTask, _
 	&h7bcb2d1d, &haa0, &h47ee, &h84, &h20, &h59, &h4a, &hd4, &h37, &h8c, &h94 _
 )

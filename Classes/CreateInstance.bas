@@ -6,6 +6,7 @@
 #include once "ClientUri.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpGetProcessor.bi"
+#include once "HttpProcessorCollection.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
@@ -125,6 +126,20 @@ Function CreateInstance( _
 		Return hr
 	End If
 	'/
+	If IsEqualCLSID(@CLSID_HTTPPROCESSORCOLLECTION, rclsid) Then
+		Dim pProcessor As HttpProcessorCollection Ptr = CreateHttpProcessorCollection(pIMemoryAllocator)
+		If pProcessor = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpProcessorCollectionQueryInterface(pProcessor, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpProcessorCollection(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
 	If IsEqualCLSID(@CLSID_HTTPREADER, rclsid) Then
 		Dim pReader As HttpReader Ptr = CreateHttpReader(pIMemoryAllocator)
 		If pReader = NULL Then

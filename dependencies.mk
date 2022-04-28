@@ -121,6 +121,19 @@ $(OBJ_RELEASE_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c: Classes\HttpGetProcess
 $(OBJ_DEBUG_DIR)\HttpGetProcessor$(FILE_SUFFIX_TEST).c:   Classes\HttpGetProcessor.bas Classes\HttpGetProcessor.bi Interfaces\IRequestProcessor.bi Interfaces\IAsyncResult.bi Interfaces\IClientRequest.bi Interfaces\IClientUri.bi Interfaces\IString.bi Modules\Http.bi Interfaces\ITextReader.bi Interfaces\INetworkStream.bi Interfaces\IBaseStream.bi Interfaces\IServerResponse.bi Modules\Mime.bi Interfaces\IWebSite.bi Interfaces\IRequestedFile.bi Interfaces\IArrayStringWriter.bi Interfaces\ITextWriter.bi Interfaces\IMutableAsyncResult.bi Classes\ContainerOf.bi Headers\CharacterConstants.bi Classes\CreateInstance.bi Headers\HttpConst.bi Modules\Logger.bi Modules\SafeHandle.bi Headers\StringConstants.bi Modules\WebUtils.bi
 
 
+$(OBJ_RELEASE_DIR)\HttpProcessorCollection$(FILE_SUFFIX_CONSOLE).c: Classes\HttpProcessorCollection.bas
+ 
+$(OBJ_DEBUG_DIR)\HttpProcessorCollection$(FILE_SUFFIX_CONSOLE).c:   Classes\HttpProcessorCollection.bas
+
+$(OBJ_RELEASE_DIR)\HttpProcessorCollection$(FILE_SUFFIX_SERVICE).c: Classes\HttpProcessorCollection.bas
+
+$(OBJ_DEBUG_DIR)\HttpProcessorCollection$(FILE_SUFFIX_SERVICE).c:   Classes\HttpProcessorCollection.bas
+
+$(OBJ_RELEASE_DIR)\HttpProcessorCollection$(FILE_SUFFIX_TEST).c: Classes\HttpProcessorCollection.bas
+
+$(OBJ_DEBUG_DIR)\HttpProcessorCollection$(FILE_SUFFIX_TEST).c:   Classes\HttpProcessorCollection.bas
+
+
 $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c: Classes\HttpReader.bas Classes\HttpReader.bi Interfaces\IHttpReader.bi Interfaces\IBaseStream.bi Interfaces\IAsyncResult.bi Interfaces\ITextReader.bi Interfaces\IString.bi Classes\ContainerOf.bi Classes\HeapBSTR.bi Interfaces\ICloneable.bi Modules\Logger.bi
 
 $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_CONSOLE).c:   Classes\HttpReader.bas Classes\HttpReader.bi Interfaces\IHttpReader.bi Interfaces\IBaseStream.bi Interfaces\IAsyncResult.bi Interfaces\ITextReader.bi Interfaces\IString.bi Classes\ContainerOf.bi Classes\HeapBSTR.bi Interfaces\ICloneable.bi Modules\Logger.bi

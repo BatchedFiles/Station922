@@ -2,6 +2,7 @@
 #define IHTTPPROCESSORCOLLECTION_BI
 
 #include once "IEnumHttpProcessor.bi"
+#include once "IString.bi"
 
 Type IHttpProcessorCollection As IHttpProcessorCollection_
 
@@ -41,6 +42,11 @@ Type IHttpProcessorCollectionVirtualTable
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	
+	GetAllMethods As Function( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal ppMethods As HeapBSTR Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IHttpProcessorCollection_
@@ -53,5 +59,6 @@ End Type
 #define IHttpProcessorCollection__NewEnum(this, ppIEnum) (this)->lpVtbl->_NewEnum(this, ppIEnum)
 #define IHttpProcessorCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
 #define IHttpProcessorCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
+#define IHttpProcessorCollection_GetAllMethods(this, ppMethods) (this)->lpVtbl->GetAllMethods(this, ppMethods)
 
 #endif

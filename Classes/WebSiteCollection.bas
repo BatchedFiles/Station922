@@ -354,6 +354,7 @@ Function CreateWebSiteNode( _
 	
 End Function
 
+
 Function IMutableWebSiteCollectionQueryInterface( _
 		ByVal this As IMutableWebSiteCollection Ptr, _
 		ByVal riid As REFIID, _

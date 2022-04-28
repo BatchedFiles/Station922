@@ -405,16 +405,11 @@ Function ReadRequestAsyncTaskEndExecute( _
 				
 				Return hrProcessReadError
 			End If
-			/'
+			
 			IWriteResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
 			IWriteResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
 			IWriteResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
 			IWriteResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-			IWriteResponseAsyncTask_SetRemoteAddress( _
-				pTask, _
-				CPtr(SOCKADDR Ptr, @this->RemoteAddress), _
-				this->RemoteAddressLength _
-			)
 			
 			Dim pIResult As IAsyncResult Ptr = Any
 			Dim hrBeginExecute As HRESULT = IWriteResponseAsyncTask_BeginExecute( _
@@ -436,7 +431,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 				IWriteResponseAsyncTask_Release(pTask)
 				Return hrBeginExecute
 			End If
-			'/
+			
 			Return S_OK
 			
 		Case S_FALSE
