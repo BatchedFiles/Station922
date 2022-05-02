@@ -1,13 +1,8 @@
 #ifndef IWRITEERRORASYNCTASK_BI
 #define IWRITEERRORASYNCTASK_BI
 
-#include once "IAsyncTask.bi"
-#include once "IAsyncResult.bi"
-#include once "IBaseStream.bi"
 #include once "IClientRequest.bi"
-#include once "IHttpProcessorCollection.bi"
-#include once "IHttpReader.bi"
-#include once "IWebSiteCollection.bi"
+#include once "IHttpAsyncTask.bi"
 
 Enum ResponseErrorCode
 	MovedPermanently
@@ -98,17 +93,27 @@ Type IWriteErrorAsyncTaskVirtualTable
 	
 	SetBaseStream As Function( _
 		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal pStream As IBaseStream Ptr _
+		byVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	
 	GetHttpReader As Function( _
 		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal ppIHttpReader As IHttpReader Ptr Ptr _
+		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
 	SetHttpReader As Function( _
 		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal pIHttpReader As IHttpReader Ptr _
+		byVal pReader As IHttpReader Ptr _
+	)As HRESULT
+	
+	GetHttpProcessorCollection As Function( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpProcessorCollection As Function( _
+		ByVal this As IWriteErrorAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
 	GetClientRequest As Function( _
@@ -125,16 +130,6 @@ Type IWriteErrorAsyncTaskVirtualTable
 		ByVal this As IWriteErrorAsyncTask Ptr, _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrCode As HRESULT _
-	)As HRESULT
-	
-	GetHttpProcessorCollection As Function( _
-		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpProcessorCollection As Function( _
-		ByVal this As IWriteErrorAsyncTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
 End Type
@@ -156,10 +151,10 @@ End Type
 #define IWriteErrorAsyncTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteErrorAsyncTask_GetHttpReader(this, ppIHttpReader) (this)->lpVtbl->GetHttpReader(this, ppIHttpReader)
 #define IWriteErrorAsyncTask_SetHttpReader(this, pIHttpReader) (this)->lpVtbl->SetHttpReader(this, pIHttpReader)
+#define IWriteErrorAsyncTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
+#define IWriteErrorAsyncTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 #define IWriteErrorAsyncTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteErrorAsyncTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IWriteErrorAsyncTask_SetErrorCode(this, HttpError, hrCode) (this)->lpVtbl->SetErrorCode(this, HttpError, hrCode)
-#define IWriteErrorAsyncTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
-#define IWriteErrorAsyncTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 
 #endif
