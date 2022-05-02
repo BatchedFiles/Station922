@@ -265,14 +265,18 @@ Function ReadRequestAsyncTaskQueryInterface( _
 	If IsEqualIID(@IID_IReadRequestAsyncTask, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IAsyncTask, riid) Then
+		If IsEqualIID(@IID_IHttpAsyncTask, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
+			If IsEqualIID(@IID_IAsyncTask, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
+				If IsEqualIID(@IID_IUnknown, riid) Then
+					*ppv = @this->lpVtbl
+				Else
+					*ppv = NULL
+					Return E_NOINTERFACE
+				End If
 			End If
 		End If
 	End If

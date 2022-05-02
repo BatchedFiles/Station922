@@ -1,9 +1,8 @@
 #ifndef IWRITERESPONSEASYNCTASK_BI
 #define IWRITERESPONSEASYNCTASK_BI
 
-#include once "IAsyncTask.bi"
-#include once "IAsyncResult.bi"
-#include once "IWebSiteCollection.bi"
+#include once "IClientRequest.bi"
+#include once "IHttpAsyncTask.bi"
 
 Type IWriteResponseAsyncTask As IWriteResponseAsyncTask_
 
@@ -71,16 +70,6 @@ Type IWriteResponseAsyncTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	GetClientRequest As Function( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal ppIRequest As IClientRequest Ptr Ptr _
-	)As HRESULT
-	
-	SetClientRequest As Function( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal pIRequest As IClientRequest Ptr _
-	)As HRESULT
-	
 	GetHttpProcessorCollection As Function( _
 		ByVal this As IWriteResponseAsyncTask Ptr, _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
@@ -89,6 +78,16 @@ Type IWriteResponseAsyncTaskVirtualTable
 	SetHttpProcessorCollection As Function( _
 		ByVal this As IWriteResponseAsyncTask Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
+	GetClientRequest As Function( _
+		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal ppIRequest As IClientRequest Ptr Ptr _
+	)As HRESULT
+	
+	SetClientRequest As Function( _
+		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
 End Type

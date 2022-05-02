@@ -5,7 +5,13 @@
 │   │   └───AsyncResult
 │   │
 │   └───IFileStreamAsyncResult
-│       └───FileStreamAsyncResult        [ ]
+│       └───FileStreamAsyncResult
+│
+├───IAsyncTask
+│   └───IHttpAsyncTask
+│       └───IReadRequestAsyncTask
+│       └───IWriteErrorAsyncTask
+│       └───IWriteResponseAsyncTask
 │
 ├───IBaseStream
 │   ├───IFileStream

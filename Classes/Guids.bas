@@ -194,6 +194,16 @@ DEFINE_IID(IID_IHeapMemoryAllocator, _
 	&h6c7428a7, &h2e13, &h453c, &h90, &he9, &h53, &h42, &h81, &h71, &hb, &h85 _
 )
 
+' {F1683D2F-C33F-4D2F-B536-E88A609BC9FC}
+DEFINE_IID(IID_IHttpAsyncTask, _
+	&hf1683d2f, &hc33f, &h4d2f, &hb5, &h36, &he8, &h8a, &h60, &h9b, &hc9, &hfc _
+)
+
+' {6FA7FA73-6097-478F-BA06-C908C6AACFCC}
+DEFINE_IID(IID_IHttpProcessor, _
+	&h6fa7fa73, &h6097, &h478f, &hba, &h6, &hc9, &h8, &hc6, &haa, &hcf, &hcc _
+)
+
 ' {7C6F76B6-989B-4995-B312-AAC3DEEC673D}
 DEFINE_IID(IID_IHttpProcessorCollection, _
 	&h7c6f76b6, &h989b, &h4995, &hb3, &h12, &haa, &hc3, &hde, &hec, &h67, &h3d _
@@ -242,11 +252,6 @@ DEFINE_IID(IID_IReadRequestAsyncTask, _
 ' {A44A1AB3-A0D5-42E6-A4FF-ADBAE8CE3682}
 DEFINE_IID(IID_IRequestedFile, _
 	&ha44a1ab3, &ha0d5, &h42e6, &ha4, &hff, &had, &hba, &he8, &hce, &h36, &h82 _
-)
-
-' {6FA7FA73-6097-478F-BA06-C908C6AACFCC}
-DEFINE_IID(IID_IRequestProcessor, _
-	&h6fa7fa73, &h6097, &h478f, &hba, &h6, &hc9, &h8, &hc6, &haa, &hcf, &hcc _
 )
 
 ' {6603A8F5-FB80-4CB9-BF80-CEADE4576F52}

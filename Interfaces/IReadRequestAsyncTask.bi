@@ -1,12 +1,7 @@
 #ifndef IREADREQUESTASYNCTASK_BI
 #define IREADREQUESTASYNCTASK_BI
 
-#include once "IAsyncTask.bi"
-#include once "IAsyncResult.bi"
-#include once "IBaseStream.bi"
-#include once "IHttpProcessorCollection.bi"
-#include once "IHttpReader.bi"
-#include once "IWebSiteCollection.bi"
+#include once "IHttpAsyncTask.bi"
 
 Type IReadRequestAsyncTask As IReadRequestAsyncTask_
 
