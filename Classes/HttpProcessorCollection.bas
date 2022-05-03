@@ -4,6 +4,14 @@
 
 Extern GlobalMutableHttpProcessorCollectionVirtualTable As Const IMutableHttpProcessorCollectionVirtualTable
 
+Const HttpProcessorCollectionCapacity As Integer = 20
+
+Type HttpProcessorCollectionKeyValuePair
+	Key As WString * 16
+	KeyLength As Integer
+	Value As IHttpProcessor Ptr
+End Type
+
 Type _HttpProcessorCollection
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -11,6 +19,8 @@ Type _HttpProcessorCollection
 	lpVtbl As Const IMutableHttpProcessorCollectionVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
+	CollectionLength As Integer
+	Collection(HttpProcessorCollectionCapacity - 1) As HttpProcessorCollectionKeyValuePair
 End Type
 
 Sub InitializeHttpProcessorCollection( _
@@ -25,12 +35,17 @@ Sub InitializeHttpProcessorCollection( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->Collectionlength = 0
 	
 End Sub
 
 Sub UnInitializeHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
+	
+	For i As Integer = 0 To this->Collectionlength - 1
+		IHttpProcessor_Release(this->Collection(i).Value)
+	Next
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -218,7 +233,20 @@ Function HttpProcessorCollectionAdd( _
 		ByVal pKey As WString Ptr, _
 		ByVal pIProcessor As IHttpProcessor Ptr _
 	)As HRESULT
-
+	
+	If this->Collectionlength > HttpProcessorCollectionCapacity Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim Length As Integer = lstrlenW(pKey)
+	
+	lstrcpyW(@this->Collection(this->Collectionlength).Key, pKey)
+	this->Collection(this->Collectionlength).KeyLength = Length
+	IHttpProcessor_AddRef(pIProcessor)
+	this->Collection(this->Collectionlength).Value = pIProcessor
+	
+	this->Collectionlength += 1
+	
 	Return S_OK
 	
 End Function

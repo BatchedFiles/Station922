@@ -4,7 +4,7 @@
 #include once "CreateInstance.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-' #include once "HttpProcessor.bi"
+#include once "HttpGetProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "Logger.bi"
 #include once "StringConstants.bi"
@@ -697,6 +697,34 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 			IMutableHttpProcessorCollection_Release(pIProcessorCollection)
 			Return hr4
 		End If
+		
+		Scope
+			Dim pIHttpGetProcessor As IHttpProcessor Ptr = Any
+			Dim hrGetProcessor As HRESULT = CreateInstance( _
+				this->pIMemoryAllocator, _
+				@CLSID_HTTPGETPROCESSOR, _
+				@IID_IHttpProcessor, _
+				@pIHttpGetProcessor _
+			)
+			If FAILED(hrGetProcessor) Then
+				IMutableHttpProcessorCollection_Release(pIProcessorCollection)
+				Return hrGetProcessor
+			End If
+			
+			IMutableHttpProcessorCollection_Add( _
+				pIProcessorCollection, _
+				WStr("GET"), _
+				pIHttpGetProcessor _
+			)
+			
+			IMutableHttpProcessorCollection_Add( _
+				pIProcessorCollection, _
+				WStr("HEAD"), _
+				pIHttpGetProcessor _
+			)
+			
+			IHttpProcessor_Release(pIHttpGetProcessor)
+		End Scope
 		
 		*ppIHttpProcessorCollection = pIProcessorCollection2
 		
