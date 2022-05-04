@@ -1,7 +1,7 @@
 #ifndef IENUMHTTPPROCESSOR_BI
 #define IENUMHTTPPROCESSOR_BI
 
-#include once "IHttpProcessor.bi"
+#include once "IHttpAsyncProcessor.bi"
 
 Type IEnumHttpProcessor As IEnumHttpProcessor_
 
@@ -28,7 +28,7 @@ Type IEnumHttpProcessorVirtualTable
 	Next As Function( _
 		ByVal this As IEnumHttpProcessor Ptr, _
 		ByVal celt As ULONG, _
-		ByVal rgelt As IHttpProcessor Ptr Ptr, _
+		ByVal rgelt As IHttpAsyncProcessor Ptr Ptr, _
 		ByVal pceltFetched As ULONG Ptr _
 	)As HRESULT
 	

@@ -9,7 +9,7 @@ Const HttpProcessorCollectionCapacity As Integer = 20
 Type HttpProcessorCollectionKeyValuePair
 	Key As WString * 16
 	KeyLength As Integer
-	Value As IHttpProcessor Ptr
+	Value As IHttpAsyncProcessor Ptr
 End Type
 
 Type _HttpProcessorCollection
@@ -44,7 +44,7 @@ Sub UnInitializeHttpProcessorCollection( _
 	)
 	
 	For i As Integer = 0 To this->Collectionlength - 1
-		IHttpProcessor_Release(this->Collection(i).Value)
+		IHttpAsyncProcessor_Release(this->Collection(i).Value)
 	Next
 	
 	IMalloc_Release(this->pIMemoryAllocator)
@@ -197,7 +197,7 @@ End Function
 Function HttpProcessorCollectionItem( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal ppIProcessor As IHttpProcessor Ptr Ptr _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
 	*ppIProcessor = NULL
@@ -231,7 +231,7 @@ End Function
 Function HttpProcessorCollectionAdd( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal pIProcessor As IHttpProcessor Ptr _
+		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	
 	If this->Collectionlength > HttpProcessorCollectionCapacity Then
@@ -242,7 +242,7 @@ Function HttpProcessorCollectionAdd( _
 	
 	lstrcpyW(@this->Collection(this->Collectionlength).Key, pKey)
 	this->Collection(this->Collectionlength).KeyLength = Length
-	IHttpProcessor_AddRef(pIProcessor)
+	IHttpAsyncProcessor_AddRef(pIProcessor)
 	this->Collection(this->Collectionlength).Value = pIProcessor
 	
 	this->Collectionlength += 1
@@ -282,7 +282,7 @@ End Function
 Function IMutableHttpProcessorCollectionItem( _
 		ByVal this As IMutableHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal ppIProcessor As IHttpProcessor Ptr Ptr _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionItem(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
 End Function
@@ -304,7 +304,7 @@ End Function
 Function IMutableHttpProcessorCollectionAdd( _
 		ByVal this As IMutableHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal pIProcessor As IHttpProcessor Ptr _
+		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionAdd(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, pIProcessor)
 End Function

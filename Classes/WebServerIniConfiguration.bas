@@ -699,11 +699,11 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 		End If
 		
 		Scope
-			Dim pIHttpGetProcessor As IHttpProcessor Ptr = Any
+			Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrGetProcessor As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
-				@CLSID_HTTPGETPROCESSOR, _
-				@IID_IHttpProcessor, _
+				@CLSID_HTTPGETASYNCPROCESSOR, _
+				@IID_IHttpGetAsyncProcessor, _
 				@pIHttpGetProcessor _
 			)
 			If FAILED(hrGetProcessor) Then
@@ -723,7 +723,7 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 				pIHttpGetProcessor _
 			)
 			
-			IHttpProcessor_Release(pIHttpGetProcessor)
+			IHttpAsyncProcessor_Release(pIHttpGetProcessor)
 		End Scope
 		
 		*ppIHttpProcessorCollection = pIProcessorCollection2

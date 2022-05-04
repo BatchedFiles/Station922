@@ -34,7 +34,7 @@ Type IHttpProcessorCollectionVirtualTable
 	Item As Function( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal ppIProcessor As IHttpProcessor Ptr Ptr _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
 	Count As Function( _

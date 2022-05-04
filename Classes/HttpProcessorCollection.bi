@@ -39,7 +39,7 @@ Declare Function HttpProcessorCollection_NewEnum( _
 Declare Function HttpProcessorCollectionItem( _
 	ByVal this As HttpProcessorCollection Ptr, _
 	ByVal pKey As WString Ptr, _
-	ByVal ppIProcessor As IHttpProcessor Ptr Ptr _
+	ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 )As HRESULT
 
 Declare Function HttpProcessorCollectionCount( _
@@ -55,7 +55,7 @@ Declare Function HttpProcessorCollectionGetAllMethods( _
 Declare Function HttpProcessorCollectionAdd( _
 	ByVal this As HttpProcessorCollection Ptr, _
 	ByVal pKey As WString Ptr, _
-	ByVal pIProcessor As IHttpProcessor Ptr _
+	ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 )As HRESULT
 
 #endif

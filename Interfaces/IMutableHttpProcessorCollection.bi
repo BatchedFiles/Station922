@@ -33,7 +33,7 @@ Type IMutableHttpProcessorCollectionVirtualTable
 	Item As Function( _
 		ByVal this As IMutableHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal ppIProcessor As IHttpProcessor Ptr Ptr _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
 	Count As Function( _
@@ -49,7 +49,7 @@ Type IMutableHttpProcessorCollectionVirtualTable
 	Add As Function( _
 		ByVal this As IMutableHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal pIProcessor As IHttpProcessor Ptr _
+		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	
 	' Для коллекций:

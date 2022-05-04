@@ -13,7 +13,7 @@
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
-Extern GlobalHttpGetProcessorVirtualTable As Const IRequestProcessorVirtualTable
+Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
 
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
@@ -25,7 +25,7 @@ Type _HttpGetProcessor
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IRequestProcessorVirtualTable Ptr
+	lpVtbl As Const IHttpGetAsyncProcessorVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
@@ -365,14 +365,18 @@ Function HttpGetProcessorQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IRequestProcessor, riid) Then
+	If IsEqualIID(@IID_IHttpGetAsyncProcessor, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
+		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
 		End If
 	End If
 	
@@ -432,10 +436,10 @@ Function HttpGetProcessorPrepare( _
 	Select Case FileState
 		
 		Case RequestedFileState.NotFound
-			Return REQUESTPROCESSOR_E_FILENOTFOUND
+			Return HTTPASYNCPROCESSOR_E_FILENOTFOUND
 			
 		Case RequestedFileState.Gone
-			Return REQUESTPROCESSOR_E_FILEGONE
+			Return HTTPASYNCPROCESSOR_E_FILEGONE
 			
 	End Select
 	
@@ -490,7 +494,7 @@ Function HttpGetProcessorPrepare( _
 		PathFindExtensionW(PathTranslated) _
 	)
 	If GetMimeOfFileExtensionResult = False Then
-		Return REQUESTPROCESSOR_E_FORBIDDEN
+		Return HTTPASYNCPROCESSOR_E_FORBIDDEN
 	End If
 	
 	' TODO Проверить идентификацию для запароленных ресурсов
@@ -545,7 +549,12 @@ Function HttpGetProcessorPrepare( _
 	
 	' TODO вместо перезаписывания заголовка его нужно добавить
 	If IsAcceptEncoding Then
-		IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderVary, WStr("Accept-Encoding"))
+		IServerResponse_AddKnownResponseHeaderWstrLen( _
+			pc->pIResponse, _
+			HttpResponseHeaders.HeaderVary, _
+			WStr("Accept-Encoding"), _
+			Len(WSTR("Accept-Encoding")) _
+		)
 	End If
 	
 	Dim ResponseZipEnable As Boolean = Any
@@ -612,7 +621,7 @@ Function HttpGetProcessorPrepare( _
 					
 					IArrayStringWriter_Release(pIWriter)
 					
-					Return REQUESTPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				this->FileBytesOffset = EncodingFileOffset + RequestedByteRange.FirstBytePosition
@@ -651,7 +660,7 @@ Function HttpGetProcessorPrepare( _
 					
 					IArrayStringWriter_Release(pIWriter)
 					
-					Return REQUESTPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				this->ContentBodyLength = min(EncodingFileSize, RequestedByteRange.LastBytePosition)
@@ -688,7 +697,7 @@ Function HttpGetProcessorPrepare( _
 					
 					IArrayStringWriter_Release(pIWriter)
 					
-					Return REQUESTPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				this->ContentBodyLength = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, EncodingFileSize)
@@ -826,7 +835,7 @@ Function HttpGetProcessorBeginProcess( _
 		If intError = ERROR_IO_PENDING OrElse intError = WSA_IO_PENDING Then
 			' TODO Запросить интерфейс вместо конвертирования указателя
 			*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
-			Return REQUESTPROCESSOR_S_IO_PENDING
+			Return HTTPASYNCPROCESSOR_S_IO_PENDING
 		End If
 		
 		IMutableAsyncResult_Release(pINewAsyncResult)
@@ -901,13 +910,13 @@ Function HttpGetProcessorEndProcess( _
 	
 	this->CurrentChunkIndex += 1
 	
-	Return REQUESTPROCESSOR_S_IO_PENDING
+	Return HTTPASYNCPROCESSOR_S_IO_PENDING
 	
 End Function
 
 
 Function IHttpGetProcessorQueryInterface( _
-		ByVal this As IRequestProcessor Ptr, _
+		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
@@ -915,26 +924,19 @@ Function IHttpGetProcessorQueryInterface( _
 End Function
 
 Function IHttpGetProcessorAddRef( _
-		ByVal this As IRequestProcessor Ptr _
+		ByVal this As IHttpGetAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpGetProcessorAddRef(ContainerOf(this, HttpGetProcessor, lpVtbl))
 End Function
 
 Function IHttpGetProcessorRelease( _
-		ByVal this As IRequestProcessor Ptr _
+		ByVal this As IHttpGetAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpGetProcessorRelease(ContainerOf(this, HttpGetProcessor, lpVtbl))
 End Function
 
-Function IHttpGetProcessorPrepare( _
-		ByVal this As IRequestProcessor Ptr, _
-		ByVal pContext As ProcessorContext Ptr _
-	)As HRESULT
-	Return HttpGetProcessorPrepare(ContainerOf(this, HttpGetProcessor, lpVtbl), pContext)
-End Function
-
 Function IHttpGetProcessorBeginProcess( _
-		ByVal this As IRequestProcessor Ptr, _
+		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -943,18 +945,16 @@ Function IHttpGetProcessorBeginProcess( _
 End Function
 
 Function IHttpGetProcessorEndProcess( _
-		ByVal this As IRequestProcessor Ptr, _
+		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	Return HttpGetProcessorEndProcess(ContainerOf(this, HttpGetProcessor, lpVtbl), pIAsyncResult)
 End Function
 
-Dim GlobalHttpGetProcessorVirtualTable As Const IRequestProcessorVirtualTable = Type( _
+Dim GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable = Type( _
 	@IHttpGetProcessorQueryInterface, _
 	@IHttpGetProcessorAddRef, _
 	@IHttpGetProcessorRelease, _
-	@IHttpGetProcessorPrepare, _
-	NULL, _ /' @IHttpGetProcessorProcess '/
 	@IHttpGetProcessorBeginProcess, _
 	@IHttpGetProcessorEndProcess _
 )

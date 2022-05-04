@@ -1,9 +1,9 @@
 #ifndef HTTPGETPROCESSOR_BI
 #define HTTPGETPROCESSOR_BI
 
-#include once "IRequestProcessor.bi"
+#include once "IHttpGetAsyncProcessor.bi"
 
-Extern CLSID_HTTPGETPROCESSOR Alias "CLSID_HTTPGETPROCESSOR" As Const CLSID
+Extern CLSID_HTTPGETASYNCPROCESSOR Alias "CLSID_HTTPGETASYNCPROCESSOR" As Const CLSID
 
 Type HttpGetProcessor As _HttpGetProcessor
 
@@ -30,16 +30,6 @@ Declare Function HttpGetProcessorAddRef( _
 Declare Function HttpGetProcessorRelease( _
 	ByVal this As HttpGetProcessor Ptr _
 )As ULONG
-
-Declare Function HttpGetProcessorPrepare( _
-	ByVal this As HttpGetProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr _
-)As HRESULT
-
-Declare Function HttpGetProcessorProcess( _
-	ByVal this As HttpGetProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr _
-)As HRESULT
 
 Declare Function HttpGetProcessorBeginProcess( _
 	ByVal this As HttpGetProcessor Ptr, _

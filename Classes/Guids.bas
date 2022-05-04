@@ -56,7 +56,7 @@ DEFINE_CLSID(CLSID_HEAPMEMORYALLOCATOR, _
 )
 
 ' {ECF4A262-2CFC-4FB3-91F0-67D2945ADFA6}
-DEFINE_CLSID(CLSID_HTTPGETPROCESSOR, _
+DEFINE_CLSID(CLSID_HTTPGETASYNCPROCESSOR, _
 	&hecf4a262, &h2cfc, &h4fb3, &h91, &hf0, &h67, &hd2, &h94, &h5a, &hdf, &ha6 _
 )
 
@@ -200,8 +200,14 @@ DEFINE_IID(IID_IHttpAsyncTask, _
 )
 
 ' {6FA7FA73-6097-478F-BA06-C908C6AACFCC}
-DEFINE_IID(IID_IHttpProcessor, _
+DEFINE_IID(IID_IHttpAsyncProcessor, _
 	&h6fa7fa73, &h6097, &h478f, &hba, &h6, &hc9, &h8, &hc6, &haa, &hcf, &hcc _
+)
+
+' {D596BBD2-86F2-4850-A807-34DA01953D61}
+
+DEFINE_IID(IID_IHttpGetAsyncProcessor, _
+	&hd596bbd2, &h86f2, &h4850, &ha8, &h7, &h34, &hda, &h1, &h95, &h3d, &h61 _
 )
 
 ' {7C6F76B6-989B-4995-B312-AAC3DEEC673D}

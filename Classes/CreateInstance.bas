@@ -1,7 +1,6 @@
 #include once "CreateInstance.bi"
 #include once "ArrayStringWriter.bi"
 #include once "AsyncResult.bi"
-#include once "ClientContext.bi"
 #include once "ClientRequest.bi"
 #include once "ClientUri.bi"
 #include once "HeapMemoryAllocator.bi"
@@ -18,6 +17,7 @@
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
 #include once "WriteErrorAsyncTask.bi"
+#include once "WriteResponseAsyncTask.bi"
 
 Function CreateInstance( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -55,21 +55,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	/'
-	If IsEqualCLSID(@CLSID_CLIENTCONTEXT, rclsid) Then
-		Dim pContext As ClientContext Ptr = CreateClientContext(pIMemoryAllocator)
-		If pContext = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = ClientContextQueryInterface(pContext, riid, ppv)
-		If FAILED(hr) Then
-			DestroyClientContext(pContext)
-		End If
-		
-		Return hr
-	End If
-	'/
+	
 	If IsEqualCLSID(@CLSID_CLIENTREQUEST, rclsid) Then
 		Dim pRequest As ClientRequest Ptr = CreateClientRequest(pIMemoryAllocator)
 		If pRequest = NULL Then
@@ -111,8 +97,8 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	/'
-	If IsEqualCLSID(@CLSID_HTTPGETPROCESSOR, rclsid) Then
+	
+	If IsEqualCLSID(@CLSID_HTTPGETASYNCPROCESSOR, rclsid) Then
 		Dim pProcessor As HttpGetProcessor Ptr = CreateHttpGetProcessor(pIMemoryAllocator)
 		If pProcessor = NULL Then
 			Return E_OUTOFMEMORY
@@ -125,7 +111,7 @@ Function CreateInstance( _
 		
 		Return hr
 	End If
-	'/
+	
 	If IsEqualCLSID(@CLSID_HTTPPROCESSORCOLLECTION, rclsid) Then
 		Dim pProcessor As HttpProcessorCollection Ptr = CreateHttpProcessorCollection(pIMemoryAllocator)
 		If pProcessor = NULL Then
