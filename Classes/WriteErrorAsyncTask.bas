@@ -928,40 +928,6 @@ Function WriteErrorAsyncTaskEndExecute( _
 	
 End Function
 
-Function WriteErrorAsyncTaskGetClientRequest( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal ppIRequest As IClientRequest Ptr Ptr _
-	)As HRESULT
-	
-	If this->pIRequest <> NULL Then
-		IClientRequest_AddRef(this->pIRequest)
-	End If
-	
-	*ppIRequest = this->pIRequest
-	
-	Return S_OK
-	
-End Function
-
-Function WriteErrorAsyncTaskSetClientRequest( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal pIRequest As IClientRequest Ptr _
-	)As HRESULT
-	
-	If pIRequest <> NULL Then
-		IClientRequest_AddRef(pIRequest)
-	End If
-	
-	If this->pIRequest <> NULL Then
-		IClientRequest_Release(this->pIRequest)
-	End If
-	
-	this->pIRequest = pIRequest
-	
-	Return S_OK
-	
-End Function
-
 Function WriteErrorAsyncTaskGetWebSiteCollection( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
@@ -1072,6 +1038,40 @@ Function WriteErrorAsyncTaskSetErrorCode( _
 	
 	this->HttpError = HttpError
 	this->hrCode = hrCode
+	
+	Return S_OK
+	
+End Function
+
+Function WriteErrorAsyncTaskGetClientRequest( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
+		ByVal ppIRequest As IClientRequest Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIRequest <> NULL Then
+		IClientRequest_AddRef(this->pIRequest)
+	End If
+	
+	*ppIRequest = this->pIRequest
+	
+	Return S_OK
+	
+End Function
+
+Function WriteErrorAsyncTaskSetClientRequest( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
+		ByVal pIRequest As IClientRequest Ptr _
+	)As HRESULT
+	
+	If pIRequest <> NULL Then
+		IClientRequest_AddRef(pIRequest)
+	End If
+	
+	If this->pIRequest <> NULL Then
+		IClientRequest_Release(this->pIRequest)
+	End If
+	
+	this->pIRequest = pIRequest
 	
 	Return S_OK
 	

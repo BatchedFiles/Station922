@@ -280,6 +280,20 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
+	If IsEqualCLSID(@CLSID_WRITERESPONSEASYNCTASK, rclsid) Then
+		Dim pTask As WriteResponseAsyncTask Ptr = CreateWriteResponseAsyncTask(pIMemoryAllocator)
+		If pTask = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WriteResponseAsyncTaskQueryInterface(pTask, riid, ppv)
+		If FAILED(hr) Then
+			DestroyWriteResponseAsyncTask(pTask)
+		End If
+		
+		Return hr
+	End If
+	
 	Return CLASS_E_CLASSNOTAVAILABLE
 	
 End Function
