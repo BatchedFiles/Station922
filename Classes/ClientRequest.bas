@@ -674,7 +674,7 @@ Function ClientRequestEndReadRequest( _
 	
 End Function
 
-Function ClientRequestPrepare( _
+Function ClientRequestParse( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
@@ -922,10 +922,10 @@ Function IClientRequestEndReadRequest( _
 	Return ClientRequestEndReadRequest(ContainerOf(this, ClientRequest, lpVtbl), pIAsyncResult)
 End Function
 
-Function IClientRequestPrepare( _
+Function IClientRequestParse( _
 		ByVal this As IClientRequest Ptr _
 	)As HRESULT
-	Return ClientRequestPrepare(ContainerOf(this, ClientRequest, lpVtbl))
+	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl))
 End Function
 
 Function IClientRequestGetHttpMethod( _
@@ -1007,7 +1007,7 @@ Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( 
 	NULL, _ /' @IClientRequestReadRequest, _ '/
 	@IClientRequestBeginReadRequest, _
 	@IClientRequestEndReadRequest, _
-	@IClientRequestPrepare, _
+	@IClientRequestParse, _
 	@IClientRequestGetHttpMethod, _
 	@IClientRequestGetUri, _
 	@IClientRequestGetHttpVersion, _

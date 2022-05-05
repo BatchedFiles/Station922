@@ -367,7 +367,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 		
 		Case S_OK
 			
-			Dim hrPrepare As HRESULT = IClientRequest_Prepare(this->pIRequest)
+			Dim hrPrepare As HRESULT = IClientRequest_Parse(this->pIRequest)
 			If FAILED(hrPrepare) Then
 				Dim vtSCode As VARIANT = Any
 				vtSCode.vt = VT_ERROR

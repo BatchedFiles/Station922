@@ -46,7 +46,7 @@ Declare Function ClientRequestEndReadRequest( _
 	ByVal pIAsyncResult As IAsyncResult Ptr _
 )As HRESULT
 
-Declare Function ClientRequestPrepare( _
+Declare Function ClientRequestParse( _
 	ByVal this As ClientRequest Ptr _
 )As HRESULT
 

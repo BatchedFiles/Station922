@@ -85,7 +85,7 @@ Type IClientRequestVirtualTable
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Prepare As Function( _
+	Parse As Function( _
 		ByVal this As IClientRequest Ptr _
 	)As HRESULT
 	
@@ -153,7 +153,7 @@ End Type
 ' #define IClientRequest_ReadRequest(this) (this)->lpVtbl->ReadRequest(this)
 #define IClientRequest_BeginReadRequest(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadRequest(this, StateObject, ppIAsyncResult)
 #define IClientRequest_EndReadRequest(this, pIAsyncResult) (this)->lpVtbl->EndReadRequest(this, pIAsyncResult)
-#define IClientRequest_Prepare(this) (this)->lpVtbl->Prepare(this)
+#define IClientRequest_Parse(this) (this)->lpVtbl->Parse(this)
 #define IClientRequest_GetHttpMethod(this, pHttpMethod) (this)->lpVtbl->GetHttpMethod(this, pHttpMethod)
 #define IClientRequest_GetUri(this, pUri) (this)->lpVtbl->GetUri(this, pUri)
 #define IClientRequest_GetHttpVersion(this, pHttpVersions) (this)->lpVtbl->GetHttpVersion(this, pHttpVersions)
