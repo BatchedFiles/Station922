@@ -80,7 +80,8 @@ Function WorkerThread( _
 			)
 			
 			Scope
-				Dim pTask As IAsyncIoTask Ptr = Cast(IAsyncIoTask Ptr, CompletionKey)
+				Dim pTask As IAsyncIoTask Ptr = Any
+				IAsyncResult_GetAsyncState(pIAsync, CPtr(IUnknown Ptr Ptr, @pTask))
 				
 				Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
 					pTask, _
@@ -373,7 +374,7 @@ Function ThreadPoolAssociateTask( _
 	Dim hPort As HANDLE = CreateIoCompletionPort( _
 		FileHandle, _
 		this->hIOCompletionPort, _
-		Cast(ULONG_PTR, pTask), _
+		Cast(ULONG_PTR, 0), _
 		0 _
 	)
 	If hPort = NULL Then
