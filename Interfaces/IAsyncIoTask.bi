@@ -15,7 +15,7 @@ Type IAsyncIoTask As IAsyncIoTask_
 
 Extern IID_IAsyncIoTask Alias "IID_IAsyncIoTask" As Const IID
 
-Type IIoAsyncTaskVirtualTable
+Type IAsyncIoTaskVirtualTable
 	
 	QueryInterface As Function( _
 		ByVal this As IAsyncIoTask Ptr, _
@@ -56,8 +56,8 @@ End Type
 #define IAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
-#define IAsyncIoTask_BeginExecute(this, pPool, ppIResult) (this)->lpVtbl->BeginExecute(this, pPool, ppIResult)
-#define IAsyncIoTask_EndExecute(this, pPool, pIResult, BytesTransferred) (this)->lpVtbl->EndExecute(this, pPool, pIResult, BytesTransferred)
+#define IAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
+#define IAsyncIoTask_EndExecute(this, pIResult, BytesTransferred) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred)
 #define IAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 
 #endif

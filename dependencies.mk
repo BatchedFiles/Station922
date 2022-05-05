@@ -198,17 +198,17 @@ $(OBJ_RELEASE_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c: Classes\ServerResponse.b
 $(OBJ_DEBUG_DIR)\ServerResponse$(FILE_SUFFIX_TEST).c:   Classes\ServerResponse.bas Classes\ServerResponse.bi Interfaces\IServerResponse.bi Modules\Http.bi Interfaces\IString.bi Modules\Mime.bi Interfaces\IArrayStringWriter.bi Interfaces\ITextWriter.bi Interfaces\IStringable.bi Headers\CharacterConstants.bi Classes\ContainerOf.bi Classes\CreateInstance.bi Classes\HeapBSTR.bi Headers\HttpConst.bi Modules\Logger.bi Headers\StringConstants.bi Modules\WebUtils.bi Interfaces\IClientRequest.bi Interfaces\IClientUri.bi Interfaces\ITextReader.bi Interfaces\IAsyncResult.bi Interfaces\IBaseStream.bi Interfaces\IWebSite.bi Interfaces\IRequestedFile.bi
 
 
-$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_CONSOLE).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_CONSOLE).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
-$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_CONSOLE).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_CONSOLE).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
-$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_SERVICE).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_SERVICE).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
-$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_SERVICE).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_SERVICE).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
-$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_TEST).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_RELEASE_DIR)\ThreadPool$(FILE_SUFFIX_TEST).c: Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
-$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_TEST).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncResult.bi Interfaces\IAsyncTask.bi Classes\ContainerOf.bi Modules\Logger.bi
+$(OBJ_DEBUG_DIR)\ThreadPool$(FILE_SUFFIX_TEST).c:   Classes\ThreadPool.bas Classes\ThreadPool.bi Interfaces\IThreadPool.bi Interfaces\IAsyncIoTask.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Modules\Logger.bi
 
 
 $(OBJ_RELEASE_DIR)\WebServer$(FILE_SUFFIX_CONSOLE).c: Classes\WebServer.bas Classes\WebServer.bi Interfaces\IRunnable.bi Classes\ClientRequest.bi Interfaces\IClientRequest.bi Interfaces\IClientUri.bi Interfaces\IString.bi Modules\Http.bi Interfaces\ITextReader.bi Interfaces\IAsyncResult.bi Classes\ContainerOf.bi Classes\CreateInstance.bi Classes\HttpReader.bi Interfaces\IHttpReader.bi Interfaces\IBaseStream.bi Modules\Logger.bi Modules\Network.bi Classes\NetworkStream.bi Interfaces\INetworkStream.bi Classes\ReadRequestAsyncTask.bi Interfaces\IReadRequestAsyncTask.bi Interfaces\IHttpAsyncTask.bi Interfaces\IAsyncTask.bi Interfaces\IThreadPool.bi Interfaces\IHttpProcessorCollection.bi Interfaces\IEnumHttpProcessor.bi Interfaces\IHttpAsyncProcessor.bi Interfaces\IServerResponse.bi Modules\Mime.bi Interfaces\IWebSite.bi Interfaces\IRequestedFile.bi Interfaces\IWebSiteCollection.bi Interfaces\IEnumWebSite.bi Classes\ServerResponse.bi Classes\ThreadPool.bi Classes\WebServerIniConfiguration.bi Interfaces\IWebServerConfiguration.bi

@@ -1,6 +1,4 @@
 #include once "ThreadPool.bi"
-#include once "IAsyncResult.bi"
-#include once "IAsyncTask.bi"
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
@@ -81,37 +79,29 @@ Function WorkerThread( _
 				True _
 			)
 			
-			Dim pTask As IAsyncTask Ptr = Any
-			IAsyncResult_GetAsyncState( _
-				pIAsync, _
-				CPtr(IUnknown Ptr Ptr, @pTask) _
-			)
-			
-			Dim hrEndExecute As HRESULT = IAsyncTask_EndExecute( _
-				pTask, _
-				CPtr(IThreadPool Ptr, @this->lpVtbl), _
-				pIAsync, _
-				BytesTransferred, _
-				CompletionKey _
-			)
-			If FAILED(hrEndExecute) Then
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_ERROR
-				vtErrorCode.scode = hrEndExecute
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IAsyncTask_EndExecute Error\t"), _
-					@vtErrorCode _
+			Scope
+				Dim pTask As IAsyncIoTask Ptr = Cast(IAsyncIoTask Ptr, CompletionKey)
+				
+				Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
+					pTask, _
+					pIAsync, _
+					BytesTransferred _
 				)
-			End If
-			
-			IAsyncTask_Release(pTask)
+				If FAILED(hrEndExecute) Then
+					Dim vtErrorCode As VARIANT = Any
+					vtErrorCode.vt = VT_ERROR
+					vtErrorCode.scode = hrEndExecute
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+						@vtErrorCode _
+					)
+				End If
+				
+				IAsyncIoTask_Release(pTask)
+			End Scope
 			
 			IAsyncResult_Release(pIAsync)
-			
-			' Уменьшаем счётчик ссылок на задачу
-			' Так как мы не сделали это при запуске задачи
-			IAsyncTask_Release(pTask)
 			
 		End If
 		
@@ -372,16 +362,31 @@ Function ThreadPoolStop( _
 	
 End Function
 
-Function ThreadPoolGetCompletionPort( _
+Function ThreadPoolAssociateTask( _
 		ByVal this As ThreadPool Ptr, _
-		ByVal pPort As HANDLE Ptr _
+		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
-	*pPort = this->hIOCompletionPort
+	Dim FileHandle As HANDLE = Any
+	IAsyncIoTask_GetFileHandle(pTask, @FileHandle)
+	
+	Dim hPort As HANDLE = CreateIoCompletionPort( _
+		FileHandle, _
+		this->hIOCompletionPort, _
+		Cast(ULONG_PTR, pTask), _
+		0 _
+	)
+	If hPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	IAsyncIoTask_AddRef(pTask)
 	
 	Return S_OK
 	
 End Function
+
 
 Function IThreadPoolQueryInterface( _
 		ByVal this As IThreadPool Ptr, _
@@ -429,11 +434,11 @@ Function IThreadPoolStop( _
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolGetCompletionPort( _
+Function IThreadPoolAssociateTask( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal pPort As HANDLE Ptr _
+		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
-	Return ThreadPoolGetCompletionPort(ContainerOf(this, ThreadPool, lpVtbl), pPort)
+	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), pTask)
 End Function
 
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
@@ -444,5 +449,5 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolSetMaxThreads, _
 	@IThreadPoolRun, _
 	@IThreadPoolStop, _
-	@IThreadPoolGetCompletionPort _
+	@IThreadPoolAssociateTask _
 )
