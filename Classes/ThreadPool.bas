@@ -381,8 +381,6 @@ Function ThreadPoolAssociateTask( _
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	IAsyncIoTask_AddRef(pTask)
-	
 	Return S_OK
 	
 End Function

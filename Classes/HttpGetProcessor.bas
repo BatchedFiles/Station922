@@ -742,7 +742,7 @@ Function HttpGetProcessorBeginProcess( _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	
+	/'
 	*ppIAsyncResult = NULL
 	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
@@ -845,7 +845,7 @@ Function HttpGetProcessorBeginProcess( _
 	
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
-	
+	'/
 	Return S_OK
 	
 End Function

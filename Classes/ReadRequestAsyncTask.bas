@@ -2,17 +2,18 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "WriteErrorAsyncTask.bi"
 #include once "WriteResponseAsyncTask.bi"
 
-Extern GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable
+Extern GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable
 
 Type _ReadRequestAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IReadRequestAsyncTaskVirtualTable Ptr
+	lpVtbl As Const IReadRequestAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
@@ -24,16 +25,15 @@ End Type
 
 Function ProcessReadError( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
 		ByVal hrReadError As HRESULT _
 	)As HRESULT
 	
 	' Создать и запустить задачу подготовки ответа ошибки
-	Dim pTask As IWriteErrorAsyncTask Ptr = Any
+	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
 	Dim hrCreateTask As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_WRITEERRORASYNCTASK, _
-		@IID_IWriteErrorAsyncTask, _
+		@IID_IWriteErrorAsyncIoTask, _
 		@pTask _
 	)
 	If FAILED(hrCreateTask) Then
@@ -74,19 +74,18 @@ Function ProcessReadError( _
 	End Select
 	
 	If HttpError < ResponseErrorCode.InternalServerError Then
-		IWriteErrorAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-		IWriteErrorAsyncTask_SetClientRequest(pTask, this->pIRequest)
-		IWriteErrorAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-		IWriteErrorAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+		IWriteErrorAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+		IWriteErrorAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
+		IWriteErrorAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+		IWriteErrorAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 	End If
 	
-	IWriteErrorAsyncTask_SetBaseStream(pTask, this->pIStream)
-	IWriteErrorAsyncTask_SetErrorCode(pTask, HttpError, hrReadError)
+	IWriteErrorAsyncIoTask_SetBaseStream(pTask, this->pIStream)
+	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrReadError)
 	
 	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncTask_BeginExecute( _
+	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncIoTask_BeginExecute( _
 		pTask, _
-		pPool, _
 		@pIResult _
 	)
 	If FAILED(hrBeginExecute) Then
@@ -100,7 +99,7 @@ Function ProcessReadError( _
 		)
 		
 		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		IWriteErrorAsyncTask_Release(pTask)
+		IWriteErrorAsyncIoTask_Release(pTask)
 		Return hrBeginExecute
 	End If
 	
@@ -117,7 +116,7 @@ Sub InitializeReadRequestAsyncTask( _
 	#if __FB_DEBUG__
 		CopyMemory(@this->IdString, @Str("ReadRequest_Task"), 16)
 	#endif
-	this->lpVtbl = @GlobalReadRequestAsyncTaskVirtualTable
+	this->lpVtbl = @GlobalReadRequestAsyncIoTaskVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -262,13 +261,13 @@ Function ReadRequestAsyncTaskQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IReadRequestAsyncTask, riid) Then
+	If IsEqualIID(@IID_IReadRequestAsyncIoTask, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IHttpAsyncTask, riid) Then
+		If IsEqualIID(@IID_IHttpAsyncIoTask, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IAsyncTask, riid) Then
+			If IsEqualIID(@IID_IAsyncIoTask, riid) Then
 				*ppv = @this->lpVtbl
 			Else
 				If IsEqualIID(@IID_IUnknown, riid) Then
@@ -323,7 +322,6 @@ End Function
 
 Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -347,10 +345,8 @@ End Function
 
 Function ReadRequestAsyncTaskEndExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR _
+		ByVal BytesTransferred As DWORD _
 	)As HRESULT
 	
 	Dim hrEndReadRequest As HRESULT = IClientRequest_EndReadRequest( _
@@ -361,7 +357,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 		
 		Dim hrProcessReadError As HRESULT = ProcessReadError( _
 			this, _
-			pPool, _
 			hrEndReadRequest _
 		)
 		
@@ -385,40 +380,259 @@ Function ReadRequestAsyncTaskEndExecute( _
 				
 				Dim hrProcessReadError As HRESULT = ProcessReadError( _
 					this, _
-					pPool, _
 					hrPrepare _
 				)
 				
 				Return hrProcessReadError
 			End If
 			
-			' Создать и запустить задачу подготовки запроса к ответу
-			Dim pTask As IWriteResponseAsyncTask Ptr = Any
+	/'
+	' IHttpWriter_Clear(pIHttpWriter)
+	
+	Scope
+		Dim KeepAlive As Boolean = True
+		IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
+		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
+	End Scope
+	
+	Dim HttpMethod As HeapBSTR = Any
+	IClientRequest_GetHttpMethod(pIRequest, @HttpMethod)
+	
+	Dim ClientURI As IClientUri Ptr = Any
+	IClientRequest_GetUri(pIRequest, @ClientURI)
+	
+	' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
+	Dim HeaderHost As HeapBSTR = Any
+	If HttpMethod = HttpMethods.HttpConnect Then
+		' pHeaderHost = ClientURI.Authority.Host
+		IClientUri_GetHost(ClientURI, HeaderHost)
+	Else
+		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @pHeaderHost)
+	End If
+	
+	Dim HttpVersion As HttpVersions = Any
+	IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
+	IServerResponse_SetHttpVersion(pIResponse, HttpVersion)
+	
+	Dim HeaderHostLength As Integer = lstrlenW(pHeaderHost)
+	If HeaderHostLength = 0 AndAlso HttpVersion = HttpVersions.Http11 Then
+		ProcessDataError(pIContext, DataError.HostNotFound, NULL)
+		hrResult = E_FAIL
+	Else
+		
+		Dim pIWebSite As IWebSite Ptr = Any
+		Dim hrFindSite As HRESULT = Any
+		If HttpMethod = HttpMethods.HttpConnect Then
+			hrFindSite = IWebSiteCollection_Item(pIWebSites, NULL, @pIWebSite)
+		Else
+			hrFindSite = IWebSiteCollection_Item(pIWebSites, pHeaderHost, @pIWebSite)
+		End If
+		
+		If FAILED(hrFindSite) Then
+			ProcessDataError(pIContext, DataError.SiteNotFound, NULL)
+			hrResult = E_FAIL
+		Else
+			
+			Dim IsSiteMoved As Boolean = Any
+			' TODO Грязный хак с robots.txt
+			Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
+			If IsRobotsTxt = 0 Then
+				IsSiteMoved = False
+			Else
+				IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
+			End If
+			
+			If IsSiteMoved Then
+				' Сайт перемещён на другой ресурс
+				' если запрошен документ /robots.txt то не перенаправлять
+				ProcessDataError(pIContext, DataError.MovedPermanently, pIWebSite)
+				hrResult = E_FAIL
+			Else
+				
+				Dim pIMemoryAllocator As IMalloc Ptr = Any
+				IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
+				
+				Dim IsKnownHttpMethod As Boolean = Any
+				Dim RequestedFileAccess As FileAccess = Any
+				Dim pIProcessor As IRequestProcessor Ptr = Any
+				Dim hrCreateRequestProcessor As HRESULT = Any
+				
+				Select Case HttpMethod
+					
+					Case HttpMethods.HttpGet
+						IsKnownHttpMethod = True
+						RequestedFileAccess = FileAccess.ReadAccess
+						hrCreateRequestProcessor = CreateInstance( _
+							pIMemoryAllocator, _
+							@CLSID_HTTPGETPROCESSOR, _
+							@IID_IRequestProcessor, _
+							@pIProcessor _
+						)
+						
+					Case HttpMethods.HttpHead
+						IsKnownHttpMethod = True
+						IServerResponse_SetSendOnlyHeaders(pIResponse, True)
+						RequestedFileAccess = FileAccess.ReadAccess
+						hrCreateRequestProcessor = CreateInstance( _
+							pIMemoryAllocator, _
+							@CLSID_HTTPGETPROCESSOR, _
+							@IID_IRequestProcessor, _
+							@pIProcessor _
+						)
+						
+					' Case HttpMethods.HttpPost
+						' RequestedFileAccess = FileAccess.UpdateAccess
+						' ProcessRequestVirtualTable = @ProcessPostRequest
+						
+					' Case HttpMethods.HttpPut
+						' RequestedFileAccess = FileAccess.CreateAccess
+						' ProcessRequestVirtualTable = @ProcessPutRequest
+						
+					' Case HttpMethods.HttpDelete
+						' RequestedFileAccess = FileAccess.DeleteAccess
+						' ProcessRequestVirtualTable = @ProcessDeleteRequest
+						
+					' Case HttpMethods.HttpOptions
+						' RequestedFileAccess = FileAccess.ReadAccess
+						' ProcessRequestVirtualTable = @ProcessOptionsRequest
+						
+					' Case HttpMethods.HttpTrace
+						' RequestedFileAccess = FileAccess.ReadAccess
+						' ProcessRequestVirtualTable = @ProcessTraceRequest
+						
+					' Case HttpMethods.HttpConnect
+						' RequestedFileAccess = FileAccess.ReadAccess
+						' ProcessRequestVirtualTable = @ProcessConnectRequest
+						
+					Case Else
+						IsKnownHttpMethod = False
+						RequestedFileAccess = FileAccess.ReadAccess
+						pIProcessor = NULL
+						hrCreateRequestProcessor = E_OUTOFMEMORY
+						
+				End Select
+				
+				If IsKnownHttpMethod = False Then
+					ProcessDataError(pIContext, DataError.HttpMethodNotSupported, pIWebSite)
+					hrResult = E_FAIL
+				Else
+					If FAILED(hrCreateRequestProcessor) Then
+						ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
+						hrResult = E_FAIL
+					Else
+						IClientContext_SetRequestProcessor(pIContext, pIProcessor)
+						
+						Dim pIFile As IRequestedFile Ptr = Any
+						Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
+							pIMemoryAllocator, _
+							@CLSID_REQUESTEDFILE, _
+							@IID_IRequestedFile, _
+							@pIFile _
+						)
+						If FAILED(hrCreateRequestedFile) Then
+							ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
+							hrResult = E_FAIL
+						Else
+							IClientContext_SetRequestedFile(pIContext, pIFile)
+							
+							Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
+								pIWebSite, _
+								pIFile, _
+								ClientURI.Path, _
+								RequestedFileAccess _
+							)
+							If FAILED(hrGetFile) Then
+								ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
+								hrResult = E_FAIL
+							Else
+								
+								Dim pINetworkStream As INetworkStream Ptr = Any
+								IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
+								Dim pIHttpReader As IHttpReader Ptr = Any
+								IClientContext_GetHttpReader(pIContext, @pIHttpReader)
+								
+								Dim pc As ProcessorContext = Any
+								pc.pIRequest = pIRequest
+								pc.pIResponse = pIResponse
+								pc.pINetworkStream = pINetworkStream
+								pc.pIWebSite = pIWebSite
+								pc.pIClientReader = pIHttpReader
+								pc.pIRequestedFile = pIFile
+								pc.pIMemoryAllocator = pIMemoryAllocator
+								
+								Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
+									pIProcessor, _
+									@pc _
+								)
+								If FAILED(hrPrepare) Then
+									ProcessBeginWriteError(pIContext, hrPrepare, pIWebSite)
+								Else
+									IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
+									
+									' TODO Запросить интерфейс вместо конвертирования указателя
+									Dim pINewAsyncResult As IAsyncResult Ptr = Any
+									Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
+										pIProcessor, _
+										@pc, _
+										CPtr(IUnknown Ptr, pIContext), _
+										@pINewAsyncResult _
+									)
+									If FAILED(hrBeginProcess) Then
+										ProcessBeginWriteError(pIContext, hrBeginProcess, pIWebSite)
+										hrResult = E_FAIL
+									End If
+									
+								End If
+								
+								IHttpReader_Release(pIHttpReader)
+								INetworkStream_Release(pINetworkStream)
+							End If
+							
+							IRequestedFile_Release(pIFile)
+						End If
+						
+						IRequestProcessor_Release(pIProcessor)
+					End If
+				End If
+				
+				IMalloc_Release(pIMemoryAllocator)
+				
+			End If
+			
+			IWebSite_Release(pIWebSite)
+			
+		End If
+		
+	End If
+	
+	IServerResponse_Release(pIResponse)
+	Return S_OK
+	'/
+			Dim pTask As IWriteResponseAsyncIoTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateInstance( _
 				this->pIMemoryAllocator, _
 				@CLSID_WRITERESPONSEASYNCTASK, _
-				@IID_IWriteResponseAsyncTask, _
+				@IID_IWriteResponseAsyncIoTask, _
 				@pTask _
 			)
 			If FAILED(hrCreateTask) Then
 				Dim hrProcessReadError As HRESULT = ProcessReadError( _
 					this, _
-					pPool, _
 					hrCreateTask _
 				)
 				
 				Return hrProcessReadError
 			End If
 			
-			IWriteResponseAsyncTask_SetBaseStream(pTask, this->pIStream)
-			IWriteResponseAsyncTask_SetHttpReader(pTask, this->pIHttpReader)
-			IWriteResponseAsyncTask_SetClientRequest(pTask, this->pIRequest)
-			IWriteResponseAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IWriteResponseAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IWriteResponseAsyncIoTask_SetBaseStream(pTask, this->pIStream)
+			IWriteResponseAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+			IWriteResponseAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+			IWriteResponseAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
 			
 			Dim pIResult As IAsyncResult Ptr = Any
-			Dim hrBeginExecute As HRESULT = IWriteResponseAsyncTask_BeginExecute( _
+			Dim hrBeginExecute As HRESULT = IWriteResponseAsyncIoTask_BeginExecute( _
 				pTask, _
-				pPool, _
 				@pIResult _
 			)
 			If FAILED(hrBeginExecute) Then
@@ -432,7 +646,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 				)
 				
 				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				IWriteResponseAsyncTask_Release(pTask)
+				IWriteResponseAsyncIoTask_Release(pTask)
 				Return hrBeginExecute
 			End If
 			
@@ -466,6 +680,25 @@ Function ReadRequestAsyncTaskEndExecute( _
 			Return ASYNCTASK_S_IO_PENDING
 			
 	End Select
+	
+End Function
+
+Function ReadRequestAsyncTaskGetFileHandle( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pFileHandle As HANDLE Ptr _
+	)As HRESULT
+	
+	Dim ns As INetworkStream Ptr = Any
+	IBaseStream_QueryInterface(this->pIStream, @IID_INetworkStream, @ns)
+	
+	Dim s As SOCKET = Any
+	INetworkStream_GetSocket(ns, @s)
+	
+	*pFileHandle = Cast(HANDLE, s)
+	
+	INetworkStream_Release(ns)
+	
+	Return S_OK
 	
 End Function
 
@@ -613,7 +846,7 @@ End Function
 
 
 Function IReadRequestAsyncTaskQueryInterface( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
@@ -621,97 +854,102 @@ Function IReadRequestAsyncTaskQueryInterface( _
 End Function
 
 Function IReadRequestAsyncTaskAddRef( _
-		ByVal this As IReadRequestAsyncTask Ptr _
+		ByVal this As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
 	Return ReadRequestAsyncTaskAddRef(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Function IReadRequestAsyncTaskRelease( _
-		ByVal this As IReadRequestAsyncTask Ptr _
+		ByVal this As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
 	Return ReadRequestAsyncTaskRelease(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Function IReadRequestAsyncTaskBeginExecute( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskBeginExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, ppIResult)
+	Return ReadRequestAsyncTaskBeginExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIResult)
 End Function
 
 Function IReadRequestAsyncTaskEndExecute( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR _
+		ByVal BytesTransferred As DWORD _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
+	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, BytesTransferred)
+End Function
+
+Function IReadRequestAsyncIoTaskGetFileHandle( _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal pFileHandle As HANDLE Ptr _
+	)As ULONG
+	Return ReadRequestAsyncTaskGetFileHandle(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pFileHandle)
 End Function
 
 Function IReadRequestAsyncTaskGetWebSiteCollection( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskGetWebSiteCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIWebSites)
 End Function
 
 Function IReadRequestAsyncTaskSetWebSiteCollection( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskSetWebSiteCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIWebSites)
 End Function
 
 Function IReadRequestAsyncTaskGetBaseStream( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskGetBaseStream(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppStream)
 End Function
 
 Function IReadRequestAsyncTaskSetBaseStream( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		byVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskSetBaseStream(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pStream)
 End Function
 
 Function IReadRequestAsyncTaskGetHttpReader( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskGetHttpReader(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppReader)
 End Function
 
 Function IReadRequestAsyncTaskSetHttpReader( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskSetHttpReader(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pReader)
 End Function
 
 Function IReadRequestAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskGetHttpProcessorCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIProcessors)
 End Function
 
 Function IReadRequestAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As IReadRequestAsyncTask Ptr, _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	Return ReadRequestAsyncTaskSetHttpProcessorCollection(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIProcessors)
 End Function
 
-Dim GlobalReadRequestAsyncTaskVirtualTable As Const IReadRequestAsyncTaskVirtualTable = Type( _
+Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable = Type( _
 	@IReadRequestAsyncTaskQueryInterface, _
 	@IReadRequestAsyncTaskAddRef, _
 	@IReadRequestAsyncTaskRelease, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
+	@IReadRequestAsyncIoTaskGetFileHandle, _
 	@IReadRequestAsyncTaskGetWebSiteCollection, _
 	@IReadRequestAsyncTaskSetWebSiteCollection, _
 	@IReadRequestAsyncTaskGetBaseStream, _

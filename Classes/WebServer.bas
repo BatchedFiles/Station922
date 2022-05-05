@@ -47,36 +47,12 @@ Type _WebServer
 	
 End Type
 
-Function AssociateWithIOCP( _
-		ByVal pPool As IThreadPool Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal CompletionKey As ULONG_PTR _
-	)As HRESULT
-	
-	Dim hIOCompletionPort As HANDLE = Any
-	IThreadPool_GetCompletionPort(pPool, @hIOCompletionPort)
-	
-	Dim hPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, ClientSocket), _
-		hIOCompletionPort, _
-		CompletionKey, _
-		0 _
-	)
-	If hPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Function CreateReadTask( _
 		ByVal this As WebServer Ptr, _
 		ByVal ClientSocket As SOCKET, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
-	)As IReadRequestAsyncTask Ptr
+	)As IReadRequestAsyncIoTask Ptr
 	
 	Dim pIClientMemoryAllocator As IMalloc Ptr = GetHeapMemoryAllocatorInstance()
 	
@@ -115,19 +91,27 @@ Function CreateReadTask( _
 					CPtr(IBaseStream Ptr, pINetworkStream) _
 				)
 				
-				Dim pTask As IReadRequestAsyncTask Ptr = Any
+				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
 				Dim hrCreateTask As HRESULT = CreateInstance( _
 					pIClientMemoryAllocator, _
 					@CLSID_READREQUESTASYNCTASK, _
-					@IID_IReadRequestAsyncTask, _
+					@IID_IReadRequestAsyncIoTask, _
 					@pTask _
 				)
 				
 				If SUCCEEDED(hrCreateTask) Then
-					IReadRequestAsyncTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
-					IReadRequestAsyncTask_SetHttpReader(pTask, pIHttpReader)
-					IReadRequestAsyncTask_SetWebSiteCollection(pTask, this->pIWebSites)
-					IReadRequestAsyncTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
+					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
+					IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+					IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+					
+					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
+						this->pIPool, _
+						CPtr(IAsyncIoTask Ptr, pTask) _
+					)
+					If FAILED(hrAssociate) Then
+						
+					End If
 					
 					IMalloc_Release(pIClientMemoryAllocator)
 					INetworkStream_Release(pINetworkStream)
@@ -202,49 +186,35 @@ Function AcceptConnection( _
 					
 					If ClientSocket <> INVALID_SOCKET Then
 						
-						Dim hrAssociateWithIOCP As HRESULT = AssociateWithIOCP( _
-							this->pIPool, _
+						Dim pTask As IReadRequestAsyncIoTask Ptr = CreateReadTask( _
+							this, _
 							ClientSocket, _
-							Cast(ULONG_PTR, 0) _
+							CPtr(SOCKADDR Ptr, @RemoteAddress), _
+							RemoteAddressLength _
 						)
 						
-						If SUCCEEDED(hrAssociateWithIOCP) Then
+						If pTask <> NULL Then
 							
-							Dim pTask As IReadRequestAsyncTask Ptr = CreateReadTask( _
-								this, _
-								ClientSocket, _
-								CPtr(SOCKADDR Ptr, @RemoteAddress), _
-								RemoteAddressLength _
+							Dim pIResult As IAsyncResult Ptr = Any
+							Dim hrBeginExecute As HRESULT = IReadRequestAsyncIoTask_BeginExecute( _
+								pTask, _
+								@pIResult _
 							)
 							
-							If pTask <> NULL Then
-								
-								Dim pIResult As IAsyncResult Ptr = Any
-								Dim hrBeginExecute As HRESULT = IReadRequestAsyncTask_BeginExecute( _
-									pTask, _
-									this->pIPool, _
-									@pIResult _
-								)
-								
-								If SUCCEEDED(hrBeginExecute) Then
-									' Сейчас мы не уменьшаем счётчик ссылок на pTask
-									' Счётчик ссылок уменьшим в функции EndExecute
-									' Когда задача будет завершена
-									Return S_OK
-								End If
-								
-								IReadRequestAsyncTask_Release(pTask)
-								
-								Dim vtSCode As VARIANT = Any
-								vtSCode.vt = VT_ERROR
-								vtSCode.scode = hrBeginExecute
-								LogWriteEntry( _
-									LogEntryType.Error, _
-									WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-									@vtSCode _
-								)
-								
+							If SUCCEEDED(hrBeginExecute) Then
+								Return S_OK
 							End If
+							
+							IReadRequestAsyncIoTask_Release(pTask)
+							
+							Dim vtSCode As VARIANT = Any
+							vtSCode.vt = VT_ERROR
+							vtSCode.scode = hrBeginExecute
+							LogWriteEntry( _
+								LogEntryType.Error, _
+								WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+								@vtSCode _
+							)
 							
 						End If
 						

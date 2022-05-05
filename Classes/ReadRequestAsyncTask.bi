@@ -1,7 +1,7 @@
 #ifndef READREQUESTASYNCTASK_BI
 #define READREQUESTASYNCTASK_BI
 
-#include once "IReadRequestAsyncTask.bi"
+#include once "IReadRequestAsyncIoTask.bi"
 
 Extern CLSID_READREQUESTASYNCTASK Alias "CLSID_READREQUESTASYNCTASK" As Const CLSID
 
@@ -33,16 +33,18 @@ Declare Function ReadRequestAsyncTaskRelease( _
 
 Declare Function ReadRequestAsyncTaskBeginExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD, _
-	ByVal CompletionKey As ULONG_PTR _
+	ByVal BytesTransferred As DWORD _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskGetFileHandle( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskGetWebSiteCollection( _

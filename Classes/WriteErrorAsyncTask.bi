@@ -1,7 +1,7 @@
 #ifndef WRITEERRORASYNCTASK_BI
 #define WRITEERRORASYNCTASK_BI
 
-#include once "IWriteErrorAsyncTask.bi"
+#include once "IWriteErrorAsyncIoTask.bi"
 
 Extern CLSID_WRITEERRORASYNCTASK Alias "CLSID_WRITEERRORASYNCTASK" As Const CLSID
 
@@ -33,16 +33,18 @@ Declare Function WriteErrorAsyncTaskRelease( _
 
 Declare Function WriteErrorAsyncTaskBeginExecute( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskEndExecute( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD, _
-	ByVal CompletionKey As ULONG_PTR _
+	ByVal BytesTransferred As DWORD _
+)As HRESULT
+
+Declare Function WriteErrorAsyncTaskGetFileHandle( _
+	ByVal this As WriteErrorAsyncTask Ptr, _
+	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskGetWebSiteCollection( _

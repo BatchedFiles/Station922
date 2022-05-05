@@ -2,8 +2,8 @@
 #define IHTTPASYNCPROCESSOR_BI
 
 #include once "IAsyncResult.bi"
+#include once "IBaseStream.bi"
 #include once "IClientRequest.bi"
-#include once "INetworkStream.bi"
 #include once "IServerResponse.bi"
 #include once "IWebSite.bi"
 
@@ -17,7 +17,7 @@ Const HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE As HRESULT = MAKE_HRESULT(SEVERIT
 Type _ProcessorContext
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pINetworkStream As INetworkStream Ptr
+	pIBaseStream As IBaseStream Ptr
 	pIWebSite As IWebSite Ptr
 	pIClientReader As ITextReader Ptr
 	pIRequestedFile As IRequestedFile Ptr

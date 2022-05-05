@@ -1,7 +1,7 @@
 #ifndef WRITERESPONSEASYNCTASK_BI
 #define WRITERESPONSEASYNCTASK_BI
 
-#include once "IWriteResponseAsyncTask.bi"
+#include once "IWriteResponseAsyncIoTask.bi"
 
 Extern CLSID_WRITERESPONSEASYNCTASK Alias "CLSID_WRITERESPONSEASYNCTASK" As Const CLSID
 
@@ -33,16 +33,18 @@ Declare Function WriteResponseAsyncTaskRelease( _
 
 Declare Function WriteResponseAsyncTaskBeginExecute( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskEndExecute( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD, _
-	ByVal CompletionKey As ULONG_PTR _
+	ByVal BytesTransferred As DWORD _
+)As HRESULT
+
+Declare Function WriteResponseAsyncTaskGetFileHandle( _
+	ByVal this As WriteResponseAsyncTask Ptr, _
+	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskGetWebSiteCollection( _

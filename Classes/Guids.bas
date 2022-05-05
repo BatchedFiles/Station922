@@ -145,7 +145,7 @@ DEFINE_IID(IID_IAsyncResult, _
 )
 
 ' {53989192-3F47-4309-A582-8AE24C03C9B3}
-DEFINE_IID(IID_IAsyncTask, _
+DEFINE_IID(IID_IAsyncIoTask, _
 	&h53989192, &h3f47, &h4309, &ha5, &h82, &h8a, &he2, &h4c, &h3, &hc9, &hb3 _
 )
 
@@ -195,7 +195,7 @@ DEFINE_IID(IID_IHeapMemoryAllocator, _
 )
 
 ' {F1683D2F-C33F-4D2F-B536-E88A609BC9FC}
-DEFINE_IID(IID_IHttpAsyncTask, _
+DEFINE_IID(IID_IHttpAsyncIoTask, _
 	&hf1683d2f, &hc33f, &h4d2f, &hb5, &h36, &he8, &h8a, &h60, &h9b, &hc9, &hfc _
 )
 
@@ -251,7 +251,7 @@ DEFINE_IID(IID_IPrivateHeapMemoryAllocatorClassFactory, _
 )
 
 ' {82B525C1-E266-4317-9FA5-F8B19DF8C73C}
-DEFINE_IID(IID_IReadRequestAsyncTask, _
+DEFINE_IID(IID_IReadRequestAsyncIoTask, _
 	&h82b525c1, &he266, &h4317, &h9f, &ha5, &hf8, &hb1, &h9d, &hf8, &hc7, &h3c _
 )
 
@@ -336,11 +336,11 @@ DEFINE_IID(IID_IWorkerThreadContext, _
 )
 
 ' {6964B4FE-BDAE-4B3B-BDF8-6C467BF35BFA}
-DEFINE_IID(IID_IWriteErrorAsyncTask, _
+DEFINE_IID(IID_IWriteErrorAsyncIoTask, _
 	&h6964b4fe, &hbdae, &h4b3b, &hbd, &hf8, &h6c, &h46, &h7b, &hf3, &h5b, &hfa _
 )
 
 ' {7BCB2D1D-0AA0-47EE-8420-594AD4378C94}
-DEFINE_IID(IID_IWriteResponseAsyncTask, _
+DEFINE_IID(IID_IWriteResponseAsyncIoTask, _
 	&h7bcb2d1d, &haa0, &h47ee, &h84, &h20, &h59, &h4a, &hd4, &h37, &h8c, &h94 _
 )

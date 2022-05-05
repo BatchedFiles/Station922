@@ -4,17 +4,18 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
+#include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 
-Extern GlobalWriteResponseAsyncTaskVirtualTable As Const IWriteResponseAsyncTaskVirtualTable
+Extern GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTaskVirtualTable
 
 Type _WriteResponseAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IWriteResponseAsyncTaskVirtualTable Ptr
+	lpVtbl As Const IWriteResponseAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
@@ -34,7 +35,7 @@ Sub InitializeWriteResponseAsyncTask( _
 	#if __FB_DEBUG__
 		CopyMemory(@this->IdString, @Str("WriteResponseTsk"), 16)
 	#endif
-	this->lpVtbl = @GlobalWriteResponseAsyncTaskVirtualTable
+	this->lpVtbl = @GlobalWriteResponseAsyncIoTaskVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -185,13 +186,13 @@ Function WriteResponseAsyncTaskQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IWriteResponseAsyncTask, riid) Then
+	If IsEqualIID(@IID_IWriteResponseAsyncIoTask, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IHttpAsyncTask, riid) Then
+		If IsEqualIID(@IID_IHttpAsyncIoTask, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IAsyncTask, riid) Then
+			If IsEqualIID(@IID_IAsyncIoTask, riid) Then
 				*ppv = @this->lpVtbl
 			Else
 				If IsEqualIID(@IID_IUnknown, riid) Then
@@ -246,21 +247,48 @@ End Function
 
 Function WriteResponseAsyncTaskBeginExecute( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	
+	Dim processor As IHttpAsyncProcessor Ptr = Any
+	Dim hrProcessor As HRESULT = IHttpProcessorCollection_Item( _
+		this->pIProcessors, _
+		"", _
+		@processor _
+	)
+	If FAILED(hrProcessor) Then
+		Return hrProcessor
+	End If
+	
+	Return ASYNCTASK_S_IO_PENDING
+	
+End Function
+
+Function WriteResponseAsyncTaskEndExecute( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		ByVal pIResult As IAsyncResult Ptr, _
+		ByVal BytesTransferred As DWORD _
 	)As HRESULT
 	
 	Return S_OK
 	
 End Function
 
-Function WriteResponseAsyncTaskEndExecute( _
+Function WriteResponseAsyncTaskGetFileHandle( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR _
+		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
+	
+	Dim ns As INetworkStream Ptr = Any
+	IBaseStream_QueryInterface(this->pIStream, @IID_INetworkStream, @ns)
+	
+	Dim s As SOCKET = Any
+	INetworkStream_GetSocket(ns, @s)
+	
+	*pFileHandle = Cast(HANDLE, s)
+	
+	INetworkStream_Release(ns)
 	
 	Return S_OK
 	
@@ -438,7 +466,7 @@ End Function
 
 
 Function IWriteResponseAsyncTaskQueryInterface( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
@@ -446,111 +474,116 @@ Function IWriteResponseAsyncTaskQueryInterface( _
 End Function
 
 Function IWriteResponseAsyncTaskAddRef( _
-		ByVal this As IWriteResponseAsyncTask Ptr _
+		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As ULONG
 	Return WriteResponseAsyncTaskAddRef(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
 Function IWriteResponseAsyncTaskRelease( _
-		ByVal this As IWriteResponseAsyncTask Ptr _
+		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As ULONG
 	Return WriteResponseAsyncTaskRelease(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
 Function IWriteResponseAsyncTaskBeginExecute( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskBeginExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pPool, ppIResult)
+	Return WriteResponseAsyncTaskBeginExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIResult)
 End Function
 
 Function IWriteResponseAsyncTaskEndExecute( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR _
+		ByVal BytesTransferred As DWORD _
 	)As ULONG
-	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pPool, pIResult, BytesTransferred, CompletionKey)
+	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIResult, BytesTransferred)
+End Function
+
+Function IWriteResponseAsyncTaskGetFileHandle( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pFileHandle As HANDLE Ptr _
+	)As ULONG
+	Return WriteResponseAsyncTaskGetFileHandle(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pFileHandle)
 End Function
 
 Function IWriteResponseAsyncTaskGetWebSiteCollection( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskGetWebSiteCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIWebSites)
 End Function
 
 Function IWriteResponseAsyncTaskSetWebSiteCollection( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskSetWebSiteCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIWebSites)
 End Function
 
 Function IWriteResponseAsyncTaskGetBaseStream( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskGetBaseStream(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppStream)
 End Function
 
 Function IWriteResponseAsyncTaskSetBaseStream( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskSetBaseStream(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pStream)
 End Function
 
 Function IWriteResponseAsyncTaskGetHttpReader( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskGetHttpReader(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppReader)
 End Function
 
 Function IWriteResponseAsyncTaskSetHttpReader( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskSetHttpReader(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pReader)
 End Function
 
 Function IWriteResponseAsyncTaskGetClientRequest( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskGetClientRequest(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIRequest)
 End Function
 
 Function IWriteResponseAsyncTaskSetClientRequest( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskSetClientRequest(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIRequest)
 End Function
 
 Function IWriteResponseAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskGetHttpProcessorCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIProcessors)
 End Function
 
 Function IWriteResponseAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As IWriteResponseAsyncTask Ptr, _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	Return WriteResponseAsyncTaskSetHttpProcessorCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIProcessors)
 End Function
 
-Dim GlobalWriteResponseAsyncTaskVirtualTable As Const IWriteResponseAsyncTaskVirtualTable = Type( _
+Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTaskVirtualTable = Type( _
 	@IWriteResponseAsyncTaskQueryInterface, _
 	@IWriteResponseAsyncTaskAddRef, _
 	@IWriteResponseAsyncTaskRelease, _
 	@IWriteResponseAsyncTaskBeginExecute, _
 	@IWriteResponseAsyncTaskEndExecute, _
+	@IWriteResponseAsyncTaskGetFileHandle, _
 	@IWriteResponseAsyncTaskGetWebSiteCollection, _
 	@IWriteResponseAsyncTaskSetWebSiteCollection, _
 	@IWriteResponseAsyncTaskGetBaseStream, _
