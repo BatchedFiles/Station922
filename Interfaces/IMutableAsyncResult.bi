@@ -26,9 +26,9 @@ Type IMutableAsyncResultVirtualTable
 		ByVal this As IMutableAsyncResult Ptr _
 	)As ULONG
 	
-	GetAsyncState As Function( _
+	GetAsyncStateWeakPtr As Function( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal ppState As IUnknown Ptr Ptr _
+		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
 	
 	GetCompleted As Function( _
@@ -43,9 +43,9 @@ Type IMutableAsyncResultVirtualTable
 		ByVal Completed As Boolean _
 	)As HRESULT
 	
-	SetAsyncState As Function( _
+	SetAsyncStateWeakPtr As Function( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal pState As IUnknown Ptr _
+		ByVal pState As Any Ptr _
 	)As HRESULT
 	
 	GetAsyncCallback As Function( _
@@ -72,10 +72,10 @@ End Type
 #define IMutableAsyncResult_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IMutableAsyncResult_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IMutableAsyncResult_Release(this) (this)->lpVtbl->Release(this)
-' #define IMutableAsyncResult_GetAsyncState(this, ppState) (this)->lpVtbl->GetAsyncState(this, ppState)
-' #define IMutableAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted)
-' #define IMutableAsyncResult_SetCompleted(this, BytesTransferred, Completed) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed)
-#define IMutableAsyncResult_SetAsyncState(this, pState) (this)->lpVtbl->SetAsyncState(this, pState)
+#define IMutableAsyncResult_GetAsyncStateWeakPtr(this, ppState) (this)->lpVtbl->GetAsyncStateWeakPtr(this, ppState)
+#define IMutableAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted)
+#define IMutableAsyncResult_SetCompleted(this, BytesTransferred, Completed) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed)
+#define IMutableAsyncResult_SetAsyncStateWeakPtr(this, pState) (this)->lpVtbl->SetAsyncStateWeakPtr(this, pState)
 #define IMutableAsyncResult_GetAsyncCallback(this, pcallback) (this)->lpVtbl->GetAsyncCallback(this, pcallback)
 #define IMutableAsyncResult_SetAsyncCallback(this, callback) (this)->lpVtbl->SetAsyncCallback(this, callback)
 #define IMutableAsyncResult_GetWsaOverlapped(this, ppRecvOverlapped) (this)->lpVtbl->GetWsaOverlapped(this, ppRecvOverlapped)

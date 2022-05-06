@@ -37,9 +37,9 @@ Type IAsyncResultVirtualTable
 		ByVal this As IAsyncResult Ptr _
 	)As ULONG
 	
-	GetAsyncState As Function( _
+	GetAsyncStateWeakPtr As Function( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal ppState As IUnknown Ptr Ptr _
+		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
 	
 	GetCompleted As Function( _
@@ -63,7 +63,7 @@ End Type
 #define IAsyncResult_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAsyncResult_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncResult_Release(this) (this)->lpVtbl->Release(this)
-#define IAsyncResult_GetAsyncState(this, ppState) (this)->lpVtbl->GetAsyncState(this, ppState)
+#define IAsyncResult_GetAsyncStateWeakPtr(this, ppState) (this)->lpVtbl->GetAsyncStateWeakPtr(this, ppState)
 #define IAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted)
 #define IAsyncResult_SetCompleted(this, BytesTransferred, Completed) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed)
 

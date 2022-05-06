@@ -351,7 +351,7 @@ Function NetworkStreamBeginRead( _
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
-	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
+	IMutableAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
@@ -441,7 +441,7 @@ Function NetworkStreamBeginWrite( _
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
 	
-	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
+	IMutableAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any

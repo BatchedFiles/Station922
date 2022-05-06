@@ -31,9 +31,9 @@ Declare Function AsyncResultRelease( _
 	ByVal this As AsyncResult Ptr _
 )As ULONG
 
-Declare Function AsyncResultGetAsyncState( _
+Declare Function AsyncResultGetAsyncStateWeakPtr( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal ppState As IUnknown Ptr Ptr _
+	ByVal ppState As Any Ptr Ptr _
 )As HRESULT
 
 Declare Function AsyncResultGetCompleted( _
@@ -48,9 +48,9 @@ Declare Function AsyncResultSetCompleted( _
 	ByVal Completed As Boolean _
 )As HRESULT
 
-Declare Function AsyncResultSetAsyncState( _
+Declare Function AsyncResultSetAsyncStateWeakPtr( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal pState As IUnknown Ptr _
+	ByVal pState As Any Ptr _
 )As HRESULT
 
 Declare Function AsyncResultGetAsyncCallback( _

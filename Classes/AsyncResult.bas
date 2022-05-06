@@ -11,7 +11,7 @@ Type _AsyncResult
 	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pState As IUnknown Ptr
+	pState As Any Ptr
 	callback As AsyncCallback
 	OverLap As ASYNCRESULTOVERLAPPED
 	BytesTransferred As DWORD
@@ -41,10 +41,6 @@ End Sub
 Sub UnInitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
-	
-	If this->pState <> NULL Then
-		IUnknown_Release(this->pState)
-	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -194,14 +190,10 @@ Function AsyncResultRelease( _
 	
 End Function
 
-Function AsyncResultGetAsyncState( _
+Function AsyncResultGetAsyncStateWeakPtr( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal ppState As IUnknown Ptr Ptr _
+		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
-	
-	If this->pState <> NULL Then
-		IUnknown_AddRef(this->pState)
-	End If
 	
 	*ppState = this->pState
 	
@@ -236,18 +228,10 @@ Function AsyncResultSetCompleted( _
 End Function
 
 
-Function AsyncResultSetAsyncState( _
+Function AsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal pState As IUnknown Ptr _
+		ByVal pState As Any Ptr _
 	)As HRESULT
-	
-	If this->pState <> NULL Then
-		IUnknown_Release(this->pState)
-	End If
-	
-	If pState <> NULL Then
-		IUnknown_AddRef(pState)
-	End If
 	
 	this->pState = pState
 	
@@ -309,11 +293,11 @@ Function IMutableAsyncResultRelease( _
 	Return AsyncResultRelease(ContainerOf(this, AsyncResult, lpVtbl))
 End Function
 
-Function IMutableAsyncResultGetAsyncState( _
+Function IMutableAsyncResultGetAsyncStateWeakPtr( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal ppState As IUnknown Ptr Ptr _
+		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultGetAsyncState(ContainerOf(this, AsyncResult, lpVtbl), ppState)
+	Return AsyncResultGetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), ppState)
 End Function
 
 Function IMutableAsyncResultGetCompleted( _
@@ -332,11 +316,11 @@ Function IMutableAsyncResultSetCompleted( _
 	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed)
 End Function
 
-Function IMutableAsyncResultSetAsyncState( _
+Function IMutableAsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal pState As IUnknown Ptr _
+		ByVal pState As Any Ptr _
 	)As HRESULT
-	Return AsyncResultSetAsyncState(ContainerOf(this, AsyncResult, lpVtbl), pState)
+	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
 End Function
 
 Function IMutableAsyncResultGetAsyncCallback( _
@@ -364,10 +348,10 @@ Dim GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTabl
 	@IMutableAsyncResultQueryInterface, _
 	@IMutableAsyncResultAddRef, _
 	@IMutableAsyncResultRelease, _
-	@IMutableAsyncResultGetAsyncState, _
+	@IMutableAsyncResultGetAsyncStateWeakPtr, _
 	@IMutableAsyncResultGetCompleted, _
 	@IMutableAsyncResultSetCompleted, _
-	@IMutableAsyncResultSetAsyncState, _
+	@IMutableAsyncResultSetAsyncStateWeakPtr, _
 	@IMutableAsyncResultGetAsyncCallback, _
 	@IMutableAsyncResultSetAsyncCallback, _
 	@IMutableAsyncResultGetWsaOverlapped _

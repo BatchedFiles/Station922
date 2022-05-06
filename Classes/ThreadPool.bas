@@ -81,7 +81,7 @@ Function WorkerThread( _
 			
 			Scope
 				Dim pTask As IAsyncIoTask Ptr = Any
-				IAsyncResult_GetAsyncState(pIAsync, CPtr(IUnknown Ptr Ptr, @pTask))
+				IAsyncResult_GetAsyncStateWeakPtr(pIAsync, @pTask)
 				
 				Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
 					pTask, _
@@ -99,6 +99,8 @@ Function WorkerThread( _
 					)
 				End If
 				
+				' ќсвобождаем ссылку на задачу
+				' “ак как мы не сделали это при создании задачи
 				IAsyncIoTask_Release(pTask)
 			End Scope
 			

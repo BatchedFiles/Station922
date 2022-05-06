@@ -100,9 +100,9 @@ Function CreateReadTask( _
 				)
 				
 				If SUCCEEDED(hrCreateTask) Then
+					IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
 					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-					IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
 					IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 					
 					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
@@ -205,16 +205,18 @@ Function AcceptConnection( _
 								Return S_OK
 							End If
 							
-							IReadRequestAsyncIoTask_Release(pTask)
-							
-							Dim vtSCode As VARIANT = Any
-							vtSCode.vt = VT_ERROR
-							vtSCode.scode = hrBeginExecute
-							LogWriteEntry( _
-								LogEntryType.Error, _
-								WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-								@vtSCode _
-							)
+							If FAILED(hrBeginExecute) Then
+								IReadRequestAsyncIoTask_Release(pTask)
+								
+								Dim vtSCode As VARIANT = Any
+								vtSCode.vt = VT_ERROR
+								vtSCode.scode = hrBeginExecute
+								LogWriteEntry( _
+									LogEntryType.Error, _
+									WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
+									@vtSCode _
+								)
+							End If
 							
 						End If
 						
