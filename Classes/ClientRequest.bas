@@ -81,6 +81,10 @@ Function ClientRequestParseRequestedLine( _
 	
 	' Метод, запрошенный ресурс и версия протокола
 	
+	If SysStringLen(this->RequestedLine) = 0 Then
+		Return CLIENTREQUEST_E_BADREQUEST
+	End If
+	
 	Dim pFirstChar As WString Ptr = this->RequestedLine
 	
 	Dim FirstChar As Integer = pFirstChar[0]
