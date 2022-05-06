@@ -92,6 +92,10 @@ Type IWriteResponseAsyncIoTaskVirtualTable
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
+	Prepare As Function( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IWriteResponseAsyncIoTask_
@@ -114,5 +118,6 @@ End Type
 #define IWriteResponseAsyncIoTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 #define IWriteResponseAsyncIoTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteResponseAsyncIoTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
+#define IWriteResponseAsyncIoTask_Prepare(this) (this)->lpVtbl->Prepare(this)
 
 #endif

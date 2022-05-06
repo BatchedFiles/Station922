@@ -134,6 +134,10 @@ Type IWriteErrorAsyncIoTaskVirtualTable
 		ByVal hrCode As HRESULT _
 	)As HRESULT
 	
+	Prepare As Function( _
+		ByVal this As IWriteErrorAsyncIoTask Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IWriteErrorAsyncIoTask_
@@ -159,5 +163,6 @@ End Type
 #define IWriteErrorAsyncIoTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteErrorAsyncIoTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IWriteErrorAsyncIoTask_SetErrorCode(this, HttpError, hrCode) (this)->lpVtbl->SetErrorCode(this, HttpError, hrCode)
+#define IWriteErrorAsyncIoTask_Prepare(this) (this)->lpVtbl->Prepare(this)
 
 #endif

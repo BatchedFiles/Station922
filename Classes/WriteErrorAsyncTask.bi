@@ -93,6 +93,10 @@ Declare Function WriteErrorAsyncTaskSetErrorCode( _
 	ByVal hrCode As HRESULT _
 )As HRESULT
 
+Declare Function WriteErrorAsyncTaskPrepare( _
+	ByVal this As WriteErrorAsyncTask Ptr _
+)As HRESULT
+
 Declare Function WriteErrorAsyncTaskGetHttpProcessorCollection( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _

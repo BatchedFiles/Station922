@@ -87,4 +87,8 @@ Declare Function WriteResponseAsyncTaskSetHttpProcessorCollection( _
 	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
+Declare Function WriteResponseAsyncTaskPrepare( _
+	ByVal this As WriteResponseAsyncTask Ptr _
+)As HRESULT
+
 #endif
