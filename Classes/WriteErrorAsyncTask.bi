@@ -107,4 +107,14 @@ Declare Function WriteErrorAsyncTaskSetHttpProcessorCollection( _
 	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
+Declare Function ProcessErrorRequestResponse( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal pIWebSites As IWebSiteCollection Ptr, _
+	ByVal pIStream As IBaseStream Ptr, _
+	ByVal pIHttpReader As IHttpReader Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr, _
+	ByVal pIRequest As IClientRequest Ptr, _
+	ByVal hrReadError As HRESULT _
+)As HRESULT
+
 #endif

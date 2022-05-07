@@ -75,6 +75,100 @@ Type _WriteErrorAsyncTask
 	BodyText As WString Ptr
 End Type
 
+Function ProcessErrorRequestResponse( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr, _
+		ByVal pIStream As IBaseStream Ptr, _
+		ByVal pIHttpReader As IHttpReader Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr, _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal hrReadError As HRESULT _
+	)As HRESULT
+	
+	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
+	Dim hrCreateTask As HRESULT = CreateInstance( _
+		pIMemoryAllocator, _
+		@CLSID_WRITEERRORASYNCTASK, _
+		@IID_IWriteErrorAsyncIoTask, _
+		@pTask _
+	)
+	If FAILED(hrCreateTask) Then
+		Return hrCreateTask
+	End If
+	
+	Dim HttpError As ResponseErrorCode = Any
+	
+	Select Case hrReadError
+		
+		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
+			
+		Case CLIENTREQUEST_E_SOCKETERROR
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_EMPTYREQUEST
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_BADHOST
+			HttpError = ResponseErrorCode.HostNotFound
+			
+		Case CLIENTREQUEST_E_BADREQUEST
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_BADPATH
+			HttpError = ResponseErrorCode.PathNotValid
+			
+		' Case CLIENTREQUEST_E_PATHNOTFOUND
+			' HttpError = ResponseErrorCode.PathNotValid
+			
+		Case CLIENTREQUEST_E_URITOOLARGE
+			HttpError = ResponseErrorCode.RequestUrlTooLarge
+			
+		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			HttpError = ResponseErrorCode.VersionNotSupported
+			
+		Case E_OUTOFMEMORY
+			HttpError = ResponseErrorCode.NotEnoughMemory
+			
+		Case Else
+			HttpError = ResponseErrorCode.InternalServerError
+			
+	End Select
+	
+	IWriteErrorAsyncIoTask_SetWebSiteCollection(pTask, pIWebSites)
+	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
+	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
+	IWriteErrorAsyncIoTask_SetHttpProcessorCollection(pTask, pIProcessors)
+	
+	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
+	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrReadError)
+	
+	IWriteErrorAsyncIoTask_Prepare(pTask)
+	
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncIoTask_BeginExecute( _
+		pTask, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IWriteErrorAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
+		
+		' TODO Отправить клиенту Не могу начать асинхронное чтение
+		IWriteErrorAsyncIoTask_Release(pTask)
+		Return hrBeginExecute
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Sub FormatErrorMessageBody( _
 		ByVal pIWriter As IArrayStringWriter Ptr, _
 		ByVal StatusCode As HttpStatusCodes, _

@@ -23,95 +23,6 @@ Type _ReadRequestAsyncTask
 	pIRequest As IClientRequest Ptr
 End Type
 
-Function ProcessErrorRequestResponse( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal hrReadError As HRESULT _
-	)As HRESULT
-	
-	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_WRITEERRORASYNCTASK, _
-		@IID_IWriteErrorAsyncIoTask, _
-		@pTask _
-	)
-	If FAILED(hrCreateTask) Then
-		Return hrCreateTask
-	End If
-	
-	Dim HttpError As ResponseErrorCode = Any
-	
-	Select Case hrReadError
-		
-		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
-			
-		Case CLIENTREQUEST_E_SOCKETERROR
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_EMPTYREQUEST
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADHOST
-			HttpError = ResponseErrorCode.HostNotFound
-			
-		Case CLIENTREQUEST_E_BADREQUEST
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADPATH
-			HttpError = ResponseErrorCode.PathNotValid
-			
-		' Case CLIENTREQUEST_E_PATHNOTFOUND
-			' HttpError = ResponseErrorCode.PathNotValid
-			
-		Case CLIENTREQUEST_E_URITOOLARGE
-			HttpError = ResponseErrorCode.RequestUrlTooLarge
-			
-		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			HttpError = ResponseErrorCode.VersionNotSupported
-			
-		Case E_OUTOFMEMORY
-			HttpError = ResponseErrorCode.NotEnoughMemory
-			
-		Case Else
-			HttpError = ResponseErrorCode.InternalServerError
-			
-	End Select
-	
-	IWriteErrorAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
-	IWriteErrorAsyncIoTask_SetBaseStream(pTask, this->pIStream)
-	IWriteErrorAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
-	IWriteErrorAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
-	
-	IWriteErrorAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
-	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrReadError)
-	
-	IWriteErrorAsyncIoTask_Prepare(pTask)
-	
-	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncIoTask_BeginExecute( _
-		pTask, _
-		@pIResult _
-	)
-	If FAILED(hrBeginExecute) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrBeginExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IWriteErrorAsyncTask_BeginExecute Error\t"), _
-			@vtSCode _
-		)
-		
-		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		IWriteErrorAsyncIoTask_Release(pTask)
-		Return hrBeginExecute
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Sub InitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -361,7 +272,12 @@ Function ReadRequestAsyncTaskEndExecute( _
 	If FAILED(hrEndReadRequest) Then
 		
 		Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
-			this, _
+			this->pIMemoryAllocator, _
+			this->pIWebSites, _
+			this->pIStream, _
+			this->pIHttpReader, _
+			this->pIProcessors, _
+			this->pIRequest, _
 			hrEndReadRequest _
 		)
 		
@@ -384,8 +300,13 @@ Function ReadRequestAsyncTaskEndExecute( _
 				)
 				
 				Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
-					this, _
-					hrPrepare _
+					this->pIMemoryAllocator, _
+					this->pIWebSites, _
+					this->pIStream, _
+					this->pIHttpReader, _
+					this->pIProcessors, _
+					this->pIRequest, _
+					hrEndReadRequest _
 				)
 				
 				Return hrProcessErrorRequestResponse
@@ -400,8 +321,13 @@ Function ReadRequestAsyncTaskEndExecute( _
 			)
 			If FAILED(hrCreateTask) Then
 				Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
-					this, _
-					hrCreateTask _
+					this->pIMemoryAllocator, _
+					this->pIWebSites, _
+					this->pIStream, _
+					this->pIHttpReader, _
+					this->pIProcessors, _
+					this->pIRequest, _
+					hrEndReadRequest _
 				)
 				
 				Return hrProcessErrorRequestResponse
@@ -415,7 +341,15 @@ Function ReadRequestAsyncTaskEndExecute( _
 			
 			Dim hrPrepareResponse As HRESULT = IWriteResponseAsyncIoTask_Prepare(pTask)
 			If FAILED(hrPrepareResponse) Then
-				ProcessErrorRequestResponse(this, hrPrepareResponse)
+				ProcessErrorRequestResponse( _
+					this->pIMemoryAllocator, _
+					this->pIWebSites, _
+					this->pIStream, _
+					this->pIHttpReader, _
+					this->pIProcessors, _
+					this->pIRequest, _
+					hrEndReadRequest _
+				)
 				IWriteResponseAsyncIoTask_Release(pTask)
 				Return hrPrepareResponse
 			End If
