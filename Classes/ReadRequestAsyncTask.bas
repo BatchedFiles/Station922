@@ -43,11 +43,17 @@ Function ProcessErrorRequestResponse( _
 	
 	Select Case hrReadError
 		
-		Case E_OUTOFMEMORY
-			HttpError = ResponseErrorCode.NotEnoughMemory
+		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
 			
-		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			HttpError = ResponseErrorCode.VersionNotSupported
+		Case CLIENTREQUEST_E_SOCKETERROR
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_EMPTYREQUEST
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_BADHOST
+			HttpError = ResponseErrorCode.HostNotFound
 			
 		Case CLIENTREQUEST_E_BADREQUEST
 			HttpError = ResponseErrorCode.BadRequest
@@ -55,17 +61,17 @@ Function ProcessErrorRequestResponse( _
 		Case CLIENTREQUEST_E_BADPATH
 			HttpError = ResponseErrorCode.PathNotValid
 			
-		Case CLIENTREQUEST_E_EMPTYREQUEST
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_SOCKETERROR
-			HttpError = ResponseErrorCode.BadRequest
+		' Case CLIENTREQUEST_E_PATHNOTFOUND
+			' HttpError = ResponseErrorCode.PathNotValid
 			
 		Case CLIENTREQUEST_E_URITOOLARGE
 			HttpError = ResponseErrorCode.RequestUrlTooLarge
 			
-		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
+		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			HttpError = ResponseErrorCode.VersionNotSupported
+			
+		Case E_OUTOFMEMORY
+			HttpError = ResponseErrorCode.NotEnoughMemory
 			
 		Case Else
 			HttpError = ResponseErrorCode.InternalServerError

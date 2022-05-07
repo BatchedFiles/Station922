@@ -474,6 +474,10 @@ Function WriteResponseAsyncTaskPrepare( _
 		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
 	End Scope
 	
+	Dim HttpVersion As HttpVersions = Any
+	IClientRequest_GetHttpVersion(this->pIRequest, @HttpVersion)
+	IServerResponse_SetHttpVersion(this->pIResponse, HttpVersion)
+	
 	' Dim HttpMethod As HeapBSTR = Any
 	' IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 	
@@ -481,211 +485,189 @@ Function WriteResponseAsyncTaskPrepare( _
 	' IClientRequest_GetUri(this->pIRequest, @ClientURI)
 	
 	/'
-	' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
-	Dim HeaderHost As HeapBSTR = Any
+	Dim pIWebSite As IWebSite Ptr = Any
+	Dim hrFindSite As HRESULT = Any
 	If HttpMethod = HttpMethods.HttpConnect Then
-		' pHeaderHost = ClientURI.Authority.Host
-		IClientUri_GetHost(ClientURI, HeaderHost)
+		hrFindSite = IWebSiteCollection_Item(pIWebSites, NULL, @pIWebSite)
 	Else
-		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @pHeaderHost)
+		hrFindSite = IWebSiteCollection_Item(pIWebSites, pHeaderHost, @pIWebSite)
 	End If
 	
-	Dim HttpVersion As HttpVersions = Any
-	IClientRequest_GetHttpVersion(pIRequest, @HttpVersion)
-	IServerResponse_SetHttpVersion(pIResponse, HttpVersion)
-	
-	Dim HeaderHostLength As Integer = lstrlenW(pHeaderHost)
-	If HeaderHostLength = 0 AndAlso HttpVersion = HttpVersions.Http11 Then
-		ProcessDataError(pIContext, DataError.HostNotFound, NULL)
+	If FAILED(hrFindSite) Then
+		ProcessDataError(pIContext, DataError.SiteNotFound, NULL)
 		hrResult = E_FAIL
 	Else
 		
-		Dim pIWebSite As IWebSite Ptr = Any
-		Dim hrFindSite As HRESULT = Any
-		If HttpMethod = HttpMethods.HttpConnect Then
-			hrFindSite = IWebSiteCollection_Item(pIWebSites, NULL, @pIWebSite)
+		Dim IsSiteMoved As Boolean = Any
+		' TODO Грязный хак с robots.txt
+		Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
+		If IsRobotsTxt = 0 Then
+			IsSiteMoved = False
 		Else
-			hrFindSite = IWebSiteCollection_Item(pIWebSites, pHeaderHost, @pIWebSite)
+			IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
 		End If
 		
-		If FAILED(hrFindSite) Then
-			ProcessDataError(pIContext, DataError.SiteNotFound, NULL)
+		If IsSiteMoved Then
+			' Сайт перемещён на другой ресурс
+			' если запрошен документ /robots.txt то не перенаправлять
+			ProcessDataError(pIContext, DataError.MovedPermanently, pIWebSite)
 			hrResult = E_FAIL
 		Else
 			
-			Dim IsSiteMoved As Boolean = Any
-			' TODO Грязный хак с robots.txt
-			Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
-			If IsRobotsTxt = 0 Then
-				IsSiteMoved = False
-			Else
-				IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
-			End If
+			Dim pIMemoryAllocator As IMalloc Ptr = Any
+			IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
 			
-			If IsSiteMoved Then
-				' Сайт перемещён на другой ресурс
-				' если запрошен документ /robots.txt то не перенаправлять
-				ProcessDataError(pIContext, DataError.MovedPermanently, pIWebSite)
+			Dim IsKnownHttpMethod As Boolean = Any
+			Dim RequestedFileAccess As FileAccess = Any
+			Dim pIProcessor As IRequestProcessor Ptr = Any
+			Dim hrCreateRequestProcessor As HRESULT = Any
+			
+			Select Case HttpMethod
+				
+				Case HttpMethods.HttpGet
+					IsKnownHttpMethod = True
+					RequestedFileAccess = FileAccess.ReadAccess
+					hrCreateRequestProcessor = CreateInstance( _
+						pIMemoryAllocator, _
+						@CLSID_HTTPGETPROCESSOR, _
+						@IID_IRequestProcessor, _
+						@pIProcessor _
+					)
+					
+				Case HttpMethods.HttpHead
+					IsKnownHttpMethod = True
+					IServerResponse_SetSendOnlyHeaders(pIResponse, True)
+					RequestedFileAccess = FileAccess.ReadAccess
+					hrCreateRequestProcessor = CreateInstance( _
+						pIMemoryAllocator, _
+						@CLSID_HTTPGETPROCESSOR, _
+						@IID_IRequestProcessor, _
+						@pIProcessor _
+					)
+					
+				' Case HttpMethods.HttpPost
+					' RequestedFileAccess = FileAccess.UpdateAccess
+					' ProcessRequestVirtualTable = @ProcessPostRequest
+					
+				' Case HttpMethods.HttpPut
+					' RequestedFileAccess = FileAccess.CreateAccess
+					' ProcessRequestVirtualTable = @ProcessPutRequest
+					
+				' Case HttpMethods.HttpDelete
+					' RequestedFileAccess = FileAccess.DeleteAccess
+					' ProcessRequestVirtualTable = @ProcessDeleteRequest
+					
+				' Case HttpMethods.HttpOptions
+					' RequestedFileAccess = FileAccess.ReadAccess
+					' ProcessRequestVirtualTable = @ProcessOptionsRequest
+					
+				' Case HttpMethods.HttpTrace
+					' RequestedFileAccess = FileAccess.ReadAccess
+					' ProcessRequestVirtualTable = @ProcessTraceRequest
+					
+				' Case HttpMethods.HttpConnect
+					' RequestedFileAccess = FileAccess.ReadAccess
+					' ProcessRequestVirtualTable = @ProcessConnectRequest
+					
+				Case Else
+					IsKnownHttpMethod = False
+					RequestedFileAccess = FileAccess.ReadAccess
+					pIProcessor = NULL
+					hrCreateRequestProcessor = E_OUTOFMEMORY
+					
+			End Select
+			
+			If IsKnownHttpMethod = False Then
+				ProcessDataError(pIContext, DataError.HttpMethodNotSupported, pIWebSite)
 				hrResult = E_FAIL
 			Else
-				
-				Dim pIMemoryAllocator As IMalloc Ptr = Any
-				IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
-				
-				Dim IsKnownHttpMethod As Boolean = Any
-				Dim RequestedFileAccess As FileAccess = Any
-				Dim pIProcessor As IRequestProcessor Ptr = Any
-				Dim hrCreateRequestProcessor As HRESULT = Any
-				
-				Select Case HttpMethod
-					
-					Case HttpMethods.HttpGet
-						IsKnownHttpMethod = True
-						RequestedFileAccess = FileAccess.ReadAccess
-						hrCreateRequestProcessor = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_HTTPGETPROCESSOR, _
-							@IID_IRequestProcessor, _
-							@pIProcessor _
-						)
-						
-					Case HttpMethods.HttpHead
-						IsKnownHttpMethod = True
-						IServerResponse_SetSendOnlyHeaders(pIResponse, True)
-						RequestedFileAccess = FileAccess.ReadAccess
-						hrCreateRequestProcessor = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_HTTPGETPROCESSOR, _
-							@IID_IRequestProcessor, _
-							@pIProcessor _
-						)
-						
-					' Case HttpMethods.HttpPost
-						' RequestedFileAccess = FileAccess.UpdateAccess
-						' ProcessRequestVirtualTable = @ProcessPostRequest
-						
-					' Case HttpMethods.HttpPut
-						' RequestedFileAccess = FileAccess.CreateAccess
-						' ProcessRequestVirtualTable = @ProcessPutRequest
-						
-					' Case HttpMethods.HttpDelete
-						' RequestedFileAccess = FileAccess.DeleteAccess
-						' ProcessRequestVirtualTable = @ProcessDeleteRequest
-						
-					' Case HttpMethods.HttpOptions
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessOptionsRequest
-						
-					' Case HttpMethods.HttpTrace
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessTraceRequest
-						
-					' Case HttpMethods.HttpConnect
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessConnectRequest
-						
-					Case Else
-						IsKnownHttpMethod = False
-						RequestedFileAccess = FileAccess.ReadAccess
-						pIProcessor = NULL
-						hrCreateRequestProcessor = E_OUTOFMEMORY
-						
-				End Select
-				
-				If IsKnownHttpMethod = False Then
-					ProcessDataError(pIContext, DataError.HttpMethodNotSupported, pIWebSite)
+				If FAILED(hrCreateRequestProcessor) Then
+					ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
 					hrResult = E_FAIL
 				Else
-					If FAILED(hrCreateRequestProcessor) Then
+					IClientContext_SetRequestProcessor(pIContext, pIProcessor)
+					
+					Dim pIFile As IRequestedFile Ptr = Any
+					Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
+						pIMemoryAllocator, _
+						@CLSID_REQUESTEDFILE, _
+						@IID_IRequestedFile, _
+						@pIFile _
+					)
+					If FAILED(hrCreateRequestedFile) Then
 						ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
 						hrResult = E_FAIL
 					Else
-						IClientContext_SetRequestProcessor(pIContext, pIProcessor)
+						IClientContext_SetRequestedFile(pIContext, pIFile)
 						
-						Dim pIFile As IRequestedFile Ptr = Any
-						Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_REQUESTEDFILE, _
-							@IID_IRequestedFile, _
-							@pIFile _
+						Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
+							pIWebSite, _
+							pIFile, _
+							ClientURI.Path, _
+							RequestedFileAccess _
 						)
-						If FAILED(hrCreateRequestedFile) Then
+						If FAILED(hrGetFile) Then
 							ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
 							hrResult = E_FAIL
 						Else
-							IClientContext_SetRequestedFile(pIContext, pIFile)
 							
-							Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
-								pIWebSite, _
-								pIFile, _
-								ClientURI.Path, _
-								RequestedFileAccess _
+							Dim pINetworkStream As INetworkStream Ptr = Any
+							IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
+							Dim pIHttpReader As IHttpReader Ptr = Any
+							IClientContext_GetHttpReader(pIContext, @pIHttpReader)
+							
+							Dim pc As ProcessorContext = Any
+							pc.pIRequest = pIRequest
+							pc.pIResponse = pIResponse
+							pc.pINetworkStream = pINetworkStream
+							pc.pIWebSite = pIWebSite
+							pc.pIClientReader = pIHttpReader
+							pc.pIRequestedFile = pIFile
+							pc.pIMemoryAllocator = pIMemoryAllocator
+							
+							Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
+								pIProcessor, _
+								@pc _
 							)
-							If FAILED(hrGetFile) Then
-								ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-								hrResult = E_FAIL
+							If FAILED(hrPrepare) Then
+								ProcessBeginWriteError(pIContext, hrPrepare, pIWebSite)
 							Else
+								IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
 								
-								Dim pINetworkStream As INetworkStream Ptr = Any
-								IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
-								Dim pIHttpReader As IHttpReader Ptr = Any
-								IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-								
-								Dim pc As ProcessorContext = Any
-								pc.pIRequest = pIRequest
-								pc.pIResponse = pIResponse
-								pc.pINetworkStream = pINetworkStream
-								pc.pIWebSite = pIWebSite
-								pc.pIClientReader = pIHttpReader
-								pc.pIRequestedFile = pIFile
-								pc.pIMemoryAllocator = pIMemoryAllocator
-								
-								Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
+								' TODO Запросить интерфейс вместо конвертирования указателя
+								Dim pINewAsyncResult As IAsyncResult Ptr = Any
+								Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
 									pIProcessor, _
-									@pc _
+									@pc, _
+									CPtr(IUnknown Ptr, pIContext), _
+									@pINewAsyncResult _
 								)
-								If FAILED(hrPrepare) Then
-									ProcessBeginWriteError(pIContext, hrPrepare, pIWebSite)
-								Else
-									IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
-									
-									' TODO Запросить интерфейс вместо конвертирования указателя
-									Dim pINewAsyncResult As IAsyncResult Ptr = Any
-									Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
-										pIProcessor, _
-										@pc, _
-										CPtr(IUnknown Ptr, pIContext), _
-										@pINewAsyncResult _
-									)
-									If FAILED(hrBeginProcess) Then
-										ProcessBeginWriteError(pIContext, hrBeginProcess, pIWebSite)
-										hrResult = E_FAIL
-									End If
-									
+								If FAILED(hrBeginProcess) Then
+									ProcessBeginWriteError(pIContext, hrBeginProcess, pIWebSite)
+									hrResult = E_FAIL
 								End If
 								
-								IHttpReader_Release(pIHttpReader)
-								INetworkStream_Release(pINetworkStream)
 							End If
 							
-							IRequestedFile_Release(pIFile)
+							IHttpReader_Release(pIHttpReader)
+							INetworkStream_Release(pINetworkStream)
 						End If
 						
-						IRequestProcessor_Release(pIProcessor)
+						IRequestedFile_Release(pIFile)
 					End If
+					
+					IRequestProcessor_Release(pIProcessor)
 				End If
-				
-				IMalloc_Release(pIMemoryAllocator)
-				
 			End If
 			
-			IWebSite_Release(pIWebSite)
+			IMalloc_Release(pIMemoryAllocator)
 			
 		End If
 		
+		IWebSite_Release(pIWebSite)
+		
 	End If
 	
-	IServerResponse_Release(pIResponse)
 	'/
 	
 	Return E_UNEXPECTED

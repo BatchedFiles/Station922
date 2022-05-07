@@ -426,6 +426,42 @@ Function ClientRequestParseRequestHeaders( _
 		this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
 	End Scope
 	
+	Scope
+		/'
+		' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
+		Dim HeaderHost As HeapBSTR = Any
+		If HttpMethod = HttpMethods.HttpConnect Then
+			' HeaderHost = ClientURI.Authority.Host
+			IClientUri_GetHost(ClientURI, HeaderHost)
+		Else
+			IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @HeaderHost)
+		End If
+		'/
+		
+		Dim HeaderHostLength As Integer = SysStringLen( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderHost) _
+		)
+		If HeaderHostLength = 0 Then
+			If this->HttpVersion = HttpVersions.Http11 Then
+				Return CLIENTREQUEST_E_BADHOST
+			Else
+				Dim pHost As HeapBSTR = Any
+				IClientUri_GetHost(this->pClientURI, @pHost)
+				Dim ClientUriHostLength As Integer = SysStringLen( _
+					pHost _
+				)
+				If ClientUriHostLength = 0 Then
+					Return CLIENTREQUEST_E_BADHOST
+				End If
+				
+				LET_HEAPSYSSTRING( _
+					this->RequestHeaders(HttpRequestHeaders.HeaderHost), _
+					pHost _
+				)
+			End If
+		End If
+	End Scope
+	
 	Return S_OK
 	
 End Function

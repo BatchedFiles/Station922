@@ -10,7 +10,7 @@ Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 ' IClientRequest.ReadRequest:
 ' S_OK — readed successful
 ' S_FALSE — client closed connection (received 0 bytes)
-' E_FAIL — readed error
+' Any Error — readed error
 
 ' IClientRequest.BeginReadRequest:
 ' CLIENTREQUEST_S_IO_PENDING — read request add in queue
@@ -21,7 +21,7 @@ Const CLIENTREQUEST_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FAC
 ' S_OK — readed successful
 ' S_FALSE — client closed connection (received 0 bytes)
 ' CLIENTREQUEST_S_IO_PENDING — read request add in queue
-' E_FAIL — readed error
+' Any Error — readed error
 Const CLIENTREQUEST_E_HEADERFIELDSTOOLARGE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0208)
 Const CLIENTREQUEST_E_SOCKETERROR As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0201)
 Const CLIENTREQUEST_E_EMPTYREQUEST As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0202)
