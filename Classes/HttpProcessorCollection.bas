@@ -200,9 +200,16 @@ Function HttpProcessorCollectionItem( _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
+	For i As Integer = 0 To this->CollectionLength - 1
+		If lstrcmpW(pKey, @this->Collection(i).Key) = 0 Then
+			IHttpAsyncProcessor_AddRef(this->Collection(i).Value)
+			*ppIProcessor = this->Collection(i).Value
+		End If
+	Next
+	
 	*ppIProcessor = NULL
 	
-	Return S_OK
+	Return E_FAIL
 	
 End Function
 
@@ -211,7 +218,7 @@ Function HttpProcessorCollectionCount( _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	
-	*pCount = 0
+	*pCount = this->CollectionLength
 	
 	Return S_OK
 	
