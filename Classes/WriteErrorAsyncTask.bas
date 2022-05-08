@@ -82,7 +82,8 @@ Function ProcessErrorRequestResponse( _
 		ByVal pIHttpReader As IHttpReader Ptr, _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
-		ByVal hrReadError As HRESULT _
+		ByVal hrReadError As HRESULT, _
+		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
@@ -93,6 +94,7 @@ Function ProcessErrorRequestResponse( _
 		@pTask _
 	)
 	If FAILED(hrCreateTask) Then
+		*ppTask = NULL
 		Return hrCreateTask
 	End If
 	
@@ -127,6 +129,15 @@ Function ProcessErrorRequestResponse( _
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			HttpError = ResponseErrorCode.VersionNotSupported
 			
+		Case SERVERRESPONSE_E_SITENOTFOUND
+			HttpError = ResponseErrorCode.SiteNotFound
+			
+		Case SERVERRESPONSE_E_SITEMOVED
+			HttpError = ResponseErrorCode.MovedPermanently
+			
+		Case SERVERRESPONSE_E_NOTIMPLEMENTED
+			HttpError = ResponseErrorCode.NotImplemented
+			
 		Case E_OUTOFMEMORY
 			HttpError = ResponseErrorCode.NotEnoughMemory
 			
@@ -145,25 +156,7 @@ Function ProcessErrorRequestResponse( _
 	
 	IWriteErrorAsyncIoTask_Prepare(pTask)
 	
-	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IWriteErrorAsyncIoTask_BeginExecute( _
-		pTask, _
-		@pIResult _
-	)
-	If FAILED(hrBeginExecute) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrBeginExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IWriteErrorAsyncTask_BeginExecute Error\t"), _
-			@vtSCode _
-		)
-		
-		' TODO Отправить клиенту Не могу начать асинхронное чтение
-		IWriteErrorAsyncIoTask_Release(pTask)
-		Return hrBeginExecute
-	End If
+	*ppTask = pTask
 	
 	Return S_OK
 	
@@ -645,7 +638,8 @@ End Function
 Function WriteErrorAsyncTaskEndExecute( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	Dim dwBytes As DWORD = Any
@@ -655,7 +649,8 @@ Function WriteErrorAsyncTaskEndExecute( _
 		@dwBytes _
 	)
 	If FAILED(hrEndWrite) Then
-		Return E_FAIL
+		*ppNextTask = NULL
+		Return hrEndWrite
 	End If
 	
 	Select Case hrEndWrite
@@ -666,6 +661,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			IServerResponse_GetKeepAlive(this->pIResponse, @KeepAlive)
 			
 			If KeepAlive = False Then
+				*ppNextTask = NULL
 				Return S_FALSE
 			End If
 			
@@ -677,6 +673,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 				@pTask _
 			)
 			If FAILED(hrCreateTask) Then
+				*ppNextTask = NULL
 				Return hrCreateTask
 			End If
 			
@@ -687,48 +684,21 @@ Function WriteErrorAsyncTaskEndExecute( _
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
 			IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 			
-			Dim ppIResult As IAsyncResult Ptr = Any
-			Dim hrBeginExecute As HRESULT = IReadRequestAsyncIoTask_BeginExecute( _
-				pTask, _
-				@ppIResult _
-			)
-			If FAILED(hrBeginExecute) Then
-				IReadRequestAsyncIoTask_Release(pTask)
-				Return hrBeginExecute
-			End If
-			
-			' Сейчас мы не уменьшаем счётчик ссылок на pTask
-			' Счётчик ссылок уменьшим в функции EndExecute
-			' Когда задача будет завершена
-			
+			' Сейчас мы не уменьшаем счётчик ссылок на задачу
+			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
+			*ppNextTask = CPtr(IAsyncIoTask Ptr, pTask)
 			Return S_OK
 			
 		Case S_FALSE
-			' Received 0 bytes
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
+			' Write 0 bytes
+			*ppNextTask = NULL
 			Return S_FALSE
 			
 		Case BASESTREAM_S_IO_PENDING
-			' WriteErrorAsyncTaskAddRef(this)
-			/'
-			Dim pIAsyncResult As IAsyncResult Ptr = Any
-			Dim hrBeginWrite As HRESULT = IBaseStream_BeginWrite( _
-				this->pIRequest, _
-				CPtr(IUnknown Ptr, @this->lpVtbl), _
-				@pIAsyncResult _
-			)
-			If FAILED(hrBeginWrite) Then
-				WriteErrorAsyncTaskRelease(this)
-				Return hrBeginWrite
-			End If
-			
-			' Ссылка на this сохранена в pIAsyncResult
-			' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
-			' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
-			'/
-			Return ASYNCTASK_S_IO_PENDING
+			' Продолжить запись запроса
+			WriteErrorAsyncTaskAddRef(this)
+			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
+			Return S_OK
 			
 	End Select
 	
@@ -942,18 +912,20 @@ Function WriteErrorAsyncTaskPrepare( _
 			)
 			this->BodyText = @MovedPermanently
 			
-			' Dim MovedUrl As WString Ptr = Any
-			' IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
-			
-			' Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
-			' lstrcpyW(@buf, MovedUrl)
-			
-			' Dim ClientURI As Station922Uri = Any
-			' IClientRequest_GetUri(pIRequest, @ClientURI)
-			
-			' lstrcatW(@buf, ClientURI.Uri)
-			
-			' IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
+			/'
+				Dim MovedUrl As WString Ptr = Any
+				IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
+				
+				Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
+				lstrcpyW(@buf, MovedUrl)
+				
+				Dim ClientURI As Station922Uri = Any
+				IClientRequest_GetUri(pIRequest, @ClientURI)
+				
+				lstrcatW(@buf, ClientURI.Uri)
+				
+				IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
+			'/
 			
 		Case ResponseErrorCode.BadRequest
 			IServerResponse_SetStatusCode( _
@@ -1264,9 +1236,10 @@ End Function
 Function IWriteErrorAsyncTaskEndExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, BytesTransferred)
+	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
 End Function
 
 Function IWriteErrorAsyncTaskGetFileHandle( _

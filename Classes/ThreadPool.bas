@@ -27,14 +27,103 @@ Function WorkerThread( _
 		Dim CompletionKey As ULONG_PTR = Any
 		Dim pOverlap As ASYNCRESULTOVERLAPPED Ptr = Any
 		
-		Dim res As Integer = GetQueuedCompletionStatus( _
+		Dim res As WINBOOL = GetQueuedCompletionStatus( _
 			this->hIOCompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
 			CPtr(LPOVERLAPPED Ptr, @pOverlap), _
 			INFINITE _
 		)
-		If res = 0 Then
+		If res Then
+			#if __FB_DEBUG__
+			Scope
+				Dim vtBytesTransferred As VARIANT = Any
+				vtBytesTransferred.vt = VT_UI4
+				vtBytesTransferred.ulVal = BytesTransferred
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr(!"\t\t\t\tBytesTransferred\t"), _
+					@vtBytesTransferred _
+				)
+			End Scope
+			#endif
+			
+			Dim pNextTask As IAsyncIoTask Ptr = Any
+			Dim hrEndExecute As HRESULT = Any
+			
+			Scope
+				Dim pIResult As IAsyncResult Ptr = pOverlap->pIAsync
+				IAsyncResult_SetCompleted( _
+					pIResult, _
+					BytesTransferred, _
+					True _
+				)
+				
+				Dim pTask As IAsyncIoTask Ptr = Any
+				IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
+				
+				hrEndExecute = IAsyncIoTask_EndExecute( _
+					pTask, _
+					pIResult, _
+					BytesTransferred, _
+					@pNextTask _
+				)
+				
+				IAsyncResult_Release(pIResult)
+				
+				' ќсвобождаем ссылку на задачу
+				' “ак как мы не сделали это при создании задачи
+				IAsyncIoTask_Release(pTask)
+			End Scope
+			
+			If FAILED(hrEndExecute) Then
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_ERROR
+				vtErrorCode.scode = hrEndExecute
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+					@vtErrorCode _
+				)
+			Else
+				Select Case hrEndExecute
+					
+					Case S_OK
+						Dim pIResult As IAsyncResult Ptr = Any
+						Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
+							pNextTask, _
+							@pIResult _
+						)
+						If FAILED(hrBeginExecute) Then
+							IAsyncIoTask_Release(pNextTask)
+							
+							Dim vtSCode As VARIANT = Any
+							vtSCode.vt = VT_ERROR
+							vtSCode.scode = hrBeginExecute
+							LogWriteEntry( _
+								LogEntryType.Error, _
+								WStr(!"IAsyncTask_BeginExecute Error\t"), _
+								@vtSCode _
+							)
+						End If
+						
+					Case S_FALSE
+						#if __FB_DEBUG__
+						Scope
+							Dim vtBytesTransferred As VARIANT = Any
+							vtBytesTransferred.vt = VT_UI4
+							vtBytesTransferred.ulVal = 0
+							LogWriteEntry( _
+								LogEntryType.Debug, _
+								WStr(!"\t\t\t\tConnection has been gracefully closed\t"), _
+								@vtBytesTransferred _
+							)
+						End Scope
+						#endif
+						
+				End Select
+			End If
+		Else
 			Dim dwError As DWORD = GetLastError()
 			Dim vtErrorCode As VARIANT = Any
 			vtErrorCode.vt = VT_UI4
@@ -57,54 +146,6 @@ Function WorkerThread( _
 				' // по ошибке этот пример продолжаетс€.
 				
 			End If
-			
-		Else
-			#if __FB_DEBUG__
-			Scope
-				Dim vtBytesTransferred As VARIANT = Any
-				vtBytesTransferred.vt = VT_UI4
-				vtBytesTransferred.ulVal = BytesTransferred
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr(!"\t\t\t\tBytesTransferred\t"), _
-					@vtBytesTransferred _
-				)
-			End Scope
-			#endif
-			
-			Dim pIAsync As IAsyncResult Ptr = pOverlap->pIAsync
-			IAsyncResult_SetCompleted( _
-				pIAsync, _
-				BytesTransferred, _
-				True _
-			)
-			
-			Scope
-				Dim pTask As IAsyncIoTask Ptr = Any
-				IAsyncResult_GetAsyncStateWeakPtr(pIAsync, @pTask)
-				
-				Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
-					pTask, _
-					pIAsync, _
-					BytesTransferred _
-				)
-				If FAILED(hrEndExecute) Then
-					Dim vtErrorCode As VARIANT = Any
-					vtErrorCode.vt = VT_ERROR
-					vtErrorCode.scode = hrEndExecute
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"IAsyncIoTask_EndExecute Error\t"), _
-						@vtErrorCode _
-					)
-				End If
-				
-				' ќсвобождаем ссылку на задачу
-				' “ак как мы не сделали это при создании задачи
-				IAsyncIoTask_Release(pTask)
-			End Scope
-			
-			IAsyncResult_Release(pIAsync)
 			
 		End If
 		

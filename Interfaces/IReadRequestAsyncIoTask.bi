@@ -3,6 +3,15 @@
 
 #include once "IHttpAsyncIoTask.bi"
 
+' BeginExecute:
+' ASYNCTASK_S_IO_PENDING
+' Any E_FAIL
+
+' EndExecute:
+' S_OK
+' S_FALSE
+' Any E_FAIL
+
 Type IReadRequestAsyncIoTask As IReadRequestAsyncIoTask_
 
 Type LPIREADREQUESTASYNCIOTASK As IReadRequestAsyncIoTask Ptr
@@ -33,7 +42,8 @@ Type IReadRequestAsyncIoTaskVirtualTable
 	EndExecute As Function( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	GetFileHandle As Function( _
@@ -91,7 +101,7 @@ End Type
 #define IReadRequestAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IReadRequestAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IReadRequestAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
-#define IReadRequestAsyncIoTask_EndExecute(this, pIResult, BytesTransferred) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred)
+#define IReadRequestAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IReadRequestAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 #define IReadRequestAsyncIoTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
 #define IReadRequestAsyncIoTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)

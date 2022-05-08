@@ -4,6 +4,15 @@
 #include once "IClientRequest.bi"
 #include once "IHttpAsyncIoTask.bi"
 
+' BeginExecute:
+' ASYNCTASK_S_IO_PENDING
+' Any E_FAIL
+
+' EndExecute:
+' S_OK
+' S_FALSE
+' Any E_FAIL
+
 Enum ResponseErrorCode
 	MovedPermanently
 	
@@ -70,7 +79,8 @@ Type IWriteErrorAsyncIoTaskVirtualTable
 	EndExecute As Function( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	GetFileHandle As Function( _
@@ -148,7 +158,7 @@ End Type
 #define IWriteErrorAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWriteErrorAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IWriteErrorAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
-#define IWriteErrorAsyncIoTask_EndExecute(this, pIResult, BytesTransferred) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred)
+#define IWriteErrorAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IWriteErrorAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 #define IWriteErrorAsyncIoTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)
 #define IWriteErrorAsyncIoTask_SetAssociatedWithIOCP(this, Associated) (this)->lpVtbl->SetAssociatedWithIOCP(this, Associated)

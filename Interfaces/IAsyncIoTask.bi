@@ -3,13 +3,16 @@
 
 #include once "IAsyncResult.bi"
 
+' BeginExecute:
+' ASYNCTASK_S_IO_PENDING
+' Any E_FAIL
+
+' EndExecute:
+' S_OK
+' S_FALSE
+' Any E_FAIL
+
 Const ASYNCTASK_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
-
-' IAsyncIoTask.BeginExecute:
-' ASYNCTASK_S_IO_PENDING, Any E_FAIL
-
-' IAsyncIoTask.EndExecute:
-' S_OK, S_FALSE, ASYNCTASK_S_IO_PENDING, Any E_FAIL
 
 Type IAsyncIoTask As IAsyncIoTask_
 
@@ -39,7 +42,8 @@ Type IAsyncIoTaskVirtualTable
 	EndExecute As Function( _
 		ByVal this As IAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	GetFileHandle As Function( _
@@ -57,7 +61,7 @@ End Type
 #define IAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
-#define IAsyncIoTask_EndExecute(this, pIResult, BytesTransferred) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred)
+#define IAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 
 #endif

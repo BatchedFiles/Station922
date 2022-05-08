@@ -39,7 +39,8 @@ Declare Function ReadRequestAsyncTaskBeginExecute( _
 Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD _
+	ByVal BytesTransferred As DWORD, _
+	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskGetFileHandle( _

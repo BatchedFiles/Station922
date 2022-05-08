@@ -39,7 +39,8 @@ Declare Function WriteErrorAsyncTaskBeginExecute( _
 Declare Function WriteErrorAsyncTaskEndExecute( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD _
+	ByVal BytesTransferred As DWORD, _
+	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskGetFileHandle( _
@@ -114,7 +115,8 @@ Declare Function ProcessErrorRequestResponse( _
 	ByVal pIHttpReader As IHttpReader Ptr, _
 	ByVal pIProcessors As IHttpProcessorCollection Ptr, _
 	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal hrReadError As HRESULT _
+	ByVal hrReadError As HRESULT, _
+	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 )As HRESULT
 
 #endif

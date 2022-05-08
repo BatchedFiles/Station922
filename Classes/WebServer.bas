@@ -202,6 +202,8 @@ Function AcceptConnection( _
 							)
 							
 							If SUCCEEDED(hrBeginExecute) Then
+								' Сейчас мы не уменьшаем счётчик ссылок на задачу
+								' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
 								Return S_OK
 							End If
 							

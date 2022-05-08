@@ -262,7 +262,8 @@ End Function
 Function ReadRequestAsyncTaskEndExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
 	Dim hrEndReadRequest As HRESULT = IClientRequest_EndReadRequest( _
@@ -271,137 +272,128 @@ Function ReadRequestAsyncTaskEndExecute( _
 	)
 	If FAILED(hrEndReadRequest) Then
 		
-		Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
+		Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 			this->pIMemoryAllocator, _
 			this->pIWebSites, _
 			this->pIStream, _
 			this->pIHttpReader, _
 			this->pIProcessors, _
 			this->pIRequest, _
-			hrEndReadRequest _
+			hrEndReadRequest, _
+			CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
 		)
+		If FAILED(hrProcessError) Then
+			Return hrEndReadRequest
+		End If
 		
-		Return hrProcessErrorRequestResponse
+		Return S_OK
 	End If
 	
 	Select Case hrEndReadRequest
 		
 		Case S_OK
 			
-			Dim hrPrepare As HRESULT = IClientRequest_Parse(this->pIRequest)
-			If FAILED(hrPrepare) Then
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrPrepare
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IClientRequest_Prepare Error\t"), _
-					@vtSCode _
-				)
-				
-				Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
-					this->pIMemoryAllocator, _
-					this->pIWebSites, _
-					this->pIStream, _
-					this->pIHttpReader, _
-					this->pIProcessors, _
-					this->pIRequest, _
-					hrEndReadRequest _
-				)
-				
-				Return hrProcessErrorRequestResponse
-			End If
+			Scope
+				Dim hrParse As HRESULT = IClientRequest_Parse(this->pIRequest)
+				If FAILED(hrParse) Then
+					Dim vtSCode As VARIANT = Any
+					vtSCode.vt = VT_ERROR
+					vtSCode.scode = hrParse
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"IClientRequest_Parse Error\t"), _
+						@vtSCode _
+					)
+					
+					Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
+						this->pIMemoryAllocator, _
+						this->pIWebSites, _
+						this->pIStream, _
+						this->pIHttpReader, _
+						this->pIProcessors, _
+						this->pIRequest, _
+						hrParse, _
+						CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
+					)
+					If FAILED(hrProcessError) Then
+						Return hrParse
+					End If
+					
+					Return S_OK
+				End If
+			End Scope
 			
-			Dim pTask As IWriteResponseAsyncIoTask Ptr = Any
-			Dim hrCreateTask As HRESULT = CreateInstance( _
-				this->pIMemoryAllocator, _
-				@CLSID_WRITERESPONSEASYNCTASK, _
-				@IID_IWriteResponseAsyncIoTask, _
-				@pTask _
-			)
-			If FAILED(hrCreateTask) Then
-				Dim hrProcessErrorRequestResponse As HRESULT = ProcessErrorRequestResponse( _
-					this->pIMemoryAllocator, _
-					this->pIWebSites, _
-					this->pIStream, _
-					this->pIHttpReader, _
-					this->pIProcessors, _
-					this->pIRequest, _
-					hrEndReadRequest _
-				)
+			Scope
+				Dim pTask As IWriteResponseAsyncIoTask Ptr = Any
 				
-				Return hrProcessErrorRequestResponse
-			End If
-			
-			IWriteResponseAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
-			IWriteResponseAsyncIoTask_SetBaseStream(pTask, this->pIStream)
-			IWriteResponseAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
-			IWriteResponseAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
-			IWriteResponseAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
-			
-			Dim hrPrepareResponse As HRESULT = IWriteResponseAsyncIoTask_Prepare(pTask)
-			If FAILED(hrPrepareResponse) Then
-				ProcessErrorRequestResponse( _
-					this->pIMemoryAllocator, _
-					this->pIWebSites, _
-					this->pIStream, _
-					this->pIHttpReader, _
-					this->pIProcessors, _
-					this->pIRequest, _
-					hrEndReadRequest _
-				)
-				IWriteResponseAsyncIoTask_Release(pTask)
-				Return hrPrepareResponse
-			End If
-			
-			Dim pIResult As IAsyncResult Ptr = Any
-			Dim hrBeginExecute As HRESULT = IWriteResponseAsyncIoTask_BeginExecute( _
-				pTask, _
-				@pIResult _
-			)
-			If FAILED(hrBeginExecute) Then
-				Dim vtSCode As VARIANT = Any
-				vtSCode.vt = VT_ERROR
-				vtSCode.scode = hrBeginExecute
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IWriteResponseAsyncTask_BeginExecute Error\t"), _
-					@vtSCode _
-				)
+				Scope
+					Dim hrCreateTask As HRESULT = CreateInstance( _
+						this->pIMemoryAllocator, _
+						@CLSID_WRITERESPONSEASYNCTASK, _
+						@IID_IWriteResponseAsyncIoTask, _
+						@pTask _
+					)
+					If FAILED(hrCreateTask) Then
+						Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
+							this->pIMemoryAllocator, _
+							this->pIWebSites, _
+							this->pIStream, _
+							this->pIHttpReader, _
+							this->pIProcessors, _
+							this->pIRequest, _
+							hrCreateTask, _
+							CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
+						)
+						If FAILED(hrProcessError) Then
+							Return hrCreateTask
+						End If
+						
+						Return S_OK
+					End If
+				End Scope
 				
-				' TODO Отправить клиенту Не могу начать асинхронное чтение
-				IWriteResponseAsyncIoTask_Release(pTask)
-				Return hrBeginExecute
-			End If
+				Scope
+					IWriteResponseAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+					IWriteResponseAsyncIoTask_SetBaseStream(pTask, this->pIStream)
+					IWriteResponseAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+					IWriteResponseAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+					IWriteResponseAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
+					
+					Dim hrPrepareResponse As HRESULT = IWriteResponseAsyncIoTask_Prepare(pTask)
+					If FAILED(hrPrepareResponse) Then
+						Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
+							this->pIMemoryAllocator, _
+							this->pIWebSites, _
+							this->pIStream, _
+							this->pIHttpReader, _
+							this->pIProcessors, _
+							this->pIRequest, _
+							hrPrepareResponse, _
+							CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
+						)
+						If FAILED(hrProcessError) Then
+							Return hrPrepareResponse
+						End If
+						
+						Return S_OK
+					End If
+					
+				End Scope
+			End Scope
 			
 			Return S_OK
 			
 		Case S_FALSE
-			' Received 0 bytes
-			' TODO Вывести байты запроса в лог
-			' DebugPrintHttpReader(pIHttpReader)
-			
+			' Принято 0 байт, достигли конец файла
+			' клиент закрыл соединение
+			*ppNextTask = NULL
 			Return S_FALSE
 			
 		Case CLIENTREQUEST_S_IO_PENDING
+			' Продолжить чтение запроса
 			ReadRequestAsyncTaskAddRef(this)
-			
-			Dim pIAsyncResult As IAsyncResult Ptr = Any
-			Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-				this->pIRequest, _
-				CPtr(IUnknown Ptr, @this->lpVtbl), _
-				@pIAsyncResult _
-			)
-			If FAILED(hrBeginReadRequest) Then
-				ReadRequestAsyncTaskRelease(this)
-				Return hrBeginReadRequest
-			End If
-			
-			' Ссылка на this сохранена в pIAsyncResult
-			' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
-			' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
-			
-			Return ASYNCTASK_S_IO_PENDING
+			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
+			Return S_OK
 			
 	End Select
 	
@@ -599,9 +591,10 @@ End Function
 Function IReadRequestAsyncTaskEndExecute( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD _
+		ByVal BytesTransferred As DWORD, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, BytesTransferred)
+	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
 End Function
 
 Function IReadRequestAsyncIoTaskGetFileHandle( _

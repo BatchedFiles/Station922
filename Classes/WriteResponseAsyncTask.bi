@@ -39,7 +39,8 @@ Declare Function WriteResponseAsyncTaskBeginExecute( _
 Declare Function WriteResponseAsyncTaskEndExecute( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal pIResult As IAsyncResult Ptr, _
-	ByVal BytesTransferred As DWORD _
+	ByVal BytesTransferred As DWORD, _
+	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskGetFileHandle( _
