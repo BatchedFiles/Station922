@@ -18,8 +18,8 @@ Type _ReadRequestAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	pIProcessors As IHttpProcessorCollection Ptr
-	pIStream As IBaseStream Ptr
 	pIHttpReader As IHttpReader Ptr
+	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 End Type
 
@@ -38,8 +38,8 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSites = NULL
 	this->pIProcessors = NULL
-	this->pIStream = NULL
 	this->pIHttpReader = NULL
+	this->pIStream = NULL
 	this->pIRequest = pIRequest
 	
 End Sub
@@ -52,12 +52,12 @@ Sub UnInitializeReadRequestAsyncTask( _
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
-	If this->pIHttpReader <> NULL Then
-		IHttpReader_Release(this->pIHttpReader)
-	End If
-	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
+	End If
+	
+	If this->pIHttpReader <> NULL Then
+		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
 	If this->pIProcessors <> NULL Then
