@@ -201,10 +201,15 @@ Function HttpProcessorCollectionItem( _
 	)As HRESULT
 	
 	For i As Integer = 0 To this->CollectionLength - 1
+		
 		If lstrcmpW(pKey, @this->Collection(i).Key) = 0 Then
+			
 			IHttpAsyncProcessor_AddRef(this->Collection(i).Value)
 			*ppIProcessor = this->Collection(i).Value
+			
+			Return S_OK
 		End If
+		
 	Next
 	
 	*ppIProcessor = NULL
