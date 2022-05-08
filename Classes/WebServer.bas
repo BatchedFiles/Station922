@@ -113,9 +113,9 @@ Function CreateReadTask( _
 						
 					End If
 					
-					IMalloc_Release(pIClientMemoryAllocator)
 					INetworkStream_Release(pINetworkStream)
 					IHttpReader_Release(pIHttpReader)
+					IMalloc_Release(pIClientMemoryAllocator)
 					
 					pIClientMemoryAllocator = NULL
 					pINetworkStream = NULL

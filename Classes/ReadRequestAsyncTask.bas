@@ -296,15 +296,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 			Scope
 				Dim hrParse As HRESULT = IClientRequest_Parse(this->pIRequest)
 				If FAILED(hrParse) Then
-					Dim vtSCode As VARIANT = Any
-					vtSCode.vt = VT_ERROR
-					vtSCode.scode = hrParse
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"IClientRequest_Parse Error\t"), _
-						@vtSCode _
-					)
-					
 					Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 						this->pIMemoryAllocator, _
 						this->pIWebSites, _
@@ -361,6 +352,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 					
 					Dim hrPrepareResponse As HRESULT = IWriteResponseAsyncIoTask_Prepare(pTask)
 					If FAILED(hrPrepareResponse) Then
+						IWriteResponseAsyncIoTask_Release(pTask)
+						
 						Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 							this->pIMemoryAllocator, _
 							this->pIWebSites, _

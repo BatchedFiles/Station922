@@ -673,6 +673,8 @@ Function WriteErrorAsyncTaskEndExecute( _
 				@pTask _
 			)
 			If FAILED(hrCreateTask) Then
+				' Мы не запускаем задачу отправки ошибки
+				' Чтобы не войти в бесконечный цикл
 				*ppNextTask = NULL
 				Return hrCreateTask
 			End If
@@ -695,7 +697,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			Return S_FALSE
 			
 		Case BASESTREAM_S_IO_PENDING
-			' Продолжить запись запроса
+			' Продолжить отправку ответа
 			WriteErrorAsyncTaskAddRef(this)
 			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
 			Return S_OK

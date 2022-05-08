@@ -502,13 +502,13 @@ Sub UnInitializeClientRequest( _
 	HeapSysFreeString(this->RequestedLine)
 	HeapSysFreeString(this->pHttpMethod)
 	
-	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
-		HeapSysFreeString(this->RequestHeaders(i))
-	Next
-	
 	If this->pClientURI <> NULL Then
 		IClientUri_Release(this->pClientURI)
 	End If
+	
+	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
+		HeapSysFreeString(this->RequestHeaders(i))
+	Next
 	
 	If this->pIReader <> NULL Then
 		ITextReader_Release(this->pIReader)

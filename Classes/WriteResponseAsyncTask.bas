@@ -296,6 +296,8 @@ Function WriteResponseAsyncTaskBeginExecute( _
 		Return hrProcessor
 	End If
 	
+	IHttpAsyncProcessor_Release(processor)
+	
 	Return ASYNCTASK_S_IO_PENDING
 	
 End Function
