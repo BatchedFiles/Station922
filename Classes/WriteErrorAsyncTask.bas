@@ -70,9 +70,10 @@ Type _WriteErrorAsyncTask
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
 	pSendBuffer As ZString Ptr
+	SendBufferLength As Integer
+	BodyText As WString Ptr
 	HttpError As ResponseErrorCode
 	hrCode As HRESULT
-	BodyText As WString Ptr
 End Type
 
 Function ProcessErrorRequestResponse( _
@@ -272,126 +273,6 @@ Sub WriteHttpResponse( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)
-	
-	Scope
-		Dim Mime As MimeType = Any
-		With Mime
-			.ContentType = ContentTypes.TextHtml
-			.IsTextFormat = True
-			.Charset = DocumentCharsets.Utf8BOM
-		End With
-		IServerResponse_SetMimeType(this->pIResponse, @Mime)
-	End Scope
-	
-	Scope
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
-			this->pIResponse, _
-			HttpResponseHeaders.HeaderContentLanguage, _
-			@DefaultContentLanguage, _
-			Len(DefaultContentLanguage) _
-		)
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
-			this->pIResponse, _
-			HttpResponseHeaders.HeaderCacheControl, _
-			@DefaultCacheControlNoCache, _
-			Len(DefaultCacheControlNoCache) _
-		)
-	End Scope
-	
-	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
-	Dim ContentBodyLength As Integer = Any
-	
-	Scope
-		Dim pIWriter As IArrayStringWriter Ptr = Any
-		Dim hr As HRESULT = CreateInstance( _
-			this->pIMemoryAllocator, _
-			@CLSID_ARRAYSTRINGWRITER, _
-			@IID_IArrayStringWriter, _
-			@pIWriter _
-		)
-		If FAILED(hr) Then
-			Exit Sub
-		End If
-		
-		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
-		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
-		
-		Scope
-			
-			Dim VirtualPath As WString Ptr = Any
-			' If this->pIWebSites = NULL Then
-				VirtualPath = @WStr("/")
-			' Else
-				' IWebSite_GetVirtualPath(this->pIWebSite, @VirtualPath)
-			' End If
-			
-			Dim StatusCode As HttpStatusCodes = Any
-			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
-			
-			FormatErrorMessageBody( _
-				pIWriter, _
-				StatusCode, _
-				VirtualPath, _
-				this->BodyText, _
-				this->hrCode _
-			)
-		End Scope
-		
-		ContentBodyLength = WideCharToMultiByte( _
-			CP_UTF8, _
-			0, _
-			@BodyBuffer, _
-			-1, _
-			@Utf8Body, _
-			MaxResponseBufferLength + 1, _
-			0, _
-			0 _
-		) - 1
-		
-		IArrayStringWriter_Release(pIWriter)
-	End Scope
-	
-	Scope
-		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
-		Dim HeadersBufferLength As Integer = AllResponseHeadersToBytes( _
-			this->pIRequest, _
-			this->pIResponse, _
-			@SendBuffer, _
-			ContentBodyLength _
-		)
-		
-		Dim SendBufferLength As Integer = HeadersBufferLength + ContentBodyLength
-		
-		this->pSendBuffer = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
-			SendBufferLength _
-		)
-		
-		If this->pSendBuffer <> NULL Then
-			
-			CopyMemory( _
-				@SendBuffer[HeadersBufferLength], _
-				@Utf8Body, _
-				ContentBodyLength _
-			)
-			
-			CopyMemory( _
-				this->pSendBuffer, _
-				@SendBuffer[0], _
-				SendBufferLength _
-			)
-			
-			IBaseStream_BeginWrite( _
-				this->pIStream, _
-				this->pSendBuffer, _
-				Cast(DWORD, SendBufferLength), _
-				NULL, _
-				CPtr(IUnknown Ptr, @this->lpVtbl), _
-				ppIResult _
-			)
-			
-		End If
-	End Scope
 	
 End Sub
 
@@ -626,12 +507,19 @@ Function WriteErrorAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	WriteHttpResponse( _
-		this, _
+	Dim hr As HRESULT = IBaseStream_BeginWrite( _
+		this->pIStream, _
+		this->pSendBuffer, _
+		Cast(DWORD, this->SendBufferLength), _
+		NULL, _
+		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
+	If FAILED(hr) Then
+		Return hr
+	End If
 	
-	Return S_OK
+	Return ASYNCTASK_S_IO_PENDING
 	
 End Function
 
@@ -898,6 +786,17 @@ End Function
 Function WriteErrorAsyncTaskPrepare( _
 		ByVal this As WriteErrorAsyncTask Ptr _
 	)As HRESULT
+	
+	Dim pIWriter As IArrayStringWriter Ptr = Any
+	Dim hr As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_ARRAYSTRINGWRITER, _
+		@IID_IArrayStringWriter, _
+		@pIWriter _
+	)
+	If FAILED(hr) Then
+		Return hr
+	End If
 	
 	Scope
 		Dim KeepAlive As Boolean = True
@@ -1189,6 +1088,106 @@ Function WriteErrorAsyncTaskPrepare( _
 			this->BodyText = @HttpError500InternalServerError
 			
 	End Select
+	
+	Scope
+		Dim Mime As MimeType = Any
+		With Mime
+			.ContentType = ContentTypes.TextHtml
+			.IsTextFormat = True
+			.Charset = DocumentCharsets.Utf8BOM
+		End With
+		IServerResponse_SetMimeType(this->pIResponse, @Mime)
+	End Scope
+	
+	Scope
+		IServerResponse_AddKnownResponseHeaderWstrLen( _
+			this->pIResponse, _
+			HttpResponseHeaders.HeaderContentLanguage, _
+			@DefaultContentLanguage, _
+			Len(DefaultContentLanguage) _
+		)
+		IServerResponse_AddKnownResponseHeaderWstrLen( _
+			this->pIResponse, _
+			HttpResponseHeaders.HeaderCacheControl, _
+			@DefaultCacheControlNoCache, _
+			Len(DefaultCacheControlNoCache) _
+		)
+	End Scope
+	
+	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
+	Dim ContentBodyLength As Integer = Any
+	
+	Scope
+		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
+		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
+		
+		Scope
+			
+			Dim VirtualPath As WString Ptr = Any
+			' If this->pIWebSites = NULL Then
+				VirtualPath = @WStr("/")
+			' Else
+				' IWebSite_GetVirtualPath(this->pIWebSite, @VirtualPath)
+			' End If
+			
+			Dim StatusCode As HttpStatusCodes = Any
+			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
+			
+			FormatErrorMessageBody( _
+				pIWriter, _
+				StatusCode, _
+				VirtualPath, _
+				this->BodyText, _
+				this->hrCode _
+			)
+		End Scope
+		
+		ContentBodyLength = WideCharToMultiByte( _
+			CP_UTF8, _
+			0, _
+			@BodyBuffer, _
+			-1, _
+			@Utf8Body, _
+			MaxResponseBufferLength + 1, _
+			0, _
+			0 _
+		) - 1
+		
+		IArrayStringWriter_Release(pIWriter)
+	End Scope
+	
+	Scope
+		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
+		Dim HeadersBufferLength As Integer = AllResponseHeadersToBytes( _
+			this->pIRequest, _
+			this->pIResponse, _
+			@SendBuffer, _
+			ContentBodyLength _
+		)
+		
+		this->SendBufferLength = HeadersBufferLength + ContentBodyLength
+		
+		this->pSendBuffer = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			this->SendBufferLength _
+		)
+		If this->pSendBuffer = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		CopyMemory( _
+			@SendBuffer[HeadersBufferLength], _
+			@Utf8Body, _
+			ContentBodyLength _
+		)
+		
+		CopyMemory( _
+			this->pSendBuffer, _
+			@SendBuffer[0], _
+			this->SendBufferLength _
+		)
+		
+	End Scope
 	
 	Return S_OK
 	

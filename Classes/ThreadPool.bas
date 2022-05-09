@@ -69,27 +69,12 @@ Function WorkerThread( _
 					@pNextTask _
 				)
 				
-				' Освобождаем ссылку на задачу
-				' и объект-результат асинхронной операции
-				' Так как мы не сделали это при создании задачи
+				' Освобождаем ссылку на задачу и футуру
+				' Так как мы не сделали это при запуске задачи
 				
 				IAsyncResult_Release(pIResult)
 				IAsyncIoTask_Release(pTask)
 			End Scope
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtResponse As VARIANT = Any
-				vtResponse.vt = VT_BSTR
-				vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					NULL, _
-					@vtResponse _
-				)
-				VariantClear(@vtResponse)
-			End Scope
-			#endif
 			
 			If FAILED(hrEndExecute) Then
 				Dim vtErrorCode As VARIANT = Any
@@ -100,6 +85,7 @@ Function WorkerThread( _
 					WStr(!"IAsyncIoTask_EndExecute Error\t"), _
 					@vtErrorCode _
 				)
+			
 			Else
 				Select Case hrEndExecute
 					
@@ -139,6 +125,20 @@ Function WorkerThread( _
 						
 				End Select
 			End If
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtResponse As VARIANT = Any
+				vtResponse.vt = VT_BSTR
+				vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					NULL, _
+					@vtResponse _
+				)
+				VariantClear(@vtResponse)
+			End Scope
+			#endif
 			
 		Else
 			Dim dwError As DWORD = GetLastError()

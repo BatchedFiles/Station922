@@ -285,7 +285,6 @@ Function WriteResponseAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	
 	Dim processor As IHttpAsyncProcessor Ptr = Any
 	Dim hrProcessor As HRESULT = IHttpProcessorCollection_Item( _
 		this->pIProcessors, _
