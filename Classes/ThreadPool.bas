@@ -15,6 +15,73 @@ Type _ThreadPool
 	WorkerThreadsCount As Integer
 End Type
 
+Function FinishExecuteTask( _
+		ByVal BytesTransferred As DWORD, _
+		ByVal pIResult As IAsyncResult Ptr, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+	)As HRESULT
+	
+	IAsyncResult_SetCompleted( _
+		pIResult, _
+		BytesTransferred, _
+		True _
+	)
+	
+	Dim pTask As IAsyncIoTask Ptr = Any
+	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
+	
+	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
+		pTask, _
+		pIResult, _
+		BytesTransferred, _
+		ppNextTask _
+	)
+	
+	' Освобождаем ссылки на задачу и футуру
+	' Так как мы не сделали это при запуске задачи
+	
+	IAsyncResult_Release(pIResult)
+	IAsyncIoTask_Release(pTask)
+	
+	If FAILED(hrEndExecute) Then
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+			@vtErrorCode _
+		)
+	End If
+	
+	Return hrEndExecute
+	
+End Function
+
+Sub StartExecuteTask( _
+		ByVal pTask As IAsyncIoTask Ptr _
+	)
+	
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
+		pTask, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		IAsyncIoTask_Release(pTask)
+		
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
+	End If
+	
+End Sub
+
 Function WorkerThread( _
 		ByVal lpParam As LPVOID _
 	)As DWORD
@@ -49,64 +116,18 @@ Function WorkerThread( _
 			#endif
 			
 			Dim pNextTask As IAsyncIoTask Ptr = Any
-			Dim hrEndExecute As HRESULT = Any
+			Dim hrFinishExecute As HRESULT = FinishExecuteTask( _
+				BytesTransferred, _
+				pOverlap->pIAsync, _
+				@pNextTask _
+			)
 			
-			Scope
-				Dim pIResult As IAsyncResult Ptr = pOverlap->pIAsync
-				IAsyncResult_SetCompleted( _
-					pIResult, _
-					BytesTransferred, _
-					True _
-				)
+			If SUCCEEDED(hrFinishExecute) Then
 				
-				Dim pTask As IAsyncIoTask Ptr = Any
-				IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
-				
-				hrEndExecute = IAsyncIoTask_EndExecute( _
-					pTask, _
-					pIResult, _
-					BytesTransferred, _
-					@pNextTask _
-				)
-				
-				' Освобождаем ссылку на задачу и футуру
-				' Так как мы не сделали это при запуске задачи
-				
-				IAsyncResult_Release(pIResult)
-				IAsyncIoTask_Release(pTask)
-			End Scope
-			
-			If FAILED(hrEndExecute) Then
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_ERROR
-				vtErrorCode.scode = hrEndExecute
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"IAsyncIoTask_EndExecute Error\t"), _
-					@vtErrorCode _
-				)
-			
-			Else
-				Select Case hrEndExecute
+				Select Case hrFinishExecute
 					
 					Case S_OK
-						Dim pIResult As IAsyncResult Ptr = Any
-						Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
-							pNextTask, _
-							@pIResult _
-						)
-						If FAILED(hrBeginExecute) Then
-							IAsyncIoTask_Release(pNextTask)
-							
-							Dim vtSCode As VARIANT = Any
-							vtSCode.vt = VT_ERROR
-							vtSCode.scode = hrBeginExecute
-							LogWriteEntry( _
-								LogEntryType.Error, _
-								WStr(!"IAsyncTask_BeginExecute Error\t"), _
-								@vtSCode _
-							)
-						End If
+						StartExecuteTask(pNextTask)
 						
 					Case S_FALSE
 						#if __FB_DEBUG__
