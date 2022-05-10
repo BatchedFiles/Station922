@@ -1,7 +1,8 @@
 #ifndef IARRAYATRINGWRITER_BI
 #define IARRAYATRINGWRITER_BI
 
-#include once "ITextWriter.bi"
+#include once "windows.bi"
+#include once "win\ole2.bi"
 
 Type IArrayStringWriter As IArrayStringWriter_
 

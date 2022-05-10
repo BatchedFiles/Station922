@@ -94,33 +94,12 @@ Declare Function ClientRequestGetZipMode( _
 
 Declare Function ClientRequestGetTextReader( _
 	ByVal this As ClientRequest Ptr, _
-	ByVal ppIReader As ITextReader Ptr Ptr _
+	ByVal ppIReader As IHttpReader Ptr Ptr _
 )As HRESULT
 
 Declare Function ClientRequestSetTextReader( _
 	ByVal this As ClientRequest Ptr, _
-	ByVal pIReader As ITextReader Ptr _
-)As HRESULT
-
-
-Declare Function ClientRequestStringableQueryInterface( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function ClientRequestStringableAddRef( _
-	ByVal this As ClientRequest Ptr _
-)As ULONG
-
-Declare Function ClientRequestStringableRelease( _
-	ByVal this As ClientRequest Ptr _
-)As ULONG
-
-Declare Function ClientRequestStringableToString( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal pLength As Integer Ptr, _
-	ByVal ppResult As WString Ptr Ptr _
+	ByVal pIReader As IHttpReader Ptr _
 )As HRESULT
 
 #endif

@@ -1,6 +1,5 @@
 #include once "ClientRequest.bi"
 #include once "win\shlwapi.bi"
-#include once "IStringable.bi"
 #include once "CharacterConstants.bi"
 #include once "ClientUri.bi"
 #include once "ContainerOf.bi"
@@ -20,7 +19,7 @@ Type _ClientRequest
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pIReader As ITextReader Ptr
+	pIReader As IHttpReader Ptr
 	RequestedLine As HeapBSTR
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
@@ -36,16 +35,16 @@ Function TranslateHresultFromTextReader( _
 	
 	Select Case hrTextReader
 		
-		Case TEXTREADER_E_INTERNALBUFFEROVERFLOW
+		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
 			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 			
-		Case TEXTREADER_E_SOCKETERROR
+		Case HTTPREADER_E_SOCKETERROR
 			Return CLIENTREQUEST_E_SOCKETERROR
 			
-		Case TEXTREADER_E_CLIENTCLOSEDCONNECTION
+		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
 			Return CLIENTREQUEST_E_EMPTYREQUEST
 			
-		Case TEXTREADER_E_INSUFFICIENT_BUFFER
+		Case HTTPREADER_E_INSUFFICIENT_BUFFER
 			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 			
 	End Select
@@ -243,7 +242,7 @@ Function ClientRequestAddRequestHeaders( _
 	
 	Do
 		Dim pLine As HeapBSTR = Any
-		Dim hrReadLine As HRESULT = ITextReader_ReadLine( _
+		Dim hrReadLine As HRESULT = IHttpReader_ReadLine( _
 			this->pIReader, _
 			@pLine _
 		)
@@ -511,7 +510,7 @@ Sub UnInitializeClientRequest( _
 	Next
 	
 	If this->pIReader <> NULL Then
-		ITextReader_Release(this->pIReader)
+		IHttpReader_Release(this->pIReader)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
@@ -670,7 +669,7 @@ Function ClientRequestBeginReadRequest( _
 	
 	Const NullCallback As AsyncCallback = NULL
 	
-	Dim hrBeginReadLine As HRESULT = ITextReader_BeginReadLine( _
+	Dim hrBeginReadLine As HRESULT = IHttpReader_BeginReadLine( _
 		this->pIReader, _
 		NullCallback, _
 		StateObject, _
@@ -689,7 +688,7 @@ Function ClientRequestEndReadRequest( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hrEndReadLine As HRESULT = ITextReader_EndReadLine( _
+	Dim hrEndReadLine As HRESULT = IHttpReader_EndReadLine( _
 		this->pIReader, _
 		pIAsyncResult, _
 		@this->RequestedLine _
@@ -701,7 +700,7 @@ Function ClientRequestEndReadRequest( _
 	
 	Select Case hrEndReadLine
 		
-		Case TEXTREADER_S_IO_PENDING
+		Case HTTPREADER_S_IO_PENDING
 			Return CLIENTREQUEST_S_IO_PENDING
 			
 		Case S_FALSE
@@ -844,7 +843,7 @@ End Function
 
 Function ClientRequestGetTextReader( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal ppIReader As ITextReader Ptr Ptr _
+		ByVal ppIReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
 	If this->pIReader = NULL Then
@@ -852,7 +851,7 @@ Function ClientRequestGetTextReader( _
 		Return S_FALSE
 	End If
 	
-	ITextReader_AddRef(this->pIReader)
+	IHttpReader_AddRef(this->pIReader)
 	*ppIReader = this->pIReader
 	
 	Return S_OK
@@ -861,15 +860,15 @@ End Function
 
 Function ClientRequestSetTextReader( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal pIReader As ITextReader Ptr _
+		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
 	
 	If this->pIReader <> NULL Then
-		ITextReader_Release(this->pIReader)
+		IHttpReader_Release(this->pIReader)
 	End If
 	
 	If pIReader <> NULL Then
-		ITextReader_AddRef(pIReader)
+		IHttpReader_AddRef(pIReader)
 	End If
 	
 	this->pIReader = pIReader
@@ -877,48 +876,6 @@ Function ClientRequestSetTextReader( _
 	Return S_OK
 	
 End Function
-
-Function ClientRequestStringableQueryInterface( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	Return ClientRequestQueryInterface( _
-		this, riid, ppv _
-	)
-	
-End Function
-
-Function ClientRequestStringableAddRef( _
-		ByVal this As ClientRequest Ptr _
-	)As ULONG
-	
-	Return ClientRequestAddRef(this)
-	
-End Function
-
-Function ClientRequestStringableRelease( _
-		ByVal this As ClientRequest Ptr _
-	)As ULONG
-	
-	Return ClientRequestRelease(this)
-	
-End Function
-
-' TODO Реализовать ClientRequestToString
-' Function ClientRequestStringableToString( _
-		' ByVal this As ClientRequest Ptr, _
-		' ByVal pLength As Integer Ptr, _
-		' ByVal ppResult As WString Ptr Ptr _
-	' )As HRESULT
-	
-	' *pLength = 0
-	' *ppResult = NULL
-	
-	' Return S_FALSE
-	
-' End Function
 
 
 Function IClientRequestQueryInterface( _
@@ -1028,14 +985,14 @@ End Function
 
 Function IClientRequestGetTextReader( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal ppIReader As ITextReader Ptr Ptr _
+		ByVal ppIReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	Return ClientRequestGetTextReader(ContainerOf(this, ClientRequest, lpVtbl), ppIReader)
 End Function
 
 Function IClientRequestSetTextReader( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As ITextReader Ptr _
+		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
 	Return ClientRequestSetTextReader(ContainerOf(this, ClientRequest, lpVtbl), pIReader)
 End Function

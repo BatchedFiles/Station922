@@ -289,15 +289,11 @@ Function HttpReaderQueryInterface( _
 	If IsEqualIID(@IID_IHttpReader, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_ITextReader, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -388,7 +384,7 @@ Function HttpReaderBeginReadLine( _
 		
 	End If
 	
-	Return TEXTREADER_S_IO_PENDING
+	Return HTTPREADER_S_IO_PENDING
 	
 End Function
 
@@ -415,7 +411,7 @@ Function HttpReaderEndReadLine( _
 			
 			Case BASESTREAM_S_IO_PENDING
 				*ppLine = NULL
-				Return TEXTREADER_S_IO_PENDING
+				Return HTTPREADER_S_IO_PENDING
 				
 			Case S_FALSE
 				*ppLine = NULL
@@ -440,7 +436,7 @@ Function HttpReaderEndReadLine( _
 	)
 	If Finded = False Then
 		*ppLine = NULL
-		Return TEXTREADER_S_IO_PENDING
+		Return HTTPREADER_S_IO_PENDING
 	End If
 	
 	#if __FB_DEBUG__

@@ -4,7 +4,6 @@
 #include once "Logger.bi"
 
 Extern GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable
-Extern GlobalRequestedFileSendableVirtualTable As Const ISendableVirtualTable
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
@@ -16,7 +15,6 @@ Type _RequestedFile
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IRequestedFileVirtualTable Ptr
-	lpSendableVtbl As Const ISendableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As WString Ptr
@@ -36,7 +34,6 @@ Sub InitializeRequestedFile( _
 		CopyMemory(@this->IdString, @Str("Requested___File"), 16)
 	#endif
 	this->lpVtbl = @GlobalRequestedFileVirtualTable
-	this->lpSendableVtbl = @GlobalRequestedFileSendableVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -198,15 +195,11 @@ Function RequestedFileQueryInterface( _
 	If IsEqualIID(@IID_IRequestedFile, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_ISendable, riid) Then
-			*ppv = @this->lpSendableVtbl
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -380,64 +373,6 @@ End Function
 	' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 ' )As HRESULT
 
-Function RequestedFileSendableQueryInterface( _
-		ByVal this As RequestedFile Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	Return RequestedFileQueryInterface(this, riid, ppv)
-	
-End Function
-
-Function RequestedFileSendableAddRef( _
-		ByVal this As RequestedFile Ptr _
-	)As ULONG
-	
-	Return RequestedFileAddRef(this)
-	
-End Function
-
-Function RequestedFileSendableRelease( _
-		ByVal this As RequestedFile Ptr _
-	)As ULONG
-	
-	Return RequestedFileRelease(this)
-	
-End Function
-
-' Declare Function RequestedFileSendableSend( _
-	' ByVal this As RequestedFile Ptr, _
-	' ByVal pIStream As INetworkStream Ptr, _
-	' ByVal pHeader As ZString Ptr, _
-	' ByVal HeaderLength As DWORD _
-' )As HRESULT
-
-Function RequestedFileSendableBeginSend( _
-		ByVal this As RequestedFile Ptr, _
-		ByVal pIStream As INetworkStream Ptr, _
-		ByVal pHeader As ZString Ptr, _
-		ByVal HeaderLength As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	*ppIAsyncResult = NULL
-	
-	Return S_OK
-	
-End Function
-
-Function RequestedFileSendableEndSend( _
-		ByVal this As RequestedFile Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	
-	Return S_OK
-	
-End Function
-
 
 Function IRequestedFileQueryInterface( _
 		ByVal this As IRequestedFile Ptr, _
@@ -544,62 +479,4 @@ Dim GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable = Type( 
 	@IRequestedFileGetLastFileModifiedDate, _
 	NULL, _
 	NULL _
-)
-
-Function IRequestedFileSendableQueryInterface( _
-		ByVal this As ISendable Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	Return RequestedFileSendableQueryInterface(ContainerOf(this, RequestedFile, lpSendableVtbl), riid, ppvObject)
-End Function
-
-Function IRequestedFileSendableAddRef( _
-		ByVal this As ISendable Ptr _
-	)As ULONG
-	Return RequestedFileSendableAddRef(ContainerOf(this, RequestedFile, lpSendableVtbl))
-End Function
-
-Function IRequestedFileSendableRelease( _
-		ByVal this As ISendable Ptr _
-	)As ULONG
-	Return RequestedFileSendableRelease(ContainerOf(this, RequestedFile, lpSendableVtbl))
-End Function
-
-' Function IRequestedFileSendableSend( _
-		' ByVal this As ISendable Ptr, _
-		' ByVal pIStream As INetworkStream Ptr, _
-		' ByVal pHeader As ZString Ptr, _
-		' ByVal HeaderLength As DWORD _
-	' )As HRESULT
-	' Return RequestedFileSendableSend(ContainerOf(this, RequestedFile, lpSendableVtbl), pIStream, pHeader, HeaderLength)
-' End Function
-
-Function IRequestedFileSendableBeginSend( _
-		ByVal this As ISendable Ptr, _
-		ByVal pIStream As INetworkStream Ptr, _
-		ByVal pHeader As ZString Ptr, _
-		ByVal HeaderLength As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	Return RequestedFileSendableBeginSend(ContainerOf(this, RequestedFile, lpSendableVtbl), pIStream, pHeader, HeaderLength, callback, StateObject, ppIAsyncResult)
-End Function
-
-Function IRequestedFileSendableEndSend( _
-		ByVal this As ISendable Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	Return RequestedFileSendableEndSend(ContainerOf(this, RequestedFile, lpSendableVtbl), pIAsyncResult)
-End Function
-
-' TODO Заполнить виртуальную таблицу RequestedFile
-Dim GlobalRequestedFileSendableVirtualTable As Const ISendableVirtualTable = Type( _
-	@IRequestedFileSendableQueryInterface, _
-	@IRequestedFileSendableAddRef, _
-	@IRequestedFileSendableRelease, _
-	NULL, _ /' Send '/
-	@IRequestedFileSendableBeginSend, _
-	@IRequestedFileSendableEndSend _
 )

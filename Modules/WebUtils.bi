@@ -4,7 +4,6 @@
 #include once "IClientRequest.bi"
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
-#include once "ITextWriter.bi"
 #include once "IWebSite.bi"
 
 ' Заполняет буфер экранированной строкой, безопасной для html

@@ -2,7 +2,6 @@
 #define REQUESTEDFILE_BI
 
 #include once "IRequestedFile.bi"
-#include once "ISendable.bi"
 
 Extern CLSID_REQUESTEDFILE Alias "CLSID_REQUESTEDFILE" As Const CLSID
 
@@ -81,42 +80,6 @@ Declare Function RequestedFileGetVaryHeaders( _
 	ByVal this As RequestedFile Ptr, _
 	ByVal pHeadersLength As Integer Ptr, _
 	ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
-)As HRESULT
-
-Declare Function RequestedFileSendableQueryInterface( _
-	ByVal this As RequestedFile Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function RequestedFileSendableAddRef( _
-	ByVal this As RequestedFile Ptr _
-)As ULONG
-
-Declare Function RequestedFileSendableRelease( _
-	ByVal this As RequestedFile Ptr _
-)As ULONG
-
-Declare Function RequestedFileSendableSend( _
-	ByVal this As RequestedFile Ptr, _
-	ByVal pIStream As INetworkStream Ptr, _
-	ByVal pHeader As ZString Ptr, _
-	ByVal HeaderLength As DWORD _
-)As HRESULT
-
-Declare Function RequestedFileSendableBeginSend( _
-	ByVal this As RequestedFile Ptr, _
-	ByVal pIStream As INetworkStream Ptr, _
-	ByVal pHeader As ZString Ptr, _
-	ByVal HeaderLength As DWORD, _
-	ByVal callback As AsyncCallback, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function RequestedFileSendableEndSend( _
-	ByVal this As RequestedFile Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
 )As HRESULT
 
 #endif

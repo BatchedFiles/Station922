@@ -7,6 +7,7 @@
 #include once "HeapBSTR.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
+#include once "RequestedFile.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 
@@ -269,10 +270,294 @@ Sub FormatErrorMessageBody( _
 	
 End Sub
 
-Sub WriteHttpResponse( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal ppIResult As IAsyncResult Ptr Ptr _
+Sub WriteErrorAsyncTaskSetBodyText( _
+		ByVal this As WriteErrorAsyncTask Ptr _
 	)
+	
+	Select Case this->HttpError
+		
+		Case ResponseErrorCode.MovedPermanently
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.MovedPermanently _
+			)
+			this->BodyText = @MovedPermanently
+			
+			/'
+				Dim MovedUrl As WString Ptr = Any
+				IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
+				
+				Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
+				lstrcpyW(@buf, MovedUrl)
+				
+				Dim ClientURI As Station922Uri = Any
+				IClientRequest_GetUri(pIRequest, @ClientURI)
+				
+				lstrcatW(@buf, ClientURI.Uri)
+				
+				IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
+			'/
+			
+		Case ResponseErrorCode.BadRequest
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.BadRequest _
+			)
+			this->BodyText = @HttpError400BadRequest
+			
+		Case ResponseErrorCode.PathNotValid
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.BadRequest _
+			)
+			this->BodyText = @HttpError400BadPath
+			
+		Case ResponseErrorCode.HostNotFound
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.BadRequest _
+			)
+			this->BodyText = @HttpError400Host
+			
+		Case ResponseErrorCode.SiteNotFound
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.NotFound _
+			)
+			this->BodyText = @HttpError404SiteNotFound
+			
+		Case ResponseErrorCode.NeedAuthenticate
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderWwwAuthenticate, _
+				@DefaultHeaderWwwAuthenticate, _
+				Len(DefaultHeaderWwwAuthenticate) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Unauthorized _
+			)
+			this->BodyText = @NeedUsernamePasswordString
+			
+		Case ResponseErrorCode.BadAuthenticateParam
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderWwwAuthenticate, _
+				@DefaultHeaderWwwAuthenticate1, _
+				Len(DefaultHeaderWwwAuthenticate1) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Unauthorized _
+			)
+			this->BodyText = @NeedUsernamePasswordString1
+			
+		Case ResponseErrorCode.NeedBasicAuthenticate
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderWwwAuthenticate, _
+				@DefaultHeaderWwwAuthenticate2, _
+				Len(DefaultHeaderWwwAuthenticate2) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Unauthorized _
+			)
+			this->BodyText = @NeedUsernamePasswordString2
+			
+		Case ResponseErrorCode.EmptyPassword
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderWwwAuthenticate, _
+				@DefaultHeaderWwwAuthenticate, _
+				Len(DefaultHeaderWwwAuthenticate) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Unauthorized _
+			)
+			this->BodyText = @NeedUsernamePasswordString3
+			
+		Case ResponseErrorCode.BadUserNamePassword
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderWwwAuthenticate, _
+				@DefaultHeaderWwwAuthenticate, _
+				Len(DefaultHeaderWwwAuthenticate) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Unauthorized _
+			)
+			this->BodyText = @NeedUsernamePasswordString
+			
+		Case ResponseErrorCode.Forbidden
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Forbidden _
+			)
+			this->BodyText = @HttpError403Forbidden
+			
+		Case ResponseErrorCode.FileNotFound
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.NotFound _
+			)
+			this->BodyText = @HttpError404FileNotFound
+			
+		Case ResponseErrorCode.MethodNotAllowed
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.MethodNotAllowed _
+			)
+			this->BodyText = @HttpError405NotAllowed
+			
+		Case ResponseErrorCode.FileGone
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.Gone _
+			)
+			this->BodyText = @HttpError410Gone
+			
+		Case ResponseErrorCode.LengthRequired
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.LengthRequired _
+			)
+			this->BodyText = @HttpError411LengthRequired
+			
+		Case ResponseErrorCode.RequestEntityTooLarge
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.RequestEntityTooLarge _
+			)
+			this->BodyText = @HttpError413RequestEntityTooLarge
+			
+		Case ResponseErrorCode.RequestUrlTooLarge
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.RequestURITooLarge _
+			)
+			this->BodyText = @HttpError414RequestUrlTooLarge
+			
+		Case ResponseErrorCode.RequestRangeNotSatisfiable
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.RangeNotSatisfiable _
+			)
+			this->BodyText = @HttpError416RangeNotSatisfiable
+			
+		Case ResponseErrorCode.RequestHeaderFieldsTooLarge
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.RequestHeaderFieldsTooLarge _
+			)
+			this->BodyText = @HttpError431RequestRequestHeaderFieldsTooLarge
+			
+		Case ResponseErrorCode.InternalServerError
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			this->BodyText = @HttpError500InternalServerError
+			
+		Case ResponseErrorCode.FileNotAvailable
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			this->BodyText = @HttpError500FileNotAvailable
+			
+		Case ResponseErrorCode.CannotCreateChildProcess
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			this->BodyText = @HttpError500CannotCreateChildProcess
+			
+		Case ResponseErrorCode.CannotCreatePipe
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			this->BodyText = @HttpError500CannotCreatePipe
+			
+		Case ResponseErrorCode.NotImplemented
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.NotImplemented _
+			)
+			this->BodyText = @HttpError501NotImplemented
+			
+		Case ResponseErrorCode.ContentTypeEmpty
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.NotImplemented _
+			)
+			this->BodyText = @HttpError501ContentTypeEmpty
+			
+		Case ResponseErrorCode.ContentEncodingNotEmpty
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.NotImplemented _
+			)
+			this->BodyText = @HttpError501ContentEncoding
+			
+		Case ResponseErrorCode.BadGateway
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.BadGateway _
+			)
+			this->BodyText = @HttpError502BadGateway
+			
+		Case ResponseErrorCode.NotEnoughMemory
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderRetryAfter, _
+				@DefaultRetryAfterString, _
+				Len(DefaultRetryAfterString) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.ServiceUnavailable _
+			)
+			this->BodyText = @HttpError503Memory
+			
+		Case ResponseErrorCode.CannotCreateThread
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderRetryAfter, _
+				@DefaultRetryAfterString, _
+				Len(DefaultRetryAfterString) _
+			)
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.ServiceUnavailable _
+			)
+			this->BodyText = @HttpError503ThreadError
+			
+		Case ResponseErrorCode.GatewayTimeout
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.GatewayTimeout _
+			)
+			this->BodyText = @HttpError504GatewayTimeout
+			
+		Case ResponseErrorCode.VersionNotSupported
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.HTTPVersionNotSupported _
+			)
+			this->BodyText = @HttpError505VersionNotSupported
+			
+		Case Else
+			IServerResponse_SetStatusCode( _
+				this->pIResponse, _
+				HttpStatusCodes.InternalServerError _
+			)
+			this->BodyText = @HttpError500InternalServerError
+			
+	End Select
 	
 End Sub
 
@@ -788,306 +1073,35 @@ Function WriteErrorAsyncTaskPrepare( _
 	)As HRESULT
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hrCreateArrayStringWriter As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_ARRAYSTRINGWRITER, _
 		@IID_IArrayStringWriter, _
 		@pIWriter _
 	)
-	If FAILED(hr) Then
-		Return hr
+	If FAILED(hrCreateArrayStringWriter) Then
+		Return hrCreateArrayStringWriter
 	End If
+	
+	Dim pIFile As IRequestedFile Ptr = Any
+	Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_REQUESTEDFILE, _
+		@IID_IRequestedFile, _
+		@pIFile _
+	)
+	If FAILED(hrCreateRequestedFile) Then
+		IArrayStringWriter_Release(pIWriter)
+		Return hrCreateRequestedFile
+	End If
+	
+	WriteErrorAsyncTaskSetBodyText(this)
 	
 	Scope
 		Dim KeepAlive As Boolean = True
 		IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
 		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
 	End Scope
-	
-	Select Case this->HttpError
-		
-		Case ResponseErrorCode.MovedPermanently
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.MovedPermanently _
-			)
-			this->BodyText = @MovedPermanently
-			
-			/'
-				Dim MovedUrl As WString Ptr = Any
-				IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
-				
-				Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
-				lstrcpyW(@buf, MovedUrl)
-				
-				Dim ClientURI As Station922Uri = Any
-				IClientRequest_GetUri(pIRequest, @ClientURI)
-				
-				lstrcatW(@buf, ClientURI.Uri)
-				
-				IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
-			'/
-			
-		Case ResponseErrorCode.BadRequest
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400BadRequest
-			
-		Case ResponseErrorCode.PathNotValid
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400BadPath
-			
-		Case ResponseErrorCode.HostNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400Host
-			
-		Case ResponseErrorCode.SiteNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotFound _
-			)
-			this->BodyText = @HttpError404SiteNotFound
-			
-		Case ResponseErrorCode.NeedAuthenticate
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderWwwAuthenticate, _
-				@DefaultHeaderWwwAuthenticate, _
-				Len(DefaultHeaderWwwAuthenticate) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString
-			
-		Case ResponseErrorCode.BadAuthenticateParam
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderWwwAuthenticate, _
-				@DefaultHeaderWwwAuthenticate1, _
-				Len(DefaultHeaderWwwAuthenticate1) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString1
-			
-		Case ResponseErrorCode.NeedBasicAuthenticate
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderWwwAuthenticate, _
-				@DefaultHeaderWwwAuthenticate2, _
-				Len(DefaultHeaderWwwAuthenticate2) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString2
-			
-		Case ResponseErrorCode.EmptyPassword
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderWwwAuthenticate, _
-				@DefaultHeaderWwwAuthenticate, _
-				Len(DefaultHeaderWwwAuthenticate) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString3
-			
-		Case ResponseErrorCode.BadUserNamePassword
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderWwwAuthenticate, _
-				@DefaultHeaderWwwAuthenticate, _
-				Len(DefaultHeaderWwwAuthenticate) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString
-			
-		Case ResponseErrorCode.Forbidden
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Forbidden _
-			)
-			this->BodyText = @HttpError403Forbidden
-			
-		Case ResponseErrorCode.FileNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotFound _
-			)
-			this->BodyText = @HttpError404FileNotFound
-			
-		Case ResponseErrorCode.MethodNotAllowed
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.MethodNotAllowed _
-			)
-			this->BodyText = @HttpError405NotAllowed
-			
-		Case ResponseErrorCode.FileGone
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Gone _
-			)
-			this->BodyText = @HttpError410Gone
-			
-		Case ResponseErrorCode.LengthRequired
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.LengthRequired _
-			)
-			this->BodyText = @HttpError411LengthRequired
-			
-		Case ResponseErrorCode.RequestEntityTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestEntityTooLarge _
-			)
-			this->BodyText = @HttpError413RequestEntityTooLarge
-			
-		Case ResponseErrorCode.RequestUrlTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestURITooLarge _
-			)
-			this->BodyText = @HttpError414RequestUrlTooLarge
-			
-		Case ResponseErrorCode.RequestRangeNotSatisfiable
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RangeNotSatisfiable _
-			)
-			this->BodyText = @HttpError416RangeNotSatisfiable
-			
-		Case ResponseErrorCode.RequestHeaderFieldsTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestHeaderFieldsTooLarge _
-			)
-			this->BodyText = @HttpError431RequestRequestHeaderFieldsTooLarge
-			
-		Case ResponseErrorCode.InternalServerError
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500InternalServerError
-			
-		Case ResponseErrorCode.FileNotAvailable
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500FileNotAvailable
-			
-		Case ResponseErrorCode.CannotCreateChildProcess
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500CannotCreateChildProcess
-			
-		Case ResponseErrorCode.CannotCreatePipe
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500CannotCreatePipe
-			
-		Case ResponseErrorCode.NotImplemented
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
-			this->BodyText = @HttpError501NotImplemented
-			
-		Case ResponseErrorCode.ContentTypeEmpty
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
-			this->BodyText = @HttpError501ContentTypeEmpty
-			
-		Case ResponseErrorCode.ContentEncodingNotEmpty
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
-			this->BodyText = @HttpError501ContentEncoding
-			
-		Case ResponseErrorCode.BadGateway
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadGateway _
-			)
-			this->BodyText = @HttpError502BadGateway
-			
-		Case ResponseErrorCode.NotEnoughMemory
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderRetryAfter, _
-				@DefaultRetryAfterString, _
-				Len(DefaultRetryAfterString) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.ServiceUnavailable _
-			)
-			this->BodyText = @HttpError503Memory
-			
-		Case ResponseErrorCode.CannotCreateThread
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderRetryAfter, _
-				@DefaultRetryAfterString, _
-				Len(DefaultRetryAfterString) _
-			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.ServiceUnavailable _
-			)
-			this->BodyText = @HttpError503ThreadError
-			
-		Case ResponseErrorCode.GatewayTimeout
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.GatewayTimeout _
-			)
-			this->BodyText = @HttpError504GatewayTimeout
-			
-		Case ResponseErrorCode.VersionNotSupported
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.HTTPVersionNotSupported _
-			)
-			this->BodyText = @HttpError505VersionNotSupported
-			
-		Case Else
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500InternalServerError
-			
-	End Select
 	
 	Scope
 		Dim Mime As MimeType = Any
@@ -1114,6 +1128,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		)
 	End Scope
 	
+	/'
 	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
 	Dim ContentBodyLength As Integer = Any
 	
@@ -1155,7 +1170,8 @@ Function WriteErrorAsyncTaskPrepare( _
 		
 		IArrayStringWriter_Release(pIWriter)
 	End Scope
-	
+	'/
+	/'
 	Scope
 		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
 		Dim HeadersBufferLength As Integer = AllResponseHeadersToBytes( _
@@ -1188,6 +1204,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		)
 		
 	End Scope
+	'/
 	
 	Return S_OK
 	

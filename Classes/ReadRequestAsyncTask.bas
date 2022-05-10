@@ -509,10 +509,9 @@ Function ReadRequestAsyncTaskSetHttpReader( _
 	
 	this->pIHttpReader = pReader
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
 	IClientRequest_SetTextReader( _
 		this->pIRequest, _
-		CPtr(ITextReader Ptr, this->pIHttpReader) _
+		this->pIHttpReader _
 	)
 	
 	Return S_OK

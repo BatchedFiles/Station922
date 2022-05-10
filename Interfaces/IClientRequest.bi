@@ -3,7 +3,7 @@
 
 #include once "IClientUri.bi"
 #include once "Http.bi"
-#include once "ITextReader.bi"
+#include once "IHttpReader.bi"
 
 Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
 
@@ -133,12 +133,12 @@ Type IClientRequestVirtualTable
 	
 	GetTextReader As Function( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal ppIReader As ITextReader Ptr Ptr _
+		ByVal ppIReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
 	SetTextReader As Function( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As ITextReader Ptr _
+		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
 	
 End Type

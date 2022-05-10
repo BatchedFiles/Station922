@@ -1,7 +1,6 @@
 #include once "WebUtils.bi"
 #include once "win\shlwapi.bi"
 #include once "win\wincrypt.bi"
-#include once "IStringable.bi"
 #include once "IWebServerConfiguration.bi"
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
@@ -413,27 +412,7 @@ Function AllResponseHeadersToBytes( _
 			
 	End Select
 	
-	Dim pIStringable As IStringable Ptr = Any
-	IServerResponse_QueryInterface(pIResponse, @IID_IStringable, @pIStringable)
-	
-	Dim HeadersBufferLength As Integer = Any
-	Dim pHeadersBuffer As WString Ptr = Any
-	IStringable_ToString(pIStringable, @HeadersBufferLength, @pHeadersBuffer)
-	
-	Dim HeadersLength As Integer = WideCharToMultiByte( _
-		CP_ACP, _
-		0, _
-		pHeadersBuffer, _
-		HeadersBufferLength, _
-		zBuffer, _
-		MaxResponseBufferLength + 1, _
-		0, _
-		0 _
-	)
-	
-	IStringable_Release(pIStringable)
-	
-	Return HeadersLength
+	Return 0
 	
 End Function
 
