@@ -265,11 +265,6 @@ DEFINE_IID(IID_IRunnable, _
 	&h6603a8f5, &hfb80, &h4cb9, &hbf, &h80, &hce, &had, &he4, &h57, &h6f, &h52 _
 )
 
-' {E6C1A359-67A1-4B3D-A329-69001B3B8065}
-DEFINE_IID(IID_ISendable, _
-	&he6c1a359, &h67a1, &h4b3d, &ha3, &h29, &h69, &h0, &h1b, &h3b, &h80, &h65 _
-)
-
 ' {C1BFB23D-79B3-4AE9-BEF9-5BF9D3073B84}
 DEFINE_IID(IID_IServerResponse, _
 	&hc1bfb23d, &h79b3, &h4ae9, &hbe, &hf9, &h5b, &hf9, &hd3, &h7, &h3b, &h84 _
@@ -293,21 +288,6 @@ DEFINE_IID(IID_IStreamWriter, _
 ' {D38929B0-17C1-47A2-A1AC-B07318B4C3C9}
 DEFINE_IID(IID_IString, _
 	&hd38929b0, &h17c1, &h47a2, &ha1, &hac, &hb0, &h73, &h18, &hb4, &hc3, &hc9 _
-)
-
-' {286FF92C-2951-47BB-A4BB-09DA00A72725}
-DEFINE_IID(IID_IStringable, _
-	&h286ff92c, &h2951, &h47bb, &ha4, &hbb, &h9, &hda, &h0, &ha7, &h27, &h25 _
-)
-
-' {D46D4E27-B2CD-4594-96EA-5B8203D21439}
-DEFINE_IID(IID_ITextReader, _
-	&hd46d4e27, &hb2cd, &h4594, &h96, &hea, &h5b, &h82, &h3, &hd2, &h14, &h39 _
-)
-
-' {8F177D4A-A214-49D2-A752-0BF4CC000C1C}
-DEFINE_IID(IID_ITextWriter, _
-	&h8f177d4a, &ha214, &h49d2, &ha7, &h52, &hb, &hf4, &hcc, &h0, &hc, &h1c _
 )
 
 ' {667DFC1A-466E-40BF-BEE3-7A34882BE2F9}
