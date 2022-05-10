@@ -13,74 +13,9 @@ Type _ThreadPool
 	pIMemoryAllocator As IMalloc Ptr
 	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As Integer
+	CallBack As ThreadPoolCallBack
+	param As Any Ptr
 End Type
-
-Function FinishExecuteTask( _
-		ByVal BytesTransferred As DWORD, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	IAsyncResult_SetCompleted( _
-		pIResult, _
-		BytesTransferred, _
-		True _
-	)
-	
-	Dim pTask As IAsyncIoTask Ptr = Any
-	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
-	
-	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
-		pTask, _
-		pIResult, _
-		BytesTransferred, _
-		ppNextTask _
-	)
-	
-	' Освобождаем ссылки на задачу и футуру
-	' Так как мы не сделали это при запуске задачи
-	
-	IAsyncResult_Release(pIResult)
-	IAsyncIoTask_Release(pTask)
-	
-	If FAILED(hrEndExecute) Then
-		Dim vtErrorCode As VARIANT = Any
-		vtErrorCode.vt = VT_ERROR
-		vtErrorCode.scode = hrEndExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
-			@vtErrorCode _
-		)
-	End If
-	
-	Return hrEndExecute
-	
-End Function
-
-Sub StartExecuteTask( _
-		ByVal pTask As IAsyncIoTask Ptr _
-	)
-	
-	Dim pIResult As IAsyncResult Ptr = Any
-	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
-		pTask, _
-		@pIResult _
-	)
-	If FAILED(hrBeginExecute) Then
-		IAsyncIoTask_Release(pTask)
-		
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrBeginExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IAsyncTask_BeginExecute Error\t"), _
-			@vtSCode _
-		)
-	End If
-	
-End Sub
 
 Function WorkerThread( _
 		ByVal lpParam As LPVOID _
@@ -92,98 +27,47 @@ Function WorkerThread( _
 		
 		Dim BytesTransferred As DWORD = Any
 		Dim CompletionKey As ULONG_PTR = Any
-		Dim pOverlap As ASYNCRESULTOVERLAPPED Ptr = Any
+		Dim pOverlap As OVERLAPPED Ptr = Any
 		
 		Dim res As WINBOOL = GetQueuedCompletionStatus( _
 			this->hIOCompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
-			CPtr(LPOVERLAPPED Ptr, @pOverlap), _
+			@pOverlap, _
 			INFINITE _
 		)
 		If res Then
-			#if __FB_DEBUG__
-			Scope
-				Dim vtBytesTransferred As VARIANT = Any
-				vtBytesTransferred.vt = VT_UI4
-				vtBytesTransferred.ulVal = BytesTransferred
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr(!"\t\t\t\tBytesTransferred\t"), _
-					@vtBytesTransferred _
-				)
-			End Scope
-			#endif
-			
-			Dim pNextTask As IAsyncIoTask Ptr = Any
-			Dim hrFinishExecute As HRESULT = FinishExecuteTask( _
+			this->CallBack( _
+				this->param, _
 				BytesTransferred, _
-				pOverlap->pIAsync, _
-				@pNextTask _
+				CompletionKey, _
+				pOverlap _
 			)
-			
-			If SUCCEEDED(hrFinishExecute) Then
-				
-				Select Case hrFinishExecute
-					
-					Case S_OK
-						StartExecuteTask(pNextTask)
-						
-					Case S_FALSE
-						#if __FB_DEBUG__
-						Scope
-							Dim vtResponse As VARIANT = Any
-							vtResponse.vt = VT_BSTR
-							vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tConnection has been gracefully closed"))
-							LogWriteEntry( _
-								LogEntryType.Debug, _
-								NULL, _
-								@vtResponse _
-							)
-							VariantClear(@vtResponse)
-						End Scope
-						#endif
-						
-				End Select
-			End If
-			
+		Else
 			#if __FB_DEBUG__
 			Scope
-				Dim vtResponse As VARIANT = Any
-				vtResponse.vt = VT_BSTR
-				vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
+				Dim dwError As DWORD = GetLastError()
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_UI4
+				vtErrorCode.ulVal = dwError
 				LogWriteEntry( _
-					LogEntryType.Debug, _
-					NULL, _
-					@vtResponse _
+					LogEntryType.Error, _
+					WStr(!"GetQueuedCompletionStatus Error\t"), _
+					@vtErrorCode _
 				)
-				VariantClear(@vtResponse)
 			End Scope
 			#endif
-			
-		Else
-			Dim dwError As DWORD = GetLastError()
-			Dim vtErrorCode As VARIANT = Any
-			vtErrorCode.vt = VT_UI4
-			vtErrorCode.ulVal = dwError
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				WStr(!"GetQueuedCompletionStatus Error\t"), _
-				@vtErrorCode _
-			)
 			
 			If pOverlap = NULL Then
 				' fprintf(stderr, "GetQueuedCompletionStatus завершилась ошибкой
 				' (ошибка %d)\n", GetLastError());
-				' exit(1);
 				Exit Do
-			Else
-				' fprintf(stderr, "GetQueuedCompletionStatus переместила 
-				' испорченный пакет I/O (ошибка %d)\n", GetLastError());
-				' // Не смотря на то, что вы можете здесь завершить работу
-				' // по ошибке этот пример продолжается.
-				
 			End If
+			
+			' fprintf(stderr, "GetQueuedCompletionStatus переместила 
+			' испорченный пакет I/O (ошибка %d)\n", GetLastError());
+			' // Не смотря на то, что вы можете здесь завершить работу
+			' // по ошибке этот пример продолжается.
 			
 		End If
 		
@@ -389,7 +273,9 @@ Function ThreadPoolSetMaxThreads( _
 End Function
 
 Function ThreadPoolRun( _
-		ByVal this As ThreadPool Ptr _
+		ByVal this As ThreadPool Ptr, _
+		ByVal CallBack As ThreadPoolCallBack, _
+		ByVal param As Any Ptr _
 	)As HRESULT
 	
 	this->hIOCompletionPort = CreateIoCompletionPort( _
@@ -402,6 +288,9 @@ Function ThreadPoolRun( _
 		Dim dwError As DWORD = GetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
+	
+	this->CallBack = CallBack
+	this->param = param
 	
 	Const DefaultStackSize As SIZE_T_ = 0
 	
@@ -446,6 +335,7 @@ End Function
 
 Function ThreadPoolAssociateTask( _
 		ByVal this As ThreadPool Ptr, _
+		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
@@ -455,7 +345,7 @@ Function ThreadPoolAssociateTask( _
 	Dim hPort As HANDLE = CreateIoCompletionPort( _
 		FileHandle, _
 		this->hIOCompletionPort, _
-		Cast(ULONG_PTR, 0), _
+		Key, _
 		0 _
 	)
 	If hPort = NULL Then
@@ -503,9 +393,11 @@ Function IThreadPoolSetMaxThreads( _
 End Function
 
 Function IThreadPoolRun( _
-		ByVal this As IThreadPool Ptr _
+		ByVal this As IThreadPool Ptr, _
+		ByVal CallBack As ThreadPoolCallBack, _
+		ByVal param As Any Ptr _
 	)As HRESULT
-	Return ThreadPoolRun(ContainerOf(this, ThreadPool, lpVtbl))
+	Return ThreadPoolRun(ContainerOf(this, ThreadPool, lpVtbl), CallBack, param)
 End Function
 
 Function IThreadPoolStop( _
@@ -516,9 +408,10 @@ End Function
 
 Function IThreadPoolAssociateTask( _
 		ByVal this As IThreadPool Ptr, _
+		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
-	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), pTask)
+	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), Key, pTask)
 End Function
 
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _

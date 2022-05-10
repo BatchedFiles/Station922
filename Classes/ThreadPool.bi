@@ -42,7 +42,9 @@ Declare Function ThreadPoolSetMaxThreads( _
 )As HRESULT
 
 Declare Function ThreadPoolRun( _
-	ByVal this As ThreadPool Ptr _
+	ByVal this As ThreadPool Ptr, _
+	ByVal CallBack As ThreadPoolCallBack, _
+	ByVal param As Any Ptr _
 )As HRESULT
 
 Declare Function ThreadPoolStop( _
@@ -51,6 +53,7 @@ Declare Function ThreadPoolStop( _
 
 Declare Function ThreadPoolAssociateTask( _
 	ByVal this As ThreadPool Ptr, _
+	ByVal Key As ULONG_PTR, _
 	ByVal pTask As IAsyncIoTask Ptr _
 )As HRESULT
 

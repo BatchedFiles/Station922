@@ -3,6 +3,13 @@
 
 #include once "IAsyncIoTask.bi"
 
+Type ThreadPoolCallBack As Function( _
+	ByVal param As Any Ptr, _
+	ByVal BytesTransferred As DWORD, _
+	ByVal CompletionKey As ULONG_PTR, _
+	ByVal pOverlap As OVERLAPPED Ptr _
+)As Integer
+
 Type IThreadPool As IThreadPool_
 
 Type LPITHREADPOOL As IThreadPool Ptr
@@ -36,7 +43,9 @@ Type IThreadPoolVirtualTable
 	)As HRESULT
 	
 	Run As Function( _
-		ByVal this As IThreadPool Ptr _
+		ByVal this As IThreadPool Ptr, _
+		ByVal CallBack As ThreadPoolCallBack, _
+		ByVal param As Any Ptr _
 	)As HRESULT
 	
 	Stop As Function( _
@@ -45,6 +54,7 @@ Type IThreadPoolVirtualTable
 	
 	AssociateTask As Function( _
 		ByVal this As IThreadPool Ptr, _
+		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
@@ -59,8 +69,8 @@ End Type
 #define IThreadPool_Release(this) (this)->lpVtbl->Release(this)
 #define IThreadPool_GetMaxThreads(this, pMaxThreads) (this)->lpVtbl->GetMaxThreads(this, pMaxThreads)
 #define IThreadPool_SetMaxThreads(this, MaxThreads) (this)->lpVtbl->SetMaxThreads(this, MaxThreads)
-#define IThreadPool_Run(this) (this)->lpVtbl->Run(this)
+#define IThreadPool_Run(this, CallBack, param) (this)->lpVtbl->Run(this, CallBack, param)
 #define IThreadPool_Stop(this) (this)->lpVtbl->Stop(this)
-#define IThreadPool_AssociateTask(this, pTask) (this)->lpVtbl->AssociateTask(this, pTask)
+#define IThreadPool_AssociateTask(this, pTask, Key) (this)->lpVtbl->AssociateTask(this, pTask, Key)
 
 #endif

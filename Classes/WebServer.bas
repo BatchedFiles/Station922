@@ -47,6 +47,149 @@ Type _WebServer
 	
 End Type
 
+Function FinishExecuteTask( _
+		ByVal BytesTransferred As DWORD, _
+		ByVal pIResult As IAsyncResult Ptr, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+	)As HRESULT
+	
+	IAsyncResult_SetCompleted( _
+		pIResult, _
+		BytesTransferred, _
+		True _
+	)
+	
+	Dim pTask As IAsyncIoTask Ptr = Any
+	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
+	
+	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
+		pTask, _
+		pIResult, _
+		BytesTransferred, _
+		ppNextTask _
+	)
+	If FAILED(hrEndExecute) Then
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+			@vtErrorCode _
+		)
+	End If
+	
+	' Освобождаем ссылки на задачу и футуру
+	' Так как мы не сделали это при запуске задачи
+	
+	IAsyncResult_Release(pIResult)
+	IAsyncIoTask_Release(pTask)
+	
+	Return hrEndExecute
+	
+End Function
+
+Function StartExecuteTask( _
+		ByVal pTask As IAsyncIoTask Ptr _
+	)As HRESULT
+	
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
+		pTask, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		IAsyncIoTask_Release(pTask)
+		
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
+		
+		Return hrBeginExecute
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function ThreadPoolCallBack( _
+		ByVal param As Any Ptr, _
+		ByVal BytesTransferred As DWORD, _
+		ByVal CompletionKey As ULONG_PTR, _
+		ByVal pOverlap As OVERLAPPED Ptr _
+	)As Integer
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtBytesTransferred As VARIANT = Any
+		vtBytesTransferred.vt = VT_UI4
+		vtBytesTransferred.ulVal = BytesTransferred
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			WStr(!"\t\t\t\tBytesTransferred\t"), _
+			@vtBytesTransferred _
+		)
+	End Scope
+	#endif
+	
+	Dim pAsyncOverlapped As ASYNCRESULTOVERLAPPED Ptr = CPtr(ASYNCRESULTOVERLAPPED Ptr, pOverlap)
+	Dim pIResult As IAsyncResult Ptr = pAsyncOverlapped->pIAsync
+	
+	Dim pNextTask As IAsyncIoTask Ptr = Any
+	Dim hrFinishExecute As HRESULT = FinishExecuteTask( _
+		BytesTransferred, _
+		pIResult, _
+		@pNextTask _
+	)
+	
+	If SUCCEEDED(hrFinishExecute) Then
+		
+		Select Case hrFinishExecute
+			
+			Case S_OK
+				StartExecuteTask(pNextTask)
+				
+			Case S_FALSE
+				#if __FB_DEBUG__
+				Scope
+					Dim vtResponse As VARIANT = Any
+					vtResponse.vt = VT_BSTR
+					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tConnection has been gracefully closed"))
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						NULL, _
+						@vtResponse _
+					)
+					VariantClear(@vtResponse)
+				End Scope
+				#endif
+				
+		End Select
+	End If
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtResponse As VARIANT = Any
+		vtResponse.vt = VT_BSTR
+		vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			NULL, _
+			@vtResponse _
+		)
+		VariantClear(@vtResponse)
+	End Scope
+	#endif
+	
+	Return 0
+	
+End Function
+
 Function CreateReadTask( _
 		ByVal this As WebServer Ptr, _
 		ByVal ClientSocket As SOCKET, _
@@ -107,6 +250,7 @@ Function CreateReadTask( _
 					
 					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
 						this->pIPool, _
+						Cast(ULONG_PTR, 0), _
 						CPtr(IAsyncIoTask Ptr, pTask) _
 					)
 					If FAILED(hrAssociate) Then
@@ -195,29 +339,14 @@ Function AcceptConnection( _
 						
 						If pTask <> NULL Then
 							
-							Dim pIResult As IAsyncResult Ptr = Any
-							Dim hrBeginExecute As HRESULT = IReadRequestAsyncIoTask_BeginExecute( _
-								pTask, _
-								@pIResult _
+							Dim hrBeginExecute As HRESULT = StartExecuteTask( _
+								CPtr(IAsyncIoTask Ptr, pTask) _
 							)
 							
 							If SUCCEEDED(hrBeginExecute) Then
 								' Сейчас мы не уменьшаем счётчик ссылок на задачу
 								' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
 								Return S_OK
-							End If
-							
-							If FAILED(hrBeginExecute) Then
-								IReadRequestAsyncIoTask_Release(pTask)
-								
-								Dim vtSCode As VARIANT = Any
-								vtSCode.vt = VT_ERROR
-								vtSCode.scode = hrBeginExecute
-								LogWriteEntry( _
-									LogEntryType.Error, _
-									WStr(!"IReadRequestAsyncTask_BeginExecute Error\t"), _
-									@vtSCode _
-								)
 							End If
 							
 						End If
@@ -676,7 +805,11 @@ Function WebServerRun( _
 	
 	IThreadPool_SetMaxThreads(this->pIPool, this->WorkerThreadsCount)
 	
-	Dim hrPool As HRESULT = IThreadPool_Run(this->pIPool)
+	Dim hrPool As HRESULT = IThreadPool_Run( _
+		this->pIPool, _
+		@ThreadPoolCallBack, _
+		NULL _
+	)
 	If FAILED(hrPool) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 		Return hrPool
