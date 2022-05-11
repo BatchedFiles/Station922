@@ -835,7 +835,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			
 			If KeepAlive = False Then
 				*ppNextTask = NULL
-				Return S_FALSE
+				Return ASYNCTASK_S_KEEPALIVE_FALSE
 			End If
 			
 			Dim pTask As IReadRequestAsyncIoTask Ptr = Any

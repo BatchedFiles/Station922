@@ -184,7 +184,7 @@ Function ThreadPoolCallBack( _
 				Scope
 					Dim vtResponse As VARIANT = Any
 					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
+					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\t—ontinue reading socket\r\n\r\n\r\n\r\n"))
 					LogWriteEntry( _
 						LogEntryType.Debug, _
 						NULL, _
@@ -201,7 +201,22 @@ Function ThreadPoolCallBack( _
 				Scope
 					Dim vtResponse As VARIANT = Any
 					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tConnection has been gracefully closed\r\n\r\n\r\n\r\n"))
+					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tEnd of file\r\n\r\n\r\n\r\n"))
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						NULL, _
+						@vtResponse _
+					)
+					VariantClear(@vtResponse)
+				End Scope
+				#endif
+				
+			Case ASYNCTASK_S_KEEPALIVE_FALSE
+				#if __FB_DEBUG__
+				Scope
+					Dim vtResponse As VARIANT = Any
+					vtResponse.vt = VT_BSTR
+					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tClient refused connection\r\n\r\n\r\n\r\n"))
 					LogWriteEntry( _
 						LogEntryType.Debug, _
 						NULL, _
