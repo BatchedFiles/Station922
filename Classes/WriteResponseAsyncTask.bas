@@ -26,41 +26,6 @@ Type _WriteResponseAsyncTask
 	pIResponse As IServerResponse Ptr
 End Type
 
-Function WriteResponseAsyncTaskFindWebSite( _
-		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
-	)As HRESULT
-	
-	/'
-	If HttpMethod = HttpMethods.HttpConnect Then
-		IWebSiteCollection_Item( _
-			this->pIWebSites, _
-			NULL, _
-			ppIWebSite _
-		)
-		Return S_OK
-	End If
-	'/
-	
-	Dim HeaderHost As HeapBSTR = Any
-	IClientRequest_GetHttpHeader( _
-		this->pIRequest, _
-		HttpRequestHeaders.HeaderHost, _
-		@HeaderHost _
-	)
-	
-	Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
-		this->pIWebSites, _
-		HeaderHost, _
-		ppIWebSite _
-	)
-	
-	HeapSysFreeString(HeaderHost)
-	
-	Return hrFindSite
-	
-End Function
-
 Sub InitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -519,8 +484,9 @@ Function WriteResponseAsyncTaskPrepare( _
 	Dim hrPrepareResponse As HRESULT = Any
 	
 	Dim pIWebSite As IWebSite Ptr = Any
-	Dim hrFindSite As HRESULT = WriteResponseAsyncTaskFindWebSite( _
-		this, _
+	Dim hrFindSite As HRESULT = FindWebSite( _
+		this->pIRequest, _
+		this->pIWebSites, _
 		@pIWebSite _
 	)
 	If FAILED(hrFindSite) Then

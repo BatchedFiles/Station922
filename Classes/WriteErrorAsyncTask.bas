@@ -1128,49 +1128,95 @@ Function WriteErrorAsyncTaskPrepare( _
 		)
 	End Scope
 	
-	/'
-	Dim Utf8Body As ZString * (MaxResponseBufferLength + 1) = Any
-	Dim ContentBodyLength As Integer = Any
-	
 	Scope
 		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
 		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
 		
-		Scope
-			
-			Dim VirtualPath As WString Ptr = Any
-			' If this->pIWebSites = NULL Then
-				VirtualPath = @WStr("/")
-			' Else
-				' IWebSite_GetVirtualPath(this->pIWebSite, @VirtualPath)
-			' End If
-			
-			Dim StatusCode As HttpStatusCodes = Any
-			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
-			
-			FormatErrorMessageBody( _
-				pIWriter, _
-				StatusCode, _
-				VirtualPath, _
-				this->BodyText, _
-				this->hrCode _
-			)
-		End Scope
+		Dim VirtualPath As HeapBSTR = Any
 		
-		ContentBodyLength = WideCharToMultiByte( _
-			CP_UTF8, _
+		Dim HeaderHost As HeapBSTR = Any
+		IClientRequest_GetHttpHeader( _
+			this->pIRequest, _
+			HttpRequestHeaders.HeaderHost, _
+			@HeaderHost _
+		)
+		If SysStringLen(HeaderHost) Then
+			Dim pIWebSite As IWebSite Ptr = Any
+			Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
+				this->pIWebSites, _
+				HeaderHost, _
+				@pIWebSite _
+			)
+			If FAILED(hrFindSite) Then
+				VirtualPath = HeapSysAllocStringLen( _
+					this->pIMemoryAllocator, _
+					@WStr("/"), _
+					1 _
+				)
+			Else
+				IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
+				IWebSite_Release(pIWebSite)
+			End If
+		Else
+			VirtualPath = HeapSysAllocStringLen( _
+				this->pIMemoryAllocator, _
+				@WStr("/"), _
+				1 _
+			)
+		End If
+		
+		HeapSysFreeString(HeaderHost)
+		
+		Dim StatusCode As HttpStatusCodes = Any
+		IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
+		
+		FormatErrorMessageBody( _
+			pIWriter, _
+			StatusCode, _
+			VirtualPath, _
+			this->BodyText, _
+			this->hrCode _
+		)
+		
+		HeapSysFreeString(VirtualPath)
+		
+		IArrayStringWriter_Release(pIWriter)
+		
+		this->SendBufferLength = WideCharToMultiByte( _
+			CP_ACP, _
 			0, _
 			@BodyBuffer, _
 			-1, _
-			@Utf8Body, _
-			MaxResponseBufferLength + 1, _
+			NULL, _
+			0, _
 			0, _
 			0 _
-		) - 1
+		)
 		
-		IArrayStringWriter_Release(pIWriter)
+		this->pSendBuffer = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			this->SendBufferLength _
+		)
+		If this->pSendBuffer = NULL Then
+			IRequestedFile_Release(pIFile)
+			IArrayStringWriter_Release(pIWriter)
+			Return E_OUTOFMEMORY
+		End If
+		
+		WideCharToMultiByte( _
+			CP_ACP, _
+			0, _
+			@BodyBuffer, _
+			-1, _
+			this->pSendBuffer, _
+			this->SendBufferLength, _
+			0, _
+			0 _
+		)
+		
+		this->SendBufferLength -= 1
 	End Scope
-	'/
+	
 	/'
 	Scope
 		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
@@ -1205,6 +1251,9 @@ Function WriteErrorAsyncTaskPrepare( _
 		
 	End Scope
 	'/
+	
+	IRequestedFile_Release(pIFile)
+	IArrayStringWriter_Release(pIWriter)
 	
 	Return S_OK
 	
