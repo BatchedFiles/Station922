@@ -62,6 +62,20 @@ Function FinishExecuteTask( _
 	Dim pTask As IAsyncIoTask Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
 	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtResponse As VARIANT = Any
+		vtResponse.vt = VT_BSTR
+		vtResponse.bstrVal = SysAllocString(WStr(!"IAsyncIoTask_EndExecute"))
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			NULL, _
+			@vtResponse _
+		)
+		VariantClear(@vtResponse)
+	End Scope
+	#endif
+	
 	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
 		pTask, _
 		pIResult, _
@@ -92,6 +106,20 @@ End Function
 Function StartExecuteTask( _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtResponse As VARIANT = Any
+		vtResponse.vt = VT_BSTR
+		vtResponse.bstrVal = SysAllocString(WStr(!"IAsyncIoTask_BeginExecute"))
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			NULL, _
+			@vtResponse _
+		)
+		VariantClear(@vtResponse)
+	End Scope
+	#endif
 	
 	Dim pIResult As IAsyncResult Ptr = Any
 	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
@@ -152,6 +180,20 @@ Function ThreadPoolCallBack( _
 		Select Case hrFinishExecute
 			
 			Case S_OK
+				#if __FB_DEBUG__
+				Scope
+					Dim vtResponse As VARIANT = Any
+					vtResponse.vt = VT_BSTR
+					vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						NULL, _
+						@vtResponse _
+					)
+					VariantClear(@vtResponse)
+				End Scope
+				#endif
+				
 				StartExecuteTask(pNextTask)
 				
 			Case S_FALSE
@@ -159,7 +201,7 @@ Function ThreadPoolCallBack( _
 				Scope
 					Dim vtResponse As VARIANT = Any
 					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tConnection has been gracefully closed"))
+					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tConnection has been gracefully closed\r\n\r\n\r\n\r\n"))
 					LogWriteEntry( _
 						LogEntryType.Debug, _
 						NULL, _
@@ -171,20 +213,6 @@ Function ThreadPoolCallBack( _
 				
 		End Select
 	End If
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtResponse As VARIANT = Any
-		vtResponse.vt = VT_BSTR
-		vtResponse.bstrVal = SysAllocString(WStr(!"\r\n\r\n\r\n\r\n"))
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			NULL, _
-			@vtResponse _
-		)
-		VariantClear(@vtResponse)
-	End Scope
-	#endif
 	
 	Return 0
 	
