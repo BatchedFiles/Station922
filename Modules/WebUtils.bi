@@ -4,7 +4,7 @@
 #include once "IClientRequest.bi"
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
-#include once "IWebSite.bi"
+#include once "IWebSiteCollection.bi"
 
 ' Заполняет буфер экранированной строкой, безопасной для html
 ' Принимающий буфер должен быть в 6 раз длиннее строки
@@ -60,5 +60,11 @@ Declare Sub AddResponseCacheHeaders( _
 	ByVal pIResponse As IServerResponse Ptr, _
 	ByVal hFile As HANDLE _
 )
+
+Declare Function FindWebSite( _
+	ByVal pIRequest As IClientRequest Ptr, _
+	ByVal pIWebSites As IWebSiteCollection Ptr, _
+	ByVal ppIWebSite As IWebSite Ptr Ptr _
+)As HRESULT
 
 #endif

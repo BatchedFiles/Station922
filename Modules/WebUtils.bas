@@ -4,6 +4,7 @@
 #include once "IWebServerConfiguration.bi"
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Mime.bi"
 #include once "StringConstants.bi"
@@ -663,5 +664,41 @@ Function GetBase64Sha1( _
 	CryptReleaseContext(hCryptProv, 0)
 	
 	Return True
+	
+End Function
+
+Function FindWebSite( _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
+	/'
+	If HttpMethod = HttpMethods.HttpConnect Then
+		IWebSiteCollection_Item( _
+			pIWebSites, _
+			NULL, _
+			ppIWebSite _
+		)
+		Return S_OK
+	End If
+	'/
+	
+	Dim HeaderHost As HeapBSTR = Any
+	IClientRequest_GetHttpHeader( _
+		pIRequest, _
+		HttpRequestHeaders.HeaderHost, _
+		@HeaderHost _
+	)
+	
+	Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
+		pIWebSites, _
+		HeaderHost, _
+		ppIWebSite _
+	)
+	
+	HeapSysFreeString(HeaderHost)
+	
+	Return hrFindSite
 	
 End Function
