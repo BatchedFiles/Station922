@@ -1,19 +1,27 @@
 #ifndef ISERVERRESPONSE_BI
 #define ISERVERRESPONSE_BI
 
-#include once "windows.bi"
-#include once "win\ole2.bi"
 #include once "Http.bi"
 #include once "IString.bi"
+#include once "IHttpWriter.bi"
 #include once "Mime.bi"
+
+' IServerResponse.BeginWriteResponse:
+' SERVERRESPONSE_S_IO_PENDING
+' Any E_FAIL — error
+Const SERVERRESPONSE_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
+
+' IServerResponse.EndWriteResponse:
+' S_OK — readed successful
+' S_FALSE — server closed connection (sended 0 bytes)
+' SERVERRESPONSE_S_IO_PENDING — write response add in queue
+' Any Error — readed error
 
 ' IServerResponse.Prepare:
 ' S_OK, E_FAIL
 Const SERVERRESPONSE_E_SITENOTFOUND As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0401)
 Const SERVERRESPONSE_E_SITEMOVED As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0402)
 Const SERVERRESPONSE_E_NOTIMPLEMENTED As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0403)
-
-Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
 
 Type IServerResponse As IServerResponse_
 
@@ -154,6 +162,32 @@ Type IServerResponseVirtualTable
 		ByVal Length As Integer _
 	)As HRESULT
 	
+	GetTextWriter As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal ppIWriter As IHttpWriter Ptr Ptr _
+	)As HRESULT
+	
+	SetTextWriter As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal pIWriter As IHttpWriter Ptr _
+	)As HRESULT
+	
+	BeginWriteResponse As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	EndWriteResponse As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr _
+	)As HRESULT
+	
+	Prepare As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal ContentLength As LongInt _
+	)As HRESULT
+	
 End Type
 
 Type IServerResponse_
@@ -185,5 +219,10 @@ End Type
 #define IServerResponse_AddKnownResponseHeader(this, HeaderIndex, Value) (this)->lpVtbl->AddKnownResponseHeader(this, HeaderIndex, Value)
 #define IServerResponse_AddKnownResponseHeaderWstr(this, HeaderIndex, Value) (this)->lpVtbl->AddKnownResponseHeaderWstr(this, HeaderIndex, Value)
 #define IServerResponse_AddKnownResponseHeaderWstrLen(this, HeaderIndex, Value, Length) (this)->lpVtbl->AddKnownResponseHeaderWstrLen(this, HeaderIndex, Value, Length)
+#define IServerResponse_GetTextWriter(this, ppIWriter) (this)->lpVtbl->GetTextWriter(this, ppIWriter)
+#define IServerResponse_SetTextWriter(this, pIWriter) (this)->lpVtbl->SetTextWriter(this, pIWriter)
+#define IServerResponse_BeginWriteResponse(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteResponse(this, StateObject, ppIAsyncResult)
+#define IServerResponse_EndWriteResponse(this, pIAsyncResult) (this)->lpVtbl->EndWriteResponse(this, pIAsyncResult)
+#define IServerResponse_Prepare(this, ContentLength) (this)->lpVtbl->Prepare(this, ContentLength)
 
 #endif

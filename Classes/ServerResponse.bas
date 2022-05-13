@@ -1,6 +1,5 @@
 #include once "ServerResponse.bi"
-#include once "IArrayStringWriter.bi"
-#include once "IStringable.bi"
+#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
@@ -11,20 +10,19 @@
 #include once "WebUtils.bi"
 
 Extern GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable
-Extern GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTable
 
-Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
+Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
 
 Type _ServerResponse
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IServerResponseVirtualTable Ptr
-	lpStringableVtbl As Const IStringableVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
+	pIWriter As IHttpWriter Ptr
 	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
-	pResponseHeaderBufferStringable As HeapBSTR
+	pResponseHeaderBufferStringable As ZString Ptr
 	HttpVersion As HttpVersions
 	StatusCode As HttpStatusCodes
 	StatusDescription As HeapBSTR
@@ -44,10 +42,10 @@ Sub InitializeServerResponse( _
 		CopyMemory(@this->IdString, @Str("Server__Response"), 16)
 	#endif
 	this->lpVtbl = @GlobalServerResponseVirtualTable
-	this->lpStringableVtbl = @GlobalServerResponseStringableVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->pIWriter = NULL
 	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(HeapBSTR))
 	this->pResponseHeaderBufferStringable = NULL
 	this->HttpVersion = HttpVersions.Http11
@@ -66,11 +64,23 @@ Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
+	If this->pIWriter <> NULL Then
+		IHttpWriter_Release(this->pIWriter)
+	End If
+	
 	For i As Integer = 0 To HttpResponseHeadersMaximum - 1
 		HeapSysFreeString(this->ResponseHeaders(i))
 	Next
+	
 	HeapSysFreeString(this->StatusDescription)
-	HeapSysFreeString(this->pResponseHeaderBufferStringable)
+	
+	If this->pResponseHeaderBufferStringable <> NULL Then
+		IMalloc_Free( _
+			this->pIMemoryAllocator, _
+			this->pResponseHeaderBufferStringable _
+		)
+	End If
+	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
@@ -171,15 +181,11 @@ Function ServerResponseQueryInterface( _
 	If IsEqualIID(@IID_IServerResponse, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IStringable, riid) Then
-			*ppv = @this->lpStringableVtbl
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -457,22 +463,179 @@ Function ServerResponseAddKnownResponseHeader( _
 	
 End Function
 
-Function ServerResponseStringableToString( _
+Function ServerResponseAddKnownResponseHeaderWstr( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal pLength As Integer Ptr, _
-		ByVal ppResult As WString Ptr Ptr _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr _
+	)As HRESULT
+	
+	Dim Length As Integer = lstrlenW(Value)
+	
+	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HeaderIndex, _
+		Value, _
+		Length _
+	)
+	
+	Return hr
+	
+End Function
+
+Function ServerResponseAddKnownResponseHeaderWstrLen( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr, _
+		ByVal Length As Integer _
+	)As HRESULT
+	
+	Dim hBstr As HeapBSTR = HeapSysAllocStringLen( _
+		this->pIMemoryAllocator, _
+		Value, _
+		Length _
+	)
+	
+	Dim hr As HRESULT = ServerResponseAddKnownResponseHeader( _
+		this, _
+		HeaderIndex, _
+		hBstr _
+	)
+	
+	HeapSysFreeString(hBstr)
+	
+	Return hr
+	
+End Function
+
+Function ServerResponseGetTextWriter( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal ppIWriter As IHttpWriter Ptr Ptr _
+	)As HRESULT
+	
+	If this->pIWriter <> NULL Then
+		IHttpWriter_AddRef(this->pIWriter)
+	End If
+	
+	*ppIWriter = this->pIWriter
+	
+	Return S_OK
+	
+End Function
+
+Function ServerResponseSetTextWriter( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal pIWriter As IHttpWriter Ptr _
+	)As HRESULT
+	
+	If pIWriter <> NULL Then
+		IHttpWriter_AddRef(pIWriter)
+	End If
+	
+	If this->pIWriter <> NULL Then
+		IHttpWriter_Release(this->pIWriter)
+	End If
+	
+	this->pIWriter = pIWriter
+	
+	Return S_OK
+	
+End Function
+
+Function ServerResponseBeginWriteResponse( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+		this->pIWriter, _
+		this->pResponseHeaderBufferStringable, _
+		StateObject, _
+		ppIAsyncResult _
+	)
+	If FAILED(hrBeginWrite) Then
+		Return hrBeginWrite
+	End If
+	
+	Return SERVERRESPONSE_S_IO_PENDING
+	
+End Function
+
+Function ServerResponseEndWriteResponse( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr _
+	)As HRESULT
+	
+	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+		this->pIWriter, _
+		pIAsyncResult _
+	)
+	If FAILED(hrEndWrite) Then
+		Return hrEndWrite
+	End If
+	
+	Select Case hrEndWrite
+		
+		Case S_OK
+			Return S_OK
+			
+		Case S_FALSE
+			Return S_FALSE
+			
+		Case HTTPWRITER_S_IO_PENDING
+			Return SERVERRESPONSE_S_IO_PENDING
+			
+	End Select
+	
+End Function
+
+Function ServerResponsePrepare( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal ContentLength As LongInt _
 	)As HRESULT
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hrCreateStringWriter As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_ARRAYSTRINGWRITER, _
 		@IID_IArrayStringWriter, _
 		@pIWriter _
 	)
-	If FAILED(hr) Then
-		Return hr
+	If FAILED(hrCreateStringWriter) Then
+		Return hrCreateStringWriter
 	End If
+	
+	ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HttpResponseHeaders.HeaderAcceptRanges, _
+		@BytesString, _
+		Len(BytesString) _
+	)
+	
+	Select Case this->StatusCode
+		
+		Case HttpStatusCodes.CodeContinue, _
+			HttpStatusCodes.SwitchingProtocols, _
+			HttpStatusCodes.Processing, _
+			HttpStatusCodes.NoContent
+			
+			ServerResponseAddKnownResponseHeader( _
+				this, _
+				HttpResponseHeaders.HeaderContentLength, _
+				NULL _
+			)
+			
+		Case Else
+			Dim strContentLength As WString * (64) = Any
+			_i64tow(ContentLength, @strContentLength, 10)
+			
+			ServerResponseAddKnownResponseHeaderWstr( _
+				this, _
+				HttpResponseHeaders.HeaderContentLength, _
+				@strContentLength _
+			)
+			
+	End Select
 	
 	If this->KeepAlive Then
 		ServerResponseAddKnownResponseHeaderWstrLen( _
@@ -501,6 +664,8 @@ Function ServerResponseStringableToString( _
 	End Scope
 	
 	Dim HeadersBuffer As WString * (MaxResponseBufferLength + 1) = Any
+	Dim HeadersBufferLength As Integer = Any
+	
 	Scope
 		IArrayStringWriter_SetBuffer(pIWriter, @HeadersBuffer, MaxResponseBufferLength)
 		
@@ -560,24 +725,17 @@ Function ServerResponseStringableToString( _
 		
 		IArrayStringWriter_WriteNewLine(pIWriter)
 		
-		IArrayStringWriter_GetBufferLength(pIWriter, pLength)
+		IArrayStringWriter_GetLength(pIWriter, @HeadersBufferLength)
 		
-		IArrayStringWriter_Release(pIWriter)
 	End Scope
 	
-	this->pResponseHeaderBufferStringable = HeapSysAllocStringLen( _
-		this->pIMemoryAllocator, _
-		@HeadersBuffer, _
-		*pLength _
-	)
-	
-	*ppResult = this->pResponseHeaderBufferStringable
+	IArrayStringWriter_Release(pIWriter)
 	
 	#if __FB_DEBUG__
 	Scope
 		Dim vtResponse As VARIANT = Any
 		vtResponse.vt = VT_BSTR
-		vtResponse.bstrVal = SysAllocString(this->pResponseHeaderBufferStringable)
+		vtResponse.bstrVal = SysAllocString(HeadersBuffer)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
 			NULL, _
@@ -587,51 +745,26 @@ Function ServerResponseStringableToString( _
 	End Scope
 	#endif
 	
-	Return S_OK
-	
-End Function
-
-Function ServerResponseAddKnownResponseHeaderWstr( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr _
-	)As HRESULT
-	
-	Dim Length As Integer = lstrlenW(Value)
-	
-	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
-		HeaderIndex, _
-		Value, _
-		Length _
-	)
-	
-	Return hr
-	
-End Function
-
-Function ServerResponseAddKnownResponseHeaderWstrLen( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr, _
-		ByVal Length As Integer _
-	)As HRESULT
-	
-	Dim hBstr As HeapBSTR = HeapSysAllocStringLen( _
+	this->pResponseHeaderBufferStringable = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
-		Value, _
-		Length _
+		HeadersBufferLength _
+	)
+	If this->pResponseHeaderBufferStringable = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	WideCharToMultiByte( _
+		CP_ACP, _
+		0, _
+		@HeadersBuffer, _
+		HeadersBufferLength, _
+		this->pResponseHeaderBufferStringable, _
+		HeadersBufferLength, _
+		0, _
+		0 _
 	)
 	
-	Dim hr As HRESULT = ServerResponseAddKnownResponseHeader( _
-		this, _
-		HeaderIndex, _
-		hBstr _
-	)
-	
-	HeapSysFreeString(hBstr)
-	
-	Return hr
+	Return S_OK
 	
 End Function
 
@@ -843,39 +976,4 @@ Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type
 	@IServerResponseAddKnownResponseHeader, _
 	@IServerResponseAddKnownResponseHeaderWstr, _
 	@IServerResponseAddKnownResponseHeaderWstrLen _
-)
-
-Function IServerResponseStringableQueryInterface( _
-		ByVal this As IStringable Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppvObject As Any Ptr Ptr _
-	)As HRESULT
-	Return ServerResponseQueryInterface(ContainerOf(this, ServerResponse, lpStringableVtbl), riid, ppvObject)
-End Function
-
-Function IServerResponseStringableAddRef( _
-		ByVal this As IStringable Ptr _
-	)As ULONG
-	Return ServerResponseAddRef(ContainerOf(this, ServerResponse, lpStringableVtbl))
-End Function
-
-Function IServerResponseStringableRelease( _
-		ByVal this As IStringable Ptr _
-	)As ULONG
-	Return ServerResponseRelease(ContainerOf(this, ServerResponse, lpStringableVtbl))
-End Function
-
-Function IServerResponseStringableToString( _
-		ByVal this As IStringable Ptr, _
-		ByVal pLength As Integer Ptr, _
-		ByVal ppResult As WString Ptr Ptr _
-	)As HRESULT
-	Return ServerResponseStringableToString(ContainerOf(this, ServerResponse, lpStringableVtbl), pLength, ppResult)
-End Function
-
-Dim GlobalServerResponseStringableVirtualTable As Const IStringableVirtualTable = Type( _
-	@IServerResponseStringableQueryInterface, _
-	@IServerResponseStringableAddRef, _
-	@IServerResponseStringableRelease, _
-	@IServerResponseStringableToString _
 )

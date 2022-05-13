@@ -148,24 +148,30 @@ Declare Function ServerResponseAddKnownResponseHeaderWstrLen( _
 	ByVal Length As Integer _
 )As HRESULT
 
-Declare Function ServerResponseStringableQueryInterface( _
+Declare Function ServerResponseGetTextWriter( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
+	ByVal ppIWriter As IHttpWriter Ptr Ptr _
 )As HRESULT
 
-Declare Function ServerResponseStringableAddRef( _
-	ByVal this As ServerResponse Ptr _
-)As ULONG
-
-Declare Function ServerResponseStringableRelease( _
-	ByVal this As ServerResponse Ptr _
-)As ULONG
-
-Declare Function ServerResponseStringableToString( _
+Declare Function ServerResponseSetTextWriter( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal pLength As Integer Ptr, _
-	ByVal ppResult As WString Ptr Ptr _
+	ByVal pIWriter As IHttpWriter Ptr _
+)As HRESULT
+
+Declare Function ServerResponseBeginWriteResponse( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal StateObject As IUnknown Ptr, _
+	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+)As HRESULT
+
+Declare Function ServerResponseEndWriteResponse( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal pIAsyncResult As IAsyncResult Ptr _
+)As HRESULT
+
+Declare Function ServerResponsePrepare( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal ContentLength As LongInt _
 )As HRESULT
 
 #endif
