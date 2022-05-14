@@ -341,7 +341,7 @@ Function AcceptConnection( _
 		WSA_INFINITE, _
 		False _
 	)
-
+	
 	If dwIndex <> WSA_WAIT_FAILED Then
 		
 		Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
