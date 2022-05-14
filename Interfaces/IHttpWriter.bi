@@ -5,6 +5,14 @@
 #include once "IBaseStream.bi"
 #include once "IBuffer.bi"
 
+' ITextWriter.BeginWrite:
+' HTTPWRITER_S_IO_PENDING, Any E_FAIL
+
+' ITextWriter.EndWrite:
+' S_OK, S_FALSE, HTTPWRITER_S_IO_PENDING, Any E_FAIL
+
+Const HTTPWRITER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
+
 Type IHttpWriter As IHttpWriter_
 
 Type LPIHTTPWRITER As IHttpWriter Ptr
@@ -49,7 +57,7 @@ Type IHttpWriterVirtualTable
 	
 	BeginWrite As Function( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal Headers As HeapBSTR, _
+		ByVal Headers As LPVOID, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
