@@ -41,13 +41,6 @@ Declare Sub GetETag( _
 	ByVal ResponseZipMode As ZipModes _
 )
 
-Declare Function AllResponseHeadersToBytes( _
-	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal zBuffer As ZString Ptr, _
-	ByVal ContentLength As ULongInt _
-)As Integer
-
 Declare Function SetResponseCompression( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _
