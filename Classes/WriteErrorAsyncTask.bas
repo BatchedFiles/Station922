@@ -5,9 +5,10 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
+#include once "HttpWriter.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
-#include once "RequestedFile.bi"
+#include once "MemoryBuffer.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 
@@ -70,8 +71,8 @@ Type _WriteErrorAsyncTask
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pSendBuffer As ZString Ptr
-	SendBufferLength As Integer
+	pIBuffer As IMemoryBuffer Ptr
+	pIHttpWriter As IHttpWriter Ptr
 	BodyText As WString Ptr
 	HttpError As ResponseErrorCode
 	hrCode As HRESULT
@@ -564,7 +565,9 @@ End Sub
 Sub InitializeWriteErrorAsyncTask( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIResponse As IServerResponse Ptr _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal pIBuffer As IMemoryBuffer Ptr, _
+		ByVal pIHttpWriter As IHttpWriter Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -580,7 +583,10 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->pIStream = NULL
 	this->pIRequest = NULL
 	this->pIResponse = pIResponse
-	this->pSendBuffer = NULL
+	this->pIBuffer = pIBuffer
+	this->pIHttpWriter = pIHttpWriter
+	IHttpWriter_SetBuffer(pIHttpWriter, CPtr(IBuffer Ptr, pIBuffer))
+	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
 	this->HttpError = ResponseErrorCode.InternalServerError
 	this->hrCode = E_UNEXPECTED
 	
@@ -589,14 +595,6 @@ End Sub
 Sub UnInitializeWriteErrorAsyncTask( _
 		ByVal this As WriteErrorAsyncTask Ptr _
 	)
-	
-	If this->pSendBuffer <> NULL Then
-		IMalloc_Free(this->pIMemoryAllocator, this->pSendBuffer)
-	End If
-	
-	If this->pIResponse <> NULL Then
-		IServerResponse_Release(this->pIResponse)
-	End If
 	
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
@@ -616,6 +614,18 @@ Sub UnInitializeWriteErrorAsyncTask( _
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
+	End If
+	
+	If this->pIBuffer <> NULL Then
+		IMemoryBuffer_Release(this->pIBuffer)
+	End If
+	
+	If this->pIHttpWriter <> NULL Then
+		IHttpWriter_Release(this->pIHttpWriter)
+	End If
+	
+	If this->pIResponse <> NULL Then
+		IServerResponse_Release(this->pIResponse)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
@@ -639,44 +649,72 @@ Function CreateWriteErrorAsyncTask( _
 	End Scope
 	#endif
 	
-	Dim pIResponse As IServerResponse Ptr = Any
-	Dim hrCreateRequest As HRESULT = CreateInstance( _
+	Dim pIHttpWriter As IHttpWriter Ptr = Any
+	Dim hrCreateWriter As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
-		@CLSID_SERVERRESPONSE, _
-		@IID_IServerResponse, _
-		@pIResponse _
+		@CLSID_HTTPWRITER, _
+		@IID_IHttpWriter, _
+		@pIHttpWriter _
 	)
 	
-	If SUCCEEDED(hrCreateRequest) Then
+	If SUCCEEDED(hrCreateWriter) Then
 		
-		Dim this As WriteErrorAsyncTask Ptr = IMalloc_Alloc( _
+		Dim pIResponse As IServerResponse Ptr = Any
+		Dim hrCreateResponse As HRESULT = CreateInstance( _
 			pIMemoryAllocator, _
-			SizeOf(WriteErrorAsyncTask) _
+			@CLSID_SERVERRESPONSE, _
+			@IID_IServerResponse, _
+			@pIResponse _
 		)
 		
-		If this <> NULL Then
-			InitializeWriteErrorAsyncTask( _
-				this, _
+		If SUCCEEDED(hrCreateResponse) Then
+			
+			Dim pIBuffer As IMemoryBuffer Ptr = Any
+			Dim hrCreateBuffer As HRESULT = CreateInstance( _
 				pIMemoryAllocator, _
-				pIResponse _
+				@CLSID_MEMORYBUFFER, _
+				@IID_IMemoryBuffer, _
+				@pIBuffer _
 			)
 			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("WriteErrorAsyncTask created"), _
-					@vtEmpty _
+			If SUCCEEDED(hrCreateBuffer) Then
+				
+				Dim this As WriteErrorAsyncTask Ptr = IMalloc_Alloc( _
+					pIMemoryAllocator, _
+					SizeOf(WriteErrorAsyncTask) _
 				)
-			End Scope
-			#endif
+				
+				If this <> NULL Then
+					InitializeWriteErrorAsyncTask( _
+						this, _
+						pIMemoryAllocator, _
+						pIResponse, _
+						pIBuffer, _
+						pIHttpWriter _
+					)
+					
+					#if __FB_DEBUG__
+					Scope
+						Dim vtEmpty As VARIANT = Any
+						VariantInit(@vtEmpty)
+						LogWriteEntry( _
+							LogEntryType.Debug, _
+							WStr("WriteErrorAsyncTask created"), _
+							@vtEmpty _
+						)
+					End Scope
+					#endif
+					
+					Return this
+				End If
+				
+				IMemoryBuffer_Release(pIBuffer)
+			End If
 			
-			Return this
+			IServerResponse_Release(pIResponse)
 		End If
 		
-		IServerResponse_Release(pIResponse)
+		IHttpWriter_Release(pIHttpWriter)
 	End If
 	
 	Return NULL
@@ -792,17 +830,19 @@ Function WriteErrorAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hr As HRESULT = IBaseStream_BeginWrite( _
-		this->pIStream, _
-		this->pSendBuffer, _
-		Cast(DWORD, this->SendBufferLength), _
-		NULL, _
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	Dim hrBeginWriteResponse As HRESULT = IServerResponse_BeginWriteResponse( _
+		this->pIResponse, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
-	If FAILED(hr) Then
-		Return hr
+	If FAILED(hrBeginWriteResponse) Then
+		Return hrBeginWriteResponse
 	End If
+	
+	' Ссылка на this сохранена в pIAsyncResult
+	' Ссылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
+	' Ссылку на OVERLAPPED возвратит функция GetQueuedCompletionStatus бассейну потоков
 	
 	Return ASYNCTASK_S_IO_PENDING
 	
@@ -815,11 +855,9 @@ Function WriteErrorAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	Dim dwBytes As DWORD = Any
-	Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
-		this->pIStream, _
-		pIResult, _
-		@dwBytes _
+	Dim hrEndWrite As HRESULT = IServerResponse_EndWriteResponse( _
+		this->pIResponse, _
+		pIResult _
 	)
 	If FAILED(hrEndWrite) Then
 		*ppNextTask = NULL
@@ -869,7 +907,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			*ppNextTask = NULL
 			Return S_FALSE
 			
-		Case BASESTREAM_S_IO_PENDING
+		Case SERVERRESPONSE_S_IO_PENDING
 			' Продолжить отправку ответа
 			WriteErrorAsyncTaskAddRef(this)
 			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
@@ -1083,18 +1121,6 @@ Function WriteErrorAsyncTaskPrepare( _
 		Return hrCreateArrayStringWriter
 	End If
 	
-	Dim pIFile As IRequestedFile Ptr = Any
-	Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_REQUESTEDFILE, _
-		@IID_IRequestedFile, _
-		@pIFile _
-	)
-	If FAILED(hrCreateRequestedFile) Then
-		IArrayStringWriter_Release(pIWriter)
-		Return hrCreateRequestedFile
-	End If
-	
 	WriteErrorAsyncTaskSetBodyText(this)
 	
 	Scope
@@ -1128,132 +1154,115 @@ Function WriteErrorAsyncTaskPrepare( _
 		)
 	End Scope
 	
+	Dim SendBufferLength As Integer = Any
+	
 	Scope
 		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
 		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
 		
-		Dim VirtualPath As HeapBSTR = Any
-		
-		Dim HeaderHost As HeapBSTR = Any
-		IClientRequest_GetHttpHeader( _
-			this->pIRequest, _
-			HttpRequestHeaders.HeaderHost, _
-			@HeaderHost _
-		)
-		If SysStringLen(HeaderHost) Then
-			Dim pIWebSite As IWebSite Ptr = Any
-			Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
-				this->pIWebSites, _
-				HeaderHost, _
-				@pIWebSite _
+		Scope
+			Dim VirtualPath As HeapBSTR = Any
+			
+			Dim HeaderHost As HeapBSTR = Any
+			IClientRequest_GetHttpHeader( _
+				this->pIRequest, _
+				HttpRequestHeaders.HeaderHost, _
+				@HeaderHost _
 			)
-			If FAILED(hrFindSite) Then
+			If SysStringLen(HeaderHost) Then
+				Dim pIWebSite As IWebSite Ptr = Any
+				Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
+					this->pIWebSites, _
+					HeaderHost, _
+					@pIWebSite _
+				)
+				If FAILED(hrFindSite) Then
+					VirtualPath = HeapSysAllocStringLen( _
+						this->pIMemoryAllocator, _
+						@WStr("/"), _
+						1 _
+					)
+				Else
+					IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
+					IWebSite_Release(pIWebSite)
+				End If
+			Else
 				VirtualPath = HeapSysAllocStringLen( _
 					this->pIMemoryAllocator, _
 					@WStr("/"), _
 					1 _
 				)
-			Else
-				IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
-				IWebSite_Release(pIWebSite)
 			End If
-		Else
-			VirtualPath = HeapSysAllocStringLen( _
-				this->pIMemoryAllocator, _
-				@WStr("/"), _
-				1 _
+			
+			HeapSysFreeString(HeaderHost)
+			
+			Dim StatusCode As HttpStatusCodes = Any
+			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
+			
+			FormatErrorMessageBody( _
+				pIWriter, _
+				StatusCode, _
+				VirtualPath, _
+				this->BodyText, _
+				this->hrCode _
 			)
-		End If
+			
+			HeapSysFreeString(VirtualPath)
+		End Scope
 		
-		HeapSysFreeString(HeaderHost)
+		Dim BodyLength As Integer = Any
+		IArrayStringWriter_GetLength(pIWriter, @BodyLength)
 		
-		Dim StatusCode As HttpStatusCodes = Any
-		IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
-		
-		FormatErrorMessageBody( _
-			pIWriter, _
-			StatusCode, _
-			VirtualPath, _
-			this->BodyText, _
-			this->hrCode _
-		)
-		
-		HeapSysFreeString(VirtualPath)
-		
-		IArrayStringWriter_Release(pIWriter)
-		
-		this->SendBufferLength = WideCharToMultiByte( _
+		SendBufferLength = WideCharToMultiByte( _
 			CP_ACP, _
 			0, _
 			@BodyBuffer, _
-			-1, _
+			BodyLength, _
 			NULL, _
 			0, _
 			0, _
 			0 _
 		)
 		
-		this->pSendBuffer = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
-			this->SendBufferLength _
+		Dim hrAllocBuffer As HRESULT = IMemoryBuffer_AllocBuffer( _
+			this->pIBuffer, _
+			SendBufferLength _
 		)
-		If this->pSendBuffer = NULL Then
-			IRequestedFile_Release(pIFile)
+		If FAILED(hrAllocBuffer) Then
 			IArrayStringWriter_Release(pIWriter)
 			Return E_OUTOFMEMORY
 		End If
+		
+		Dim Slice As BufferSlice = Any
+		IMemoryBuffer_GetSlice( _
+			this->pIBuffer, _
+			0, _
+			SendBufferLength, _
+			@Slice _
+		)
 		
 		WideCharToMultiByte( _
 			CP_ACP, _
 			0, _
 			@BodyBuffer, _
-			-1, _
-			this->pSendBuffer, _
-			this->SendBufferLength, _
+			BodyLength, _
+			Slice.pSlice, _
+			SendBufferLength, _
 			0, _
 			0 _
 		)
 		
-		this->SendBufferLength -= 1
 	End Scope
 	
-	/'
-	Scope
-		Dim SendBuffer As ZString * (MaxResponseBufferLength * 2 + 1) = Any
-		Dim HeadersBufferLength As Integer = AllResponseHeadersToBytes( _
-			this->pIRequest, _
-			this->pIResponse, _
-			@SendBuffer, _
-			ContentBodyLength _
-		)
-		
-		this->SendBufferLength = HeadersBufferLength + ContentBodyLength
-		
-		this->pSendBuffer = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
-			this->SendBufferLength _
-		)
-		If this->pSendBuffer = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		CopyMemory( _
-			@SendBuffer[HeadersBufferLength], _
-			@Utf8Body, _
-			ContentBodyLength _
-		)
-		
-		CopyMemory( _
-			this->pSendBuffer, _
-			@SendBuffer[0], _
-			this->SendBufferLength _
-		)
-		
-	End Scope
-	'/
-	
-	IRequestedFile_Release(pIFile)
 	IArrayStringWriter_Release(pIWriter)
+	
+	Dim hrPrepareResponse As HRESULT = IServerResponse_Prepare( _
+		this->pIResponse, _
+		SendBufferLength _
+	)
+	If FAILED(hrPrepareResponse) Then
+		Return hrPrepareResponse
+	End If
 	
 	Return S_OK
 	
