@@ -90,10 +90,10 @@ Type IArrayStringWriterVirtualTable
 	SetBuffer As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal Buffer As WString Ptr, _
-		ByVal MaxBufferLength As Integer _
+		ByVal Capacity As Integer _
 	)As HRESULT
 	
-	GetBufferLength As Function( _
+	GetLength As Function( _
 		ByVal this As IArrayStringWriter Ptr, _
 		ByVal pLength As Integer Ptr _
 	)As HRESULT
@@ -123,6 +123,6 @@ End Type
 #define IArrayStringWriter_WriteInt64(this, Value) (this)->lpVtbl->WriteInt64(this, Value)
 #define IArrayStringWriter_WriteUInt64(this, Value) (this)->lpVtbl->WriteUInt64(this, Value)
 #define IArrayStringWriter_SetBuffer(this, Buffer, MaxBufferLength) (this)->lpVtbl->SetBuffer(this, Buffer, MaxBufferLength)
-#define IArrayStringWriter_GetBufferLength(this, pLength) (this)->lpVtbl->GetBufferLength(this, pLength)
+#define IArrayStringWriter_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 
 #endif

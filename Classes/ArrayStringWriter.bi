@@ -95,10 +95,10 @@ Declare Function ArrayStringWriterSetCodePage( _
 Declare Function ArrayStringWriterSetBuffer( _
 	ByVal this As ArrayStringWriter Ptr, _
 	ByVal Buffer As WString Ptr, _
-	ByVal MaxBufferLength As Integer _
+	ByVal Capacity As Integer _
 )As HRESULT
 
-Declare Function ArrayStringWriterGetBufferLength( _
+Declare Function ArrayStringWriterGetLength( _
 	ByVal this As ArrayStringWriter Ptr, _
 	ByVal pLength As Integer Ptr _
 )As HRESULT
