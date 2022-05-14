@@ -59,6 +59,6 @@ End Type
 #define IBuffer_Release(this) (this)->lpVtbl->Release(this)
 #define IBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
-#define IBuffer_GetSlice(this, StartIndex, Length, pLength, ppSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pLength, ppSlice)
+#define IBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 
 #endif
