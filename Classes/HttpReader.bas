@@ -173,11 +173,11 @@ Sub UnInitializeHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-	IMalloc_Free(this->pIMemoryAllocator, this->pReadedData)
-	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
 	End If
+	
+	IMalloc_Free(this->pIMemoryAllocator, this->pReadedData)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	

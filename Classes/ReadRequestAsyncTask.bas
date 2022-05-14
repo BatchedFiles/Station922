@@ -48,10 +48,6 @@ Sub UnInitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)
 	
-	If this->pIRequest <> NULL Then
-		IClientRequest_Release(this->pIRequest)
-	End If
-	
 	If this->pIStream <> NULL Then
 		IBaseStream_Release(this->pIStream)
 	End If
@@ -66,6 +62,10 @@ Sub UnInitializeReadRequestAsyncTask( _
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
+	End If
+	
+	If this->pIRequest <> NULL Then
+		IClientRequest_Release(this->pIRequest)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)

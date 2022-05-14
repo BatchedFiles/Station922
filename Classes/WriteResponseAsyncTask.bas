@@ -52,10 +52,6 @@ Sub UnInitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr _
 	)
 	
-	If this->pIResponse <> NULL Then
-		IServerResponse_Release(this->pIResponse)
-	End If
-	
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
 	End If
@@ -74,6 +70,10 @@ Sub UnInitializeWriteResponseAsyncTask( _
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
+	End If
+	
+	If this->pIResponse <> NULL Then
+		IServerResponse_Release(this->pIResponse)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
