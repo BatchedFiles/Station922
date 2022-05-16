@@ -38,13 +38,14 @@ Type IMemoryBufferVirtualTable
 	GetSlice As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As LongInt, _
+		ByVal Length As DWORD, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	
 	AllocBuffer As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
-		ByVal Length As LongInt _
+		ByVal Length As LongInt, _
+		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 	
 End Type
@@ -59,6 +60,6 @@ End Type
 #define IMemoryBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IMemoryBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IMemoryBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
-#define IMemoryBuffer_AllocBuffer(this, Length) (this)->lpVtbl->AllocBuffer(this, Length)
+#define IMemoryBuffer_AllocBuffer(this, Length, ppBuffer) (this)->lpVtbl->AllocBuffer(this, Length, ppBuffer)
 
 #endif

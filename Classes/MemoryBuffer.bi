@@ -44,8 +44,14 @@ Declare Function MemoryBufferGetLength( _
 Declare Function MemoryBufferGetSlice( _
 	ByVal this As MemoryBuffer Ptr, _
 	ByVal StartIndex As LongInt, _
-	ByVal Length As LongInt, _
+	ByVal Length As DWORD, _
 	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferAllocBuffer( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal Length As LongInt, _
+	ByVal ppBuffer As Any Ptr Ptr _
 )As HRESULT
 
 #endif
