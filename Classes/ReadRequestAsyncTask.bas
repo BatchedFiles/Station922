@@ -292,7 +292,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 	Select Case hrEndReadRequest
 		
 		Case S_OK
-			
 			Scope
 				Dim hrParse As HRESULT = IClientRequest_Parse(this->pIRequest)
 				If FAILED(hrParse) Then
