@@ -7,6 +7,8 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpReader.bi"
+#include once "HttpWriter.bi"
+#include once "MemoryBuffer.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "RequestedFile.bi"
@@ -135,6 +137,34 @@ Function CreateInstance( _
 		Dim hr As HRESULT = HttpReaderQueryInterface(pReader, riid, ppv)
 		If FAILED(hr) Then
 			DestroyHttpReader(pReader)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_HTTPWRITER, rclsid) Then
+		Dim pWriter As HttpWriter Ptr = CreateHttpWriter(pIMemoryAllocator)
+		If pWriter = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpWriterQueryInterface(pWriter, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpWriter(pWriter)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_MEMORYBUFFER, rclsid) Then
+		Dim pBuffer As MemoryBuffer Ptr = CreateMemoryBuffer(pIMemoryAllocator)
+		If pBuffer = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = MemoryBufferQueryInterface(pBuffer, riid, ppv)
+		If FAILED(hr) Then
+			DestroyMemoryBuffer(pBuffer)
 		End If
 		
 		Return hr
