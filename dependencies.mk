@@ -133,6 +133,32 @@ $(OBJ_RELEASE_DIR)\HttpReader$(FILE_SUFFIX_TEST).c: Classes\HttpReader.bas Class
 $(OBJ_DEBUG_DIR)\HttpReader$(FILE_SUFFIX_TEST).c:   Classes\HttpReader.bas Classes\HttpReader.bi Interfaces\IHttpReader.bi Interfaces\IBaseStream.bi Interfaces\IAsyncResult.bi Interfaces\IString.bi Classes\ContainerOf.bi Classes\HeapBSTR.bi Modules\Logger.bi
 
 
+$(OBJ_RELEASE_DIR)\HttpWriter$(FILE_SUFFIX_CONSOLE).c: Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+$(OBJ_DEBUG_DIR)\HttpWriter$(FILE_SUFFIX_CONSOLE).c:   Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+$(OBJ_RELEASE_DIR)\HttpWriter$(FILE_SUFFIX_SERVICE).c: Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+$(OBJ_DEBUG_DIR)\HttpWriter$(FILE_SUFFIX_SERVICE).c:   Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+$(OBJ_RELEASE_DIR)\HttpWriter$(FILE_SUFFIX_TEST).c: Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+$(OBJ_DEBUG_DIR)\HttpWriter$(FILE_SUFFIX_TEST).c:   Classes\HttpWriter.bas Classes\HttpWriter.bi
+
+
+$(OBJ_RELEASE_DIR)\MemoryBuffer$(FILE_SUFFIX_CONSOLE).c: Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+$(OBJ_DEBUG_DIR)\MemoryBuffer$(FILE_SUFFIX_CONSOLE).c:   Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+$(OBJ_RELEASE_DIR)\MemoryBuffer$(FILE_SUFFIX_SERVICE).c: Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+$(OBJ_DEBUG_DIR)\MemoryBuffer$(FILE_SUFFIX_SERVICE).c:   Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+$(OBJ_RELEASE_DIR)\MemoryBuffer$(FILE_SUFFIX_TEST).c: Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+$(OBJ_DEBUG_DIR)\MemoryBuffer$(FILE_SUFFIX_TEST).c:   Classes\MemoryBuffer.bas Classes\MemoryBuffer.bi
+
+
 $(OBJ_RELEASE_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c: Classes\NetworkStream.bas Classes\NetworkStream.bi Interfaces\INetworkStream.bi Interfaces\IBaseStream.bi Interfaces\IAsyncResult.bi Interfaces\IMutableAsyncResult.bi Classes\ContainerOf.bi Classes\CreateInstance.bi Modules\Logger.bi Modules\Network.bi
  
 $(OBJ_DEBUG_DIR)\NetworkStream$(FILE_SUFFIX_CONSOLE).c:   Classes\NetworkStream.bas Classes\NetworkStream.bi Interfaces\INetworkStream.bi Interfaces\IBaseStream.bi Interfaces\IAsyncResult.bi Interfaces\IMutableAsyncResult.bi Classes\ContainerOf.bi Classes\CreateInstance.bi Modules\Logger.bi Modules\Network.bi

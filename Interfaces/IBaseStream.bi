@@ -5,12 +5,6 @@
 
 Const BASESTREAM_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
-Enum SeekOrigin
-	SeekBegin
-	SeekCurrent
-	SeekEnd
-End Enum
-
 ' IBaseStream.Read:
 ' S_OK, S_FALSE, E_FAIL
 
@@ -20,6 +14,22 @@ End Enum
 ' IBaseStream.EndRead:
 ' S_OK, S_FALSE, BASESTREAM_S_IO_PENDING, E_FAIL
 
+' IBaseStream.BeginWrite:
+' BASESTREAM_S_IO_PENDING, Any E_FAIL
+
+' IBaseStream.EndWrite:
+' S_OK, S_FALSE, BASESTREAM_S_IO_PENDING, E_FAIL
+
+Enum SeekOrigin
+	SeekBegin
+	SeekCurrent
+	SeekEnd
+End Enum
+
+Type BaseStreamBuffer
+	Buffer As LPVOID
+	Length As DWORD
+End Type
 
 Type IBaseStream As IBaseStream_
 
@@ -127,6 +137,24 @@ Type IBaseStreamVirtualTable
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	
+	BeginReadScatter As Function( _
+		ByVal this As IBaseStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	BeginWriteGather As Function( _
+		ByVal this As IBaseStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IBaseStream_
@@ -151,5 +179,7 @@ End Type
 #define IBaseStream_BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
 #define IBaseStream_EndRead(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndRead(this, pIAsyncResult, pReadedBytes)
 #define IBaseStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
+#define IBaseStream_BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
 
 #endif

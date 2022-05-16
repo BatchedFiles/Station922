@@ -423,6 +423,30 @@ Function NetworkStreamBeginWrite( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	Dim buf As BaseStreamBuffer = Any
+	buf.Buffer = Buffer
+	buf.Length = Count
+	
+	Return NetworkStreamBeginWriteGather( _
+		this, _
+		@buf, _
+		1, _
+		callback, _
+		StateObject, _
+		ppIAsyncResult _
+	)
+	
+End Function
+
+Function NetworkStreamBeginWriteGather( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal BuffersCount As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
@@ -431,6 +455,16 @@ Function NetworkStreamBeginWrite( _
 		@pINewAsyncResult _
 	)
 	If FAILED(hr) Then
+		*ppIAsyncResult = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim pSendBuffers As WSABUF Ptr = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		SizeOf(WSABUF) * BuffersCount _
+	)
+	If pSendBuffers = NULL Then
+		IMutableAsyncResult_Release(pINewAsyncResult)
 		*ppIAsyncResult = NULL
 		Return E_OUTOFMEMORY
 	End If
@@ -469,17 +503,18 @@ Function NetworkStreamBeginWrite( _
 		lpCompletionRoutine = NULL
 	End If
 	
-	Dim SendBuffer As WSABUF = Any
-	SendBuffer.len = Cast(ULONG, Count)
-	SendBuffer.buf = CPtr(ZString Ptr, Buffer)
+	For i As DWORD = 0 To BuffersCount - 1
+		pSendBuffers[i].len = Cast(ULONG, pBuffer[i].Length)
+		pSendBuffers[i].buf = Cast(CHAR Ptr, pBuffer[i].Buffer)
+	Next
 	
-	Const BuffersCount As DWORD = 1
 	Const lpNumberOfBytesSend As LPDWORD = NULL
-	Dim Flags As DWORD = 0
+	
+	Const Flags As DWORD = 0
 	
 	Dim WSASendResult As Long = WSASend( _
 		this->ClientSocket, _
-		@SendBuffer, _
+		pSendBuffers, _
 		BuffersCount, _
 		lpNumberOfBytesSend, _
 		Flags, _
@@ -487,12 +522,17 @@ Function NetworkStreamBeginWrite( _
 		lpCompletionRoutine _
 	)
 	
+	IMalloc_Free( _
+		this->pIMemoryAllocator, _
+		pSendBuffers _
+	)
+	
 	If WSASendResult <> 0 Then
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then
-			*ppIAsyncResult = NULL
 			IMutableAsyncResult_Release(pINewAsyncResult)
+			*ppIAsyncResult = NULL
 			Return HRESULT_FROM_WIN32(intError)
 		End If
 		
@@ -749,6 +789,17 @@ Function INetworkStreamEndWrite( _
 	Return NetworkStreamEndWrite(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
 End Function
 
+Function INetworkStreamBeginWriteGather( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, callback, StateObject, ppIAsyncResult)
+End Function
+
 Function INetworkStreamGetSocket( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
@@ -803,6 +854,8 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamBeginWrite, _ 
 	@INetworkStreamEndRead, _
 	@INetworkStreamEndWrite, _
+	NULL, _ /' BeginReadScatter '/
+	@INetworkStreamBeginWriteGather, _
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
 	@INetworkStreamGetRemoteAddress, _

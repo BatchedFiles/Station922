@@ -6,7 +6,7 @@
 
 Type BufferSlice
 	pSlice As LPVOID
-	Length As LongInt
+	Length As DWORD
 End Type
 
 Type IBuffer As IBuffer_
@@ -44,7 +44,7 @@ Type IBufferVirtualTable
 	GetSlice As Function( _
 		ByVal this As IBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As LongInt, _
+		ByVal Length As DWORD, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	
