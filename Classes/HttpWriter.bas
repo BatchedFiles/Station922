@@ -452,7 +452,6 @@ Function HttpWriterBeginWrite( _
 		TRANSMIT_CHUNK_SIZE, _
 		@Slice _
 	)
-	
 	If FAILED(hrGetSlice) Then
 		Return hrGetSlice
 	End If
@@ -495,7 +494,7 @@ Function HttpWriterBeginWrite( _
 		Return hrBeginWrite
 	End If
 	
-	Return S_OK
+	Return HTTPWRITER_S_IO_PENDING
 	
 End Function
 
