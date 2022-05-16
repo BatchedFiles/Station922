@@ -1000,6 +1000,8 @@ Function WriteErrorAsyncTaskSetBaseStream( _
 	
 	this->pIStream = pStream
 	
+	IHttpWriter_SetBaseStream(this->pIHttpWriter, pStream)
+	
 	Return S_OK
 	
 End Function
@@ -1224,29 +1226,23 @@ Function WriteErrorAsyncTaskPrepare( _
 			0 _
 		)
 		
+		Dim pBuffer As Any Ptr = Any
 		Dim hrAllocBuffer As HRESULT = IMemoryBuffer_AllocBuffer( _
 			this->pIBuffer, _
-			SendBufferLength _
+			SendBufferLength, _
+			@pBuffer _
 		)
 		If FAILED(hrAllocBuffer) Then
 			IArrayStringWriter_Release(pIWriter)
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim Slice As BufferSlice = Any
-		IMemoryBuffer_GetSlice( _
-			this->pIBuffer, _
-			0, _
-			SendBufferLength, _
-			@Slice _
-		)
-		
 		WideCharToMultiByte( _
 			CP_ACP, _
 			0, _
 			@BodyBuffer, _
 			BodyLength, _
-			Slice.pSlice, _
+			pBuffer, _
 			SendBufferLength, _
 			0, _
 			0 _
