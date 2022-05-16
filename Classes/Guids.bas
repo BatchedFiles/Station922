@@ -164,6 +164,11 @@ DEFINE_IID(IID_IBaseStream, _
 	&hb6ac4cef, &h9b3d, &h4b41, &hb2, &hf6, &hde, &ha2, &h7d, &h8, &h5e, &hb7 _
 )
 
+' {FAC287DE-4E2C-4F51-8E7E-B0B77E2AE918}
+DEFINE_IID(IID_IBuffer, _
+	&hfac287de, &h4e2c, &h4f51, &h8e, &h7e, &hb0, &hb7, &h7e, &h2a, &he9, &h18 _
+)
+
 ' {DBFDAAD7-BEB7-4551-A432-FD87DCA6E7CD}
 DEFINE_IID(IID_IClientContext, _
 	&hdbfdaad7, &hbeb7, &h4551, &ha4, &h32, &hfd, &h87, &hdc, &ha6, &he7, &hcd _
