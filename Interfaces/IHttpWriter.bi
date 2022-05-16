@@ -58,6 +58,7 @@ Type IHttpWriterVirtualTable
 	BeginWrite As Function( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal Headers As LPVOID, _
+		ByVal HeadersLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -80,7 +81,7 @@ End Type
 #define IHttpWriter_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)
 #define IHttpWriter_GetBuffer(this, ppResult) (this)->lpVtbl->GetBuffer(this, ppResult)
 #define IHttpWriter_SetBuffer(this, pIBuffer) (this)->lpVtbl->SetBuffer(this, pIBuffer)
-#define IHttpWriter_BeginWrite(this, Headers, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Headers, StateObject, ppIAsyncResult)
+#define IHttpWriter_BeginWrite(this, Headers, HeadersLength, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Headers, HeadersLength, StateObject, ppIAsyncResult)
 #define IHttpWriter_EndWrite(this, pIAsyncResult) (this)->lpVtbl->EndWrite(this, pIAsyncResult)
 
 #endif

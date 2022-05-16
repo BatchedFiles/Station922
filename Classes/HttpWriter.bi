@@ -31,4 +31,37 @@ Declare Function HttpWriterRelease( _
 	ByVal this As HttpWriter Ptr _
 )As ULONG
 
+Declare Function HttpWriterGetBaseStream( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal ppResult As IBaseStream Ptr Ptr _
+)As HRESULT
+
+Declare Function HttpWriterSetBaseStream( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal pIStream As IBaseStream Ptr _
+)As HRESULT
+
+Declare Function HttpWriterGetBuffer( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal ppResult As IBuffer Ptr Ptr _
+)As HRESULT
+
+Declare Function HttpWriterSetBuffer( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal pIBuffer As IBuffer Ptr _
+)As HRESULT
+
+Declare Function HttpWriterBeginWrite( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal Headers As LPVOID, _
+	ByVal HeadersLength As DWORD, _
+	ByVal StateObject As IUnknown Ptr, _
+	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+)As HRESULT
+
+Declare Function HttpWriterEndWrite( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal pIAsyncResult As IAsyncResult Ptr _
+)As HRESULT
+
 #endif
