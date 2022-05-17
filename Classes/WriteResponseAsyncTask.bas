@@ -655,21 +655,18 @@ Function WriteResponseAsyncTaskPrepare( _
 				pc.pIResponse = this->pIResponse
 				pc.pIReader = this->pIHttpReader
 				
-				Dim pIBuffer As IBuffer Ptr = Any
+				If this->pIBuffer <> NULL Then
+					IBuffer_Release(this->pIBuffer)
+				End If
+				
 				Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _
 					this->pIProcessor, _
 					@pc, _
-					@pIBuffer _
+					@this->pIBuffer _
 				)
 				If FAILED(hrPrepareProcess) Then
 					hrPrepareResponse = hrPrepareProcess
 				Else
-					
-					If this->pIBuffer <> NULL Then
-						IBuffer_Release(this->pIBuffer)
-					End If
-					
-					this->pIBuffer = pIBuffer
 					
 					IHttpWriter_SetBuffer(this->pIHttpWriter, this->pIBuffer)
 					
