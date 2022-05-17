@@ -15,13 +15,11 @@ Const HTTPASYNCPROCESSOR_E_FORBIDDEN As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, F
 Const HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0204)
 
 Type _ProcessorContext
+	pIMemoryAllocator As IMalloc Ptr
+	pIWebSite As IWebSite Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pIBaseStream As IBaseStream Ptr
-	pIWebSite As IWebSite Ptr
-	pIClientReader As IHttpReader Ptr
-	pIRequestedFile As IRequestedFile Ptr
-	pIMemoryAllocator As IMalloc Ptr
+	pIReader As IHttpReader Ptr
 End Type
 
 Type ProcessorContext As _ProcessorContext
@@ -50,6 +48,12 @@ Type IHttpAsyncProcessorVirtualTable
 		ByVal this As IHttpAsyncProcessor Ptr _
 	)As ULONG
 	
+	Prepare As Function( _
+		ByVal this As IHttpAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
+		ByVal ppIBuffer As IBuffer Ptr Ptr _
+	)As HRESULT
+	
 	BeginProcess As Function( _
 		ByVal this As IHttpAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
@@ -59,6 +63,7 @@ Type IHttpAsyncProcessorVirtualTable
 	
 	EndProcess As Function( _
 		ByVal this As IHttpAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
@@ -71,5 +76,8 @@ End Type
 #define IHttpAsyncProcessor_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IHttpAsyncProcessor_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpAsyncProcessor_Release(this) (this)->lpVtbl->Release(this)
+#define IHttpAsyncProcessor_Prepare(this, pContext, ppIBuffer) (this)->lpVtbl->Prepare(this, pContext, ppIBuffer)
+#define IHttpAsyncProcessor_BeginProcess(this, pContext, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginProcess(this, pContext, StateObject, ppIAsyncResult)
+#define IHttpAsyncProcessor_EndProcess(this, pContext, pIAsyncResult) (this)->lpVtbl->EndProcess(this, pContext, pIAsyncResult)
 
 #endif

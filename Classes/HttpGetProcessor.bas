@@ -15,10 +15,6 @@
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
 
-Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
-Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
-
-Const TRANSMIT_CHUNK_SIZE As DWORD = 1024 * 1024 * 265
 Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
 Type _HttpGetProcessor
@@ -30,8 +26,6 @@ Type _HttpGetProcessor
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
-	pSendBuffer As ZString Ptr
-	HeadersLength As Integer
 	' BodyLength As LongInt
 	ContentBodyLength As LongInt
 	FileBytesOffset As LongInt
@@ -159,6 +153,7 @@ Sub AddExtendedHeaders( _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)
+	/'
 	' TODO Убрать переполнение буфера при слишком длинных заголовках
 	
 	Dim PathTranslated As WString Ptr = Any
@@ -221,12 +216,13 @@ Sub AddExtendedHeaders( _
 		CloseHandle(hExtHeadersFile)
 	End If
 	
+	'/
+	
 End Sub
 
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pSendBuffer As ZString Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -238,16 +234,12 @@ Sub InitializeHttpGetProcessor( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
-	this->pSendBuffer = pSendBuffer
-	this->HeadersLength = 0
 	
 End Sub
 
 Sub UnInitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
-	
-	IMalloc_Free(this->pIMemoryAllocator, this->pSendBuffer)
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		CloseHandle(this->FileHandle)
@@ -278,42 +270,31 @@ Function CreateHttpGetProcessor( _
 	End Scope
 	#endif
 	
-	Dim pSendBuffer As ZString Ptr = IMalloc_Alloc( _
+	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(ZString) * (MaxResponseBufferLength + 1) _
+		SizeOf(HttpGetProcessor) _
 	)
 	
-	If pSendBuffer <> NULL Then
+	If this <> NULL Then
 		
-		Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(HttpGetProcessor) _
+		InitializeHttpGetProcessor( _
+			this, _
+			pIMemoryAllocator _
 		)
 		
-		If this <> NULL Then
-			
-			InitializeHttpGetProcessor( _
-				this, _
-				pIMemoryAllocator, _
-				pSendBuffer _
+		#if __FB_DEBUG__
+		Scope
+			Dim vtEmpty As VARIANT = Any
+			VariantInit(@vtEmpty)
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				WStr("HttpGetProcessor created"), _
+				@vtEmpty _
 			)
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("HttpGetProcessor created"), _
-					@vtEmpty _
-				)
-			End Scope
-			#endif
-			
-			Return this
-		End If
+		End Scope
+		#endif
 		
-		IMalloc_Free(pIMemoryAllocator, pSendBuffer)
+		Return this
 	End If
 	
 	Return NULL
@@ -422,9 +403,37 @@ End Function
 
 Function HttpGetProcessorPrepare( _
 		ByVal this As HttpGetProcessor Ptr, _
-		ByVal pc As ProcessorContext Ptr _
+		ByVal pContext As ProcessorContext Ptr, _
+		ByVal ppIBuffer As IBuffer Ptr Ptr _
 	)As HRESULT
 	
+	/'
+	Dim pIFile As IRequestedFile Ptr = Any
+	Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
+		pIMemoryAllocator, _
+		@CLSID_REQUESTEDFILE, _
+		@IID_IRequestedFile, _
+		@pIFile _
+	)
+	If FAILED(hrCreateRequestedFile) Then
+		ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
+		hrResult = E_FAIL
+	Else
+		IClientContext_SetRequestedFile(pIContext, pIFile)
+		
+		Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
+			pIWebSite, _
+			pIFile, _
+			ClientURI.Path, _
+			RequestedFileAccess _
+		)
+		If FAILED(hrGetFile) Then
+			ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
+			hrResult = E_FAIL
+		Else
+	'/
+	
+	/'
 	Dim PathTranslated As WString Ptr = Any
 	IRequestedFile_GetPathTranslated(pc->pIRequestedFile, @PathTranslated)
 	
@@ -731,8 +740,11 @@ Function HttpGetProcessorPrepare( _
 	this->CurrentChunkIndex = 0
 	
 	IRequestedFile_SetFileHandle(pc->pIRequestedFile, INVALID_HANDLE_VALUE)
+	'/
 	
-	Return S_OK
+	*ppIBuffer = NULL
+	
+	Return E_UNEXPECTED
 	
 End Function
 
@@ -742,175 +754,19 @@ Function HttpGetProcessorBeginProcess( _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	/'
+	
 	*ppIAsyncResult = NULL
-	
-	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_ASYNCRESULT, _
-		@IID_IMutableAsyncResult, _
-		@pINewAsyncResult _
-	)
-	If FAILED(hr) Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
-	IMutableAsyncResult_SetAsyncState(pINewAsyncResult, StateObject)
-	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, NULL)
-	
-	Dim FileOffsetPointer As LARGE_INTEGER = Any
-	FileOffsetPointer.QuadPart = this->CurrentChunkIndex * Cast(LongInt, TRANSMIT_CHUNK_SIZE)
-	
-	Dim dwCurrentChunkSize As DWORD = Cast(DWORD, _
-		min( _
-			this->ContentBodyLength - FileOffsetPointer.QuadPart, _
-			Cast(LongInt, TRANSMIT_CHUNK_SIZE) _
-		) _
-	)
-	
-	Dim pTransmitHeader As TRANSMIT_FILE_BUFFERS Ptr = Any
-	If this->CurrentChunkIndex = 0 Then
-		this->TransmitHeader.Head = this->pSendBuffer
-		this->TransmitHeader.HeadLength = Cast(DWORD, this->HeadersLength)
-		this->TransmitHeader.Tail = NULL
-		this->TransmitHeader.TailLength = Cast(DWORD, 0)
-		pTransmitHeader = @this->TransmitHeader
-	Else
-		pTransmitHeader = NULL
-	End If
-	
-	Dim SendOnlyHeaders As Boolean = Any
-	IServerResponse_GetSendOnlyHeaders(pc->pIResponse, @SendOnlyHeaders)
-	
-	If SendOnlyHeaders Then
-		this->hTransmitFile = NULL
-	Else
-		If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
-			this->hTransmitFile = this->ZipFileHandle
-		Else
-			this->hTransmitFile = this->FileHandle
-		End If
-	End If
-	
-	Dim ClientSocket As SOCKET = Any
-	INetworkStream_GetSocket(pc->pINetworkStream, @ClientSocket)
-	
-	If this->hTransmitFile <> NULL Then
-		Dim CurrentOffsetPointer As LARGE_INTEGER = Any
-		CurrentOffsetPointer.QuadPart = FileOffsetPointer.QuadPart + this->FileBytesOffset
-		
-		Dim OffsetResult As Integer = SetFilePointerEx( _
-			this->hTransmitFile, _
-			CurrentOffsetPointer, _
-			NULL, _
-			FILE_BEGIN _
-		)
-		If OffsetResult = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			IMutableAsyncResult_Release(pINewAsyncResult)
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-	End If
-	
-	Const Reserved As DWORD = 0
-	Const NumberOfBytesPerSendDefault As DWORD = 0
-	
-	Dim TransmitFileResult As Integer = TransmitFile( _
-		ClientSocket, _
-		this->hTransmitFile, _
-		dwCurrentChunkSize, _
-		NumberOfBytesPerSendDefault, _
-		CPtr(OVERLAPPED Ptr, lpRecvOverlapped), _
-		pTransmitHeader, _
-		Reserved _
-	)
-	If TransmitFileResult = 0 Then
-		
-		Dim intError As Long = WSAGetLastError()
-		If intError = ERROR_IO_PENDING OrElse intError = WSA_IO_PENDING Then
-			' TODO Запросить интерфейс вместо конвертирования указателя
-			*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
-			Return HTTPASYNCPROCESSOR_S_IO_PENDING
-		End If
-		
-		IMutableAsyncResult_Release(pINewAsyncResult)
-		Return HRESULT_FROM_WIN32(intError)
-		
-	End If
-	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
-	'/
-	Return S_OK
+	Return E_UNEXPECTED
 	
 End Function
 
 Function HttpGetProcessorEndProcess( _
 		ByVal this As HttpGetProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	' TODO Приём и отправка данных через какой-нибудь объект
-	
-	If this->hTransmitFile = NULL Then
-		If this->FileHandle <> INVALID_HANDLE_VALUE Then
-			' If CloseHandle(this->FileHandle) = 0 Then
-				' Dim dwError As DWORD = GetLastError()
-			' End If
-			CloseHandle(this->FileHandle)
-			this->FileHandle = INVALID_HANDLE_VALUE
-		End If
-		
-		If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
-			' If CloseHandle(this->ZipFileHandle) = 0 Then
-				' Dim dwError As DWORD = GetLastError()
-			' End If
-			CloseHandle(this->ZipFileHandle)
-			this->ZipFileHandle = INVALID_HANDLE_VALUE
-		End If
-		
-		Return S_OK
-	End If
-	
-	Dim FileOffsetPointer As LARGE_INTEGER = Any
-	FileOffsetPointer.QuadPart = this->CurrentChunkIndex * Cast(LongInt, TRANSMIT_CHUNK_SIZE)
-	
-	Dim dwCurrentChunkSize As DWORD = Cast(DWORD, _
-		min( _
-			this->ContentBodyLength - FileOffsetPointer.QuadPart, _
-			Cast(LongInt, TRANSMIT_CHUNK_SIZE) _
-		) _
-	)
-	
-	If dwCurrentChunkSize <= TRANSMIT_CHUNK_SIZE Then
-		
-		If this->FileHandle <> INVALID_HANDLE_VALUE Then
-			' If CloseHandle(this->FileHandle) = 0 Then
-				' Dim dwError As DWORD = GetLastError()
-			' End If
-			CloseHandle(this->FileHandle)
-			this->FileHandle = INVALID_HANDLE_VALUE
-		End If
-		
-		If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
-			' If CloseHandle(this->ZipFileHandle) = 0 Then
-				' Dim dwError As DWORD = GetLastError()
-			' End If
-			CloseHandle(this->ZipFileHandle)
-			this->ZipFileHandle = INVALID_HANDLE_VALUE
-		End If
-		
-		Return S_OK
-	End If
-	
-	this->CurrentChunkIndex += 1
-	
-	Return HTTPASYNCPROCESSOR_S_IO_PENDING
+	Return E_UNEXPECTED
 	
 End Function
 
@@ -935,6 +791,14 @@ Function IHttpGetProcessorRelease( _
 	Return HttpGetProcessorRelease(ContainerOf(this, HttpGetProcessor, lpVtbl))
 End Function
 
+Function IHttpGetProcessorPrepare( _
+		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
+		ByVal ppIBuffer As IBuffer Ptr Ptr _
+	)As HRESULT
+	Return HttpGetProcessorPrepare(ContainerOf(this, HttpGetProcessor, lpVtbl), pContext, ppIBuffer)
+End Function
+
 Function IHttpGetProcessorBeginProcess( _
 		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
@@ -946,15 +810,17 @@ End Function
 
 Function IHttpGetProcessorEndProcess( _
 		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpGetProcessorEndProcess(ContainerOf(this, HttpGetProcessor, lpVtbl), pIAsyncResult)
+	Return HttpGetProcessorEndProcess(ContainerOf(this, HttpGetProcessor, lpVtbl), pContext, pIAsyncResult)
 End Function
 
 Dim GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable = Type( _
 	@IHttpGetProcessorQueryInterface, _
 	@IHttpGetProcessorAddRef, _
 	@IHttpGetProcessorRelease, _
+	@IHttpGetProcessorPrepare, _
 	@IHttpGetProcessorBeginProcess, _
 	@IHttpGetProcessorEndProcess _
 )

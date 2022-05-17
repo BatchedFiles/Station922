@@ -25,6 +25,12 @@ Type IHttpGetAsyncProcessorVirtualTable
 		ByVal this As IHttpGetAsyncProcessor Ptr _
 	)As ULONG
 	
+	Prepare As Function( _
+		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
+		ByVal ppIBuffer As IBuffer Ptr Ptr _
+	)As HRESULT
+	
 	BeginProcess As Function( _
 		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
@@ -34,6 +40,7 @@ Type IHttpGetAsyncProcessorVirtualTable
 	
 	EndProcess As Function( _
 		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
@@ -46,5 +53,8 @@ End Type
 #define IHttpGetAsyncProcessor_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IHttpGetAsyncProcessor_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpGetAsyncProcessor_Release(this) (this)->lpVtbl->Release(this)
+#define IHttpGetAsyncProcessor_Prepare(this, pContext, ppIBuffer) (this)->lpVtbl->Prepare(this, pContext, ppIBuffer)
+#define IHttpGetAsyncProcessor_BeginProcess(this, pContext, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginProcess(this, pContext, StateObject, ppIAsyncResult)
+#define IHttpGetAsyncProcessor_EndProcess(this, pContext, pIAsyncResult) (this)->lpVtbl->EndProcess(this, pContext, pIAsyncResult)
 
 #endif

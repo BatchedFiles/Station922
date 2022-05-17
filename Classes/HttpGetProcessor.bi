@@ -31,6 +31,12 @@ Declare Function HttpGetProcessorRelease( _
 	ByVal this As HttpGetProcessor Ptr _
 )As ULONG
 
+Declare Function HttpGetProcessorPrepare( _
+	ByVal this As HttpGetProcessor Ptr, _
+	ByVal pContext As ProcessorContext Ptr, _
+	ByVal ppIBuffer As IBuffer Ptr Ptr _
+)As HRESULT
+
 Declare Function HttpGetProcessorBeginProcess( _
 	ByVal this As HttpGetProcessor Ptr, _
 	ByVal pContext As ProcessorContext Ptr, _
@@ -40,6 +46,7 @@ Declare Function HttpGetProcessorBeginProcess( _
 
 Declare Function HttpGetProcessorEndProcess( _
 	ByVal this As HttpGetProcessor Ptr, _
+	ByVal pContext As ProcessorContext Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr _
 )As HRESULT
 
