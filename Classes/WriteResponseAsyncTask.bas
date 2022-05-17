@@ -4,6 +4,7 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
+#include once "HttpWriter.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
@@ -24,12 +25,17 @@ Type _WriteResponseAsyncTask
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
+	pIBuffer As IBuffer Ptr
+	pIHttpWriter As IHttpWriter Ptr
+	pIProcessor As IHttpAsyncProcessor Ptr
+	pIWebSite As IWebSite Ptr
 End Type
 
 Sub InitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIResponse As IServerResponse Ptr _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal pIHttpWriter As IHttpWriter Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -45,12 +51,25 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->pIStream = NULL
 	this->pIRequest = NULL
 	this->pIResponse = pIResponse
+	this->pIBuffer = NULL
+	this->pIHttpWriter = pIHttpWriter
+	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
+	this->pIProcessor = NULL
+	this->pIWebSite = NULL
 	
 End Sub
 
 Sub UnInitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr _
 	)
+	
+	If this->pIProcessor <> NULL Then
+		IHttpAsyncProcessor_Release(this->pIProcessor)
+	End If
+	
+	If this->pIWebSite <> NULL Then
+		IWebSite_Release(this->pIWebSite)
+	End If
 	
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
@@ -70,6 +89,14 @@ Sub UnInitializeWriteResponseAsyncTask( _
 	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
+	End If
+	
+	If this->pIBuffer <> NULL Then
+		IBuffer_Release(this->pIBuffer)
+	End If
+	
+	If this->pIHttpWriter <> NULL Then
+		IHttpWriter_Release(this->pIHttpWriter)
 	End If
 	
 	If this->pIResponse <> NULL Then
@@ -97,44 +124,58 @@ Function CreateWriteResponseAsyncTask( _
 	End Scope
 	#endif
 	
-	Dim pIResponse As IServerResponse Ptr = Any
-	Dim hrCreateRequest As HRESULT = CreateInstance( _
+	Dim pIHttpWriter As IHttpWriter Ptr = Any
+	Dim hrCreateWriter As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
-		@CLSID_SERVERRESPONSE, _
-		@IID_IServerResponse, _
-		@pIResponse _
+		@CLSID_HTTPWRITER, _
+		@IID_IHttpWriter, _
+		@pIHttpWriter _
 	)
 	
-	If SUCCEEDED(hrCreateRequest) Then
+	If SUCCEEDED(hrCreateWriter) Then
 		
-		Dim this As WriteResponseAsyncTask Ptr = IMalloc_Alloc( _
+		Dim pIResponse As IServerResponse Ptr = Any
+		Dim hrCreateResponse As HRESULT = CreateInstance( _
 			pIMemoryAllocator, _
-			SizeOf(WriteResponseAsyncTask) _
+			@CLSID_SERVERRESPONSE, _
+			@IID_IServerResponse, _
+			@pIResponse _
 		)
 		
-		If this <> NULL Then
-			InitializeWriteResponseAsyncTask( _
-				this, _
+		If SUCCEEDED(hrCreateResponse) Then
+			
+			Dim this As WriteResponseAsyncTask Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
-				pIResponse _
+				SizeOf(WriteResponseAsyncTask) _
 			)
 			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("WriteResponseAsyncTask created"), _
-					@vtEmpty _
+			If this <> NULL Then
+				InitializeWriteResponseAsyncTask( _
+					this, _
+					pIMemoryAllocator, _
+					pIResponse, _
+					pIHttpWriter _
 				)
-			End Scope
-			#endif
+				
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit(@vtEmpty)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr("WriteResponseAsyncTask created"), _
+						@vtEmpty _
+					)
+				End Scope
+				#endif
+				
+				Return this
+			End If
 			
-			Return this
+			IServerResponse_Release(pIResponse)
 		End If
 		
-		IServerResponse_Release(pIResponse)
+		IHttpWriter_Release(pIHttpWriter)
 	End If
 	
 	Return NULL
@@ -250,17 +291,22 @@ Function WriteResponseAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim processor As IHttpAsyncProcessor Ptr = Any
-	Dim hrProcessor As HRESULT = IHttpProcessorCollection_Item( _
-		this->pIProcessors, _
-		"", _
-		@processor _
-	)
-	If FAILED(hrProcessor) Then
-		Return hrProcessor
-	End If
+	Dim pc As ProcessorContext = Any
+	pc.pIMemoryAllocator = this->pIMemoryAllocator
+	pc.pIWebSite = this->pIWebSite
+	pc.pIRequest = this->pIRequest
+	pc.pIResponse = this->pIResponse
+	pc.pIReader = this->pIHttpReader
 	
-	IHttpAsyncProcessor_Release(processor)
+	Dim hrBeginProcess As HRESULT = IHttpAsyncProcessor_BeginProcess( _
+		this->pIProcessor, _
+		@pc, _
+		CPtr(IUnknown Ptr, @this->lpVtbl), _
+		ppIResult _
+	)
+	If FAILED(hrBeginProcess) Then
+		Return hrBeginProcess
+	End If
 	
 	Return ASYNCTASK_S_IO_PENDING
 	
@@ -273,8 +319,73 @@ Function WriteResponseAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	*ppNextTask = NULL
-	Return E_FAIL
+	Dim pc As ProcessorContext = Any
+	pc.pIMemoryAllocator = this->pIMemoryAllocator
+	pc.pIWebSite = this->pIWebSite
+	pc.pIRequest = this->pIRequest
+	pc.pIResponse = this->pIResponse
+	pc.pIReader = this->pIHttpReader
+	
+	Dim hrEndProcess As HRESULT = IHttpAsyncProcessor_EndProcess( _
+		this->pIProcessor, _
+		@pc, _
+		pIResult _
+	)
+	If FAILED(hrEndProcess) Then
+		*ppNextTask = NULL
+		Return hrEndProcess
+	End If
+	
+	Select Case hrEndProcess
+		
+		Case S_OK
+			
+			Dim KeepAlive As Boolean = Any
+			IServerResponse_GetKeepAlive(this->pIResponse, @KeepAlive)
+			
+			If KeepAlive = False Then
+				*ppNextTask = NULL
+				Return ASYNCTASK_S_KEEPALIVE_FALSE
+			End If
+			
+			Dim pTask As IReadRequestAsyncIoTask Ptr = Any
+			Dim hrCreateTask As HRESULT = CreateInstance( _
+				this->pIMemoryAllocator, _
+				@CLSID_READREQUESTASYNCTASK, _
+				@IID_IReadRequestAsyncIoTask, _
+				@pTask _
+			)
+			If FAILED(hrCreateTask) Then
+				' Мы не запускаем задачу отправки ошибки
+				' Чтобы не войти в бесконечный цикл
+				*ppNextTask = NULL
+				Return hrCreateTask
+			End If
+			
+			IHttpReader_Clear(this->pIHttpReader)
+			
+			IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
+			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+			IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
+			
+			' Сейчас мы не уменьшаем счётчик ссылок на задачу
+			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
+			*ppNextTask = CPtr(IAsyncIoTask Ptr, pTask)
+			Return S_OK
+			
+		Case S_FALSE
+			' Write 0 bytes
+			*ppNextTask = NULL
+			Return S_FALSE
+			
+		Case HTTPASYNCPROCESSOR_S_IO_PENDING
+			' Продолжить отправку ответа
+			WriteResponseAsyncTaskAddRef(this)
+			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
+			Return S_OK
+			
+	End Select
 	
 End Function
 
@@ -360,6 +471,8 @@ Function WriteResponseAsyncTaskSetBaseStream( _
 	End If
 	
 	this->pIStream = pStream
+	
+	IHttpWriter_SetBaseStream(this->pIHttpWriter, pStream)
 	
 	Return S_OK
 	
@@ -483,17 +596,20 @@ Function WriteResponseAsyncTaskPrepare( _
 	
 	Dim hrPrepareResponse As HRESULT = Any
 	
-	Dim pIWebSite As IWebSite Ptr = Any
+	If this->pIWebSite <> NULL Then
+		IWebSite_Release(this->pIWebSite)
+	End If
+	
 	Dim hrFindSite As HRESULT = FindWebSite( _
 		this->pIRequest, _
 		this->pIWebSites, _
-		@pIWebSite _
+		@this->pIWebSite _
 	)
 	If FAILED(hrFindSite) Then
 		hrPrepareResponse = SERVERRESPONSE_E_SITENOTFOUND
 	Else
 		Dim IsSiteMoved As Boolean = Any
-		IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
+		IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
 		
 		/'
 			' Dim ClientURI As IClientUri Ptr = Any
@@ -506,7 +622,7 @@ Function WriteResponseAsyncTaskPrepare( _
 			If IsRobotsTxt = 0 Then
 				IsSiteMoved = False
 			Else
-				IWebSite_GetIsMoved(pIWebSite, @IsSiteMoved)
+				IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
 			End If
 		'/
 		
@@ -518,180 +634,52 @@ Function WriteResponseAsyncTaskPrepare( _
 			Dim HttpMethod As HeapBSTR = Any
 			IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 			
-			Dim pIProcessor As IHttpAsyncProcessor Ptr = Any
+			If this->pIProcessor <> NULL Then
+				IHttpAsyncProcessor_Release(this->pIProcessor)
+			End If
+			
 			Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_Item( _
 				this->pIProcessors, _
 				HttpMethod, _
-				@pIProcessor _
+				@this->pIProcessor _
 			)
+			HeapSysFreeString(HttpMethod)
+			
 			If FAILED(hrProcessorItem) Then
 				hrPrepareResponse = SERVERRESPONSE_E_NOTIMPLEMENTED
 			Else
+				Dim pc As ProcessorContext = Any
+				pc.pIMemoryAllocator = this->pIMemoryAllocator
+				pc.pIWebSite = this->pIWebSite
+				pc.pIRequest = this->pIRequest
+				pc.pIResponse = this->pIResponse
+				pc.pIReader = this->pIHttpReader
 				
-				/'
-				Dim pIMemoryAllocator As IMalloc Ptr = Any
-				IClientContext_GetMemoryAllocator(pIContext, @pIMemoryAllocator)
-				
-				Dim IsKnownHttpMethod As Boolean = Any
-				Dim RequestedFileAccess As FileAccess = Any
-				Dim hrCreateRequestProcessor As HRESULT = Any
-				
-				Select Case HttpMethod
-					
-					Case HttpMethods.HttpGet
-						IsKnownHttpMethod = True
-						RequestedFileAccess = FileAccess.ReadAccess
-						hrCreateRequestProcessor = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_HTTPGETPROCESSOR, _
-							@IID_IRequestProcessor, _
-							@pIProcessor _
-						)
-						
-					Case HttpMethods.HttpHead
-						IsKnownHttpMethod = True
-						RequestedFileAccess = FileAccess.ReadAccess
-						IServerResponse_SetSendOnlyHeaders(pIResponse, True)
-						hrCreateRequestProcessor = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_HTTPGETPROCESSOR, _
-							@IID_IRequestProcessor, _
-							@pIProcessor _
-						)
-						
-					' Case HttpMethods.HttpPost
-						' RequestedFileAccess = FileAccess.UpdateAccess
-						' ProcessRequestVirtualTable = @ProcessPostRequest
-						
-					' Case HttpMethods.HttpPut
-						' RequestedFileAccess = FileAccess.CreateAccess
-						' ProcessRequestVirtualTable = @ProcessPutRequest
-						
-					' Case HttpMethods.HttpDelete
-						' RequestedFileAccess = FileAccess.DeleteAccess
-						' ProcessRequestVirtualTable = @ProcessDeleteRequest
-						
-					' Case HttpMethods.HttpOptions
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessOptionsRequest
-						
-					' Case HttpMethods.HttpTrace
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessTraceRequest
-						
-					' Case HttpMethods.HttpConnect
-						' RequestedFileAccess = FileAccess.ReadAccess
-						' ProcessRequestVirtualTable = @ProcessConnectRequest
-						
-					Case Else
-						IsKnownHttpMethod = False
-						RequestedFileAccess = FileAccess.ReadAccess
-						pIProcessor = NULL
-						hrCreateRequestProcessor = E_OUTOFMEMORY
-						
-				End Select
-				
-				If IsKnownHttpMethod = False Then
-					ProcessDataError(pIContext, DataError.HttpMethodNotSupported, pIWebSite)
-					hrResult = E_FAIL
+				Dim pIBuffer As IBuffer Ptr = Any
+				Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _
+					this->pIProcessor, _
+					@pc, _
+					@pIBuffer _
+				)
+				If FAILED(hrPrepareProcess) Then
+					hrPrepareResponse = hrPrepareProcess
 				Else
-					If FAILED(hrCreateRequestProcessor) Then
-						ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-						hrResult = E_FAIL
-					Else
-						IClientContext_SetRequestProcessor(pIContext, pIProcessor)
-						
-						Dim pIFile As IRequestedFile Ptr = Any
-						Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-							pIMemoryAllocator, _
-							@CLSID_REQUESTEDFILE, _
-							@IID_IRequestedFile, _
-							@pIFile _
-						)
-						If FAILED(hrCreateRequestedFile) Then
-							ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-							hrResult = E_FAIL
-						Else
-							IClientContext_SetRequestedFile(pIContext, pIFile)
-							
-							Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
-								pIWebSite, _
-								pIFile, _
-								ClientURI.Path, _
-								RequestedFileAccess _
-							)
-							If FAILED(hrGetFile) Then
-								ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-								hrResult = E_FAIL
-							Else
-								
-								Dim pINetworkStream As INetworkStream Ptr = Any
-								IClientContext_GetNetworkStream(pIContext, @pINetworkStream)
-								Dim pIHttpReader As IHttpReader Ptr = Any
-								IClientContext_GetHttpReader(pIContext, @pIHttpReader)
-								
-								Dim pc As ProcessorContext = Any
-								pc.pIRequest = pIRequest
-								pc.pIResponse = pIResponse
-								pc.pINetworkStream = pINetworkStream
-								pc.pIWebSite = pIWebSite
-								pc.pIClientReader = pIHttpReader
-								pc.pIRequestedFile = pIFile
-								pc.pIMemoryAllocator = pIMemoryAllocator
-								
-								Dim hrPrepare As HRESULT = IRequestProcessor_Prepare( _
-									pIProcessor, _
-									@pc _
-								)
-								If FAILED(hrPrepare) Then
-									ProcessBeginWriteError(pIContext, hrPrepare, pIWebSite)
-								Else
-									IClientContext_SetOperationCode(pIContext, OperationCodes.WriteResponse)
-									
-									' TODO Запросить интерфейс вместо конвертирования указателя
-									Dim pINewAsyncResult As IAsyncResult Ptr = Any
-									Dim hrBeginProcess As HRESULT = IRequestProcessor_BeginProcess( _
-										pIProcessor, _
-										@pc, _
-										CPtr(IUnknown Ptr, pIContext), _
-										@pINewAsyncResult _
-									)
-									If FAILED(hrBeginProcess) Then
-										ProcessBeginWriteError(pIContext, hrBeginProcess, pIWebSite)
-										hrResult = E_FAIL
-									End If
-									'/
-									
-									' hrPrepareResponse = S_OK
-									hrPrepareResponse = E_UNEXPECTED
-									
-									/'
-									
-								End If
-								
-								IHttpReader_Release(pIHttpReader)
-								INetworkStream_Release(pINetworkStream)
-							End If
-							
-							IRequestedFile_Release(pIFile)
-						End If
-						
-						IRequestProcessor_Release(pIProcessor)
+					
+					If this->pIBuffer <> NULL Then
+						IBuffer_Release(this->pIBuffer)
 					End If
+					
+					this->pIBuffer = pIBuffer
+					
+					IHttpWriter_SetBuffer(this->pIHttpWriter, this->pIBuffer)
+					
+					hrPrepareResponse = S_OK
+					
 				End If
 				
-				IMalloc_Release(pIMemoryAllocator)
-				
-				'/
-				
-				IHttpAsyncProcessor_Release(pIProcessor)
 			End If
 			
-			HeapSysFreeString(HttpMethod)
-			
 		End If
-		
-		IWebSite_Release(pIWebSite)
 		
 	End If
 	
