@@ -149,11 +149,11 @@ Function GetFileBytesOffset( _
 	
 End Function
 
+/'
 Sub AddExtendedHeaders( _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
 	)
-	/'
 	' TODO Убрать переполнение буфера при слишком длинных заголовках
 	
 	Dim PathTranslated As WString Ptr = Any
@@ -216,9 +216,8 @@ Sub AddExtendedHeaders( _
 		CloseHandle(hExtHeadersFile)
 	End If
 	
-	'/
-	
 End Sub
+'/
 
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _

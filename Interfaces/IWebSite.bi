@@ -1,7 +1,6 @@
 #ifndef IWEBSITE_BI
 #define IWEBSITE_BI
 
-#include once "IRequestedFile.bi"
 #include once "IString.bi"
 
 Enum FileAccess
@@ -64,13 +63,6 @@ Type IWebSiteVirtualTable
 		ByVal pResult As HeapBSTR Ptr _
 	)As HRESULT
 	
-	OpenRequestedFile As Function( _
-		ByVal this As IWebSite Ptr, _
-		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As HeapBSTR, _
-		ByVal fAccess As FileAccess _
-	)As HRESULT
-	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal path As HeapBSTR, _
@@ -98,7 +90,6 @@ End Type
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
 #define IWebSite_MapPath(this, Path, pResult) (this)->lpVtbl->MapPath(this, Path, pResult)
-#define IWebSite_OpenRequestedFile(this, pRequestedFile, FilePath, fAccess) (this)->lpVtbl->OpenRequestedFile(this, pRequestedFile, FilePath, fAccess)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 #define IWebSite_NeedDllProcessing(this, Path, pResult) (this)->lpVtbl->NeedDllProcessing(this, Path, pResult)
 

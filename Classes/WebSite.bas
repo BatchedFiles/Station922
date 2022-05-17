@@ -301,6 +301,7 @@ Function WebSiteMapPath( _
 	
 End Function
 
+/'
 Function WebSiteOpenRequestedFile( _
 		ByVal this As WebSite Ptr, _
 		ByVal pRequestedFile As IRequestedFile Ptr, _
@@ -365,6 +366,7 @@ Function WebSiteOpenRequestedFile( _
 	Return S_FALSE
 	
 End Function
+'/
 
 Function WebSiteNeedCgiProcessing( _
 		ByVal this As WebSite Ptr, _
@@ -599,15 +601,6 @@ Function IMutableWebSiteMapPath( _
 	Return WebSiteMapPath(ContainerOf(this, WebSite, lpVtbl), Path, pResult)
 End Function
 
-Function IMutableWebSiteOpenRequestedFile( _
-		ByVal this As IMutableWebSite Ptr, _
-		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As HeapBSTR, _
-		ByVal fAccess As FileAccess _
-	)As HRESULT
-	Return WebSiteOpenRequestedFile(ContainerOf(this, WebSite, lpVtbl), pRequestedFile, FilePath, fAccess)
-End Function
-
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IMutableWebSite Ptr, _
 		ByVal path As HeapBSTR, _
@@ -669,7 +662,6 @@ Dim GlobalMutableWebSiteVirtualTable As Const IMutableWebSiteVirtualTable = Type
 	@IMutableWebSiteGetIsMoved, _
 	@IMutableWebSiteGetMovedUrl, _
 	@IMutableWebSiteMapPath, _
-	@IMutableWebSiteOpenRequestedFile, _
 	@IMutableWebSiteNeedCgiProcessing, _
 	@IMutableWebSiteNeedDllProcessing, _
 	@IMutableWebSiteSetHostName, _

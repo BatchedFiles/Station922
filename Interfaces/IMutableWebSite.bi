@@ -56,13 +56,6 @@ Type IMutableWebSiteVirtualTable
 		ByVal pResult As HeapBSTR Ptr _
 	)As HRESULT
 	
-	OpenRequestedFile As Function( _
-		ByVal this As IMutableWebSite Ptr, _
-		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As HeapBSTR, _
-		ByVal fAccess As FileAccess _
-	)As HRESULT
-	
 	NeedCgiProcessing As Function( _
 		ByVal this As IMutableWebSite Ptr, _
 		ByVal path As HeapBSTR, _
@@ -115,7 +108,6 @@ End Type
 #define IMutableWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IMutableWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
 #define IMutableWebSite_MapPath(this, Path, pResult) (this)->lpVtbl->MapPath(this, Path, pResult)
-#define IMutableWebSite_OpenRequestedFile(this, pRequestedFile, FilePath, fAccess) (this)->lpVtbl->OpenRequestedFile(this, pRequestedFile, FilePath, fAccess)
 #define IMutableWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 #define IMutableWebSite_NeedDllProcessing(this, Path, pResult) (this)->lpVtbl->NeedDllProcessing(this, Path, pResult)
 #define IMutableWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)

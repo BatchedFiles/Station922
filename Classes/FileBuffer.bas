@@ -1,20 +1,20 @@
-#include once "RequestedFile.bi"
+#include once "FileBuffer.bi"
 #include once "ContainerOf.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
 
-Extern GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable
+Extern GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
 Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
 
-Type _RequestedFile
+Type _FileBuffer
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IRequestedFileVirtualTable Ptr
+	lpVtbl As Const IFileBufferVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As WString Ptr
@@ -23,17 +23,17 @@ Type _RequestedFile
 	LastFileModifiedDate As FILETIME
 End Type
 
-Sub InitializeRequestedFile( _
-		ByVal this As RequestedFile Ptr, _
+Sub InitializeFileBuffer( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pFilePath As WString Ptr, _
 		ByVal pPathTranslated As WString Ptr _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Requested___File"), 16)
+		CopyMemory(@this->IdString, @Str("FileBuffer______"), 16)
 	#endif
-	this->lpVtbl = @GlobalRequestedFileVirtualTable
+	this->lpVtbl = @GlobalFileBufferVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -45,8 +45,8 @@ Sub InitializeRequestedFile( _
 	
 End Sub
 
-Sub UnInitializeRequestedFile( _
-		ByVal this As RequestedFile Ptr _
+Sub UnInitializeFileBuffer( _
+		ByVal this As FileBuffer Ptr _
 	)
 	
 	IMalloc_Free(this->pIMemoryAllocator, this->pPathTranslated)
@@ -77,18 +77,18 @@ Sub UnInitializeRequestedFile( _
 	
 End Sub
 
-Function CreateRequestedFile( _
+Function CreateFileBuffer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As RequestedFile Ptr
+	)As FileBuffer Ptr
 	
 	#if __FB_DEBUG__
 	Scope
 		Dim vtAllocatedBytes As VARIANT = Any
 		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(RequestedFile)
+		vtAllocatedBytes.lVal = SizeOf(FileBuffer)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr(!"RequestedFile creating\t"), _
+			WStr(!"FileBuffer creating\t"), _
 			@vtAllocatedBytes _
 		)
 	End Scope
@@ -108,13 +108,13 @@ Function CreateRequestedFile( _
 		
 		If pPathTranslated <> NULL Then
 			
-			Dim this As RequestedFile Ptr = IMalloc_Alloc( _
+			Dim this As FileBuffer Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
-				SizeOf(RequestedFile) _
+				SizeOf(FileBuffer) _
 			)
 			If this <> NULL Then
 				
-				InitializeRequestedFile( _
+				InitializeFileBuffer( _
 					this, _
 					pIMemoryAllocator, _
 					pFilePath, _
@@ -127,7 +127,7 @@ Function CreateRequestedFile( _
 					VariantInit(@vtEmpty)
 					LogWriteEntry( _
 						LogEntryType.Debug, _
-						WStr("RequestedFile created"), _
+						WStr("FileBuffer created"), _
 						@vtEmpty _
 					)
 				End Scope
@@ -147,8 +147,8 @@ Function CreateRequestedFile( _
 	
 End Function
 
-Sub DestroyRequestedFile( _
-		ByVal this As RequestedFile Ptr _
+Sub DestroyFileBuffer( _
+		ByVal this As FileBuffer Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -157,7 +157,7 @@ Sub DestroyRequestedFile( _
 		VariantInit(@vtEmpty)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr("RequestedFile destroying"), _
+			WStr("FileBuffer destroying"), _
 			@vtEmpty _
 		)
 	End Scope
@@ -166,7 +166,7 @@ Sub DestroyRequestedFile( _
 	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
-	UnInitializeRequestedFile(this)
+	UnInitializeFileBuffer(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
@@ -176,7 +176,7 @@ Sub DestroyRequestedFile( _
 		VariantInit(@vtEmpty)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr("RequestedFile destroyed"), _
+			WStr("FileBuffer destroyed"), _
 			@vtEmpty _
 		)
 	End Scope
@@ -186,31 +186,35 @@ Sub DestroyRequestedFile( _
 	
 End Sub
 
-Function RequestedFileQueryInterface( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferQueryInterface( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IRequestedFile, riid) Then
+	If IsEqualIID(@IID_IFileBuffer, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
+		If IsEqualIID(@IID_IBuffer, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
 		End If
 	End If
 	
-	RequestedFileAddRef(this)
+	FileBufferAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
-Function RequestedFileAddRef( _
-		ByVal this As RequestedFile Ptr _
+Function FileBufferAddRef( _
+		ByVal this As FileBuffer Ptr _
 	)As ULONG
 	
 	#ifdef __FB_64BIT__
@@ -223,8 +227,8 @@ Function RequestedFileAddRef( _
 	
 End Function
 
-Function RequestedFileRelease( _
-		ByVal this As RequestedFile Ptr _
+Function FileBufferRelease( _
+		ByVal this As FileBuffer Ptr _
 	)As ULONG
 	
 	#ifdef __FB_64BIT__
@@ -237,14 +241,14 @@ Function RequestedFileRelease( _
 		End If
 	#endif
 	
-	DestroyRequestedFile(this)
+	DestroyFileBuffer(this)
 	
 	Return 0
 	
 End Function
 
-Function RequestedFileGetFilePath( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferGetFilePath( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal ppFilePath As WString Ptr Ptr _
 	)As HRESULT
 	
@@ -254,8 +258,8 @@ Function RequestedFileGetFilePath( _
 	
 End Function
 
-Function RequestedFileSetFilePath( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferSetFilePath( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal FilePath As WString Ptr _
 	)As HRESULT
 	
@@ -265,8 +269,8 @@ Function RequestedFileSetFilePath( _
 	
 End Function
 
-Function RequestedFileGetPathTranslated( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferGetPathTranslated( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal ppPathTranslated As WString Ptr Ptr _
 	)As HRESULT
 	
@@ -276,8 +280,8 @@ Function RequestedFileGetPathTranslated( _
 	
 End Function
 
-Function RequestedFileSetPathTranslated( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferSetPathTranslated( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal PathTranslated As WString Ptr _
 	)As HRESULT
 	
@@ -287,8 +291,8 @@ Function RequestedFileSetPathTranslated( _
 	
 End Function
 
-Function RequestedFileFileExists( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferFileExists( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal pResult As RequestedFileState Ptr _
 	)As HRESULT
 	
@@ -323,8 +327,8 @@ Function RequestedFileFileExists( _
 	
 End Function
 
-Function RequestedFileGetFileHandle( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferGetFileHandle( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
@@ -334,8 +338,8 @@ Function RequestedFileGetFileHandle( _
 	
 End Function
 
-Function RequestedFileSetFileHandle( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferSetFileHandle( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
@@ -345,8 +349,8 @@ Function RequestedFileSetFileHandle( _
 	
 End Function
 
-Function RequestedFileGetLastFileModifiedDate( _
-		ByVal this As RequestedFile Ptr, _
+Function FileBufferGetLastFileModifiedDate( _
+		ByVal this As FileBuffer Ptr, _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
@@ -362,121 +366,123 @@ Function RequestedFileGetLastFileModifiedDate( _
 	
 End Function
 
-' Declare Function RequestedFileGetFileLength( _
-	' ByVal this As RequestedFile Ptr, _
+' Declare Function FileBufferGetFileLength( _
+	' ByVal this As FileBuffer Ptr, _
 	' ByVal pResult As ULongInt Ptr _
 ' )As HRESULT
 
-' Declare Function RequestedFileGetVaryHeaders( _
-	' ByVal this As RequestedFile Ptr, _
+' Declare Function FileBufferGetVaryHeaders( _
+	' ByVal this As FileBuffer Ptr, _
 	' ByVal pHeadersLength As Integer Ptr, _
 	' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 ' )As HRESULT
 
 
-Function IRequestedFileQueryInterface( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferQueryInterface( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return RequestedFileQueryInterface(ContainerOf(this, RequestedFile, lpVtbl), riid, ppvObject)
+	Return FileBufferQueryInterface(ContainerOf(this, FileBuffer, lpVtbl), riid, ppvObject)
 End Function
 
-Function IRequestedFileAddRef( _
-		ByVal this As IRequestedFile Ptr _
+Function IFileBufferAddRef( _
+		ByVal this As IFileBuffer Ptr _
 	)As ULONG
-	Return RequestedFileAddRef(ContainerOf(this, RequestedFile, lpVtbl))
+	Return FileBufferAddRef(ContainerOf(this, FileBuffer, lpVtbl))
 End Function
 
-Function IRequestedFileRelease( _
-		ByVal this As IRequestedFile Ptr _
+Function IFileBufferRelease( _
+		ByVal this As IFileBuffer Ptr _
 	)As ULONG
-	Return RequestedFileRelease(ContainerOf(this, RequestedFile, lpVtbl))
+	Return FileBufferRelease(ContainerOf(this, FileBuffer, lpVtbl))
 End Function
 
-Function IRequestedFileGetFilePath( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferGetFilePath( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal ppFilePath As WString Ptr Ptr _
 	)As HRESULT
-	Return RequestedFileGetFilePath(ContainerOf(this, RequestedFile, lpVtbl), ppFilePath)
+	Return FileBufferGetFilePath(ContainerOf(this, FileBuffer, lpVtbl), ppFilePath)
 End Function
 
-Function IRequestedFileSetFilePath( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferSetFilePath( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal FilePath As WString Ptr _
 	)As HRESULT
-	Return RequestedFileSetFilePath(ContainerOf(this, RequestedFile, lpVtbl), FilePath)
+	Return FileBufferSetFilePath(ContainerOf(this, FileBuffer, lpVtbl), FilePath)
 End Function
 
-Function IRequestedFileGetPathTranslated( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferGetPathTranslated( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal ppPathTranslated As WString Ptr Ptr _
 	)As HRESULT
-	Return RequestedFileGetPathTranslated(ContainerOf(this, RequestedFile, lpVtbl), ppPathTranslated)
+	Return FileBufferGetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), ppPathTranslated)
 End Function
 
-Function IRequestedFileSetPathTranslated( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferSetPathTranslated( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal PathTranslated As WString Ptr _
 	)As HRESULT
-	Return RequestedFileSetPathTranslated(ContainerOf(this, RequestedFile, lpVtbl), PathTranslated)
+	Return FileBufferSetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), PathTranslated)
 End Function
 
-Function IRequestedFileFileExists( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferFileExists( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As RequestedFileState Ptr _
 	)As HRESULT
-	Return RequestedFileFileExists(ContainerOf(this, RequestedFile, lpVtbl), pResult)
+	Return FileBufferFileExists(ContainerOf(this, FileBuffer, lpVtbl), pResult)
 End Function
 
-Function IRequestedFileGetFileHandle( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferGetFileHandle( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
-	Return RequestedFileGetFileHandle(ContainerOf(this, RequestedFile, lpVtbl), pResult)
+	Return FileBufferGetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), pResult)
 End Function
 
-Function IRequestedFileSetFileHandle( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferSetFileHandle( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
-	Return RequestedFileSetFileHandle(ContainerOf(this, RequestedFile, lpVtbl), hFile)
+	Return FileBufferSetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
 End Function
 
-Function IRequestedFileGetLastFileModifiedDate( _
-		ByVal this As IRequestedFile Ptr, _
+Function IFileBufferGetLastFileModifiedDate( _
+		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
-	Return RequestedFileGetLastFileModifiedDate(ContainerOf(this, RequestedFile, lpVtbl), pResult)
+	Return FileBufferGetLastFileModifiedDate(ContainerOf(this, FileBuffer, lpVtbl), pResult)
 End Function
 
-' Function IRequestedFileGetFileLength( _
-		' ByVal this As IRequestedFile Ptr, _
+' Function IFileBufferGetFileLength( _
+		' ByVal this As IFileBuffer Ptr, _
 		' ByVal pResult As ULongInt Ptr _
 	' )As HRESULT
-	' Return RequestedFileGetFileLength(ContainerOf(this, RequestedFile, lpVtbl), pResult)
+	' Return FileBufferGetFileLength(ContainerOf(this, FileBuffer, lpVtbl), pResult)
 ' End Function
 
-' Function IRequestedFileGetVaryHeaders( _
-		' ByVal this As IRequestedFile Ptr, _
+' Function IFileBufferGetVaryHeaders( _
+		' ByVal this As IFileBuffer Ptr, _
 		' ByVal pHeadersLength As Integer Ptr, _
 		' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
 	' )As HRESULT
-	' Return RequestedFileGetVaryHeaders(ContainerOf(this, RequestedFile, lpVtbl), pHeadersLength, ppHeaders)
+	' Return FileBufferGetVaryHeaders(ContainerOf(this, FileBuffer, lpVtbl), pHeadersLength, ppHeaders)
 ' End Function
 
-Dim GlobalRequestedFileVirtualTable As Const IRequestedFileVirtualTable = Type( _
-	@IRequestedFileQueryInterface, _
-	@IRequestedFileAddRef, _
-	@IRequestedFileRelease, _
-	@IRequestedFileGetFilePath, _
-	@IRequestedFileSetFilePath, _
-	@IRequestedFileGetPathTranslated, _
-	@IRequestedFileSetPathTranslated, _
-	@IRequestedFileFileExists, _
-	@IRequestedFileGetFileHandle, _
-	@IRequestedFileSetFileHandle, _
-	@IRequestedFileGetLastFileModifiedDate, _
-	NULL, _
+Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
+	@IFileBufferQueryInterface, _
+	@IFileBufferAddRef, _
+	@IFileBufferRelease, _
+	NULL, _ /' @IFileBufferGetCapacity, _ '/
+	NULL, _ /' @IFileBufferGetLength, _ '/
+	NULL, _ /' @IFileBufferGetSlice, _ '/
+	@IFileBufferGetFilePath, _
+	@IFileBufferSetFilePath, _
+	@IFileBufferGetPathTranslated, _
+	@IFileBufferSetPathTranslated, _
+	@IFileBufferFileExists, _
+	@IFileBufferGetFileHandle, _
+	@IFileBufferSetFileHandle, _
+	@IFileBufferGetLastFileModifiedDate, _
 	NULL _
 )

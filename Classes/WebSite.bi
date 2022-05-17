@@ -62,13 +62,6 @@ Declare Function WebSiteMapPath( _
 	ByVal pResult As HeapBSTR Ptr _
 )As HRESULT
 
-Declare Function WebSiteOpenRequestedFile( _
-	ByVal this As WebSite Ptr, _
-	ByVal pRequestedFile As IRequestedFile Ptr, _
-	ByVal FilePath As HeapBSTR, _
-	ByVal fAccess As FileAccess _
-)As HRESULT
-
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
 	ByVal path As HeapBSTR, _
