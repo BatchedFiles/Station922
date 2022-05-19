@@ -50,10 +50,14 @@ Type IMutableWebSiteVirtualTable
 		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
-	MapPath As Function( _
+	GetBuffer As Function( _
 		ByVal this As IMutableWebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal Path As HeapBSTR, _
-		ByVal pResult As HeapBSTR Ptr _
+		ByVal fAccess As FileAccess, _
+		ByVal pNegotiation As ContentNegotiationContext Ptr, _
+		ByVal pFlags As ContentNegotiationFlags Ptr, _
+		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
 	NeedCgiProcessing As Function( _
@@ -107,7 +111,7 @@ End Type
 #define IMutableWebSite_GetVirtualPath(this, ppVirtualPath) (this)->lpVtbl->GetVirtualPath(this, ppVirtualPath)
 #define IMutableWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IMutableWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
-#define IMutableWebSite_MapPath(this, Path, pResult) (this)->lpVtbl->MapPath(this, Path, pResult)
+#define IMutableWebSite_GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult)
 #define IMutableWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 #define IMutableWebSite_NeedDllProcessing(this, Path, pResult) (this)->lpVtbl->NeedDllProcessing(this, Path, pResult)
 #define IMutableWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)

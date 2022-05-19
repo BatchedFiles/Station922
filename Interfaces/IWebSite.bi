@@ -1,6 +1,7 @@
 #ifndef IWEBSITE_BI
 #define IWEBSITE_BI
 
+#include once "IBuffer.bi"
 #include once "IString.bi"
 
 Enum FileAccess
@@ -8,6 +9,22 @@ Enum FileAccess
 	ReadAccess
 	UpdateAccess
 	DeleteAccess
+End Enum
+
+Type ContentNegotiationContext
+	Encoding As HeapBSTR
+	Mime As HeapBSTR
+	Charset As HeapBSTR
+	Language As HeapBSTR
+	UserAgent As HeapBSTR
+End Type
+
+Enum ContentNegotiationFlags
+	ContentNegotiationAcceptEncoding = 1
+	ContentNegotiationAcceptMime = 2
+	ContentNegotiationAcceptCharset = 4
+	ContentNegotiationAcceptLanguage = 8
+	ContentNegotiationUserAgent = 16
 End Enum
 
 Type IWebSite As IWebSite_
@@ -57,10 +74,14 @@ Type IWebSiteVirtualTable
 		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
-	MapPath As Function( _
+	GetBuffer As Function( _
 		ByVal this As IWebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal Path As HeapBSTR, _
-		ByVal pResult As HeapBSTR Ptr _
+		ByVal fAccess As FileAccess, _
+		ByVal pNegotiation As ContentNegotiationContext Ptr, _
+		ByVal pFlags As ContentNegotiationFlags Ptr, _
+		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
 	NeedCgiProcessing As Function( _
@@ -89,7 +110,7 @@ End Type
 #define IWebSite_GetVirtualPath(this, ppVirtualPath) (this)->lpVtbl->GetVirtualPath(this, ppVirtualPath)
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
-#define IWebSite_MapPath(this, Path, pResult) (this)->lpVtbl->MapPath(this, Path, pResult)
+#define IWebSite_GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 #define IWebSite_NeedDllProcessing(this, Path, pResult) (this)->lpVtbl->NeedDllProcessing(this, Path, pResult)
 

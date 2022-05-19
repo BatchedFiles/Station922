@@ -56,10 +56,14 @@ Declare Function WebSiteGetMovedUrl( _
 	ByVal ppMovedUrl As HeapBSTR Ptr _
 )As HRESULT
 
-Declare Function WebSiteMapPath( _
+Declare Function WebSiteGetBuffer( _
 	ByVal this As WebSite Ptr, _
+	ByVal pIMalloc As IMalloc Ptr, _
 	ByVal Path As HeapBSTR, _
-	ByVal pResult As HeapBSTR Ptr _
+	ByVal fAccess As FileAccess, _
+	ByVal pNegotiation As ContentNegotiationContext Ptr, _
+	ByVal pFlags As ContentNegotiationFlags Ptr, _
+	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteNeedCgiProcessing( _

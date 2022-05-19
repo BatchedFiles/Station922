@@ -26,7 +26,6 @@ Type _HttpGetProcessor
 	pIMemoryAllocator As IMalloc Ptr
 	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
-	' BodyLength As LongInt
 	ContentBodyLength As LongInt
 	FileBytesOffset As LongInt
 	hTransmitFile As HANDLE
@@ -56,7 +55,6 @@ Sub MakeContentRangeHeader( _
 	
 End Sub
 
-' Определяет кодировку документа (массива байт)
 Function GetDocumentCharset( _
 		ByVal bytes As ZString Ptr _
 	)As DocumentCharsets
@@ -450,51 +448,67 @@ Function HttpGetProcessorPrepare( _
 			Return HTTPASYNCPROCESSOR_E_FILEGONE
 			
 	End Select
+	'/
 	
-	' Scope
+	/'
+	Scope
 		
-		' Dim pHeaderConnection As WString Ptr = Any
-		' IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderConnection, @pHeaderConnection)
+		Dim pHeaderConnection As WString Ptr = Any
+		IClientRequest_GetHttpHeader( _
+			' pIRequest, _
+			' HttpRequestHeaders.HeaderConnection, _
+			' @pHeaderConnection _
+		' )
 		
-		' If lstrcmpi(pHeaderConnection, @UpgradeString) = 0 Then
-			' Dim pHeaderUpgrade As WString Ptr = Any
-			' IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderUpgrade, @pHeaderUpgrade)
+		If lstrcmpi(pHeaderConnection, @UpgradeString) = 0 Then
+			Dim pHeaderUpgrade As WString Ptr = Any
+			IClientRequest_GetHttpHeader( _
+				' pIRequest, _
+				' HttpRequestHeaders.HeaderUpgrade, _
+				' @pHeaderUpgrade _
+			' )
 			
-			' If lstrcmpi(pHeaderUpgrade, @WebSocketString) = 0 Then
-				' Dim pHeaderSecWebSocketVersion As WString Ptr = Any
-				' IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderSecWebSocketVersion, @pHeaderSecWebSocketVersion)
+			If lstrcmpi(pHeaderUpgrade, @WebSocketString) = 0 Then
+				Dim pHeaderSecWebSocketVersion As WString Ptr = Any
+				IClientRequest_GetHttpHeader( _
+					' pIRequest, _
+					' HttpRequestHeaders.HeaderSecWebSocketVersion, _
+					' @pHeaderSecWebSocketVersion _
+				' )
 				
-				' If lstrcmpi(pHeaderSecWebSocketVersion, @WebSocketVersionString) = 0 Then
+				If lstrcmpi(pHeaderSecWebSocketVersion, @WebSocketVersionString) = 0 Then
 					
-					' CloseHandle(FileHandle)
-					' Return ProcessWebSocketRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+					CloseHandle(FileHandle)
+					Return ProcessWebSocketRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
 					
-				' End If 
-			' End If
-		' End If
+				End If 
+			End If
+		End If
 		
-		' Dim ClientUri As Station922Uri = Any
-		' IClientRequest_GetUri(pIRequest, @ClientUri)
+		Dim ClientUri As Station922Uri = Any
+		IClientRequest_GetUri(pIRequest, @ClientUri)
 		
-		' Dim NeedProcessing As Boolean = Any
+		Dim NeedProcessing As Boolean = Any
 		
-		' IWebSite_NeedCgiProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
+		IWebSite_NeedCgiProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
 		
-		' If NeedProcessing Then
-			' CloseHandle(FileHandle)
-			' Return ProcessCGIRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		' End If
+		If NeedProcessing Then
+			CloseHandle(FileHandle)
+			Return ProcessCGIRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+		End If
 		
-		' TODO ProcessDllCgiRequest
-		' IWebSite_NeedDllProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
+		TODO ProcessDllCgiRequest
+		IWebSite_NeedDllProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
 		
-		' If NeedProcessing Then
-			' CloseHandle(FileHandle)
-			' Return ProcessDllCgiRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		' End If
+		If NeedProcessing Then
+			CloseHandle(FileHandle)
+			Return ProcessDllCgiRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+		End If
 		
-	' End Scope
+	End Scope
+	'/
 	
+	/'
 	' Проверка запрещённого MIME
 	Dim Mime As MimeType = Any
 	Dim GetMimeOfFileExtensionResult As Boolean = GetMimeOfFileExtension( _
@@ -547,23 +561,25 @@ Function HttpGetProcessorPrepare( _
 	
 	AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
-	' В основном анализируются заголовки
-	' Accept: text/css, */*
-	' Accept-Charset: utf-8
-	' Accept-Encoding: gzip, deflate
-	' Accept-Language: ru-RU
-	' User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063
-	' Серверу следует включать в ответ заголовок Vary
-	
-	' TODO вместо перезаписывания заголовка его нужно добавить
-	If IsAcceptEncoding Then
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
-			pc->pIResponse, _
-			HttpResponseHeaders.HeaderVary, _
-			WStr("Accept-Encoding"), _
-			Len(WSTR("Accept-Encoding")) _
-		)
-	End If
+	Scope
+		' В основном анализируются заголовки
+		' Accept: text/css, */*
+		' Accept-Charset: utf-8
+		' Accept-Encoding: gzip, deflate
+		' Accept-Language: ru-RU
+		' User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063
+		' Серверу следует включать в ответ заголовок Vary
+		
+		' TODO вместо перезаписывания заголовка его нужно добавить
+		If IsAcceptEncoding Then
+			IServerResponse_AddKnownResponseHeaderWstrLen( _
+				pc->pIResponse, _
+				HttpResponseHeaders.HeaderVary, _
+				WStr("Accept-Encoding"), _
+				Len(WSTR("Accept-Encoding")) _
+			)
+		End If
+	End Scope
 	
 	Dim ResponseZipEnable As Boolean = Any
 	IServerResponse_GetZipEnabled(pc->pIResponse, @ResponseZipEnable)
@@ -576,10 +592,18 @@ Function HttpGetProcessorPrepare( _
 		Select Case ResponseZipMode
 			
 			Case ZipModes.GZip
-				IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentEncoding, @GZipString)
+				IServerResponse_AddKnownResponseHeader( _
+					pc->pIResponse, _
+					HttpResponseHeaders.HeaderContentEncoding, _
+					@GZipString _
+				)
 				
 			Case ZipModes.Deflate
-				IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentEncoding, @DeflateString)
+				IServerResponse_AddKnownResponseHeader( _
+					pc->pIResponse, _
+					HttpResponseHeaders.HeaderContentEncoding, _
+					@DeflateString _
+				)
 				
 		End Select
 		
@@ -625,7 +649,11 @@ Function HttpGetProcessorPrepare( _
 						EncodingFileSize _
 					)
 					
-					IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+					IServerResponse_AddKnownResponseHeader( _
+						pc->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
 					
 					IArrayStringWriter_Release(pIWriter)
 					
@@ -636,7 +664,10 @@ Function HttpGetProcessorPrepare( _
 				this->ContentBodyLength = EncodingFileSize - RequestedByteRange.FirstBytePosition
 				Dim LastBytePosition As LongInt = this->ContentBodyLength - 1
 				
-				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
+				IServerResponse_SetStatusCode( _
+					pc->pIResponse, _
+					HttpStatusCodes.PartialContent _
+				)
 				
 				MakeContentRangeHeader( _
 					pIWriter, _
@@ -645,7 +676,11 @@ Function HttpGetProcessorPrepare( _
 					EncodingFileSize _
 				)
 				
-				IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+				IServerResponse_AddKnownResponseHeader( _
+					pc->pIResponse, _
+					HttpResponseHeaders.HeaderContentRange, _
+					@wContentRange _
+				)
 				
 			Case ByteRangeIsSet.LastBytePositionIsSet
 				' Окончательные 500 байт (байтовые смещения 9500-9999, включительно): bytes=-500
@@ -664,7 +699,11 @@ Function HttpGetProcessorPrepare( _
 						EncodingFileSize _
 					)
 					
-					IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+					IServerResponse_AddKnownResponseHeader( _
+						pc->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
 					
 					IArrayStringWriter_Release(pIWriter)
 					
@@ -676,7 +715,10 @@ Function HttpGetProcessorPrepare( _
 				Dim FirstBytePosition As LongInt = EncodingFileSize - this->ContentBodyLength
 				Dim LastBytePosition As LongInt = FirstBytePosition + this->ContentBodyLength - 1
 				
-				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
+				IServerResponse_SetStatusCode( _
+					pc->pIResponse, _
+					HttpStatusCodes.PartialContent _
+				)
 				
 				MakeContentRangeHeader( _
 					pIWriter, _
@@ -685,7 +727,11 @@ Function HttpGetProcessorPrepare( _
 					EncodingFileSize _
 				)
 				
-				IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+				IServerResponse_AddKnownResponseHeader( _
+					pc->pIResponse, _
+					HttpResponseHeaders.HeaderContentRange, _
+					@wContentRange _
+				)
 				
 			Case ByteRangeIsSet.FirstAndLastPositionIsSet
 				' Первые 500 байтов (байтовые смещения 0-499 включительно): bytes=0-499
@@ -701,7 +747,11 @@ Function HttpGetProcessorPrepare( _
 						EncodingFileSize _
 					)
 					
-					IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+					IServerResponse_AddKnownResponseHeader( _
+						pc->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
 					
 					IArrayStringWriter_Release(pIWriter)
 					
@@ -713,7 +763,10 @@ Function HttpGetProcessorPrepare( _
 				Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
 				Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, EncodingFileSize - 1)
 				
-				IServerResponse_SetStatusCode(pc->pIResponse, HttpStatusCodes.PartialContent)
+				IServerResponse_SetStatusCode( _
+					pc->pIResponse, _
+					HttpStatusCodes.PartialContent _
+				)
 				
 				MakeContentRangeHeader( _
 					pIWriter, _
@@ -722,7 +775,11 @@ Function HttpGetProcessorPrepare( _
 					EncodingFileSize _
 				)
 				
-				IServerResponse_AddKnownResponseHeader(pc->pIResponse, HttpResponseHeaders.HeaderContentRange, @wContentRange)
+				IServerResponse_AddKnownResponseHeader( _
+					pc->pIResponse, _
+					HttpResponseHeaders.HeaderContentRange, _
+					@wContentRange _
+				)
 				
 		End Select
 		

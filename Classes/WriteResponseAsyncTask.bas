@@ -627,7 +627,6 @@ Function WriteResponseAsyncTaskPrepare( _
 		'/
 		
 		If IsSiteMoved Then
-			' Сайт перемещён на другой ресурс
 			hrPrepareResponse = SERVERRESPONSE_E_SITEMOVED
 		Else
 			
