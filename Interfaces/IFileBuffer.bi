@@ -2,6 +2,7 @@
 #define IFILEBUFFER_BI
 
 #include once "IBuffer.bi"
+#include once "IString.bi"
 
 Enum RequestedFileState
 	Exist
@@ -50,22 +51,22 @@ Type IFileBufferVirtualTable
 	
 	GetFilePath As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppFilePath As WString Ptr Ptr _
+		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
 	
 	SetFilePath As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal FilePath As WString Ptr _
+		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	
 	GetPathTranslated As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppPathTranslated As WString Ptr Ptr _
+		ByVal ppPathTranslated As HeapBSTR Ptr _
 	)As HRESULT
 	
 	SetPathTranslated As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal PathTranslated As WString Ptr _
+		ByVal PathTranslated As HeapBSTR _
 	)As HRESULT
 	
 	FileExists As Function( _

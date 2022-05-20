@@ -1,5 +1,6 @@
 #include once "FileBuffer.bi"
 #include once "ContainerOf.bi"
+#include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
 
@@ -17,17 +18,15 @@ Type _FileBuffer
 	lpVtbl As Const IFileBufferVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pFilePath As WString Ptr
-	pPathTranslated As WString Ptr
+	pFilePath As HeapBSTR
+	pPathTranslated As HeapBSTR
 	FileHandle As Handle
 	LastFileModifiedDate As FILETIME
 End Type
 
 Sub InitializeFileBuffer( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pFilePath As WString Ptr, _
-		ByVal pPathTranslated As WString Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -37,10 +36,8 @@ Sub InitializeFileBuffer( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pFilePath = pFilePath
-	this->pFilePath[0] = 0
-	this->pPathTranslated = pPathTranslated
-	this->pPathTranslated[0] = 0
+	this->pFilePath = NULL
+	this->pPathTranslated = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
 	
 End Sub
@@ -49,8 +46,8 @@ Sub UnInitializeFileBuffer( _
 		ByVal this As FileBuffer Ptr _
 	)
 	
-	IMalloc_Free(this->pIMemoryAllocator, this->pPathTranslated)
-	IMalloc_Free(this->pIMemoryAllocator, this->pFilePath)
+	HeapSysFreeString(this->pPathTranslated)
+	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		If CloseHandle(this->FileHandle) = 0 Then
@@ -94,53 +91,31 @@ Function CreateFileBuffer( _
 	End Scope
 	#endif
 	
-	Dim pFilePath As WString Ptr = IMalloc_Alloc( _
+	Dim this As FileBuffer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(WString) * (REQUESTEDFILE_MAXPATHLENGTH + 1) _
+		SizeOf(FileBuffer) _
 	)
-	
-	If pFilePath <> NULL Then
+	If this <> NULL Then
 		
-		Dim pPathTranslated As WString Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(WString) * (REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1) _
+		InitializeFileBuffer( _
+			this, _
+			pIMemoryAllocator _
 		)
 		
-		If pPathTranslated <> NULL Then
-			
-			Dim this As FileBuffer Ptr = IMalloc_Alloc( _
-				pIMemoryAllocator, _
-				SizeOf(FileBuffer) _
+		#if __FB_DEBUG__
+		Scope
+			Dim vtEmpty As VARIANT = Any
+			VariantInit(@vtEmpty)
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				WStr("FileBuffer created"), _
+				@vtEmpty _
 			)
-			If this <> NULL Then
-				
-				InitializeFileBuffer( _
-					this, _
-					pIMemoryAllocator, _
-					pFilePath, _
-					pPathTranslated _
-				)
-				
-				#if __FB_DEBUG__
-				Scope
-					Dim vtEmpty As VARIANT = Any
-					VariantInit(@vtEmpty)
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr("FileBuffer created"), _
-						@vtEmpty _
-					)
-				End Scope
-				#endif
-				
-				Return this
-				
-			End If
-			
-			IMalloc_Free(pIMemoryAllocator, pPathTranslated)
-		End If
+		End Scope
+		#endif
 		
-		IMalloc_Free(pIMemoryAllocator, pFilePath)
+		Return this
+		
 	End If
 	
 	Return NULL
@@ -247,11 +222,30 @@ Function FileBufferRelease( _
 	
 End Function
 
+' Declare Function FileBufferGetCapacity( _
+	' ByVal this As FileBuffer Ptr, _
+	' ByVal pCapacity As LongInt Ptr _
+' )As HRESULT
+
+' Declare Function FileBufferGetLength( _
+	' ByVal this As FileBuffer Ptr, _
+	' ByVal pLength As LongInt Ptr _
+' )As HRESULT
+
+' Declare Function FileBufferGetSlice( _
+	' ByVal this As FileBuffer Ptr, _
+	' ByVal StartIndex As LongInt, _
+	' ByVal Length As DWORD, _
+	' ByVal pBufferSlice As BufferSlice Ptr _
+' )As HRESULT
+
+
 Function FileBufferGetFilePath( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal ppFilePath As WString Ptr Ptr _
+		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
 	
+	HeapSysAddRefString(this->pFilePath)
 	*ppFilePath = this->pFilePath
 	
 	Return S_OK
@@ -260,10 +254,10 @@ End Function
 
 Function FileBufferSetFilePath( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal FilePath As WString Ptr _
+		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	
-	lstrcpynW(this->pFilePath, FilePath, REQUESTEDFILE_MAXPATHLENGTH + 1)
+	LET_HEAPSYSSTRING(this->pFilePath, FilePath)
 	
 	Return S_OK
 	
@@ -271,9 +265,10 @@ End Function
 
 Function FileBufferGetPathTranslated( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal ppPathTranslated As WString Ptr Ptr _
+		ByVal ppPathTranslated As HeapBSTR Ptr _
 	)As HRESULT
 	
+	HeapSysAddRefString(this->pPathTranslated)
 	*ppPathTranslated = this->pPathTranslated
 	
 	Return S_OK
@@ -282,10 +277,10 @@ End Function
 
 Function FileBufferSetPathTranslated( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal PathTranslated As WString Ptr _
+		ByVal PathTranslated As HeapBSTR _
 	)As HRESULT
 	
-	lstrcpynW(this->pPathTranslated, PathTranslated, REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH + 1)
+	LET_HEAPSYSSTRING(this->pPathTranslated, PathTranslated)
 	
 	Return S_OK
 	
@@ -400,28 +395,28 @@ End Function
 
 Function IFileBufferGetFilePath( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppFilePath As WString Ptr Ptr _
+		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
 	Return FileBufferGetFilePath(ContainerOf(this, FileBuffer, lpVtbl), ppFilePath)
 End Function
 
 Function IFileBufferSetFilePath( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal FilePath As WString Ptr _
+		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	Return FileBufferSetFilePath(ContainerOf(this, FileBuffer, lpVtbl), FilePath)
 End Function
 
 Function IFileBufferGetPathTranslated( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppPathTranslated As WString Ptr Ptr _
+		ByVal ppPathTranslated As HeapBSTR Ptr _
 	)As HRESULT
 	Return FileBufferGetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), ppPathTranslated)
 End Function
 
 Function IFileBufferSetPathTranslated( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal PathTranslated As WString Ptr _
+		ByVal PathTranslated As HeapBSTR _
 	)As HRESULT
 	Return FileBufferSetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), PathTranslated)
 End Function

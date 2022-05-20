@@ -31,24 +31,41 @@ Declare Function FileBufferRelease( _
 	ByVal this As FileBuffer Ptr _
 )As ULONG
 
+Declare Function FileBufferGetCapacity( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal pCapacity As LongInt Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetLength( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal pLength As LongInt Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetSlice( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal StartIndex As LongInt, _
+	ByVal Length As DWORD, _
+	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
+
 Declare Function FileBufferGetFilePath( _
 	ByVal this As FileBuffer Ptr, _
-	ByVal ppFilePath As WString Ptr Ptr _
+	ByVal ppFilePath As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function FileBufferSetFilePath( _
 	ByVal this As FileBuffer Ptr, _
-	ByVal FilePath As WString Ptr _
+	ByVal FilePath As HeapBSTR _
 )As HRESULT
 
 Declare Function FileBufferGetPathTranslated( _
 	ByVal this As FileBuffer Ptr, _
-	ByVal ppPathTranslated As WString Ptr Ptr _
+	ByVal ppPathTranslated As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function FileBufferSetPathTranslated( _
 	ByVal this As FileBuffer Ptr, _
-	ByVal PathTranslated As WString Ptr _
+	ByVal PathTranslated As HeapBSTR _
 )As HRESULT
 
 Declare Function FileBufferFileExists( _
