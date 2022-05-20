@@ -6,6 +6,7 @@
 #include once "ContainerOf.bi"
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
@@ -404,51 +405,76 @@ Function HttpGetProcessorPrepare( _
 		ByVal ppIBuffer As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	/'
-	Dim pIFile As IRequestedFile Ptr = Any
-	Dim hrCreateRequestedFile As HRESULT = CreateInstance( _
-		pIMemoryAllocator, _
-		@CLSID_REQUESTEDFILE, _
-		@IID_IRequestedFile, _
-		@pIFile _
+	Dim ClientURI As IClientUri Ptr = Any
+	IClientRequest_GetUri(pContext->pIRequest, @ClientURI)
+	
+	Dim Path As HeapBSTR = Any
+	IClientUri_GetPath(ClientURI, @Path)
+	
+	Dim NegotiationContext As ContentNegotiationContext = Any
+	
+	IClientRequest_GetHttpHeader( _
+		pContext->pIRequest, _
+		HttpRequestHeaders.HeaderAcceptEncoding, _
+		@NegotiationContext.Encoding _
 	)
-	If FAILED(hrCreateRequestedFile) Then
-		ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-		hrResult = E_FAIL
-	Else
-		IClientContext_SetRequestedFile(pIContext, pIFile)
+	
+	IClientRequest_GetHttpHeader( _
+		pContext->pIRequest, _
+		HttpRequestHeaders.HeaderAccept, _
+		@NegotiationContext.Mime _
+	)
+	
+	IClientRequest_GetHttpHeader( _
+		pContext->pIRequest, _
+		HttpRequestHeaders.HeaderAcceptCharset, _
+		@NegotiationContext.Charset _
+	)
+	
+	IClientRequest_GetHttpHeader( _
+		pContext->pIRequest, _
+		HttpRequestHeaders.HeaderAcceptLanguage, _
+		@NegotiationContext.Language _
+	)
+	
+	IClientRequest_GetHttpHeader( _
+		pContext->pIRequest, _
+		HttpRequestHeaders.HeaderUserAgent, _
+		@NegotiationContext.UserAgent _
+	)
+	
+	Dim Flags As ContentNegotiationFlags = Any
+	Dim pIBuffer As IBuffer Ptr = Any
+	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
+		pContext->pIWebSite, _
+		pContext->pIMemoryAllocator, _
+		Path, _
+		FileAccess.ReadAccess, _
+		@NegotiationContext, _
+		@Flags, _
+		@pIBuffer _
+	)
+	If FAILED(hrGetBuffer) Then
+		HeapSysFreeString(NegotiationContext.Encoding)
+		HeapSysFreeString(NegotiationContext.Mime)
+		HeapSysFreeString(NegotiationContext.Charset)
+		HeapSysFreeString(NegotiationContext.Language)
+		HeapSysFreeString(NegotiationContext.UserAgent)
 		
-		Dim hrGetFile As HRESULT = IWebSite_OpenRequestedFile( _
-			pIWebSite, _
-			pIFile, _
-			ClientURI.Path, _
-			RequestedFileAccess _
-		)
-		If FAILED(hrGetFile) Then
-			ProcessDataError(pIContext, DataError.NotEnoughMemory, pIWebSite)
-			hrResult = E_FAIL
-		Else
-	'/
-	
-	/'
-	Dim PathTranslated As WString Ptr = Any
-	IRequestedFile_GetPathTranslated(pc->pIRequestedFile, @PathTranslated)
-	
-	IRequestedFile_GetFileHandle(pc->pIRequestedFile, @this->FileHandle)
-	
-	Dim FileState As RequestedFileState = Any
-	IRequestedFile_FileExists(pc->pIRequestedFile, @FileState)
-	
-	Select Case FileState
+		HeapSysFreeString(Path)
+		IClientRequest_Release(ClientURI)
 		
-		Case RequestedFileState.NotFound
-			Return HTTPASYNCPROCESSOR_E_FILENOTFOUND
-			
-		Case RequestedFileState.Gone
-			Return HTTPASYNCPROCESSOR_E_FILEGONE
-			
-	End Select
-	'/
+		Return E_FAIL
+	End If
+	
+	HeapSysFreeString(NegotiationContext.Encoding)
+	HeapSysFreeString(NegotiationContext.Mime)
+	HeapSysFreeString(NegotiationContext.Charset)
+	HeapSysFreeString(NegotiationContext.Language)
+	HeapSysFreeString(NegotiationContext.UserAgent)
+	
+	HeapSysFreeString(Path)
+	IClientRequest_Release(ClientURI)
 	
 	/'
 	Scope
@@ -518,7 +544,9 @@ Function HttpGetProcessorPrepare( _
 	If GetMimeOfFileExtensionResult = False Then
 		Return HTTPASYNCPROCESSOR_E_FORBIDDEN
 	End If
+	'/
 	
+	/'
 	' TODO Проверить идентификацию для запароленных ресурсов
 	
 	' Заголовки сжатия
@@ -798,6 +826,7 @@ Function HttpGetProcessorPrepare( _
 	IRequestedFile_SetFileHandle(pc->pIRequestedFile, INVALID_HANDLE_VALUE)
 	'/
 	
+	IBuffer_Release(pIBuffer)
 	*ppIBuffer = NULL
 	
 	Return E_UNEXPECTED

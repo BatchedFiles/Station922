@@ -1,10 +1,11 @@
 #include once "WebSite.bi"
 #include once "win\shlwapi.bi"
-#include once "IMutableWebSite.bi"
 #include once "CharacterConstants.bi"
-#include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
+#include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "Logger.bi"
+#include once "FileBuffer.bi"
 
 Extern GlobalMutableWebSiteVirtualTable As Const IMutableWebSiteVirtualTable
 
@@ -34,7 +35,6 @@ Type _WebSite
 	IsMoved As Boolean
 End Type
 
-/'
 Function GetDefaultFileName( _
 		ByVal Buffer As WString Ptr, _
 		ByVal Index As Integer _
@@ -76,64 +76,132 @@ Function GetDefaultFileName( _
 	
 End Function
 
-Function OpenFileForReading( _
+Function GetFileHandle( _
 		ByVal PathTranslated As WString Ptr, _
-		ByVal ForReading As FileAccess _
-	)As HANDLE
+		ByVal ForReading As FileAccess, _
+		ByVal pFileHandle As HANDLE Ptr _
+	)As HRESULT
 	
-	' Dim dwError As DWORD = Any
+	Dim FileHandle As HANDLE = Any
+	Dim hrErrorCode As HRESULT = Any
 	
 	Select Case ForReading
 		
 		Case FileAccess.ReadAccess
-			' dwError = GetLastError()
-			Return CreateFileW( _
+			FileHandle = CreateFileW( _
 				PathTranslated, _
 				GENERIC_READ, _
 				FILE_SHARE_READ, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_SEQUENTIAL_SCAN, _
+				FILE_ATTRIBUTE_NORMAL, _
 				NULL _
 			)
+			If FileHandle = INVALID_HANDLE_VALUE Then
+				Dim dwError As DWORD = GetLastError()
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				hrErrorCode = S_OK
+			End If
 			
 		Case FileAccess.DeleteAccess
-			' dwError = GetLastError()
-			Return CreateFileW( _
+			FileHandle = CreateFileW( _
 				PathTranslated, _
 				0, _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE, _
 				NULL _
 			)
+			If FileHandle = INVALID_HANDLE_VALUE Then
+				Dim dwError As DWORD = GetLastError()
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				hrErrorCode = S_OK
+			End If
 			
 		Case Else
-			' dwError = 0
-			Return INVALID_HANDLE_VALUE
+			'FileAccess.CreateAccess, FileAccess.UpdateAccess
+			FileHandle = INVALID_HANDLE_VALUE
+			hrErrorCode = S_OK
 			
 	End Select
+	
+	*pFileHandle = FileHandle
+	Return hrErrorCode
+	
+End Function
+
+Sub ReplaceSolidus( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal Length As Integer _
+	)
+	
+	For i As Integer = 0 To Length - 1
+		If pBuffer[i] = Characters.Solidus Then
+			pBuffer[i] = Characters.ReverseSolidus
+		End If
+	Next
+	
+End Sub
+
+Function WebSiteMapPath( _
+		ByVal this As WebSite Ptr, _
+		ByVal Path As HeapBSTR, _
+		ByVal pBuffer As WString Ptr _
+	)As HRESULT
+	
+	lstrcpyW(pBuffer, this->pPhysicalDirectory)
+	
+	Scope
+		Dim BufferLength As Integer = SysStringLen(this->pPhysicalDirectory)
+		
+		If pBuffer[BufferLength - 1] <> Characters.ReverseSolidus Then
+			pBuffer[BufferLength] = Characters.ReverseSolidus
+			BufferLength += 1
+			pBuffer[BufferLength] = 0
+		End If
+	End Scope
+	
+	If SysStringLen(Path) Then
+		If Path[0] = Characters.Solidus Then
+			lstrcatW(pBuffer, @Path[1])
+		Else
+			lstrcatW(pBuffer, Path)
+		End If
+	End If
+	
+	Dim BufferLength As Integer = lstrlenW(pBuffer)
+	ReplaceSolidus(pBuffer, BufferLength)
+	
+	Return S_OK
 	
 End Function
 
 Function WebSiteOpenRequestedFile( _
 		ByVal this As WebSite Ptr, _
-		ByVal pRequestedFile As IRequestedFile Ptr, _
-		ByVal FilePath As HeapBSTR, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal pFile As IFileBuffer Ptr, _
+		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
-	/'
+	
 	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
 	
-	If FilePath[lstrlenW(FilePath) - 1] <> Characters.Solidus Then
+	If Path[lstrlenW(Path) - 1] <> Characters.Solidus Then
 		
-		WebSiteMapPath(this, FilePath, @PathTranslated)
-		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
+		WebSiteMapPath(this, Path, @PathTranslated)
+		Dim hFile As HANDLE = Any
+		GetFileHandle(@PathTranslated, fAccess, @hFile)
 		
-		IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
-		IRequestedFile_SetFilePath(pRequestedFile, FilePath)
-		IRequestedFile_SetFileHandle(pRequestedFile, hFile)
+		Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
+		IFileBuffer_SetPathTranslated(pFile, pt)
+		
+		IFileBuffer_SetFilePath(pFile, Path)
+		IFileBuffer_SetFileHandle(pFile, hFile)
+		
+		HeapSysFreeString(pt)
 		
 		Return S_OK
 		
@@ -143,45 +211,70 @@ Function WebSiteOpenRequestedFile( _
 	Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
 	Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
 	
-	Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
+	Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName( _
+		@DefaultFilename, _
+		DefaultFilenameIndex _
+	)
 	
 	Do
-		lstrcpyW(@FullDefaultFilename, FilePath)
+		lstrcpyW(@FullDefaultFilename, Path)
 		lstrcatW(@FullDefaultFilename, DefaultFilename)
 		
 		WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
 		
-		Dim hFile As HANDLE = OpenFileForReading(@PathTranslated, fAccess)
+		Dim hFile As HANDLE = Any
+		Dim hrGetFile As HRESULT = GetFileHandle( _
+			@PathTranslated, _
+			fAccess, _
+			@hFile _
+		)
 		
-		If hFile <> INVALID_HANDLE_VALUE Then
+		If SUCCEEDED(hrGetFile) Then
 			
-			IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
-			IRequestedFile_SetFilePath(pRequestedFile, FullDefaultFilename)
-			IRequestedFile_SetFileHandle(pRequestedFile, hFile)
+			Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
+			Dim fp As HeapBSTR = HeapSysAllocString(pIMalloc, @FullDefaultFilename)
+			
+			IFileBuffer_SetPathTranslated(pFile, pt)
+			IFileBuffer_SetFilePath(pFile, fp)
+			IFileBuffer_SetFileHandle(pFile, hFile)
+			
+			HeapSysFreeString(fp)
+			HeapSysFreeString(pt)
+			
 			Return S_OK
 			
 		End If
 		
 		DefaultFilenameIndex += 1
-		GetDefaultFileNameResult = GetDefaultFileName(@DefaultFilename, DefaultFilenameIndex)
+		GetDefaultFileNameResult = GetDefaultFileName( _
+			@DefaultFilename, _
+			DefaultFilenameIndex _
+		)
 		
 	Loop While GetDefaultFileNameResult
 	
-	GetDefaultFileName(DefaultFilename, 0)
+	Scope
+		GetDefaultFileName(DefaultFilename, 0)
+		
+		lstrcpyW(@FullDefaultFilename, Path)
+		lstrcatW(@FullDefaultFilename, @DefaultFilename)
+		
+		WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
+		
+		Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
+		Dim fp As HeapBSTR = HeapSysAllocString(pIMalloc, @FullDefaultFilename)
+		
+		IFileBuffer_SetPathTranslated(pFile, pt)
+		IFileBuffer_SetFilePath(pFile, fp)
+		IFileBuffer_SetFileHandle(pFile, INVALID_HANDLE_VALUE)
+		
+		HeapSysFreeString(fp)
+		HeapSysFreeString(pt)
+	End Scope
 	
-	lstrcpyW(@FullDefaultFilename, FilePath)
-	lstrcatW(@FullDefaultFilename, @DefaultFilename)
-	
-	WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
-	
-	IRequestedFile_SetPathTranslated(pRequestedFile, PathTranslated)
-	IRequestedFile_SetFilePath(pRequestedFile, FullDefaultFilename)
-	IRequestedFile_SetFileHandle(pRequestedFile, INVALID_HANDLE_VALUE)
-	'/
 	Return S_FALSE
 	
 End Function
-'/
 
 Sub InitializeWebSite( _
 		ByVal this As WebSite Ptr, _
@@ -189,7 +282,7 @@ Sub InitializeWebSite( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WebSiteWebSiteWe"), 16)
+		CopyMemory(@this->IdString, @Str("WebSite_________"), 16)
 	#endif
 	this->lpVtbl = @GlobalMutableWebSiteVirtualTable
 	this->ReferenceCounter = 0
@@ -417,39 +510,6 @@ Function WebSiteGetMovedUrl( _
 	
 End Function
 
-/'
-Function WebSiteMapPath( _
-		ByVal this As WebSite Ptr, _
-		ByVal Path As HeapBSTR, _
-		ByVal pResult As HeapBSTR Ptr _
-	)As HRESULT
-	lstrcpyW(pResult, this->pPhysicalDirectory)
-	Dim BufferLength As Integer = lstrlenW(pResult)
-	
-	If pResult[BufferLength - 1] <> Characters.ReverseSolidus Then
-		pResult[BufferLength] = Characters.ReverseSolidus
-		BufferLength += 1
-		pResult[BufferLength] = 0
-	End If
-	
-	If lstrlenW(Path) <> 0 Then
-		If Path[0] = Characters.Solidus Then
-			lstrcatW(pResult, @Path[1])
-		Else
-			lstrcatW(pResult, Path)
-		End If
-	End If
-	
-	For i As Integer = 0 To lstrlenW(pResult) - 1
-		If pResult[i] = Characters.Solidus Then
-			pResult[i] = Characters.ReverseSolidus
-		End If
-	Next
-	Return S_OK
-	
-End Function
-'/
-
 Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -460,7 +520,67 @@ Function WebSiteGetBuffer( _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	Return S_OK
+	Dim pIFile As IFileBuffer Ptr = Any
+	Dim hrCreateFileBuffer As HRESULT = CreateInstance( _
+		pIMalloc, _
+		@CLSID_FILEBUFFER, _
+		@IID_IFileBuffer, _
+		@pIFile _
+	)
+	If FAILED(hrCreateFileBuffer) Then
+		Return hrCreateFileBuffer
+	End If
+	
+	/'
+	Dim PathTranslated As WString Ptr = Any
+	IRequestedFile_GetPathTranslated(pc->pIRequestedFile, @PathTranslated)
+	
+	IRequestedFile_GetFileHandle(pc->pIRequestedFile, @this->FileHandle)
+	
+	Dim FileState As RequestedFileState = Any
+	IRequestedFile_FileExists(pc->pIRequestedFile, @FileState)
+	
+	Select Case FileState
+		
+		Case RequestedFileState.NotFound
+			Return HTTPASYNCPROCESSOR_E_FILENOTFOUND
+			
+		Case RequestedFileState.Gone
+			Return HTTPASYNCPROCESSOR_E_FILEGONE
+			
+	End Select
+	'/
+	
+	' Получить FilePath — путь + имя файл (с расширением)
+	' Получить PathTranslated — путь к файлу на диске
+	Dim hrOpenFile As HRESULT = WebSiteOpenRequestedFile( _
+		this, _
+		pIMalloc, _
+		pIFile, _
+		Path, _
+		fAccess _
+	)
+	If FAILED(hrOpenFile) Then
+		IFileBuffer_Release(pIFile)
+		*ppResult = NULL
+		Return hrOpenFile
+	End If
+	
+	' Получить ZipPath — путь к сжатому файлу если есть
+	
+	' Открыть оба файла — в зависимости от метода доступа
+	
+	' Проверить MIME, если текстовое — сдвинуть указатель на SizeOf(BOM) байт
+	' для несжатого файла
+	
+	' Установить флаги согласованного содержимого
+	
+	' Вернуть IFileBuffer
+	
+	IFileBuffer_Release(pIFile)
+	*ppResult = NULL
+	
+	Return E_UNEXPECTED
 	
 End Function
 
