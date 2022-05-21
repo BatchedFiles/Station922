@@ -189,11 +189,17 @@ Function WebSiteOpenRequestedFile( _
 	
 	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
 	
-	If Path[lstrlenW(Path) - 1] <> Characters.Solidus Then
+	Dim LastChar As Integer = Path[lstrlenW(Path) - 1]
+	If LastChar <> Characters.Solidus Then
 		
 		WebSiteMapPath(this, Path, @PathTranslated)
+		
 		Dim hFile As HANDLE = Any
-		GetFileHandle(@PathTranslated, fAccess, @hFile)
+		Dim hrGetFileHandle As HRESULT = GetFileHandle( _
+			@PathTranslated, _
+			fAccess, _
+			@hFile _
+		)
 		
 		Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
 		IFileBuffer_SetPathTranslated(pFile, pt)
@@ -203,7 +209,7 @@ Function WebSiteOpenRequestedFile( _
 		
 		HeapSysFreeString(pt)
 		
-		Return S_OK
+		Return hrGetFileHandle
 		
 	End If
 	
@@ -516,6 +522,7 @@ Function WebSiteGetBuffer( _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal pNegotiation As ContentNegotiationContext Ptr, _
+		ByVal pFileContext As FileContentInfo Ptr, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
@@ -528,6 +535,8 @@ Function WebSiteGetBuffer( _
 		@pIFile _
 	)
 	If FAILED(hrCreateFileBuffer) Then
+		ZeroMemory(pFileContext, SizeOf(FileContentInfo))
+		*ppResult = NULL
 		Return hrCreateFileBuffer
 	End If
 	
@@ -551,8 +560,6 @@ Function WebSiteGetBuffer( _
 	End Select
 	'/
 	
-	' Получить FilePath — путь + имя файл (с расширением)
-	' Получить PathTranslated — путь к файлу на диске
 	Dim hrOpenFile As HRESULT = WebSiteOpenRequestedFile( _
 		this, _
 		pIMalloc, _
@@ -562,6 +569,7 @@ Function WebSiteGetBuffer( _
 	)
 	If FAILED(hrOpenFile) Then
 		IFileBuffer_Release(pIFile)
+		ZeroMemory(pFileContext, SizeOf(FileContentInfo))
 		*ppResult = NULL
 		Return hrOpenFile
 	End If
@@ -578,6 +586,7 @@ Function WebSiteGetBuffer( _
 	' Вернуть IFileBuffer
 	
 	IFileBuffer_Release(pIFile)
+	ZeroMemory(pFileContext, SizeOf(FileContentInfo))
 	*ppResult = NULL
 	
 	Return E_UNEXPECTED
@@ -733,10 +742,11 @@ Function IMutableWebSiteGetBuffer( _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal pNegotiation As ContentNegotiationContext Ptr, _
+		ByVal pFileContext As FileContentInfo Ptr, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
-	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult)
+	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, Path, fAccess, pNegotiation, pFileContext, pFlags, ppResult)
 End Function
 
 Function IMutableWebSiteNeedCgiProcessing( _

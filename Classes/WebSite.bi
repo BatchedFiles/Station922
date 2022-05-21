@@ -62,6 +62,7 @@ Declare Function WebSiteGetBuffer( _
 	ByVal Path As HeapBSTR, _
 	ByVal fAccess As FileAccess, _
 	ByVal pNegotiation As ContentNegotiationContext Ptr, _
+	ByVal pFileContext As FileContentInfo Ptr, _
 	ByVal pFlags As ContentNegotiationFlags Ptr, _
 	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT

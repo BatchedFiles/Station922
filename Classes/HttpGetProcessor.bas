@@ -443,6 +443,7 @@ Function HttpGetProcessorPrepare( _
 		@NegotiationContext.UserAgent _
 	)
 	
+	Dim FileInfo As FileContentInfo = Any
 	Dim Flags As ContentNegotiationFlags = Any
 	Dim pIBuffer As IBuffer Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
@@ -451,6 +452,7 @@ Function HttpGetProcessorPrepare( _
 		Path, _
 		FileAccess.ReadAccess, _
 		@NegotiationContext, _
+		@FileInfo, _
 		@Flags, _
 		@pIBuffer _
 	)
