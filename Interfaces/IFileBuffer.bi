@@ -32,6 +32,36 @@ Type IFileBufferVirtualTable
 		ByVal this As IFileBuffer Ptr _
 	)As ULONG
 	
+	GetContentType As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	
+	GetEncoding As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetCharset As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetLanguage As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetETag As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetLastFileModifiedDate As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppDate As FILETIME Ptr _
+	)As HRESULT
+	
 	GetCapacity As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pCapacity As LongInt Ptr _
@@ -84,11 +114,6 @@ Type IFileBufferVirtualTable
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
-	GetLastFileModifiedDate As Function( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal pResult As FILETIME Ptr _
-	)As HRESULT
-	
 	GetFileLength As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As ULongInt Ptr _
@@ -103,6 +128,12 @@ End Type
 #define IFileBuffer_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IFileBuffer_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IFileBuffer_Release(this) (this)->lpVtbl->Release(this)
+#define IFileBuffer_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
+#define IFileBuffer_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
+#define IFileBuffer_GetCharset(this, ppCharset) (this)->lpVtbl->GetCharset(this, ppCharset)
+#define IFileBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
+#define IFileBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
+#define IFileBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IFileBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IFileBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IFileBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
@@ -113,7 +144,6 @@ End Type
 #define IFileBuffer_FileExists(this, pResult) (this)->lpVtbl->FileExists(this, pResult)
 #define IFileBuffer_GetFileHandle(this, pResult) (this)->lpVtbl->GetFileHandle(this, pResult)
 #define IFileBuffer_SetFileHandle(this, hFile) (this)->lpVtbl->SetFileHandle(this, hFile)
-#define IFileBuffer_GetLastFileModifiedDate(this, pResult) (this)->lpVtbl->GetLastFileModifiedDate(this, pResult)
 #define IFileBuffer_GetFileLength(this, pResult) (this)->lpVtbl->GetFileLength(this, pResult)
 
 #endif

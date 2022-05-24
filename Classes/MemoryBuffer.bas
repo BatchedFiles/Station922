@@ -1,5 +1,6 @@
 #include once "MemoryBuffer.bi"
 #include once "ContainerOf.bi"
+#include once "HeapBSTR.bi"
 #include once "Logger.bi"
 
 Extern GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable
@@ -11,8 +12,13 @@ Type _MemoryBuffer
 	lpVtbl As Const IMemoryBufferVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	Capacity As LongInt
 	pBuffer As Byte Ptr
+	Capacity As LongInt
+	Encoding As HeapBSTR
+	Charset As HeapBSTR
+	Language As HeapBSTR
+	ETag As HeapBSTR
+	ContentType As MimeType
 End Type
 
 Sub InitializeMemoryBuffer( _
@@ -27,14 +33,26 @@ Sub InitializeMemoryBuffer( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->Capacity = 0
 	this->pBuffer = NULL
+	this->Capacity = 0
+	this->Encoding = NULL
+	this->Charset = NULL
+	this->Language = NULL
+	this->ETag = NULL
+	this->ContentType.ContentType = ContentTypes.AnyAny
+	this->ContentType.Charset = DocumentCharsets.ASCII
+	this->ContentType.IsTextFormat = False
 	
 End Sub
 
 Sub UnInitializeMemoryBuffer( _
 		ByVal this As MemoryBuffer Ptr _
 	)
+	
+	HeapSysFreeString(this->ETag)
+	HeapSysFreeString(this->Encoding)
+	HeapSysFreeString(this->Charset)
+	HeapSysFreeString(this->Language)
 	
 	If this->pBuffer <> NULL Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffer)
@@ -192,6 +210,76 @@ Function MemoryBufferRelease( _
 	
 End Function
 
+Function MemoryBufferGetContentType( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	
+	memcpy(ppType, @this->ContentType, SizeOf(MimeType))
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferGetEncoding( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Encoding)
+	*ppEncoding = this->Encoding
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferGetCharset( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Charset)
+	*ppCharset = this->Charset
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferGetLanguage( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Language)
+	*ppLanguage = this->Language
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferGetLastFileModifiedDate( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppDate As FILETIME Ptr _
+	)As HRESULT
+	
+	ZeroMemory(ppDate, SizeOf(FILETIME))
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferGetETag( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->ETag)
+	*ppETag = this->ETag
+	
+	Return S_OK
+	
+End Function
+
 Function MemoryBufferGetCapacity( _
 		ByVal this As MemoryBuffer Ptr, _
 		ByVal pCapacity As LongInt Ptr _
@@ -231,6 +319,17 @@ Function MemoryBufferGetSlice( _
 	If pBufferSlice->Length <= this->Capacity Then
 		Return S_FALSE
 	End If
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferSetContentType( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal pType As MimeType Ptr _
+	)As HRESULT
+	
+	memcpy(@this->ContentType, pType, SizeOf(MimeType))
 	
 	Return S_OK
 	
@@ -279,6 +378,48 @@ Function IMemoryBufferRelease( _
 	Return MemoryBufferRelease(ContainerOf(this, MemoryBuffer, lpVtbl))
 End Function
 
+Function IMemoryBufferGetContentType( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	Return MemoryBufferGetContentType(ContainerOf(this, MemoryBuffer, lpVtbl), ppType)
+End Function
+
+Function IMemoryBufferGetEncoding( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	Return MemoryBufferGetEncoding(ContainerOf(this, MemoryBuffer, lpVtbl), ppEncoding)
+End Function
+
+Function IMemoryBufferGetCharset( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	Return MemoryBufferGetCharset(ContainerOf(this, MemoryBuffer, lpVtbl), ppCharset)
+End Function
+
+Function IMemoryBufferGetLanguage( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	Return MemoryBufferGetLanguage(ContainerOf(this, MemoryBuffer, lpVtbl), ppLanguage)
+End Function
+
+Function IMemoryBufferGetETag( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	Return MemoryBufferGetETag(ContainerOf(this, MemoryBuffer, lpVtbl), ppETag)
+End Function
+
+Function IMemoryBufferGetLastFileModifiedDate( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal ppDate As FILETIME Ptr _
+	)As HRESULT
+	Return MemoryBufferGetLastFileModifiedDate(ContainerOf(this, MemoryBuffer, lpVtbl), ppDate)
+End Function
+
 Function IMemoryBufferGetCapacity( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal pCapacity As LongInt Ptr _
@@ -302,6 +443,13 @@ Function IMemoryBufferGetSlice( _
 	Return MemoryBufferGetSlice(ContainerOf(this, MemoryBuffer, lpVtbl), StartIndex, Length, pBufferSlice)
 End Function
 
+Function IMemoryBufferSetContentType( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal pType As MimeType Ptr _
+	)As HRESULT
+	Return MemoryBufferSetContentType(ContainerOf(this, MemoryBuffer, lpVtbl), pType)
+End Function
+
 Function IMemoryBufferAllocBuffer( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal Length As LongInt, _
@@ -314,8 +462,15 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferQueryInterface, _
 	@IMemoryBufferAddRef, _
 	@IMemoryBufferRelease, _
+	@IMemoryBufferGetContentType, _
+	@IMemoryBufferGetEncoding, _
+	@IMemoryBufferGetCharset, _
+	@IMemoryBufferGetLanguage, _
+	@IMemoryBufferGetETag, _
+	@IMemoryBufferGetLastFileModifiedDate, _
 	@IMemoryBufferGetCapacity, _
 	@IMemoryBufferGetLength, _
 	@IMemoryBufferGetSlice, _
+	@IMemoryBufferSetContentType, _
 	@IMemoryBufferAllocBuffer _
 )

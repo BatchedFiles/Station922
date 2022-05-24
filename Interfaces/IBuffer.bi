@@ -1,8 +1,8 @@
 #ifndef IBUFFER_BI
 #define IBUFFER_BI
 
-#include once "windows.bi"
-#include once "win\ole2.bi"
+#include once "IString.bi"
+#include once "Mime.bi"
 
 Type BufferSlice
 	pSlice As LPVOID
@@ -31,6 +31,36 @@ Type IBufferVirtualTable
 		ByVal this As IBuffer Ptr _
 	)As ULONG
 	
+	GetContentType As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	
+	GetEncoding As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetCharset As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetLanguage As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetETag As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	
+	GetLastFileModifiedDate As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal ppDate As FILETIME Ptr _
+	)As HRESULT
+	
 	GetCapacity As Function( _
 		ByVal this As IBuffer Ptr, _
 		ByVal pCapacity As LongInt Ptr _
@@ -57,6 +87,12 @@ End Type
 #define IBuffer_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IBuffer_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IBuffer_Release(this) (this)->lpVtbl->Release(this)
+#define IBuffer_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
+#define IBuffer_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
+#define IBuffer_GetCharset(this, ppCharset) (this)->lpVtbl->GetCharset(this, ppCharset)
+#define IBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
+#define IBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
+#define IBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)

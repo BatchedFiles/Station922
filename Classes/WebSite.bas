@@ -3,9 +3,10 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "FileBuffer.bi"
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
-#include once "FileBuffer.bi"
+#include once "Mime.bi"
 
 Extern GlobalMutableWebSiteVirtualTable As Const IMutableWebSiteVirtualTable
 
@@ -522,7 +523,6 @@ Function WebSiteGetBuffer( _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal pNegotiation As ContentNegotiationContext Ptr, _
-		ByVal pFileContext As FileContentInfo Ptr, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
@@ -535,7 +535,6 @@ Function WebSiteGetBuffer( _
 		@pIFile _
 	)
 	If FAILED(hrCreateFileBuffer) Then
-		ZeroMemory(pFileContext, SizeOf(FileContentInfo))
 		*ppResult = NULL
 		Return hrCreateFileBuffer
 	End If
@@ -569,9 +568,24 @@ Function WebSiteGetBuffer( _
 	)
 	If FAILED(hrOpenFile) Then
 		IFileBuffer_Release(pIFile)
-		ZeroMemory(pFileContext, SizeOf(FileContentInfo))
 		*ppResult = NULL
 		Return hrOpenFile
+	End If
+	
+	Dim PathTranslated As HeapBSTR = Any
+	IFileBuffer_GetPathTranslated(pIFile, @PathTranslated)
+	
+	Dim Mime As MimeType = Any
+	Dim GetMimeOfFileExtensionResult As Boolean = GetMimeOfFileExtension( _
+		@Mime, _
+		PathFindExtensionW(PathTranslated) _
+	)
+	
+	If GetMimeOfFileExtensionResult = False Then
+		HeapSysFreeString(PathTranslated)
+		IFileBuffer_Release(pIFile)
+		*ppResult = NULL
+		Return WEBSITE_E_FORBIDDEN
 	End If
 	
 	' Получить ZipPath — путь к сжатому файлу если есть
@@ -585,8 +599,9 @@ Function WebSiteGetBuffer( _
 	
 	' Вернуть IFileBuffer
 	
+	HeapSysFreeString(PathTranslated)
+	
 	IFileBuffer_Release(pIFile)
-	ZeroMemory(pFileContext, SizeOf(FileContentInfo))
 	*ppResult = NULL
 	
 	Return E_UNEXPECTED
@@ -742,11 +757,10 @@ Function IMutableWebSiteGetBuffer( _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal pNegotiation As ContentNegotiationContext Ptr, _
-		ByVal pFileContext As FileContentInfo Ptr, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
-	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, Path, fAccess, pNegotiation, pFileContext, pFlags, ppResult)
+	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult)
 End Function
 
 Function IMutableWebSiteNeedCgiProcessing( _

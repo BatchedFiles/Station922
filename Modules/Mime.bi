@@ -1,7 +1,6 @@
 #ifndef MIME_BI
 #define MIME_BI
 
-' Размер буфера для записи в него типа документа
 Const MaxContentTypeLength As Integer = 256 - 1
 
 Enum ContentTypes
@@ -128,8 +127,8 @@ End Enum
 
 Type _MimeType
 	ContentType As ContentTypes
-	IsTextFormat As Boolean
 	Charset As DocumentCharsets
+	IsTextFormat As Boolean
 End Type
 
 Type MimeType As _MimeType

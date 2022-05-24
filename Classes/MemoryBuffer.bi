@@ -31,6 +31,36 @@ Declare Function MemoryBufferRelease( _
 	ByVal this As MemoryBuffer Ptr _
 )As ULONG
 
+Declare Function MemoryBufferGetContentType( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppType As MimeType Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferGetEncoding( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppEncoding As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferGetCharset( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppCharset As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferGetLanguage( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppLanguage As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferGetETag( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppETag As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferGetLastFileModifiedDate( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal ppDate As FILETIME Ptr _
+)As HRESULT
+
 Declare Function MemoryBufferGetCapacity( _
 	ByVal this As MemoryBuffer Ptr, _
 	ByVal pCapacity As LongInt Ptr _
@@ -46,6 +76,11 @@ Declare Function MemoryBufferGetSlice( _
 	ByVal StartIndex As LongInt, _
 	ByVal Length As DWORD, _
 	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
+
+Declare Function MemoryBufferSetContentType( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal pType As MimeType Ptr _
 )As HRESULT
 
 Declare Function MemoryBufferAllocBuffer( _

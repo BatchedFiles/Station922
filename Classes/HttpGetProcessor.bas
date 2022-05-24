@@ -9,7 +9,6 @@
 #include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
 #include once "Logger.bi"
-#include once "Mime.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
@@ -443,7 +442,6 @@ Function HttpGetProcessorPrepare( _
 		@NegotiationContext.UserAgent _
 	)
 	
-	Dim FileInfo As FileContentInfo = Any
 	Dim Flags As ContentNegotiationFlags = Any
 	Dim pIBuffer As IBuffer Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
@@ -452,7 +450,6 @@ Function HttpGetProcessorPrepare( _
 		Path, _
 		FileAccess.ReadAccess, _
 		@NegotiationContext, _
-		@FileInfo, _
 		@Flags, _
 		@pIBuffer _
 	)
@@ -534,18 +531,6 @@ Function HttpGetProcessorPrepare( _
 		End If
 		
 	End Scope
-	'/
-	
-	/'
-	' Проверка запрещённого MIME
-	Dim Mime As MimeType = Any
-	Dim GetMimeOfFileExtensionResult As Boolean = GetMimeOfFileExtension( _
-		@Mime, _
-		PathFindExtensionW(PathTranslated) _
-	)
-	If GetMimeOfFileExtensionResult = False Then
-		Return HTTPASYNCPROCESSOR_E_FORBIDDEN
-	End If
 	'/
 	
 	/'

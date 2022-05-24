@@ -31,6 +31,36 @@ Declare Function FileBufferRelease( _
 	ByVal this As FileBuffer Ptr _
 )As ULONG
 
+Declare Function FileBufferGetContentType( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppType As MimeType Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetEncoding( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppEncoding As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetCharset( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppCharset As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetLanguage( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppLanguage As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetETag( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppETag As HeapBSTR Ptr _
+)As HRESULT
+
+Declare Function FileBufferGetLastFileModifiedDate( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ppDate As FILETIME Ptr _
+)As HRESULT
+
 Declare Function FileBufferGetCapacity( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal pCapacity As LongInt Ptr _
@@ -81,11 +111,6 @@ Declare Function FileBufferGetFileHandle( _
 Declare Function FileBufferSetFileHandle( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal hFile As HANDLE _
-)As HRESULT
-
-Declare Function FileBufferGetLastFileModifiedDate( _
-	ByVal this As FileBuffer Ptr, _
-	ByVal pResult As FILETIME Ptr _
 )As HRESULT
 
 Declare Function FileBufferGetFileLength( _

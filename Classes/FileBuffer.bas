@@ -21,7 +21,11 @@ Type _FileBuffer
 	pFilePath As HeapBSTR
 	pPathTranslated As HeapBSTR
 	FileHandle As Handle
+	Encoding As HeapBSTR
+	Charset As HeapBSTR
+	Language As HeapBSTR
 	LastFileModifiedDate As FILETIME
+	ContentType As MimeType
 End Type
 
 Sub InitializeFileBuffer( _
@@ -39,6 +43,12 @@ Sub InitializeFileBuffer( _
 	this->pFilePath = NULL
 	this->pPathTranslated = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
+	this->Encoding = NULL
+	this->Charset = NULL
+	this->Language = NULL
+	this->ContentType.ContentType = ContentTypes.AnyAny
+	this->ContentType.Charset = DocumentCharsets.ASCII
+	this->ContentType.IsTextFormat = False
 	
 End Sub
 
@@ -46,6 +56,9 @@ Sub UnInitializeFileBuffer( _
 		ByVal this As FileBuffer Ptr _
 	)
 	
+	HeapSysFreeString(this->Language)
+	HeapSysFreeString(this->Charset)
+	HeapSysFreeString(this->Encoding)
 	HeapSysFreeString(this->pPathTranslated)
 	HeapSysFreeString(this->pFilePath)
 	
@@ -222,6 +235,65 @@ Function FileBufferRelease( _
 	
 End Function
 
+Function FileBufferGetContentType( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	
+	memcpy(ppType, @this->ContentType, SizeOf(MimeType))
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferGetEncoding( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Encoding)
+	*ppEncoding = this->Encoding
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferGetCharset( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Charset)
+	*ppCharset = this->Charset
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferGetLanguage( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	
+	HeapSysAddRefString(this->Language)
+	*ppLanguage = this->Language
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferGetETag( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	
+	*ppETag = NULL
+	
+	Return S_OK
+	
+End Function
+
+
 ' Declare Function FileBufferGetCapacity( _
 	' ByVal this As FileBuffer Ptr, _
 	' ByVal pCapacity As LongInt Ptr _
@@ -393,6 +465,71 @@ Function IFileBufferRelease( _
 	Return FileBufferRelease(ContainerOf(this, FileBuffer, lpVtbl))
 End Function
 
+Function IFileBufferGetContentType( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppType As MimeType Ptr _
+	)As HRESULT
+	Return FileBufferGetContentType(ContainerOf(this, FileBuffer, lpVtbl), ppType)
+End Function
+
+Function IFileBufferGetEncoding( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppEncoding As HeapBSTR Ptr _
+	)As HRESULT
+	Return FileBufferGetEncoding(ContainerOf(this, FileBuffer, lpVtbl), ppEncoding)
+End Function
+
+Function IFileBufferGetCharset( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppCharset As HeapBSTR Ptr _
+	)As HRESULT
+	Return FileBufferGetCharset(ContainerOf(this, FileBuffer, lpVtbl), ppCharset)
+End Function
+
+Function IFileBufferGetLanguage( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppLanguage As HeapBSTR Ptr _
+	)As HRESULT
+	Return FileBufferGetLanguage(ContainerOf(this, FileBuffer, lpVtbl), ppLanguage)
+End Function
+
+Function IFileBufferGetETag( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppETag As HeapBSTR Ptr _
+	)As HRESULT
+	Return FileBufferGetETag(ContainerOf(this, FileBuffer, lpVtbl), ppETag)
+End Function
+
+Function IFileBufferGetLastFileModifiedDate( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ppDate As FILETIME Ptr _
+	)As HRESULT
+	Return FileBufferGetLastFileModifiedDate(ContainerOf(this, FileBuffer, lpVtbl), ppDate)
+End Function
+
+' Function IFileBufferGetCapacity( _
+		' ByVal this As IFileBuffer Ptr, _
+		' ByVal pCapacity As LongInt Ptr _
+	' )As HRESULT
+	' Return FileBufferGetCapacity(ContainerOf(this, FileBuffer, lpVtbl), pCapacity)
+' End Function
+
+' Function IFileBufferGetLength( _
+		' ByVal this As IFileBuffer Ptr, _
+		' ByVal pLength As LongInt Ptr _
+	' )As HRESULT
+	' Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
+' End Function
+
+' Function IFileBufferGetSlice( _
+		' ByVal this As IFileBuffer Ptr, _
+		' ByVal StartIndex As LongInt, _
+		' ByVal Length As DWORD, _
+		' ByVal pBufferSlice As BufferSlice Ptr _
+	' )As HRESULT
+	' Return FileBufferGetSlice(ContainerOf(this, FileBuffer, lpVtbl), StartIndex, Length, pBufferSlice)
+' End Function
+
 Function IFileBufferGetFilePath( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
@@ -442,13 +579,6 @@ Function IFileBufferSetFileHandle( _
 	Return FileBufferSetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
 End Function
 
-Function IFileBufferGetLastFileModifiedDate( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal pResult As FILETIME Ptr _
-	)As HRESULT
-	Return FileBufferGetLastFileModifiedDate(ContainerOf(this, FileBuffer, lpVtbl), pResult)
-End Function
-
 ' Function IFileBufferGetFileLength( _
 		' ByVal this As IFileBuffer Ptr, _
 		' ByVal pResult As ULongInt Ptr _
@@ -468,6 +598,12 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferQueryInterface, _
 	@IFileBufferAddRef, _
 	@IFileBufferRelease, _
+	@IFileBufferGetContentType, _
+	@IFileBufferGetEncoding, _
+	@IFileBufferGetCharset, _
+	@IFileBufferGetLanguage, _
+	@IFileBufferGetETag, _
+	@IFileBufferGetLastFileModifiedDate, _
 	NULL, _ /' @IFileBufferGetCapacity, _ '/
 	NULL, _ /' @IFileBufferGetLength, _ '/
 	NULL, _ /' @IFileBufferGetSlice, _ '/
@@ -478,6 +614,5 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferFileExists, _
 	@IFileBufferGetFileHandle, _
 	@IFileBufferSetFileHandle, _
-	@IFileBufferGetLastFileModifiedDate, _
 	NULL _
 )
