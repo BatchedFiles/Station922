@@ -25,6 +25,7 @@ Type ContentNegotiationContext
 End Type
 
 Enum ContentNegotiationFlags
+	ContentNegotiationNone = 0
 	ContentNegotiationAcceptEncoding = 1
 	ContentNegotiationAcceptMime = 2
 	ContentNegotiationAcceptCharset = 4

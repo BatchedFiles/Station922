@@ -535,6 +535,7 @@ Function WebSiteGetBuffer( _
 		@pIFile _
 	)
 	If FAILED(hrCreateFileBuffer) Then
+		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 		*ppResult = NULL
 		Return hrCreateFileBuffer
 	End If
@@ -568,6 +569,7 @@ Function WebSiteGetBuffer( _
 	)
 	If FAILED(hrOpenFile) Then
 		IFileBuffer_Release(pIFile)
+		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 		*ppResult = NULL
 		Return hrOpenFile
 	End If
@@ -580,10 +582,10 @@ Function WebSiteGetBuffer( _
 		@Mime, _
 		PathFindExtensionW(PathTranslated) _
 	)
-	
 	If GetMimeOfFileExtensionResult = False Then
 		HeapSysFreeString(PathTranslated)
 		IFileBuffer_Release(pIFile)
+		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 		*ppResult = NULL
 		Return WEBSITE_E_FORBIDDEN
 	End If
@@ -602,6 +604,7 @@ Function WebSiteGetBuffer( _
 	HeapSysFreeString(PathTranslated)
 	
 	IFileBuffer_Release(pIFile)
+	*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 	*ppResult = NULL
 	
 	Return E_UNEXPECTED
