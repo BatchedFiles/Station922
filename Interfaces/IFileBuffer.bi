@@ -114,9 +114,24 @@ Type IFileBufferVirtualTable
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
-	GetFileLength As Function( _
+	GetZipFileHandle As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal pResult As ULongInt Ptr _
+		ByVal pResult As HANDLE Ptr _
+	)As HRESULT
+	
+	SetZipFileHandle As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	
+	SetContentType As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pType As MimeType Ptr _
+	)As HRESULT
+	
+	SetFileOffset As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal Offset As LongInt _
 	)As HRESULT
 	
 End Type
@@ -137,6 +152,7 @@ End Type
 #define IFileBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IFileBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IFileBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
+
 #define IFileBuffer_GetFilePath(this, ppFilePath) (this)->lpVtbl->GetFilePath(this, ppFilePath)
 #define IFileBuffer_SetFilePath(this, FilePath) (this)->lpVtbl->SetFilePath(this, FilePath)
 #define IFileBuffer_GetPathTranslated(this, ppPathTranslated) (this)->lpVtbl->GetPathTranslated(this, ppPathTranslated)
@@ -144,6 +160,9 @@ End Type
 #define IFileBuffer_FileExists(this, pResult) (this)->lpVtbl->FileExists(this, pResult)
 #define IFileBuffer_GetFileHandle(this, pResult) (this)->lpVtbl->GetFileHandle(this, pResult)
 #define IFileBuffer_SetFileHandle(this, hFile) (this)->lpVtbl->SetFileHandle(this, hFile)
-#define IFileBuffer_GetFileLength(this, pResult) (this)->lpVtbl->GetFileLength(this, pResult)
+#define IFileBuffer_GetZipFileHandle(this, pResult) (this)->lpVtbl->GetZipFileHandle(this, pResult)
+#define IFileBuffer_SetZipFileHandle(this, hFile) (this)->lpVtbl->SetZipFileHandle(this, hFile)
+#define IFileBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
+#define IFileBuffer_SetFileOffset(this, Offset) (this)->lpVtbl->SetFileOffset(this, Offset)
 
 #endif

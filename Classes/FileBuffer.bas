@@ -21,9 +21,11 @@ Type _FileBuffer
 	pFilePath As HeapBSTR
 	pPathTranslated As HeapBSTR
 	FileHandle As Handle
+	ZipFileHandle As HANDLE
 	Encoding As HeapBSTR
 	Charset As HeapBSTR
 	Language As HeapBSTR
+	FileOffset As LongInt
 	LastFileModifiedDate As FILETIME
 	ContentType As MimeType
 End Type
@@ -43,9 +45,11 @@ Sub InitializeFileBuffer( _
 	this->pFilePath = NULL
 	this->pPathTranslated = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
+	this->ZipFileHandle = INVALID_HANDLE_VALUE
 	this->Encoding = NULL
 	this->Charset = NULL
 	this->Language = NULL
+	this->FileOffset = 0
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
 	this->ContentType.IsTextFormat = False
@@ -63,24 +67,11 @@ Sub UnInitializeFileBuffer( _
 	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
-		If CloseHandle(this->FileHandle) = 0 Then
-			#if __FB_DEBUG__
-			Scope
-				Dim dwError As DWORD = GetLastError()
-				If dwError <> ERROR_SUCCESS Then
-					Dim vtErrorCode As VARIANT = Any
-					vtErrorCode.vt = VT_UI4
-					vtErrorCode.ulVal = dwError
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr(!"RequestedFile Close FileHandle Error\t"), _
-						@vtErrorCode _
-					)
-				End If
-			End Scope
-			#endif
-		End If
-		this->FileHandle = INVALID_HANDLE_VALUE
+		CloseHandle(this->FileHandle)
+	End If
+	
+	If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
+		CloseHandle(this->ZipFileHandle)
 	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
@@ -293,6 +284,23 @@ Function FileBufferGetETag( _
 	
 End Function
 
+Function FileBufferGetLastFileModifiedDate( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal pResult As FILETIME Ptr _
+	)As HRESULT
+	
+	Dim DateLastFileModified As FILETIME = Any
+	
+	If GetFileTime(this->FileHandle, NULL, NULL, @DateLastFileModified) = 0 Then
+		Return HRESULT_FROM_WIN32(GetLastError())
+	End If
+	
+	*pResult = DateLastFileModified
+	
+	Return S_OK
+	
+End Function
+
 
 ' Declare Function FileBufferGetCapacity( _
 	' ByVal this As FileBuffer Ptr, _
@@ -369,20 +377,12 @@ Function FileBufferFileExists( _
 		lstrcpyW(@buf410, this->pPathTranslated)
 		lstrcatW(@buf410, @FileGoneExtension)
 		
-		Dim hFile410 As HANDLE = CreateFileW( _
-			@buf410, _
-			0, _
-			FILE_SHARE_READ, _
-			NULL, _
-			OPEN_EXISTING, _
-			FILE_ATTRIBUTE_NORMAL, _
-			NULL _
+		Dim Attributes As DWORD = GetFileAttributesW( _
+			@buf410 _
 		)
-		
-		If hFile410 = INVALID_HANDLE_VALUE Then
+		If Attributes = INVALID_FILE_ATTRIBUTES Then
 			*pResult = RequestedFileState.NotFound
 		Else
-			CloseHandle(hFile410)
 			*pResult = RequestedFileState.Gone
 		End If
 		
@@ -416,33 +416,49 @@ Function FileBufferSetFileHandle( _
 	
 End Function
 
-Function FileBufferGetLastFileModifiedDate( _
+Function FileBufferGetZipFileHandle( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal pResult As FILETIME Ptr _
+		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
-	Dim DateLastFileModified As FILETIME = Any
-	
-	If GetFileTime(this->FileHandle, NULL, NULL, @DateLastFileModified) = 0 Then
-		Return HRESULT_FROM_WIN32(GetLastError())
-	End If
-	
-	*pResult = DateLastFileModified
+	*pResult = this->ZipFileHandle
 	
 	Return S_OK
 	
 End Function
 
-' Declare Function FileBufferGetFileLength( _
-	' ByVal this As FileBuffer Ptr, _
-	' ByVal pResult As ULongInt Ptr _
-' )As HRESULT
+Function FileBufferSetZipFileHandle( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	
+	this->ZipFileHandle = hFile
+	
+	Return S_OK
+	
+End Function
 
-' Declare Function FileBufferGetVaryHeaders( _
-	' ByVal this As FileBuffer Ptr, _
-	' ByVal pHeadersLength As Integer Ptr, _
-	' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
-' )As HRESULT
+Function FileBufferSetContentType( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal pType As MimeType Ptr _
+	)As HRESULT
+	
+	memcpy(@this->ContentType, pType, SizeOf(MimeType))
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferSetFileOffset( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal Offset As LongInt _
+	)As HRESULT
+	
+	this->FileOffset = Offset
+	
+	Return S_OK
+	
+End Function
 
 
 Function IFileBufferQueryInterface( _
@@ -579,20 +595,33 @@ Function IFileBufferSetFileHandle( _
 	Return FileBufferSetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
 End Function
 
-' Function IFileBufferGetFileLength( _
-		' ByVal this As IFileBuffer Ptr, _
-		' ByVal pResult As ULongInt Ptr _
-	' )As HRESULT
-	' Return FileBufferGetFileLength(ContainerOf(this, FileBuffer, lpVtbl), pResult)
-' End Function
+Function IFileBufferGetZipFileHandle( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pResult As HANDLE Ptr _
+	)As HRESULT
+	Return FileBufferGetZipFileHandle(ContainerOf(this, FileBuffer, lpVtbl), pResult)
+End Function
 
-' Function IFileBufferGetVaryHeaders( _
-		' ByVal this As IFileBuffer Ptr, _
-		' ByVal pHeadersLength As Integer Ptr, _
-		' ByVal ppHeaders As HttpRequestHeaders Ptr Ptr _
-	' )As HRESULT
-	' Return FileBufferGetVaryHeaders(ContainerOf(this, FileBuffer, lpVtbl), pHeadersLength, ppHeaders)
-' End Function
+Function IFileBufferSetZipFileHandle( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	Return FileBufferSetZipFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
+End Function
+
+Function IFileBufferSetContentType( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pType As MimeType Ptr _
+	)As HRESULT
+	Return FileBufferSetContentType(ContainerOf(this, FileBuffer, lpVtbl), pType)
+End Function
+
+Function IFileBufferSetFileOffset( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal Offset As LongInt _
+	)As HRESULT
+	Return FileBufferSetFileOffset(ContainerOf(this, FileBuffer, lpVtbl), Offset)
+End Function
 
 Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferQueryInterface, _
@@ -614,5 +643,8 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferFileExists, _
 	@IFileBufferGetFileHandle, _
 	@IFileBufferSetFileHandle, _
-	NULL _
+	@IFileBufferGetZipFileHandle, _
+	@IFileBufferSetZipFileHandle, _
+	@IFileBufferSetContentType, _
+	@IFileBufferSetFileOffset _
 )
