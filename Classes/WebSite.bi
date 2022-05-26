@@ -1,7 +1,7 @@
 #ifndef WEBSITE_BI
 #define WEBSITE_BI
 
-#include once "IMutableWebSite.bi"
+#include once "IWebSite.bi"
 
 Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
@@ -59,9 +59,8 @@ Declare Function WebSiteGetMovedUrl( _
 Declare Function WebSiteGetBuffer( _
 	ByVal this As WebSite Ptr, _
 	ByVal pIMalloc As IMalloc Ptr, _
-	ByVal Path As HeapBSTR, _
 	ByVal fAccess As FileAccess, _
-	ByVal pNegotiation As ContentNegotiationContext Ptr, _
+	ByVal pRequest As IClientRequest Ptr, _
 	ByVal pFlags As ContentNegotiationFlags Ptr, _
 	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT

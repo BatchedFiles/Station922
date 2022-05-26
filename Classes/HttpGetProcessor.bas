@@ -33,6 +33,7 @@ Type _HttpGetProcessor
 	TransmitHeader As TRANSMIT_FILE_BUFFERS
 End Type
 
+/'
 Sub MakeContentRangeHeader( _
 		ByVal pIWriter As IArrayStringWriter Ptr, _
 		ByVal FirstBytePosition As LongInt, _
@@ -55,99 +56,6 @@ Sub MakeContentRangeHeader( _
 	
 End Sub
 
-Function GetDocumentCharset( _
-		ByVal bytes As ZString Ptr _
-	)As DocumentCharsets
-	
-	Dim byte1 As UByte = bytes[0]
-	
-	Select Case byte1
-		
-		Case 239
-			Dim byte2 As UByte = bytes[1]
-			If byte2 = 187 Then
-				Dim byte3 As UByte = bytes[2]
-				If byte3 = 191 Then
-					Return DocumentCharsets.Utf8BOM
-				End If
-			End If
-			
-		Case 254
-			Dim byte2 As UByte = bytes[1]
-			If byte2 = 255 Then
-				Return DocumentCharsets.Utf16BE
-			End If
-			
-		Case 255
-			Dim byte2 As UByte = bytes[1]
-			If byte2 = 254 Then
-				Return DocumentCharsets.Utf16LE
-			End If
-			
-	End Select
-	
-	Return DocumentCharsets.ASCII
-	
-End Function
-
-Function GetFileBytesOffset( _
-		ByVal mt As MimeType Ptr, _
-		ByVal hRequestedFile As HANDLE, _
-		ByVal hZipFile As HANDLE _
-	)As LongInt
-	
-	If mt->IsTextFormat Then
-		Const MaxBytesRead As DWORD = 16 - 1
-		
-		Dim FileBytes As ZString * (MaxBytesRead + 1) = Any
-		Dim BytesReaded As DWORD = Any
-		
-		Dim ReadResult As Integer = ReadFile( _
-			hRequestedFile, _
-			@FileBytes, _
-			MaxBytesRead, _
-			@BytesReaded, _
-			0 _
-		)
-		If ReadResult <> 0 Then
-			
-			mt->Charset = GetDocumentCharset(@FileBytes)
-			
-			Dim offset As LongInt = Any
-			
-			If hZipFile = INVALID_HANDLE_VALUE Then
-				
-				Select Case mt->Charset
-					
-					Case DocumentCharsets.Utf8BOM
-						offset = 3
-						
-					Case DocumentCharsets.Utf16LE
-						offset = 0
-						
-					Case DocumentCharsets.Utf16BE
-						offset = 2
-						
-					Case Else
-						offset = 0
-						
-				End Select
-			Else
-				offset = 0
-				
-			End If
-			
-			Return offset
-			
-		End If
-		
-	End If
-	
-	Return 0
-	
-End Function
-
-/'
 Sub AddExtendedHeaders( _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal pIRequestedFile As IRequestedFile Ptr _
@@ -404,76 +312,19 @@ Function HttpGetProcessorPrepare( _
 		ByVal ppIBuffer As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	Dim ClientURI As IClientUri Ptr = Any
-	IClientRequest_GetUri(pContext->pIRequest, @ClientURI)
-	
-	Dim Path As HeapBSTR = Any
-	IClientUri_GetPath(ClientURI, @Path)
-	
-	Dim NegotiationContext As ContentNegotiationContext = Any
-	
-	IClientRequest_GetHttpHeader( _
-		pContext->pIRequest, _
-		HttpRequestHeaders.HeaderAcceptEncoding, _
-		@NegotiationContext.Encoding _
-	)
-	
-	IClientRequest_GetHttpHeader( _
-		pContext->pIRequest, _
-		HttpRequestHeaders.HeaderAccept, _
-		@NegotiationContext.Mime _
-	)
-	
-	IClientRequest_GetHttpHeader( _
-		pContext->pIRequest, _
-		HttpRequestHeaders.HeaderAcceptCharset, _
-		@NegotiationContext.Charset _
-	)
-	
-	IClientRequest_GetHttpHeader( _
-		pContext->pIRequest, _
-		HttpRequestHeaders.HeaderAcceptLanguage, _
-		@NegotiationContext.Language _
-	)
-	
-	IClientRequest_GetHttpHeader( _
-		pContext->pIRequest, _
-		HttpRequestHeaders.HeaderUserAgent, _
-		@NegotiationContext.UserAgent _
-	)
-	
 	Dim Flags As ContentNegotiationFlags = Any
 	Dim pIBuffer As IBuffer Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
-		Path, _
 		FileAccess.ReadAccess, _
-		@NegotiationContext, _
+		pContext->pIRequest, _
 		@Flags, _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then
-		HeapSysFreeString(NegotiationContext.Encoding)
-		HeapSysFreeString(NegotiationContext.Mime)
-		HeapSysFreeString(NegotiationContext.Charset)
-		HeapSysFreeString(NegotiationContext.Language)
-		HeapSysFreeString(NegotiationContext.UserAgent)
-		
-		HeapSysFreeString(Path)
-		IClientRequest_Release(ClientURI)
-		
 		Return E_FAIL
 	End If
-	
-	HeapSysFreeString(NegotiationContext.Encoding)
-	HeapSysFreeString(NegotiationContext.Mime)
-	HeapSysFreeString(NegotiationContext.Charset)
-	HeapSysFreeString(NegotiationContext.Language)
-	HeapSysFreeString(NegotiationContext.UserAgent)
-	
-	HeapSysFreeString(Path)
-	IClientRequest_Release(ClientURI)
 	
 	/'
 	Scope
@@ -534,22 +385,6 @@ Function HttpGetProcessorPrepare( _
 	'/
 	
 	/'
-	' TODO Проверить идентификацию для запароленных ресурсов
-	
-	' Заголовки сжатия
-	Dim IsAcceptEncoding As Boolean = Any
-	
-	If Mime.IsTextFormat Then
-		this->ZipFileHandle = SetResponseCompression( _
-			pc->pIRequest, _
-			pc->pIResponse, _
-			PathTranslated, _
-			@IsAcceptEncoding _
-		)
-	Else
-		this->ZipFileHandle = INVALID_HANDLE_VALUE
-		IsAcceptEncoding = False
-	End If
 	
 	Dim FileSize As LARGE_INTEGER = Any
 	Dim GetFileSizeExResult As Integer = Any
@@ -563,12 +398,6 @@ Function HttpGetProcessorPrepare( _
 		Dim dwError As DWORD = GetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
-	Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
-		@Mime, _
-		this->FileHandle, _
-		this->ZipFileHandle _
-	)
 	
 	IServerResponse_SetMimeType(pc->pIResponse, @Mime)
 	
