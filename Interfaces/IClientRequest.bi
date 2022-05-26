@@ -5,8 +5,6 @@
 #include once "Http.bi"
 #include once "IHttpReader.bi"
 
-Const MaxRequestBufferLength As Integer = 32 * 1024 - 1
-
 ' IClientRequest.ReadRequest:
 ' S_OK — readed successful
 ' S_FALSE — client closed connection (received 0 bytes)
