@@ -2,6 +2,7 @@
 #define IWEBSITE_BI
 
 #include once "IBuffer.bi"
+#include once "IClientRequest.bi"
 #include once "IString.bi"
 
 Const WEBSITE_E_FILENOTFOUND As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0201)
@@ -15,14 +16,6 @@ Enum FileAccess
 	UpdateAccess
 	DeleteAccess
 End Enum
-
-Type ContentNegotiationContext
-	Encoding As HeapBSTR
-	Mime As HeapBSTR
-	Charset As HeapBSTR
-	Language As HeapBSTR
-	UserAgent As HeapBSTR
-End Type
 
 Enum ContentNegotiationFlags
 	ContentNegotiationNone = 0
@@ -83,23 +76,35 @@ Type IWebSiteVirtualTable
 	GetBuffer As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
-		ByVal pNegotiation As ContentNegotiationContext Ptr, _
+		ByVal pRequest As IClientRequest Ptr, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	NeedCgiProcessing As Function( _
+	SetHostName As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal path As HeapBSTR, _
-		ByVal pResult As Boolean Ptr _
+		ByVal pHost As HeapBSTR _
 	)As HRESULT
 	
-	NeedDllProcessing As Function( _
+	SetSitePhysicalDirectory As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal path As HeapBSTR, _
-		ByVal pResult As Boolean Ptr _
+		ByVal pPhysicalDirectory As HeapBSTR _
+	)As HRESULT
+	
+	SetVirtualPath As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pVirtualPath As HeapBSTR _
+	)As HRESULT
+	
+	SetIsMoved As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal IsMoved As Boolean _
+	)As HRESULT
+	
+	SetMovedUrl As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	
 End Type
@@ -116,8 +121,11 @@ End Type
 #define IWebSite_GetVirtualPath(this, ppVirtualPath) (this)->lpVtbl->GetVirtualPath(this, ppVirtualPath)
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
-#define IWebSite_GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, Path, fAccess, pNegotiation, pFlags, ppResult)
-#define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
-#define IWebSite_NeedDllProcessing(this, Path, pResult) (this)->lpVtbl->NeedDllProcessing(this, Path, pResult)
+#define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, pFlags, ppResult)
+#define IWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)
+#define IWebSite_SetSitePhysicalDirectory(this, pPhysicalDirectory) (this)->lpVtbl->SetSitePhysicalDirectory(this, pPhysicalDirectory)
+#define IWebSite_SetVirtualPath(this, pVirtualPath) (this)->lpVtbl->SetVirtualPath(this, pVirtualPath)
+#define IWebSite_SetIsMoved(this, IsMoved) (this)->lpVtbl->SetIsMoved(this, IsMoved)
+#define IWebSite_SetMovedUrl(this, pMovedUrl) (this)->lpVtbl->SetMovedUrl(this, pMovedUrl)
 
 #endif

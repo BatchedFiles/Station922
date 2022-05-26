@@ -184,11 +184,6 @@ DEFINE_IID(IID_IClientUri, _
 	&hfa6493da, &h9102, &h4ff6, &h82, &h2e, &h16, &h33, &h99, &hbf, &h9e, &h81 _
 )
 
-' {606E6533-1086-409E-A91C-93A88CF78B35}
-DEFINE_IID(IID_ICloneable, _
-	&h606e6533, &h1086, &h409e, &ha9, &h1c, &h93, &ha8, &h8c, &hf7, &h8b, &h35 _
-)
-
 ' {76A3EA34-6604-4126-9550-54280EAA291A}
 DEFINE_IID(IID_IEnumWebServerConfiguration, _
 	&h76a3ea34, &h6604, &h4126, &h95, &h50, &h54, &h28, &he, &haa, &h29, &h1a _
@@ -257,11 +252,6 @@ DEFINE_IID(IID_IMutableAsyncResult, _
 ' {3B2C4524-DB79-4D15-ACF5-576A7FE343B7}
 DEFINE_IID(IID_IMutableHttpProcessorCollection, _
 	&h3b2c4524, &hdb79, &h4d15, &hac, &hf5, &h57, &h6a, &h7f, &he3, &h43, &hb7 _
-)
-
-' {FD8CC1E3-E4E0-4E11-87DF-903D193D1F84}
-DEFINE_IID(IID_IMutableWebSite, _
-	&hfd8cc1e3, &he4e0, &h4e11, &h87, &hdf, &h90, &h3d, &h19, &h3d, &h1f, &h84 _
 )
 
 ' {86629567-EA4F-47C5-926A-17860A4887D9}

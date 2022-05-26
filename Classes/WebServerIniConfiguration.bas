@@ -511,15 +511,15 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			End Select
 		Next
 		
-		Dim pIWebSite As IMutableWebSite Ptr = Any
+		Dim pIWebSite As IWebSite Ptr = Any
 		Dim hr2 As HRESULT = CreateInstance( _
 			this->pIMemoryAllocator, _
 			@CLSID_WEBSITE, _
-			@IID_IMutableWebSite, _
+			@IID_IWebSite, _
 			@pIWebSite _
 		)
 		If FAILED(hr2) Then
-			IMutableWebSiteCollection_Release(pIWebSiteCollection)
+			IWebSiteCollection_Release(pIWebSiteCollection)
 			Return hr2
 		End If
 		
@@ -527,7 +527,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			this->pIMemoryAllocator, _
 			@WebSiteName _
 		)
-		IMutableWebSite_SetHostName(pIWebSite, bstrWebSite)
+		IWebSite_SetHostName(pIWebSite, bstrWebSite)
 		HeapSysFreeString(bstrWebSite)
 		
 		Scope
@@ -542,8 +542,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			)
 			If ValueLength = 0 Then
 				Dim dwError As DWORD = GetLastError()
-				IMutableWebSite_Release(pIWebSite)
-				IMutableWebSiteCollection_Release(pIWebSiteCollection)
+				IWebSite_Release(pIWebSite)
+				IWebSiteCollection_Release(pIWebSiteCollection)
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -551,7 +551,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				this->pIMemoryAllocator, _
 				@PhisycalDir _
 			)
-			IMutableWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
+			IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
 			HeapSysFreeString(bstrPhisycalDir)
 		End Scope
 		
@@ -567,8 +567,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			)
 			If ValueLength = 0 Then
 				Dim dwError As DWORD = GetLastError()
-				IMutableWebSite_Release(pIWebSite)
-				IMutableWebSiteCollection_Release(pIWebSiteCollection)
+				IWebSite_Release(pIWebSite)
+				IWebSiteCollection_Release(pIWebSiteCollection)
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -576,7 +576,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				this->pIMemoryAllocator, _
 				@VirtualPath _
 			)
-			IMutableWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
+			IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
 			HeapSysFreeString(bstrVirtualPath)
 		End Scope
 		
@@ -592,8 +592,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			)
 			If ValueLength = 0 Then
 				Dim dwError As DWORD = GetLastError()
-				IMutableWebSite_Release(pIWebSite)
-				IMutableWebSiteCollection_Release(pIWebSiteCollection)
+				IWebSite_Release(pIWebSite)
+				IWebSiteCollection_Release(pIWebSiteCollection)
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -601,7 +601,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				this->pIMemoryAllocator, _
 				@MovedUrl _
 			)
-			IMutableWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
+			IWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
 			HeapSysFreeString(bstrMovedUrl)
 		End Scope
 		
@@ -613,31 +613,15 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				this->pWebSitesIniFileName _
 			)
 			If IsMoved = 0 Then
-				IMutableWebSite_SetIsMoved(pIWebSite, False)
+				IWebSite_SetIsMoved(pIWebSite, False)
 			Else
-				IMutableWebSite_SetIsMoved(pIWebSite, True)
+				IWebSite_SetIsMoved(pIWebSite, True)
 			End If
 		End Scope
 		
-		Scope
-			Dim pIWebSite2 As IWebSite Ptr = Any
-			Dim hr3 As HRESULT = IMutableWebSite_QueryInterface( _
-				pIWebSite, _
-				@IID_IWebSite, _
-				@pIWebSite2 _
-			)
-			If FAILED(hr3) Then
-				IMutableWebSite_Release(pIWebSite)
-				IMutableWebSiteCollection_Release(pIWebSiteCollection)
-				Return hr3
-			End If
-			
-			IMutableWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite2)
-			
-			IWebSite_Release(pIWebSite2)
-		End Scope
+		IMutableWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite)
 		
-		IMutableWebSite_Release(pIWebSite)
+		IWebSite_Release(pIWebSite)
 		
 		lpwszHost = @lpwszHost[HostLength + 1]
 		HostLength = lstrlenW(lpwszHost)
