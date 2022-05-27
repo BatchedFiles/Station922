@@ -22,11 +22,12 @@ Type _FileBuffer
 	pPathTranslated As HeapBSTR
 	FileHandle As Handle
 	ZipFileHandle As HANDLE
+	hMapFile As HANDLE
+	FileBytes As ZString Ptr
 	Encoding As HeapBSTR
 	Charset As HeapBSTR
 	Language As HeapBSTR
 	FileOffset As LongInt
-	LastFileModifiedDate As FILETIME
 	ContentType As MimeType
 End Type
 
@@ -46,11 +47,12 @@ Sub InitializeFileBuffer( _
 	this->pPathTranslated = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
+	this->hMapFile = NULL
+	this->FileBytes = NULL
 	this->Encoding = NULL
 	this->Charset = NULL
 	this->Language = NULL
 	this->FileOffset = 0
-	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
 	this->ContentType.IsTextFormat = False
@@ -66,6 +68,14 @@ Sub UnInitializeFileBuffer( _
 	HeapSysFreeString(this->Encoding)
 	HeapSysFreeString(this->pPathTranslated)
 	HeapSysFreeString(this->pFilePath)
+	
+	If this->FileBytes <> NULL Then
+		UnmapViewOfFile(this->FileBytes)
+	End If
+	
+	If this->hMapFile <> NULL Then
+		CloseHandle(this->hMapFile)
+	End If
 	
 	If this->FileHandle <> INVALID_HANDLE_VALUE Then
 		CloseHandle(this->FileHandle)
@@ -299,9 +309,25 @@ Function FileBufferGetLastFileModifiedDate( _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
-	CopyMemory(pResult, @this->LastFileModifiedDate, SizeOf(FILETIME))
+	If this->FileHandle <> INVALID_HANDLE_VALUE Then
+		Dim LastFileModifiedDate As FILETIME = Any
+		Dim res As BOOL = GetFileTime( _
+			this->FileHandle, _
+			NULL, _
+			NULL, _
+			@LastFileModifiedDate _
+		)
+		If res = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			ZeroMemory(pResult, SizeOf(FILETIME))
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		CopyMemory(pResult, @LastFileModifiedDate, SizeOf(FILETIME))
+		Return S_OK
+	End If
 	
-	Return S_OK
+	Return E_UNEXPECTED
 	
 End Function
 
@@ -331,13 +357,16 @@ Function FileBufferGetLength( _
 	
 End Function
 
-' Declare Function FileBufferGetSlice( _
-	' ByVal this As FileBuffer Ptr, _
-	' ByVal StartIndex As LongInt, _
-	' ByVal Length As DWORD, _
-	' ByVal pBufferSlice As BufferSlice Ptr _
-' )As HRESULT
-
+Function FileBufferGetSlice( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
 
 Function FileBufferGetFilePath( _
 		ByVal this As FileBuffer Ptr, _
@@ -430,15 +459,6 @@ Function FileBufferSetFileHandle( _
 	)As HRESULT
 	
 	this->FileHandle = hFile
-	
-	If this->FileHandle <> INVALID_HANDLE_VALUE Then
-		GetFileTime( _
-			this->FileHandle, _
-			NULL, _
-			NULL, _
-			@this->LastFileModifiedDate _
-		)
-	End If
 	
 	Return S_OK
 	
@@ -558,14 +578,14 @@ Function IFileBufferGetLength( _
 	Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
 End Function
 
-' Function IFileBufferGetSlice( _
-		' ByVal this As IFileBuffer Ptr, _
-		' ByVal StartIndex As LongInt, _
-		' ByVal Length As DWORD, _
-		' ByVal pBufferSlice As BufferSlice Ptr _
-	' )As HRESULT
-	' Return FileBufferGetSlice(ContainerOf(this, FileBuffer, lpVtbl), StartIndex, Length, pBufferSlice)
-' End Function
+Function IFileBufferGetSlice( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	Return FileBufferGetSlice(ContainerOf(this, FileBuffer, lpVtbl), StartIndex, Length, pBufferSlice)
+End Function
 
 Function IFileBufferGetFilePath( _
 		ByVal this As IFileBuffer Ptr, _
@@ -655,7 +675,7 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferGetETag, _
 	@IFileBufferGetLastFileModifiedDate, _
 	@IFileBufferGetLength, _
-	NULL, _ /' @IFileBufferGetSlice, _ '/
+	@IFileBufferGetSlice, _
 	@IFileBufferGetFilePath, _
 	@IFileBufferSetFilePath, _
 	@IFileBufferGetPathTranslated, _
