@@ -305,12 +305,6 @@ Function FileBufferGetLastFileModifiedDate( _
 	
 End Function
 
-
-' Declare Function FileBufferGetCapacity( _
-	' ByVal this As FileBuffer Ptr, _
-	' ByVal pCapacity As LongInt Ptr _
-' )As HRESULT
-
 Function FileBufferGetLength( _
 		ByVal this As FileBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -557,19 +551,12 @@ Function IFileBufferGetLastFileModifiedDate( _
 	Return FileBufferGetLastFileModifiedDate(ContainerOf(this, FileBuffer, lpVtbl), ppDate)
 End Function
 
-' Function IFileBufferGetCapacity( _
-		' ByVal this As IFileBuffer Ptr, _
-		' ByVal pCapacity As LongInt Ptr _
-	' )As HRESULT
-	' Return FileBufferGetCapacity(ContainerOf(this, FileBuffer, lpVtbl), pCapacity)
-' End Function
-
-' Function IFileBufferGetLength( _
-		' ByVal this As IFileBuffer Ptr, _
-		' ByVal pLength As LongInt Ptr _
-	' )As HRESULT
-	' Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
-' End Function
+Function IFileBufferGetLength( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pLength As LongInt Ptr _
+	)As HRESULT
+	Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
+End Function
 
 ' Function IFileBufferGetSlice( _
 		' ByVal this As IFileBuffer Ptr, _
@@ -667,8 +654,7 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferGetLanguage, _
 	@IFileBufferGetETag, _
 	@IFileBufferGetLastFileModifiedDate, _
-	NULL, _ /' @IFileBufferGetCapacity, _ '/
-	NULL, _ /' @IFileBufferGetLength, _ '/
+	@IFileBufferGetLength, _
 	NULL, _ /' @IFileBufferGetSlice, _ '/
 	@IFileBufferGetFilePath, _
 	@IFileBufferSetFilePath, _

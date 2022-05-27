@@ -62,11 +62,6 @@ Type IFileBufferVirtualTable
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
 	
-	GetCapacity As Function( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal pCapacity As LongInt Ptr _
-	)As HRESULT
-	
 	GetLength As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -149,10 +144,8 @@ End Type
 #define IFileBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
 #define IFileBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IFileBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
-#define IFileBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IFileBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IFileBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
-
 #define IFileBuffer_GetFilePath(this, ppFilePath) (this)->lpVtbl->GetFilePath(this, ppFilePath)
 #define IFileBuffer_SetFilePath(this, FilePath) (this)->lpVtbl->SetFilePath(this, FilePath)
 #define IFileBuffer_GetPathTranslated(this, ppPathTranslated) (this)->lpVtbl->GetPathTranslated(this, ppPathTranslated)

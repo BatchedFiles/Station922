@@ -61,11 +61,6 @@ Declare Function MemoryBufferGetLastFileModifiedDate( _
 	ByVal ppDate As FILETIME Ptr _
 )As HRESULT
 
-Declare Function MemoryBufferGetCapacity( _
-	ByVal this As MemoryBuffer Ptr, _
-	ByVal pCapacity As LongInt Ptr _
-)As HRESULT
-
 Declare Function MemoryBufferGetLength( _
 	ByVal this As MemoryBuffer Ptr, _
 	ByVal pLength As LongInt Ptr _

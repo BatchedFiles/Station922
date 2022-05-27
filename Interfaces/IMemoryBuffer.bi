@@ -55,11 +55,6 @@ Type IMemoryBufferVirtualTable
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
 	
-	GetCapacity As Function( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal pCapacity As LongInt Ptr _
-	)As HRESULT
-	
 	GetLength As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -98,7 +93,6 @@ End Type
 #define IMemoryBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
 #define IMemoryBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IMemoryBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
-#define IMemoryBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IMemoryBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IMemoryBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IMemoryBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)

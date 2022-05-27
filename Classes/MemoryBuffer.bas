@@ -280,17 +280,6 @@ Function MemoryBufferGetETag( _
 	
 End Function
 
-Function MemoryBufferGetCapacity( _
-		ByVal this As MemoryBuffer Ptr, _
-		ByVal pCapacity As LongInt Ptr _
-	)As HRESULT
-	
-	*pCapacity = this->Capacity
-	
-	Return S_OK
-	
-End Function
-
 Function MemoryBufferGetLength( _
 		ByVal this As MemoryBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -420,13 +409,6 @@ Function IMemoryBufferGetLastFileModifiedDate( _
 	Return MemoryBufferGetLastFileModifiedDate(ContainerOf(this, MemoryBuffer, lpVtbl), ppDate)
 End Function
 
-Function IMemoryBufferGetCapacity( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal pCapacity As LongInt Ptr _
-	)As ULONG
-	Return MemoryBufferGetCapacity(ContainerOf(this, MemoryBuffer, lpVtbl), pCapacity)
-End Function
-
 Function IMemoryBufferGetLength( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -468,7 +450,6 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferGetLanguage, _
 	@IMemoryBufferGetETag, _
 	@IMemoryBufferGetLastFileModifiedDate, _
-	@IMemoryBufferGetCapacity, _
 	@IMemoryBufferGetLength, _
 	@IMemoryBufferGetSlice, _
 	@IMemoryBufferSetContentType, _

@@ -61,11 +61,6 @@ Type IBufferVirtualTable
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
 	
-	GetCapacity As Function( _
-		ByVal this As IBuffer Ptr, _
-		ByVal pCapacity As LongInt Ptr _
-	)As HRESULT
-	
 	GetLength As Function( _
 		ByVal this As IBuffer Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -93,7 +88,6 @@ End Type
 #define IBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
 #define IBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
-#define IBuffer_GetCapacity(this, pCapacity) (this)->lpVtbl->GetCapacity(this, pCapacity)
 #define IBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 
