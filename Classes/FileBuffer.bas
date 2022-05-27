@@ -50,6 +50,7 @@ Sub InitializeFileBuffer( _
 	this->Charset = NULL
 	this->Language = NULL
 	this->FileOffset = 0
+	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
 	this->ContentType.IsTextFormat = False
@@ -278,6 +279,15 @@ Function FileBufferGetETag( _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
 	
+	' Dim strETag As WString * 256 = Any
+	' GetETag( _
+		' @strETag, _
+		' @DateLastFileModified, _
+		' ResponseZipEnable, _
+		' ResponseZipMode _
+	' )
+	' *ppETag = HeapSysAllocString(this->pIMemoryAllocator, strETag)
+	
 	*ppETag = NULL
 	
 	Return S_OK
@@ -289,13 +299,7 @@ Function FileBufferGetLastFileModifiedDate( _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
-	Dim DateLastFileModified As FILETIME = Any
-	
-	If GetFileTime(this->FileHandle, NULL, NULL, @DateLastFileModified) = 0 Then
-		Return HRESULT_FROM_WIN32(GetLastError())
-	End If
-	
-	*pResult = DateLastFileModified
+	CopyMemory(pResult, @this->LastFileModifiedDate, SizeOf(FILETIME))
 	
 	Return S_OK
 	
@@ -307,10 +311,31 @@ End Function
 	' ByVal pCapacity As LongInt Ptr _
 ' )As HRESULT
 
-' Declare Function FileBufferGetLength( _
-	' ByVal this As FileBuffer Ptr, _
-	' ByVal pLength As LongInt Ptr _
-' )As HRESULT
+Function FileBufferGetLength( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal pLength As LongInt Ptr _
+	)As HRESULT
+	
+	Dim FileSize As LARGE_INTEGER = Any
+	
+	Dim resGetFileSize As BOOL = Any
+	If this->ZipFileHandle = INVALID_HANDLE_VALUE Then
+		resGetFileSize = GetFileSizeEx(this->FileHandle, @FileSize)
+	Else
+		resGetFileSize = GetFileSizeEx(this->ZipFileHandle, @FileSize)
+	End If
+	
+	If resGetFileSize = 0 Then
+		*pLength = 0
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	*pLength = FileSize.QuadPart - this->FileOffset
+	
+	Return S_OK
+	
+End Function
 
 ' Declare Function FileBufferGetSlice( _
 	' ByVal this As FileBuffer Ptr, _
@@ -411,6 +436,15 @@ Function FileBufferSetFileHandle( _
 	)As HRESULT
 	
 	this->FileHandle = hFile
+	
+	If this->FileHandle <> INVALID_HANDLE_VALUE Then
+		GetFileTime( _
+			this->FileHandle, _
+			NULL, _
+			NULL, _
+			@this->LastFileModifiedDate _
+		)
+	End If
 	
 	Return S_OK
 	
