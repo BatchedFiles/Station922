@@ -27,6 +27,76 @@ Type _WebSite
 	IsMoved As Boolean
 End Type
 
+/'
+Sub AddExtendedHeaders( _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal pIRequestedFile As IRequestedFile Ptr _
+	)
+	' TODO Убрать переполнение буфера при слишком длинных заголовках
+	
+	Dim PathTranslated As WString Ptr = Any
+	IRequestedFile_GetPathTranslated(pIRequestedFile, @PathTranslated)
+	
+	Dim wExtHeadersFile As WString * (MAX_PATH + 1) = Any
+	lstrcpyW(@wExtHeadersFile, PathTranslated)
+	lstrcatW(@wExtHeadersFile, @HeadersExtensionString)
+	
+	Dim hExtHeadersFile As HANDLE = CreateFileW( _
+		@wExtHeadersFile, _
+		GENERIC_READ, _
+		FILE_SHARE_READ, _
+		NULL, _
+		OPEN_EXISTING, _
+		FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_SEQUENTIAL_SCAN, _
+		NULL _
+	)
+	
+	If hExtHeadersFile <> INVALID_HANDLE_VALUE Then
+		Dim zExtHeaders As ZString * (MaxResponseBufferLength + 1) = Any
+		Dim wExtHeaders As WString * (MaxResponseBufferLength + 1) = Any
+		
+		Dim BytesReaded As DWORD = Any
+		If ReadFile(hExtHeadersFile, @zExtHeaders, MaxResponseBufferLength, @BytesReaded, 0) <> 0 Then
+			
+			If BytesReaded > 2 Then
+				zExtHeaders[BytesReaded] = 0
+				
+				If MultiByteToWideChar(CP_UTF8, 0, @zExtHeaders, -1, @wExtHeaders, MaxResponseBufferLength) > 0 Then
+					Dim w As WString Ptr = @wExtHeaders
+					
+					Do
+						Dim wName As WString Ptr = w
+						Dim wColon As WString Ptr = StrChrW(w, Characters.Colon)
+						
+						w = StrStrW(w, NewLineString)
+						
+						If w <> 0 Then
+							w[0] = Characters.NullChar ' и ещё w[1] = 0
+							' Указываем на следующий символ после vbCrLf, если это ноль — то это конец
+							w += 2
+						End If
+						
+						If wColon > 0 Then
+							wColon[0] = Characters.NullChar
+							Do
+								wColon += 1
+							Loop While wColon[0] = Characters.WhiteSpace
+							
+							IServerResponse_AddResponseHeader(pIResponse, wName, wColon)
+						End If
+						
+					Loop While lstrlenW(w) > 0
+					
+				End If
+			End If
+		End If
+		
+		CloseHandle(hExtHeadersFile)
+	End If
+	
+End Sub
+'/
+
 Function GetDefaultFileName( _
 		ByVal Buffer As WString Ptr, _
 		ByVal Index As Integer _
@@ -404,56 +474,68 @@ Function GetFileBytesOffset( _
 	If mt->IsTextFormat Then
 		Const MaxBytesRead As DWORD = 16
 		
-		Dim FileBytes As ZString * (MaxBytesRead - 1) = Any
-		Dim BytesReaded As DWORD = Any
+		' Dim ReadResult As Integer = ReadFile( _
+			' hRequestedFile, _
+			' @FileBytes, _
+			' MaxBytesRead - 1, _
+			' @BytesReaded, _
+			' 0 _
+		' )
 		
-		Dim ReadResult As Integer = ReadFile( _
+		Dim hMapFile As HANDLE = CreateFileMapping( _
 			hRequestedFile, _
-			@FileBytes, _
-			MaxBytesRead - 1, _
-			@BytesReaded, _
-			0 _
+			NULL, _
+			PAGE_READONLY, _
+			0, 0, _
+			NULL _
 		)
 		
-		If ReadResult Then
+		If hMapFile <> NULL Then
 			
-			mt->Charset = GetDocumentCharset(@FileBytes)
+			Dim FileBytes As ZString Ptr = MapViewOfFile( _
+				hMapFile, _
+				FILE_MAP_READ, _
+				0, 0, _
+				MaxBytesRead _
+			)
 			
-			If hZipFile = INVALID_HANDLE_VALUE Then
+			If FileBytes <> NULL Then
+				mt->Charset = GetDocumentCharset(FileBytes)
 				
-				Select Case mt->Charset
+				If hZipFile = INVALID_HANDLE_VALUE Then
 					
-					Case DocumentCharsets.Utf8BOM
-						offset = 3
+					Select Case mt->Charset
 						
-					Case DocumentCharsets.Utf16LE
-						offset = 0
-						
-					Case DocumentCharsets.Utf16BE
-						offset = 2
-						
-					Case Else
-						offset = 0
-						
-				End Select
+						Case DocumentCharsets.Utf8BOM
+							offset = 3
+							
+						Case DocumentCharsets.Utf16LE
+							offset = 0
+							
+						Case DocumentCharsets.Utf16BE
+							offset = 2
+							
+						Case Else
+							offset = 0
+							
+					End Select
+				Else
+					
+					offset = 0
+				End If
+				
+				UnmapViewOfFile(FileBytes)
 			Else
 				
 				offset = 0
 			End If
+			
+			CloseHandle(hMapFile)
 		Else
 			
 			offset = 0
 		End If
 		
-		Dim DistanceToMove As LARGE_INTEGER = Any
-		DistanceToMove.QuadPart = 0
-		
-		SetFilePointerEx( _
-			hRequestedFile, _
-			DistanceToMove, _
-			NULL, _
-			FILE_BEGIN _
-		)
 	Else
 		offset = 0
 	End If
@@ -774,58 +856,121 @@ Function WebSiteGetBuffer( _
 		Return WEBSITE_E_FORBIDDEN
 	End If
 	
-	IFileBuffer_SetContentType(pIFile, @Mime)
-	
 	' TODO Проверить идентификацию для запароленных ресурсов
 	
-	Dim ZipFileHandle As HANDLE = Any
-	Dim ZipMode As ZipModes = Any
-	Dim IsAcceptEncoding As Boolean = Any
+	' В основном анализируются заголовки
+	' Accept-Encoding: gzip, deflate
+	' Accept: text/css, */*
+	' Accept-Charset: utf-8
+	' Accept-Language: ru-RU
+	' User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063
 	
-	If Mime.IsTextFormat Then
-		ZipFileHandle = GetCompressionHandle( _
-			PathTranslated, _
-			pRequest, _
-			@ZipMode, _
-			@IsAcceptEncoding _
+	Scope
+		Dim ZipFileHandle As HANDLE = Any
+		Dim ZipMode As ZipModes = Any
+		Dim IsAcceptEncoding As Boolean = Any
+		
+		If Mime.IsTextFormat Then
+			ZipFileHandle = GetCompressionHandle( _
+				PathTranslated, _
+				pRequest, _
+				@ZipMode, _
+				@IsAcceptEncoding _
+			)
+		Else
+			ZipFileHandle = INVALID_HANDLE_VALUE
+			IsAcceptEncoding = False
+		End If
+		
+		IFileBuffer_SetZipFileHandle(pIFile, ZipFileHandle)
+		
+		' Установить смещение Byte Order Mark юникодного текстового файла
+		
+		Dim FileHandle As HANDLE = Any
+		IFileBuffer_GetFileHandle(pIFile, @FileHandle)
+		
+		Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
+			@Mime, _
+			FileHandle, _
+			ZipFileHandle _
 		)
-	Else
-		ZipFileHandle = INVALID_HANDLE_VALUE
-		IsAcceptEncoding = False
-	End If
+		
+		IFileBuffer_SetFileOffset(pIFile, EncodingFileOffset)
+		
+		If IsAcceptEncoding Then
+			*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
+		End If
+	End Scope
 	
-	IFileBuffer_SetZipFileHandle(pIFile, ZipFileHandle)
+	IFileBuffer_SetContentType(pIFile, @Mime)
 	
-	' Установить смещение Byte Order Mark юникодного файла
-	
-	Dim FileHandle As HANDLE = Any
-	IFileBuffer_GetFileHandle(pIFile, @FileHandle)
-	
-	Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
-		@Mime, _
-		FileHandle, _
-		ZipFileHandle _
-	)
-	
-	IFileBuffer_SetFileOffset(pIFile, EncodingFileOffset)
-	
-	' Установить флаги согласованного содержимого
-	If IsAcceptEncoding Then
-		*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
-	End If
+	' AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
 	HeapSysFreeString(Path)
 	HeapSysFreeString(PathTranslated)
 	IClientUri_Release(ClientURI)
 	
-	' Вернуть IFileBuffer
+	*ppResult = CPtr(IBuffer Ptr, pIFile)
 	
-	IFileBuffer_Release(pIFile)
-	*pFlags = ContentNegotiationFlags.ContentNegotiationNone
-	*ppResult = NULL
+	Return S_OK
 	
-	Return E_UNEXPECTED
-	
+	/'
+	Scope
+		
+		Dim pHeaderConnection As WString Ptr = Any
+		IClientRequest_GetHttpHeader( _
+			' pIRequest, _
+			' HttpRequestHeaders.HeaderConnection, _
+			' @pHeaderConnection _
+		' )
+		
+		If lstrcmpi(pHeaderConnection, @UpgradeString) = 0 Then
+			Dim pHeaderUpgrade As WString Ptr = Any
+			IClientRequest_GetHttpHeader( _
+				' pIRequest, _
+				' HttpRequestHeaders.HeaderUpgrade, _
+				' @pHeaderUpgrade _
+			' )
+			
+			If lstrcmpi(pHeaderUpgrade, @WebSocketString) = 0 Then
+				Dim pHeaderSecWebSocketVersion As WString Ptr = Any
+				IClientRequest_GetHttpHeader( _
+					' pIRequest, _
+					' HttpRequestHeaders.HeaderSecWebSocketVersion, _
+					' @pHeaderSecWebSocketVersion _
+				' )
+				
+				If lstrcmpi(pHeaderSecWebSocketVersion, @WebSocketVersionString) = 0 Then
+					
+					CloseHandle(FileHandle)
+					Return ProcessWebSocketRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+					
+				End If 
+			End If
+		End If
+		
+		Dim ClientUri As Station922Uri = Any
+		IClientRequest_GetUri(pIRequest, @ClientUri)
+		
+		Dim NeedProcessing As Boolean = Any
+		
+		IWebSite_NeedCgiProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
+		
+		If NeedProcessing Then
+			CloseHandle(FileHandle)
+			Return ProcessCGIRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+		End If
+		
+		TODO ProcessDllCgiRequest
+		IWebSite_NeedDllProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
+		
+		If NeedProcessing Then
+			CloseHandle(FileHandle)
+			Return ProcessDllCgiRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
+		End If
+		
+	End Scope
+	'/
 End Function
 
 Function WebSiteNeedCgiProcessing( _
