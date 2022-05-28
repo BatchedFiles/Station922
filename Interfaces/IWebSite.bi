@@ -9,13 +9,9 @@ Const WEBSITE_E_FILENOTFOUND As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_
 Const WEBSITE_E_FILEGONE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0202)
 Const WEBSITE_E_FORBIDDEN As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0203)
 Const WEBSITE_E_RANGENOTSATISFIABLE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0204)
+Const WEBSITE_E_RANGENOTSATISFIABLE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0204)
 
-Enum FileAccess
-	CreateAccess
-	ReadAccess
-	UpdateAccess
-	DeleteAccess
-End Enum
+Const WEBSITE_S_ALREADY_EXISTS As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, ERROR_ALREADY_EXISTS)
 
 Enum ContentNegotiationFlags
 	ContentNegotiationNone = 0
@@ -78,6 +74,7 @@ Type IWebSiteVirtualTable
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
@@ -121,7 +118,7 @@ End Type
 #define IWebSite_GetVirtualPath(this, ppVirtualPath) (this)->lpVtbl->GetVirtualPath(this, ppVirtualPath)
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
-#define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, pFlags, ppResult)
+#define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
 #define IWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)
 #define IWebSite_SetSitePhysicalDirectory(this, pPhysicalDirectory) (this)->lpVtbl->SetSitePhysicalDirectory(this, pPhysicalDirectory)
 #define IWebSite_SetVirtualPath(this, pVirtualPath) (this)->lpVtbl->SetVirtualPath(this, pVirtualPath)

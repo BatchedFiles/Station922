@@ -61,6 +61,7 @@ Declare Function WebSiteGetBuffer( _
 	ByVal pIMalloc As IMalloc Ptr, _
 	ByVal fAccess As FileAccess, _
 	ByVal pRequest As IClientRequest Ptr, _
+	ByVal BufferLength As LongInt, _
 	ByVal pFlags As ContentNegotiationFlags Ptr, _
 	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT

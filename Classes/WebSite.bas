@@ -149,15 +149,38 @@ End Function
 
 Function GetFileHandle( _
 		ByVal PathTranslated As WString Ptr, _
-		ByVal ForReading As FileAccess, _
+		ByVal fAccess As FileAccess, _
 		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
 	
 	Dim FileHandle As HANDLE = Any
 	Dim hrErrorCode As HRESULT = Any
 	
-	Select Case ForReading
+	Select Case fAccess
 		
+		Case FileAccess.CreateAccess
+			FileHandle = CreateFileW( _
+				PathTranslated, _
+				GENERIC_READ Or GENERIC_WRITE, _
+				0, _
+				NULL, _
+				CREATE_ALWAYS, _
+				FILE_ATTRIBUTE_NORMAL, _
+				NULL _
+			)
+			
+			Dim dwError As DWORD = GetLastError()
+			
+			If FileHandle = INVALID_HANDLE_VALUE Then
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				If dwError = ERROR_ALREADY_EXISTS Then
+					hrErrorCode = WEBSITE_S_ALREADY_EXISTS
+				Else
+					hrErrorCode = S_OK
+				End If
+			End If
+			
 		Case FileAccess.ReadAccess
 			FileHandle = CreateFileW( _
 				PathTranslated, _
@@ -175,7 +198,30 @@ Function GetFileHandle( _
 				hrErrorCode = S_OK
 			End If
 			
-		Case FileAccess.DeleteAccess
+		Case FileAccess.UpdateAccess
+			FileHandle = CreateFileW( _
+				PathTranslated, _
+				GENERIC_READ Or GENERIC_WRITE, _
+				0, _
+				NULL, _
+				OPEN_EXISTING, _
+				FILE_ATTRIBUTE_NORMAL, _
+				NULL _
+			)
+			
+			Dim dwError As DWORD = GetLastError()
+			
+			If FileHandle = INVALID_HANDLE_VALUE Then
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				If dwError = ERROR_ALREADY_EXISTS Then
+					hrErrorCode = WEBSITE_S_ALREADY_EXISTS
+				Else
+					hrErrorCode = S_OK
+				End If
+			End If
+			
+		Case Else ' FileAccess.DeleteAccess
 			FileHandle = CreateFileW( _
 				PathTranslated, _
 				0, _
@@ -192,14 +238,65 @@ Function GetFileHandle( _
 				hrErrorCode = S_OK
 			End If
 			
-		Case Else
-			'FileAccess.CreateAccess, FileAccess.UpdateAccess
-			FileHandle = INVALID_HANDLE_VALUE
+	End Select
+	
+	*pFileHandle = FileHandle
+	Return hrErrorCode
+	
+End Function
+
+Function GetFileMappingHandle( _
+		ByVal FileHandle As HANDLE, _
+		ByVal fAccess As FileAccess, _
+		ByVal FileLength As LongInt, _
+		ByVal pFileMapHandle As HANDLE Ptr _
+	)As HRESULT
+	
+	Dim FileMapHandle As HANDLE = Any
+	Dim hrErrorCode As HRESULT = Any
+	
+	Select Case fAccess
+		
+		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
+			Dim liFileSize As LARGE_INTEGER = Any
+			liFileSize.QuadPart = FileLength
+			
+			FileMapHandle = CreateFileMapping( _
+				FileHandle, _
+				NULL, _
+				PAGE_READWRITE, _
+				liFileSize.HighPart, liFileSize.LowPart, _
+				NULL _
+			)
+			If FileMapHandle = NULL Then
+				Dim dwError As DWORD = GetLastError()
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				hrErrorCode = S_OK
+			End If
+			
+		Case FileAccess.ReadAccess
+			FileMapHandle = CreateFileMapping( _
+				FileHandle, _
+				NULL, _
+				PAGE_READONLY, _
+				0, 0, _
+				NULL _
+			)
+			If FileMapHandle = NULL Then
+				Dim dwError As DWORD = GetLastError()
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
+			Else
+				hrErrorCode = S_OK
+			End If
+			
+		Case Else ' FileAccess.DeleteAccess
+			FileMapHandle = NULL
 			hrErrorCode = S_OK
 			
 	End Select
 	
-	*pFileHandle = FileHandle
+	*pFileMapHandle = FileMapHandle
 	Return hrErrorCode
 	
 End Function
@@ -465,77 +562,44 @@ End Function
 
 Function GetFileBytesOffset( _
 		ByVal mt As MimeType Ptr, _
-		ByVal hRequestedFile As HANDLE, _
+		ByVal FileBytes As ZString Ptr, _
 		ByVal hZipFile As HANDLE _
 	)As LongInt
 	
 	Dim offset As LongInt = Any
 	
 	If mt->IsTextFormat Then
-		Const MaxBytesRead As DWORD = 16
 		
-		' Dim ReadResult As Integer = ReadFile( _
-			' hRequestedFile, _
-			' @FileBytes, _
-			' MaxBytesRead - 1, _
-			' @BytesReaded, _
-			' 0 _
-		' )
-		
-		Dim hMapFile As HANDLE = CreateFileMapping( _
-			hRequestedFile, _
-			NULL, _
-			PAGE_READONLY, _
-			0, 0, _
-			NULL _
-		)
-		
-		If hMapFile <> NULL Then
+		If FileBytes <> NULL Then
 			
-			Dim FileBytes As ZString Ptr = MapViewOfFile( _
-				hMapFile, _
-				FILE_MAP_READ, _
-				0, 0, _
-				MaxBytesRead _
-			)
+			mt->Charset = GetDocumentCharset(FileBytes)
 			
-			If FileBytes <> NULL Then
-				mt->Charset = GetDocumentCharset(FileBytes)
+			If hZipFile = INVALID_HANDLE_VALUE Then
 				
-				If hZipFile = INVALID_HANDLE_VALUE Then
+				Select Case mt->Charset
 					
-					Select Case mt->Charset
+					Case DocumentCharsets.Utf8BOM
+						offset = 3
 						
-						Case DocumentCharsets.Utf8BOM
-							offset = 3
-							
-						Case DocumentCharsets.Utf16LE
-							offset = 0
-							
-						Case DocumentCharsets.Utf16BE
-							offset = 2
-							
-						Case Else
-							offset = 0
-							
-					End Select
-				Else
-					
-					offset = 0
-				End If
-				
-				UnmapViewOfFile(FileBytes)
+					Case DocumentCharsets.Utf16LE
+						offset = 0
+						
+					Case DocumentCharsets.Utf16BE
+						offset = 2
+						
+					Case Else
+						offset = 0
+						
+				End Select
 			Else
 				
 				offset = 0
 			End If
-			
-			CloseHandle(hMapFile)
+		
 		Else
-			
 			offset = 0
 		End If
-		
+	
 	Else
 		offset = 0
 	End If
@@ -779,6 +843,7 @@ Function WebSiteGetBuffer( _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
@@ -810,33 +875,36 @@ Function WebSiteGetBuffer( _
 		fAccess _
 	)
 	If FAILED(hrOpenFile) Then
+		Dim hrOpenFileTranslate As HRESULT = Any
+		
+		If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
+			
+			Dim FileState As RequestedFileState = Any
+			IFileBuffer_FileExists(pIFile, @FileState)
+			
+			Select Case FileState
+				
+				Case RequestedFileState.Gone
+					hrOpenFileTranslate = WEBSITE_E_FILEGONE
+					
+				Case Else ' RequestedFileState.NotFound
+					hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
+					
+			End Select
+			
+		Else
+			hrOpenFileTranslate = hrOpenFile
+		End If
+		
 		HeapSysFreeString(Path)
 		IClientUri_Release(ClientURI)
 		IFileBuffer_Release(pIFile)
 		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 		*ppResult = NULL
-		Return hrOpenFile
+		Return hrOpenFileTranslate
 	End If
 	
-	/'
-	Dim PathTranslated As WString Ptr = Any
-	IRequestedFile_GetPathTranslated(pc->pIRequestedFile, @PathTranslated)
-	
-	IRequestedFile_GetFileHandle(pc->pIRequestedFile, @this->FileHandle)
-	
-	Dim FileState As RequestedFileState = Any
-	IRequestedFile_FileExists(pc->pIRequestedFile, @FileState)
-	
-	Select Case FileState
-		
-		Case RequestedFileState.NotFound
-			Return WEBSITE_E_FILENOTFOUND
-			
-		Case RequestedFileState.Gone
-			Return WEBSITE_E_FILEGONE
-			
-	End Select
-	'/
+	' TODO Проверить идентификацию для запароленных ресурсов
 	
 	Dim PathTranslated As HeapBSTR = Any
 	IFileBuffer_GetPathTranslated(pIFile, @PathTranslated)
@@ -847,16 +915,14 @@ Function WebSiteGetBuffer( _
 		PathFindExtensionW(PathTranslated) _
 	)
 	If GetMimeOfFileExtensionResult = False Then
+		HeapSysFreeString(PathTranslated)
 		HeapSysFreeString(Path)
 		IClientUri_Release(ClientURI)
-		HeapSysFreeString(PathTranslated)
 		IFileBuffer_Release(pIFile)
 		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 		*ppResult = NULL
 		Return WEBSITE_E_FORBIDDEN
 	End If
-	
-	' TODO Проверить идентификацию для запароленных ресурсов
 	
 	' В основном анализируются заголовки
 	' Accept-Encoding: gzip, deflate
@@ -884,22 +950,105 @@ Function WebSiteGetBuffer( _
 		
 		IFileBuffer_SetZipFileHandle(pIFile, ZipFileHandle)
 		
-		' Установить смещение Byte Order Mark юникодного текстового файла
-		
 		Dim FileHandle As HANDLE = Any
 		IFileBuffer_GetFileHandle(pIFile, @FileHandle)
 		
-		Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
-			@Mime, _
-			FileHandle, _
-			ZipFileHandle _
-		)
+		Scope
+			Dim hRequestedFile As HANDLE = Any
+			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
+				hRequestedFile = ZipFileHandle
+			Else
+				hRequestedFile = FileHandle
+			End If
+			
+			Dim FileLength As LongInt = Any
+			
+			Select Case fAccess
+				Case FileAccess.CreateAccess
+					FileLength = BufferLength
+					
+				Case FileAccess.ReadAccess, FileAccess.UpdateAccess
+					Dim FileSize As LARGE_INTEGER = Any
+					Dim resGetFileSize As BOOL = GetFileSizeEx( _
+						hRequestedFile, _
+						@FileSize _
+					)
+					If resGetFileSize = 0 Then
+						Dim dwError As DWORD = GetLastError()
+						HeapSysFreeString(PathTranslated)
+						HeapSysFreeString(Path)
+						IClientUri_Release(ClientURI)
+						IFileBuffer_Release(pIFile)
+						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+						*ppResult = NULL
+						Return HRESULT_FROM_WIN32(dwError)
+					End If
+					
+					FileLength = FileSize.QuadPart
+					
+				Case Else ' FileAccess.DeleteAccess
+					FileLength = 0
+					
+			End Select
+			
+			Dim hMapFile As HANDLE = Any
+			Dim hrGetFileMappingHandle As HRESULT = GetFileMappingHandle( _
+				hRequestedFile, _
+				fAccess, _
+				FileLength, _
+				@hMapFile _
+			)
+			If FAILED(hrGetFileMappingHandle) = NULL Then
+				HeapSysFreeString(PathTranslated)
+				HeapSysFreeString(Path)
+				IClientUri_Release(ClientURI)
+				IFileBuffer_Release(pIFile)
+				*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+				*ppResult = NULL
+				Return hrGetFileMappingHandle
+			End If
+			
+			IFileBuffer_SetFileMappingHandle( _
+				pIFile, _
+				fAccess, _
+				hMapFile _
+			)
+			
+			IFileBuffer_SetFileSize(pIFile, FileLength)
+			
+			' Установить смещение Byte Order Mark юникодного текстового файла
+			
+			Dim Slice As BufferSlice = Any
+			Dim hrSlice As HRESULT = IFileBuffer_GetSlice( _
+				pIFile, _
+				0, _
+				BUFFERSLICECHUNK_SIZE, _
+				@Slice _
+			)
+			If FAILED(hrSlice) Then
+				HeapSysFreeString(PathTranslated)
+				HeapSysFreeString(Path)
+				IClientUri_Release(ClientURI)
+				IFileBuffer_Release(pIFile)
+				*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+				*ppResult = NULL
+				Return hrSlice
+			End If
+			
+			Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
+				@Mime, _
+				Slice.pSlice, _
+				ZipFileHandle _
+			)
+			
+			IFileBuffer_SetFileOffset(pIFile, EncodingFileOffset)
+			
+			If IsAcceptEncoding Then
+				*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
+			End If
+			
+		End Scope
 		
-		IFileBuffer_SetFileOffset(pIFile, EncodingFileOffset)
-		
-		If IsAcceptEncoding Then
-			*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
-		End If
 	End Scope
 	
 	IFileBuffer_SetContentType(pIFile, @Mime)
@@ -1121,10 +1270,11 @@ Function IMutableWebSiteGetBuffer( _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
-	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, pFlags, ppResult)
+	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
 End Function
 
 Function IMutableWebSiteSetHostName( _
