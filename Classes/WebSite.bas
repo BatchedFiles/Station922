@@ -255,12 +255,12 @@ Function GetFileMappingHandle( _
 	Dim FileMapHandle As HANDLE = Any
 	Dim hrErrorCode As HRESULT = Any
 	
+	Dim liFileSize As LARGE_INTEGER = Any
+	liFileSize.QuadPart = FileLength
+	
 	Select Case fAccess
 		
 		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-			Dim liFileSize As LARGE_INTEGER = Any
-			liFileSize.QuadPart = FileLength
-			
 			FileMapHandle = CreateFileMapping( _
 				FileHandle, _
 				NULL, _
@@ -280,7 +280,7 @@ Function GetFileMappingHandle( _
 				FileHandle, _
 				NULL, _
 				PAGE_READONLY, _
-				0, 0, _
+				liFileSize.HighPart, liFileSize.LowPart, _
 				NULL _
 			)
 			If FileMapHandle = NULL Then
@@ -1015,8 +1015,6 @@ Function WebSiteGetBuffer( _
 			)
 			
 			IFileBuffer_SetFileSize(pIFile, FileLength)
-			
-			' Установить смещение Byte Order Mark юникодного текстового файла
 			
 			Dim Slice As BufferSlice = Any
 			Dim hrSlice As HRESULT = IFileBuffer_GetSlice( _
