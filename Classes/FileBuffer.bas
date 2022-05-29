@@ -6,11 +6,6 @@
 
 Extern GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable
 
-Const MEMORYPAGE_SIZE As Integer = 4096
-
-Const REQUESTEDFILE_MAXPATHLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
-Const REQUESTEDFILE_MAXPATHTRANSLATEDLENGTH As Integer = (MEMORYPAGE_SIZE) \ SizeOf(WString) - 1
-
 Type _FileBuffer
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -23,11 +18,14 @@ Type _FileBuffer
 	FileHandle As Handle
 	ZipFileHandle As HANDLE
 	hMapFile As HANDLE
+	FileSize As LongInt
+	ChunkIndex As LongInt
+	FileOffset As LongInt
 	FileBytes As ZString Ptr
+	fAccess As FileAccess
 	Encoding As HeapBSTR
 	Charset As HeapBSTR
 	Language As HeapBSTR
-	FileOffset As LongInt
 	ContentType As MimeType
 End Type
 
@@ -52,6 +50,8 @@ Sub InitializeFileBuffer( _
 	this->Encoding = NULL
 	this->Charset = NULL
 	this->Language = NULL
+	this->FileSize = 0
+	this->ChunkIndex = 0
 	this->FileOffset = 0
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
@@ -336,22 +336,7 @@ Function FileBufferGetLength( _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	Dim FileSize As LARGE_INTEGER = Any
-	
-	Dim resGetFileSize As BOOL = Any
-	If this->ZipFileHandle = INVALID_HANDLE_VALUE Then
-		resGetFileSize = GetFileSizeEx(this->FileHandle, @FileSize)
-	Else
-		resGetFileSize = GetFileSizeEx(this->ZipFileHandle, @FileSize)
-	End If
-	
-	If resGetFileSize = 0 Then
-		*pLength = 0
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	*pLength = FileSize.QuadPart - this->FileOffset
+	*pLength = this->FileSize - this->FileOffset
 	
 	Return S_OK
 	
@@ -363,6 +348,59 @@ Function FileBufferGetSlice( _
 		ByVal Length As DWORD, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
+	
+	If StartIndex + this->FileOffset >= this->FileSize - this->FileOffset Then
+		ZeroMemory(pBufferSlice, SizeOf(BufferSlice))
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim RequestChunkIndex As LongInt = (this->FileSize) \ (StartIndex + this->FileOffset)
+	
+	If this->ChunkIndex <> RequestChunkIndex Then
+		If this->FileBytes <> NULL Then
+			UnmapViewOfFile(this->FileBytes)
+			this->FileBytes = NULL
+		End If
+		
+		this->ChunkIndex = RequestChunkIndex
+	End If
+	
+	Dim dwNumberOfBytesToMap As DWORD = min( _
+		BUFFERSLICECHUNK_SIZE, _
+		this->FileSize - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
+	)
+	
+	If this->FileBytes = NULL Then
+		Dim dwDesiredAccess As DWORD = Any
+		
+		Select Case this->fAccess
+			Case FileAccess.CreateAccess, FileAccess.UpdateAccess
+				dwDesiredAccess = FILE_MAP_WRITE
+			Case Else
+				dwDesiredAccess = FILE_MAP_READ
+		End Select
+		
+		Dim liStartIndex As LARGE_INTEGER = Any
+		liStartIndex.QuadPart = RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)
+		
+		this->FileBytes = MapViewOfFile( _
+			this->hMapFile, _
+			dwDesiredAccess, _
+			liStartIndex.HighPart, liStartIndex.LowPart, _
+			dwNumberOfBytesToMap _
+		)
+		If this->FileBytes = NULL Then
+			Dim dwError As DWORD = GetLastError()
+			ZeroMemory(pBufferSlice, SizeOf(BufferSlice))
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+	End If
+	
+	Dim ByteIndex As LongInt = StartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE) + this->FileOffset
+	Dim SliceLength As DWORD = Cast(DWORD, CLngInt(dwNumberOfBytesToMap) - ByteIndex - this->FileOffset)
+	
+	pBufferSlice->pSlice = @this->FileBytes[ByteIndex]
+	pBufferSlice->Length = SliceLength
 	
 	Return S_OK
 	
@@ -486,6 +524,19 @@ Function FileBufferSetZipFileHandle( _
 	
 End Function
 
+Function FileBufferSetFileMappingHandle( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal fAccess As FileAccess, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	
+	this->fAccess = fAccess
+	this->hMapFile = hFile
+	
+	Return S_OK
+	
+End Function
+
 Function FileBufferSetContentType( _
 		ByVal this As FileBuffer Ptr, _
 		ByVal pType As MimeType Ptr _
@@ -503,6 +554,17 @@ Function FileBufferSetFileOffset( _
 	)As HRESULT
 	
 	this->FileOffset = Offset
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferSetFileSize( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal FileSize As LongInt _
+	)As HRESULT
+	
+	this->FileSize = FileSize
 	
 	Return S_OK
 	
@@ -650,6 +712,14 @@ Function IFileBufferSetZipFileHandle( _
 	Return FileBufferSetZipFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
 End Function
 
+Function IFileBufferSetFileMappingHandle( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal fAccess As FileAccess, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	Return FileBufferSetFileMappingHandle(ContainerOf(this, FileBuffer, lpVtbl), fAccess, hFile)
+End Function
+
 Function IFileBufferSetContentType( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pType As MimeType Ptr _
@@ -662,6 +732,13 @@ Function IFileBufferSetFileOffset( _
 		ByVal Offset As LongInt _
 	)As HRESULT
 	Return FileBufferSetFileOffset(ContainerOf(this, FileBuffer, lpVtbl), Offset)
+End Function
+
+Function IFileBufferSetFileSize( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal FileSize As LongInt _
+	)As HRESULT
+	Return FileBufferSetFileSize(ContainerOf(this, FileBuffer, lpVtbl), FileSize)
 End Function
 
 Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
@@ -685,6 +762,8 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferSetFileHandle, _
 	@IFileBufferGetZipFileHandle, _
 	@IFileBufferSetZipFileHandle, _
+	@IFileBufferSetFileMappingHandle, _
 	@IFileBufferSetContentType, _
-	@IFileBufferSetFileOffset _
+	@IFileBufferSetFileOffset, _
+	@IFileBufferSetFileSize _
 )

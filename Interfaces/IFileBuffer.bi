@@ -119,6 +119,12 @@ Type IFileBufferVirtualTable
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
+	SetFileMappingHandle As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal fAccess As FileAccess, _
+		ByVal hFile As HANDLE _
+	)As HRESULT
+	
 	SetContentType As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pType As MimeType Ptr _
@@ -127,6 +133,11 @@ Type IFileBufferVirtualTable
 	SetFileOffset As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal Offset As LongInt _
+	)As HRESULT
+	
+	SetFileSize As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal FileSize As LongInt _
 	)As HRESULT
 	
 End Type
@@ -155,7 +166,9 @@ End Type
 #define IFileBuffer_SetFileHandle(this, hFile) (this)->lpVtbl->SetFileHandle(this, hFile)
 #define IFileBuffer_GetZipFileHandle(this, pResult) (this)->lpVtbl->GetZipFileHandle(this, pResult)
 #define IFileBuffer_SetZipFileHandle(this, hFile) (this)->lpVtbl->SetZipFileHandle(this, hFile)
+#define IFileBuffer_SetFileMappingHandle(this, fAccess, hFile) (this)->lpVtbl->SetFileMappingHandle(this, fAccess, hFile)
 #define IFileBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IFileBuffer_SetFileOffset(this, Offset) (this)->lpVtbl->SetFileOffset(this, Offset)
+#define IFileBuffer_SetFileSize(this, FileSize) (this)->lpVtbl->SetFileSize(this, FileSize)
 
 #endif

@@ -118,6 +118,12 @@ Declare Function FileBufferSetZipFileHandle( _
 	ByVal hFile As HANDLE _
 )As HRESULT
 
+Declare Function FileBufferSetFileMappingHandle( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal fAccess As FileAccess, _
+	ByVal hFile As HANDLE _
+)As HRESULT
+
 Declare Function FileBufferSetContentType( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal pType As MimeType Ptr _
@@ -126,6 +132,11 @@ Declare Function FileBufferSetContentType( _
 Declare Function FileBufferSetFileOffset( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal Offset As LongInt _
+)As HRESULT
+
+Declare Function FileBufferSetFileSize( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal FileSize As LongInt _
 )As HRESULT
 
 #endif

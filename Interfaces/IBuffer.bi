@@ -4,6 +4,15 @@
 #include once "IString.bi"
 #include once "Mime.bi"
 
+Const BUFFERSLICECHUNK_SIZE As DWORD = 64 * 1024 * 128
+
+Enum FileAccess
+	CreateAccess
+	ReadAccess
+	UpdateAccess
+	DeleteAccess
+End Enum
+
 Type BufferSlice
 	pSlice As LPVOID
 	Length As DWORD
