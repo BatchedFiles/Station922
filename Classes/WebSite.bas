@@ -998,7 +998,7 @@ Function WebSiteGetBuffer( _
 				FileLength, _
 				@hMapFile _
 			)
-			If FAILED(hrGetFileMappingHandle) = NULL Then
+			If FAILED(hrGetFileMappingHandle) Then
 				HeapSysFreeString(PathTranslated)
 				HeapSysFreeString(Path)
 				IClientUri_Release(ClientURI)
