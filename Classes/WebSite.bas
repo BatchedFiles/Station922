@@ -1120,7 +1120,7 @@ Function WebSiteGetBuffer( _
 			IFileBuffer_SetFileOffset(pIFile, EncodingFileOffset)
 			
 			If IsAcceptEncoding Then
-				*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
+				*pFlags = ContentNegotiationFlags.ContentNegotiationNone Or ContentNegotiationFlags.ContentNegotiationAcceptEncoding
 			End If
 		End Scope
 		
