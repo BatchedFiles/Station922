@@ -34,13 +34,6 @@ Declare Function HttpAuthUtil( _
 	ByVal ProxyAuthorization As Boolean _
 )As Boolean
 
-Declare Sub GetETag( _
-	ByVal wETag As WString Ptr, _
-	ByVal pDateLastFileModified As FILETIME Ptr, _
-	ByVal ZipEnable As Boolean, _
-	ByVal ResponseZipMode As ZipModes _
-)
-
 Declare Function SetResponseCompression( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _
@@ -51,7 +44,8 @@ Declare Function SetResponseCompression( _
 Declare Sub AddResponseCacheHeaders( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal hFile As HANDLE _
+	ByVal pDateLastFileModified As FILETIME Ptr, _
+	ByVal ETag As HeapBSTR _
 )
 
 Declare Function FindWebSite( _

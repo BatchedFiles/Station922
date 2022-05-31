@@ -320,132 +320,131 @@ Function HttpAuthUtil( _
 End Function
 '/
 
-Sub GetETag( _
-		ByVal wETag As WString Ptr, _
-		ByVal pDateLastFileModified As FILETIME Ptr, _
-		ByVal ZipEnable As Boolean, _
-		ByVal ResponseZipMode As ZipModes _
-	)
-	
-	lstrcpyW(wETag, @QuoteString)
-	
-	Dim ul As ULARGE_INTEGER = Any
-	With ul
-		.LowPart = pDateLastFileModified->dwLowDateTime
-		.HighPart = pDateLastFileModified->dwHighDateTime
-	End With
-	
-	_ui64tow(ul.QuadPart, @wETag[1], 10)
-	
-	If ZipEnable Then
-		Select Case ResponseZipMode
-			
-			Case ZipModes.GZip
-				lstrcatW(wETag, @GzipString)
-				
-			Case ZipModes.Deflate
-				lstrcatW(wETag, @DeflateString)
-				
-		End Select
-	End If
-	
-	lstrcatW(wETag, @QuoteString)
-	
-End Sub
-
 Sub AddResponseCacheHeaders( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal hFile As HANDLE _
+		ByVal pDateLastFileModified As FILETIME Ptr, _
+		ByVal ETag As HeapBSTR _
 	)
-	Dim IsFileModified As Boolean = True
 	
-	Dim DateLastFileModified As FILETIME = Any
-	If GetFileTime(hFile, 0, 0, @DateLastFileModified) = 0 Then
-		Exit Sub
-	End If
+	Dim IsFileModified As Boolean = True
 	
 	Scope
 		' TODO Уметь распознавать все три HTTP-формата даты
 		Dim dFileLastModified As SYSTEMTIME = Any
-		FileTimeToSystemTime(@DateLastFileModified, @dFileLastModified)
+		FileTimeToSystemTime(pDateLastFileModified, @dFileLastModified)
 		
 		Dim strFileLastModifiedHttpDate As WString * 256 = Any
 		GetHttpDate(@strFileLastModifiedHttpDate, @dFileLastModified)
 		
-		IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLastModified, @strFileLastModifiedHttpDate)
+		IServerResponse_AddKnownResponseHeaderWstr( _
+			pIResponse, _
+			HttpResponseHeaders.HeaderLastModified, _
+			@strFileLastModifiedHttpDate _
+		)
 		
-		Dim pHeaderIfModifiedSince As WString Ptr = Any
-		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderIfModifiedSince, @pHeaderIfModifiedSince)
+		Dim pHeaderIfModifiedSince As HeapBSTR = Any
+		IClientRequest_GetHttpHeader( _
+			pIRequest, _
+			HttpRequestHeaders.HeaderIfModifiedSince, _
+			@pHeaderIfModifiedSince _
+		)
 		
-		If lstrlenW(pHeaderIfModifiedSince) <> 0 Then
+		If SysStringLen(pHeaderIfModifiedSince) <> 0 Then
 			
-			Dim wSeparator As WString Ptr = StrChrW(pHeaderIfModifiedSince, Characters.Semicolon)
+			Dim wSeparator As WString Ptr = StrChrW( _
+				pHeaderIfModifiedSince, _
+				Characters.Semicolon _
+			)
 			If wSeparator <> 0 Then
 				wSeparator[0] = 0
 			End If
 			
-			If lstrcmpiW(@strFileLastModifiedHttpDate, pHeaderIfModifiedSince) = 0 Then
+			Dim resCompare As Long = lstrcmpiW( _
+				@strFileLastModifiedHttpDate, _
+				pHeaderIfModifiedSince _
+			)
+			If resCompare = 0 Then
 				IsFileModified = False
 			End If
 		End If
 		
-		Dim pHeaderIfUnModifiedSince As WString Ptr = Any
-		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderIfUnModifiedSince, @pHeaderIfUnModifiedSince)
+		HeapSysFreeString(pHeaderIfModifiedSince)
 		
-		If lstrlenW(pHeaderIfUnModifiedSince) <> 0 Then
+		Dim pHeaderIfUnModifiedSince As HeapBSTR = Any
+		IClientRequest_GetHttpHeader( _
+			pIRequest, _
+			HttpRequestHeaders.HeaderIfUnModifiedSince, _
+			@pHeaderIfUnModifiedSince _
+		)
+		
+		If SysStringLen(pHeaderIfUnModifiedSince) <> 0 Then
 			
-			Dim wSeparator As WString Ptr = StrChrW(pHeaderIfUnModifiedSince, Characters.Semicolon)
+			Dim wSeparator As WString Ptr = StrChrW( _
+				pHeaderIfUnModifiedSince, _
+				Characters.Semicolon _
+			)
 			If wSeparator <> 0 Then
 				wSeparator[0] = 0
 			End If
 			
-			If lstrcmpiW(@strFileLastModifiedHttpDate, pHeaderIfUnModifiedSince) = 0 Then
+			Dim resCompare As Long = lstrcmpiW( _
+				@strFileLastModifiedHttpDate, _
+				pHeaderIfUnModifiedSince _
+			)
+			If resCompare = 0 Then
 				IsFileModified = True
 			End If
 		End If
+		
+		HeapSysFreeString(pHeaderIfUnModifiedSince)
 	End Scope
 	
 	Scope
-		Dim ResponseZipEnable As Boolean = Any
-		IServerResponse_GetZipEnabled(pIResponse, @ResponseZipEnable)
-		
-		Dim ResponseZipMode As ZipModes = Any
-		IServerResponse_GetZipMode(pIResponse, @ResponseZipMode)
-		
-		Dim strETag As WString * 256 = Any
-		GetETag(@strETag, @DateLastFileModified, ResponseZipEnable, ResponseZipMode)
-		
-		IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderEtag, @strETag)
-		
 		If IsFileModified Then
-			Dim pHeaderIfNoneMatch As WString Ptr = Any
-			IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderIfNoneMatch, @pHeaderIfNoneMatch)
 			
-			If lstrlenW(pHeaderIfNoneMatch) <> 0 Then
-				If lstrcmpiW(pHeaderIfNoneMatch, @strETag) = 0 Then
+			Dim HeaderIfNoneMatch As HeapBSTR = Any
+			IClientRequest_GetHttpHeader( _
+				pIRequest, _
+				HttpRequestHeaders.HeaderIfNoneMatch, _
+				@HeaderIfNoneMatch _
+			)
+			
+			If SysStringLen(HeaderIfNoneMatch) Then
+				If lstrcmpiW(HeaderIfNoneMatch, ETag) = 0 Then
 					IsFileModified = False
 				End If
 			End If
 			
+			HeapSysFreeString(HeaderIfNoneMatch)
 		End If
 		
 		If IsFileModified = False Then
 			
-			Dim pHeaderIfMatch As WString Ptr = Any
-			IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderIfMatch, @pHeaderIfMatch)
+			Dim HeaderIfMatch As HeapBSTR = Any
+			IClientRequest_GetHttpHeader( _
+				pIRequest, _
+				HttpRequestHeaders.HeaderIfMatch, _
+				@HeaderIfMatch _
+			)
 			
-			If lstrlenW(pHeaderIfMatch) <> 0 Then
-				If lstrcmpiW(pHeaderIfMatch, @strETag) = 0 Then
+			If SysStringLen(HeaderIfMatch) Then
+				If lstrcmpiW(HeaderIfMatch, ETag) = 0 Then
 					IsFileModified = True
 				End If
 			End If
 			
+			HeapSysFreeString(HeaderIfMatch)
 		End If
 		
 	End Scope
 	
-	IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderCacheControl, @DefaultCacheControl)
+	IServerResponse_AddKnownResponseHeaderWstrLen( _
+		pIResponse, _
+		HttpResponseHeaders.HeaderCacheControl, _
+		@DefaultCacheControl, _
+		Len(DefaultCacheControl) _
+	)
 	
 	Dim SendOnlyHeaders As Boolean = Any
 	IServerResponse_GetSendOnlyHeaders(pIResponse, @SendOnlyHeaders)
