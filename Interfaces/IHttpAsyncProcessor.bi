@@ -15,6 +15,7 @@ Type _ProcessorContext
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
 	pIReader As IHttpReader Ptr
+	pIWriter As IHttpWriter Ptr
 End Type
 
 Type ProcessorContext As _ProcessorContext

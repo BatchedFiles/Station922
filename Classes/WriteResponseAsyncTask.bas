@@ -297,6 +297,7 @@ Function WriteResponseAsyncTaskBeginExecute( _
 	pc.pIRequest = this->pIRequest
 	pc.pIResponse = this->pIResponse
 	pc.pIReader = this->pIHttpReader
+	pc.pIWriter = this->pIHttpWriter
 	
 	Dim hrBeginProcess As HRESULT = IHttpAsyncProcessor_BeginProcess( _
 		this->pIProcessor, _
@@ -325,6 +326,7 @@ Function WriteResponseAsyncTaskEndExecute( _
 	pc.pIRequest = this->pIRequest
 	pc.pIResponse = this->pIResponse
 	pc.pIReader = this->pIHttpReader
+	pc.pIWriter = this->pIHttpWriter
 	
 	Dim hrEndProcess As HRESULT = IHttpAsyncProcessor_EndProcess( _
 		this->pIProcessor, _
@@ -612,18 +614,22 @@ Function WriteResponseAsyncTaskPrepare( _
 		IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
 		
 		/'
-			' Dim ClientURI As IClientUri Ptr = Any
-			' IClientRequest_GetUri(this->pIRequest, @ClientURI)
-		
 			Dim IsSiteMoved As Boolean = Any
+			
 			' TODO Грязный хак с robots.txt
 			' если запрошен документ /robots.txt то не перенаправлять
+			
+			Dim ClientURI As IClientUri Ptr = Any
+			IClientRequest_GetUri(this->pIRequest, @ClientURI)
+		
 			Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
 			If IsRobotsTxt = 0 Then
 				IsSiteMoved = False
 			Else
 				IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
 			End If
+			
+			IClientRequest_Release(ClientURI)
 		'/
 		
 		If IsSiteMoved Then
@@ -653,6 +659,7 @@ Function WriteResponseAsyncTaskPrepare( _
 				pc.pIRequest = this->pIRequest
 				pc.pIResponse = this->pIResponse
 				pc.pIReader = this->pIHttpReader
+				pc.pIWriter = this->pIHttpWriter
 				
 				If this->pIBuffer <> NULL Then
 					IBuffer_Release(this->pIBuffer)
