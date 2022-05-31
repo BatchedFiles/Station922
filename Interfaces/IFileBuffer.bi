@@ -124,6 +124,16 @@ Type IFileBufferVirtualTable
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 	
+	SetFileTime As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pTime As FILETIME Ptr _
+	)As HRESULT
+	
+	SetETag As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ETag As HeapBSTR _
+	)As HRESULT
+	
 End Type
 
 Type IFileBuffer_
@@ -152,5 +162,7 @@ End Type
 #define IFileBuffer_SetFileOffset(this, Offset) (this)->lpVtbl->SetFileOffset(this, Offset)
 #define IFileBuffer_SetFileSize(this, FileSize) (this)->lpVtbl->SetFileSize(this, FileSize)
 #define IFileBuffer_SetEncoding(this, ZipMode) (this)->lpVtbl->SetEncoding(this, ZipMode)
+#define IFileBuffer_SetFileTime(this, pTime) (this)->lpVtbl->SetFileTime(this, pTime)
+#define IFileBuffer_SetETag(this, ETag) (this)->lpVtbl->SetETag(this, ETag)
 
 #endif

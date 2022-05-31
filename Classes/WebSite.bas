@@ -98,6 +98,36 @@ Sub AddExtendedHeaders( _
 End Sub
 '/
 
+Sub GetETag( _
+		ByVal wETag As WString Ptr, _
+		ByVal pTime As FILETIME Ptr, _
+		ByVal ZipMode As ZipModes _
+	)
+	
+	lstrcpyW(wETag, @QuoteString)
+	
+	Dim ul As ULARGE_INTEGER = Any
+	With ul
+		.LowPart = pTime->dwLowDateTime
+		.HighPart = pTime->dwHighDateTime
+	End With
+	
+	_ui64tow(ul.QuadPart, @wETag[1], 10)
+	
+	Select Case ZipMode
+		
+		Case ZipModes.GZip
+			lstrcatW(wETag, @GzipString)
+			
+		Case ZipModes.Deflate
+			lstrcatW(wETag, @DeflateString)
+			
+	End Select
+	
+	lstrcatW(wETag, @QuoteString)
+	
+End Sub
+
 Function GetDefaultFileName( _
 		ByVal Buffer As WString Ptr, _
 		ByVal Index As Integer _
@@ -966,7 +996,43 @@ Function WebSiteGetBuffer( _
 		Scope
 			Dim FileHandle As HANDLE = Any
 			IFileBuffer_GetFileHandle(pIFile, @FileHandle)
-		
+			
+			Scope
+				Dim LastFileModifiedDate As FILETIME = Any
+				Dim resFileTime As BOOL = GetFileTime( _
+					FileHandle, _
+					NULL, _
+					NULL, _
+					@LastFileModifiedDate _
+				)
+				If resFileTime = 0 Then
+					Dim dwError As DWORD = GetLastError()
+					HeapSysFreeString(Path)
+					IClientUri_Release(ClientURI)
+					IFileBuffer_Release(pIFile)
+					*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+					*ppResult = NULL
+					Return HRESULT_FROM_WIN32(dwError)
+				End If
+				
+				IFileBuffer_SetFileTime(pIFile, @LastFileModifiedDate)
+				
+				Dim ETagBuffer As WString * 256 = Any
+				GetETag( _
+					@ETagBuffer, _
+					@LastFileModifiedDate, _
+					ZipMode _
+				)
+				
+				Dim ETag As HeapBSTR = HeapSysAllocString( _
+					pIMalloc, _
+					ETagBuffer _
+				)
+				IFileBuffer_SetETag(pIFile, ETag)
+				
+				HeapSysFreeString(ETag)
+			End Scope
+			
 			Dim hRequestedFile As HANDLE = Any
 			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
 				hRequestedFile = ZipFileHandle

@@ -24,6 +24,8 @@ Type _FileBuffer
 	ZipMode As ZipModes
 	Charset As HeapBSTR
 	Language As HeapBSTR
+	ETag As HeapBSTR
+	LastFileModifiedDate As FILETIME
 	ContentType As MimeType
 End Type
 
@@ -47,9 +49,11 @@ Sub InitializeFileBuffer( _
 	this->ZipMode = ZipModes.None
 	this->Charset = NULL
 	this->Language = NULL
+	this->ETag = NULL
 	this->FileSize = 0
 	this->ChunkIndex = 0
 	this->FileOffset = 0
+	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
 	this->ContentType.IsTextFormat = False
@@ -60,6 +64,7 @@ Sub UnInitializeFileBuffer( _
 		ByVal this As FileBuffer Ptr _
 	)
 	
+	HeapSysFreeString(this->ETag)
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->Charset)
 	HeapSysFreeString(this->pFilePath)
@@ -283,16 +288,8 @@ Function FileBufferGetETag( _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
 	
-	' Dim strETag As WString * 256 = Any
-	' GetETag( _
-		' @strETag, _
-		' @DateLastFileModified, _
-		' ResponseZipEnable, _
-		' ResponseZipMode _
-	' )
-	' *ppETag = HeapSysAllocString(this->pIMemoryAllocator, strETag)
-	
-	*ppETag = NULL
+	HeapSysAddRefString(this->ETag)
+	*ppETag = this->ETag
 	
 	Return S_OK
 	
@@ -303,25 +300,9 @@ Function FileBufferGetLastFileModifiedDate( _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
-	If this->FileHandle <> INVALID_HANDLE_VALUE Then
-		Dim LastFileModifiedDate As FILETIME = Any
-		Dim res As BOOL = GetFileTime( _
-			this->FileHandle, _
-			NULL, _
-			NULL, _
-			@LastFileModifiedDate _
-		)
-		If res = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			ZeroMemory(pResult, SizeOf(FILETIME))
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-		CopyMemory(pResult, @LastFileModifiedDate, SizeOf(FILETIME))
-		Return S_OK
-	End If
+	CopyMemory(pResult, @this->LastFileModifiedDate, SizeOf(FILETIME))
 	
-	Return E_UNEXPECTED
+	Return S_OK
 	
 End Function
 
@@ -532,6 +513,28 @@ Function FileBufferSetEncoding( _
 	
 End Function
 
+Function FileBufferSetFileTime( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal pTime As FILETIME Ptr _
+	)As HRESULT
+	
+	CopyMemory(@this->LastFileModifiedDate, pTime, SizeOf(FILETIME))
+	
+	Return S_OK
+	
+End Function
+
+Function FileBufferSetETag( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ETag As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ETag, ETag)
+	
+	Return S_OK
+	
+End Function
+
 
 Function IFileBufferQueryInterface( _
 		ByVal this As IFileBuffer Ptr, _
@@ -689,6 +692,20 @@ Function IFileBufferSetEncoding( _
 	Return FileBufferSetEncoding(ContainerOf(this, FileBuffer, lpVtbl), ZipMode)
 End Function
 
+Function IFileBufferSetFileTime( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal pTime As FILETIME Ptr _
+	)As HRESULT
+	Return FileBufferSetFileTime(ContainerOf(this, FileBuffer, lpVtbl), pTime)
+End Function
+
+Function IFileBufferSetETag( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ETag As HeapBSTR _
+	)As HRESULT
+	Return FileBufferSetETag(ContainerOf(this, FileBuffer, lpVtbl), ETag)
+End Function
+
 Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferQueryInterface, _
 	@IFileBufferAddRef, _
@@ -711,5 +728,7 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferSetContentType, _
 	@IFileBufferSetFileOffset, _
 	@IFileBufferSetFileSize, _
-	@IFileBufferSetEncoding _
+	@IFileBufferSetEncoding, _
+	@IFileBufferSetFileTime, _
+	@IFileBufferSetETag _
 )

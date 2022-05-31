@@ -129,4 +129,14 @@ Declare Function FileBufferSetEncoding( _
 	ByVal ZipMode As ZipModes _
 )As HRESULT
 
+Declare Function FileBufferSetFileTime( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal pTime As FILETIME Ptr _
+)As HRESULT
+
+Declare Function FileBufferSetETag( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ETag As HeapBSTR _
+)As HRESULT
+
 #endif
