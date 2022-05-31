@@ -1,21 +1,19 @@
 #include once "HttpGetProcessor.bi"
 #include once "win\shlwapi.bi"
 #include once "win\mswsock.bi"
-#include once "IArrayStringWriter.bi"
-#include once "IMutableAsyncResult.bi"
-#include once "ContainerOf.bi"
+#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
+#include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
+#include once "IMutableAsyncResult.bi"
 #include once "Logger.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
-
-Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 
 Type _HttpGetProcessor
 	#if __FB_DEBUG__
@@ -24,16 +22,8 @@ Type _HttpGetProcessor
 	lpVtbl As Const IHttpGetAsyncProcessorVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	FileHandle As HANDLE
-	ZipFileHandle As HANDLE
-	ContentBodyLength As LongInt
-	FileBytesOffset As LongInt
-	hTransmitFile As HANDLE
-	CurrentChunkIndex As LongInt
-	TransmitHeader As TRANSMIT_FILE_BUFFERS
 End Type
 
-/'
 Sub MakeContentRangeHeader( _
 		ByVal pIWriter As IArrayStringWriter Ptr, _
 		ByVal FirstBytePosition As LongInt, _
@@ -56,75 +46,6 @@ Sub MakeContentRangeHeader( _
 	
 End Sub
 
-Sub AddExtendedHeaders( _
-		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal pIRequestedFile As IRequestedFile Ptr _
-	)
-	' TODO Убрать переполнение буфера при слишком длинных заголовках
-	
-	Dim PathTranslated As WString Ptr = Any
-	IRequestedFile_GetPathTranslated(pIRequestedFile, @PathTranslated)
-	
-	Dim wExtHeadersFile As WString * (MAX_PATH + 1) = Any
-	lstrcpyW(@wExtHeadersFile, PathTranslated)
-	lstrcatW(@wExtHeadersFile, @HeadersExtensionString)
-	
-	Dim hExtHeadersFile As HANDLE = CreateFileW( _
-		@wExtHeadersFile, _
-		GENERIC_READ, _
-		FILE_SHARE_READ, _
-		NULL, _
-		OPEN_EXISTING, _
-		FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_SEQUENTIAL_SCAN, _
-		NULL _
-	)
-	
-	If hExtHeadersFile <> INVALID_HANDLE_VALUE Then
-		Dim zExtHeaders As ZString * (MaxResponseBufferLength + 1) = Any
-		Dim wExtHeaders As WString * (MaxResponseBufferLength + 1) = Any
-		
-		Dim BytesReaded As DWORD = Any
-		If ReadFile(hExtHeadersFile, @zExtHeaders, MaxResponseBufferLength, @BytesReaded, 0) <> 0 Then
-			
-			If BytesReaded > 2 Then
-				zExtHeaders[BytesReaded] = 0
-				
-				If MultiByteToWideChar(CP_UTF8, 0, @zExtHeaders, -1, @wExtHeaders, MaxResponseBufferLength) > 0 Then
-					Dim w As WString Ptr = @wExtHeaders
-					
-					Do
-						Dim wName As WString Ptr = w
-						Dim wColon As WString Ptr = StrChrW(w, Characters.Colon)
-						
-						w = StrStrW(w, NewLineString)
-						
-						If w <> 0 Then
-							w[0] = Characters.NullChar ' и ещё w[1] = 0
-							' Указываем на следующий символ после vbCrLf, если это ноль — то это конец
-							w += 2
-						End If
-						
-						If wColon > 0 Then
-							wColon[0] = Characters.NullChar
-							Do
-								wColon += 1
-							Loop While wColon[0] = Characters.WhiteSpace
-							
-							IServerResponse_AddResponseHeader(pIResponse, wName, wColon)
-						End If
-						
-					Loop While lstrlenW(w) > 0
-					
-				End If
-			End If
-		End If
-		
-		CloseHandle(hExtHeadersFile)
-	End If
-	
-End Sub
-'/
-
 Sub InitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
@@ -137,22 +58,12 @@ Sub InitializeHttpGetProcessor( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->FileHandle = INVALID_HANDLE_VALUE
-	this->ZipFileHandle = INVALID_HANDLE_VALUE
 	
 End Sub
 
 Sub UnInitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
-	
-	If this->FileHandle <> INVALID_HANDLE_VALUE Then
-		CloseHandle(this->FileHandle)
-	End If
-	
-	If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
-		CloseHandle(this->ZipFileHandle)
-	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -319,105 +230,79 @@ Function HttpGetProcessorPrepare( _
 		pContext->pIMemoryAllocator, _
 		FileAccess.ReadAccess, _
 		pContext->pIRequest, _
+		0, _
 		@Flags, _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then
+		*ppIBuffer = NULL
 		Return E_FAIL
 	End If
 	
-	/'
 	Scope
+		Dim Mime As MimeType = Any
+		IBuffer_GetContentType(pIBuffer, @Mime)
 		
-		Dim pHeaderConnection As WString Ptr = Any
-		IClientRequest_GetHttpHeader( _
-			' pIRequest, _
-			' HttpRequestHeaders.HeaderConnection, _
-			' @pHeaderConnection _
-		' )
+		IServerResponse_SetMimeType(pContext->pIResponse, @Mime)
 		
-		If lstrcmpi(pHeaderConnection, @UpgradeString) = 0 Then
-			Dim pHeaderUpgrade As WString Ptr = Any
-			IClientRequest_GetHttpHeader( _
-				' pIRequest, _
-				' HttpRequestHeaders.HeaderUpgrade, _
-				' @pHeaderUpgrade _
-			' )
-			
-			If lstrcmpi(pHeaderUpgrade, @WebSocketString) = 0 Then
-				Dim pHeaderSecWebSocketVersion As WString Ptr = Any
-				IClientRequest_GetHttpHeader( _
-					' pIRequest, _
-					' HttpRequestHeaders.HeaderSecWebSocketVersion, _
-					' @pHeaderSecWebSocketVersion _
-				' )
-				
-				If lstrcmpi(pHeaderSecWebSocketVersion, @WebSocketVersionString) = 0 Then
-					
-					CloseHandle(FileHandle)
-					Return ProcessWebSocketRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-					
-				End If 
-			End If
-		End If
+		Dim DateLastFileModified As FILETIME = Any
+		IBuffer_GetLastFileModifiedDate(pIBuffer, @DateLastFileModified)
 		
-		Dim ClientUri As Station922Uri = Any
-		IClientRequest_GetUri(pIRequest, @ClientUri)
+		Dim ETag As HeapBSTR = Any
+		IBuffer_GetETag(pIBuffer, @ETag)
 		
-		Dim NeedProcessing As Boolean = Any
+		AddResponseCacheHeaders( _
+			pContext->pIRequest, _
+			pContext->pIResponse, _
+			@DateLastFileModified, _
+			ETag _
+		)
 		
-		IWebSite_NeedCgiProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
-		
-		If NeedProcessing Then
-			CloseHandle(FileHandle)
-			Return ProcessCGIRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		End If
-		
-		TODO ProcessDllCgiRequest
-		IWebSite_NeedDllProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
-		
-		If NeedProcessing Then
-			CloseHandle(FileHandle)
-			Return ProcessDllCgiRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		End If
-		
+		HeapSysFreeString(ETag)
 	End Scope
-	'/
-	
-	/'
-	
-	Dim FileSize As LARGE_INTEGER = Any
-	Dim GetFileSizeExResult As Integer = Any
-	If this->ZipFileHandle = INVALID_HANDLE_VALUE Then
-		GetFileSizeExResult = GetFileSizeEx(this->FileHandle, @FileSize)
-	Else
-		GetFileSizeExResult = GetFileSizeEx(this->ZipFileHandle, @FileSize)
-	End If
-	
-	If GetFileSizeExResult = 0 Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	IServerResponse_SetMimeType(pc->pIResponse, @Mime)
-	
-	AddResponseCacheHeaders(pc->pIRequest, pc->pIResponse, this->FileHandle)
-	
-	AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
 	Scope
-		' В основном анализируются заголовки
-		' Accept: text/css, */*
-		' Accept-Charset: utf-8
-		' Accept-Encoding: gzip, deflate
-		' Accept-Language: ru-RU
-		' User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063
-		' Серверу следует включать в ответ заголовок Vary
+		Dim ZipMode As ZipModes = Any
+		IBuffer_GetEncoding(pIBuffer, @ZipMode)
 		
-		' TODO вместо перезаписывания заголовка его нужно добавить
-		If IsAcceptEncoding Then
+		Select Case ZipMode
+			
+			Case ZipModes.GZip
+				IServerResponse_AddKnownResponseHeaderWstrLen( _
+					pContext->pIResponse, _
+					HttpResponseHeaders.HeaderContentEncoding, _
+					@GZipString, _
+					Len(GZipString) _
+				)
+				
+			Case ZipModes.Deflate
+				IServerResponse_AddKnownResponseHeaderWstrLen( _
+					pContext->pIResponse, _
+					HttpResponseHeaders.HeaderContentEncoding, _
+					@DeflateString, _
+					Len(DeflateString) _
+				)
+				
+		End Select
+	End Scope
+	
+	Scope
+		Dim Language As HeapBSTR = Any
+		IBuffer_GetLanguage(pIBuffer, @Language)
+		
+		IServerResponse_AddKnownResponseHeader( _
+			pContext->pIResponse, _
+			HttpResponseHeaders.HeaderContentLanguage, _
+			Language _
+		)
+		
+		HeapSysFreeString(Language)
+	End Scope
+	
+	Scope
+		If Flags And ContentNegotiationFlags.ContentNegotiationAcceptEncoding Then
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
-				pc->pIResponse, _
+				pContext->pIResponse, _
 				HttpResponseHeaders.HeaderVary, _
 				WStr("Accept-Encoding"), _
 				Len(WSTR("Accept-Encoding")) _
@@ -425,227 +310,199 @@ Function HttpGetProcessorPrepare( _
 		End If
 	End Scope
 	
-	Dim ResponseZipEnable As Boolean = Any
-	IServerResponse_GetZipEnabled(pc->pIResponse, @ResponseZipEnable)
-	
-	If ResponseZipEnable Then
+	Scope
+		Dim RequestedByteRange As ByteRange = Any
+		IClientRequest_GetByteRange(pContext->pIRequest, @RequestedByteRange)
 		
-		Dim ResponseZipMode As ZipModes = Any
-		IServerResponse_GetZipMode(pc->pIResponse, @ResponseZipMode)
-		
-		Select Case ResponseZipMode
+		If RequestedByteRange.IsSet <> ByteRangeIsSet.NotSet Then
+			Dim pIWriter As IArrayStringWriter Ptr = Any
+			Dim hrCreateWriter As HRESULT = CreateInstance( _
+				pContext->pIMemoryAllocator, _
+				@CLSID_ARRAYSTRINGWRITER, _
+				@IID_IArrayStringWriter, _
+				@pIWriter _
+			)
+			If FAILED(hrCreateWriter) Then
+				IBuffer_Release(pIBuffer)
+				*ppIBuffer = NULL
+				Return hrCreateWriter
+			End If
 			
-			Case ZipModes.GZip
-				IServerResponse_AddKnownResponseHeader( _
-					pc->pIResponse, _
-					HttpResponseHeaders.HeaderContentEncoding, _
-					@GZipString _
-				)
+			Const ContentRangeMaximumBufferLength As Integer = 512 - 1
+			Dim wContentRange As WString * (ContentRangeMaximumBufferLength + 1) = Any
+			
+			IArrayStringWriter_SetBuffer(pIWriter, @wContentRange, ContentRangeMaximumBufferLength)
+			
+			Dim VirtualFileLength As LongInt = Any 'EncodingFileSize
+			IBuffer_GetLength(pIBuffer, @VirtualFileLength)
+			
+			Select Case RequestedByteRange.IsSet
 				
-			Case ZipModes.Deflate
-				IServerResponse_AddKnownResponseHeader( _
-					pc->pIResponse, _
-					HttpResponseHeaders.HeaderContentEncoding, _
-					@DeflateString _
-				)
-				
-		End Select
-		
-	End If
-	
-	Dim EncodingFileSize As LongInt = FileSize.QuadPart - EncodingFileOffset
-	
-	Dim RequestedByteRange As ByteRange = Any
-	IClientRequest_GetByteRange(pc->pIRequest, @RequestedByteRange)
-	
-	If RequestedByteRange.IsSet = ByteRangeIsSet.NotSet Then
-		this->FileBytesOffset = EncodingFileOffset
-		this->ContentBodyLength = EncodingFileSize
-	Else
-		
-		Dim pIWriter As IArrayStringWriter Ptr = Any
-		Dim hr As HRESULT = CreateInstance( _
-			pc->pIMemoryAllocator, _
-			@CLSID_ARRAYSTRINGWRITER, _
-			@IID_IArrayStringWriter, _
-			@pIWriter _
-		)
-		If FAILED(hr) Then
-			Return hr
+				Case ByteRangeIsSet.FirstBytePositionIsSet
+					' От X байта и до конца: bytes=9500-
+					If RequestedByteRange.FirstBytePosition > VirtualFileLength Then
+						' Ошибка в диапазоне?
+						Dim FirstBytePosition As LongInt = 0
+						Dim LastBytePosition As LongInt = VirtualFileLength - 1
+						
+						MakeContentRangeHeader( _
+							pIWriter, _
+							FirstBytePosition, _
+							LastBytePosition, _
+							VirtualFileLength _
+						)
+						
+						IServerResponse_AddKnownResponseHeaderWstr( _
+							pContext->pIResponse, _
+							HttpResponseHeaders.HeaderContentRange, _
+							@wContentRange _
+						)
+						
+						IArrayStringWriter_Release(pIWriter)
+						IBuffer_Release(pIBuffer)
+						*ppIBuffer = NULL
+						
+						Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					End If
+					
+					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
+					Dim ContentBodyLength As LongInt = VirtualFileLength - RequestedByteRange.FirstBytePosition
+					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					
+					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
+					Dim LastBytePosition As LongInt = ContentBodyLength - 1
+					
+					MakeContentRangeHeader( _
+						pIWriter, _
+						FirstBytePosition, _
+						LastBytePosition, _
+						VirtualFileLength _
+					)
+					
+					IServerResponse_AddKnownResponseHeaderWstr( _
+						pContext->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
+					IServerResponse_SetStatusCode( _
+						pContext->pIResponse, _
+						HttpStatusCodes.PartialContent _
+					)
+					
+				Case ByteRangeIsSet.LastBytePositionIsSet
+					' Окончательные 500 байт (байтовые смещения 9500-9999, включительно): bytes=-500
+					' Только последний байты (9999): bytes=-1
+					' Если указано больше чем длина файла
+					' то возвращаются все байты файла
+					If RequestedByteRange.LastBytePosition = 0 Then
+						' Ошибка в диапазоне?
+						Dim FirstBytePosition As LongInt = 0
+						Dim LastBytePosition As LongInt = VirtualFileLength - 1
+						
+						MakeContentRangeHeader( _
+							pIWriter, _
+							FirstBytePosition, _
+							LastBytePosition, _
+							VirtualFileLength _
+						)
+						
+						IServerResponse_AddKnownResponseHeaderWstr( _
+							pContext->pIResponse, _
+							HttpResponseHeaders.HeaderContentRange, _
+							@wContentRange _
+						)
+						
+						IArrayStringWriter_Release(pIWriter)
+						IBuffer_Release(pIBuffer)
+						*ppIBuffer = NULL
+						
+						Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					End If
+					
+					Dim ContentBodyLength As LongInt = min(VirtualFileLength, RequestedByteRange.LastBytePosition)
+					Dim FileBytesOffset As LongInt = VirtualFileLength - ContentBodyLength
+					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					
+					Dim FirstBytePosition As LongInt = VirtualFileLength - ContentBodyLength
+					Dim LastBytePosition As LongInt = FirstBytePosition + ContentBodyLength - 1
+					
+					MakeContentRangeHeader( _
+						pIWriter, _
+						FirstBytePosition, _
+						LastBytePosition, _
+						VirtualFileLength _
+					)
+					
+					IServerResponse_AddKnownResponseHeaderWstr( _
+						pContext->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
+					IServerResponse_SetStatusCode( _
+						pContext->pIResponse, _
+						HttpStatusCodes.PartialContent _
+					)
+					
+				Case ByteRangeIsSet.FirstAndLastPositionIsSet
+					' Первые 500 байтов (байтовые смещения 0-499 включительно): bytes=0-499
+					' Второй 500 байтов (байтовые смещения 500-999 включительно): bytes=500-999
+					If RequestedByteRange.LastBytePosition < RequestedByteRange.FirstBytePosition OrElse RequestedByteRange.FirstBytePosition >= VirtualFileLength Then
+						Dim FirstBytePosition As LongInt = 0
+						Dim LastBytePosition As LongInt = VirtualFileLength - 1
+						
+						MakeContentRangeHeader( _
+							pIWriter, _
+							FirstBytePosition, _
+							LastBytePosition, _
+							VirtualFileLength _
+						)
+						
+						IServerResponse_AddKnownResponseHeaderWstr( _
+							pContext->pIResponse, _
+							HttpResponseHeaders.HeaderContentRange, _
+							@wContentRange _
+						)
+						
+						IArrayStringWriter_Release(pIWriter)
+						IBuffer_Release(pIBuffer)
+						*ppIBuffer = NULL
+						
+						Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					End If
+					
+					Dim ContentBodyLength As LongInt = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, VirtualFileLength)
+					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
+					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					
+					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
+					Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, VirtualFileLength - 1)
+					
+					MakeContentRangeHeader( _
+						pIWriter, _
+						FirstBytePosition, _
+						LastBytePosition, _
+						VirtualFileLength _
+					)
+					
+					IServerResponse_AddKnownResponseHeaderWstr( _
+						pContext->pIResponse, _
+						HttpResponseHeaders.HeaderContentRange, _
+						@wContentRange _
+					)
+					IServerResponse_SetStatusCode( _
+						pContext->pIResponse, _
+						HttpStatusCodes.PartialContent _
+					)
+					
+			End Select
+			
+			IArrayStringWriter_Release(pIWriter)
 		End If
-		
-		Dim wContentRange As WString * (ContentRangeMaximumBufferLength + 1) = Any
-		IArrayStringWriter_SetBuffer(pIWriter, @wContentRange, ContentRangeMaximumBufferLength)
-		
-		Select Case RequestedByteRange.IsSet
-			
-			Case ByteRangeIsSet.FirstBytePositionIsSet
-				' От X байта и до конца: bytes=9500-
-				If RequestedByteRange.FirstBytePosition > EncodingFileSize Then
-					' Ошибка в диапазоне?
-					Dim FirstBytePosition As LongInt = 0
-					Dim LastBytePosition As LongInt = EncodingFileSize - 1
-					
-					MakeContentRangeHeader( _
-						pIWriter, _
-						FirstBytePosition, _
-						LastBytePosition, _
-						EncodingFileSize _
-					)
-					
-					IServerResponse_AddKnownResponseHeader( _
-						pc->pIResponse, _
-						HttpResponseHeaders.HeaderContentRange, _
-						@wContentRange _
-					)
-					
-					IArrayStringWriter_Release(pIWriter)
-					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
-				End If
-				
-				this->FileBytesOffset = EncodingFileOffset + RequestedByteRange.FirstBytePosition
-				this->ContentBodyLength = EncodingFileSize - RequestedByteRange.FirstBytePosition
-				Dim LastBytePosition As LongInt = this->ContentBodyLength - 1
-				
-				IServerResponse_SetStatusCode( _
-					pc->pIResponse, _
-					HttpStatusCodes.PartialContent _
-				)
-				
-				MakeContentRangeHeader( _
-					pIWriter, _
-					RequestedByteRange.FirstBytePosition, _
-					LastBytePosition, _
-					EncodingFileSize _
-				)
-				
-				IServerResponse_AddKnownResponseHeader( _
-					pc->pIResponse, _
-					HttpResponseHeaders.HeaderContentRange, _
-					@wContentRange _
-				)
-				
-			Case ByteRangeIsSet.LastBytePositionIsSet
-				' Окончательные 500 байт (байтовые смещения 9500-9999, включительно): bytes=-500
-				' Только последний байты (9999): bytes=-1
-				' Если указано больше чем длина файла
-				' то возвращаются все байты файла
-				If RequestedByteRange.LastBytePosition = 0 Then
-					' Ошибка в диапазоне?
-					Dim FirstBytePosition As LongInt = 0
-					Dim LastBytePosition As LongInt = EncodingFileSize - 1
-					
-					MakeContentRangeHeader( _
-						pIWriter, _
-						FirstBytePosition, _
-						LastBytePosition, _
-						EncodingFileSize _
-					)
-					
-					IServerResponse_AddKnownResponseHeader( _
-						pc->pIResponse, _
-						HttpResponseHeaders.HeaderContentRange, _
-						@wContentRange _
-					)
-					
-					IArrayStringWriter_Release(pIWriter)
-					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
-				End If
-				
-				this->ContentBodyLength = min(EncodingFileSize, RequestedByteRange.LastBytePosition)
-				this->FileBytesOffset = EncodingFileOffset + EncodingFileSize - this->ContentBodyLength
-				Dim FirstBytePosition As LongInt = EncodingFileSize - this->ContentBodyLength
-				Dim LastBytePosition As LongInt = FirstBytePosition + this->ContentBodyLength - 1
-				
-				IServerResponse_SetStatusCode( _
-					pc->pIResponse, _
-					HttpStatusCodes.PartialContent _
-				)
-				
-				MakeContentRangeHeader( _
-					pIWriter, _
-					FirstBytePosition, _
-					LastBytePosition, _
-					EncodingFileSize _
-				)
-				
-				IServerResponse_AddKnownResponseHeader( _
-					pc->pIResponse, _
-					HttpResponseHeaders.HeaderContentRange, _
-					@wContentRange _
-				)
-				
-			Case ByteRangeIsSet.FirstAndLastPositionIsSet
-				' Первые 500 байтов (байтовые смещения 0-499 включительно): bytes=0-499
-				' Второй 500 байтов (байтовые смещения 500-999 включительно): bytes=500-999
-				If RequestedByteRange.LastBytePosition < RequestedByteRange.FirstBytePosition OrElse RequestedByteRange.FirstBytePosition >= EncodingFileSize Then
-					Dim FirstBytePosition As LongInt = 0
-					Dim LastBytePosition As LongInt = EncodingFileSize - 1
-					
-					MakeContentRangeHeader( _
-						pIWriter, _
-						FirstBytePosition, _
-						LastBytePosition, _
-						EncodingFileSize _
-					)
-					
-					IServerResponse_AddKnownResponseHeader( _
-						pc->pIResponse, _
-						HttpResponseHeaders.HeaderContentRange, _
-						@wContentRange _
-					)
-					
-					IArrayStringWriter_Release(pIWriter)
-					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
-				End If
-				
-				this->ContentBodyLength = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, EncodingFileSize)
-				this->FileBytesOffset = EncodingFileOffset + RequestedByteRange.FirstBytePosition
-				Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
-				Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, EncodingFileSize - 1)
-				
-				IServerResponse_SetStatusCode( _
-					pc->pIResponse, _
-					HttpStatusCodes.PartialContent _
-				)
-				
-				MakeContentRangeHeader( _
-					pIWriter, _
-					FirstBytePosition, _
-					LastBytePosition, _
-					EncodingFileSize _
-				)
-				
-				IServerResponse_AddKnownResponseHeader( _
-					pc->pIResponse, _
-					HttpResponseHeaders.HeaderContentRange, _
-					@wContentRange _
-				)
-				
-		End Select
-		
-		IArrayStringWriter_Release(pIWriter)
-	End If
+	End Scope
 	
-	this->HeadersLength = AllResponseHeadersToBytes( _
-		pc->pIRequest, _
-		pc->pIResponse, _
-		this->pSendBuffer, _
-		this->ContentBodyLength _
-	)
+	*ppIBuffer = pIBuffer
 	
-	this->CurrentChunkIndex = 0
-	
-	IRequestedFile_SetFileHandle(pc->pIRequestedFile, INVALID_HANDLE_VALUE)
-	'/
-	
-	IBuffer_Release(pIBuffer)
-	*ppIBuffer = NULL
-	
-	Return E_UNEXPECTED
+	Return S_OK
 	
 End Function
 
@@ -657,6 +514,7 @@ Function HttpGetProcessorBeginProcess( _
 	)As HRESULT
 	
 	*ppIAsyncResult = NULL
+	
 	Return E_UNEXPECTED
 	
 End Function
