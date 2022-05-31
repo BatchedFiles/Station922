@@ -5,6 +5,7 @@
 #include once "CreateInstance.bi"
 #include once "FileBuffer.bi"
 #include once "HeapBSTR.bi"
+#include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
 
@@ -350,32 +351,28 @@ End Function
 Function WebSiteOpenRequestedFile( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal pFile As IFileBuffer Ptr, _
+		ByVal pFileBuffer As IFileBuffer Ptr, _
 		ByVal Path As HeapBSTR, _
+		ByVal pFileName As WString Ptr, _
 		ByVal fAccess As FileAccess _
 	)As HRESULT
 	
-	Dim PathTranslated As WString * (MAX_PATH + 1) = Any
+	Dim PathLength As Integer = SysStringLen(Path)
+	Dim LastChar As Integer = Path[PathLength - 1]
 	
-	Dim LastChar As Integer = Path[lstrlenW(Path) - 1]
 	If LastChar <> Characters.Solidus Then
 		
-		WebSiteMapPath(this, Path, @PathTranslated)
+		WebSiteMapPath(this, Path, pFileName)
 		
 		Dim hFile As HANDLE = Any
 		Dim hrGetFileHandle As HRESULT = GetFileHandle( _
-			@PathTranslated, _
+			pFileName, _
 			fAccess, _
 			@hFile _
 		)
 		
-		Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
-		IFileBuffer_SetPathTranslated(pFile, pt)
-		
-		IFileBuffer_SetFilePath(pFile, Path)
-		IFileBuffer_SetFileHandle(pFile, hFile)
-		
-		HeapSysFreeString(pt)
+		IFileBuffer_SetFilePath(pFileBuffer, Path)
+		IFileBuffer_SetFileHandle(pFileBuffer, hFile)
 		
 		Return hrGetFileHandle
 		
@@ -394,26 +391,26 @@ Function WebSiteOpenRequestedFile( _
 		lstrcpyW(@FullDefaultFilename, Path)
 		lstrcatW(@FullDefaultFilename, DefaultFilename)
 		
-		WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
+		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
 		
 		Dim hFile As HANDLE = Any
 		Dim hrGetFile As HRESULT = GetFileHandle( _
-			@PathTranslated, _
+			pFileName, _
 			fAccess, _
 			@hFile _
 		)
 		
 		If SUCCEEDED(hrGetFile) Then
 			
-			Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
-			Dim fp As HeapBSTR = HeapSysAllocString(pIMalloc, @FullDefaultFilename)
+			Dim fp As HeapBSTR = HeapSysAllocString( _
+				pIMalloc, _
+				@FullDefaultFilename _
+			)
 			
-			IFileBuffer_SetPathTranslated(pFile, pt)
-			IFileBuffer_SetFilePath(pFile, fp)
-			IFileBuffer_SetFileHandle(pFile, hFile)
+			IFileBuffer_SetFilePath(pFileBuffer, fp)
+			IFileBuffer_SetFileHandle(pFileBuffer, hFile)
 			
 			HeapSysFreeString(fp)
-			HeapSysFreeString(pt)
 			
 			Return S_OK
 			
@@ -433,17 +430,17 @@ Function WebSiteOpenRequestedFile( _
 		lstrcpyW(@FullDefaultFilename, Path)
 		lstrcatW(@FullDefaultFilename, @DefaultFilename)
 		
-		WebSiteMapPath(this, @FullDefaultFilename, @PathTranslated)
+		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
 		
-		Dim pt As HeapBSTR = HeapSysAllocString(pIMalloc, @PathTranslated)
-		Dim fp As HeapBSTR = HeapSysAllocString(pIMalloc, @FullDefaultFilename)
+		Dim fp As HeapBSTR = HeapSysAllocString( _
+			pIMalloc, _
+			@FullDefaultFilename _
+		)
 		
-		IFileBuffer_SetPathTranslated(pFile, pt)
-		IFileBuffer_SetFilePath(pFile, fp)
-		IFileBuffer_SetFileHandle(pFile, INVALID_HANDLE_VALUE)
+		IFileBuffer_SetFilePath(pFileBuffer, fp)
+		IFileBuffer_SetFileHandle(pFileBuffer, INVALID_HANDLE_VALUE)
 		
 		HeapSysFreeString(fp)
-		HeapSysFreeString(pt)
 	End Scope
 	
 	Return S_FALSE
@@ -454,13 +451,14 @@ Function GetCompressionHandle( _
 		ByVal PathTranslated As WString Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pZipMode As ZipModes Ptr, _
-		ByVal pAcceptEncoding As Boolean Ptr _
+		ByVal pEncodingVaryFlag As Boolean Ptr _
 	)As Handle
 	
-	*pAcceptEncoding = False
+	*pEncodingVaryFlag = False
 	
 	Scope
 		Const GzipExtensionString = WStr(".gz")
+		
 		Dim GZipFileName As WString * (MAX_PATH + 1) = Any
 		lstrcpyW(@GZipFileName, PathTranslated)
 		lstrcatW(@GZipFileName, @GZipExtensionString)
@@ -476,12 +474,16 @@ Function GetCompressionHandle( _
 		)
 		
 		If hFile <> INVALID_HANDLE_VALUE Then
-			*pAcceptEncoding = True
+			*pEncodingVaryFlag = True
 			
-			Dim IsGZip As Boolean = Any
-			IClientRequest_GetZipMode(pIRequest, ZipModes.GZip, @IsGZip)
+			Dim IsClientSupportGZip As Boolean = Any
+			IClientRequest_GetZipMode( _
+				pIRequest, _
+				ZipModes.GZip, _
+				@IsClientSupportGZip _
+			)
 			
-			If IsGZip Then
+			If IsClientSupportGZip Then
 				*pZipMode = ZipModes.GZip
 				Return hFile
 			End If
@@ -492,6 +494,7 @@ Function GetCompressionHandle( _
 	
 	Scope
 		Const DeflateExtensionString = WStr(".deflate")
+		
 		Dim DeflateFileName As WString * (MAX_PATH + 1) = Any
 		lstrcpyW(@DeflateFileName, PathTranslated)
 		lstrcatW(@DeflateFileName, @DeflateExtensionString)
@@ -507,12 +510,16 @@ Function GetCompressionHandle( _
 		)
 		
 		If hFile <> INVALID_HANDLE_VALUE Then
-			*pAcceptEncoding = True
+			*pEncodingVaryFlag = True
 		
-			Dim IsDeflate As Boolean = Any
-			IClientRequest_GetZipMode(pIRequest, ZipModes.Deflate, @IsDeflate)
+			Dim IsClientSupportDeflate As Boolean = Any
+			IClientRequest_GetZipMode( _
+				pIRequest, _
+				ZipModes.Deflate, _
+				@IsClientSupportDeflate _
+			)
 			
-			If IsDeflate Then
+			If IsClientSupportDeflate Then
 				*pZipMode = ZipModes.Deflate
 				Return hFile
 			End If
@@ -520,6 +527,9 @@ Function GetCompressionHandle( _
 			CloseHandle(hFile)
 		End If
 	End Scope
+	
+	*pZipMode = ZipModes.None
+	*pEncodingVaryFlag = False
 	
 	Return INVALID_HANDLE_VALUE
 	
@@ -867,11 +877,13 @@ Function WebSiteGetBuffer( _
 	Dim Path As HeapBSTR = Any
 	IClientUri_GetPath(ClientURI, @Path)
 	
+	Dim FileName As WString * (MAX_PATH + 1) = Any
 	Dim hrOpenFile As HRESULT = WebSiteOpenRequestedFile( _
 		this, _
 		pIMalloc, _
 		pIFile, _
 		Path, _
+		@FileName, _
 		fAccess _
 	)
 	If FAILED(hrOpenFile) Then
@@ -879,18 +891,18 @@ Function WebSiteGetBuffer( _
 		
 		If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
 			
-			Dim FileState As RequestedFileState = Any
-			IFileBuffer_FileExists(pIFile, @FileState)
+			Dim File410 As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@File410, @FileName)
+			lstrcatW(@File410, @FileGoneExtension)
 			
-			Select Case FileState
-				
-				Case RequestedFileState.Gone
-					hrOpenFileTranslate = WEBSITE_E_FILEGONE
-					
-				Case Else ' RequestedFileState.NotFound
-					hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
-					
-			End Select
+			Dim Attributes As DWORD = GetFileAttributesW( _
+				@File410 _
+			)
+			If Attributes = INVALID_FILE_ATTRIBUTES Then
+				hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
+			Else
+				hrOpenFileTranslate = WEBSITE_E_FILEGONE
+			End If
 			
 		Else
 			hrOpenFileTranslate = hrOpenFile
@@ -904,25 +916,25 @@ Function WebSiteGetBuffer( _
 		Return hrOpenFileTranslate
 	End If
 	
-	' TODO Проверить идентификацию для запароленных ресурсов
-	
-	Dim PathTranslated As HeapBSTR = Any
-	IFileBuffer_GetPathTranslated(pIFile, @PathTranslated)
-	
 	Dim Mime As MimeType = Any
-	Dim GetMimeOfFileExtensionResult As Boolean = GetMimeOfFileExtension( _
-		@Mime, _
-		PathFindExtensionW(PathTranslated) _
-	)
-	If GetMimeOfFileExtensionResult = False Then
-		HeapSysFreeString(PathTranslated)
-		HeapSysFreeString(Path)
-		IClientUri_Release(ClientURI)
-		IFileBuffer_Release(pIFile)
-		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
-		*ppResult = NULL
-		Return WEBSITE_E_FORBIDDEN
-	End If
+	
+	Scope
+		Dim resGetMimeOfFileExtension As Boolean = GetMimeOfFileExtension( _
+			@Mime, _
+			PathFindExtensionW(FileName) _
+		)
+		If resGetMimeOfFileExtension = False Then
+			HeapSysFreeString(Path)
+			IClientUri_Release(ClientURI)
+			IFileBuffer_Release(pIFile)
+			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*ppResult = NULL
+			Return WEBSITE_E_FORBIDDEN
+		End If
+		
+		' TODO Проверить идентификацию для запароленных ресурсов
+		
+	End Scope
 	
 	' В основном анализируются заголовки
 	' Accept-Encoding: gzip, deflate
@@ -938,7 +950,7 @@ Function WebSiteGetBuffer( _
 		
 		If Mime.IsTextFormat Then
 			ZipFileHandle = GetCompressionHandle( _
-				PathTranslated, _
+				FileName, _
 				pRequest, _
 				@ZipMode, _
 				@IsAcceptEncoding _
@@ -975,7 +987,6 @@ Function WebSiteGetBuffer( _
 					)
 					If resGetFileSize = 0 Then
 						Dim dwError As DWORD = GetLastError()
-						HeapSysFreeString(PathTranslated)
 						HeapSysFreeString(Path)
 						IClientUri_Release(ClientURI)
 						IFileBuffer_Release(pIFile)
@@ -999,7 +1010,6 @@ Function WebSiteGetBuffer( _
 				@hMapFile _
 			)
 			If FAILED(hrGetFileMappingHandle) Then
-				HeapSysFreeString(PathTranslated)
 				HeapSysFreeString(Path)
 				IClientUri_Release(ClientURI)
 				IFileBuffer_Release(pIFile)
@@ -1015,7 +1025,9 @@ Function WebSiteGetBuffer( _
 			)
 			
 			IFileBuffer_SetFileSize(pIFile, FileLength)
-			
+		End Scope
+		
+		Scope
 			Dim Slice As BufferSlice = Any
 			Dim hrSlice As HRESULT = IFileBuffer_GetSlice( _
 				pIFile, _
@@ -1024,7 +1036,6 @@ Function WebSiteGetBuffer( _
 				@Slice _
 			)
 			If FAILED(hrSlice) Then
-				HeapSysFreeString(PathTranslated)
 				HeapSysFreeString(Path)
 				IClientUri_Release(ClientURI)
 				IFileBuffer_Release(pIFile)
@@ -1044,7 +1055,6 @@ Function WebSiteGetBuffer( _
 			If IsAcceptEncoding Then
 				*pFlags = ContentNegotiationFlags.ContentNegotiationNone And ContentNegotiationFlags.ContentNegotiationAcceptEncoding
 			End If
-			
 		End Scope
 		
 	End Scope
@@ -1054,7 +1064,6 @@ Function WebSiteGetBuffer( _
 	' AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
 	HeapSysFreeString(Path)
-	HeapSysFreeString(PathTranslated)
 	IClientUri_Release(ClientURI)
 	
 	*ppResult = CPtr(IBuffer Ptr, pIFile)

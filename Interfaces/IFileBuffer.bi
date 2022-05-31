@@ -4,12 +4,6 @@
 #include once "IBuffer.bi"
 #include once "IString.bi"
 
-Enum RequestedFileState
-	Exist
-	NotFound
-	Gone
-End Enum
-
 Type IFileBuffer As IFileBuffer_
 
 Type LPIFILEBUFFER As IFileBuffer Ptr
@@ -84,21 +78,6 @@ Type IFileBufferVirtualTable
 		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	
-	GetPathTranslated As Function( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal ppPathTranslated As HeapBSTR Ptr _
-	)As HRESULT
-	
-	SetPathTranslated As Function( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal PathTranslated As HeapBSTR _
-	)As HRESULT
-	
-	FileExists As Function( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal pResult As RequestedFileState Ptr _
-	)As HRESULT
-	
 	GetFileHandle As Function( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As HANDLE Ptr _
@@ -159,9 +138,6 @@ End Type
 #define IFileBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IFileBuffer_GetFilePath(this, ppFilePath) (this)->lpVtbl->GetFilePath(this, ppFilePath)
 #define IFileBuffer_SetFilePath(this, FilePath) (this)->lpVtbl->SetFilePath(this, FilePath)
-#define IFileBuffer_GetPathTranslated(this, ppPathTranslated) (this)->lpVtbl->GetPathTranslated(this, ppPathTranslated)
-#define IFileBuffer_SetPathTranslated(this, PathTranslated) (this)->lpVtbl->SetPathTranslated(this, PathTranslated)
-#define IFileBuffer_FileExists(this, pResult) (this)->lpVtbl->FileExists(this, pResult)
 #define IFileBuffer_GetFileHandle(this, pResult) (this)->lpVtbl->GetFileHandle(this, pResult)
 #define IFileBuffer_SetFileHandle(this, hFile) (this)->lpVtbl->SetFileHandle(this, hFile)
 #define IFileBuffer_GetZipFileHandle(this, pResult) (this)->lpVtbl->GetZipFileHandle(this, pResult)

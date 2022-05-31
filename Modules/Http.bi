@@ -195,6 +195,7 @@ End Enum
 Const HttpResponseHeadersSize As Integer = 37
 
 Enum ZipModes
+	None
 	GZip
 	Deflate
 End Enum

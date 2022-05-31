@@ -1,7 +1,6 @@
 #include once "FileBuffer.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Logger.bi"
 
 Extern GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable
@@ -14,7 +13,6 @@ Type _FileBuffer
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
-	pPathTranslated As HeapBSTR
 	FileHandle As Handle
 	ZipFileHandle As HANDLE
 	hMapFile As HANDLE
@@ -42,7 +40,6 @@ Sub InitializeFileBuffer( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pFilePath = NULL
-	this->pPathTranslated = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
 	this->hMapFile = NULL
@@ -66,7 +63,6 @@ Sub UnInitializeFileBuffer( _
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->Charset)
 	HeapSysFreeString(this->Encoding)
-	HeapSysFreeString(this->pPathTranslated)
 	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileBytes <> NULL Then
@@ -242,7 +238,7 @@ Function FileBufferGetContentType( _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
 	
-	memcpy(ppType, @this->ContentType, SizeOf(MimeType))
+	CopyMemory(ppType, @this->ContentType, SizeOf(MimeType))
 	
 	Return S_OK
 	
@@ -349,12 +345,20 @@ Function FileBufferGetSlice( _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	
-	If StartIndex + this->FileOffset >= this->FileSize - this->FileOffset Then
+	Dim VirtualStartIndex As LongInt = StartIndex + this->FileOffset
+	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
+	
+	If VirtualStartIndex >= VirtualFileSize Then
 		ZeroMemory(pBufferSlice, SizeOf(BufferSlice))
 		Return E_OUTOFMEMORY
 	End If
 	
-	Dim RequestChunkIndex As LongInt = (this->FileSize) \ (StartIndex + this->FileOffset)
+	Dim RequestChunkIndex As LongInt = Any
+	If VirtualStartIndex = 0 Then
+		RequestChunkIndex = 0
+	Else
+		RequestChunkIndex = this->FileSize \ VirtualStartIndex
+	End If
 	
 	If this->ChunkIndex <> RequestChunkIndex Then
 		If this->FileBytes <> NULL Then
@@ -396,10 +400,10 @@ Function FileBufferGetSlice( _
 		End If
 	End If
 	
-	Dim ByteIndex As LongInt = StartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE) + this->FileOffset
-	Dim SliceLength As DWORD = Cast(DWORD, CLngInt(dwNumberOfBytesToMap) - ByteIndex - this->FileOffset)
+	Dim IndexInChunck As LongInt = StartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE) + this->FileOffset
+	Dim SliceLength As DWORD = Cast(DWORD, CLngInt(dwNumberOfBytesToMap) - IndexInChunck - this->FileOffset)
 	
-	pBufferSlice->pSlice = @this->FileBytes[ByteIndex]
+	pBufferSlice->pSlice = @this->FileBytes[IndexInChunck]
 	pBufferSlice->Length = SliceLength
 	
 	Return S_OK
@@ -424,57 +428,6 @@ Function FileBufferSetFilePath( _
 	)As HRESULT
 	
 	LET_HEAPSYSSTRING(this->pFilePath, FilePath)
-	
-	Return S_OK
-	
-End Function
-
-Function FileBufferGetPathTranslated( _
-		ByVal this As FileBuffer Ptr, _
-		ByVal ppPathTranslated As HeapBSTR Ptr _
-	)As HRESULT
-	
-	HeapSysAddRefString(this->pPathTranslated)
-	*ppPathTranslated = this->pPathTranslated
-	
-	Return S_OK
-	
-End Function
-
-Function FileBufferSetPathTranslated( _
-		ByVal this As FileBuffer Ptr, _
-		ByVal PathTranslated As HeapBSTR _
-	)As HRESULT
-	
-	LET_HEAPSYSSTRING(this->pPathTranslated, PathTranslated)
-	
-	Return S_OK
-	
-End Function
-
-Function FileBufferFileExists( _
-		ByVal this As FileBuffer Ptr, _
-		ByVal pResult As RequestedFileState Ptr _
-	)As HRESULT
-	
-	If this->FileHandle = INVALID_HANDLE_VALUE Then
-		' TODO Проверить код ошибки через GetLastError, могут быть не только File Not Found
-		Dim buf410 As WString * (MAX_PATH + 1) = Any
-		lstrcpyW(@buf410, this->pPathTranslated)
-		lstrcatW(@buf410, @FileGoneExtension)
-		
-		Dim Attributes As DWORD = GetFileAttributesW( _
-			@buf410 _
-		)
-		If Attributes = INVALID_FILE_ATTRIBUTES Then
-			*pResult = RequestedFileState.NotFound
-		Else
-			*pResult = RequestedFileState.Gone
-		End If
-		
-	Else
-		*pResult = RequestedFileState.Exist
-	End If
 	
 	Return S_OK
 	
@@ -542,7 +495,7 @@ Function FileBufferSetContentType( _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
 	
-	memcpy(@this->ContentType, pType, SizeOf(MimeType))
+	CopyMemory(@this->ContentType, pType, SizeOf(MimeType))
 	
 	Return S_OK
 	
@@ -663,27 +616,6 @@ Function IFileBufferSetFilePath( _
 	Return FileBufferSetFilePath(ContainerOf(this, FileBuffer, lpVtbl), FilePath)
 End Function
 
-Function IFileBufferGetPathTranslated( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal ppPathTranslated As HeapBSTR Ptr _
-	)As HRESULT
-	Return FileBufferGetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), ppPathTranslated)
-End Function
-
-Function IFileBufferSetPathTranslated( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal PathTranslated As HeapBSTR _
-	)As HRESULT
-	Return FileBufferSetPathTranslated(ContainerOf(this, FileBuffer, lpVtbl), PathTranslated)
-End Function
-
-Function IFileBufferFileExists( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal pResult As RequestedFileState Ptr _
-	)As HRESULT
-	Return FileBufferFileExists(ContainerOf(this, FileBuffer, lpVtbl), pResult)
-End Function
-
 Function IFileBufferGetFileHandle( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal pResult As HANDLE Ptr _
@@ -755,9 +687,6 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferGetSlice, _
 	@IFileBufferGetFilePath, _
 	@IFileBufferSetFilePath, _
-	@IFileBufferGetPathTranslated, _
-	@IFileBufferSetPathTranslated, _
-	@IFileBufferFileExists, _
 	@IFileBufferGetFileHandle, _
 	@IFileBufferSetFileHandle, _
 	@IFileBufferGetZipFileHandle, _

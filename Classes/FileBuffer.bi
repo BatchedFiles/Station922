@@ -83,21 +83,6 @@ Declare Function FileBufferSetFilePath( _
 	ByVal FilePath As HeapBSTR _
 )As HRESULT
 
-Declare Function FileBufferGetPathTranslated( _
-	ByVal this As FileBuffer Ptr, _
-	ByVal ppPathTranslated As HeapBSTR Ptr _
-)As HRESULT
-
-Declare Function FileBufferSetPathTranslated( _
-	ByVal this As FileBuffer Ptr, _
-	ByVal PathTranslated As HeapBSTR _
-)As HRESULT
-
-Declare Function FileBufferFileExists( _
-	ByVal this As FileBuffer Ptr, _
-	ByVal pResult As RequestedFileState Ptr _
-)As HRESULT
-
 Declare Function FileBufferGetFileHandle( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal pResult As HANDLE Ptr _
