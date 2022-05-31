@@ -8,8 +8,9 @@
 #include once "IWebSite.bi"
 
 Const HTTPASYNCPROCESSOR_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
+Const HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE As HRESULT = MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, &h0204)
 
-Type _ProcessorContext
+Type ProcessorContext
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSite As IWebSite Ptr
 	pIRequest As IClientRequest Ptr
@@ -17,8 +18,6 @@ Type _ProcessorContext
 	pIReader As IHttpReader Ptr
 	pIWriter As IHttpWriter Ptr
 End Type
-
-Type ProcessorContext As _ProcessorContext
 
 Type LPProcessorContext As _ProcessorContext Ptr
 
