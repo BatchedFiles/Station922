@@ -371,6 +371,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 					End If
 					
 				End Scope
+				
+				*ppNextTask = CPtr(IAsyncIoTask Ptr, pTask)
 			End Scope
 			
 			Return S_OK
