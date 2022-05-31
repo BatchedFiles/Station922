@@ -21,7 +21,7 @@ Type _FileBuffer
 	FileOffset As LongInt
 	FileBytes As ZString Ptr
 	fAccess As FileAccess
-	Encoding As HeapBSTR
+	ZipMode As ZipModes
 	Charset As HeapBSTR
 	Language As HeapBSTR
 	ContentType As MimeType
@@ -44,7 +44,7 @@ Sub InitializeFileBuffer( _
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
 	this->hMapFile = NULL
 	this->FileBytes = NULL
-	this->Encoding = NULL
+	this->ZipMode = ZipModes.None
 	this->Charset = NULL
 	this->Language = NULL
 	this->FileSize = 0
@@ -62,7 +62,6 @@ Sub UnInitializeFileBuffer( _
 	
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->Charset)
-	HeapSysFreeString(this->Encoding)
 	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileBytes <> NULL Then
@@ -246,11 +245,10 @@ End Function
 
 Function FileBufferGetEncoding( _
 		ByVal this As FileBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
-	HeapSysAddRefString(this->Encoding)
-	*ppEncoding = this->Encoding
+	*pZipMode = this->ZipMode
 	
 	Return S_OK
 	
@@ -523,6 +521,17 @@ Function FileBufferSetFileSize( _
 	
 End Function
 
+Function FileBufferSetEncoding( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal ZipMode As ZipModes _
+	)As HRESULT
+	
+	this->ZipMode = ZipMode
+	
+	Return S_OK
+	
+End Function
+
 
 Function IFileBufferQueryInterface( _
 		ByVal this As IFileBuffer Ptr, _
@@ -553,9 +562,9 @@ End Function
 
 Function IFileBufferGetEncoding( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	Return FileBufferGetEncoding(ContainerOf(this, FileBuffer, lpVtbl), ppEncoding)
+	Return FileBufferGetEncoding(ContainerOf(this, FileBuffer, lpVtbl), pZipMode)
 End Function
 
 Function IFileBufferGetCharset( _
@@ -673,6 +682,13 @@ Function IFileBufferSetFileSize( _
 	Return FileBufferSetFileSize(ContainerOf(this, FileBuffer, lpVtbl), FileSize)
 End Function
 
+Function IFileBufferSetEncoding( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ZipMode As ZipModes _
+	)As HRESULT
+	Return FileBufferSetEncoding(ContainerOf(this, FileBuffer, lpVtbl), ZipMode)
+End Function
+
 Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferQueryInterface, _
 	@IFileBufferAddRef, _
@@ -694,5 +710,6 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferSetFileMappingHandle, _
 	@IFileBufferSetContentType, _
 	@IFileBufferSetFileOffset, _
-	@IFileBufferSetFileSize _
+	@IFileBufferSetFileSize, _
+	@IFileBufferSetEncoding _
 )

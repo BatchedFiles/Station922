@@ -38,7 +38,7 @@ Declare Function FileBufferGetContentType( _
 
 Declare Function FileBufferGetEncoding( _
 	ByVal this As FileBuffer Ptr, _
-	ByVal ppEncoding As HeapBSTR Ptr _
+	ByVal pZipMode As ZipModes Ptr _
 )As HRESULT
 
 Declare Function FileBufferGetCharset( _
@@ -122,6 +122,11 @@ Declare Function FileBufferSetFileOffset( _
 Declare Function FileBufferSetFileSize( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal FileSize As LongInt _
+)As HRESULT
+
+Declare Function FileBufferSetEncoding( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal ZipMode As ZipModes _
 )As HRESULT
 
 #endif

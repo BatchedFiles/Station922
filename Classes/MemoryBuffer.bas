@@ -14,7 +14,7 @@ Type _MemoryBuffer
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
 	Capacity As LongInt
-	Encoding As HeapBSTR
+	ZipMode As ZipModes
 	Charset As HeapBSTR
 	Language As HeapBSTR
 	ETag As HeapBSTR
@@ -35,7 +35,7 @@ Sub InitializeMemoryBuffer( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pBuffer = NULL
 	this->Capacity = 0
-	this->Encoding = NULL
+	this->ZipMode = ZipModes.None
 	this->Charset = NULL
 	this->Language = NULL
 	this->ETag = NULL
@@ -50,7 +50,6 @@ Sub UnInitializeMemoryBuffer( _
 	)
 	
 	HeapSysFreeString(this->ETag)
-	HeapSysFreeString(this->Encoding)
 	HeapSysFreeString(this->Charset)
 	HeapSysFreeString(this->Language)
 	
@@ -223,11 +222,10 @@ End Function
 
 Function MemoryBufferGetEncoding( _
 		ByVal this As MemoryBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
-	HeapSysAddRefString(this->Encoding)
-	*ppEncoding = this->Encoding
+	*pZipMode = this->ZipMode
 	
 	Return S_OK
 	
@@ -376,9 +374,9 @@ End Function
 
 Function IMemoryBufferGetEncoding( _
 		ByVal this As IMemoryBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	Return MemoryBufferGetEncoding(ContainerOf(this, MemoryBuffer, lpVtbl), ppEncoding)
+	Return MemoryBufferGetEncoding(ContainerOf(this, MemoryBuffer, lpVtbl), pZipMode)
 End Function
 
 Function IMemoryBufferGetCharset( _

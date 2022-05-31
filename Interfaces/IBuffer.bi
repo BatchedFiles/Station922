@@ -1,6 +1,7 @@
 #ifndef IBUFFER_BI
 #define IBUFFER_BI
 
+#include once "Http.bi"
 #include once "IString.bi"
 #include once "Mime.bi"
 
@@ -47,7 +48,7 @@ Type IBufferVirtualTable
 	
 	GetEncoding As Function( _
 		ByVal this As IBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
 	GetCharset As Function( _

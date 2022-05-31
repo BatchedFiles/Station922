@@ -38,7 +38,7 @@ Declare Function MemoryBufferGetContentType( _
 
 Declare Function MemoryBufferGetEncoding( _
 	ByVal this As MemoryBuffer Ptr, _
-	ByVal ppEncoding As HeapBSTR Ptr _
+	ByVal pZipMode As ZipModes Ptr _
 )As HRESULT
 
 Declare Function MemoryBufferGetCharset( _

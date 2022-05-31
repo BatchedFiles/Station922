@@ -33,7 +33,7 @@ Type IFileBufferVirtualTable
 	
 	GetEncoding As Function( _
 		ByVal this As IFileBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
 	GetCharset As Function( _
@@ -119,6 +119,11 @@ Type IFileBufferVirtualTable
 		ByVal FileSize As LongInt _
 	)As HRESULT
 	
+	SetEncoding As Function( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal ZipMode As ZipModes _
+	)As HRESULT
+	
 End Type
 
 Type IFileBuffer_
@@ -146,5 +151,6 @@ End Type
 #define IFileBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IFileBuffer_SetFileOffset(this, Offset) (this)->lpVtbl->SetFileOffset(this, Offset)
 #define IFileBuffer_SetFileSize(this, FileSize) (this)->lpVtbl->SetFileSize(this, FileSize)
+#define IFileBuffer_SetEncoding(this, ZipMode) (this)->lpVtbl->SetEncoding(this, ZipMode)
 
 #endif

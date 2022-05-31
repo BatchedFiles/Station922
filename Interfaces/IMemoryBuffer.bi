@@ -32,7 +32,7 @@ Type IMemoryBufferVirtualTable
 	
 	GetEncoding As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
-		ByVal ppEncoding As HeapBSTR Ptr _
+		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
 	GetCharset As Function( _

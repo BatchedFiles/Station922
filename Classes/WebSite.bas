@@ -960,12 +960,13 @@ Function WebSiteGetBuffer( _
 			IsAcceptEncoding = False
 		End If
 		
+		IFileBuffer_SetEncoding(pIFile, ZipMode)
 		IFileBuffer_SetZipFileHandle(pIFile, ZipFileHandle)
 		
-		Dim FileHandle As HANDLE = Any
-		IFileBuffer_GetFileHandle(pIFile, @FileHandle)
-		
 		Scope
+			Dim FileHandle As HANDLE = Any
+			IFileBuffer_GetFileHandle(pIFile, @FileHandle)
+		
 			Dim hRequestedFile As HANDLE = Any
 			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
 				hRequestedFile = ZipFileHandle
