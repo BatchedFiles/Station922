@@ -500,6 +500,19 @@ Function HttpGetProcessorPrepare( _
 		End If
 	End Scope
 	
+	Dim ContentLength As LongInt = Any
+	IBuffer_GetLength(pIBuffer, @ContentLength)
+	
+	Dim hrPrepareResponse As HRESULT = IServerResponse_Prepare( _
+		pContext->pIResponse, _
+		ContentLength _
+	)
+	If FAILED(hrPrepareResponse) Then
+		IBuffer_Release(pIBuffer)
+		*ppIBuffer = NULL
+		Return hrPrepareResponse
+	End If
+	
 	*ppIBuffer = pIBuffer
 	
 	Return S_OK
@@ -508,14 +521,22 @@ End Function
 
 Function HttpGetProcessorBeginProcess( _
 		ByVal this As HttpGetProcessor Ptr, _
-		ByVal pc As ProcessorContext Ptr, _
+		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	*ppIAsyncResult = NULL
+	' TODO Запросить интерфейс вместо конвертирования указателя
+	Dim hrBeginWriteResponse As HRESULT = IServerResponse_BeginWriteResponse( _
+		pContext->pIResponse, _
+		StateObject, _
+		ppIAsyncResult _
+	)
+	If FAILED(hrBeginWriteResponse) Then
+		Return hrBeginWriteResponse
+	End If
 	
-	Return E_UNEXPECTED
+	Return HTTPASYNCPROCESSOR_S_IO_PENDING
 	
 End Function
 
@@ -525,7 +546,26 @@ Function HttpGetProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Return E_UNEXPECTED
+	Dim hrEndWrite As HRESULT = IServerResponse_EndWriteResponse( _
+		pContext->pIResponse, _
+		pIAsyncResult _
+	)
+	If FAILED(hrEndWrite) Then
+		Return hrEndWrite
+	End If
+	
+	Select Case hrEndWrite
+		
+		Case S_OK
+			Return S_OK
+			
+		Case S_FALSE
+			Return S_FALSE
+			
+		Case SERVERRESPONSE_S_IO_PENDING
+			Return HTTPASYNCPROCESSOR_S_IO_PENDING
+			
+	End Select
 	
 End Function
 
