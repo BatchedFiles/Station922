@@ -330,12 +330,7 @@ Function FileBufferGetSlice( _
 		Return E_OUTOFMEMORY
 	End If
 	
-	Dim RequestChunkIndex As LongInt = Any
-	If VirtualStartIndex = 0 Then
-		RequestChunkIndex = 0
-	Else
-		RequestChunkIndex = this->FileSize \ VirtualStartIndex
-	End If
+	Dim RequestChunkIndex As LongInt = VirtualStartIndex \ CLngInt(BUFFERSLICECHUNK_SIZE)
 	
 	If this->ChunkIndex <> RequestChunkIndex Then
 		If this->FileBytes <> NULL Then
@@ -348,17 +343,20 @@ Function FileBufferGetSlice( _
 	
 	Dim dwNumberOfBytesToMap As DWORD = min( _
 		BUFFERSLICECHUNK_SIZE, _
-		this->FileSize - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
+		VirtualFileSize - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
 	)
 	
 	If this->FileBytes = NULL Then
 		Dim dwDesiredAccess As DWORD = Any
 		
 		Select Case this->fAccess
+			
 			Case FileAccess.CreateAccess, FileAccess.UpdateAccess
 				dwDesiredAccess = FILE_MAP_WRITE
+				
 			Case Else
 				dwDesiredAccess = FILE_MAP_READ
+				
 		End Select
 		
 		Dim liStartIndex As LARGE_INTEGER = Any
@@ -377,11 +375,15 @@ Function FileBufferGetSlice( _
 		End If
 	End If
 	
-	Dim IndexInChunck As LongInt = StartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE) + this->FileOffset
-	Dim SliceLength As DWORD = Cast(DWORD, CLngInt(dwNumberOfBytesToMap) - IndexInChunck - this->FileOffset)
+	Dim IndexInChunck As LongInt = VirtualStartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)
+	Dim SliceLength As DWORD = min(dwNumberOfBytesToMap, Length)
 	
 	pBufferSlice->pSlice = @this->FileBytes[IndexInChunck]
 	pBufferSlice->Length = SliceLength
+	
+	If VirtualStartIndex + CLngInt(SliceLength) >= VirtualFileSize Then
+		Return S_FALSE
+	End If
 	
 	Return S_OK
 	
