@@ -71,6 +71,12 @@ Type IBufferVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
+	SetByteRange As Function( _
+		ByVal this As IBuffer Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
 	GetSlice As Function( _
 		ByVal this As IBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -93,6 +99,7 @@ End Type
 #define IBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
+#define IBuffer_SetByteRange(this, Offset, Length) (this)->lpVtbl->SetByteRange(this, Offset, Length)
 #define IBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 
 #endif

@@ -61,6 +61,12 @@ Declare Function FileBufferGetLength( _
 	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
+Declare Function FileBufferSetByteRange( _
+	ByVal this As FileBuffer Ptr, _
+	ByVal Offset As LongInt, _
+	ByVal Length As LongInt _
+)As HRESULT
+
 Declare Function FileBufferGetSlice( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal StartIndex As LongInt, _

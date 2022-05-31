@@ -14,6 +14,7 @@ Type _MemoryBuffer
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
 	Capacity As LongInt
+	Offset As LongInt
 	ZipMode As ZipModes
 	Language As HeapBSTR
 	ETag As HeapBSTR
@@ -34,6 +35,7 @@ Sub InitializeMemoryBuffer( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pBuffer = NULL
 	this->Capacity = 0
+	this->Offset = 0
 	this->ZipMode = ZipModes.None
 	this->Language = NULL
 	this->ETag = NULL
@@ -274,6 +276,19 @@ Function MemoryBufferGetLength( _
 	
 End Function
 
+Function MemoryBufferSetByteRange( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
+	this->Capacity = max(this->Capacity, Length)
+	this->Offset = Offset
+	
+	Return S_OK
+	
+End Function
+
 Function MemoryBufferGetSlice( _
 		ByVal this As MemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -281,11 +296,13 @@ Function MemoryBufferGetSlice( _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	
-	If StartIndex > this->Capacity Then
+	Dim VirtualIndex As LongInt = StartIndex + this->Offset
+	
+	If VirtualIndex > this->Capacity Then
 		Return E_OUTOFMEMORY
 	End If
 	
-	pBufferSlice->pSlice = @this->pBuffer[StartIndex]
+	pBufferSlice->pSlice = @this->pBuffer[VirtualIndex]
 	pBufferSlice->Length = this->Capacity - StartIndex
 	
 	If pBufferSlice->Length <= this->Capacity Then
@@ -392,6 +409,14 @@ Function IMemoryBufferGetLength( _
 	Return MemoryBufferGetLength(ContainerOf(this, MemoryBuffer, lpVtbl), pLength)
 End Function
 
+Function IMemoryBufferSetByteRange( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return MemoryBufferSetByteRange(ContainerOf(this, MemoryBuffer, lpVtbl), Offset, Length)
+End Function
+
 Function IMemoryBufferGetSlice( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -426,6 +451,7 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferGetETag, _
 	@IMemoryBufferGetLastFileModifiedDate, _
 	@IMemoryBufferGetLength, _
+	@IMemoryBufferSetByteRange, _
 	@IMemoryBufferGetSlice, _
 	@IMemoryBufferSetContentType, _
 	@IMemoryBufferAllocBuffer _

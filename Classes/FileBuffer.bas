@@ -302,6 +302,19 @@ Function FileBufferGetLength( _
 	
 End Function
 
+Function FileBufferSetByteRange( _
+		ByVal this As FileBuffer Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
+	this->FileOffset += Offset
+	this->FileSize -= Length
+	
+	Return S_OK
+	
+End Function
+
 Function FileBufferGetSlice( _
 		ByVal this As FileBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -583,6 +596,14 @@ Function IFileBufferGetLength( _
 	Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
 End Function
 
+Function IFileBufferSetByteRange( _
+		ByVal this As IFileBuffer Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return FileBufferSetByteRange(ContainerOf(this, FileBuffer, lpVtbl), Offset, Length)
+End Function
+
 Function IFileBufferGetSlice( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -694,6 +715,7 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferGetETag, _
 	@IFileBufferGetLastFileModifiedDate, _
 	@IFileBufferGetLength, _
+	@IFileBufferSetByteRange, _
 	@IFileBufferGetSlice, _
 	@IFileBufferGetFilePath, _
 	@IFileBufferSetFilePath, _
