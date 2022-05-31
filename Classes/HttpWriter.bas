@@ -4,8 +4,6 @@
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
-Const TRANSMIT_CHUNK_SIZE As DWORD = 265 * (1024 * 1024)
-
 Type HeadersBodyBuffer
 	Buf(1) As BaseStreamBuffer
 End Type
@@ -286,7 +284,7 @@ Function HttpWriterBeginWrite( _
 	Dim hrGetSlice As HRESULT = IBuffer_GetSlice( _
 		this->pIBuffer, _
 		this->WriterStartIndex, _
-		TRANSMIT_CHUNK_SIZE, _
+		BUFFERSLICECHUNK_SIZE, _
 		@Slice _
 	)
 	If FAILED(hrGetSlice) Then
