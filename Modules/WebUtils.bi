@@ -54,4 +54,9 @@ Declare Function FindWebSite( _
 	ByVal ppIWebSite As IWebSite Ptr Ptr _
 )As HRESULT
 
+Declare Function Integer64Division( _
+	ByVal Dividend As LongInt, _
+	ByVal Divisor As LongInt _
+)As LongInt
+
 #endif

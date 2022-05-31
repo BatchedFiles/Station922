@@ -2,6 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable
 
@@ -330,7 +331,10 @@ Function FileBufferGetSlice( _
 		Return E_OUTOFMEMORY
 	End If
 	
-	Dim RequestChunkIndex As LongInt = VirtualStartIndex \ CLngInt(BUFFERSLICECHUNK_SIZE)
+	Dim RequestChunkIndex As LongInt = Integer64Division( _
+		VirtualStartIndex, _
+		CLngInt(BUFFERSLICECHUNK_SIZE) _
+	)
 	
 	If this->ChunkIndex <> RequestChunkIndex Then
 		If this->FileBytes <> NULL Then

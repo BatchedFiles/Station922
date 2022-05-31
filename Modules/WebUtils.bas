@@ -559,3 +559,32 @@ Function FindWebSite( _
 	Return hrFindSite
 	
 End Function
+
+Function Integer64Division( _
+		ByVal Dividend As LongInt, _
+		ByVal Divisor As LongInt _
+	)As LongInt
+	
+	Dim varLeft As VARIANT = Any
+	varLeft.vt = VT_I8
+	varLeft.llVal = Dividend
+	
+	Dim varRight As VARIANT = Any
+	varRight.vt = VT_I8
+	varRight.llVal = Divisor
+	
+	Dim varResult As VARIANT = Any
+	VariantInit(@varResult)
+	
+	Dim hr As HRESULT = VarIdiv( _
+		@varLeft, _
+		@varRight, _
+		@varResult _
+	)
+	If FAILED(hr) Then
+		Return 0
+	End If
+	
+	Return varResult.llVal
+	
+End Function
