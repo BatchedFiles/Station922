@@ -41,11 +41,6 @@ Declare Function FileBufferGetEncoding( _
 	ByVal pZipMode As ZipModes Ptr _
 )As HRESULT
 
-Declare Function FileBufferGetCharset( _
-	ByVal this As FileBuffer Ptr, _
-	ByVal ppCharset As HeapBSTR Ptr _
-)As HRESULT
-
 Declare Function FileBufferGetLanguage( _
 	ByVal this As FileBuffer Ptr, _
 	ByVal ppLanguage As HeapBSTR Ptr _

@@ -51,11 +51,6 @@ Type IBufferVirtualTable
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
-	GetCharset As Function( _
-		ByVal this As IBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	
 	GetLanguage As Function( _
 		ByVal this As IBuffer Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
@@ -94,7 +89,6 @@ End Type
 #define IBuffer_Release(this) (this)->lpVtbl->Release(this)
 #define IBuffer_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
 #define IBuffer_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
-#define IBuffer_GetCharset(this, ppCharset) (this)->lpVtbl->GetCharset(this, ppCharset)
 #define IBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
 #define IBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)

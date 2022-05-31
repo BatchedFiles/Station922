@@ -41,11 +41,6 @@ Declare Function MemoryBufferGetEncoding( _
 	ByVal pZipMode As ZipModes Ptr _
 )As HRESULT
 
-Declare Function MemoryBufferGetCharset( _
-	ByVal this As MemoryBuffer Ptr, _
-	ByVal ppCharset As HeapBSTR Ptr _
-)As HRESULT
-
 Declare Function MemoryBufferGetLanguage( _
 	ByVal this As MemoryBuffer Ptr, _
 	ByVal ppLanguage As HeapBSTR Ptr _

@@ -15,7 +15,6 @@ Type _MemoryBuffer
 	pBuffer As Byte Ptr
 	Capacity As LongInt
 	ZipMode As ZipModes
-	Charset As HeapBSTR
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	ContentType As MimeType
@@ -36,7 +35,6 @@ Sub InitializeMemoryBuffer( _
 	this->pBuffer = NULL
 	this->Capacity = 0
 	this->ZipMode = ZipModes.None
-	this->Charset = NULL
 	this->Language = NULL
 	this->ETag = NULL
 	this->ContentType.ContentType = ContentTypes.AnyAny
@@ -50,7 +48,6 @@ Sub UnInitializeMemoryBuffer( _
 	)
 	
 	HeapSysFreeString(this->ETag)
-	HeapSysFreeString(this->Charset)
 	HeapSysFreeString(this->Language)
 	
 	If this->pBuffer <> NULL Then
@@ -231,18 +228,6 @@ Function MemoryBufferGetEncoding( _
 	
 End Function
 
-Function MemoryBufferGetCharset( _
-		ByVal this As MemoryBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	
-	HeapSysAddRefString(this->Charset)
-	*ppCharset = this->Charset
-	
-	Return S_OK
-	
-End Function
-
 Function MemoryBufferGetLanguage( _
 		ByVal this As MemoryBuffer Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
@@ -379,13 +364,6 @@ Function IMemoryBufferGetEncoding( _
 	Return MemoryBufferGetEncoding(ContainerOf(this, MemoryBuffer, lpVtbl), pZipMode)
 End Function
 
-Function IMemoryBufferGetCharset( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	Return MemoryBufferGetCharset(ContainerOf(this, MemoryBuffer, lpVtbl), ppCharset)
-End Function
-
 Function IMemoryBufferGetLanguage( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
@@ -444,7 +422,6 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferRelease, _
 	@IMemoryBufferGetContentType, _
 	@IMemoryBufferGetEncoding, _
-	@IMemoryBufferGetCharset, _
 	@IMemoryBufferGetLanguage, _
 	@IMemoryBufferGetETag, _
 	@IMemoryBufferGetLastFileModifiedDate, _

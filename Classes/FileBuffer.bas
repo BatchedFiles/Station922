@@ -22,7 +22,6 @@ Type _FileBuffer
 	FileBytes As ZString Ptr
 	fAccess As FileAccess
 	ZipMode As ZipModes
-	Charset As HeapBSTR
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	LastFileModifiedDate As FILETIME
@@ -47,7 +46,6 @@ Sub InitializeFileBuffer( _
 	this->hMapFile = NULL
 	this->FileBytes = NULL
 	this->ZipMode = ZipModes.None
-	this->Charset = NULL
 	this->Language = NULL
 	this->ETag = NULL
 	this->FileSize = 0
@@ -66,7 +64,6 @@ Sub UnInitializeFileBuffer( _
 	
 	HeapSysFreeString(this->ETag)
 	HeapSysFreeString(this->Language)
-	HeapSysFreeString(this->Charset)
 	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileBytes <> NULL Then
@@ -254,18 +251,6 @@ Function FileBufferGetEncoding( _
 	)As HRESULT
 	
 	*pZipMode = this->ZipMode
-	
-	Return S_OK
-	
-End Function
-
-Function FileBufferGetCharset( _
-		ByVal this As FileBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	
-	HeapSysAddRefString(this->Charset)
-	*ppCharset = this->Charset
 	
 	Return S_OK
 	
@@ -570,13 +555,6 @@ Function IFileBufferGetEncoding( _
 	Return FileBufferGetEncoding(ContainerOf(this, FileBuffer, lpVtbl), pZipMode)
 End Function
 
-Function IFileBufferGetCharset( _
-		ByVal this As IFileBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	Return FileBufferGetCharset(ContainerOf(this, FileBuffer, lpVtbl), ppCharset)
-End Function
-
 Function IFileBufferGetLanguage( _
 		ByVal this As IFileBuffer Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
@@ -712,7 +690,6 @@ Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
 	@IFileBufferRelease, _
 	@IFileBufferGetContentType, _
 	@IFileBufferGetEncoding, _
-	@IFileBufferGetCharset, _
 	@IFileBufferGetLanguage, _
 	@IFileBufferGetETag, _
 	@IFileBufferGetLastFileModifiedDate, _

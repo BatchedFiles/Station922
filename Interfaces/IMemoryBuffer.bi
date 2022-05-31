@@ -35,11 +35,6 @@ Type IMemoryBufferVirtualTable
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
-	GetCharset As Function( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal ppCharset As HeapBSTR Ptr _
-	)As HRESULT
-	
 	GetLanguage As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
@@ -89,7 +84,6 @@ End Type
 #define IMemoryBuffer_Release(this) (this)->lpVtbl->Release(this)
 #define IMemoryBuffer_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
 #define IMemoryBuffer_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
-#define IMemoryBuffer_GetCharset(this, ppCharset) (this)->lpVtbl->GetCharset(this, ppCharset)
 #define IMemoryBuffer_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
 #define IMemoryBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IMemoryBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
