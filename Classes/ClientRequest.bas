@@ -339,6 +339,15 @@ Function ClientRequestParseRequestHeaders( _
 		If pUTCInModifiedSince <> 0 Then
 			lstrcpyW(pUTCInModifiedSince, WStr("GMT"))
 		End If
+		/'
+		Dim wSeparator As WString Ptr = StrChrW( _
+			pHeaderIfModifiedSince, _
+			Characters.Semicolon _
+		)
+		If wSeparator <> 0 Then
+			wSeparator[0] = 0
+		End If
+		'/
 		
 		Dim pUTCInUnModifiedSince As WString Ptr = StrStrW( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), _
@@ -347,6 +356,15 @@ Function ClientRequestParseRequestHeaders( _
 		If pUTCInUnModifiedSince <> 0 Then
 			lstrcpyW(pUTCInUnModifiedSince, WStr("GMT"))
 		End If
+		/'
+		Dim wSeparator As WString Ptr = StrChrW( _
+			pHeaderIfUnModifiedSince, _
+			Characters.Semicolon _
+		)
+		If wSeparator <> 0 Then
+			wSeparator[0] = 0
+		End If
+		'/
 	End Scope
 	
 	Scope
