@@ -12,20 +12,20 @@ Type _FileBuffer
 	#endif
 	lpVtbl As Const IFileBufferVirtualTable Ptr
 	ReferenceCounter As Integer
+	FileSize As LongInt
+	ChunkIndex As LongInt
+	FileOffset As LongInt
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
 	FileHandle As Handle
 	ZipFileHandle As HANDLE
 	hMapFile As HANDLE
-	FileSize As LongInt
-	ChunkIndex As LongInt
-	FileOffset As LongInt
 	FileBytes As ZString Ptr
-	fAccess As FileAccess
-	ZipMode As ZipModes
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	LastFileModifiedDate As FILETIME
+	fAccess As FileAccess
+	ZipMode As ZipModes
 	ContentType As MimeType
 End Type
 

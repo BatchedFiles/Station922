@@ -65,7 +65,7 @@ Declare Function AsyncResultSetAsyncCallback( _
 
 Declare Function AsyncResultGetWsaOverlapped( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal ppRecvOverlapped As LPASYNCRESULTOVERLAPPED Ptr _
+	ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 )As HRESULT
 
 #endif

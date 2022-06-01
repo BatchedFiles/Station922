@@ -5,10 +5,10 @@
 Extern GlobalMutableWebSiteCollectionVirtualTable As Const IMutableWebSiteCollectionVirtualTable
 
 Type WebSiteNode
-	HostName As BSTR
-	pIWebSite As IWebSite Ptr
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
+	HostName As BSTR
+	pIWebSite As IWebSite Ptr
 End Type
 
 Declare Sub TreeAddNode( _

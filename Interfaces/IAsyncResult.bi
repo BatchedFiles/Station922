@@ -4,10 +4,6 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
-Type ASYNCRESULTOVERLAPPED As _ASYNCRESULTOVERLAPPED
-
-Type LPASYNCRESULTOVERLAPPED As _ASYNCRESULTOVERLAPPED Ptr
-
 Type IAsyncResult As IAsyncResult_
 
 Type LPIASYNCRESULT As IAsyncResult Ptr
@@ -16,7 +12,7 @@ Type AsyncCallback As Sub(ByVal ar As IAsyncResult Ptr, ByVal ReadedBytes As Int
 
 Extern IID_IAsyncResult Alias "IID_IAsyncResult" As Const IID
 
-Type _ASYNCRESULTOVERLAPPED
+Type ASYNCRESULTOVERLAPPED
 	OverLap As OVERLAPPED
 	pIAsync As IAsyncResult Ptr
 End Type

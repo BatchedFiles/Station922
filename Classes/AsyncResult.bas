@@ -8,12 +8,12 @@ Type _AsyncResult
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
+	OverLap As ASYNCRESULTOVERLAPPED
 	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
 	callback As AsyncCallback
-	OverLap As ASYNCRESULTOVERLAPPED
 	BytesTransferred As DWORD
 	Completed As Boolean
 End Type
@@ -263,7 +263,7 @@ End Function
 
 Function AsyncResultGetWsaOverlapped( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal ppRecvOverlapped As LPASYNCRESULTOVERLAPPED Ptr _
+		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 	)As HRESULT
 	
 	*ppRecvOverlapped = @this->OverLap
@@ -339,7 +339,7 @@ End Function
 
 Function IMutableAsyncResultGetWsaOverlapped( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal ppRecvOverlapped As LPASYNCRESULTOVERLAPPED Ptr _
+		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppRecvOverlapped)
 End Function

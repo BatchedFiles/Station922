@@ -13,10 +13,10 @@ Type _NetworkStream
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
+	RemoteAddress As SOCKADDR_STORAGE
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	RemoteAddress As SOCKADDR_STORAGE
 	RemoteAddressLength As Integer
 	ClientSocket As SOCKET
 End Type
@@ -192,137 +192,6 @@ Function NetworkStreamRelease( _
 	Return 0
 	
 End Function
-
-' Function NetworkStreamCanRead( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	
-	' *pResult = True
-	
-	' Return S_OK
-	
-' End Function
-
-' Function NetworkStreamCanSeek( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	
-	' *pResult = False
-	
-	' Return S_OK
-	
-' End Function
-
-' Function NetworkStreamCanWrite( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As WINBOOLEAN Ptr _
-	' )As HRESULT
-	
-	' *pResult = True
-	
-	' Return S_OK
-	
-' End Function
-
-' Function NetworkStreamFlush( _
-		' ByVal this As NetworkStream Ptr _
-	' )As HRESULT
-	
-	' Return S_OK
-	
-' End Function
-
-' Function NetworkStreamGetLength( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As LARGE_INTEGER Ptr _
-	' )As HRESULT
-	
-	' *pResult = 0
-	
-	' Return S_FALSE
-	
-' End Function
-
-' Function NetworkStreamPosition( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal pResult As LARGE_INTEGER Ptr _
-	' )As HRESULT
-	
-	' *pResult = 0
-	
-	' Return S_FALSE
-	
-' End Function
-
-' Function NetworkStreamRead( _
-' 		ByVal this As NetworkStream Ptr, _
-' 		ByVal buffer As LPVOID, _
-' 		ByVal Count As DWORD, _
-' 		ByVal pReadedBytes As DWORD Ptr _
-' 	)As HRESULT
-	
-' 	Dim ReadedBytes As Long = recv(this->ClientSocket, buffer, Count, 0)
-	
-' 	Select Case ReadedBytes
-		
-' 		Case SOCKET_ERROR
-' 			Dim intError As Long = WSAGetLastError()
-' 			*pReadedBytes = 0
-' 			Return HRESULT_FROM_WIN32(intError)
-			
-' 		Case 0
-' 			*pReadedBytes = 0
-' 			Return S_FALSE
-			
-' 		Case Else
-' 			*pReadedBytes = ReadedBytes
-' 			Return S_OK
-			
-' 	End Select
-	
-' End Function
-
-' Function NetworkStreamWrite( _
-' 		ByVal this As NetworkStream Ptr, _
-' 		ByVal Buffer As LPVOID, _
-' 		ByVal Count As DWORD, _
-' 		ByVal pWritedBytes As DWORD Ptr _
-' 	)As HRESULT
-	
-' 	Dim WritedBytes As Long = send(this->ClientSocket, Buffer, Count, 0)
-	
-' 	If WritedBytes = SOCKET_ERROR Then	
-' 		Dim intError As Long = WSAGetLastError()
-' 		*pWritedBytes = 0
-' 		Return HRESULT_FROM_WIN32(intError)
-' 	End If
-	
-' 	*pWritedBytes = WritedBytes
-	
-' 	Return S_OK
-	
-' End Function
-
-' Function NetworkStreamSeek( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal offset As LARGE_INTEGER, _
-		' ByVal origin As SeekOrigin _
-	' )As HRESULT
-	
-	' Return S_FALSE
-	
-' End Function
-
-' Function NetworkStreamSetLength( _
-		' ByVal this As NetworkStream Ptr, _
-		' ByVal length As LARGE_INTEGER _
-	' )As HRESULT
-	
-	' Return S_FALSE
-	
-' End Function
 
 Function NetworkStreamBeginRead( _
 		ByVal this As NetworkStream Ptr, _

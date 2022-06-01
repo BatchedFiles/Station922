@@ -15,9 +15,9 @@ Type _MemoryBuffer
 	pBuffer As Byte Ptr
 	Capacity As LongInt
 	Offset As LongInt
-	ZipMode As ZipModes
 	Language As HeapBSTR
 	ETag As HeapBSTR
+	ZipMode As ZipModes
 	ContentType As MimeType
 End Type
 

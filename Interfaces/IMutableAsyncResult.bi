@@ -60,7 +60,7 @@ Type IMutableAsyncResultVirtualTable
 	
 	GetWsaOverlapped As Function( _
 		ByVal this As IMutableAsyncResult Ptr, _
-		ByVal ppRecvOverlapped As LPASYNCRESULTOVERLAPPED Ptr _
+		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 	)As HRESULT
 	
 End Type
