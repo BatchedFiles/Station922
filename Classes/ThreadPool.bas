@@ -29,14 +29,14 @@ Function WorkerThread( _
 		Dim CompletionKey As ULONG_PTR = Any
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		
-		Dim res As WINBOOL = GetQueuedCompletionStatus( _
+		Dim resCompletionStatus As BOOL = GetQueuedCompletionStatus( _
 			this->hIOCompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
 			@pOverlap, _
 			INFINITE _
 		)
-		If res Then
+		If resCompletionStatus Then
 			this->CallBack( _
 				this->param, _
 				BytesTransferred, _
