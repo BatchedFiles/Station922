@@ -157,7 +157,12 @@ Function ProcessErrorRequestResponse( _
 	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
 	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrReadError)
 	
-	IWriteErrorAsyncIoTask_Prepare(pTask)
+	Dim hrPrepare As HRESULT = IWriteErrorAsyncIoTask_Prepare(pTask)
+	If FAILED(hrPrepare) Then
+		IWriteErrorAsyncIoTask_Release(pTask)
+		*ppTask = NULL
+		Return hrPrepare
+	End If
 	
 	*ppTask = pTask
 	
