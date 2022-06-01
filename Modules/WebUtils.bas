@@ -385,6 +385,12 @@ Sub AddResponseCacheHeaders( _
 	End Scope
 	
 	Scope
+		IServerResponse_AddKnownResponseHeader( _
+			pIResponse, _
+			HttpResponseHeaders.HeaderETag, _
+			ETag _
+		)
+		
 		If IsFileModified Then
 			
 			Dim HeaderIfNoneMatch As HeapBSTR = Any
