@@ -32,7 +32,7 @@ Sub InitializeAsyncResult( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pState = NULL
 	this->callback = NULL
-	ZeroMemory(@this->OverLap, SizeOf(WSAOVERLAPPED))
+	ZeroMemory(@this->OverLap, SizeOf(ASYNCRESULTOVERLAPPED))
 	this->BytesTransferred = 0
 	this->Completed = False
 	

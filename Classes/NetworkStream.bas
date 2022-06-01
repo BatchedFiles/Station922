@@ -203,13 +203,13 @@ Function NetworkStreamBeginRead( _
 	)As HRESULT
 	
 	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
 		@IID_IMutableAsyncResult, _
 		@pINewAsyncResult _
 	)
-	If FAILED(hr) Then
+	If FAILED(hrCreateAsyncResult) Then
 		*ppIAsyncResult = NULL
 		Return E_OUTOFMEMORY
 	End If
@@ -248,24 +248,24 @@ Function NetworkStreamBeginRead( _
 		lpCompletionRoutine = NULL
 	End If
 	
+	Const ReceiveBuffersCount As DWORD = 1
 	Dim ReceiveBuffer As WSABUF = Any
 	ReceiveBuffer.len = Cast(ULONG, BufferLength)
 	ReceiveBuffer.buf = CPtr(ZString Ptr, Buffer)
 	
-	Const BuffersCount As DWORD = 1
-	Const lpNumberOfBytesRecvd As LPDWORD = NULL
+	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 	
-	Dim WSARecvResult As Long = WSARecv( _
+	Dim resWSARecv As Long = WSARecv( _
 		this->ClientSocket, _
 		@ReceiveBuffer, _
-		BuffersCount, _
-		lpNumberOfBytesRecvd, _
+		ReceiveBuffersCount, _
+		lpNumberOfBytesReceived, _
 		@Flags, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
 		lpCompletionRoutine _
 	)
-	If WSARecvResult <> 0 Then
+	If resWSARecv <> 0 Then
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then
