@@ -1135,7 +1135,7 @@ Function WebSiteGetBuffer( _
 					)
 					If FileBytes = NULL Then
 						Dim dwError As DWORD = GetLastError()
-						CloseHandle(hrGetFileMappingHandle)
+						CloseHandle(hMapOroginalFileHandle)
 						HeapSysFreeString(Path)
 						IClientUri_Release(ClientURI)
 						IFileBuffer_Release(pIFile)
