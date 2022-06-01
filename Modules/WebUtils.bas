@@ -372,14 +372,6 @@ Sub AddResponseCacheHeaders( _
 		
 		If SysStringLen(pHeaderIfUnModifiedSince) <> 0 Then
 			
-			Dim wSeparator As WString Ptr = StrChrW( _
-				pHeaderIfUnModifiedSince, _
-				Characters.Semicolon _
-			)
-			If wSeparator <> 0 Then
-				wSeparator[0] = 0
-			End If
-			
 			Dim resCompare As Long = lstrcmpiW( _
 				@strFileLastModifiedHttpDate, _
 				pHeaderIfUnModifiedSince _
