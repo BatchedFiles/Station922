@@ -238,7 +238,7 @@ Function HttpGetProcessorPrepare( _
 	)
 	If FAILED(hrGetBuffer) Then
 		*ppIBuffer = NULL
-		Return E_FAIL
+		Return hrGetBuffer
 	End If
 	
 	Scope
