@@ -452,17 +452,16 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	*ppIWebSiteCollection = NULL
-	
-	Dim pIWebSiteCollection As IMutableWebSiteCollection Ptr = Any
+	Dim pIWebSiteCollection As IWebSiteCollection Ptr = Any
 	Scope
 		Dim hr As HRESULT = CreateInstance( _
 			this->pIMemoryAllocator, _
 			@CLSID_WEBSITECOLLECTION, _
-			@IID_IMutableWebSiteCollection, _
+			@IID_IWebSiteCollection, _
 			@pIWebSiteCollection _
 		)
 		If FAILED(hr) Then
+			*ppIWebSiteCollection = NULL
 			Return hr
 		End If
 	End Scope
@@ -483,7 +482,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		)
 		If SectionsLength = 0 Then
 			Dim dwError As DWORD = GetLastError()
-			IMutableWebSiteCollection_Release(pIWebSiteCollection)
+			IWebSiteCollection_Release(pIWebSiteCollection)
+			*ppIWebSiteCollection = NULL
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
@@ -520,6 +520,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		)
 		If FAILED(hr2) Then
 			IWebSiteCollection_Release(pIWebSiteCollection)
+			*ppIWebSiteCollection = NULL
 			Return hr2
 		End If
 		
@@ -544,6 +545,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Dim dwError As DWORD = GetLastError()
 				IWebSite_Release(pIWebSite)
 				IWebSiteCollection_Release(pIWebSiteCollection)
+				*ppIWebSiteCollection = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -569,6 +571,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Dim dwError As DWORD = GetLastError()
 				IWebSite_Release(pIWebSite)
 				IWebSiteCollection_Release(pIWebSiteCollection)
+				*ppIWebSiteCollection = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -594,6 +597,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Dim dwError As DWORD = GetLastError()
 				IWebSite_Release(pIWebSite)
 				IWebSiteCollection_Release(pIWebSiteCollection)
+				*ppIWebSiteCollection = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
@@ -619,7 +623,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			End If
 		End Scope
 		
-		IMutableWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite)
+		IWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite)
 		
 		IWebSite_Release(pIWebSite)
 		
@@ -628,23 +632,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		
 	Loop
 	
-	Scope
-		Dim pIWebSiteCollection2 As IWebSiteCollection Ptr = Any
-		Dim hr4 As HRESULT = IMutableWebSiteCollection_QueryInterface( _
-			pIWebSiteCollection, _
-			@IID_IWebSiteCollection, _
-			@pIWebSiteCollection2 _
-		)
-		If FAILED(hr4) Then
-			IMutableWebSiteCollection_Release(pIWebSiteCollection)
-			Return hr4
-		End If
-		
-		*ppIWebSiteCollection = pIWebSiteCollection2
-		
-	End Scope
-	
-	IMutableWebSiteCollection_Release(pIWebSiteCollection)
+	*ppIWebSiteCollection = pIWebSiteCollection
 	
 	Return S_OK
 	

@@ -1,7 +1,7 @@
 #ifndef WEBSITECOLLECTION_BI
 #define WEBSITECOLLECTION_BI
 
-#include once "IMutableWebSiteCollection.bi"
+#include once "IWebSiteCollection.bi"
 
 Extern CLSID_WEBSITECOLLECTION Alias "CLSID_WEBSITECOLLECTION" As Const CLSID
 

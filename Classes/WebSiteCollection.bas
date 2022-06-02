@@ -2,7 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
-Extern GlobalMutableWebSiteCollectionVirtualTable As Const IMutableWebSiteCollectionVirtualTable
+Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable
 
 Type WebSiteNode
 	LeftNode As WebSiteNode Ptr
@@ -31,7 +31,7 @@ Type _WebSiteCollection
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IMutableWebSiteCollectionVirtualTable Ptr
+	lpVtbl As Const IWebSiteCollectionVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pDefaultNode As WebSiteNode Ptr
@@ -47,7 +47,7 @@ Sub InitializeWebSiteCollection( _
 	#if __FB_DEBUG__
 		CopyMemory(@this->IdString, @Str("WebSiteCollectio"), 16)
 	#endif
-	this->lpVtbl = @GlobalMutableWebSiteCollectionVirtualTable
+	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -153,18 +153,14 @@ Function WebSiteCollectionQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IMutableWebSiteCollection, riid) Then
+	If IsEqualIID(@IID_IWebSiteCollection, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IWebSiteCollection, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -355,62 +351,62 @@ Function CreateWebSiteNode( _
 End Function
 
 
-Function IMutableWebSiteCollectionQueryInterface( _
-		ByVal this As IMutableWebSiteCollection Ptr, _
+Function IWebSiteCollectionQueryInterface( _
+		ByVal this As IWebSiteCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionQueryInterface(ContainerOf(this, WebSiteCollection, lpVtbl), riid, ppvObject)
 End Function
 
-Function IMutableWebSiteCollectionAddRef( _
-		ByVal this As IMutableWebSiteCollection Ptr _
+Function IWebSiteCollectionAddRef( _
+		ByVal this As IWebSiteCollection Ptr _
 	)As ULONG
 	Return WebSiteCollectionAddRef(ContainerOf(this, WebSiteCollection, lpVtbl))
 End Function
 
-Function IMutableWebSiteCollectionRelease( _
-		ByVal this As IMutableWebSiteCollection Ptr _
+Function IWebSiteCollectionRelease( _
+		ByVal this As IWebSiteCollection Ptr _
 	)As ULONG
 	Return WebSiteCollectionRelease(ContainerOf(this, WebSiteCollection, lpVtbl))
 End Function
 
-' Function IMutableWebSiteCollection_NewEnum( _
-		' ByVal this As IMutableWebSiteCollection Ptr, _
+' Function IWebSiteCollection_NewEnum( _
+		' ByVal this As IWebSiteCollection Ptr, _
 		' ByVal ppIEnum As IEnumWebSite Ptr Ptr _
 	' )As HRESULT
 	' Return WebSiteCollection_NewEnum(ContainerOf(this, WebSiteCollection, lpVtbl), ppIEnum)
 ' End Function
 
-Function IMutableWebSiteCollectionItem( _
-		ByVal this As IMutableWebSiteCollection Ptr, _
+Function IWebSiteCollectionItem( _
+		ByVal this As IWebSiteCollection Ptr, _
 		ByVal Host As WString Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionItem(ContainerOf(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
 End Function
 
-Function IMutableWebSiteCollectionCount( _
-		ByVal this As IMutableWebSiteCollection Ptr, _
+Function IWebSiteCollectionCount( _
+		ByVal this As IWebSiteCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	Return WebSiteCollectionCount(ContainerOf(this, WebSiteCollection, lpVtbl), pCount)
 End Function
 
-Function IMutableWebSiteCollectionAdd( _
-		ByVal this As IMutableWebSiteCollection Ptr, _
+Function IWebSiteCollectionAdd( _
+		ByVal this As IWebSiteCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	Return WebSiteCollectionAdd(ContainerOf(this, WebSiteCollection, lpVtbl), pKey, pIWebSite)
 End Function
 
-Dim GlobalMutableWebSiteCollectionVirtualTable As Const IMutableWebSiteCollectionVirtualTable = Type( _
-	@IMutableWebSiteCollectionQueryInterface, _
-	@IMutableWebSiteCollectionAddRef, _
-	@IMutableWebSiteCollectionRelease, _
-	NULL, _ /' @IMutableWebSiteCollection_NewEnum, _ '/
-	@IMutableWebSiteCollectionItem, _
-	@IMutableWebSiteCollectionCount, _
-	@IMutableWebSiteCollectionAdd _
+Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable = Type( _
+	@IWebSiteCollectionQueryInterface, _
+	@IWebSiteCollectionAddRef, _
+	@IWebSiteCollectionRelease, _
+	NULL, _ /' @IWebSiteCollection_NewEnum, _ '/
+	@IWebSiteCollectionItem, _
+	@IWebSiteCollectionCount, _
+	@IWebSiteCollectionAdd _
 )

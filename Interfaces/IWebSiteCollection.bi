@@ -41,6 +41,18 @@ Type IWebSiteCollectionVirtualTable
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	
+	Add As Function( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	' Для коллекций:
+	' Count()
+	' Item()
+	' _NewEnum()
+	' Необязательно: Add, Remove, Clear, Move и методы поиска
+	
 End Type
 
 Type IWebSiteCollection_
@@ -53,5 +65,6 @@ End Type
 #define IWebSiteCollection__NewEnum(this, ppIEnum) (this)->lpVtbl->_NewEnum(this, ppIEnum)
 #define IWebSiteCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
 #define IWebSiteCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
+#define IWebSiteCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
 
 #endif

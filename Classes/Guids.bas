@@ -244,19 +244,9 @@ DEFINE_IID(IID_IMemoryBuffer, _
 	&hbdf996f, &h284c, &h4cd5, &hb0, &h10, &hc8, &h8d, &h55, &h33, &hfa, &h50 _
 )
 
-' {86629567-EA4F-47C5-926A-17860A4887D9}
-DEFINE_IID(IID_IMutableWebSiteCollection, _
-	&h86629567, &hea4f, &h47c5, &h92, &h6a, &h17, &h86, &ha, &h48, &h87, &hd9 _
-)
-
 ' {A4C7EAED-5EC0-4B7C-81D2-05BE69E63A1F}
 DEFINE_IID(IID_INetworkStream, _
 	&ha4c7eaed, &h5ec0, &h4b7c, &h81, &hd2, &h5, &hbe, &h69, &he6, &h3a, &h1f _
-)
-
-' {277ECE2A-2962-467F-AF0E-B12B2F1D40AB}
-DEFINE_IID(IID_IPrivateHeapMemoryAllocatorClassFactory, _
-	&h277ece2a, &h2962, &h467f, &haf, &he, &hb1, &h2b, &h2f, &h1d, &h40, &hab _
 )
 
 ' {82B525C1-E266-4317-9FA5-F8B19DF8C73C}
