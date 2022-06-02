@@ -7,7 +7,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpConst.bi"
-#include once "IMutableAsyncResult.bi"
 #include once "Logger.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"

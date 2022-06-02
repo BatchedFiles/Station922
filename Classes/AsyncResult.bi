@@ -1,7 +1,7 @@
 #ifndef ASYNCRESULT_BI
 #define ASYNCRESULT_BI
 
-#include once "IMutableAsyncResult.bi"
+#include once "IAsyncResult.bi"
 
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 

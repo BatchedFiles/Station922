@@ -2,14 +2,14 @@
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
-Extern GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTable
+Extern GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable
 
 Type _AsyncResult
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
 	OverLap As ASYNCRESULTOVERLAPPED
-	lpVtbl As Const IMutableAsyncResultVirtualTable Ptr
+	lpVtbl As Const IAsyncResultVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
@@ -26,7 +26,7 @@ Sub InitializeAsyncResult( _
 	#if __FB_DEBUG__
 		CopyMemory(@this->IdString, @Str("AsyncResultResul"), 16)
 	#endif
-	this->lpVtbl = @GlobalMutableAsyncResultVirtualTable
+	this->lpVtbl = @GlobalAsyncResultVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -135,18 +135,14 @@ Function AsyncResultQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IMutableAsyncResult, riid) Then
+	If IsEqualIID(@IID_IAsyncResult, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IAsyncResult, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -273,86 +269,86 @@ Function AsyncResultGetWsaOverlapped( _
 End Function
 
 
-Function IMutableAsyncResultQueryInterface( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultQueryInterface( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultQueryInterface(ContainerOf(this, AsyncResult, lpVtbl), riid, ppvObject)
 End Function
 
-Function IMutableAsyncResultAddRef( _
-		ByVal this As IMutableAsyncResult Ptr _
+Function IAsyncResultAddRef( _
+		ByVal this As IAsyncResult Ptr _
 	)As HRESULT
 	Return AsyncResultAddRef(ContainerOf(this, AsyncResult, lpVtbl))
 End Function
 
-Function IMutableAsyncResultRelease( _
-		ByVal this As IMutableAsyncResult Ptr _
+Function IAsyncResultRelease( _
+		ByVal this As IAsyncResult Ptr _
 	)As HRESULT
 	Return AsyncResultRelease(ContainerOf(this, AsyncResult, lpVtbl))
 End Function
 
-Function IMutableAsyncResultGetAsyncStateWeakPtr( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultGetAsyncStateWeakPtr( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultGetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), ppState)
 End Function
 
-Function IMutableAsyncResultGetCompleted( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultGetCompleted( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
 		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
 	Return AsyncResultGetCompleted(ContainerOf(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted)
 End Function
 
-Function IMutableAsyncResultSetCompleted( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultSetCompleted( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal Completed As Boolean _
 	)As HRESULT
 	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed)
 End Function
 
-Function IMutableAsyncResultSetAsyncStateWeakPtr( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultSetAsyncStateWeakPtr( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
 	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
 End Function
 
-Function IMutableAsyncResultGetAsyncCallback( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultGetAsyncCallback( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal pcallback As AsyncCallback Ptr _
 	)As HRESULT
 	Return AsyncResultGetAsyncCallback(ContainerOf(this, AsyncResult, lpVtbl), pcallback)
 End Function
 
-Function IMutableAsyncResultSetAsyncCallback( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultSetAsyncCallback( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal callback As AsyncCallback _
 	)As HRESULT
 	Return AsyncResultSetAsyncCallback(ContainerOf(this, AsyncResult, lpVtbl), callback)
 End Function
 
-Function IMutableAsyncResultGetWsaOverlapped( _
-		ByVal this As IMutableAsyncResult Ptr, _
+Function IAsyncResultGetWsaOverlapped( _
+		ByVal this As IAsyncResult Ptr, _
 		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppRecvOverlapped)
 End Function
 
-Dim GlobalMutableAsyncResultVirtualTable As Const IMutableAsyncResultVirtualTable = Type( _
-	@IMutableAsyncResultQueryInterface, _
-	@IMutableAsyncResultAddRef, _
-	@IMutableAsyncResultRelease, _
-	@IMutableAsyncResultGetAsyncStateWeakPtr, _
-	@IMutableAsyncResultGetCompleted, _
-	@IMutableAsyncResultSetCompleted, _
-	@IMutableAsyncResultSetAsyncStateWeakPtr, _
-	@IMutableAsyncResultGetAsyncCallback, _
-	@IMutableAsyncResultSetAsyncCallback, _
-	@IMutableAsyncResultGetWsaOverlapped _
+Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
+	@IAsyncResultQueryInterface, _
+	@IAsyncResultAddRef, _
+	@IAsyncResultRelease, _
+	@IAsyncResultGetAsyncStateWeakPtr, _
+	@IAsyncResultGetCompleted, _
+	@IAsyncResultSetCompleted, _
+	@IAsyncResultSetAsyncStateWeakPtr, _
+	@IAsyncResultGetAsyncCallback, _
+	@IAsyncResultSetAsyncCallback, _
+	@IAsyncResultGetWsaOverlapped _
 )

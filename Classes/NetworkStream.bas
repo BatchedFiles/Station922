@@ -1,5 +1,5 @@
 #include once "NetworkStream.bi"
-#include once "IMutableAsyncResult.bi"
+#include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
@@ -202,26 +202,25 @@ Function NetworkStreamBeginRead( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
+	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
-		@IID_IMutableAsyncResult, _
+		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)
 	If FAILED(hrCreateAsyncResult) Then
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return hrCreateAsyncResult
 	End If
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	lpRecvOverlapped->pIAsync = pINewAsyncResult
 	
-	IMutableAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
@@ -270,14 +269,13 @@ Function NetworkStreamBeginRead( _
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then
 			*ppIAsyncResult = NULL
-			IMutableAsyncResult_Release(pINewAsyncResult)
+			IAsyncResult_Release(pINewAsyncResult)
 			Return HRESULT_FROM_WIN32(intError)
 		End If
 		
 	End If
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	*ppIAsyncResult = pINewAsyncResult
 	
 	Return BASESTREAM_S_IO_PENDING
 	
@@ -316,16 +314,16 @@ Function NetworkStreamBeginWriteGather( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim pINewAsyncResult As IMutableAsyncResult Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim pINewAsyncResult As IAsyncResult Ptr = Any
+	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_ASYNCRESULT, _
-		@IID_IMutableAsyncResult, _
+		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)
-	If FAILED(hr) Then
+	If FAILED(hrCreateAsyncResult) Then
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return hrCreateAsyncResult
 	End If
 	
 	Dim pSendBuffers As WSABUF Ptr = IMalloc_Alloc( _
@@ -333,19 +331,18 @@ Function NetworkStreamBeginWriteGather( _
 		SizeOf(WSABUF) * BuffersCount _
 	)
 	If pSendBuffers = NULL Then
-		IMutableAsyncResult_Release(pINewAsyncResult)
+		IAsyncResult_Release(pINewAsyncResult)
 		*ppIAsyncResult = NULL
 		Return E_OUTOFMEMORY
 	End If
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	lpRecvOverlapped->pIAsync = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	lpRecvOverlapped->pIAsync = pINewAsyncResult
 	
-	IMutableAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	IMutableAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
@@ -400,15 +397,14 @@ Function NetworkStreamBeginWriteGather( _
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then
-			IMutableAsyncResult_Release(pINewAsyncResult)
+			IAsyncResult_Release(pINewAsyncResult)
 			*ppIAsyncResult = NULL
 			Return HRESULT_FROM_WIN32(intError)
 		End If
 		
 	End If
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	*ppIAsyncResult = CPtr(IAsyncResult Ptr, pINewAsyncResult)
+	*ppIAsyncResult = pINewAsyncResult
 	
 	Return BASESTREAM_S_IO_PENDING
 	
@@ -437,11 +433,8 @@ Function NetworkStreamEndRead( _
 		Return S_OK
 	End If
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	Dim pINewAsyncResult As IMutableAsyncResult Ptr = CPtr(IMutableAsyncResult Ptr, pIAsyncResult)
-	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @lpRecvOverlapped)
 	
 	Const fNoWait As BOOL = False
 	Dim cbTransfer As DWORD = Any
@@ -499,11 +492,8 @@ Function NetworkStreamEndWrite( _
 		Return S_OK
 	End If
 	
-	' TODO Запросить интерфейс вместо конвертирования указателя
-	Dim pINewAsyncResult As IMutableAsyncResult Ptr = CPtr(IMutableAsyncResult Ptr, pIAsyncResult)
-	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IMutableAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
+	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @lpRecvOverlapped)
 	
 	Const fNoWait As BOOL = False
 	Dim cbTransfer As DWORD = Any

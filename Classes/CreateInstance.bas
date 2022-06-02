@@ -331,14 +331,6 @@ End Function
 Function GetHeapMemoryAllocatorInstance( _
 	)As IMalloc Ptr
 	
-	/'
-	' TODO Реализовать механизм пула объектов
-	Потеребитель запрашивает интерфейс IMalloc
-	Ему выдаётся уже заранее созданный IMalloc из пула
-	Когда счётчик ссылок на IMalloc падает до нуля
-	то объект не уничтожается, а возвращается в пул
-	Не тратится время на создание новых куч памяти
-	'/
 	Dim pMalloc As IMalloc Ptr = Any
 	Dim hrCreateMalloc As HRESULT = CreateInstance( _
 		NULL, _
