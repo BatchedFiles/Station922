@@ -2,7 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
-Extern GlobalMutableHttpProcessorCollectionVirtualTable As Const IMutableHttpProcessorCollectionVirtualTable
+Extern GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable
 
 Const HttpProcessorCollectionCapacity As Integer = 20
 
@@ -16,7 +16,7 @@ Type _HttpProcessorCollection
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IMutableHttpProcessorCollectionVirtualTable Ptr
+	lpVtbl As Const IHttpProcessorCollectionVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
 	CollectionLength As Integer
@@ -31,7 +31,7 @@ Sub InitializeHttpProcessorCollection( _
 	#if __FB_DEBUG__
 		CopyMemory(@this->IdString, @Str("HttpProcessorCol"), 16)
 	#endif
-	this->lpVtbl = @GlobalMutableHttpProcessorCollectionVirtualTable
+	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -142,15 +142,11 @@ Function HttpProcessorCollectionQueryInterface( _
 	If IsEqualIID(@IID_IHttpProcessorCollection, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IMutableHttpProcessorCollection, riid) Then
+		If IsEqualIID(@IID_IUnknown, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
+			*ppv = NULL
+			Return E_NOINTERFACE
 		End If
 	End If
 	
@@ -264,70 +260,70 @@ Function HttpProcessorCollectionAdd( _
 End Function
 
 
-Function IMutableHttpProcessorCollectionQueryInterface( _
-		ByVal this As IMutableHttpProcessorCollection Ptr, _
+Function IHttpProcessorCollectionQueryInterface( _
+		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionQueryInterface(ContainerOf(this, HttpProcessorCollection, lpVtbl), riid, ppvObject)
 End Function
 
-Function IMutableHttpProcessorCollectionAddRef( _
-		ByVal this As IMutableHttpProcessorCollection Ptr _
+Function IHttpProcessorCollectionAddRef( _
+		ByVal this As IHttpProcessorCollection Ptr _
 	)As ULONG
 	Return HttpProcessorCollectionAddRef(ContainerOf(this, HttpProcessorCollection, lpVtbl))
 End Function
 
-Function IMutableHttpProcessorCollectionRelease( _
-		ByVal this As IMutableHttpProcessorCollection Ptr _
+Function IHttpProcessorCollectionRelease( _
+		ByVal this As IHttpProcessorCollection Ptr _
 	)As ULONG
 	Return HttpProcessorCollectionRelease(ContainerOf(this, HttpProcessorCollection, lpVtbl))
 End Function
 
-' Function IMutableHttpProcessorCollection_NewEnum( _
-		' ByVal this As IMutableHttpProcessorCollection Ptr, _
+' Function IHttpProcessorCollection_NewEnum( _
+		' ByVal this As IHttpProcessorCollection Ptr, _
 		' ByVal ppIEnum As IEnumHttpProcessor Ptr Ptr _
 	' )As HRESULT
 	' Return HttpProcessorCollection_NewEnum(ContainerOf(this, HttpProcessorCollection, lpVtbl), ppIEnum)
 ' End Function
 
-Function IMutableHttpProcessorCollectionItem( _
-		ByVal this As IMutableHttpProcessorCollection Ptr, _
+Function IHttpProcessorCollectionItem( _
+		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionItem(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
 End Function
 
-Function IMutableHttpProcessorCollectionCount( _
-		ByVal this As IMutableHttpProcessorCollection Ptr, _
+Function IHttpProcessorCollectionCount( _
+		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionCount(ContainerOf(this, HttpProcessorCollection, lpVtbl), pCount)
 End Function
 
-Function IMutableHttpProcessorCollectionGetAllMethods( _
-		ByVal this As IMutableHttpProcessorCollection Ptr, _
+Function IHttpProcessorCollectionGetAllMethods( _
+		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal ppMethods As HeapBSTR Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionGetAllMethods(ContainerOf(this, HttpProcessorCollection, lpVtbl), ppMethods)
 End Function
 
-Function IMutableHttpProcessorCollectionAdd( _
-		ByVal this As IMutableHttpProcessorCollection Ptr, _
+Function IHttpProcessorCollectionAdd( _
+		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionAdd(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, pIProcessor)
 End Function
 
-Dim GlobalMutableHttpProcessorCollectionVirtualTable As Const IMutableHttpProcessorCollectionVirtualTable = Type( _
-	@IMutableHttpProcessorCollectionQueryInterface, _
-	@IMutableHttpProcessorCollectionAddRef, _
-	@IMutableHttpProcessorCollectionRelease, _
-	NULL, _ /' @IMutableWebSiteCollection_NewEnum, _ '/
-	@IMutableHttpProcessorCollectionItem, _
-	@IMutableHttpProcessorCollectionCount, _
-	@IMutableHttpProcessorCollectionGetAllMethods, _
-	@IMutableHttpProcessorCollectionAdd _
+Dim GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable = Type( _
+	@IHttpProcessorCollectionQueryInterface, _
+	@IHttpProcessorCollectionAddRef, _
+	@IHttpProcessorCollectionRelease, _
+	NULL, _ /' @IWebSiteCollection_NewEnum, _ '/
+	@IHttpProcessorCollectionItem, _
+	@IHttpProcessorCollectionCount, _
+	@IHttpProcessorCollectionGetAllMethods, _
+	@IHttpProcessorCollectionAdd _
 )

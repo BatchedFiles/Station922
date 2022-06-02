@@ -655,66 +655,51 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	
-	*ppIHttpProcessorCollection = NULL
+	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
 	
-	Dim pIProcessorCollection As IMutableHttpProcessorCollection Ptr = Any
 	Scope
 		Dim hr As HRESULT = CreateInstance( _
 			this->pIMemoryAllocator, _
 			@CLSID_HTTPPROCESSORCOLLECTION, _
-			@IID_IMutableHttpProcessorCollection, _
+			@IID_IHttpProcessorCollection, _
 			@pIProcessorCollection _
 		)
 		If FAILED(hr) Then
+			*ppIHttpProcessorCollection = NULL
 			Return hr
 		End If
 	End Scope
 	
 	Scope
-		Dim pIProcessorCollection2 As IHttpProcessorCollection Ptr = Any
-		Dim hr4 As HRESULT = IHttpProcessorCollection_QueryInterface( _
-			pIProcessorCollection, _
-			@IID_IHttpProcessorCollection, _
-			@pIProcessorCollection2 _
+		Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
+		Dim hrGetProcessor As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_HTTPGETASYNCPROCESSOR, _
+			@IID_IHttpGetAsyncProcessor, _
+			@pIHttpGetProcessor _
 		)
-		If FAILED(hr4) Then
-			IMutableHttpProcessorCollection_Release(pIProcessorCollection)
-			Return hr4
+		If FAILED(hrGetProcessor) Then
+			IHttpProcessorCollection_Release(pIProcessorCollection)
+			*ppIHttpProcessorCollection = NULL
+			Return hrGetProcessor
 		End If
 		
-		Scope
-			Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
-			Dim hrGetProcessor As HRESULT = CreateInstance( _
-				this->pIMemoryAllocator, _
-				@CLSID_HTTPGETASYNCPROCESSOR, _
-				@IID_IHttpGetAsyncProcessor, _
-				@pIHttpGetProcessor _
-			)
-			If FAILED(hrGetProcessor) Then
-				IMutableHttpProcessorCollection_Release(pIProcessorCollection)
-				Return hrGetProcessor
-			End If
-			
-			IMutableHttpProcessorCollection_Add( _
-				pIProcessorCollection, _
-				WStr("GET"), _
-				pIHttpGetProcessor _
-			)
-			
-			IMutableHttpProcessorCollection_Add( _
-				pIProcessorCollection, _
-				WStr("HEAD"), _
-				pIHttpGetProcessor _
-			)
-			
-			IHttpAsyncProcessor_Release(pIHttpGetProcessor)
-		End Scope
+		IHttpProcessorCollection_Add( _
+			pIProcessorCollection, _
+			WStr("GET"), _
+			pIHttpGetProcessor _
+		)
 		
-		*ppIHttpProcessorCollection = pIProcessorCollection2
+		IHttpProcessorCollection_Add( _
+			pIProcessorCollection, _
+			WStr("HEAD"), _
+			pIHttpGetProcessor _
+		)
 		
+		IHttpAsyncProcessor_Release(pIHttpGetProcessor)
 	End Scope
 	
-	IMutableHttpProcessorCollection_Release(pIProcessorCollection)
+	*ppIHttpProcessorCollection = pIProcessorCollection
 	
 	Return S_OK
 	

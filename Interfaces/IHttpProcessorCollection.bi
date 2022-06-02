@@ -47,6 +47,18 @@ Type IHttpProcessorCollectionVirtualTable
 		ByVal ppMethods As HeapBSTR Ptr _
 	)As HRESULT
 	
+	Add As Function( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
+	)As HRESULT
+	
+	' Для коллекций:
+	' Count()
+	' Item()
+	' _NewEnum()
+	' Необязательно: Add, Remove, Clear, Move и методы поиска
+	
 End Type
 
 Type IHttpProcessorCollection_
@@ -60,5 +72,6 @@ End Type
 #define IHttpProcessorCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
 #define IHttpProcessorCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
 #define IHttpProcessorCollection_GetAllMethods(this, ppMethods) (this)->lpVtbl->GetAllMethods(this, ppMethods)
+#define IHttpProcessorCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
 
 #endif

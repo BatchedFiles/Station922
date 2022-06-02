@@ -1,7 +1,7 @@
 #ifndef HTTPPROCESSORCOLLECTION_BI
 #define HTTPPROCESSORCOLLECTION_BI
 
-#include once "IMutableHttpProcessorCollection.bi"
+#include once "IHttpProcessorCollection.bi"
 
 Extern CLSID_HTTPPROCESSORCOLLECTION Alias "CLSID_HTTPPROCESSORCOLLECTION" As Const CLSID
 

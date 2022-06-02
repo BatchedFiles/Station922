@@ -244,11 +244,6 @@ DEFINE_IID(IID_IMemoryBuffer, _
 	&hbdf996f, &h284c, &h4cd5, &hb0, &h10, &hc8, &h8d, &h55, &h33, &hfa, &h50 _
 )
 
-' {3B2C4524-DB79-4D15-ACF5-576A7FE343B7}
-DEFINE_IID(IID_IMutableHttpProcessorCollection, _
-	&h3b2c4524, &hdb79, &h4d15, &hac, &hf5, &h57, &h6a, &h7f, &he3, &h43, &hb7 _
-)
-
 ' {86629567-EA4F-47C5-926A-17860A4887D9}
 DEFINE_IID(IID_IMutableWebSiteCollection, _
 	&h86629567, &hea4f, &h47c5, &h92, &h6a, &h17, &h86, &ha, &h48, &h87, &hd9 _
