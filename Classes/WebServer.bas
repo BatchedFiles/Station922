@@ -47,7 +47,7 @@ Type _WebServer
 	
 End Type
 
-Function FinishExecuteTask( _
+Function FinishExecuteTaskSink( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
@@ -165,15 +165,18 @@ Function ThreadPoolCallBack( _
 	End Scope
 	#endif
 	
-	Dim pAsyncOverlapped As ASYNCRESULTOVERLAPPED Ptr = CPtr(ASYNCRESULTOVERLAPPED Ptr, pOverlap)
-	Dim pIResult As IAsyncResult Ptr = pAsyncOverlapped->pIAsync
-	
+	Dim hrFinishExecute As HRESULT = Any
 	Dim pNextTask As IAsyncIoTask Ptr = Any
-	Dim hrFinishExecute As HRESULT = FinishExecuteTask( _
-		BytesTransferred, _
-		pIResult, _
-		@pNextTask _
-	)
+	Scope
+		Dim pAsyncOverlapped As ASYNCRESULTOVERLAPPED Ptr = CPtr(ASYNCRESULTOVERLAPPED Ptr, pOverlap)
+		Dim pIResult As IAsyncResult Ptr = pAsyncOverlapped->pIAsync
+		
+		hrFinishExecute = FinishExecuteTaskSink( _
+			BytesTransferred, _
+			pIResult, _
+			@pNextTask _
+		)
+	End Scope
 	
 	If SUCCEEDED(hrFinishExecute) Then
 		
