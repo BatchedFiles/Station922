@@ -58,6 +58,8 @@ Const DefaultHeaderWwwAuthenticate = WStr("Basic realm=""Need username and passw
 Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 
+Const DefaultVirtualPath = WStr("/")
+
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16

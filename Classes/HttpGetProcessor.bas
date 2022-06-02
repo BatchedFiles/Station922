@@ -6,13 +6,16 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "SafeHandle.bi"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
+
+Const GzipString = WStr("gzip")
+Const DeflateString = WStr("deflate")
+Const BytesStringWithSpace = WStr("bytes ")
 
 Type _HttpGetProcessor
 	#if __FB_DEBUG__
@@ -33,7 +36,7 @@ Sub MakeContentRangeHeader( _
 	' Example:
 	' Content-Range: bytes 88080384-160993791/160993792
 	
-	IArrayStringWriter_WriteLengthString(pIWriter, @BytesStringWithSpace, BytesStringWithSpaceLength)
+	IArrayStringWriter_WriteLengthString(pIWriter, @BytesStringWithSpace, Len(BytesStringWithSpace))
 	
 	IArrayStringWriter_WriteUInt64(pIWriter, FirstBytePosition)
 	IArrayStringWriter_WriteChar(pIWriter, Characters.HyphenMinus)

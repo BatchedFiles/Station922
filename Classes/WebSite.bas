@@ -5,7 +5,6 @@
 #include once "CreateInstance.bi"
 #include once "FileBuffer.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
 
@@ -13,6 +12,16 @@ Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
 Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
+
+Const WebSocketGuidString = WStr("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+Const UpgradeString = WStr("Upgrade")
+Const WebSocketString = WStr("websocket")
+Const WebSocketVersionString = WStr("13")
+Const HeadersExtensionString = WStr(".headers")
+Const FileGoneExtension = WStr(".410")
+Const QuoteString = WStr("""")
+Const GzipString = WStr("gzip")
+Const DeflateString = WStr("deflate")
 
 Type _WebSite
 	#if __FB_DEBUG__

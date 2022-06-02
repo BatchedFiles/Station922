@@ -5,10 +5,15 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Logger.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
+
+Const GzipString = WStr("gzip")
+Const DeflateString = WStr("deflate")
+Const BytesString = WStr("bytes")
+Const CloseString = WStr("Close")
+Const KeepAliveString = WStr("Keep-Alive")
 
 Type _ClientRequest
 	#if __FB_DEBUG__
@@ -28,51 +33,6 @@ Type _ClientRequest
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
 End Type
-
-Function TranslateHresultFromTextReader( _
-		ByVal hrTextReader As HRESULT _
-	)As HRESULT
-	
-	Select Case hrTextReader
-		
-		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW
-			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			
-		Case HTTPREADER_E_SOCKETERROR
-			Return CLIENTREQUEST_E_SOCKETERROR
-			
-		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-			Return CLIENTREQUEST_E_EMPTYREQUEST
-			
-		Case HTTPREADER_E_INSUFFICIENT_BUFFER
-			Return CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
-			
-	End Select
-	
-	Return hrTextReader
-	
-End Function
-
-Function TranslateHresultFromClientUri( _
-		ByVal hrClientUri As HRESULT _
-	)As HRESULT
-	
-	Select Case hrClientUri
-		
-		Case CLIENTURI_E_URITOOLARGE
-			Return CLIENTREQUEST_E_URITOOLARGE
-			
-		Case CLIENTURI_E_CONTAINSBADCHAR
-			Return CLIENTREQUEST_E_BADPATH
-			
-		Case CLIENTURI_E_PATHNOTFOUND
-			Return CLIENTREQUEST_E_PATHNOTFOUND
-			
-	End Select
-	
-	Return hrClientUri
-	
-End Function
 
 Function ClientRequestParseRequestedLine( _
 		ByVal this As ClientRequest Ptr _
@@ -159,8 +119,7 @@ Function ClientRequestParseRequestedLine( _
 		HeapSysFreeString(bstrUri)
 		
 		If FAILED(hrUriFromString) Then
-			Dim hrUri As HRESULT = TranslateHresultFromClientUri(hrUriFromString)
-			Return hrUri
+			Return hrUriFromString
 		End If
 		
 	End Scope
@@ -247,8 +206,7 @@ Function ClientRequestAddRequestHeaders( _
 			@pLine _
 		)
 		If FAILED(hrReadLine) Then
-			Dim hrTextReader As HRESULT = TranslateHresultFromTextReader(hrReadLine)
-			Return hrTextReader
+			Return hrReadLine
 		End If
 		
 		Dim LineLength As Integer = SysStringLen(pLine)
@@ -712,8 +670,7 @@ Function ClientRequestEndReadRequest( _
 		@this->RequestedLine _
 	)
 	If FAILED(hrEndReadLine) Then
-		Dim hrTextReader As HRESULT = TranslateHresultFromTextReader(hrEndReadLine)
-		Return hrTextReader
+		Return hrEndReadLine
 	End If
 	
 	Select Case hrEndReadLine

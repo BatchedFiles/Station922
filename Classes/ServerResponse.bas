@@ -4,13 +4,15 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Logger.bi"
 #include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable
 
+Const BytesString = WStr("bytes")
+Const CloseString = WStr("Close")
+Const KeepAliveString = WStr("Keep-Alive")
 Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
 
 Type _ServerResponse

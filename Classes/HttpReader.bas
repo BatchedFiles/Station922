@@ -1,5 +1,6 @@
 #include once "HttpReader.bi"
 #include once "ContainerOf.bi"
+#include once "Http.bi"
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
 

@@ -5,7 +5,6 @@
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpConst.bi"
 #include once "Mime.bi"
 #include once "StringConstants.bi"
 
@@ -14,6 +13,7 @@ Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" A
 Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 Const TimeFormatString = WStr("HH:mm:ss GMT")
 Const DefaultCacheControl = WStr("max-age=2678400")
+Const BasicAuthorization = WStr("Basic")
 
 Declare Function GetBase64Sha1( _
 	ByVal pDestination As WString Ptr, _

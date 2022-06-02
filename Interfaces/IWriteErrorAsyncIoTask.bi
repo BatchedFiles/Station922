@@ -13,42 +13,6 @@
 ' S_FALSE
 ' Any E_FAIL
 
-Enum ResponseErrorCode
-	MovedPermanently
-	
-	BadRequest
-	PathNotValid
-	HostNotFound
-	SiteNotFound
-	NeedAuthenticate
-	BadAuthenticateParam
-	NeedBasicAuthenticate
-	EmptyPassword
-	BadUserNamePassword
-	Forbidden
-	FileNotFound
-	MethodNotAllowed
-	FileGone
-	LengthRequired
-	RequestEntityTooLarge
-	RequestUrlTooLarge
-	RequestRangeNotSatisfiable
-	RequestHeaderFieldsTooLarge
-	
-	InternalServerError
-	FileNotAvailable
-	CannotCreateChildProcess
-	CannotCreatePipe
-	NotImplemented
-	ContentTypeEmpty
-	ContentEncodingNotEmpty
-	BadGateway
-	NotEnoughMemory
-	CannotCreateThread
-	GatewayTimeout
-	VersionNotSupported
-End Enum
-
 Type IWriteErrorAsyncIoTask As IWriteErrorAsyncIoTask_
 
 Type LPIWRITEERRORASYNCIOTASK As IWriteErrorAsyncIoTask Ptr
