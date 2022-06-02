@@ -107,13 +107,16 @@ Function ProcessErrorRequestResponse( _
 	
 	Select Case hrReadError
 		
-		Case CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER, CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
 			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
 			
-		Case CLIENTREQUEST_E_SOCKETERROR
+		Case CLIENTURI_E_CONTAINSBADCHAR, CLIENTURI_E_PATHNOTFOUND
 			HttpError = ResponseErrorCode.BadRequest
 			
-		Case CLIENTREQUEST_E_EMPTYREQUEST
+		Case HTTPREADER_E_SOCKETERROR, CLIENTREQUEST_E_SOCKETERROR
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION, CLIENTREQUEST_E_EMPTYREQUEST
 			HttpError = ResponseErrorCode.BadRequest
 			
 		Case CLIENTREQUEST_E_BADHOST
@@ -122,26 +125,35 @@ Function ProcessErrorRequestResponse( _
 		Case CLIENTREQUEST_E_BADREQUEST
 			HttpError = ResponseErrorCode.BadRequest
 			
-		Case CLIENTREQUEST_E_BADPATH
+		Case CLIENTREQUEST_E_BADPATH, CLIENTURI_E_PATHNOTFOUND
 			HttpError = ResponseErrorCode.PathNotValid
 			
-		' Case CLIENTREQUEST_E_PATHNOTFOUND
-			' HttpError = ResponseErrorCode.PathNotValid
-			
-		Case CLIENTREQUEST_E_URITOOLARGE
+		Case CLIENTURI_E_URITOOLARGE, CLIENTREQUEST_E_URITOOLARGE
 			HttpError = ResponseErrorCode.RequestUrlTooLarge
 			
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			HttpError = ResponseErrorCode.VersionNotSupported
 			
-		Case SERVERRESPONSE_E_SITENOTFOUND
+		Case HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
+			
+		Case WEBSITE_E_SITENOTFOUND
 			HttpError = ResponseErrorCode.SiteNotFound
 			
-		Case SERVERRESPONSE_E_SITEMOVED
+		Case WEBSITE_E_REDIRECTED
 			HttpError = ResponseErrorCode.MovedPermanently
 			
-		Case SERVERRESPONSE_E_NOTIMPLEMENTED
+		Case WEBSITE_E_NOTIMPLEMENTED
 			HttpError = ResponseErrorCode.NotImplemented
+			
+		Case WEBSITE_E_FILENOTFOUND
+			HttpError = ResponseErrorCode.FileNotFound
+			
+		Case WEBSITE_E_FILEGONE
+			HttpError = ResponseErrorCode.FileGone
+			
+		Case WEBSITE_E_FORBIDDEN
+			HttpError = ResponseErrorCode.Forbidden
 			
 		Case E_OUTOFMEMORY
 			HttpError = ResponseErrorCode.NotEnoughMemory

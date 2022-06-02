@@ -608,7 +608,7 @@ Function WriteResponseAsyncTaskPrepare( _
 		@this->pIWebSite _
 	)
 	If FAILED(hrFindSite) Then
-		hrPrepareResponse = SERVERRESPONSE_E_SITENOTFOUND
+		hrPrepareResponse = WEBSITE_E_SITENOTFOUND
 	Else
 		Dim IsSiteMoved As Boolean = Any
 		IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
@@ -633,7 +633,7 @@ Function WriteResponseAsyncTaskPrepare( _
 		'/
 		
 		If IsSiteMoved Then
-			hrPrepareResponse = SERVERRESPONSE_E_SITEMOVED
+			hrPrepareResponse = WEBSITE_E_REDIRECTED
 		Else
 			
 			Dim HttpMethod As HeapBSTR = Any
@@ -651,7 +651,7 @@ Function WriteResponseAsyncTaskPrepare( _
 			HeapSysFreeString(HttpMethod)
 			
 			If FAILED(hrProcessorItem) Then
-				hrPrepareResponse = SERVERRESPONSE_E_NOTIMPLEMENTED
+				hrPrepareResponse = WEBSITE_E_NOTIMPLEMENTED
 			Else
 				Dim pc As ProcessorContext = Any
 				pc.pIMemoryAllocator = this->pIMemoryAllocator
