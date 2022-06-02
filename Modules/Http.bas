@@ -4,9 +4,6 @@
 Const HttpVersion10String = WStr("HTTP/1.0")
 Const HttpVersion11String = WStr("HTTP/1.1")
 
-Const HttpVersion10StringLength As Integer = 8
-Const HttpVersion11StringLength As Integer = 8
-
 Const HttpMethodCopy =     WStr("COPY")
 Const HttpMethodConnect =  WStr("CONNECT")
 Const HttpMethodDelete =   WStr("DELETE")
@@ -19,19 +16,6 @@ Const HttpMethodPost =     WStr("POST")
 Const HttpMethodPropfind = WStr("PROPFIND")
 Const HttpMethodPut =      WStr("PUT")
 Const HttpMethodTrace =    WStr("TRACE")
-
-Const HttpMethodCopyLength As Integer =     4
-Const HttpMethodConnectLength As Integer =  7
-Const HttpMethodDeleteLength As Integer =   6
-Const HttpMethodGetLength As Integer =      3
-Const HttpMethodHeadLength As Integer =     4
-Const HttpMethodMoveLength As Integer =     4
-Const HttpMethodOptionsLength As Integer =  7
-Const HttpMethodPatchLength As Integer =    5
-Const HttpMethodPostLength As Integer =     4
-Const HttpMethodPropfindLength As Integer = 8
-Const HttpMethodPutLength As Integer =      3
-Const HttpMethodTraceLength As Integer =    5
 
 Const HeaderAcceptString =             WStr("Accept")
 Const HeaderAcceptCharsetString =      WStr("Accept-Charset")
@@ -385,60 +369,6 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"),        23, HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
-Function HttpMethodToString( _
-		ByVal HttpMethod As HttpMethods, _
-		ByVal pBufferLength As Integer Ptr _
-	)As WString Ptr
-	
-	Dim intBufferLength As Integer = 0
-	
-	Select Case HttpMethod
-		
-		Case HttpMethods.HttpGet
-			intBufferLength = HttpMethodGetLength
-			HttpMethodToString = @HttpMethodGet
-			
-		Case HttpMethods.HttpHead
-			intBufferLength = HttpMethodHeadLength
-			HttpMethodToString = @HttpMethodHead
-			
-		Case HttpMethods.HttpPost
-			intBufferLength = HttpMethodPostLength
-			HttpMethodToString = @HttpMethodPost
-			
-		Case HttpMethods.HttpPut
-			intBufferLength = HttpMethodPutLength
-			HttpMethodToString = @HttpMethodPut
-			
-		Case HttpMethods.HttpDelete
-			intBufferLength = HttpMethodDeleteLength
-			HttpMethodToString = @HttpMethodDelete
-			
-		Case HttpMethods.HttpOptions
-			intBufferLength = HttpMethodOptionsLength
-			HttpMethodToString = @HttpMethodOptions
-			
-		Case HttpMethods.HttpTrace
-			intBufferLength = HttpMethodTraceLength
-			HttpMethodToString = @HttpMethodTrace
-			
-		Case HttpMethods.HttpConnect
-			intBufferLength = HttpMethodConnectLength
-			HttpMethodToString = @HttpMethodConnect
-			
-		Case Else
-			intBufferLength = 0
-			HttpMethodToString = 0
-			
-	End Select
-	
-	If pBufferLength <> 0 Then
-		*pBufferLength = intBufferLength
-	End If
-	
-End Function
-
-
 Function GetStatusDescription( _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal pDescriptionLength As Integer Ptr _
@@ -498,15 +428,15 @@ Function HttpVersionToString( _
 	Select Case v
 		
 		Case HttpVersions.Http11
-			intBufferLength = HttpVersion11StringLength
+			intBufferLength = Len(HttpVersion11String)
 			HttpVersionToString = @HttpVersion11String
 			
 		Case HttpVersions.Http10
-			intBufferLength = HttpVersion10StringLength
+			intBufferLength = Len(HttpVersion10String)
 			HttpVersionToString = @HttpVersion10String
 			
 		Case Else
-			intBufferLength = HttpVersion11StringLength
+			intBufferLength = Len(HttpVersion11String)
 			HttpVersionToString = @HttpVersion11String
 			
 	End Select
