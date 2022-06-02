@@ -6,19 +6,19 @@
 #include once "IHttpReader.bi"
 
 ' IClientRequest.ReadRequest:
-' S_OK — readed successful
-' S_FALSE — client closed connection (received 0 bytes)
-' Any Error — readed error
+' S_OK - readed successful
+' S_FALSE - client closed connection (received 0 bytes)
+' Any Error - readed error
 
 ' IClientRequest.BeginReadRequest:
-' CLIENTREQUEST_S_IO_PENDING — read request add in queue
-' Any E_FAIL — error
+' CLIENTREQUEST_S_IO_PENDING - read request add in queue
+' Any E_FAIL - error
 
 ' IClientRequest.EndReadRequest:
-' S_OK — readed successful
-' S_FALSE — client closed connection (received 0 bytes)
-' CLIENTREQUEST_S_IO_PENDING — read request add in queue
-' Any Error — readed error
+' S_OK - readed successful
+' S_FALSE - client closed connection (received 0 bytes)
+' CLIENTREQUEST_S_IO_PENDING - read request add in queue
+' Any Error - readed error
 
 ' IClientRequest.Parse:
 ' S_OK, E_FAIL, CLIENTREQUEST_E_...
