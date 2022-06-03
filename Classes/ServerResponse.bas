@@ -460,7 +460,6 @@ Function ServerResponseAddKnownResponseHeader( _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
 	
-	
 	LET_HEAPSYSSTRING(this->ResponseHeaders(HeaderIndex), Value)
 	
 	Return S_OK
@@ -617,6 +616,14 @@ Function ServerResponsePrepare( _
 		Len(BytesString) _
 	)
 	
+	#if __FB_DEBUG__
+		ServerResponseAddKnownResponseHeaderWstr( _
+			this, _
+			HttpResponseHeaders.HeaderServer, _
+			@WStr("Station922/0.9.0") _
+		)
+	#endif
+	
 	Select Case this->StatusCode
 		
 		Case HttpStatusCodes.CodeContinue, _
@@ -661,6 +668,7 @@ Function ServerResponsePrepare( _
 	Scope
 		Dim wContentType As WString * (MaxContentTypeLength + 1) = Any
 		GetContentTypeOfMimeType(@wContentType, @this->Mime)
+		
 		ServerResponseAddKnownResponseHeaderWstr( _
 			this, _
 			HttpResponseHeaders.HeaderContentType, _
@@ -671,7 +679,11 @@ Function ServerResponsePrepare( _
 	Dim HeadersBuffer As WString * (MaxResponseBufferLength + 1) = Any
 	
 	Scope
-		IArrayStringWriter_SetBuffer(pIWriter, @HeadersBuffer, MaxResponseBufferLength)
+		IArrayStringWriter_SetBuffer( _
+			pIWriter, _
+			@HeadersBuffer, _
+			MaxResponseBufferLength _
+		)
 		
 		Scope
 			Dim HttpVersionLength As Integer = Any
@@ -718,11 +730,25 @@ Function ServerResponsePrepare( _
 			If this->ResponseHeaders(HeaderIndex) <> NULL Then
 				
 				Dim BufferLength As Integer = Any
-				Dim wBuffer As WString Ptr = KnownResponseHeaderToString(HeaderIndex, @BufferLength)
+				Dim wBuffer As WString Ptr = KnownResponseHeaderToString( _
+					HeaderIndex, _
+					@BufferLength _
+				)
 				
-				IArrayStringWriter_WriteLengthString(pIWriter, wBuffer, BufferLength)
-				IArrayStringWriter_WriteLengthString(pIWriter, @ColonWithSpaceString, 2)
-				IArrayStringWriter_WriteStringLine(pIWriter, this->ResponseHeaders(HeaderIndex))
+				IArrayStringWriter_WriteLengthString( _
+					pIWriter, _
+					wBuffer, _
+					BufferLength _
+				)
+				IArrayStringWriter_WriteLengthString( _
+					pIWriter, _
+					@ColonWithSpaceString, _
+					Len(ColonWithSpaceString) _
+				)
+				IArrayStringWriter_WriteStringLine( _
+					pIWriter, _
+					this->ResponseHeaders(HeaderIndex) _
+				)
 			End If
 			
 		Next
