@@ -68,4 +68,10 @@ Declare Function AsyncResultGetWsaOverlapped( _
 	ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 )As HRESULT
 
+Declare Function AsyncResultAllocBuffers( _
+	ByVal this As AsyncResult Ptr, _
+	ByVal Count As Integer, _
+	ByVal ppBuffers As WSABUF Ptr Ptr _
+)As HRESULT
+
 #endif

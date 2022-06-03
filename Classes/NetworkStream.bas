@@ -214,6 +214,22 @@ Function NetworkStreamBeginRead( _
 		Return hrCreateAsyncResult
 	End If
 	
+	Const ReceiveBuffersCount As DWORD = 1
+	Dim pRecvBuffers As WSABUF Ptr = Any
+	Dim hrAllocBuffer As HRESULT = IAsyncResult_AllocBuffers( _
+		pINewAsyncResult, _
+		CInt(ReceiveBuffersCount), _
+		@pRecvBuffers _
+	)
+	If FAILED(hrAllocBuffer) Then
+		IAsyncResult_Release(pINewAsyncResult)
+		*ppIAsyncResult = NULL
+		Return hrAllocBuffer
+	End If
+	
+	pRecvBuffers[0].len = Cast(ULONG, BufferLength)
+	pRecvBuffers[0].buf = CPtr(ZString Ptr, Buffer)
+	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
 	
@@ -247,17 +263,12 @@ Function NetworkStreamBeginRead( _
 		lpCompletionRoutine = NULL
 	End If
 	
-	Const ReceiveBuffersCount As DWORD = 1
-	Dim ReceiveBuffer As WSABUF = Any
-	ReceiveBuffer.len = Cast(ULONG, BufferLength)
-	ReceiveBuffer.buf = CPtr(ZString Ptr, Buffer)
-	
 	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 	
 	Dim resWSARecv As Long = WSARecv( _
 		this->ClientSocket, _
-		@ReceiveBuffer, _
+		pRecvBuffers, _
 		ReceiveBuffersCount, _
 		lpNumberOfBytesReceived, _
 		@Flags, _
@@ -326,14 +337,16 @@ Function NetworkStreamBeginWriteGather( _
 		Return hrCreateAsyncResult
 	End If
 	
-	Dim pSendBuffers As WSABUF Ptr = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
-		SizeOf(WSABUF) * BuffersCount _
+	Dim pSendBuffers As WSABUF Ptr = Any
+	Dim hrAllocBuffer As HRESULT = IAsyncResult_AllocBuffers( _
+		pINewAsyncResult, _
+		CInt(BuffersCount), _
+		@pSendBuffers _
 	)
-	If pSendBuffers = NULL Then
+	If FAILED(hrAllocBuffer) Then
 		IAsyncResult_Release(pINewAsyncResult)
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return hrAllocBuffer
 	End If
 	
 	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
@@ -386,11 +399,6 @@ Function NetworkStreamBeginWriteGather( _
 		Flags, _
 		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
 		lpCompletionRoutine _
-	)
-	
-	IMalloc_Free( _
-		this->pIMemoryAllocator, _
-		pSendBuffers _
 	)
 	
 	If WSASendResult <> 0 Then

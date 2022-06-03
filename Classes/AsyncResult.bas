@@ -14,6 +14,7 @@ Type _AsyncResult
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
 	callback As AsyncCallback
+	pBuffers As WSABUF Ptr
 	BytesTransferred As DWORD
 	Completed As Boolean
 End Type
@@ -32,6 +33,7 @@ Sub InitializeAsyncResult( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pState = NULL
 	this->callback = NULL
+	this->pBuffers = NULL
 	ZeroMemory(@this->OverLap, SizeOf(ASYNCRESULTOVERLAPPED))
 	this->BytesTransferred = 0
 	this->Completed = False
@@ -41,6 +43,10 @@ End Sub
 Sub UnInitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
+	
+	If this->pBuffers <> NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, this->pBuffers)
+	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -268,6 +274,27 @@ Function AsyncResultGetWsaOverlapped( _
 	
 End Function
 
+Function AsyncResultAllocBuffers( _
+		ByVal this As AsyncResult Ptr, _
+		ByVal Count As Integer, _
+		ByVal ppBuffers As WSABUF Ptr Ptr _
+	)As HRESULT
+	
+	this->pBuffers = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		SizeOf(WSABUF) * Count _
+	)
+	If this->pBuffers = NULL Then
+		*ppBuffers = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*ppBuffers = this->pBuffers
+	
+	Return S_OK
+	
+End Function
+
 
 Function IAsyncResultQueryInterface( _
 		ByVal this As IAsyncResult Ptr, _
@@ -340,6 +367,14 @@ Function IAsyncResultGetWsaOverlapped( _
 	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppRecvOverlapped)
 End Function
 
+Function IAsyncResultAllocBuffers( _
+		ByVal this As IAsyncResult Ptr, _
+		ByVal Count As Integer, _
+		ByVal ppBuffers As WSABUF Ptr Ptr _
+	)As HRESULT
+	Return AsyncResultAllocBuffers(ContainerOf(this, AsyncResult, lpVtbl), Count, ppBuffers)
+End Function
+
 Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultQueryInterface, _
 	@IAsyncResultAddRef, _
@@ -350,5 +385,6 @@ Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultSetAsyncStateWeakPtr, _
 	@IAsyncResultGetAsyncCallback, _
 	@IAsyncResultSetAsyncCallback, _
-	@IAsyncResultGetWsaOverlapped _
+	@IAsyncResultGetWsaOverlapped, _
+	@IAsyncResultAllocBuffers _
 )

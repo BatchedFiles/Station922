@@ -3,6 +3,7 @@
 
 #include once "windows.bi"
 #include once "win\ole2.bi"
+#include once "win\winsock2.bi"
 
 Type IAsyncResult As IAsyncResult_
 
@@ -70,6 +71,12 @@ Type IAsyncResultVirtualTable
 		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
 	)As HRESULT
 	
+	AllocBuffers As Function( _
+		ByVal this As IAsyncResult Ptr, _
+		ByVal Count As Integer, _
+		ByVal ppBuffers As WSABUF Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IAsyncResult_
@@ -86,5 +93,6 @@ End Type
 #define IAsyncResult_GetAsyncCallback(this, pcallback) (this)->lpVtbl->GetAsyncCallback(this, pcallback)
 #define IAsyncResult_SetAsyncCallback(this, callback) (this)->lpVtbl->SetAsyncCallback(this, callback)
 #define IAsyncResult_GetWsaOverlapped(this, ppRecvOverlapped) (this)->lpVtbl->GetWsaOverlapped(this, ppRecvOverlapped)
+#define IAsyncResult_AllocBuffers(this, Count, ppBuffers) (this)->lpVtbl->AllocBuffers(this, Count, ppBuffers)
 
 #endif

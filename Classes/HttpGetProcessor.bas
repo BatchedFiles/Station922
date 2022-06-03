@@ -242,6 +242,19 @@ Function HttpGetProcessorPrepare( _
 	End If
 	
 	Scope
+		Dim Language As HeapBSTR = Any
+		IBuffer_GetLanguage(pIBuffer, @Language)
+		
+		IServerResponse_AddKnownResponseHeader( _
+			pContext->pIResponse, _
+			HttpResponseHeaders.HeaderContentLanguage, _
+			Language _
+		)
+		
+		HeapSysFreeString(Language)
+	End Scope
+	
+	Scope
 		Dim Mime As MimeType = Any
 		IBuffer_GetContentType(pIBuffer, @Mime)
 		
@@ -286,19 +299,6 @@ Function HttpGetProcessorPrepare( _
 				)
 				
 		End Select
-	End Scope
-	
-	Scope
-		Dim Language As HeapBSTR = Any
-		IBuffer_GetLanguage(pIBuffer, @Language)
-		
-		IServerResponse_AddKnownResponseHeader( _
-			pContext->pIResponse, _
-			HttpResponseHeaders.HeaderContentLanguage, _
-			Language _
-		)
-		
-		HeapSysFreeString(Language)
 	End Scope
 	
 	Scope
