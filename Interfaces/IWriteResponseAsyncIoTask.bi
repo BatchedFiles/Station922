@@ -52,14 +52,24 @@ Type IWriteResponseAsyncIoTaskVirtualTable
 		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
 	
-	GetWebSiteCollection As Function( _
+	GetWebSiteCollectionWeakPtr As Function( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	SetWebSiteCollection As Function( _
+	SetWebSiteCollectionWeakPtr As Function( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
+	)As HRESULT
+	
+	GetHttpProcessorCollectionWeakPtr As Function( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpProcessorCollectionWeakPtr As Function( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
 	GetBaseStream As Function( _
@@ -80,16 +90,6 @@ Type IWriteResponseAsyncIoTaskVirtualTable
 	SetHttpReader As Function( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
-	)As HRESULT
-	
-	GetHttpProcessorCollection As Function( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpProcessorCollection As Function( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
 	GetClientRequest As Function( _
@@ -118,14 +118,14 @@ End Type
 #define IWriteResponseAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IWriteResponseAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IWriteResponseAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
-#define IWriteResponseAsyncIoTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
-#define IWriteResponseAsyncIoTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
+#define IWriteResponseAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
+#define IWriteResponseAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
+#define IWriteResponseAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)
+#define IWriteResponseAsyncIoTask_SetHttpProcessorCollectionWeakPtr(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollectionWeakPtr(this, pIProcessors)
 #define IWriteResponseAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IWriteResponseAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteResponseAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IWriteResponseAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
-#define IWriteResponseAsyncIoTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
-#define IWriteResponseAsyncIoTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 #define IWriteResponseAsyncIoTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteResponseAsyncIoTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IWriteResponseAsyncIoTask_Prepare(this) (this)->lpVtbl->Prepare(this)

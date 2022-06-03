@@ -58,14 +58,24 @@ Type IHttpAsyncIoTaskVirtualTable
 		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
 	
-	GetWebSiteCollection As Function( _
+	GetWebSiteCollectionWeakPtr As Function( _
 		ByVal this As IHttpAsyncIoTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	SetWebSiteCollection As Function( _
+	SetWebSiteCollectionWeakPtr As Function( _
 		ByVal this As IHttpAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
+	)As HRESULT
+	
+	GetHttpProcessorCollectionWeakPtr As Function( _
+		ByVal this As IHttpAsyncIoTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	SetHttpProcessorCollectionWeakPtr As Function( _
+		ByVal this As IHttpAsyncIoTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
 	GetBaseStream As Function( _
@@ -88,16 +98,6 @@ Type IHttpAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	GetHttpProcessorCollection As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpProcessorCollection As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IHttpAsyncIoTask_
@@ -110,13 +110,13 @@ End Type
 #define IHttpAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IHttpAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IHttpAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
-#define IHttpAsyncIoTask_GetWebSiteCollection(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSites)
-#define IHttpAsyncIoTask_SetWebSiteCollection(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollection(this, pIWebSites)
+#define IHttpAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
+#define IHttpAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
+#define IHttpAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)
+#define IHttpAsyncIoTask_SetHttpProcessorCollectionWeakPtr(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollectionWeakPtr(this, pIProcessors)
 #define IHttpAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IHttpAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IHttpAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IHttpAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
-#define IHttpAsyncIoTask_GetHttpProcessorCollection(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIProcessors)
-#define IHttpAsyncIoTask_SetHttpProcessorCollection(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollection(this, pIProcessors)
 
 #endif

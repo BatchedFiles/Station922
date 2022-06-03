@@ -48,14 +48,24 @@ Declare Function WriteErrorAsyncTaskGetFileHandle( _
 	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
-Declare Function WriteErrorAsyncTaskGetWebSiteCollection( _
+Declare Function WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 )As HRESULT
 
-Declare Function WriteErrorAsyncTaskSetWebSiteCollection( _
+Declare Function WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
+)As HRESULT
+
+Declare Function WriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr( _
+	ByVal this As WriteErrorAsyncTask Ptr, _
+	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
+Declare Function WriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr( _
+	ByVal this As WriteErrorAsyncTask Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskGetBaseStream( _
@@ -96,16 +106,6 @@ Declare Function WriteErrorAsyncTaskSetErrorCode( _
 
 Declare Function WriteErrorAsyncTaskPrepare( _
 	ByVal this As WriteErrorAsyncTask Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskGetHttpProcessorCollection( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskSetHttpProcessorCollection( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 Declare Function ProcessErrorRequestResponse( _

@@ -48,14 +48,24 @@ Declare Function ReadRequestAsyncTaskGetFileHandle( _
 	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
-Declare Function ReadRequestAsyncTaskGetWebSiteCollection( _
+Declare Function ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 )As HRESULT
 
-Declare Function ReadRequestAsyncTaskSetWebSiteCollection( _
+Declare Function ReadRequestAsyncTaskSetWebSiteCollectionWeakPtr( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
+Declare Function ReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskGetBaseStream( _
@@ -76,16 +86,6 @@ Declare Function ReadRequestAsyncTaskGetHttpReader( _
 Declare Function ReadRequestAsyncTaskSetHttpReader( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	byVal pReader As IHttpReader Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskGetHttpProcessorCollection( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskSetHttpProcessorCollection( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 #endif

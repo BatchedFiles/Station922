@@ -289,10 +289,10 @@ Function CreateReadTask( _
 				)
 				
 				If SUCCEEDED(hrCreateTask) Then
-					IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+					IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
+					IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
 					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-					IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 					
 					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
 						this->pIPool, _

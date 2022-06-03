@@ -83,14 +83,6 @@ Sub UnInitializeWriteResponseAsyncTask( _
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If this->pIProcessors <> NULL Then
-		IHttpProcessorCollection_Release(this->pIProcessors)
-	End If
-	
-	If this->pIWebSites <> NULL Then
-		IWebSiteCollection_Release(this->pIWebSites)
-	End If
-	
 	If this->pIBuffer <> NULL Then
 		IBuffer_Release(this->pIBuffer)
 	End If
@@ -366,10 +358,10 @@ Function WriteResponseAsyncTaskEndExecute( _
 			
 			IHttpReader_Clear(this->pIHttpReader)
 			
-			IReadRequestAsyncIoTask_SetWebSiteCollection(pTask, this->pIWebSites)
+			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
+			IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
 			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
-			IReadRequestAsyncIoTask_SetHttpProcessorCollection(pTask, this->pIProcessors)
 			
 			' Сейчас мы не уменьшаем счётчик ссылок на задачу
 			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
@@ -410,14 +402,10 @@ Function WriteResponseAsyncTaskGetFileHandle( _
 	
 End Function
 
-Function WriteResponseAsyncTaskGetWebSiteCollection( _
+Function WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
-	
-	If this->pIWebSites <> NULL Then
-		IWebSiteCollection_AddRef(this->pIWebSites)
-	End If
 	
 	*ppIWebSites = this->pIWebSites
 	
@@ -425,20 +413,34 @@ Function WriteResponseAsyncTaskGetWebSiteCollection( _
 	
 End Function
 
-Function WriteResponseAsyncTaskSetWebSiteCollection( _
+Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
-	If pIWebSites <> NULL Then
-		IWebSiteCollection_AddRef(pIWebSites)
-	End If
-	
-	If this->pIWebSites <> NULL Then
-		IWebSiteCollection_Release(this->pIWebSites)
-	End If
-	
 	this->pIWebSites = pIWebSites
+	
+	Return S_OK
+	
+End Function
+
+Function WriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	*ppIProcessors = this->pIProcessors
+	
+	Return S_OK
+	
+End Function
+
+Function WriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	
+	this->pIProcessors = pIProcessors
 	
 	Return S_OK
 	
@@ -509,40 +511,6 @@ Function WriteResponseAsyncTaskSetHttpReader( _
 	End If
 	
 	this->pIHttpReader = pReader
-	
-	Return S_OK
-	
-End Function
-
-Function WriteResponseAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	If this->pIProcessors <> NULL Then
-		IHttpReader_AddRef(this->pIProcessors)
-	End If
-	
-	*ppIProcessors = this->pIProcessors
-	
-	Return S_OK
-	
-End Function
-
-Function WriteResponseAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
-	If this->pIProcessors <> NULL Then
-		IBaseStream_Release(this->pIProcessors)
-	End If
-	
-	If pIProcessors <> NULL Then
-		IBaseStream_AddRef(pIProcessors)
-	End If
-	
-	this->pIProcessors = pIProcessors
 	
 	Return S_OK
 	
@@ -734,18 +702,32 @@ Function IWriteResponseAsyncTaskGetFileHandle( _
 	Return WriteResponseAsyncTaskGetFileHandle(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pFileHandle)
 End Function
 
-Function IWriteResponseAsyncTaskGetWebSiteCollection( _
+Function IWriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskGetWebSiteCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIWebSites)
+	Return WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIWebSites)
 End Function
 
-Function IWriteResponseAsyncTaskSetWebSiteCollection( _
+Function IWriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskSetWebSiteCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIWebSites)
+	Return WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIWebSites)
+End Function
+
+Function IWriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	Return WriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIProcessors)
+End Function
+
+Function IWriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr _
+	)As HRESULT
+	Return WriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIProcessors)
 End Function
 
 Function IWriteResponseAsyncTaskGetBaseStream( _
@@ -790,20 +772,6 @@ Function IWriteResponseAsyncTaskSetClientRequest( _
 	Return WriteResponseAsyncTaskSetClientRequest(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIRequest)
 End Function
 
-Function IWriteResponseAsyncTaskGetHttpProcessorCollection( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	Return WriteResponseAsyncTaskGetHttpProcessorCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIProcessors)
-End Function
-
-Function IWriteResponseAsyncTaskSetHttpProcessorCollection( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	Return WriteResponseAsyncTaskSetHttpProcessorCollection(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIProcessors)
-End Function
-
 Function IWriteResponseAsyncTaskPrepare( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As HRESULT
@@ -817,14 +785,14 @@ Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTas
 	@IWriteResponseAsyncTaskBeginExecute, _
 	@IWriteResponseAsyncTaskEndExecute, _
 	@IWriteResponseAsyncTaskGetFileHandle, _
-	@IWriteResponseAsyncTaskGetWebSiteCollection, _
-	@IWriteResponseAsyncTaskSetWebSiteCollection, _
+	@IWriteResponseAsyncTaskGetWebSiteCollectionWeakPtr, _
+	@IWriteResponseAsyncTaskSetWebSiteCollectionWeakPtr, _
+	@IWriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr, _
+	@IWriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr, _
 	@IWriteResponseAsyncTaskGetBaseStream, _
 	@IWriteResponseAsyncTaskSetBaseStream, _
 	@IWriteResponseAsyncTaskGetHttpReader, _
 	@IWriteResponseAsyncTaskSetHttpReader, _
-	@IWriteResponseAsyncTaskGetHttpProcessorCollection, _
-	@IWriteResponseAsyncTaskSetHttpProcessorCollection, _
 	@IWriteResponseAsyncTaskGetClientRequest, _
 	@IWriteResponseAsyncTaskSetClientRequest, _
 	@IWriteResponseAsyncTaskPrepare _

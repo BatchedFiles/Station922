@@ -48,14 +48,24 @@ Declare Function WriteResponseAsyncTaskGetFileHandle( _
 	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
-Declare Function WriteResponseAsyncTaskGetWebSiteCollection( _
+Declare Function WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 )As HRESULT
 
-Declare Function WriteResponseAsyncTaskSetWebSiteCollection( _
+Declare Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr _
+)As HRESULT
+
+Declare Function WriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr( _
+	ByVal this As WriteResponseAsyncTask Ptr, _
+	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
+Declare Function WriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr( _
+	ByVal this As WriteResponseAsyncTask Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskGetBaseStream( _
@@ -76,16 +86,6 @@ Declare Function WriteResponseAsyncTaskGetHttpReader( _
 Declare Function WriteResponseAsyncTaskSetHttpReader( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	byVal pReader As IHttpReader Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskGetHttpProcessorCollection( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskSetHttpProcessorCollection( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskPrepare( _
