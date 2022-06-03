@@ -33,19 +33,20 @@ End Function
 
 Function wMain()As Long
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = GetHeapMemoryAllocatorInstance()
-	If pIMemoryAllocator = NULL Then
+	Dim pIMemoryAllocator As IMalloc Ptr = Any
+	Dim hrGetAllocator As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)
+	If FAILED(hrGetAllocator) Then
 		Return 1
 	End If
 	
 	Dim pIWebServer As IRunnable Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hrCreateServer As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
 		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
 		@pIWebServer _
 	)
-	If FAILED(hr) Then
+	If FAILED(hrCreateServer) Then
 		IMalloc_Release(pIMemoryAllocator)
 		Return 1
 	End If
