@@ -213,7 +213,7 @@ Function MemoryBufferGetContentType( _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
 	
-	memcpy(ppType, @this->ContentType, SizeOf(MimeType))
+	CopyMemory(ppType, @this->ContentType, SizeOf(MimeType))
 	
 	Return S_OK
 	
