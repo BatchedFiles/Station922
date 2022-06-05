@@ -241,6 +241,12 @@ Function HttpGetProcessorPrepare( _
 		Return hrGetBuffer
 	End If
 	
+	/'
+	Scope
+		IServerResponse_SetSendOnlyHeaders(this, SendOnlyHeaders)
+	End Scope
+	'/
+	
 	Scope
 		Dim Language As HeapBSTR = Any
 		IBuffer_GetLanguage(pIBuffer, @Language)

@@ -350,7 +350,7 @@ Sub AddResponseCacheHeaders( _
 			@pHeaderIfModifiedSince _
 		)
 		
-		If SysStringLen(pHeaderIfModifiedSince) <> 0 Then
+		If SysStringLen(pHeaderIfModifiedSince) Then
 			
 			Dim resCompare As Long = lstrcmpiW( _
 				@strFileLastModifiedHttpDate, _
@@ -370,7 +370,7 @@ Sub AddResponseCacheHeaders( _
 			@pHeaderIfUnModifiedSince _
 		)
 		
-		If SysStringLen(pHeaderIfUnModifiedSince) <> 0 Then
+		If SysStringLen(pHeaderIfUnModifiedSince) Then
 			
 			Dim resCompare As Long = lstrcmpiW( _
 				@strFileLastModifiedHttpDate, _

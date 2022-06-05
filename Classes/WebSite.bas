@@ -367,8 +367,7 @@ Function WebSiteMapPath( _
 		
 		If pBuffer[BufferLength - 1] <> Characters.ReverseSolidus Then
 			pBuffer[BufferLength] = Characters.ReverseSolidus
-			BufferLength += 1
-			pBuffer[BufferLength] = 0
+			pBuffer[BufferLength + 1] = 0
 		End If
 	End Scope
 	

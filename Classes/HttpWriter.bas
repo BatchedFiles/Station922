@@ -276,6 +276,7 @@ Function HttpWriterBeginWrite( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal Headers As LPVOID, _
 		ByVal HeadersLength As DWORD, _
+		ByVal SendOnlyHeaders As Boolean, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -303,9 +304,13 @@ Function HttpWriterBeginWrite( _
 		StreamBuffer.Buf(0).Length = HeadersLength
 		
 		If Slice.Length > 0 Then
-			StreamBufferLength = 2
-			StreamBuffer.Buf(1).Buffer = Slice.pSlice
-			StreamBuffer.Buf(1).Length = Slice.Length
+			If SendOnlyHeaders Then
+				StreamBufferLength = 1
+			Else
+				StreamBufferLength = 2
+				StreamBuffer.Buf(1).Buffer = Slice.pSlice
+				StreamBuffer.Buf(1).Length = Slice.Length
+			End If
 		Else
 			StreamBufferLength = 1
 		End If
@@ -314,6 +319,10 @@ Function HttpWriterBeginWrite( _
 	End If
 	
 	If hrGetSlice = S_FALSE OrElse Slice.Length = 0 Then
+		this->BodySended = True
+	End If
+	
+	If SendOnlyHeaders Then
 		this->BodySended = True
 	End If
 	
@@ -423,10 +432,11 @@ Function IHttpWriterBeginWrite( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal Headers As LPVOID, _
 		ByVal HeadersLength As DWORD, _
+		ByVal SendOnlyHeaders As Boolean, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), Headers, HeadersLength, StateObject, ppIAsyncResult)
+	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), Headers, HeadersLength, SendOnlyHeaders, StateObject, ppIAsyncResult)
 End Function
 
 Function IHttpWriterEndWrite( _

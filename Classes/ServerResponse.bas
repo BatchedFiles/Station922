@@ -554,6 +554,7 @@ Function ServerResponseBeginWriteResponse( _
 		this->pIWriter, _
 		this->ResponseHeaderLine, _
 		this->ResponseHeaderLineLength, _
+		this->SendOnlyHeaders, _
 		StateObject, _
 		ppIAsyncResult _
 	)

@@ -55,6 +55,7 @@ Declare Function HttpWriterBeginWrite( _
 	ByVal this As HttpWriter Ptr, _
 	ByVal Headers As LPVOID, _
 	ByVal HeadersLength As DWORD, _
+	ByVal SendOnlyHeaders As Boolean, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
