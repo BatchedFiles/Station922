@@ -514,10 +514,10 @@ Function GetBase64Sha1( _
 	
 End Function
 
-Function FindWebSite( _
+Function FindWebSiteWeakPtr( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 	)As HRESULT
 	
 	/'
@@ -525,7 +525,7 @@ Function FindWebSite( _
 		IWebSiteCollection_Item( _
 			pIWebSites, _
 			NULL, _
-			ppIWebSite _
+			ppIWebSiteWeakPtr _
 		)
 		Return S_OK
 	End If
@@ -538,10 +538,10 @@ Function FindWebSite( _
 		@HeaderHost _
 	)
 	
-	Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
+	Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
 		pIWebSites, _
 		HeaderHost, _
-		ppIWebSite _
+		ppIWebSiteWeakPtr _
 	)
 	
 	HeapSysFreeString(HeaderHost)

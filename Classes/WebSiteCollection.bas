@@ -11,22 +11,6 @@ Type WebSiteNode
 	pIWebSite As IWebSite Ptr
 End Type
 
-Declare Sub TreeAddNode( _
-	ByVal pTree As WebSiteNode Ptr, _
-	ByVal pNode As WebSiteNode Ptr _
-)
-
-Declare Function TreeFindNode( _
-	ByVal pTree As WebSiteNode Ptr, _
-	ByVal pKey As WString Ptr _
-)As WebSiteNode Ptr
-
-Declare Function CreateWebSiteNode( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	ByVal pKey As WString Ptr, _
-	ByVal pValue As IWebSite Ptr _
-)As WebSiteNode Ptr
-
 Type _WebSiteCollection
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -38,6 +22,91 @@ Type _WebSiteCollection
 	pTree As WebSiteNode Ptr
 	WebSitesCount As Integer
 End Type
+
+Sub TreeAddNode( _
+		ByVal pTree As WebSiteNode Ptr, _
+		ByVal pNode As WebSiteNode Ptr _
+	)
+	
+	Dim CompareResult As Long = lstrcmpiW(pNode->HostName, pTree->HostName)
+	
+	Select Case CompareResult
+		
+		Case Is > 0
+			If pTree->RightNode = NULL Then
+				pTree->RightNode = pNode
+			Else
+				TreeAddNode(pTree->RightNode, pNode)
+			End If
+			
+		Case Is < 0
+			If pTree->LeftNode = NULL Then
+				pTree->LeftNode = pNode
+			Else
+				TreeAddNode(pTree->LeftNode, pNode)
+			End If
+			
+	End Select
+	
+End Sub
+
+Function TreeFindNode( _
+		ByVal pNode As WebSiteNode Ptr, _
+		ByVal HostName As WString Ptr _
+	)As WebSiteNode Ptr
+	
+	Select Case lstrcmpiW(HostName, pNode->HostName)
+		
+		Case Is > 0
+			If pNode->RightNode = NULL Then
+				Return NULL
+			End If
+			
+			Return TreeFindNode(pNode->RightNode, HostName)
+			
+		Case 0
+			Return pNode
+			
+		Case Is < 0
+			If pNode->LeftNode = NULL Then
+				Return NULL
+			End If
+			
+			Return TreeFindNode(pNode->LeftNode, HostName)
+			
+	End Select
+	
+End Function
+
+Function CreateWebSiteNode( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal pValue As IWebSite Ptr _
+	)As WebSiteNode Ptr
+	
+	Dim bstrHostName As BSTR = SysAllocString(pKey)
+	If bstrHostName = NULL Then
+		Return NULL
+	End If
+	
+	Dim pNode As WebSiteNode Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(WebSiteNode) _
+	)
+	If pNode = NULL Then
+		SysFreeString(bstrHostName)
+		Return NULL
+	End If
+	
+	pNode->HostName = bstrHostName
+	IWebSite_AddRef(pValue)
+	pNode->pIWebSite = pValue
+	pNode->LeftNode = NULL
+	pNode->RightNode = NULL
+	
+	Return pNode
+	
+End Function
 
 Sub InitializeWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr, _
@@ -265,88 +334,21 @@ Function WebSiteCollectionAdd( _
 	
 End Function
 
-Sub TreeAddNode( _
-		ByVal pTree As WebSiteNode Ptr, _
-		ByVal pNode As WebSiteNode Ptr _
-	)
-	
-	Dim CompareResult As Long = lstrcmpiW(pNode->HostName, pTree->HostName)
-	
-	Select Case CompareResult
-		
-		Case Is > 0
-			If pTree->RightNode = NULL Then
-				pTree->RightNode = pNode
-			Else
-				TreeAddNode(pTree->RightNode, pNode)
-			End If
-			
-		Case Is < 0
-			If pTree->LeftNode = NULL Then
-				pTree->LeftNode = pNode
-			Else
-				TreeAddNode(pTree->LeftNode, pNode)
-			End If
-			
-	End Select
-	
-End Sub
-
-Function TreeFindNode( _
-		ByVal pNode As WebSiteNode Ptr, _
-		ByVal HostName As WString Ptr _
-	)As WebSiteNode Ptr
-	
-	Select Case lstrcmpiW(HostName, pNode->HostName)
-		
-		Case Is > 0
-			If pNode->RightNode = NULL Then
-				Return NULL
-			End If
-			
-			Return TreeFindNode(pNode->RightNode, HostName)
-			
-		Case 0
-			Return pNode
-			
-		Case Is < 0
-			If pNode->LeftNode = NULL Then
-				Return NULL
-			End If
-			
-			Return TreeFindNode(pNode->LeftNode, HostName)
-			
-	End Select
-	
-End Function
-
-Function CreateWebSiteNode( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
+Function WebSiteCollectionItemWeakPtr( _
+		ByVal this As WebSiteCollection Ptr, _
 		ByVal pKey As WString Ptr, _
-		ByVal pValue As IWebSite Ptr _
-	)As WebSiteNode Ptr
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
 	
-	Dim bstrHostName As BSTR = SysAllocString(pKey)
-	If bstrHostName = NULL Then
-		Return NULL
-	End If
-	
-	Dim pNode As WebSiteNode Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		SizeOf(WebSiteNode) _
-	)
+	Dim pNode As WebSiteNode Ptr = TreeFindNode(this->pTree, pKey)
 	If pNode = NULL Then
-		SysFreeString(bstrHostName)
-		Return NULL
+		*ppIWebSite = NULL
+		Return E_FAIL
 	End If
 	
-	pNode->HostName = bstrHostName
-	IWebSite_AddRef(pValue)
-	pNode->pIWebSite = pValue
-	pNode->LeftNode = NULL
-	pNode->RightNode = NULL
+	*ppIWebSite = pNode->pIWebSite
 	
-	Return pNode
+	Return S_OK
 	
 End Function
 
@@ -401,6 +403,14 @@ Function IWebSiteCollectionAdd( _
 	Return WebSiteCollectionAdd(ContainerOf(this, WebSiteCollection, lpVtbl), pKey, pIWebSite)
 End Function
 
+Function IWebSiteCollectionItemWeakPtr( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal Host As WString Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	Return WebSiteCollectionItemWeakPtr(ContainerOf(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
+End Function
+
 Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable = Type( _
 	@IWebSiteCollectionQueryInterface, _
 	@IWebSiteCollectionAddRef, _
@@ -408,5 +418,6 @@ Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable 
 	NULL, _ /' @IWebSiteCollection_NewEnum, _ '/
 	@IWebSiteCollectionItem, _
 	@IWebSiteCollectionCount, _
-	@IWebSiteCollectionAdd _
+	@IWebSiteCollectionAdd, _
+	@IWebSiteCollectionItemWeakPtr _
 )

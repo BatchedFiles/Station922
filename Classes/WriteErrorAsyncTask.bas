@@ -1159,11 +1159,11 @@ Function WriteErrorAsyncTaskPrepare( _
 				@HeaderHost _
 			)
 			If SysStringLen(HeaderHost) Then
-				Dim pIWebSite As IWebSite Ptr = Any
-				Dim hrFindSite As HRESULT = IWebSiteCollection_Item( _
+				Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
+				Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
 					this->pIWebSitesWeakPtr, _
 					HeaderHost, _
-					@pIWebSite _
+					@pIWebSiteWeakPtr _
 				)
 				If FAILED(hrFindSite) Then
 					VirtualPath = HeapSysAllocStringLen( _
@@ -1172,8 +1172,7 @@ Function WriteErrorAsyncTaskPrepare( _
 						1 _
 					)
 				Else
-					IWebSite_GetVirtualPath(pIWebSite, @VirtualPath)
-					IWebSite_Release(pIWebSite)
+					IWebSite_GetVirtualPath(pIWebSiteWeakPtr, @VirtualPath)
 				End If
 			Else
 				VirtualPath = HeapSysAllocStringLen( _

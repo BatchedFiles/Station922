@@ -47,6 +47,12 @@ Type IWebSiteCollectionVirtualTable
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
+	ItemWeakPtr As Function( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
 	' Для коллекций:
 	' Count()
 	' Item()
@@ -63,8 +69,9 @@ End Type
 #define IWebSiteCollection_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWebSiteCollection_Release(this) (this)->lpVtbl->Release(this)
 #define IWebSiteCollection__NewEnum(this, ppIEnum) (this)->lpVtbl->_NewEnum(this, ppIEnum)
-#define IWebSiteCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
+' #define IWebSiteCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
 #define IWebSiteCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
 #define IWebSiteCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
+#define IWebSiteCollection_ItemWeakPtr(this, pKey, ppIWebSite) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIWebSite)
 
 #endif

@@ -53,4 +53,10 @@ Declare Function WebSiteCollectionAdd( _
 	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 
+Declare Function WebSiteCollectionItemWeakPtr( _
+	ByVal this As WebSiteCollection Ptr, _
+	ByVal pKey As WString Ptr, _
+	ByVal ppIWebSite As IWebSite Ptr Ptr _
+)As HRESULT
+
 #endif

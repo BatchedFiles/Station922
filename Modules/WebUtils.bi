@@ -48,10 +48,10 @@ Declare Sub AddResponseCacheHeaders( _
 	ByVal ETag As HeapBSTR _
 )
 
-Declare Function FindWebSite( _
+Declare Function FindWebSiteWeakPtr( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr, _
-	ByVal ppIWebSite As IWebSite Ptr Ptr _
+	ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 )As HRESULT
 
 Declare Function Integer64Division( _

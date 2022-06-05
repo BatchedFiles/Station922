@@ -28,7 +28,7 @@ Type _WriteResponseAsyncTask
 	pIBuffer As IBuffer Ptr
 	pIHttpWriter As IHttpWriter Ptr
 	pIProcessorWeakPtr As IHttpAsyncProcessor Ptr
-	pIWebSite As IWebSite Ptr
+	pIWebSiteWeakPtr As IWebSite Ptr
 End Type
 
 Sub InitializeWriteResponseAsyncTask( _
@@ -55,17 +55,13 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->pIHttpWriter = pIHttpWriter
 	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
 	this->pIProcessorWeakPtr = NULL
-	this->pIWebSite = NULL
+	this->pIWebSiteWeakPtr = NULL
 	
 End Sub
 
 Sub UnInitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr _
 	)
-	
-	If this->pIWebSite <> NULL Then
-		IWebSite_Release(this->pIWebSite)
-	End If
 	
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
@@ -281,7 +277,7 @@ Function WriteResponseAsyncTaskBeginExecute( _
 	
 	Dim pc As ProcessorContext = Any
 	pc.pIMemoryAllocator = this->pIMemoryAllocator
-	pc.pIWebSite = this->pIWebSite
+	pc.pIWebSite = this->pIWebSiteWeakPtr
 	pc.pIRequest = this->pIRequest
 	pc.pIResponse = this->pIResponse
 	pc.pIReader = this->pIHttpReader
@@ -310,7 +306,7 @@ Function WriteResponseAsyncTaskEndExecute( _
 	
 	Dim pc As ProcessorContext = Any
 	pc.pIMemoryAllocator = this->pIMemoryAllocator
-	pc.pIWebSite = this->pIWebSite
+	pc.pIWebSite = this->pIWebSiteWeakPtr
 	pc.pIRequest = this->pIRequest
 	pc.pIResponse = this->pIResponse
 	pc.pIReader = this->pIHttpReader
@@ -562,20 +558,16 @@ Function WriteResponseAsyncTaskPrepare( _
 	
 	Dim hrPrepareResponse As HRESULT = Any
 	
-	If this->pIWebSite <> NULL Then
-		IWebSite_Release(this->pIWebSite)
-	End If
-	
-	Dim hrFindSite As HRESULT = FindWebSite( _
+	Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
 		this->pIRequest, _
 		this->pIWebSitesWeakPtr, _
-		@this->pIWebSite _
+		@this->pIWebSiteWeakPtr _
 	)
 	If FAILED(hrFindSite) Then
 		hrPrepareResponse = WEBSITE_E_SITENOTFOUND
 	Else
 		Dim IsSiteMoved As Boolean = Any
-		IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
+		IWebSite_GetIsMoved(this->pIWebSiteWeakPtr, @IsSiteMoved)
 		
 		/'
 			Dim IsSiteMoved As Boolean = Any
@@ -615,7 +607,7 @@ Function WriteResponseAsyncTaskPrepare( _
 			Else
 				Dim pc As ProcessorContext = Any
 				pc.pIMemoryAllocator = this->pIMemoryAllocator
-				pc.pIWebSite = this->pIWebSite
+				pc.pIWebSite = this->pIWebSiteWeakPtr
 				pc.pIRequest = this->pIRequest
 				pc.pIResponse = this->pIResponse
 				pc.pIReader = this->pIHttpReader
