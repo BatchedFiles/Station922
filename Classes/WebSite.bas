@@ -989,6 +989,7 @@ Function WebSiteGetBuffer( _
 			)
 		Else
 			ZipFileHandle = INVALID_HANDLE_VALUE
+			ZipMode = ZipModes.None
 			IsAcceptEncoding = False
 		End If
 		
