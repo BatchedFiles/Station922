@@ -53,6 +53,12 @@ Type IHttpProcessorCollectionVirtualTable
 		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	
+	ItemWeakPtr As Function( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
+	)As HRESULT
+	
 	' Для коллекций:
 	' Count()
 	' Item()
@@ -69,9 +75,10 @@ End Type
 #define IHttpProcessorCollection_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpProcessorCollection_Release(this) (this)->lpVtbl->Release(this)
 #define IHttpProcessorCollection__NewEnum(this, ppIEnum) (this)->lpVtbl->_NewEnum(this, ppIEnum)
-#define IHttpProcessorCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
+' #define IHttpProcessorCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
 #define IHttpProcessorCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
 #define IHttpProcessorCollection_GetAllMethods(this, ppMethods) (this)->lpVtbl->GetAllMethods(this, ppMethods)
 #define IHttpProcessorCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
+#define IHttpProcessorCollection_ItemWeakPtr(this, pKey, ppIWebSite) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIWebSite)
 
 #endif

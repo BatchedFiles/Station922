@@ -259,6 +259,29 @@ Function HttpProcessorCollectionAdd( _
 	
 End Function
 
+Function HttpProcessorCollectionItemWeakPtr( _
+		ByVal this As HttpProcessorCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
+	)As HRESULT
+	
+	For i As Integer = 0 To this->CollectionLength - 1
+		
+		If lstrcmpW(pKey, @this->Collection(i).Key) = 0 Then
+			
+			*ppIProcessor = this->Collection(i).Value
+			
+			Return S_OK
+		End If
+		
+	Next
+	
+	*ppIProcessor = NULL
+	
+	Return E_FAIL
+	
+End Function
+
 
 Function IHttpProcessorCollectionQueryInterface( _
 		ByVal this As IHttpProcessorCollection Ptr, _
@@ -317,6 +340,14 @@ Function IHttpProcessorCollectionAdd( _
 	Return HttpProcessorCollectionAdd(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, pIProcessor)
 End Function
 
+Function IHttpProcessorCollectionItemWeakPtr( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal pKey As WString Ptr, _
+		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
+	)As HRESULT
+	Return HttpProcessorCollectionItemWeakPtr(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
+End Function
+
 Dim GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable = Type( _
 	@IHttpProcessorCollectionQueryInterface, _
 	@IHttpProcessorCollectionAddRef, _
@@ -325,5 +356,6 @@ Dim GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionV
 	@IHttpProcessorCollectionItem, _
 	@IHttpProcessorCollectionCount, _
 	@IHttpProcessorCollectionGetAllMethods, _
-	@IHttpProcessorCollectionAdd _
+	@IHttpProcessorCollectionAdd, _
+	@IHttpProcessorCollectionItemWeakPtr _
 )

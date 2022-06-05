@@ -19,15 +19,15 @@ Type _WriteResponseAsyncTask
 	lpVtbl As Const IWriteResponseAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pIWebSites As IWebSiteCollection Ptr
-	pIProcessors As IHttpProcessorCollection Ptr
+	pIWebSitesWeakPtr As IWebSiteCollection Ptr
+	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
 	pIBuffer As IBuffer Ptr
 	pIHttpWriter As IHttpWriter Ptr
-	pIProcessor As IHttpAsyncProcessor Ptr
+	pIProcessorWeakPtr As IHttpAsyncProcessor Ptr
 	pIWebSite As IWebSite Ptr
 End Type
 
@@ -45,8 +45,8 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSites = NULL
-	this->pIProcessors = NULL
+	this->pIWebSitesWeakPtr = NULL
+	this->pIProcessorsWeakPtr = NULL
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = NULL
@@ -54,7 +54,7 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
 	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
-	this->pIProcessor = NULL
+	this->pIProcessorWeakPtr = NULL
 	this->pIWebSite = NULL
 	
 End Sub
@@ -62,10 +62,6 @@ End Sub
 Sub UnInitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr _
 	)
-	
-	If this->pIProcessor <> NULL Then
-		IHttpAsyncProcessor_Release(this->pIProcessor)
-	End If
 	
 	If this->pIWebSite <> NULL Then
 		IWebSite_Release(this->pIWebSite)
@@ -292,7 +288,7 @@ Function WriteResponseAsyncTaskBeginExecute( _
 	pc.pIWriter = this->pIHttpWriter
 	
 	Dim hrBeginProcess As HRESULT = IHttpAsyncProcessor_BeginProcess( _
-		this->pIProcessor, _
+		this->pIProcessorWeakPtr, _
 		@pc, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
@@ -321,7 +317,7 @@ Function WriteResponseAsyncTaskEndExecute( _
 	pc.pIWriter = this->pIHttpWriter
 	
 	Dim hrEndProcess As HRESULT = IHttpAsyncProcessor_EndProcess( _
-		this->pIProcessor, _
+		this->pIProcessorWeakPtr, _
 		@pc, _
 		pIResult _
 	)
@@ -358,8 +354,8 @@ Function WriteResponseAsyncTaskEndExecute( _
 			
 			IHttpReader_Clear(this->pIHttpReader)
 			
-			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
-			IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
+			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
+			IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessorsWeakPtr)
 			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
 			
@@ -407,7 +403,7 @@ Function WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
 		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
 	)As HRESULT
 	
-	*ppIWebSites = this->pIWebSites
+	*ppIWebSites = this->pIWebSitesWeakPtr
 	
 	Return S_OK
 	
@@ -418,7 +414,7 @@ Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
 	
-	this->pIWebSites = pIWebSites
+	this->pIWebSitesWeakPtr = pIWebSites
 	
 	Return S_OK
 	
@@ -429,7 +425,7 @@ Function WriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr( _
 		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	
-	*ppIProcessors = this->pIProcessors
+	*ppIProcessors = this->pIProcessorsWeakPtr
 	
 	Return S_OK
 	
@@ -440,7 +436,7 @@ Function WriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr( _
 		ByVal pIProcessors As IHttpProcessorCollection Ptr _
 	)As HRESULT
 	
-	this->pIProcessors = pIProcessors
+	this->pIProcessorsWeakPtr = pIProcessors
 	
 	Return S_OK
 	
@@ -572,7 +568,7 @@ Function WriteResponseAsyncTaskPrepare( _
 	
 	Dim hrFindSite As HRESULT = FindWebSite( _
 		this->pIRequest, _
-		this->pIWebSites, _
+		this->pIWebSitesWeakPtr, _
 		@this->pIWebSite _
 	)
 	If FAILED(hrFindSite) Then
@@ -607,14 +603,10 @@ Function WriteResponseAsyncTaskPrepare( _
 			Dim HttpMethod As HeapBSTR = Any
 			IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 			
-			If this->pIProcessor <> NULL Then
-				IHttpAsyncProcessor_Release(this->pIProcessor)
-			End If
-			
-			Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_Item( _
-				this->pIProcessors, _
+			Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_ItemWeakPtr( _
+				this->pIProcessorsWeakPtr, _
 				HttpMethod, _
-				@this->pIProcessor _
+				@this->pIProcessorWeakPtr _
 			)
 			HeapSysFreeString(HttpMethod)
 			
@@ -634,7 +626,7 @@ Function WriteResponseAsyncTaskPrepare( _
 				End If
 				
 				Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _
-					this->pIProcessor, _
+					this->pIProcessorWeakPtr, _
 					@pc, _
 					@this->pIBuffer _
 				)

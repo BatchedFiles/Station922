@@ -58,4 +58,10 @@ Declare Function HttpProcessorCollectionAdd( _
 	ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 )As HRESULT
 
+Declare Function HttpProcessorCollectionItemWeakPtr( _
+	ByVal this As HttpProcessorCollection Ptr, _
+	ByVal pKey As WString Ptr, _
+	ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
+)As HRESULT
+
 #endif
