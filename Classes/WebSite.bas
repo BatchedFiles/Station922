@@ -356,7 +356,7 @@ End Sub
 
 Function WebSiteMapPath( _
 		ByVal this As WebSite Ptr, _
-		ByVal Path As HeapBSTR, _
+		ByVal pPath As WString Ptr, _
 		ByVal pBuffer As WString Ptr _
 	)As HRESULT
 	
@@ -371,12 +371,10 @@ Function WebSiteMapPath( _
 		End If
 	End Scope
 	
-	If SysStringLen(Path) Then
-		If Path[0] = Characters.Solidus Then
-			lstrcatW(pBuffer, @Path[1])
-		Else
-			lstrcatW(pBuffer, Path)
-		End If
+	If pPath[0] = Characters.Solidus Then
+		lstrcatW(pBuffer, @pPath[1])
+	Else
+		lstrcatW(pBuffer, pPath)
 	End If
 	
 	Dim BufferLength As Integer = lstrlenW(pBuffer)
