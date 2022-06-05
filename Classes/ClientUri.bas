@@ -35,17 +35,16 @@ Function DecodeUri( _
 	)As Integer
 	
 	' TODO Исправить раскодирование неправильного запроса
-	' Расшифровываем url-кодировку %XY
-	Dim iAcc As UInteger = 0
-	Dim iHex As UInteger = 0
 	
 	Dim DecodedBytesUtf8Length As Integer = 0
 	
 	Dim DecodedBytesUtf8 As ZString * (INTERNET_MAX_URL_LENGTH + 1) = Any
 	
+	Dim iAcc As UInteger = 0
+	Dim iHex As UInteger = 0
 	For i As Integer = 0 To UriLength - 1
 		
-		Dim c As wchar_t = pUri[i]
+		Dim c As WCHAR = pUri[i]
 		
 		If iHex <> 0 Then
 			' 0 = 30 = 48 = 0
@@ -100,8 +99,7 @@ Function DecodeUri( _
 		
 	Next
 	
-	' Завершающий ноль
-	DecodedBytesUtf8[DecodedBytesUtf8Length] = 0
+	DecodedBytesUtf8[DecodedBytesUtf8Length] = Characters.NullChar
 	
 	Const dwFlags As DWORD = 0
 	Dim DecodedLength As Long = MultiByteToWideChar( _

@@ -241,11 +241,16 @@ Function HttpGetProcessorPrepare( _
 		Return hrGetBuffer
 	End If
 	
-	/'
 	Scope
-		IServerResponse_SetSendOnlyHeaders(this, SendOnlyHeaders)
+		Dim HttpMethod As HeapBSTR = Any
+		IClientRequest_GetHttpMethod(pContext->pIRequest, @HttpMethod)
+		
+		If lstrcmp(HttpMethod, WStr("HEAD")) = 0 Then
+			IServerResponse_SetSendOnlyHeaders(pContext->pIResponse, True)
+		End If
+		
+		HeapSysFreeString(HttpMethod)
 	End Scope
-	'/
 	
 	Scope
 		Dim Language As HeapBSTR = Any
