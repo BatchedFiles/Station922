@@ -183,11 +183,7 @@ Function ContainsBadCharSequence( _
 				' Разделитель путей
 				'Return E_FAIL
 				
-			Case Characters.LessThanSign
-				' Защита от перенаправлений ввода-вывода
-				Return E_FAIL
-				
-			Case Characters.GreaterThanSign
+			Case Characters.LessThanSign, Characters.GreaterThanSign
 				' Защита от перенаправлений ввода-вывода
 				Return E_FAIL
 				
@@ -213,7 +209,7 @@ Sub InitializeClientUri( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("ClientUriClientU"), 16)
+		CopyMemory(@this->IdString, @Str("ClientUri_______"), 16)
 	#endif
 	this->lpVtbl = @GlobalClientUriVirtualTable
 	this->ReferenceCounter = 0
@@ -555,35 +551,67 @@ Function ClientUriUriFromString( _
 	this->Uri = bstrUri
 	
 	If SchemeLength <> 0 Then
-		this->Scheme = HeapSysAllocStringLen(this->pIMemoryAllocator, pScheme, SchemeLength)
+		this->Scheme = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pScheme, _
+			SchemeLength _
+		)
 	End If
 	
 	If UserNameLength <> 0 Then
-		this->UserName = HeapSysAllocStringLen(this->pIMemoryAllocator, pUserName, UserNameLength)
+		this->UserName = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pUserName, _
+			UserNameLength _
+		)
 	End If
 	
 	If PasswordLength <> 0 Then
-		this->Password = HeapSysAllocStringLen(this->pIMemoryAllocator, pPassword, PasswordLength)
+		this->Password = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pPassword, _
+			PasswordLength _
+		)
 	End If
 	
 	If HostLength <> 0 Then
-		this->Host = HeapSysAllocStringLen(this->pIMemoryAllocator, pHost, HostLength)
+		this->Host = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pHost, _
+			HostLength _
+		)
 	End If
 	
 	If PortLength <> 0 Then
-		this->Port = HeapSysAllocStringLen(this->pIMemoryAllocator, pPort, PortLength)
+		this->Port = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pPort, _
+			PortLength _
+		)
 	End If
 	
 	If PathLength <> 0 Then
-		this->Path = HeapSysAllocStringLen(this->pIMemoryAllocator, pPath, PathLength)
+		this->Path = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pPath, _
+			PathLength _
+		)
 	End If
 	
 	If QueryLength <> 0 Then
-		this->Query = HeapSysAllocStringLen(this->pIMemoryAllocator, pQuery, QueryLength)
+		this->Query = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pQuery, _
+			QueryLength _
+		)
 	End If
 	
 	If FragmentLength <> 0 Then
-		this->Fragment = HeapSysAllocStringLen(this->pIMemoryAllocator, pFragment, FragmentLength)
+		this->Fragment = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			pFragment, _
+			FragmentLength _
+		)
 	End If
 	
 	Return S_OK

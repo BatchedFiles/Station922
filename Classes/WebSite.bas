@@ -921,7 +921,8 @@ Function WebSiteGetBuffer( _
 	If FAILED(hrOpenFile) Then
 		Dim hrOpenFileTranslate As HRESULT = Any
 		
-		If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
+		If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse _
+		hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
 			
 			Dim File410 As WString * (MAX_PATH + 1) = Any
 			lstrcpyW(@File410, @FileName)
