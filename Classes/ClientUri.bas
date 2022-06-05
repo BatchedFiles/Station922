@@ -1,5 +1,6 @@
 #include once "ClientUri.bi"
 #include once "win\shlwapi.bi"
+#include once "win\wininet.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
@@ -7,8 +8,6 @@
 #include once "Logger.bi"
 
 Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
-
-Const MaxUrlLength As Integer = 2048 - 1
 
 Type _ClientUri
 	#if __FB_DEBUG__
@@ -30,6 +29,7 @@ End Type
 
 Function DecodeUri( _
 		ByVal pBuffer As WString Ptr, _
+		ByVal BufferLength As Integer, _
 		ByVal pUri As Const WString Const Ptr, _
 		ByVal UriLength As Integer _
 	)As Integer
@@ -41,7 +41,7 @@ Function DecodeUri( _
 	
 	Dim DecodedBytesUtf8Length As Integer = 0
 	
-	Dim DecodedBytesUtf8 As ZString * (MaxUrlLength + 1) = Any
+	Dim DecodedBytesUtf8 As ZString * (INTERNET_MAX_URL_LENGTH + 1) = Any
 	
 	For i As Integer = 0 To UriLength - 1
 		
@@ -104,14 +104,16 @@ Function DecodeUri( _
 	DecodedBytesUtf8[DecodedBytesUtf8Length] = 0
 	
 	Const dwFlags As DWORD = 0
-	Dim DecodedLength As Integer = MultiByteToWideChar( _
+	Dim DecodedLength As Long = MultiByteToWideChar( _
 		CP_UTF8, _
 		dwFlags, _
 		@DecodedBytesUtf8, _
 		DecodedBytesUtf8Length, _
 		pBuffer, _
-		MaxUrlLength _
+		BufferLength _
 	)
+	
+	pBuffer[DecodedLength] = Characters.NullChar
 	
 	Return DecodedLength
 	
@@ -396,13 +398,14 @@ Function ClientUriUriFromString( _
 	
 	Dim UriLength As Integer = SysStringLen(bstrUri)
 	
-	If UriLength > MaxUrlLength Then
+	If UriLength > INTERNET_MAX_URL_LENGTH Then
 		Return CLIENTURI_E_URITOOLARGE
 	End If
 	
-	Dim wszDecodedUri As WString * (MaxUrlLength + 1) = Any
+	Dim wszDecodedUri As WString * (INTERNET_MAX_URL_LENGTH + 1) = Any
 	Dim DecodedUriLength As Integer = DecodeUri( _
 		@wszDecodedUri, _
+		INTERNET_MAX_URL_LENGTH, _
 		bstrUri, _
 		UriLength _
 	)
@@ -432,6 +435,7 @@ Function ClientUriUriFromString( _
 	Dim FragmentLength As Integer = Any
 	
 	Dim pFirstChar As WString Ptr = @wszDecodedUri
+	
 	Dim FirstChar As Integer = pFirstChar[0]
 	If FirstChar = Characters.Solidus Then
 		pScheme = NULL
@@ -497,19 +501,19 @@ Function ClientUriUriFromString( _
 		End If
 	Else
 		Return CLIENTURI_E_PATHNOTFOUND
-		
-		' Dim pSolidusChar As WString Ptr = StrChrW( _
-		' 	pFirstChar, _
-		' 	Characters.Solidus _
-		' )
-		' If pSolidusChar = NULL Then
-		' 	Return STATION922URI_E_PATHNOTFOUND
-		' Else
-			' PathLength = pQuestionMark - pFirstChar
-			' this->Query = HeapSysAllocString( _
-			' 	this->pIMemoryAllocator, _
-			' 	pQuestionMark + 1 _
-			' )
+		/'
+		Dim pSolidusChar As WString Ptr = StrChrW( _
+			pFirstChar, _
+			Characters.Solidus _
+		)
+		If pSolidusChar = NULL Then
+			Return STATION922URI_E_PATHNOTFOUND
+		Else
+			PathLength = pQuestionMark - pFirstChar
+			this->Query = HeapSysAllocString( _
+				this->pIMemoryAllocator, _
+				pQuestionMark + 1 _
+			)
 			Scope
 				pScheme = NULL
 				SchemeLength = 0
@@ -535,8 +539,8 @@ Function ClientUriUriFromString( _
 				pFragment = NULL
 				FragmentLength = 0
 			End Scope
-		' End If
-		
+		End If
+		'/
 	End If
 	
 	Dim hrContainsBadChar As HRESULT = ContainsBadCharSequence( _
