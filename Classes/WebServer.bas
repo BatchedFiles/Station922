@@ -168,8 +168,7 @@ Function ThreadPoolCallBack( _
 	Dim hrFinishExecute As HRESULT = Any
 	Dim pNextTask As IAsyncIoTask Ptr = Any
 	Scope
-		Dim pAsyncOverlapped As ASYNCRESULTOVERLAPPED Ptr = CPtr(ASYNCRESULTOVERLAPPED Ptr, pOverlap)
-		Dim pIResult As IAsyncResult Ptr = pAsyncOverlapped->pIAsync
+		Dim pIResult As IAsyncResult Ptr = GetAsyncResultFromOverlappedWeakPtr(pOverlap)
 		
 		hrFinishExecute = FinishExecuteTaskSink( _
 			BytesTransferred, _

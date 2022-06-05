@@ -13,10 +13,9 @@ Type AsyncCallback As Sub(ByVal ar As IAsyncResult Ptr, ByVal ReadedBytes As Int
 
 Extern IID_IAsyncResult Alias "IID_IAsyncResult" As Const IID
 
-Type ASYNCRESULTOVERLAPPED
-	OverLap As OVERLAPPED
-	pIAsync As IAsyncResult Ptr
-End Type
+Declare Function GetAsyncResultFromOverlappedWeakPtr( _
+	ByVal pOverLap As OVERLAPPED Ptr _
+)As IAsyncResult Ptr
 
 Type IAsyncResultVirtualTable
 	
@@ -68,7 +67,7 @@ Type IAsyncResultVirtualTable
 	
 	GetWsaOverlapped As Function( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
+		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
 	
 	AllocBuffers As Function( _

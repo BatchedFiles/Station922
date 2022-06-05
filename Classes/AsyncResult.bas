@@ -8,7 +8,7 @@ Type _AsyncResult
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	OverLap As ASYNCRESULTOVERLAPPED
+	OverLap As OVERLAPPED
 	lpVtbl As Const IAsyncResultVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
@@ -18,6 +18,18 @@ Type _AsyncResult
 	BytesTransferred As DWORD
 	Completed As Boolean
 End Type
+
+Function GetAsyncResultFromOverlappedWeakPtr( _
+		ByVal pOverLap As OVERLAPPED Ptr _
+	)As IAsyncResult Ptr
+	
+	Dim this As AsyncResult Ptr = ContainerOf(pOverLap, AsyncResult, OverLap)
+	
+	Dim pResult As IAsyncResult Ptr = CPtr(IAsyncResult Ptr, @this->lpVtbl)
+	
+	Return pResult
+	
+End Function
 
 Sub InitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr, _
@@ -34,7 +46,7 @@ Sub InitializeAsyncResult( _
 	this->pState = NULL
 	this->callback = NULL
 	this->pBuffers = NULL
-	ZeroMemory(@this->OverLap, SizeOf(ASYNCRESULTOVERLAPPED))
+	ZeroMemory(@this->OverLap, SizeOf(OVERLAPPED))
 	this->BytesTransferred = 0
 	this->Completed = False
 	
@@ -265,10 +277,10 @@ End Function
 
 Function AsyncResultGetWsaOverlapped( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
+		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
 	
-	*ppRecvOverlapped = @this->OverLap
+	*ppOverlapped = @this->OverLap
 	
 	Return S_OK
 	
@@ -362,9 +374,9 @@ End Function
 
 Function IAsyncResultGetWsaOverlapped( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal ppRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr Ptr _
+		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppRecvOverlapped)
+	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppOverlapped)
 End Function
 
 Function IAsyncResultAllocBuffers( _

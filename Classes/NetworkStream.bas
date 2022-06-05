@@ -230,10 +230,8 @@ Function NetworkStreamBeginRead( _
 	pRecvBuffers[0].len = Cast(ULONG, BufferLength)
 	pRecvBuffers[0].buf = CPtr(ZString Ptr, Buffer)
 	
-	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
-	
-	lpRecvOverlapped->pIAsync = pINewAsyncResult
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
@@ -272,7 +270,7 @@ Function NetworkStreamBeginRead( _
 		ReceiveBuffersCount, _
 		lpNumberOfBytesReceived, _
 		@Flags, _
-		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		lpCompletionRoutine _
 	)
 	If resWSARecv <> 0 Then
@@ -349,10 +347,8 @@ Function NetworkStreamBeginWriteGather( _
 		Return hrAllocBuffer
 	End If
 	
-	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @lpRecvOverlapped)
-	
-	lpRecvOverlapped->pIAsync = pINewAsyncResult
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
@@ -397,7 +393,7 @@ Function NetworkStreamBeginWriteGather( _
 		BuffersCount, _
 		lpNumberOfBytesSend, _
 		Flags, _
-		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		lpCompletionRoutine _
 	)
 	
@@ -441,8 +437,8 @@ Function NetworkStreamEndRead( _
 		Return S_OK
 	End If
 	
-	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @lpRecvOverlapped)
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @pOverlap)
 	
 	Const fNoWait As BOOL = False
 	Dim cbTransfer As DWORD = Any
@@ -450,7 +446,7 @@ Function NetworkStreamEndRead( _
 	
 	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
 		this->ClientSocket, _
-		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		@cbTransfer, _
 		fNoWait, _
 		@dwFlags _
@@ -500,8 +496,8 @@ Function NetworkStreamEndWrite( _
 		Return S_OK
 	End If
 	
-	Dim lpRecvOverlapped As ASYNCRESULTOVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @lpRecvOverlapped)
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @pOverlap)
 	
 	Const fNoWait As BOOL = False
 	Dim cbTransfer As DWORD = Any
@@ -509,7 +505,7 @@ Function NetworkStreamEndWrite( _
 	
 	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
 		this->ClientSocket, _
-		CPtr(WSAOVERLAPPED Ptr, lpRecvOverlapped), _
+		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		@cbTransfer, _
 		fNoWait, _
 		@dwFlags _
