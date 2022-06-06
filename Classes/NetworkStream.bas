@@ -45,6 +45,9 @@ Sub UnInitializeNetworkStream( _
 	If this->ClientSocket <> INVALID_SOCKET Then
 		CloseSocketConnection(this->ClientSocket)
 	End If
+	#if __FB_DEBUG__
+		this->ClientSocket = INVALID_SOCKET
+	#endif
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
