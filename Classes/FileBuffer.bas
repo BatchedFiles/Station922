@@ -13,8 +13,8 @@ Type _FileBuffer
 	lpVtbl As Const IFileBufferVirtualTable Ptr
 	ReferenceCounter As Integer
 	FileSize As LongInt
-	ChunkIndex As LongInt
 	FileOffset As LongInt
+	ChunkIndex As LongInt
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
 	FileHandle As Handle
@@ -309,8 +309,8 @@ Function FileBufferSetByteRange( _
 		ByVal Length As LongInt _
 	)As HRESULT
 	
+	this->FileSize = min(this->FileSize, Length - this->FileOffset + Offset)
 	this->FileOffset += Offset
-	this->FileSize -= Length
 	
 	Return S_OK
 	
@@ -326,7 +326,7 @@ Function FileBufferGetSlice( _
 	Dim VirtualStartIndex As LongInt = StartIndex + this->FileOffset
 	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
 	
-	If VirtualStartIndex >= VirtualFileSize Then
+	If VirtualStartIndex >= this->FileSize Then
 		ZeroMemory(pBufferSlice, SizeOf(BufferSlice))
 		Return E_OUTOFMEMORY
 	End If

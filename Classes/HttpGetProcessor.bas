@@ -380,10 +380,11 @@ Function HttpGetProcessorPrepare( _
 					
 					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
 					Dim ContentBodyLength As LongInt = VirtualFileLength - RequestedByteRange.FirstBytePosition
+					
 					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
 					
 					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
-					Dim LastBytePosition As LongInt = ContentBodyLength - 1
+					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 					
 					MakeContentRangeHeader( _
 						pIWriter, _
@@ -434,10 +435,11 @@ Function HttpGetProcessorPrepare( _
 					
 					Dim ContentBodyLength As LongInt = min(VirtualFileLength, RequestedByteRange.LastBytePosition)
 					Dim FileBytesOffset As LongInt = VirtualFileLength - ContentBodyLength
+					
 					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
 					
 					Dim FirstBytePosition As LongInt = VirtualFileLength - ContentBodyLength
-					Dim LastBytePosition As LongInt = FirstBytePosition + ContentBodyLength - 1
+					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 					
 					MakeContentRangeHeader( _
 						pIWriter, _
@@ -485,6 +487,7 @@ Function HttpGetProcessorPrepare( _
 					
 					Dim ContentBodyLength As LongInt = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, VirtualFileLength)
 					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
+					
 					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
 					
 					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
