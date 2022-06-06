@@ -1,4 +1,5 @@
 #include once "WriteErrorAsyncTask.bi"
+#include once "win\wininet.bi"
 #include once "ArrayStringWriter.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
@@ -304,20 +305,38 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 			)
 			this->BodyText = @MovedPermanently
 			
-			/'
-				Dim MovedUrl As WString Ptr = Any
-				IWebSite_GetMovedUrl(pIWebSite, @MovedUrl)
+			Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
+			Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
+				this->pIRequest, _
+				this->pIWebSitesWeakPtr, _
+				@pIWebSiteWeakPtr _
+			)
+			
+			If SUCCEEDED(hrFindSite) Then
+				Dim MovedUrl As HeapBSTR = Any
+				IWebSite_GetMovedUrl(pIWebSiteWeakPtr, @MovedUrl)
 				
-				Dim buf As WString * (URI_BUFFER_CAPACITY * 2 + 1) = Any
+				Dim buf As WString * (INTERNET_MAX_URL_LENGTH + 1 * 2 + 1) = Any
 				lstrcpyW(@buf, MovedUrl)
 				
-				Dim ClientURI As Station922Uri = Any
-				IClientRequest_GetUri(pIRequest, @ClientURI)
+				Dim ClientURI As IClientUri Ptr = Any
+				IClientRequest_GetUri(this->pIRequest, @ClientURI)
 				
-				lstrcatW(@buf, ClientURI.Uri)
+				Dim Path As HeapBSTR = Any
+				IClientUri_GetPath(ClientURI, @Path)
 				
-				IServerResponse_AddKnownResponseHeader(pIResponse, HttpResponseHeaders.HeaderLocation, @buf)
-			'/
+				lstrcatW(@buf, Path)
+				
+				IServerResponse_AddKnownResponseHeaderWstr( _
+					this->pIResponse, _
+					HttpResponseHeaders.HeaderLocation, _
+					@buf _
+				)
+				
+				HeapSysFreeString(Path)
+				IClientUri_Release(ClientURI)
+				HeapSysFreeString(MovedUrl)
+			End If
 			
 		Case ResponseErrorCode.BadRequest
 			IServerResponse_SetStatusCode( _
