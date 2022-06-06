@@ -44,6 +44,24 @@ Function WorkerThread( _
 				pOverlap _
 			)
 		Else
+			If pOverlap = NULL Then
+				#if __FB_DEBUG__
+				Scope
+					Dim dwError As DWORD = GetLastError()
+					Dim vtErrorCode As VARIANT = Any
+					vtErrorCode.vt = VT_UI4
+					vtErrorCode.ulVal = dwError
+					LogWriteEntry( _
+						LogEntryType.Error, _
+						WStr(!"Completion port error\t"), _
+						@vtErrorCode _
+					)
+				End Scope
+				#endif
+				
+				Exit Do
+			End If
+			
 			#if __FB_DEBUG__
 			Scope
 				Dim dwError As DWORD = GetLastError()
@@ -52,23 +70,18 @@ Function WorkerThread( _
 				vtErrorCode.ulVal = dwError
 				LogWriteEntry( _
 					LogEntryType.Error, _
-					WStr(!"GetQueuedCompletionStatus Error\t"), _
+					WStr(!"Failed I/O operation\t"), _
 					@vtErrorCode _
 				)
 			End Scope
 			#endif
 			
-			If pOverlap = NULL Then
-				' fprintf(stderr, "GetQueuedCompletionStatus завершилась ошибкой
-				' (ошибка %d)\n", GetLastError());
-				Exit Do
-			End If
-			
-			' fprintf(stderr, "GetQueuedCompletionStatus переместила 
-			' испорченный пакет I/O (ошибка %d)\n", GetLastError());
-			' // Не смотря на то, что вы можете здесь завершить работу
-			' // по ошибке этот пример продолжается.
-			
+			this->CallBack( _
+				this->param, _
+				BytesTransferred, _
+				CompletionKey, _
+				pOverlap _
+			)
 		End If
 		
 	Loop
