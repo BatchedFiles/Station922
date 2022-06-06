@@ -417,6 +417,7 @@ Function WebSiteOpenRequestedFile( _
 	Dim DefaultFilenameIndex As Integer = 0
 	Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
 	Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+	Dim hrGetFile As HRESULT = Any
 	
 	Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName( _
 		@DefaultFilename, _
@@ -430,7 +431,7 @@ Function WebSiteOpenRequestedFile( _
 		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
 		
 		Dim hFile As HANDLE = Any
-		Dim hrGetFile As HRESULT = GetFileHandle( _
+		hrGetFile = GetFileHandle( _
 			pFileName, _
 			fAccess, _
 			@hFile _
@@ -479,7 +480,7 @@ Function WebSiteOpenRequestedFile( _
 		HeapSysFreeString(fp)
 	End Scope
 	
-	Return S_FALSE
+	Return hrGetFile
 	
 End Function
 
@@ -888,63 +889,70 @@ Function WebSiteGetBuffer( _
 	)As HRESULT
 	
 	Dim pIFile As IFileBuffer Ptr = Any
-	Dim hrCreateFileBuffer As HRESULT = CreateInstance( _
-		pIMalloc, _
-		@CLSID_FILEBUFFER, _
-		@IID_IFileBuffer, _
-		@pIFile _
-	)
-	If FAILED(hrCreateFileBuffer) Then
-		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
-		*ppResult = NULL
-		Return hrCreateFileBuffer
-	End If
-	
-	Dim ClientURI As IClientUri Ptr = Any
-	IClientRequest_GetUri(pRequest, @ClientURI)
-	
-	Dim Path As HeapBSTR = Any
-	IClientUri_GetPath(ClientURI, @Path)
+	Scope
+		Dim hrCreateFileBuffer As HRESULT = CreateInstance( _
+			pIMalloc, _
+			@CLSID_FILEBUFFER, _
+			@IID_IFileBuffer, _
+			@pIFile _
+		)
+		If FAILED(hrCreateFileBuffer) Then
+			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*ppResult = NULL
+			Return hrCreateFileBuffer
+		End If
+	End Scope
 	
 	Dim FileName As WString * (MAX_PATH + 1) = Any
-	Dim hrOpenFile As HRESULT = WebSiteOpenRequestedFile( _
-		this, _
-		pIMalloc, _
-		pIFile, _
-		Path, _
-		@FileName, _
-		fAccess _
-	)
-	If FAILED(hrOpenFile) Then
-		Dim hrOpenFileTranslate As HRESULT = Any
+	
+	Scope
+		Dim ClientURI As IClientUri Ptr = Any
+		IClientRequest_GetUri(pRequest, @ClientURI)
 		
-		If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse _
-		hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
-			
-			Dim File410 As WString * (MAX_PATH + 1) = Any
-			lstrcpyW(@File410, @FileName)
-			lstrcatW(@File410, @FileGoneExtension)
-			
-			Dim Attributes As DWORD = GetFileAttributesW( _
-				@File410 _
-			)
-			If Attributes = INVALID_FILE_ATTRIBUTES Then
-				hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
-			Else
-				hrOpenFileTranslate = WEBSITE_E_FILEGONE
-			End If
-			
-		Else
-			hrOpenFileTranslate = hrOpenFile
-		End If
+		Dim Path As HeapBSTR = Any
+		IClientUri_GetPath(ClientURI, @Path)
 		
+		Dim hrOpenFile As HRESULT = WebSiteOpenRequestedFile( _
+			this, _
+			pIMalloc, _
+			pIFile, _
+			Path, _
+			@FileName, _
+			fAccess _
+		)
 		HeapSysFreeString(Path)
 		IClientUri_Release(ClientURI)
-		IFileBuffer_Release(pIFile)
-		*pFlags = ContentNegotiationFlags.ContentNegotiationNone
-		*ppResult = NULL
-		Return hrOpenFileTranslate
-	End If
+		
+		If FAILED(hrOpenFile) Then
+			Dim hrOpenFileTranslate As HRESULT = Any
+			
+			If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) OrElse _
+			hrOpenFile = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) Then
+				
+				Dim File410 As WString * (MAX_PATH + 1) = Any
+				lstrcpyW(@File410, @FileName)
+				lstrcatW(@File410, @FileGoneExtension)
+				
+				Dim Attributes As DWORD = GetFileAttributesW( _
+					@File410 _
+				)
+				If Attributes = INVALID_FILE_ATTRIBUTES Then
+					hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
+				Else
+					hrOpenFileTranslate = WEBSITE_E_FILEGONE
+				End If
+				
+			Else
+				hrOpenFileTranslate = hrOpenFile
+			End If
+			
+			IFileBuffer_Release(pIFile)
+			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*ppResult = NULL
+			Return hrOpenFileTranslate
+		End If
+		
+	End Scope
 	
 	Dim Mime As MimeType = Any
 	
@@ -954,8 +962,6 @@ Function WebSiteGetBuffer( _
 			PathFindExtensionW(FileName) _
 		)
 		If resGetMimeOfFileExtension = False Then
-			HeapSysFreeString(Path)
-			IClientUri_Release(ClientURI)
 			IFileBuffer_Release(pIFile)
 			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 			*ppResult = NULL
@@ -1008,8 +1014,6 @@ Function WebSiteGetBuffer( _
 				)
 				If resFileTime = 0 Then
 					Dim dwError As DWORD = GetLastError()
-					HeapSysFreeString(Path)
-					IClientUri_Release(ClientURI)
 					IFileBuffer_Release(pIFile)
 					*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 					*ppResult = NULL
@@ -1055,8 +1059,6 @@ Function WebSiteGetBuffer( _
 					)
 					If resGetFileSize = 0 Then
 						Dim dwError As DWORD = GetLastError()
-						HeapSysFreeString(Path)
-						IClientUri_Release(ClientURI)
 						IFileBuffer_Release(pIFile)
 						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 						*ppResult = NULL
@@ -1078,8 +1080,6 @@ Function WebSiteGetBuffer( _
 				@hMapFile _
 			)
 			If FAILED(hrGetFileMappingHandle) Then
-				HeapSysFreeString(Path)
-				IClientUri_Release(ClientURI)
 				IFileBuffer_Release(pIFile)
 				*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 				*ppResult = NULL
@@ -1108,8 +1108,6 @@ Function WebSiteGetBuffer( _
 				)
 				If resGetFileSize = 0 Then
 					Dim dwError As DWORD = GetLastError()
-					HeapSysFreeString(Path)
-					IClientUri_Release(ClientURI)
 					IFileBuffer_Release(pIFile)
 					*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 					*ppResult = NULL
@@ -1127,8 +1125,6 @@ Function WebSiteGetBuffer( _
 						@hMapOroginalFileHandle _
 					)
 					If FAILED(hrGetFileMappingHandle) Then
-						HeapSysFreeString(Path)
-						IClientUri_Release(ClientURI)
 						IFileBuffer_Release(pIFile)
 						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 						*ppResult = NULL
@@ -1144,8 +1140,6 @@ Function WebSiteGetBuffer( _
 					If FileBytes = NULL Then
 						Dim dwError As DWORD = GetLastError()
 						CloseHandle(hMapOroginalFileHandle)
-						HeapSysFreeString(Path)
-						IClientUri_Release(ClientURI)
 						IFileBuffer_Release(pIFile)
 						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 						*ppResult = NULL
@@ -1162,8 +1156,6 @@ Function WebSiteGetBuffer( _
 					@Slice _
 				)
 				If FAILED(hrSlice) Then
-					HeapSysFreeString(Path)
-					IClientUri_Release(ClientURI)
 					IFileBuffer_Release(pIFile)
 					*pFlags = ContentNegotiationFlags.ContentNegotiationNone
 					*ppResult = NULL
@@ -1205,70 +1197,10 @@ Function WebSiteGetBuffer( _
 	
 	' AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
-	HeapSysFreeString(Path)
-	IClientUri_Release(ClientURI)
-	
 	*ppResult = CPtr(IBuffer Ptr, pIFile)
 	
 	Return S_OK
 	
-	/'
-	Scope
-		
-		Dim pHeaderConnection As WString Ptr = Any
-		IClientRequest_GetHttpHeader( _
-			' pIRequest, _
-			' HttpRequestHeaders.HeaderConnection, _
-			' @pHeaderConnection _
-		' )
-		
-		If lstrcmpi(pHeaderConnection, @UpgradeString) = 0 Then
-			Dim pHeaderUpgrade As WString Ptr = Any
-			IClientRequest_GetHttpHeader( _
-				' pIRequest, _
-				' HttpRequestHeaders.HeaderUpgrade, _
-				' @pHeaderUpgrade _
-			' )
-			
-			If lstrcmpi(pHeaderUpgrade, @WebSocketString) = 0 Then
-				Dim pHeaderSecWebSocketVersion As WString Ptr = Any
-				IClientRequest_GetHttpHeader( _
-					' pIRequest, _
-					' HttpRequestHeaders.HeaderSecWebSocketVersion, _
-					' @pHeaderSecWebSocketVersion _
-				' )
-				
-				If lstrcmpi(pHeaderSecWebSocketVersion, @WebSocketVersionString) = 0 Then
-					
-					CloseHandle(FileHandle)
-					Return ProcessWebSocketRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-					
-				End If 
-			End If
-		End If
-		
-		Dim ClientUri As Station922Uri = Any
-		IClientRequest_GetUri(pIRequest, @ClientUri)
-		
-		Dim NeedProcessing As Boolean = Any
-		
-		IWebSite_NeedCgiProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
-		
-		If NeedProcessing Then
-			CloseHandle(FileHandle)
-			Return ProcessCGIRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		End If
-		
-		TODO ProcessDllCgiRequest
-		IWebSite_NeedDllProcessing(pIWebSite, ClientUri.Path, @NeedProcessing)
-		
-		If NeedProcessing Then
-			CloseHandle(FileHandle)
-			Return ProcessDllCgiRequest(pIRequest, pIResponse, pINetworkStream, pIWebSite, pIClientReader, pIRequestedFile)
-		End If
-		
-	End Scope
-	'/
 End Function
 
 Function WebSiteNeedCgiProcessing( _
