@@ -603,7 +603,7 @@ Function WriteResponseAsyncTaskPrepare( _
 			HeapSysFreeString(HttpMethod)
 			
 			If FAILED(hrProcessorItem) Then
-				hrPrepareResponse = WEBSITE_E_NOTIMPLEMENTED
+				hrPrepareResponse = HTTPPROCESSOR_E_NOTIMPLEMENTED
 			Else
 				Dim pc As ProcessorContext = Any
 				pc.pIMemoryAllocator = this->pIMemoryAllocator

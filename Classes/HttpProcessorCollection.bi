@@ -64,4 +64,9 @@ Declare Function HttpProcessorCollectionItemWeakPtr( _
 	ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 )As HRESULT
 
+Declare Function HttpProcessorCollectionSetAllMethods( _
+	ByVal this As HttpProcessorCollection Ptr, _
+	ByVal pMethods As HeapBSTR _
+)As HRESULT
+
 #endif

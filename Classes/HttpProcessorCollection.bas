@@ -1,5 +1,6 @@
 #include once "HttpProcessorCollection.bi"
 #include once "ContainerOf.bi"
+#include once "HeapBSTR.bi"
 #include once "Logger.bi"
 
 Extern GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable
@@ -19,6 +20,7 @@ Type _HttpProcessorCollection
 	lpVtbl As Const IHttpProcessorCollectionVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
+	Dim AllMethods As HeapBSTR
 	CollectionLength As Integer
 	Collection(HttpProcessorCollectionCapacity - 1) As HttpProcessorCollectionKeyValuePair
 End Type
@@ -34,6 +36,7 @@ Sub InitializeHttpProcessorCollection( _
 	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
+	this->AllMethods = NULL
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->Collectionlength = 0
 	
@@ -42,6 +45,8 @@ End Sub
 Sub UnInitializeHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
+	
+	HeapSysFreeString(this->AllMethods)
 	
 	For i As Integer = 0 To this->Collectionlength - 1
 		IHttpAsyncProcessor_Release(this->Collection(i).Value)
@@ -230,7 +235,8 @@ Function HttpProcessorCollectionGetAllMethods( _
 		ByVal ppMethods As HeapBSTR Ptr _
 	)As HRESULT
 	
-	*ppMethods = NULL
+	HeapSysAddRefString(this->AllMethods)
+	*ppMethods = this->AllMethods
 	
 	Return S_OK
 	
@@ -279,6 +285,17 @@ Function HttpProcessorCollectionItemWeakPtr( _
 	*ppIProcessor = NULL
 	
 	Return E_FAIL
+	
+End Function
+
+Function HttpProcessorCollectionSetAllMethods( _
+		ByVal this As HttpProcessorCollection Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->AllMethods, pMethods)
+	
+	Return S_OK
 	
 End Function
 
@@ -348,6 +365,13 @@ Function IHttpProcessorCollectionItemWeakPtr( _
 	Return HttpProcessorCollectionItemWeakPtr(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
 End Function
 
+Function IHttpProcessorCollectionSetAllMethods( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	Return HttpProcessorCollectionSetAllMethods(ContainerOf(this, HttpProcessorCollection, lpVtbl), pMethods)
+End Function
+
 Dim GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable = Type( _
 	@IHttpProcessorCollectionQueryInterface, _
 	@IHttpProcessorCollectionAddRef, _
@@ -357,5 +381,6 @@ Dim GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionV
 	@IHttpProcessorCollectionCount, _
 	@IHttpProcessorCollectionGetAllMethods, _
 	@IHttpProcessorCollectionAdd, _
-	@IHttpProcessorCollectionItemWeakPtr _
+	@IHttpProcessorCollectionItemWeakPtr, _
+	@IHttpProcessorCollectionSetAllMethods _
 )

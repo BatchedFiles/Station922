@@ -687,6 +687,22 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 		IHttpAsyncProcessor_Release(pIHttpGetProcessor)
 	End Scope
 	
+	Scope
+		Const AllMethodsString = "GET, HEAD"
+		Dim AllMethods As HeapBSTR = HeapSysAllocStringLen( _
+			this->pIMemoryAllocator, _
+			WStr(AllMethodsString), _
+			Len(AllMethodsString) _
+		)
+		
+		IHttpProcessorCollection_SetAllMethods( _
+			pIProcessorCollection, _
+			AllMethods _
+		)
+		
+		HeapSysFreeString(AllMethods)
+	End Scope
+
 	*ppIHttpProcessorCollection = pIProcessorCollection
 	
 	Return S_OK

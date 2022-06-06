@@ -143,9 +143,6 @@ Function ProcessErrorRequestResponse( _
 		Case WEBSITE_E_REDIRECTED
 			HttpError = ResponseErrorCode.MovedPermanently
 			
-		Case WEBSITE_E_NOTIMPLEMENTED
-			HttpError = ResponseErrorCode.NotImplemented
-			
 		Case WEBSITE_E_FILENOTFOUND
 			HttpError = ResponseErrorCode.FileNotFound
 			
@@ -154,6 +151,9 @@ Function ProcessErrorRequestResponse( _
 			
 		Case WEBSITE_E_FORBIDDEN
 			HttpError = ResponseErrorCode.Forbidden
+			
+		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
+			HttpError = ResponseErrorCode.NotImplemented
 			
 		Case E_OUTOFMEMORY
 			HttpError = ResponseErrorCode.NotEnoughMemory
@@ -233,6 +233,7 @@ Sub FormatErrorMessageBody( _
 	IArrayStringWriter_WriteString(pIWriter, HttpEndH1Tag)
 	
 	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	
 	Select Case StatusCode
 		
 		Case 300 To 399
@@ -507,6 +508,17 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				this->pIResponse, _
 				HttpStatusCodes.NotImplemented _
 			)
+			Dim AllMethods As HeapBSTR = Any
+			IHttpProcessorCollection_GetAllMethods( _
+				this->pIProcessorsWeakPtr, _
+				@AllMethods _
+			)
+			IServerResponse_AddKnownResponseHeader( _
+				this->pIResponse, _
+				HttpResponseHeaders.HeaderAllow, _
+				AllMethods _
+			)
+			HeapSysFreeString(AllMethods)
 			this->BodyText = @HttpError501NotImplemented
 			
 		Case ResponseErrorCode.ContentTypeEmpty

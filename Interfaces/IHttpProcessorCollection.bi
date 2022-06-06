@@ -59,6 +59,11 @@ Type IHttpProcessorCollectionVirtualTable
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
+	SetAllMethods As Function( _
+		ByVal this As IHttpProcessorCollection Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	
 	' Для коллекций:
 	' Count()
 	' Item()
@@ -80,5 +85,6 @@ End Type
 #define IHttpProcessorCollection_GetAllMethods(this, ppMethods) (this)->lpVtbl->GetAllMethods(this, ppMethods)
 #define IHttpProcessorCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
 #define IHttpProcessorCollection_ItemWeakPtr(this, pKey, ppIWebSite) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIWebSite)
+#define IHttpProcessorCollection_SetAllMethods(this, pMethods) (this)->lpVtbl->SetAllMethods(this, pMethods)
 
 #endif
