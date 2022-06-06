@@ -14,12 +14,19 @@ Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 2
 Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
 #endif
 
+#if __FB_DEBUG__
+Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (4 * SizeOf(Integer)) \ SizeOf(UByte) - SizeOf(ZString) * 16
+#else
 Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) \ SizeOf(UByte) - (4 * SizeOf(Integer)) \ SizeOf(UByte)
+#endif
 
 Const DoubleNewLineStringA = Str(!"\r\n\r\n")
 Const NewLineStringA = Str(!"\r\n")
 
 Type RawBuffer
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	cbLength As Integer
 	EndOfHeaders As Integer
 	StartLine As Integer
@@ -31,6 +38,9 @@ Sub InitializeRawBuffer( _
 		ByVal pBufer As RawBuffer Ptr _
 	)
 	
+	#if __FB_DEBUG__
+		CopyMemory(@this->IdString, @Str("HttpReaderBuffer"), 16)
+	#endif
 	' No Need ZeroMemory pBufer.Bytes
 	pBufer->cbLength = 0
 	pBufer->EndOfHeaders = 0
