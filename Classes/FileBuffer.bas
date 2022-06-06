@@ -297,7 +297,9 @@ Function FileBufferGetLength( _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	*pLength = this->FileSize - this->FileOffset
+	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
+	
+	*pLength = VirtualFileSize
 	
 	Return S_OK
 	
@@ -309,7 +311,7 @@ Function FileBufferSetByteRange( _
 		ByVal Length As LongInt _
 	)As HRESULT
 	
-	this->FileSize = min(this->FileSize, Length - this->FileOffset + Offset)
+	this->FileSize = min(this->FileSize, Length + Offset + this->FileOffset)
 	this->FileOffset += Offset
 	
 	Return S_OK
