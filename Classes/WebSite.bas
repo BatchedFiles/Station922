@@ -566,7 +566,6 @@ Function GetCompressionHandle( _
 	End Scope
 	
 	*pZipMode = ZipModes.None
-	*pEncodingVaryFlag = False
 	
 	Return INVALID_HANDLE_VALUE
 	
