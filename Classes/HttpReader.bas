@@ -39,7 +39,7 @@ Sub InitializeRawBuffer( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("HttpReaderBuffer"), 16)
+		CopyMemory(@pBufer->IdString, @Str("HttpReaderBuffer"), 16)
 	#endif
 	' No Need ZeroMemory pBufer.Bytes
 	pBufer->cbLength = 0
