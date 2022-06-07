@@ -24,7 +24,11 @@ Sub InitializeArrayStringWriter( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("ArayStringWriter"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_ARRAYSTRINGWRITER), _
+			Len(ArrayStringWriter.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalArrayStringWriterVirtualTable
 	this->ReferenceCounter = 0

@@ -5,6 +5,8 @@
 
 Extern CLSID_READREQUESTASYNCTASK Alias "CLSID_READREQUESTASYNCTASK" As Const CLSID
 
+Const RTTI_ID_READREQUESTASYNCTASK    = !"\001Task______Read\001"
+
 Type ReadRequestAsyncTask As _ReadRequestAsyncTask
 
 Type LPReadRequestAsyncTask As _ReadRequestAsyncTask Ptr

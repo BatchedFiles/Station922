@@ -29,7 +29,11 @@ Sub InitializeHttpWriter( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Http______Writer"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HTTPWRITER), _
+			Len(HttpWriter.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalHttpWriterVirtualTable
 	this->ReferenceCounter = 0

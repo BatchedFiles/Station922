@@ -3,6 +3,9 @@
 
 #include once "IHttpReader.bi"
 
+Const RTTI_ID_HTTPREADER              = !"\001Http____Reader\001"
+Const RTTI_ID_HTTPREADERBUFFER        = !"\001Reader__Buffer\001"
+
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
 Type HttpReader As _HttpReader

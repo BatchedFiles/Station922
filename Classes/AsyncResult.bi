@@ -5,6 +5,8 @@
 
 Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
+Const RTTI_ID_ASYNCRESULT             = !"\001Async___Result\001"
+
 Type AsyncResult As _AsyncResult
 
 Type LPAsyncResult As _AsyncResult Ptr

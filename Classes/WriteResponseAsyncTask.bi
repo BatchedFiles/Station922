@@ -5,6 +5,8 @@
 
 Extern CLSID_WRITERESPONSEASYNCTASK Alias "CLSID_WRITERESPONSEASYNCTASK" As Const CLSID
 
+Const RTTI_ID_WRITERESPONSEASYNCTASK  = !"\001Task__Response\001"
+
 Type WriteResponseAsyncTask As _WriteResponseAsyncTask
 
 Type LPWriteResponseAsyncTask As _WriteResponseAsyncTask Ptr

@@ -35,7 +35,11 @@ Sub InitializeFileBuffer( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("FileBuffer______"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_FILEBUFFER), _
+			Len(FileBuffer.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalFileBufferVirtualTable
 	this->ReferenceCounter = 0

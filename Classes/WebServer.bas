@@ -554,7 +554,11 @@ Sub InitializeWebServer( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WebServerWebServ"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_WEBSERVER), _
+			Len(WebServer.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWebServerVirtualTable
 	this->ReferenceCounter = 0

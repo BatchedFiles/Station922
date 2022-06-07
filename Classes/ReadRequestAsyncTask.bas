@@ -30,7 +30,11 @@ Sub InitializeReadRequestAsyncTask( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("ReadRequest_Task"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_READREQUESTASYNCTASK), _
+			Len(ReadRequestAsyncTask.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalReadRequestAsyncIoTaskVirtualTable
 	this->ReferenceCounter = 0

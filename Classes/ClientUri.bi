@@ -5,6 +5,8 @@
 
 Extern CLSID_CLIENTURI Alias "CLSID_CLIENTURI" As Const CLSID
 
+Const RTTI_ID_CLIENTURI               = !"\001Client_____Uri\001"
+
 Type ClientUri As _ClientUri
 
 Type LPClientUri As _ClientUri Ptr

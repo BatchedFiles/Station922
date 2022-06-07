@@ -99,7 +99,11 @@ Sub InitializeInternalHeapBSTR( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("InternalHeapBSTR"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HEAPBSTR), _
+			Len(InternalHeapBSTR.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalInternalStringVirtualTable
 	this->ReferenceCounter = 0

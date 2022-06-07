@@ -39,7 +39,11 @@ Sub InitializeRawBuffer( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@pBufer->IdString, @Str("HttpReaderBuffer"), 16)
+		CopyMemory( _
+			@pBufer->IdString, _
+			@Str(RTTI_ID_HTTPREADERBUFFER), _
+			Len(RawBuffer.IdString) _
+		)
 	#endif
 	' No Need ZeroMemory pBufer.Bytes
 	pBufer->cbLength = 0
@@ -167,7 +171,11 @@ Sub InitializeHttpReader( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("HttpReaderReader"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HTTPREADER), _
+			Len(HttpReader.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalHttpReaderVirtualTable
 	this->ReferenceCounter = 0

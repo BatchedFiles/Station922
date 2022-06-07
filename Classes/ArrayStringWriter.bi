@@ -5,6 +5,8 @@
 
 Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
 
+Const RTTI_ID_ARRAYSTRINGWRITER       = !"\001String_Builder\001"
+
 Type ArrayStringWriter As _ArrayStringWriter
 
 Type LPArrayStringWriter As _ArrayStringWriter Ptr

@@ -5,6 +5,8 @@
 
 Extern CLSID_SERVERRESPONSE Alias "CLSID_SERVERRESPONSE" As Const CLSID
 
+Const RTTI_ID_SERVERRESPONSE          = !"\001ServerResponse\001"
+
 Type ServerResponse As _ServerResponse
 
 Type LPServerResponse As _ServerResponse Ptr

@@ -447,7 +447,11 @@ Sub InitializeClientRequest( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Client___Request"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_CLIENTREQUEST), _
+			Len(ClientRequest.IdString) _
+		)
 	#endif
 	this->ContentLength = 0
 	this->RequestByteRange.FirstBytePosition = 0

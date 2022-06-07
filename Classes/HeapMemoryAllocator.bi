@@ -5,6 +5,8 @@
 
 Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
 
+Const RTTI_ID_HEAPMEMORYALLOCATOR     = !"\001Mem__Allocator\001"
+
 Type HeapMemoryAllocator As _HeapMemoryAllocator
 
 Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr

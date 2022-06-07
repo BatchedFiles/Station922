@@ -27,7 +27,11 @@ Sub InitializeMemoryBuffer( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Memory____Buffer"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_MEMORYBUFFER), _
+			Len(MemoryBuffer.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalMemoryBufferVirtualTable
 	this->ReferenceCounter = 0

@@ -5,7 +5,11 @@
 #include once "IString.bi"
 #include once "Mime.bi"
 
+#if __FB_DEBUG__
+Const BUFFERSLICECHUNK_SIZE As DWORD = 64 * 1024
+#else
 Const BUFFERSLICECHUNK_SIZE As DWORD = 64 * 1024 * 128
+#endif
 
 Enum FileAccess
 	CreateAccess

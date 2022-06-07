@@ -98,7 +98,11 @@ Sub InitializeThreadPool( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Thread_Pool_Pool"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_THREADPOOL), _
+			Len(ThreadPool.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalThreadPoolVirtualTable
 	this->ReferenceCounter = 0

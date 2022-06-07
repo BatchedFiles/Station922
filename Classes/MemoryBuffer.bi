@@ -3,6 +3,8 @@
 
 #include once "IMemoryBuffer.bi"
 
+Const RTTI_ID_MEMORYBUFFER            = !"\001Memory__Buffer\001"
+
 Extern CLSID_MEMORYBUFFER Alias "CLSID_MEMORYBUFFER" As Const CLSID
 
 Type MemoryBuffer As _MemoryBuffer

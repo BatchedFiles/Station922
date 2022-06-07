@@ -28,7 +28,11 @@ Sub InitializeHeapMemoryAllocator( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("HMemoryAllocator"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HEAPMEMORYALLOCATOR), _
+			Len(HeapMemoryAllocator.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0

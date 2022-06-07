@@ -5,6 +5,9 @@
 Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable
 
 Type WebSiteNode
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
 	HostName As BSTR
@@ -98,6 +101,13 @@ Function CreateWebSiteNode( _
 		Return NULL
 	End If
 	
+	#if __FB_DEBUG__
+		CopyMemory( _
+			@pNode->IdString, _
+			@Str(RTTI_ID_WEBSITENODE), _
+			Len(WebSiteNode.IdString) _
+		)
+	#endif
 	pNode->HostName = bstrHostName
 	IWebSite_AddRef(pValue)
 	pNode->pIWebSite = pValue
@@ -114,7 +124,11 @@ Sub InitializeWebSiteCollection( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WebSiteCollectio"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_WEBSITECOLLECTION), _
+			Len(WebSiteCollection.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable
 	this->ReferenceCounter = 0

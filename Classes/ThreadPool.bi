@@ -5,6 +5,8 @@
 
 Extern CLSID_THREADPOOL Alias "CLSID_THREADPOOL" As Const CLSID
 
+Const RTTI_ID_THREADPOOL              = !"\001Thread____Pool\001"
+
 Type ThreadPool As _ThreadPool
 
 Type LPThreadPool As _ThreadPool Ptr

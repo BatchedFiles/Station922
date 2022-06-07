@@ -39,7 +39,11 @@ Sub InitializeWriteResponseAsyncTask( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WriteResponseTsk"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_WRITERESPONSEASYNCTASK), _
+			Len(WriteResponseAsyncTask.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWriteResponseAsyncIoTaskVirtualTable
 	this->ReferenceCounter = 0

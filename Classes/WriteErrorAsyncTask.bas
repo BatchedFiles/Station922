@@ -621,7 +621,11 @@ Sub InitializeWriteErrorAsyncTask( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WriteError__Task"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_WRITEERRORASYNCTASK), _
+			Len(WriteErrorAsyncTask.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWriteErrorAsyncIoTaskVirtualTable
 	this->ReferenceCounter = 0

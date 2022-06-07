@@ -209,7 +209,11 @@ Sub InitializeClientUri( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("ClientUri_______"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_CLIENTURI), _
+			Len(ClientUri.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalClientUriVirtualTable
 	this->ReferenceCounter = 0

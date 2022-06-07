@@ -37,7 +37,11 @@ Sub InitializeAsyncResult( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("AsyncResultResul"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_ASYNCRESULT), _
+			Len(AsyncResult.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalAsyncResultVirtualTable
 	this->ReferenceCounter = 0

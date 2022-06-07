@@ -54,7 +54,11 @@ Sub InitializeHttpGetProcessor( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("HttpGetProcessor"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HTTPGETPROCESSOR), _
+			Len(HttpGetProcessor.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
 	this->ReferenceCounter = 0

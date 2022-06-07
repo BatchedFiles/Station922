@@ -3,6 +3,8 @@
 
 #include once "INetworkStream.bi"
 
+Const RTTI_ID_NETWORKSTREAM           = !"\001Network_Stream\001"
+
 Extern CLSID_NETWORKSTREAM Alias "CLSID_NETWORKSTREAM" As Const CLSID
 
 Type NetworkStream As _NetworkStream

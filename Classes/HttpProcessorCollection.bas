@@ -31,7 +31,11 @@ Sub InitializeHttpProcessorCollection( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("HttpProcessorCol"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_HTTPPROCESSORCOLLECTION), _
+			Len(HttpProcessorCollection.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable
 	this->ReferenceCounter = 0

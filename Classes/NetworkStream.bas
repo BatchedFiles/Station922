@@ -27,7 +27,11 @@ Sub InitializeNetworkStream( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Network___Stream"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_NETWORKSTREAM), _
+			Len(NetworkStream.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	this->ReferenceCounter = 0

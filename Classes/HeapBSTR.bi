@@ -5,6 +5,8 @@
 
 Extern CLSID_HEAPBSTR Alias "CLSID_HEAPBSTR" As Const CLSID
 
+Const RTTI_ID_HEAPBSTR                = !"\001Heap______BSTR\001"
+
 #MACRO LET_HEAPSYSSTRING(lhs, rhs)
 	HeapSysFreeString(lhs)
 	HeapSysAddRefString(rhs)

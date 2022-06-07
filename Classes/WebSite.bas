@@ -653,7 +653,11 @@ Sub InitializeWebSite( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("WebSite_________"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_WEBSITE), _
+			Len(WebSite.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteVirtualTable
 	this->ReferenceCounter = 0

@@ -3,6 +3,8 @@
 
 #include once "IHttpProcessorCollection.bi"
 
+Const RTTI_ID_HTTPPROCESSORCOLLECTION = !"\001Coll_Processor\001"
+
 Extern CLSID_HTTPPROCESSORCOLLECTION Alias "CLSID_HTTPPROCESSORCOLLECTION" As Const CLSID
 
 Type HttpProcessorCollection As _HttpProcessorCollection

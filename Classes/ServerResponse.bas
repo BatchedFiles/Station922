@@ -42,7 +42,11 @@ Sub InitializeServerResponse( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("Server__Response"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_SERVERRESPONSE), _
+			Len(ServerResponse.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalServerResponseVirtualTable
 	this->ReferenceCounter = 0

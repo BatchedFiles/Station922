@@ -62,7 +62,11 @@ Sub InitializeWebServerIniConfiguration( _
 	)
 	
 	#if __FB_DEBUG__
-		CopyMemory(@this->IdString, @Str("IniConfiguration"), 16)
+		CopyMemory( _
+			@this->IdString, _
+			@Str(RTTI_ID_INICONFIGURATION), _
+			Len(WebServerIniConfiguration.IdString) _
+		)
 	#endif
 	this->lpVtbl = @GlobalWebServerIniConfigurationVirtualTable
 	this->ReferenceCounter = 0

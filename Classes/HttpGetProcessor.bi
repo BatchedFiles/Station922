@@ -5,6 +5,8 @@
 
 Extern CLSID_HTTPGETASYNCPROCESSOR Alias "CLSID_HTTPGETASYNCPROCESSOR" As Const CLSID
 
+Const RTTI_ID_HTTPGETPROCESSOR        = !"\001Get_______Proc\001"
+
 Type HttpGetProcessor As _HttpGetProcessor
 
 Type LPHttpGetProcessor As _HttpGetProcessor Ptr

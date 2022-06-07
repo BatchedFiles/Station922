@@ -3,6 +3,8 @@
 
 #include once "IClientRequest.bi"
 
+Const RTTI_ID_CLIENTREQUEST           = !"\001Client_Request\001"
+
 Extern CLSID_CLIENTREQUEST Alias "CLSID_CLIENTREQUEST" As Const CLSID
 
 Type ClientRequest As _ClientRequest

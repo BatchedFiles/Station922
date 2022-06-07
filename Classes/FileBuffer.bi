@@ -5,6 +5,8 @@
 
 Extern CLSID_FILEBUFFER Alias "CLSID_FILEBUFFER" As Const CLSID
 
+Const RTTI_ID_FILEBUFFER              = !"\001File____Buffer\001"
+
 Type FileBuffer As _FileBuffer
 
 Type LPFileBuffer As _FileBuffer Ptr

@@ -5,6 +5,8 @@
 
 Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
 
+Const RTTI_ID_INICONFIGURATION        = !"\001INI_____Config\001"
+
 Type WebServerIniConfiguration As _WebServerIniConfiguration
 
 Type LPWebServerIniConfiguration As _WebServerIniConfiguration Ptr
