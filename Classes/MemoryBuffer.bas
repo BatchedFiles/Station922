@@ -274,7 +274,9 @@ Function MemoryBufferGetLength( _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	*pLength = this->Capacity
+	Dim VirtualLength As LongInt = this->Capacity - this->Offset
+	
+	*pLength = VirtualLength
 	
 	Return S_OK
 	
@@ -307,7 +309,7 @@ Function MemoryBufferGetSlice( _
 	End If
 	
 	pBufferSlice->pSlice = @this->pBuffer[VirtualIndex]
-	pBufferSlice->Length = this->Capacity - StartIndex
+	pBufferSlice->Length = this->Capacity - StartIndex - this->Offset
 	
 	If pBufferSlice->Length <= this->Capacity Then
 		Return S_FALSE
@@ -334,17 +336,34 @@ Function MemoryBufferAllocBuffer( _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 	
+	Dim Offset As LongInt = Any
+	#if __FB_DEBUG__
+		Offset = Len(RTTI_ID_MEMORYBUFFERBODY)
+	#else
+		Offset = 0
+	#endif
+	
 	this->pBuffer = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
-		Length _
+		Length + Offset _
 	)
 	If this->pBuffer = NULL Then
 		*ppBuffer = NULL
 		Return E_OUTOFMEMORY
 	End If
 	
-	this->Capacity = Length
-	*ppBuffer = this->pBuffer
+	#if __FB_DEBUG__
+		CopyMemory( _
+			this->pBuffer, _
+			@Str(RTTI_ID_MEMORYBUFFERBODY), _
+			Len(RTTI_ID_MEMORYBUFFERBODY) _
+		)
+	#endif
+	
+	this->Capacity = Length + Offset
+	this->OffSet = Offset
+	
+	*ppBuffer = @this->pBuffer[Offset]
 	
 	Return S_OK
 	
