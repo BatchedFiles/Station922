@@ -182,7 +182,22 @@ Sub DestroyHeapMemoryAllocator( _
 			HeapUnlock(hHeap)
 		End If
 		
-		HeapDestroy(hHeap)
+		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
+		If resHeapDestroy = 0 Then
+			#if __FB_DEBUG__
+			Scope
+				Dim dwError As DWORD = GetLastError()
+				Dim vtErrorCode As VARIANT = Any
+				vtErrorCode.vt = VT_UI4
+				vtErrorCode.ulVal = dwError
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"HeapDestroy error\t"), _
+					@vtErrorCode _
+				)
+			End Scope
+			#endif
+		End If
 	End If
 	
 	#if __FB_DEBUG__
