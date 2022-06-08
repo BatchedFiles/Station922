@@ -330,7 +330,6 @@ Function FileBufferGetSlice( _
 	)As HRESULT
 	
 	Dim VirtualStartIndex As LongInt = StartIndex + this->FileOffset
-	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
 	
 	If VirtualStartIndex >= this->FileSize Then
 		ZeroMemory(pBufferSlice, SizeOf(BufferSlice))
@@ -386,16 +385,20 @@ Function FileBufferGetSlice( _
 	End If
 	
 	Dim IndexInChunck As LongInt = VirtualStartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)
-	Dim SliceLength As DWORD = min(dwNumberOfBytesToMap, Length)
+	Dim SliceLength As DWORD = min(dwNumberOfBytesToMap, Length - Cast(DWORD, IndexInChunck))
 	
 	pBufferSlice->pSlice = @this->FileBytes[IndexInChunck]
 	pBufferSlice->Length = SliceLength
 	
-	If VirtualStartIndex + CLngInt(SliceLength) >= VirtualFileSize Then
-		Return S_FALSE
+	Dim NextChunkIndex As LongInt = Integer64Division( _
+		VirtualStartIndex + Length - SliceLength, _
+		CLngInt(BUFFERSLICECHUNK_SIZE) _
+	)
+	If RequestChunkIndex < NextChunkIndex Then
+		Return S_OK
 	End If
 	
-	Return S_OK
+	Return S_FALSE
 	
 End Function
 
