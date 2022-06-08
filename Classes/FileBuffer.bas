@@ -353,7 +353,7 @@ Function FileBufferGetSlice( _
 	
 	Dim dwNumberOfBytesToMap As DWORD = min( _
 		BUFFERSLICECHUNK_SIZE, _
-		VirtualFileSize - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
+		this->FileSize - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
 	)
 	
 	If this->FileBytes = NULL Then
