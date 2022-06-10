@@ -64,12 +64,6 @@ Declare Function MemoryBufferGetLength( _
 	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
-Declare Function MemoryBufferSetByteRange( _
-	ByVal this As MemoryBuffer Ptr, _
-	ByVal Offset As LongInt, _
-	ByVal Length As LongInt _
-)As HRESULT
-
 Declare Function MemoryBufferGetSlice( _
 	ByVal this As MemoryBuffer Ptr, _
 	ByVal StartIndex As LongInt, _

@@ -176,4 +176,10 @@ Declare Function ServerResponsePrepare( _
 	ByVal ContentLength As LongInt _
 )As HRESULT
 
+Declare Function FileBufferSetByteRange( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal Offset As LongInt, _
+	ByVal Length As LongInt _
+)As HRESULT
+
 #endif

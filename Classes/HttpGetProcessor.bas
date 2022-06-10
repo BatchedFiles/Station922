@@ -348,9 +348,13 @@ Function HttpGetProcessorPrepare( _
 			Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 			Dim wContentRange As WString * (ContentRangeMaximumBufferLength + 1) = Any
 			
-			IArrayStringWriter_SetBuffer(pIWriter, @wContentRange, ContentRangeMaximumBufferLength)
+			IArrayStringWriter_SetBuffer( _
+				pIWriter, _
+				@wContentRange, _
+				ContentRangeMaximumBufferLength _
+			)
 			
-			Dim VirtualFileLength As LongInt = Any 'EncodingFileSize
+			Dim VirtualFileLength As LongInt = Any
 			IBuffer_GetLength(pIBuffer, @VirtualFileLength)
 			
 			Select Case RequestedByteRange.IsSet
@@ -385,7 +389,11 @@ Function HttpGetProcessorPrepare( _
 					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
 					Dim ContentBodyLength As LongInt = VirtualFileLength - RequestedByteRange.FirstBytePosition
 					
-					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					IServerResponse_SetByteRange( _
+						pContext->pIResponse, _
+						FileBytesOffset, _
+						ContentBodyLength _
+					)
 					
 					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
@@ -408,8 +416,7 @@ Function HttpGetProcessorPrepare( _
 					)
 					
 				Case ByteRangeIsSet.LastBytePositionIsSet
-					' Окончательные 500 байт (байтовые смещения 9500-9999, включительно): bytes=-500
-					' Только последний байты (9999): bytes=-1
+					' Окончательные 500 байт : bytes=-500
 					' Если указано больше чем длина файла
 					' то возвращаются все байты файла
 					If RequestedByteRange.LastBytePosition = 0 Then
@@ -440,7 +447,11 @@ Function HttpGetProcessorPrepare( _
 					Dim ContentBodyLength As LongInt = min(VirtualFileLength, RequestedByteRange.LastBytePosition)
 					Dim FileBytesOffset As LongInt = VirtualFileLength - ContentBodyLength
 					
-					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					IServerResponse_SetByteRange( _
+						pContext->pIResponse, _
+						FileBytesOffset, _
+						ContentBodyLength _
+					)
 					
 					Dim FirstBytePosition As LongInt = VirtualFileLength - ContentBodyLength
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
@@ -492,7 +503,11 @@ Function HttpGetProcessorPrepare( _
 					Dim ContentBodyLength As LongInt = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, VirtualFileLength)
 					Dim FileBytesOffset As LongInt = RequestedByteRange.FirstBytePosition
 					
-					IBuffer_SetByteRange(pIBuffer, FileBytesOffset, ContentBodyLength)
+					IServerResponse_SetByteRange( _
+						pContext->pIResponse, _
+						FileBytesOffset, _
+						ContentBodyLength _
+					)
 					
 					Dim FirstBytePosition As LongInt = RequestedByteRange.FirstBytePosition
 					Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, VirtualFileLength - 1)

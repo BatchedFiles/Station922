@@ -1,8 +1,6 @@
 #ifndef IHTTPASYNCPROCESSOR_BI
 #define IHTTPASYNCPROCESSOR_BI
 
-#include once "IAsyncResult.bi"
-#include once "IBaseStream.bi"
 #include once "IClientRequest.bi"
 #include once "IServerResponse.bi"
 #include once "IWebSite.bi"

@@ -185,6 +185,12 @@ Type IServerResponseVirtualTable
 		ByVal ContentLength As LongInt _
 	)As HRESULT
 	
+	SetByteRange As Function( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
 End Type
 
 Type IServerResponse_
@@ -221,5 +227,6 @@ End Type
 #define IServerResponse_BeginWriteResponse(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteResponse(this, StateObject, ppIAsyncResult)
 #define IServerResponse_EndWriteResponse(this, pIAsyncResult) (this)->lpVtbl->EndWriteResponse(this, pIAsyncResult)
 #define IServerResponse_Prepare(this, ContentLength) (this)->lpVtbl->Prepare(this, ContentLength)
+#define IServerResponse_SetByteRange(this, Offset, Length) (this)->lpVtbl->SetByteRange(this, Offset, Length)
 
 #endif

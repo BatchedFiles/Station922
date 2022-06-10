@@ -803,6 +803,19 @@ Function ServerResponsePrepare( _
 	
 End Function
 
+Function ServerResponseSetByteRange( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
+	'this->FileSize = min(this->FileSize, Length + Offset + this->FileOffset)
+	'this->FileOffset += Offset
+	
+	Return S_OK
+	
+End Function
+
 
 Function IServerResponseQueryInterface( _
 		ByVal this As IServerResponse Ptr, _
@@ -1021,6 +1034,14 @@ Function IServerResponsePrepare( _
 	Return ServerResponsePrepare(ContainerOf(this, ServerResponse, lpVtbl), ContentLength)
 End Function
 
+Function IServerResponseSetByteRange( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return ServerResponseSetByteRange(ContainerOf(this, ServerResponse, lpVtbl), Offset, Length)
+End Function
+
 Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type( _
 	@IServerResponseQueryInterface, _
 	@IServerResponseAddRef, _
@@ -1051,5 +1072,6 @@ Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type
 	@IServerResponseSetTextWriter, _
 	@IServerResponseBeginWriteResponse, _
 	@IServerResponseEndWriteResponse, _
-	@IServerResponsePrepare _
+	@IServerResponsePrepare, _
+	@IServerResponseSetByteRange _
 )

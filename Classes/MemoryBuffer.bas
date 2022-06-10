@@ -282,19 +282,6 @@ Function MemoryBufferGetLength( _
 	
 End Function
 
-Function MemoryBufferSetByteRange( _
-		ByVal this As MemoryBuffer Ptr, _
-		ByVal Offset As LongInt, _
-		ByVal Length As LongInt _
-	)As HRESULT
-	
-	this->Capacity = max(this->Capacity, Length)
-	this->Offset = Offset
-	
-	Return S_OK
-	
-End Function
-
 Function MemoryBufferGetSlice( _
 		ByVal this As MemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -432,14 +419,6 @@ Function IMemoryBufferGetLength( _
 	Return MemoryBufferGetLength(ContainerOf(this, MemoryBuffer, lpVtbl), pLength)
 End Function
 
-Function IMemoryBufferSetByteRange( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal Offset As LongInt, _
-		ByVal Length As LongInt _
-	)As HRESULT
-	Return MemoryBufferSetByteRange(ContainerOf(this, MemoryBuffer, lpVtbl), Offset, Length)
-End Function
-
 Function IMemoryBufferGetSlice( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -474,7 +453,6 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferGetETag, _
 	@IMemoryBufferGetLastFileModifiedDate, _
 	@IMemoryBufferGetLength, _
-	@IMemoryBufferSetByteRange, _
 	@IMemoryBufferGetSlice, _
 	@IMemoryBufferSetContentType, _
 	@IMemoryBufferAllocBuffer _

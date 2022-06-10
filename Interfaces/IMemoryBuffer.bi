@@ -55,12 +55,6 @@ Type IMemoryBufferVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	SetByteRange As Function( _
-		ByVal this As IMemoryBuffer Ptr, _
-		ByVal Offset As LongInt, _
-		ByVal Length As LongInt _
-	)As HRESULT
-	
 	GetSlice As Function( _
 		ByVal this As IMemoryBuffer Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -94,7 +88,6 @@ End Type
 #define IMemoryBuffer_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IMemoryBuffer_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IMemoryBuffer_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
-#define IMemoryBuffer_SetByteRange(this, Offset, Length) (this)->lpVtbl->SetByteRange(this, Offset, Length)
 #define IMemoryBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IMemoryBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IMemoryBuffer_AllocBuffer(this, Length, ppBuffer) (this)->lpVtbl->AllocBuffer(this, Length, ppBuffer)
