@@ -5,21 +5,6 @@
 #include once "Http.bi"
 #include once "IHttpReader.bi"
 
-' IClientRequest.ReadRequest:
-' S_OK - readed successful
-' S_FALSE - client closed connection (received 0 bytes)
-' Any Error - readed error
-
-' IClientRequest.BeginReadRequest:
-' CLIENTREQUEST_S_IO_PENDING - read request add in queue
-' Any E_FAIL - error
-
-' IClientRequest.EndReadRequest:
-' S_OK - readed successful
-' S_FALSE - client closed connection (received 0 bytes)
-' CLIENTREQUEST_S_IO_PENDING - read request add in queue
-' Any Error - readed error
-
 ' IClientRequest.Parse:
 ' S_OK, E_FAIL, CLIENTREQUEST_E_...
 
@@ -60,23 +45,10 @@ Type IClientRequestVirtualTable
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
 	
-	ReadRequest As Function( _
-		ByVal this As IClientRequest Ptr _
-	)As HRESULT
-	
-	BeginReadRequest As Function( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	EndReadRequest As Function( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	
 	Parse As Function( _
-		ByVal this As IClientRequest Ptr _
+		ByVal this As IClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
+		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	
 	GetHttpMethod As Function( _
@@ -121,16 +93,6 @@ Type IClientRequestVirtualTable
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
 	
-	GetTextReader As Function( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal ppIReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	
-	SetTextReader As Function( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IClientRequest_
@@ -140,10 +102,7 @@ End Type
 #define IClientRequest_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IClientRequest_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IClientRequest_Release(this) (this)->lpVtbl->Release(this)
-' #define IClientRequest_ReadRequest(this) (this)->lpVtbl->ReadRequest(this)
-#define IClientRequest_BeginReadRequest(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadRequest(this, StateObject, ppIAsyncResult)
-#define IClientRequest_EndReadRequest(this, pIAsyncResult) (this)->lpVtbl->EndReadRequest(this, pIAsyncResult)
-#define IClientRequest_Parse(this) (this)->lpVtbl->Parse(this)
+#define IClientRequest_Parse(this, pIReader, RequestedLine) (this)->lpVtbl->Parse(this, pIReader, RequestedLine)
 #define IClientRequest_GetHttpMethod(this, pHttpMethod) (this)->lpVtbl->GetHttpMethod(this, pHttpMethod)
 #define IClientRequest_GetUri(this, pUri) (this)->lpVtbl->GetUri(this, pUri)
 #define IClientRequest_GetHttpVersion(this, pHttpVersions) (this)->lpVtbl->GetHttpVersion(this, pHttpVersions)
@@ -152,8 +111,5 @@ End Type
 #define IClientRequest_GetContentLength(this, pContentLength) (this)->lpVtbl->GetContentLength(this, pContentLength)
 #define IClientRequest_GetByteRange(this, pRange) (this)->lpVtbl->GetByteRange(this, pRange)
 #define IClientRequest_GetZipMode(this, ZipIndex, pSupported) (this)->lpVtbl->GetZipMode(this, ZipIndex, pSupported)
-#define IClientRequest_Clear(this) (this)->lpVtbl->Clear(this)
-#define IClientRequest_GetTextReader(this, ppIReader) (this)->lpVtbl->GetTextReader(this, ppIReader)
-#define IClientRequest_SetTextReader(this, pIReader) (this)->lpVtbl->SetTextReader(this, pIReader)
 
 #endif

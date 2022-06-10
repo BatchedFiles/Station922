@@ -2,6 +2,7 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "WriteErrorAsyncTask.bi"
@@ -21,6 +22,7 @@ Type _ReadRequestAsyncTask
 	pIHttpReader As IHttpReader Ptr
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
+	RequestedLine As HeapBSTR
 End Type
 
 Sub InitializeReadRequestAsyncTask( _
@@ -45,6 +47,7 @@ Sub InitializeReadRequestAsyncTask( _
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = pIRequest
+	this->RequestedLine = NULL
 	
 End Sub
 
@@ -63,6 +66,8 @@ Sub UnInitializeReadRequestAsyncTask( _
 	If this->pIRequest <> NULL Then
 		IClientRequest_Release(this->pIRequest)
 	End If
+	
+	HeapSysFreeString(this->RequestedLine)
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -237,14 +242,17 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	Const NullCallback As AsyncCallback = NULL
+	
 	' TODO Запросить интерфейс вместо конвертирования указателя
-	Dim hrBeginReadRequest As HRESULT = IClientRequest_BeginReadRequest( _
-		this->pIRequest, _
+	Dim hrBeginReadLine As HRESULT = IHttpReader_BeginReadLine( _
+		this->pIHttpReader, _
+		NullCallback, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
-	If FAILED(hrBeginReadRequest) Then
-		Return hrBeginReadRequest
+	If FAILED(hrBeginReadLine) Then
+		Return hrBeginReadLine
 	End If
 	
 	' Ссылка на this сохранена в pIAsyncResult
@@ -262,11 +270,12 @@ Function ReadRequestAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrEndReadRequest As HRESULT = IClientRequest_EndReadRequest( _
-		this->pIRequest, _
-		pIResult _
+	Dim hrEndReadLine As HRESULT = IHttpReader_EndReadLine( _
+		this->pIHttpReader, _
+		pIResult, _
+		@this->RequestedLine _
 	)
-	If FAILED(hrEndReadRequest) Then
+	If FAILED(hrEndReadLine) Then
 		
 		Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 			this->pIMemoryAllocator, _
@@ -275,21 +284,28 @@ Function ReadRequestAsyncTaskEndExecute( _
 			this->pIHttpReader, _
 			this->pIProcessorsWeakPtr, _
 			this->pIRequest, _
-			hrEndReadRequest, _
+			hrEndReadLine, _
 			CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
 		)
 		If FAILED(hrProcessError) Then
-			Return hrEndReadRequest
+			Return hrEndReadLine
 		End If
 		
 		Return S_OK
 	End If
 	
-	Select Case hrEndReadRequest
+	Select Case hrEndReadLine
 		
 		Case S_OK
 			Scope
-				Dim hrParse As HRESULT = IClientRequest_Parse(this->pIRequest)
+				Dim hrParse As HRESULT = IClientRequest_Parse( _
+					this->pIRequest, _
+					this->pIHttpReader, _
+					this->RequestedLine _
+				)
+				HeapSysFreeString(this->RequestedLine)
+				this->RequestedLine = NULL
+				
 				If FAILED(hrParse) Then
 					Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 						this->pIMemoryAllocator, _
@@ -379,7 +395,7 @@ Function ReadRequestAsyncTaskEndExecute( _
 			*ppNextTask = NULL
 			Return S_FALSE
 			
-		Case CLIENTREQUEST_S_IO_PENDING
+		Case HTTPREADER_S_IO_PENDING
 			' Продолжить чтение запроса
 			ReadRequestAsyncTaskAddRef(this)
 			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
@@ -515,11 +531,6 @@ Function ReadRequestAsyncTaskSetHttpReader( _
 	End If
 	
 	this->pIHttpReader = pReader
-	
-	IClientRequest_SetTextReader( _
-		this->pIRequest, _
-		this->pIHttpReader _
-	)
 	
 	Return S_OK
 	

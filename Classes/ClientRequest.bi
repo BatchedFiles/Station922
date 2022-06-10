@@ -33,23 +33,10 @@ Declare Function ClientRequestRelease( _
 	ByVal this As ClientRequest Ptr _
 )As ULONG
 
-Declare Function ClientRequestReadRequest( _
-	ByVal this As ClientRequest Ptr _
-)As HRESULT
-
-Declare Function ClientRequestBeginReadRequest( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function ClientRequestEndReadRequest( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
 Declare Function ClientRequestParse( _
-	ByVal this As ClientRequest Ptr _
+	ByVal this As ClientRequest Ptr, _
+	ByVal pIReader As IHttpReader Ptr, _
+	ByVal RequestedLine As HeapBSTR _
 )As HRESULT
 
 Declare Function ClientRequestGetHttpMethod( _
@@ -92,16 +79,6 @@ Declare Function ClientRequestGetZipMode( _
 	ByVal this As ClientRequest Ptr, _
 	ByVal ZipIndex As ZipModes, _
 	ByVal pSupported As Boolean Ptr _
-)As HRESULT
-
-Declare Function ClientRequestGetTextReader( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal ppIReader As IHttpReader Ptr Ptr _
-)As HRESULT
-
-Declare Function ClientRequestSetTextReader( _
-	ByVal this As ClientRequest Ptr, _
-	ByVal pIReader As IHttpReader Ptr _
 )As HRESULT
 
 #endif

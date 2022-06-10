@@ -24,8 +24,6 @@ Type _ClientRequest
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pIReader As IHttpReader Ptr
-	RequestedLine As HeapBSTR
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
 	HttpVersion As HttpVersions
@@ -35,16 +33,17 @@ Type _ClientRequest
 End Type
 
 Function ClientRequestParseRequestedLine( _
-		ByVal this As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr, _
+		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	
 	' Метод, запрошенный ресурс и версия протокола
 	
-	If SysStringLen(this->RequestedLine) = 0 Then
+	If SysStringLen(RequestedLine) = 0 Then
 		Return CLIENTREQUEST_E_BADREQUEST
 	End If
 	
-	Dim pFirstChar As WString Ptr = this->RequestedLine
+	Dim pFirstChar As WString Ptr = RequestedLine
 	
 	Dim FirstChar As Integer = pFirstChar[0]
 	If FirstChar = Characters.WhiteSpace Then
@@ -196,13 +195,14 @@ Function ClientRequestAddRequestHeader( _
 End Function
 
 Function ClientRequestAddRequestHeaders( _
-		ByVal this As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
 	
 	Do
 		Dim pLine As HeapBSTR = Any
 		Dim hrReadLine As HRESULT = IHttpReader_ReadLine( _
-			this->pIReader, _
+			pIReader, _
 			@pLine _
 		)
 		If FAILED(hrReadLine) Then
@@ -463,8 +463,6 @@ Sub InitializeClientRequest( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	this->pIReader = NULL
-	this->RequestedLine = NULL
 	this->pHttpMethod = NULL
 	this->pClientURI = NULL
 	this->HttpVersion = HttpVersions.Http11
@@ -478,7 +476,6 @@ Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-	HeapSysFreeString(this->RequestedLine)
 	HeapSysFreeString(this->pHttpMethod)
 	
 	If this->pClientURI <> NULL Then
@@ -488,10 +485,6 @@ Sub UnInitializeClientRequest( _
 	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
 		HeapSysFreeString(this->RequestHeaders(i))
 	Next
-	
-	If this->pIReader <> NULL Then
-		IHttpReader_Release(this->pIReader)
-	End If
 	
 	IMalloc_Release(this->pIMemoryAllocator)
 	
@@ -641,70 +634,24 @@ Function ClientRequestRelease( _
 	
 End Function
 
-Function ClientRequestBeginReadRequest( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	Const NullCallback As AsyncCallback = NULL
-	
-	Dim hrBeginReadLine As HRESULT = IHttpReader_BeginReadLine( _
-		this->pIReader, _
-		NullCallback, _
-		StateObject, _
-		ppIAsyncResult _
-	)
-	If FAILED(hrBeginReadLine) Then
-		Return CLIENTREQUEST_E_SOCKETERROR
-	End If
-	
-	Return CLIENTREQUEST_S_IO_PENDING
-	
-End Function
-
-Function ClientRequestEndReadRequest( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	
-	Dim hrEndReadLine As HRESULT = IHttpReader_EndReadLine( _
-		this->pIReader, _
-		pIAsyncResult, _
-		@this->RequestedLine _
-	)
-	If FAILED(hrEndReadLine) Then
-		Return hrEndReadLine
-	End If
-	
-	Select Case hrEndReadLine
-		
-		Case HTTPREADER_S_IO_PENDING
-			Return CLIENTREQUEST_S_IO_PENDING
-			
-		Case S_FALSE
-			Return S_FALSE
-			
-		Case Else
-			Return S_OK
-			
-	End Select
-	
-End Function
-
 Function ClientRequestParse( _
-		ByVal this As ClientRequest Ptr _
+		ByVal this As ClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
+		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	
-	Dim hrParseRequestedLine As HRESULT = ClientRequestParseRequestedLine(this)
+	Dim hrParseRequestedLine As HRESULT = ClientRequestParseRequestedLine( _
+		this, _
+		RequestedLine _
+	)
 	If FAILED(hrParseRequestedLine) Then
 		Return hrParseRequestedLine
 	End If
 	
-	HeapSysFreeString(this->RequestedLine)
-	this->RequestedLine = NULL
-	
-	Dim hrAddHeaders As HRESULT = ClientRequestAddRequestHeaders(this)
+	Dim hrAddHeaders As HRESULT = ClientRequestAddRequestHeaders( _
+		this, _
+		pIReader _
+	)
 	If FAILED(hrAddHeaders) Then
 		Return hrAddHeaders
 	End If
@@ -820,42 +767,6 @@ Function ClientRequestGetZipMode( _
 	
 End Function
 
-Function ClientRequestGetTextReader( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal ppIReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	
-	If this->pIReader = NULL Then
-		*ppIReader = NULL
-		Return S_FALSE
-	End If
-	
-	IHttpReader_AddRef(this->pIReader)
-	*ppIReader = this->pIReader
-	
-	Return S_OK
-	
-End Function
-
-Function ClientRequestSetTextReader( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr _
-	)As HRESULT
-	
-	If this->pIReader <> NULL Then
-		IHttpReader_Release(this->pIReader)
-	End If
-	
-	If pIReader <> NULL Then
-		IHttpReader_AddRef(pIReader)
-	End If
-	
-	this->pIReader = pIReader
-	
-	Return S_OK
-	
-End Function
-
 
 Function IClientRequestQueryInterface( _
 		ByVal this As IClientRequest Ptr, _
@@ -877,31 +788,12 @@ Function IClientRequestRelease( _
 	Return ClientRequestRelease(ContainerOf(this, ClientRequest, lpVtbl))
 End Function
 
-' Function IClientRequestReadRequest( _
-		' ByVal this As IClientRequest Ptr _
-	' )As HRESULT
-	' Return ClientRequestReadRequest(ContainerOf(this, ClientRequest, lpVtbl))
-' End Function
-
-Function IClientRequestBeginReadRequest( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	Return ClientRequestBeginReadRequest(ContainerOf(this, ClientRequest, lpVtbl), StateObject, ppIAsyncResult)
-End Function
-
-Function IClientRequestEndReadRequest( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	Return ClientRequestEndReadRequest(ContainerOf(this, ClientRequest, lpVtbl), pIAsyncResult)
-End Function
-
 Function IClientRequestParse( _
-		ByVal this As IClientRequest Ptr _
+		ByVal this As IClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
+		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
-	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl))
+	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl), pIReader, RequestedLine)
 End Function
 
 Function IClientRequestGetHttpMethod( _
@@ -962,27 +854,10 @@ Function IClientRequestGetZipMode( _
 	Return ClientRequestGetZipMode(ContainerOf(this, ClientRequest, lpVtbl), ZipIndex, pSupported)
 End Function
 
-Function IClientRequestGetTextReader( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal ppIReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	Return ClientRequestGetTextReader(ContainerOf(this, ClientRequest, lpVtbl), ppIReader)
-End Function
-
-Function IClientRequestSetTextReader( _
-		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr _
-	)As HRESULT
-	Return ClientRequestSetTextReader(ContainerOf(this, ClientRequest, lpVtbl), pIReader)
-End Function
-
 Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( _
 	@IClientRequestQueryInterface, _
 	@IClientRequestAddRef, _
 	@IClientRequestRelease, _
-	NULL, _ /' @IClientRequestReadRequest, _ '/
-	@IClientRequestBeginReadRequest, _
-	@IClientRequestEndReadRequest, _
 	@IClientRequestParse, _
 	@IClientRequestGetHttpMethod, _
 	@IClientRequestGetUri, _
@@ -991,7 +866,5 @@ Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( 
 	@IClientRequestGetKeepAlive, _
 	@IClientRequestGetContentLength, _
 	@IClientRequestGetByteRange, _
-	@IClientRequestGetZipMode, _
-	@IClientRequestGetTextReader, _
-	@IClientRequestSetTextReader _
+	@IClientRequestGetZipMode _
 )
