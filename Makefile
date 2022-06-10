@@ -228,7 +228,7 @@ OUTPUT_FILE_NAME_SERVICE=Station922$(FILE_SUFFIX_SERVICE).exe
 OUTPUT_FILE_NAME_TEST=test$(FILE_SUFFIX_TEST).exe
 
 LIBRARIES_UUID=-luuid
-LIBRARIES_WINAPI=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32 -lgdi32 -lgdiplus -limm32 -lkernel32 -lmsimg32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lwinmm -lwinspool -lws2_32
+LIBRARIES_WINAPI=-ladvapi32 -lcrypt32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -lws2_32
 LIBRARIES_BASE=$(LIBRARIES_GCCRUNTIME) $(LIBRARIES_FBRUNTIME) $(LIBRARIES_WINAPI) $(LIBRARIES_UUID) $(LIBRARIES_GMONITOR)
 LIBRARIES_ALL=$(LIBRARIES_BASE) -lGuids$(FILE_SUFFIX_BASE)
 
