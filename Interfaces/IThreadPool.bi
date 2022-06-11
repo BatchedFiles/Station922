@@ -54,7 +54,6 @@ Type IThreadPoolVirtualTable
 	
 	AssociateTask As Function( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
@@ -71,6 +70,6 @@ End Type
 #define IThreadPool_SetMaxThreads(this, MaxThreads) (this)->lpVtbl->SetMaxThreads(this, MaxThreads)
 #define IThreadPool_Run(this, CallBack, param) (this)->lpVtbl->Run(this, CallBack, param)
 #define IThreadPool_Stop(this) (this)->lpVtbl->Stop(this)
-#define IThreadPool_AssociateTask(this, pTask, Key) (this)->lpVtbl->AssociateTask(this, pTask, Key)
+#define IThreadPool_AssociateTask(this, pTask) (this)->lpVtbl->AssociateTask(this, pTask)
 
 #endif

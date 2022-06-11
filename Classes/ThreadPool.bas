@@ -37,6 +37,10 @@ Function WorkerThread( _
 			INFINITE _
 		)
 		If resCompletionStatus Then
+			If CompletionKey = 0 Then
+				Exit Do
+			End If
+			
 			this->CallBack( _
 				this->param, _
 				BytesTransferred, _
@@ -341,10 +345,14 @@ Function ThreadPoolStop( _
 		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
-	If this->hIOCompletionPort <> NULL Then
-		CloseHandle(this->hIOCompletionPort)
-		this->hIOCompletionPort = NULL
-	End If
+	For i As Integer = 0 To this->WorkerThreadsCount - 1
+		PostQueuedCompletionStatus( _
+			this->hIOCompletionPort, _
+			0, _
+			0, _
+			NULL _
+		)
+	Next
 	
 	Return S_OK
 	
@@ -352,7 +360,6 @@ End Function
 
 Function ThreadPoolAssociateTask( _
 		ByVal this As ThreadPool Ptr, _
-		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
@@ -362,7 +369,7 @@ Function ThreadPoolAssociateTask( _
 	Dim hPort As HANDLE = CreateIoCompletionPort( _
 		FileHandle, _
 		this->hIOCompletionPort, _
-		Key, _
+		Cast(ULONG_PTR, FileHandle), _
 		0 _
 	)
 	If hPort = NULL Then
@@ -425,10 +432,9 @@ End Function
 
 Function IThreadPoolAssociateTask( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal Key As ULONG_PTR, _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
-	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), Key, pTask)
+	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), pTask)
 End Function
 
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _

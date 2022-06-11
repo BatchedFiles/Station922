@@ -55,7 +55,6 @@ Declare Function ThreadPoolStop( _
 
 Declare Function ThreadPoolAssociateTask( _
 	ByVal this As ThreadPool Ptr, _
-	ByVal Key As ULONG_PTR, _
 	ByVal pTask As IAsyncIoTask Ptr _
 )As HRESULT
 

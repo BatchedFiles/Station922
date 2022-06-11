@@ -295,7 +295,6 @@ Function CreateReadTask( _
 					
 					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
 						this->pIPool, _
-						Cast(ULONG_PTR, 0), _
 						CPtr(IAsyncIoTask Ptr, pTask) _
 					)
 					If FAILED(hrAssociate) Then
@@ -532,7 +531,7 @@ Sub ServerThread( _
 			)
 			
 			If this->CurrentStatus = RUNNABLE_S_RUNNING Then
-				Sleep_(THREAD_SLEEPING_TIME)
+				' Sleep_(THREAD_SLEEPING_TIME)
 			Else
 				Exit Do
 			End If
@@ -880,12 +879,12 @@ Function WebServerStop( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOP_PENDING)
 	
-	IThreadPool_Stop(this->pIPool)
+	For i As Integer = 0 To this->SocketListLength - 1
+		WSASetEvent(this->hEvents(i))
+		closesocket(this->SocketList(i).ClientSocket)
+	Next
 	
-	' If this->SocketList <> INVALID_SOCKET Then
-		' closesocket(this->SocketList)
-		' this->SocketList = INVALID_SOCKET
-	' End If
+	IThreadPool_Stop(this->pIPool)
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 	

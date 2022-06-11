@@ -1,9 +1,6 @@
-#include once "IRunnable.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
-
-Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
-Extern CLSID_CONSOLELOGGER Alias "CLSID_CONSOLELOGGER" As Const CLSID
+#include once "WebServer.bi"
 
 Type ServerContext
 	pIWebServer As IRunnable Ptr
