@@ -542,7 +542,7 @@ Function ServerResponseAllHeadersToZString( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
-		ByVal pHeadersLength As Integer Ptr _
+		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
@@ -955,7 +955,7 @@ Function IServerResponseAllHeadersToZString( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
-		ByVal pHeadersLength As Integer Ptr _
+		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
 	Return ServerResponseAllHeadersToZString(ContainerOf(this, ServerResponse, lpVtbl), ContentLength, ppHeaders, pHeadersLength)
 End Function

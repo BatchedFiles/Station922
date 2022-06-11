@@ -163,7 +163,7 @@ Type IServerResponseVirtualTable
 		ByVal this As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
-		ByVal pHeadersLength As Integer Ptr _
+		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
 	
 End Type
