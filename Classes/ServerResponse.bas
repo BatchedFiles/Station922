@@ -22,13 +22,14 @@ Type _ServerResponse
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	ReferenceCounter As Integer
 	pIMemoryAllocator As IMalloc Ptr
-	pIWriter As IHttpWriter Ptr
 	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
 	ResponseHeaderLine As ZString Ptr
 	ResponseHeaderLineLength As Integer
 	HttpVersion As HttpVersions
 	StatusCode As HttpStatusCodes
 	StatusDescription As HeapBSTR
+	ByteRangeOffset As LongInt
+	ByteRangeLength As LongInt
 	ResponseZipMode As ZipModes
 	Mime As MimeType
 	ResponseZipEnable As Boolean
@@ -52,13 +53,14 @@ Sub InitializeServerResponse( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWriter = NULL
 	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(HeapBSTR))
 	this->ResponseHeaderLine = NULL
 	this->ResponseHeaderLineLength = 0
 	this->HttpVersion = HttpVersions.Http11
 	this->StatusCode = HttpStatusCodes.OK
 	this->StatusDescription = NULL
+	this->ByteRangeOffset = 0
+	this->ByteRangeLength = 0
 	this->SendOnlyHeaders = False
 	this->KeepAlive = True
 	this->ResponseZipEnable = False
@@ -71,10 +73,6 @@ End Sub
 Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
-	
-	If this->pIWriter <> NULL Then
-		IHttpWriter_Release(this->pIWriter)
-	End If
 	
 	For i As Integer = 0 To HttpResponseHeadersMaximum - 1
 		HeapSysFreeString(this->ResponseHeaders(i))
@@ -514,93 +512,37 @@ Function ServerResponseAddKnownResponseHeaderWstrLen( _
 	
 End Function
 
-Function ServerResponseGetTextWriter( _
+Function ServerResponseGetByteRange( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal ppIWriter As IHttpWriter Ptr Ptr _
+		ByVal pOffset As LongInt Ptr, _
+		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	If this->pIWriter <> NULL Then
-		IHttpWriter_AddRef(this->pIWriter)
-	End If
-	
-	*ppIWriter = this->pIWriter
+	*pOffset = this->ByteRangeOffset
+	*pLength = this->ByteRangeLength
 	
 	Return S_OK
 	
 End Function
 
-Function ServerResponseSetTextWriter( _
+Function ServerResponseSetByteRange( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal pIWriter As IHttpWriter Ptr _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
 	)As HRESULT
 	
-	If pIWriter <> NULL Then
-		IHttpWriter_AddRef(pIWriter)
-	End If
-	
-	If this->pIWriter <> NULL Then
-		IHttpWriter_Release(this->pIWriter)
-	End If
-	
-	this->pIWriter = pIWriter
+	this->ByteRangeOffset = Offset
+	this->ByteRangeLength = Length
 	
 	Return S_OK
 	
 End Function
 
-Function ServerResponseBeginWriteResponse( _
+Function ServerResponseAllHeadersToZString( _
 		ByVal this As ServerResponse Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
-		this->pIWriter, _
-		this->ResponseHeaderLine, _
-		this->ResponseHeaderLineLength, _
-		this->SendOnlyHeaders, _
-		StateObject, _
-		ppIAsyncResult _
-	)
-	If FAILED(hrBeginWrite) Then
-		Return hrBeginWrite
-	End If
-	
-	Return SERVERRESPONSE_S_IO_PENDING
-	
-End Function
-
-Function ServerResponseEndWriteResponse( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	
-	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
-		this->pIWriter, _
-		pIAsyncResult _
-	)
-	If FAILED(hrEndWrite) Then
-		Return hrEndWrite
-	End If
-	
-	Select Case hrEndWrite
-		
-		Case S_OK
-			Return S_OK
-			
-		Case S_FALSE
-			Return S_FALSE
-			
-		Case HTTPWRITER_S_IO_PENDING
-			Return SERVERRESPONSE_S_IO_PENDING
-			
-	End Select
-	
-End Function
-
-Function ServerResponsePrepare( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal ContentLength As LongInt _
+		ByVal ContentLength As LongInt, _
+		ByVal ppHeaders As ZString Ptr Ptr, _
+		ByVal pHeadersLength As Integer Ptr _
 	)As HRESULT
 	
 	Dim pIWriter As IArrayStringWriter Ptr = Any
@@ -611,6 +553,8 @@ Function ServerResponsePrepare( _
 		@pIWriter _
 	)
 	If FAILED(hrCreateStringWriter) Then
+		*ppHeaders = NULL
+		*pHeadersLength = 0
 		Return hrCreateStringWriter
 	End If
 	
@@ -699,6 +643,7 @@ Function ServerResponsePrepare( _
 			
 			IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
 			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+			
 			IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
 			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
 			
@@ -785,6 +730,8 @@ Function ServerResponsePrepare( _
 		this->ResponseHeaderLineLength _
 	)
 	If this->ResponseHeaderLine = NULL Then
+		*ppHeaders = NULL
+		*pHeadersLength = 0
 		Return E_OUTOFMEMORY
 	End If
 	
@@ -799,18 +746,8 @@ Function ServerResponsePrepare( _
 		0 _
 	)
 	
-	Return S_OK
-	
-End Function
-
-Function ServerResponseSetByteRange( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal Offset As LongInt, _
-		ByVal Length As LongInt _
-	)As HRESULT
-	
-	'this->FileSize = min(this->FileSize, Length + Offset + this->FileOffset)
-	'this->FileOffset += Offset
+	*ppHeaders = this->ResponseHeaderLine
+	*pHeadersLength = this->ResponseHeaderLineLength
 	
 	Return S_OK
 	
@@ -989,6 +926,22 @@ Function IServerResponseAddKnownResponseHeaderWstr( _
 	Return ServerResponseAddKnownResponseHeaderWstr(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
+Function IServerResponseGetByteRange( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal pOffset As LongInt Ptr, _
+		ByVal pLength As LongInt Ptr _
+	)As HRESULT
+	Return ServerResponseGetByteRange(ContainerOf(this, ServerResponse, lpVtbl), pOffset, pLength)
+End Function
+
+Function IServerResponseSetByteRange( _
+		ByVal this As IServerResponse Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return ServerResponseSetByteRange(ContainerOf(this, ServerResponse, lpVtbl), Offset, Length)
+End Function
+
 Function IServerResponseAddKnownResponseHeaderWstrLen( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
@@ -998,48 +951,13 @@ Function IServerResponseAddKnownResponseHeaderWstrLen( _
 	Return ServerResponseAddKnownResponseHeaderWstrLen(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value, Length)
 End Function
 
-Function IServerResponseGetTextWriter( _
+Function IServerResponseAllHeadersToZString( _
 		ByVal this As IServerResponse Ptr, _
-		ByVal ppIWriter As IHttpWriter Ptr Ptr _
+		ByVal ContentLength As LongInt, _
+		ByVal ppHeaders As ZString Ptr Ptr, _
+		ByVal pHeadersLength As Integer Ptr _
 	)As HRESULT
-	Return ServerResponseGetTextWriter(ContainerOf(this, ServerResponse, lpVtbl), ppIWriter)
-End Function
-
-Function IServerResponseSetTextWriter( _
-		ByVal this As IServerResponse Ptr, _
-		ByVal pIWriter As IHttpWriter Ptr _
-	)As HRESULT
-	Return ServerResponseSetTextWriter(ContainerOf(this, ServerResponse, lpVtbl), pIWriter)
-End Function
-
-Function IServerResponseBeginWriteResponse( _
-		ByVal this As IServerResponse Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	Return ServerResponseBeginWriteResponse(ContainerOf(this, ServerResponse, lpVtbl), StateObject, ppIAsyncResult)
-End Function
-
-Function IServerResponseEndWriteResponse( _
-		ByVal this As IServerResponse Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr _
-	)As HRESULT
-	Return ServerResponseEndWriteResponse(ContainerOf(this, ServerResponse, lpVtbl), pIAsyncResult)
-End Function
-
-Function IServerResponsePrepare( _
-		ByVal this As IServerResponse Ptr, _
-		ByVal ContentLength As LongInt _
-	)As HRESULT
-	Return ServerResponsePrepare(ContainerOf(this, ServerResponse, lpVtbl), ContentLength)
-End Function
-
-Function IServerResponseSetByteRange( _
-		ByVal this As IServerResponse Ptr, _
-		ByVal Offset As LongInt, _
-		ByVal Length As LongInt _
-	)As HRESULT
-	Return ServerResponseSetByteRange(ContainerOf(this, ServerResponse, lpVtbl), Offset, Length)
+	Return ServerResponseAllHeadersToZString(ContainerOf(this, ServerResponse, lpVtbl), ContentLength, ppHeaders, pHeadersLength)
 End Function
 
 Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type( _
@@ -1068,10 +986,7 @@ Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type
 	@IServerResponseAddKnownResponseHeader, _
 	@IServerResponseAddKnownResponseHeaderWstr, _
 	@IServerResponseAddKnownResponseHeaderWstrLen, _
-	@IServerResponseGetTextWriter, _
-	@IServerResponseSetTextWriter, _
-	@IServerResponseBeginWriteResponse, _
-	@IServerResponseEndWriteResponse, _
-	@IServerResponsePrepare, _
-	@IServerResponseSetByteRange _
+	@IServerResponseGetByteRange, _
+	@IServerResponseSetByteRange, _
+	@IServerResponseAllHeadersToZString _
 )

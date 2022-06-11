@@ -372,7 +372,12 @@ Function FileBufferGetSlice( _
 	End If
 	
 	Dim IndexInChunck As LongInt = VirtualStartIndex - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)
-	Dim SliceLength As DWORD = min(dwNumberOfBytesToMap, Length - Cast(DWORD, IndexInChunck))
+	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
+	
+	Dim SliceLength As DWORD = min( _
+		dwNumberOfBytesToMap - Cast(DWORD, IndexInChunck), _
+		min(Length, VirtualFileSize - RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)) _
+	)
 	
 	pBufferSlice->pSlice = @this->FileBytes[IndexInChunck]
 	pBufferSlice->Length = SliceLength

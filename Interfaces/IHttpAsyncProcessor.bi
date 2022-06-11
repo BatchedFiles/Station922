@@ -2,7 +2,7 @@
 #define IHTTPASYNCPROCESSOR_BI
 
 #include once "IClientRequest.bi"
-#include once "IServerResponse.bi"
+#include once "IHttpWriter.bi"
 #include once "IWebSite.bi"
 
 Const HTTPASYNCPROCESSOR_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)

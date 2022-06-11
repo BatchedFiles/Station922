@@ -150,36 +150,23 @@ Declare Function ServerResponseAddKnownResponseHeaderWstrLen( _
 	ByVal Length As Integer _
 )As HRESULT
 
-Declare Function ServerResponseGetTextWriter( _
+Declare Function ServerResponseGetByteRange( _
 	ByVal this As ServerResponse Ptr, _
-	ByVal ppIWriter As IHttpWriter Ptr Ptr _
+	ByVal pOffset As LongInt Ptr, _
+	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
-Declare Function ServerResponseSetTextWriter( _
-	ByVal this As ServerResponse Ptr, _
-	ByVal pIWriter As IHttpWriter Ptr _
-)As HRESULT
-
-Declare Function ServerResponseBeginWriteResponse( _
-	ByVal this As ServerResponse Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function ServerResponseEndWriteResponse( _
-	ByVal this As ServerResponse Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
-Declare Function ServerResponsePrepare( _
-	ByVal this As ServerResponse Ptr, _
-	ByVal ContentLength As LongInt _
-)As HRESULT
-
-Declare Function FileBufferSetByteRange( _
+Declare Function ServerResponseSetByteRange( _
 	ByVal this As ServerResponse Ptr, _
 	ByVal Offset As LongInt, _
 	ByVal Length As LongInt _
+)As HRESULT
+
+Declare Function ServerResponseAllHeadersToZString( _
+	ByVal this As ServerResponse Ptr, _
+	ByVal ContentLength As LongInt, _
+	ByVal ppHeaders As ZString Ptr Ptr, _
+	ByVal pHeadersLength As Integer Ptr _
 )As HRESULT
 
 #endif

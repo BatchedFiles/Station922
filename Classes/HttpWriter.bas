@@ -17,10 +17,16 @@ Type _HttpWriter
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
 	pIBuffer As IBuffer Ptr
-	Padding As Integer
-	WriterStartIndex As LongInt
+	Headers As ZString Ptr
+	HeadersOffset As LongInt
+	HeadersLength As LongInt
+	HeadersEndIndex As LongInt
+	BodyOffset As LongInt
+	BodyContentLength As LongInt
+	BodyEndIndex As LongInt
 	HeadersSended As Boolean
 	BodySended As Boolean
+	SendOnlyHeaders As Boolean
 End Type
 
 Sub InitializeHttpWriter( _
@@ -41,10 +47,8 @@ Sub InitializeHttpWriter( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
 	this->pIBuffer = NULL
-	' this->Padding = 0
-	this->WriterStartIndex = 0
-	this->HeadersSended = False
-	this->BodySended = False
+	this->BodyOffset = 0
+	this->BodyContentLength = 0
 	
 End Sub
 
@@ -276,58 +280,103 @@ Function HttpWriterSetBuffer( _
 	
 End Function
 
+Function HttpWriterPrepare( _
+		ByVal this As HttpWriter Ptr, _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal ContentLength As LongInt _
+	)As HRESULT
+	
+	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
+		pIResponse, _
+		ContentLength, _
+		@this->Headers, _
+		@this->HeadersLength _
+	)
+	If FAILED(hrHeadersToString) Then
+		Return hrHeadersToString
+	End If
+	
+	this->HeadersOffset = 0
+	
+	IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
+	
+	If this->SendOnlyHeaders Then
+		this->BodySended = True
+	Else
+		this->BodySended = False
+	End If
+	
+	this->HeadersSended = False
+	
+	Dim ByteRangeLength As LongInt = Any
+	IServerResponse_GetByteRange( _
+		pIResponse, _
+		@this->BodyOffset, _
+		@ByteRangeLength _
+	)
+	
+	If ByteRangeLength = 0 Then
+		this->BodyContentLength = ContentLength
+	Else
+		this->BodyContentLength = ByteRangeLength
+	End If
+	
+	this->HeadersEndIndex = this->HeadersOffset + this->HeadersLength
+	this->BodyEndIndex = this->BodyOffset + this->BodyContentLength
+	
+	Return S_OK
+	
+End Function
+
 Function HttpWriterBeginWrite( _
 		ByVal this As HttpWriter Ptr, _
-		ByVal Headers As LPVOID, _
-		ByVal HeadersLength As DWORD, _
-		ByVal SendOnlyHeaders As Boolean, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim Slice As BufferSlice = Any
-	Dim hrGetSlice As HRESULT = IBuffer_GetSlice( _
-		this->pIBuffer, _
-		this->WriterStartIndex, _
-		BUFFERSLICECHUNK_SIZE, _
-		@Slice _
-	)
-	If FAILED(hrGetSlice) Then
-		Return hrGetSlice
-	End If
-	
 	Dim StreamBuffer As HeadersBodyBuffer = Any
 	Dim StreamBufferLength As Integer = Any
 	
-	If this->HeadersSended Then
-		StreamBufferLength = 1
-		StreamBuffer.Buf(0).Buffer = Slice.pSlice
-		StreamBuffer.Buf(0).Length = Slice.Length
-	Else
-		StreamBuffer.Buf(0).Buffer = Headers
-		StreamBuffer.Buf(0).Length = HeadersLength
-		
-		If Slice.Length > 0 Then
-			If SendOnlyHeaders Then
-				StreamBufferLength = 1
-			Else
-				StreamBufferLength = 2
-				StreamBuffer.Buf(1).Buffer = Slice.pSlice
-				StreamBuffer.Buf(1).Length = Slice.Length
-			End If
-		Else
-			StreamBufferLength = 1
+	If this->BodySended Then
+		If this->HeadersSended Then
+			Return S_FALSE
 		End If
 		
-		this->WriterStartIndex = this->WriterStartIndex - HeadersLength
-	End If
-	
-	If hrGetSlice = S_FALSE OrElse Slice.Length = 0 Then
-		this->BodySended = True
-	End If
-	
-	If SendOnlyHeaders Then
-		this->BodySended = True
+		' Отправить только заголовки
+		StreamBufferLength = 1
+		
+		StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+		StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+	Else
+		Dim DesiredSliceLength As LongInt = min(BUFFERSLICECHUNK_SIZE, this->BodyEndIndex - this->BodyOffset)
+		
+		Dim Slice As BufferSlice = Any
+		Dim hrGetSlice As HRESULT = IBuffer_GetSlice( _
+			this->pIBuffer, _
+			this->BodyOffset, _
+			Cast(DWORD, DesiredSliceLength), _
+			@Slice _
+		)
+		If FAILED(hrGetSlice) Then
+			Return hrGetSlice
+		End If
+		
+		If this->HeadersSended Then
+			' Отправить только тело
+			StreamBufferLength = 1
+			
+			StreamBuffer.Buf(0).Buffer = Slice.pSlice
+			StreamBuffer.Buf(0).Length = Slice.Length
+		Else
+			' Отправить заголовки и тело
+			StreamBufferLength = 2
+			
+			StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+			StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+			
+			StreamBuffer.Buf(1).Buffer = Slice.pSlice
+			StreamBuffer.Buf(1).Length = Slice.Length
+		End If
 	End If
 	
 	Dim hrBeginWrite As HRESULT = IBaseStream_BeginWriteGather( _
@@ -361,8 +410,26 @@ Function HttpWriterEndWrite( _
 		Return hrEndWrite
 	End If
 	
-	this->HeadersSended = True
-	this->WriterStartIndex = this->WriterStartIndex + WritedBytes
+	If this->HeadersSended Then
+		this->BodyOffset += CLngInt(WritedBytes)
+	Else
+		Dim HeadersSize As LongInt = this->HeadersLength - this->HeadersOffset
+		Dim HeadersWritedBytes As LongInt = min(CLngInt(WritedBytes), HeadersSize)
+		
+		this->HeadersOffset += HeadersWritedBytes
+		
+		If this->HeadersOffset >= this->HeadersEndIndex Then
+			this->HeadersSended = True
+		End If
+		
+		Dim BodyWritedBytes As LongInt = CLngInt(WritedBytes) - HeadersWritedBytes
+		this->BodyOffset += CLngInt(BodyWritedBytes)
+		
+	End If
+	
+	If this->BodyOffset >= this->BodyEndIndex Then
+		this->BodySended = True
+	End If
 	
 	Select Case hrEndWrite
 		
@@ -432,15 +499,20 @@ Function IHttpWriterSetBuffer( _
 	Return HttpWriterSetBuffer(ContainerOf(this, HttpWriter, lpVtbl), pIBuffer)
 End Function
 
+Function IHttpWriterPrepare( _
+		ByVal this As IHttpWriter Ptr, _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal ContentLength As LongInt _
+	)As HRESULT
+	Return HttpWriterPrepare(ContainerOf(this, HttpWriter, lpVtbl), pIResponse, ContentLength)
+End Function
+
 Function IHttpWriterBeginWrite( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal Headers As LPVOID, _
-		ByVal HeadersLength As DWORD, _
-		ByVal SendOnlyHeaders As Boolean, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), Headers, HeadersLength, SendOnlyHeaders, StateObject, ppIAsyncResult)
+	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), StateObject, ppIAsyncResult)
 End Function
 
 Function IHttpWriterEndWrite( _
@@ -458,6 +530,7 @@ Dim GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable = Type( _
 	@IHttpWriterSetBaseStream, _
 	@IHttpWriterGetBuffer, _
 	@IHttpWriterSetBuffer, _
+	@IHttpWriterPrepare, _
 	@IHttpWriterBeginWrite, _
 	@IHttpWriterEndWrite _
 )

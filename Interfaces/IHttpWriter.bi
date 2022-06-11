@@ -4,6 +4,7 @@
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
 #include once "IBuffer.bi"
+#include once "IServerResponse.bi"
 
 ' ITextWriter.BeginWrite:
 ' HTTPWRITER_S_IO_PENDING, Any E_FAIL
@@ -55,11 +56,14 @@ Type IHttpWriterVirtualTable
 		ByVal pIBuffer As IBuffer Ptr _
 	)As HRESULT
 	
+	Prepare As Function( _
+		ByVal this As IHttpWriter Ptr, _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal ContentLength As LongInt _
+	)As HRESULT
+	
 	BeginWrite As Function( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal Headers As LPVOID, _
-		ByVal HeadersLength As DWORD, _
-		ByVal SendOnlyHeaders As Boolean, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -82,7 +86,8 @@ End Type
 #define IHttpWriter_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)
 #define IHttpWriter_GetBuffer(this, ppResult) (this)->lpVtbl->GetBuffer(this, ppResult)
 #define IHttpWriter_SetBuffer(this, pIBuffer) (this)->lpVtbl->SetBuffer(this, pIBuffer)
-#define IHttpWriter_BeginWrite(this, Headers, HeadersLength, SendOnlyHeaders, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Headers, HeadersLength, SendOnlyHeaders, StateObject, ppIAsyncResult)
+#define IHttpWriter_Prepare(this, pIResponse, ContentLength) (this)->lpVtbl->Prepare(this, pIResponse, ContentLength)
+#define IHttpWriter_BeginWrite(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, StateObject, ppIAsyncResult)
 #define IHttpWriter_EndWrite(this, pIAsyncResult) (this)->lpVtbl->EndWrite(this, pIAsyncResult)
 
 #endif

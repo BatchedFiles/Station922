@@ -108,16 +108,16 @@ Function ProcessErrorRequestResponse( _
 	
 	Select Case hrReadError
 		
-		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER, CLIENTREQUEST_E_HEADERFIELDSTOOLARGE
+		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER
 			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
 			
 		Case CLIENTURI_E_CONTAINSBADCHAR, CLIENTURI_E_PATHNOTFOUND
 			HttpError = ResponseErrorCode.BadRequest
 			
-		Case HTTPREADER_E_SOCKETERROR, CLIENTREQUEST_E_SOCKETERROR
+		Case HTTPREADER_E_SOCKETERROR
 			HttpError = ResponseErrorCode.BadRequest
 			
-		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION, CLIENTREQUEST_E_EMPTYREQUEST
+		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
 			HttpError = ResponseErrorCode.BadRequest
 			
 		Case CLIENTREQUEST_E_BADHOST
@@ -640,7 +640,6 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->pIBuffer = pIBuffer
 	this->pIHttpWriter = pIHttpWriter
 	IHttpWriter_SetBuffer(pIHttpWriter, CPtr(IBuffer Ptr, pIBuffer))
-	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
 	this->HttpError = ResponseErrorCode.InternalServerError
 	this->hrCode = E_UNEXPECTED
 	
@@ -877,13 +876,13 @@ Function WriteErrorAsyncTaskBeginExecute( _
 	)As HRESULT
 	
 	' TODO Запросить интерфейс вместо конвертирования указателя
-	Dim hrBeginWriteResponse As HRESULT = IServerResponse_BeginWriteResponse( _
-		this->pIResponse, _
+	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+		this->pIHttpWriter, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
-	If FAILED(hrBeginWriteResponse) Then
-		Return hrBeginWriteResponse
+	If FAILED(hrBeginWrite) Then
+		Return hrBeginWrite
 	End If
 	
 	' Ссылка на this сохранена в pIAsyncResult
@@ -901,8 +900,8 @@ Function WriteErrorAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrEndWrite As HRESULT = IServerResponse_EndWriteResponse( _
-		this->pIResponse, _
+	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+		this->pIHttpWriter, _
 		pIResult _
 	)
 	If FAILED(hrEndWrite) Then
@@ -953,7 +952,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			*ppNextTask = NULL
 			Return S_FALSE
 			
-		Case SERVERRESPONSE_S_IO_PENDING
+		Case HTTPWRITER_S_IO_PENDING
 			' Продолжить отправку ответа
 			WriteErrorAsyncTaskAddRef(this)
 			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
@@ -1273,7 +1272,8 @@ Function WriteErrorAsyncTaskPrepare( _
 	
 	IArrayStringWriter_Release(pIWriter)
 	
-	Dim hrPrepareResponse As HRESULT = IServerResponse_Prepare( _
+	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
+		this->pIHttpWriter, _
 		this->pIResponse, _
 		SendBufferLength _
 	)

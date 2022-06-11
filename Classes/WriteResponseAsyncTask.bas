@@ -57,7 +57,6 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->pIResponse = pIResponse
 	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
-	IServerResponse_SetTextWriter(pIResponse, pIHttpWriter)
 	this->pIProcessorWeakPtr = NULL
 	this->pIWebSiteWeakPtr = NULL
 	
