@@ -9,14 +9,14 @@
 ## Файлы исходного кода
 
 * [x] файлы хранить в кодировке ANSI
-* [ ] Использовать оператор переноса для стрк кода больше 80 символов
+* [ ] Использовать оператор переноса для строк кода больше 80 символов
 
 
 ## Юникод
 
 * [x] к строкам применять макрос `__TEXT` или WStr()
-* [ ] юникодные функции и структуры должны быть с W на конце, неюникодные — с A.
-* [ ] все интерфейсы работают только с юникодными строками
+* [x] юникодные функции и структуры должны быть с W на конце, неюникодные — с A.
+* [x] все интерфейсы работают только с юникодными строками
 
 ## Сборка
 
@@ -33,15 +33,8 @@
 
 [x] Объекты создаёт функция CreateInstance
 [x] Уничтожение объектов в обратном порядке: сначала освобождают ссылки на внешние объекты, затем на внутренние
-[ ] Слабые ссылки для глобальных объектов
+[x] Слабые ссылки для глобальных объектов
 
-
-## Предварительное объявление классов
-
-Объявить в заголовочнике псевдоним, а в файле реализации сам тип с подчёркиванием слева.
-
-* [ ] Mime.bas
-* [ ] SafeHandle.bas
 
 ## Асинхронность
 
@@ -64,22 +57,21 @@
 Обработчики запросов — в свои отдельные классы:
 
 * [ ] CONNECT
-* [ ] GET
-* [ ] HEAD
+* [ ] COPY
+* [x] GET
+* [x] HEAD
 * [ ] DELETE
+* [ ] LOCK
+* [ ] MKCOL
+* [ ] MOVE
 * [ ] OPTIONS
 * [ ] POST
-* [ ] PUT
 * [ ] PATCH
-* [ ] TRACE
-* [ ] MOVE
 * [ ] PROPFIND
 * [ ] PROPPATCH
-* [ ] MKCOL
-* [ ] LOCK
+* [ ] PUT
+* [ ] TRACE
 * [ ] UNLOCK
-* [ ] COPY
-* [ ] MOVE
 
 
 ## Сделать
@@ -100,7 +92,6 @@
 * [ ] Различать версию HTTP/1.0 и HTTP/1.1, отдавать соответствующие заголовки.
 * [ ] Хранить нераспознанные заголовки запроса.
 * [ ] Журналирование запросов.
-* [ ] Откатывать назад изменения заголовоков ответа.
 * [ ] Добавить возможность парольных ресурсов.
 * [x] Все коды ошибок WinAPI с описанием отправлять клиенту.
 * [x] Новый объект Uri, учитывающий Scheme, Authority, Path, Query, Fragment.
@@ -115,70 +106,11 @@
 
 ## Контроль жизни объектов
 
-* [ ] Возвращать слабые ссылки на коллекцию сайтов
-* [ ] Возвращать слабые ссылки на коллекцию обработчиков запроса
+* [x] Возвращать слабые ссылки на коллекцию сайтов
+* [x] Возвращать слабые ссылки на коллекцию обработчиков запроса
 * [ ] Атомарный и неатомарный счётчики ссылок где это нужно.
 * [ ] Умные указатели для объектов ядра системы.
 * [ ] Умные указатели для интерфейсов.
-
-
-## Рефракторинг
-
-### Классы
-
-* [ ] ArrayStringWriter.bas
-* [ ] ClientRequest.bas
-* [ ] Configuration.bas
-* [ ] HttpReader.bas
-* [ ] NetworkStream.bas
-* [ ] RequestedFile.bas
-* [ ] SafeHandle.bas
-* [ ] ServerResponse.bas
-* [ ] ServerState.bas
-* [ ] WebServer.bas
-* [ ] WebSite.bas
-* [ ] WebSiteContainer.bas
-
-### Интерфейсы
-
-* [ ] IArrayStringWriter.bi
-* [ ] IAsyncResult.bi
-* [ ] IBaseStream.bi
-* [ ] IClientRequest.bi
-* [ ] IConfiguration.bi
-* [ ] IFileStream.bi
-* [ ] IHttpReader.bi
-* [ ] INetworkStream.bi
-* [ ] IRequestedFile.bi
-* [ ] IRequestProcessor.bi
-* [ ] IRunnable.bi
-* [ ] ISendable.bi
-* [ ] IServerResponse.bi
-* [ ] IServerState.bi
-* [ ] IStreamReader.bi
-* [ ] IStreamWriter.bi
-* [ ] IStringable.bi
-* [ ] ITextReader.bi
-* [ ] ITextWriter.bi
-* [ ] IUri.bi
-* [ ] IWebSite.bi
-* [ ] IWebSiteContainer.bi
-
-### Модули
-
-* [ ] ConsoleColors.bas
-* [ ] ConsoleMain.bas
-* [ ] EntryPoint.bas
-* [ ] Guids.bas
-* [ ] Http.bas
-* [ ] Network.bas
-* [ ] NetworkClient.bas
-* [ ] NetworkServer.bas
-* [ ] PrintDebugInfo.bas
-* [ ] WebUtils.bas
-* [ ] WindowsServiceMain.bas
-* [ ] WriteHttpError.bas
-* [ ] URI.bas
 
 
 ## Выполнено
