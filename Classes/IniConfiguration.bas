@@ -273,14 +273,13 @@ Function WebServerIniConfigurationRelease( _
 	
 	this->ReferenceCounter -= 1
 	
-	If this->ReferenceCounter = 0 Then
-		
-		DestroyWebServerIniConfiguration(this)
-		
-		Return 0
+	If this->ReferenceCounter Then
+		Return 1
 	End If
 	
-	Return 1
+	DestroyWebServerIniConfiguration(this)
+	
+	Return 0
 	
 End Function
 

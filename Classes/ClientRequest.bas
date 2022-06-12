@@ -601,11 +601,7 @@ Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
+	this->ReferenceCounter += 1
 	
 	Return 1
 	
@@ -615,15 +611,11 @@ Function ClientRequestRelease( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
 	
 	DestroyClientRequest(this)
 	
