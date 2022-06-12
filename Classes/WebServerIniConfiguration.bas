@@ -92,8 +92,6 @@ Sub UnInitializeWebServerIniConfiguration( _
 		IMalloc_Free(this->pIMemoryAllocator, this->pWebServerIniFileName)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateWebServerIniConfiguration( _
@@ -214,7 +212,6 @@ Sub DestroyWebServerIniConfiguration( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebServerIniConfiguration(this)

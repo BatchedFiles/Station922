@@ -71,8 +71,6 @@ Sub UnInitializeHttpGetProcessor( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateHttpGetProcessor( _
@@ -139,7 +137,6 @@ Sub DestroyHttpGetProcessor( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpGetProcessor(this)

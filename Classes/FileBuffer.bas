@@ -87,8 +87,6 @@ Sub UnInitializeFileBuffer( _
 		CloseHandle(this->ZipFileHandle)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateFileBuffer( _
@@ -155,7 +153,6 @@ Sub DestroyFileBuffer( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeFileBuffer(this)

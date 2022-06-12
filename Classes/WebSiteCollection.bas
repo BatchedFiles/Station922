@@ -144,8 +144,6 @@ Sub UnInitializeWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateWebSiteCollection( _
@@ -207,7 +205,6 @@ Sub DestroyWebSiteCollection( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebSiteCollection(this)

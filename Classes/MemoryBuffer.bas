@@ -60,8 +60,6 @@ Sub UnInitializeMemoryBuffer( _
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffer)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateMemoryBuffer( _
@@ -128,7 +126,6 @@ Sub DestroyMemoryBuffer( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeMemoryBuffer(this)

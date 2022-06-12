@@ -486,8 +486,6 @@ Sub UnInitializeClientRequest( _
 		HeapSysFreeString(this->RequestHeaders(i))
 	Next
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateClientRequest( _
@@ -554,7 +552,6 @@ Sub DestroyClientRequest( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeClientRequest(this)

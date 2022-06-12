@@ -679,7 +679,6 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->pPhysicalDirectory)
 	HeapSysFreeString(this->pVirtualPath)
 	HeapSysFreeString(this->pMovedUrl)
-	IMalloc_Release(this->pIMemoryAllocator)
 	
 End Sub
 
@@ -742,7 +741,6 @@ Sub DestroyWebSite( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebSite(this)

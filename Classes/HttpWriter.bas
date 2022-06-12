@@ -64,8 +64,6 @@ Sub UnInitializeHttpWriter( _
 		IBuffer_Release(this->pIBuffer)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateHttpWriter( _
@@ -132,7 +130,6 @@ Sub DestroyHttpWriter( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpWriter(this)

@@ -245,8 +245,6 @@ Sub UnInitializeClientUri( _
 	HeapSysFreeString(this->Scheme)
 	HeapSysFreeString(this->Uri)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateClientUri( _
@@ -313,7 +311,6 @@ Sub DestroyClientUri( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeClientUri(this)

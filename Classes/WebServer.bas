@@ -615,12 +615,6 @@ Sub UnInitializeWebServer( _
 		IThreadPool_Release(this->pIPool)
 	End If
 	
-	' If this->SocketList <> INVALID_SOCKET Then
-		' closesocket(this->SocketList)
-	' End If
-	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateWebServer( _
@@ -749,7 +743,6 @@ Sub DestroyWebServer( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebServer(this)

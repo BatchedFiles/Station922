@@ -64,8 +64,6 @@ Sub UnInitializeAsyncResult( _
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffers)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateAsyncResult( _
@@ -127,7 +125,6 @@ Sub DestroyAsyncResult( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeAsyncResult(this)

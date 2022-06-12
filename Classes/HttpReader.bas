@@ -198,8 +198,6 @@ Sub UnInitializeHttpReader( _
 	
 	IMalloc_Free(this->pIMemoryAllocator, this->pReadedData)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateHttpReader( _
@@ -276,7 +274,6 @@ Sub DestroyHttpReader( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpReader(this)

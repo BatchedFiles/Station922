@@ -53,8 +53,6 @@ Sub UnInitializeNetworkStream( _
 		this->ClientSocket = INVALID_SOCKET
 	#endif
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateNetworkStream( _
@@ -116,7 +114,6 @@ Sub DestroyNetworkStream( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeNetworkStream(this)

@@ -125,8 +125,6 @@ Sub UnInitializeThreadPool( _
 		CloseHandle(this->hIOCompletionPort)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateThreadPool( _
@@ -191,7 +189,6 @@ Sub DestroyThreadPool( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeThreadPool(this)

@@ -673,8 +673,6 @@ Sub UnInitializeWriteErrorAsyncTask( _
 		IServerResponse_Release(this->pIResponse)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateWriteErrorAsyncTask( _
@@ -782,7 +780,6 @@ Sub DestroyWriteErrorAsyncTask( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWriteErrorAsyncTask(this)

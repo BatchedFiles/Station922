@@ -87,8 +87,6 @@ Sub UnInitializeServerResponse( _
 		)
 	End If
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateServerResponse( _
@@ -155,7 +153,6 @@ Sub DestroyServerResponse( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeServerResponse(this)

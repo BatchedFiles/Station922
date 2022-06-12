@@ -69,8 +69,6 @@ Sub UnInitializeReadRequestAsyncTask( _
 	
 	HeapSysFreeString(this->RequestedLine)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateReadRequestAsyncTask( _
@@ -149,7 +147,6 @@ Sub DestroyReadRequestAsyncTask( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeReadRequestAsyncTask(this)

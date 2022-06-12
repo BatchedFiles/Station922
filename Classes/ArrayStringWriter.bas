@@ -45,8 +45,6 @@ Sub UnInitializeArrayStringWriter( _
 		ByVal this As ArrayStringWriter Ptr _
 	)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateArrayStringWriter( _
@@ -108,7 +106,6 @@ Sub DestroyArrayStringWriter( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeArrayStringWriter(this)

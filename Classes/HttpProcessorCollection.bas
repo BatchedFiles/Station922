@@ -56,8 +56,6 @@ Sub UnInitializeHttpProcessorCollection( _
 		IHttpAsyncProcessor_Release(this->Collection(i).Value)
 	Next
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function CreateHttpProcessorCollection( _
@@ -119,7 +117,6 @@ Sub DestroyHttpProcessorCollection( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpProcessorCollection(this)

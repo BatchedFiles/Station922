@@ -129,8 +129,6 @@ Sub UnInitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
-	IMalloc_Release(this->pIMemoryAllocator)
-	
 End Sub
 
 Function HeapSysAllocZStringLen( _
@@ -284,7 +282,6 @@ Sub DestroyInternalHeapBSTR( _
 	End Scope
 	#endif
 	
-	IMalloc_AddRef(this->pIMemoryAllocator)
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeInternalHeapBSTR(this)
