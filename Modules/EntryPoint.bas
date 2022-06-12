@@ -2,9 +2,17 @@
 #include once "win\winsock2.bi"
 #include once "win\mswsock.bi"
 
+Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
+Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+
 #ifdef WSAID_ACCEPTEX
 #undef WSAID_ACCEPTEX
 #define WSAID_ACCEPTEX &hb5367df1, &hcbac, &h11cf, {&h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92}
+#endif
+
+#ifdef WSAID_GETACCEPTEXSOCKADDRS
+#undef WSAID_GETACCEPTEXSOCKADDRS
+#define WSAID_GETACCEPTEXSOCKADDRS &hb5367df2, &hcbac, &h11cf, {&h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92}
 #endif
 
 Declare Function wMain()As Long
@@ -20,25 +28,47 @@ Function LoadWsaFunctions()As Long
 		Return 1
 	End If
 	
-	Dim lpfnAcceptEx As LPFN_ACCEPTEX = Any
-	Dim dwBytes As DWORD = Any
-	Dim GuidAcceptEx As GUID = Type(WSAID_ACCEPTEX)
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim GuidAcceptEx As GUID = Type(WSAID_ACCEPTEX)
+		
+		Dim resLoadAcceptEx As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GuidAcceptEx, _
+			SizeOf(GUID), _
+			@lpfnAcceptEx, _
+			SizeOf(lpfnAcceptEx), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resLoadAcceptEx = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return 1
+		End If
+	End Scope
 	
-	Dim resLoadAcceptEx As Long = WSAIoctl( _
-		ListenSocket, _
-		SIO_GET_EXTENSION_FUNCTION_POINTER, _
-		@GuidAcceptEx, _
-		SizeOf(GUID), _
-		@lpfnAcceptEx, _
-		SizeOf(lpfnAcceptEx), _
-		@dwBytes, _
-		NULL, _
-		NULL _
-	)
-	If resLoadAcceptEx = SOCKET_ERROR Then
-		closesocket(ListenSocket)
-		return 1
-	End If
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim GuidGetAcceptExSockaddrs As GUID = Type(WSAID_GETACCEPTEXSOCKADDRS)
+		
+		Dim resGetAcceptExSockaddrs As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GuidGetAcceptExSockaddrs, _
+			SizeOf(GUID), _
+			@lpfnGetAcceptExSockaddrs, _
+			SizeOf(lpfnGetAcceptExSockaddrs), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resGetAcceptExSockaddrs = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return 1
+		End If
+	End Scope
 	
 	closesocket(ListenSocket)
 	
