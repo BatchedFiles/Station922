@@ -13,6 +13,7 @@ Type _ThreadPool
 	pIMemoryAllocator As IMalloc Ptr
 	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As Integer
+	hThreads As HANDLE Ptr
 	CallBack As ThreadPoolCallBack
 	param As Any Ptr
 End Type
@@ -114,6 +115,7 @@ Sub InitializeThreadPool( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hIOCompletionPort = NULL
 	this->WorkerThreadsCount = 0
+	this->hThreads = NULL
 	
 End Sub
 
@@ -123,6 +125,10 @@ Sub UnInitializeThreadPool( _
 	
 	If this->hIOCompletionPort <> NULL Then
 		CloseHandle(this->hIOCompletionPort)
+	End If
+	
+	If this->hThreads <> NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, this->hThreads)
 	End If
 	
 End Sub
@@ -307,6 +313,14 @@ Function ThreadPoolRun( _
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
+	this->hThreads = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		SizeOf(HANDLE) * this->WorkerThreadsCount _
+	)
+	If this = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
 	this->CallBack = CallBack
 	this->param = param
 	
@@ -317,7 +331,7 @@ Function ThreadPoolRun( _
 		ThreadPoolAddRef(this)
 		
 		Dim ThreadId As DWORD = Any
-		Dim hThread As HANDLE = CreateThread( _
+		this->hThreads[i] = CreateThread( _
 			NULL, _
 			DefaultStackSize, _
 			@WorkerThread, _
@@ -325,12 +339,10 @@ Function ThreadPoolRun( _
 			0, _
 			@ThreadId _
 		)
-		If hThread = NULL Then
+		If this->hThreads[i] = NULL Then
 			Dim dwError As DWORD = GetLastError()
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
-		
-		CloseHandle(hThread)
 		
 	Next
 	
@@ -349,6 +361,20 @@ Function ThreadPoolStop( _
 			0, _
 			NULL _
 		)
+	Next
+	
+	Dim resWaitThreads As DWORD = WaitForMultipleObjects( _
+		this->WorkerThreadsCount, _
+		this->hThreads, _
+		TRUE, _
+		10 * 1000 _
+	)
+	If resWaitThreads <> WAIT_OBJECT_0 Then
+		Return HRESULT_FROM_WIN32(GetLastError())
+	End If
+	
+	For i As Integer = 0 To this->WorkerThreadsCount - 1
+		CloseHandle(this->hThreads[i])
 	Next
 	
 	Return S_OK
