@@ -441,39 +441,7 @@ Function NetworkStreamEndRead( _
 		Return S_OK
 	End If
 	
-	Dim pOverlap As OVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @pOverlap)
-	
-	Const fNoWait As BOOL = False
-	Dim cbTransfer As DWORD = Any
-	Dim dwFlags As DWORD = Any
-	
-	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
-		this->ClientSocket, _
-		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
-		@cbTransfer, _
-		fNoWait, _
-		@dwFlags _
-	)
-	If OverlappedResult = False Then
-		
-		Dim intError As Long = WSAGetLastError()
-		
-		If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
-			Return BASESTREAM_S_IO_PENDING
-		End If
-		
-		*pReadedBytes = 0
-		Return HRESULT_FROM_WIN32(intError)
-	End If
-	
-	*pReadedBytes = cbTransfer
-	
-	If cbTransfer = 0 Then
-		Return S_FALSE
-	End If
-	
-	Return S_OK
+	Return HRESULT_FROM_WIN32(WSA_IO_INCOMPLETE)
 	
 End Function
 
@@ -500,39 +468,7 @@ Function NetworkStreamEndWrite( _
 		Return S_OK
 	End If
 	
-	Dim pOverlap As OVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pIAsyncResult, @pOverlap)
-	
-	Const fNoWait As BOOL = False
-	Dim cbTransfer As DWORD = Any
-	Dim dwFlags As DWORD = Any
-	
-	Dim OverlappedResult As BOOL = WSAGetOverlappedResult( _
-		this->ClientSocket, _
-		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
-		@cbTransfer, _
-		fNoWait, _
-		@dwFlags _
-	)
-	If OverlappedResult = False Then
-		
-		Dim intError As Long = WSAGetLastError()
-		
-		If intError = WSA_IO_INCOMPLETE OrElse intError = WSA_IO_PENDING Then
-			Return BASESTREAM_S_IO_PENDING
-		End If
-		
-		*pWritedBytes = 0
-		Return HRESULT_FROM_WIN32(intError)
-	End If
-	
-	*pWritedBytes = cbTransfer
-	
-	If cbTransfer = 0 Then
-		Return S_FALSE
-	End If
-	
-	Return S_OK
+	Return HRESULT_FROM_WIN32(WSA_IO_INCOMPLETE)
 	
 End Function
 
