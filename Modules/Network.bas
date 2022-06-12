@@ -132,32 +132,6 @@ Function CloseSocketConnection( _
 	
 End Function
 
-Function SetReceiveTimeout( _
-		ByVal ClientSocket As SOCKET, _
-		ByVal dwMilliseconds As DWORD _
-	)As HRESULT
-	
-	Dim res As Integer = setsockopt( _
-		ClientSocket, _
-		SOL_SOCKET, _
-		SO_RCVTIMEO, _
-		CPtr(ZString Ptr, @dwMilliseconds), _
-		SizeOf(DWORD) _
-	)
-	
-	If res <> 0 Then
-		
-		Dim e As Integer = WSAGetLastError()
-		Dim hr As HRESULT = HRESULT_FROM_WIN32(e)
-		
-		Return hr
-		
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
