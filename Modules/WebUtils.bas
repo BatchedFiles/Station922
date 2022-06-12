@@ -1,14 +1,11 @@
 #include once "WebUtils.bi"
 #include once "win\shlwapi.bi"
 #include once "win\wincrypt.bi"
-#include once "IWebServerConfiguration.bi"
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "Mime.bi"
 #include once "StringConstants.bi"
-
-Extern CLSID_WEBSERVERINICONFIGURATION Alias "CLSID_WEBSERVERINICONFIGURATION" As Const CLSID
 
 Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 Const TimeFormatString = WStr("HH:mm:ss GMT")

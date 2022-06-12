@@ -1,4 +1,4 @@
-#include once "WebServerIniConfiguration.bi"
+#include once "IniConfiguration.bi"
 #include once "win\shlwapi.bi"
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
@@ -240,7 +240,7 @@ Function WebServerIniConfigurationQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IWebServerConfiguration, riid) Then
+	If IsEqualIID(@IID_IIniConfiguration, riid) Then
 		*ppv = @this->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then

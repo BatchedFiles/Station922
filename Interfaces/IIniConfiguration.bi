@@ -1,5 +1,5 @@
-#ifndef IWEBSERVERCONFIGURATION_BI
-#define IWEBSERVERCONFIGURATION_BI
+#ifndef IINICONFIGURATION_BI
+#define IINICONFIGURATION_BI
 
 #include once "IWebSiteCollection.bi"
 #include once "IHttpProcessorCollection.bi"
@@ -8,7 +8,7 @@ Type IWebServerConfiguration As IWebServerConfiguration_
 
 Type LPIWebServerConfiguration As IWebServerConfiguration Ptr
 
-Extern IID_IWebServerConfiguration Alias "IID_IWebServerConfiguration" As Const IID
+Extern IID_IIniConfiguration Alias "IID_IIniConfiguration" As Const IID
 
 Type IWebServerConfigurationVirtualTable
 	

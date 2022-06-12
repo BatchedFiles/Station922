@@ -9,7 +9,7 @@
 #include once "ReadRequestAsyncTask.bi"
 #include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
-#include once "WebServerIniConfiguration.bi"
+#include once "IniConfiguration.bi"
 
 Extern GlobalWebServerVirtualTable As Const IRunnableVirtualTable
 
@@ -427,8 +427,8 @@ Function ReadConfiguration( _
 	Dim pIConfig As IWebServerConfiguration Ptr = Any
 	Dim hr As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
-		@CLSID_WEBSERVERINICONFIGURATION, _
-		@IID_IWebServerConfiguration, _
+		@CLSID_INICONFIGURATION, _
+		@IID_IIniConfiguration, _
 		@pIConfig _
 	)
 	If FAILED(hr) Then

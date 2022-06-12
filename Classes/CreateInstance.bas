@@ -9,13 +9,13 @@
 #include once "HttpProcessorCollection.bi"
 #include once "HttpReader.bi"
 #include once "HttpWriter.bi"
+#include once "IniConfiguration.bi"
 #include once "MemoryBuffer.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
 #include once "WebServer.bi"
-#include once "WebServerIniConfiguration.bi"
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
 #include once "WriteErrorAsyncTask.bi"
@@ -254,7 +254,7 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_WEBSERVERINICONFIGURATION, rclsid) Then
+	If IsEqualCLSID(@CLSID_INICONFIGURATION, rclsid) Then
 		Dim pConfiguration As WebServerIniConfiguration Ptr = CreateWebServerIniConfiguration(pIMemoryAllocator)
 		If pConfiguration = NULL Then
 			Return E_OUTOFMEMORY

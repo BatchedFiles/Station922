@@ -80,6 +80,11 @@ DEFINE_CLSID(CLSID_HTTPWRITER, _
 	&hca5dd19b, &hd8a6, &h467d, &h89, &h19, &hcb, &h41, &h9e, &he, &h80, &h24 _
 )
 
+' {190A5653-1F53-4FAD-A8CC-8E3998926514}
+DEFINE_CLSID(CLSID_INICONFIGURATION, _
+	&h190a5653, &h1f53, &h4fad, &ha8, &hcc, &h8e, &h39, &h98, &h92, &h65, &h14 _
+)
+
 ' {381E6704-C5E4-40AB-9863-C420B6DE25D7}
 DEFINE_CLSID(CLSID_MEMORYBUFFER, _
 	&h381e6704, &hc5e4, &h40ab, &h98, &h63, &hc4, &h20, &hb6, &hde, &h25, &hd7 _
@@ -100,11 +105,6 @@ DEFINE_CLSID(CLSID_SERVERRESPONSE, _
 	&h33c9eb2, &hab1f, &h4ac1, &ha6, &h41, &hb5, &h4d, &h4a, &h9c, &h83, &hd7 _
 )
 
-' {E9BE6663-1ED6-45A4-9090-01FF8A82AB99}
-DEFINE_CLSID(CLSID_SERVERSTATE, _
-	&he9be6663, &h1ed6, &h45a4, &h90, &h90, &h01, &hff, &h8a, &h82, &hab, &h99 _
-)
-
 ' {EE0793B6-B903-4C0F-8205-AB8A13D22316}
 DEFINE_CLSID(CLSID_THREADPOOL, _
 	&hee0793b6, &hb903, &h4c0f, &h82, &h5, &hab, &h8a, &h13, &hd2, &h23, &h16 _
@@ -113,11 +113,6 @@ DEFINE_CLSID(CLSID_THREADPOOL, _
 ' {EA837873-0F90-4DD6-838C-60391FCF293E}
 DEFINE_CLSID(CLSID_WEBSERVER, _
 	&hdec52339, &hcc4d, &h409d, &h93, &h1, &h21, &hc6, &hd5, &h22, &h9e, &h68 _
-)
-
-' {190A5653-1F53-4FAD-A8CC-8E3998926514}
-DEFINE_CLSID(CLSID_WEBSERVERINICONFIGURATION, _
-	&h190a5653, &h1f53, &h4fad, &ha8, &hcc, &h8e, &h39, &h98, &h92, &h65, &h14 _
 )
 
 ' {AB26908E-C919-4D74-8C2C-78E70D11423C}
@@ -184,11 +179,6 @@ DEFINE_IID(IID_IClientUri, _
 	&hfa6493da, &h9102, &h4ff6, &h82, &h2e, &h16, &h33, &h99, &hbf, &h9e, &h81 _
 )
 
-' {76A3EA34-6604-4126-9550-54280EAA291A}
-DEFINE_IID(IID_IEnumWebServerConfiguration, _
-	&h76a3ea34, &h6604, &h4126, &h95, &h50, &h54, &h28, &he, &haa, &h29, &h1a _
-)
-
 ' {9042F178-B211-478B-8FF6-9C4133984364}
 DEFINE_IID(IID_IEnumWebSite, _
 	&h9042f178, &hb211, &h478b, &h8f, &hf6, &h9c, &h41, &h33, &h98, &h43, &h64 _
@@ -239,6 +229,11 @@ DEFINE_IID(IID_IHttpWriter, _
 	&hc910075b, &h3950, &h4831, &h85, &hb0, &h8c, &haf, &h4, &h7a, &hb9, &h2 _
 )
 
+' {204A5587-12AC-4CE2-A438-B1F8049FD66E}
+DEFINE_IID(IID_IIniConfiguration, _
+	&h204a5587, &h12ac, &h4ce2, &ha4, &h38, &hb1, &hf8, &h4, &h9f, &hd6, &h6e _
+)
+
 ' {0BDF996F-284C-4CD5-B010-C88D5533FA50}
 DEFINE_IID(IID_IMemoryBuffer, _
 	&hbdf996f, &h284c, &h4cd5, &hb0, &h10, &hc8, &h8d, &h55, &h33, &hfa, &h50 _
@@ -287,11 +282,6 @@ DEFINE_IID(IID_IString, _
 ' {667DFC1A-466E-40BF-BEE3-7A34882BE2F9}
 DEFINE_IID(IID_IThreadPool, _
 	&h667dfc1a, &h466e, &h40bf, &hbe, &he3, &h7a, &h34, &h88, &h2b, &he2, &hf9 _
-)
-
-' {204A5587-12AC-4CE2-A438-B1F8049FD66E}
-DEFINE_IID(IID_IWebServerConfiguration, _
-	&h204a5587, &h12ac, &h4ce2, &ha4, &h38, &hb1, &hf8, &h4, &h9f, &hd6, &h6e _
 )
 
 ' {DE416BE2-F7C8-40C6-81DF-44742D47F0F7}
