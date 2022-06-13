@@ -38,7 +38,7 @@ Sub InitializeHttpProcessorCollection( _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable
-	this->ReferenceCounter = 1
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->AllMethods = NULL
 	this->pIMemoryAllocator = pIMemoryAllocator

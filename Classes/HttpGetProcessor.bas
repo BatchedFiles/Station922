@@ -60,7 +60,7 @@ Sub InitializeHttpGetProcessor( _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
-	this->ReferenceCounter = 1
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	

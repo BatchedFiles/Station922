@@ -660,7 +660,7 @@ Sub InitializeWebSite( _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteVirtualTable
-	this->ReferenceCounter = 1
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pHostName = NULL

@@ -131,7 +131,7 @@ Sub InitializeWebSiteCollection( _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable
-	this->ReferenceCounter = 1
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pDefaultNode = NULL
