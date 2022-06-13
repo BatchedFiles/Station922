@@ -22,7 +22,7 @@ Type _ClientRequest
 	ContentLength As LongInt
 	RequestByteRange As ByteRange
 	lpVtbl As Const IClientRequestVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr

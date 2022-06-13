@@ -10,7 +10,7 @@ Type _MemoryBuffer
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IMemoryBufferVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
 	Capacity As LongInt

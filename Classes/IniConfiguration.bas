@@ -46,7 +46,7 @@ Type _WebServerIniConfiguration
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IWebServerConfigurationVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pWebServerIniFileName As WString Ptr
 	pWebSitesIniFileName As WString Ptr

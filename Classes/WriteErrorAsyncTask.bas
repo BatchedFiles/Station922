@@ -66,7 +66,7 @@ Type _WriteErrorAsyncTask
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IWriteErrorAsyncIoTaskVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr

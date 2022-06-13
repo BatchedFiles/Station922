@@ -13,7 +13,7 @@ Type _HttpWriter
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IHttpWriterVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
 	pIBuffer As IBuffer Ptr

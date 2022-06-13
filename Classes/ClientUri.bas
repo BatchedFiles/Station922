@@ -14,7 +14,7 @@ Type _ClientUri
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IClientUriVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	Uri As HeapBSTR
 	Scheme As HeapBSTR

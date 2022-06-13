@@ -157,7 +157,7 @@ Type _HttpReader
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
 	pReadedData As RawBuffer Ptr

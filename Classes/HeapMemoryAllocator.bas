@@ -17,7 +17,7 @@ Type _HeapMemoryAllocator
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pISpyObject As IMallocSpy Ptr
 	hHeap As HANDLE
 End Type

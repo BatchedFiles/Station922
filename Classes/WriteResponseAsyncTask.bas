@@ -17,7 +17,7 @@ Type _WriteResponseAsyncTask
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IWriteResponseAsyncIoTaskVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr

@@ -11,7 +11,7 @@ Type _FileBuffer
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IFileBufferVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	FileSize As LongInt
 	FileOffset As LongInt
 	ChunkIndex As LongInt

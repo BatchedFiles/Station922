@@ -10,7 +10,7 @@ Type _ArrayStringWriter
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IArrayStringWriterVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	CodePage As Integer
 	Capacity As Integer

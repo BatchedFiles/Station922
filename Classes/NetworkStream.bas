@@ -15,7 +15,7 @@ Type _NetworkStream
 	#endif
 	RemoteAddress As SOCKADDR_STORAGE
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	RemoteAddressLength As Integer
 	ClientSocket As SOCKET

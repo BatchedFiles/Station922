@@ -20,7 +20,7 @@ Type _ServerResponse
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IServerResponseVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
 	ResponseHeaderLine As ZString Ptr
