@@ -22,7 +22,7 @@ Type _WebServer
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IRunnableVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	
 	WorkerThreadsCount As Integer
@@ -635,7 +635,7 @@ Function CreateWebServer( _
 	#endif
 	
 	Dim pIPool As IThreadPool Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hr As HRESULT = CreatePermanentInstance( _
 		pIMemoryAllocator, _
 		@CLSID_THREADPOOL, _
 		@IID_IThreadPool, _
@@ -792,11 +792,7 @@ Function WebServerAddRef( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
+	this->ReferenceCounter += 1
 	
 	Return 1
 	
@@ -806,15 +802,11 @@ Function WebServerRelease( _
 		ByVal this As WebServer Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
 	
 	DestroyWebServer(this)
 	

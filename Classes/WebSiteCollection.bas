@@ -19,7 +19,7 @@ Type _WebSiteCollection
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IWebSiteCollectionVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pDefaultNode As WebSiteNode Ptr
 	pTree As WebSiteNode Ptr
@@ -131,7 +131,7 @@ Sub InitializeWebSiteCollection( _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = 1
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pDefaultNode = NULL
@@ -146,7 +146,7 @@ Sub UnInitializeWebSiteCollection( _
 	
 End Sub
 
-Function CreateWebSiteCollection( _
+Function CreatePermanentWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSiteCollection Ptr
 	
@@ -254,12 +254,6 @@ Function WebSiteCollectionAddRef( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
-	
 	Return 1
 	
 End Function
@@ -267,18 +261,6 @@ End Function
 Function WebSiteCollectionRelease( _
 		ByVal this As WebSiteCollection Ptr _
 	)As ULONG
-	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
-	
-	DestroyWebSiteCollection(this)
 	
 	Return 0
 	

@@ -28,7 +28,7 @@ Type _WebSite
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IWebSiteVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pHostName As HeapBSTR
 	pPhysicalDirectory As HeapBSTR
@@ -660,7 +660,7 @@ Sub InitializeWebSite( _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = 1
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pHostName = NULL
@@ -682,7 +682,7 @@ Sub UnInitializeWebSite( _
 	
 End Sub
 
-Function CreateWebSite( _
+Function CreatePermanentWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSite Ptr
 	
@@ -790,12 +790,6 @@ Function WebSiteAddRef( _
 		ByVal this As WebSite Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
-	
 	Return 1
 	
 End Function
@@ -803,18 +797,6 @@ End Function
 Function WebSiteRelease( _
 		ByVal this As WebSite Ptr _
 	)As ULONG
-	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
-	
-	DestroyWebSite(this)
 	
 	Return 0
 	

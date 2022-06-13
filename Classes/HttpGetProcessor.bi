@@ -11,7 +11,7 @@ Type HttpGetProcessor As _HttpGetProcessor
 
 Type LPHttpGetProcessor As _HttpGetProcessor Ptr
 
-Declare Function CreateHttpGetProcessor( _
+Declare Function CreatePermanentHttpGetProcessor( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As HttpGetProcessor Ptr
 

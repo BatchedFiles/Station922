@@ -18,7 +18,7 @@ Type _HttpProcessorCollection
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IHttpProcessorCollectionVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	Dim AllMethods As HeapBSTR
 	CollectionLength As Integer
@@ -38,7 +38,7 @@ Sub InitializeHttpProcessorCollection( _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = 1
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->AllMethods = NULL
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -58,7 +58,7 @@ Sub UnInitializeHttpProcessorCollection( _
 	
 End Sub
 
-Function CreateHttpProcessorCollection( _
+Function CreatePermanentHttpProcessorCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpProcessorCollection Ptr
 	
@@ -166,12 +166,6 @@ Function HttpProcessorCollectionAddRef( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
-	
 	Return 1
 	
 End Function
@@ -179,18 +173,6 @@ End Function
 Function HttpProcessorCollectionRelease( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)As ULONG
-	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
-	
-	DestroyHttpProcessorCollection(this)
 	
 	Return 0
 	

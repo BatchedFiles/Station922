@@ -11,7 +11,7 @@ Type WebSite As _WebSite
 
 Type LPWebSite As _WebSite Ptr
 
-Declare Function CreateWebSite( _
+Declare Function CreatePermanentWebSite( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebSite Ptr
 

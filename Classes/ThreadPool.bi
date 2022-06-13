@@ -11,7 +11,7 @@ Type ThreadPool As _ThreadPool
 
 Type LPThreadPool As _ThreadPool Ptr
 
-Declare Function CreateThreadPool( _
+Declare Function CreatePermanentThreadPool( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As ThreadPool Ptr
 

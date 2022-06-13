@@ -12,7 +12,7 @@ Type WebSiteCollection As _WebSiteCollection
 
 Type LPWebSiteCollection As _WebSiteCollection Ptr
 
-Declare Function CreateWebSiteCollection( _
+Declare Function CreatePermanentWebSiteCollection( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As WebSiteCollection Ptr
 

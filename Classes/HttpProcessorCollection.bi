@@ -11,7 +11,7 @@ Type HttpProcessorCollection As _HttpProcessorCollection
 
 Type LPHttpProcessorCollection As _HttpProcessorCollection Ptr
 
-Declare Function CreateHttpProcessorCollection( _
+Declare Function CreatePermanentHttpProcessorCollection( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As HttpProcessorCollection Ptr
 

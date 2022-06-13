@@ -9,7 +9,7 @@ Type _ThreadPool
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As Integer
@@ -110,7 +110,7 @@ Sub InitializeThreadPool( _
 		)
 	#endif
 	this->lpVtbl = @GlobalThreadPoolVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = 1
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hIOCompletionPort = NULL
@@ -133,7 +133,7 @@ Sub UnInitializeThreadPool( _
 	
 End Sub
 
-Function CreateThreadPool( _
+Function CreatePermanentThreadPool( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ThreadPool Ptr
 	
@@ -244,12 +244,6 @@ Function ThreadPoolAddRef( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
-	
 	Return 1
 	
 End Function
@@ -257,18 +251,6 @@ End Function
 Function ThreadPoolRelease( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
-	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
-	
-	DestroyThreadPool(this)
 	
 	Return 0
 	

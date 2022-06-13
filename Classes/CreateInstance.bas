@@ -114,34 +114,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_HTTPGETASYNCPROCESSOR, rclsid) Then
-		Dim pProcessor As HttpGetProcessor Ptr = CreateHttpGetProcessor(pIMemoryAllocator)
-		If pProcessor = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = HttpGetProcessorQueryInterface(pProcessor, riid, ppv)
-		If FAILED(hr) Then
-			DestroyHttpGetProcessor(pProcessor)
-		End If
-		
-		Return hr
-	End If
-	
-	If IsEqualCLSID(@CLSID_HTTPPROCESSORCOLLECTION, rclsid) Then
-		Dim pProcessor As HttpProcessorCollection Ptr = CreateHttpProcessorCollection(pIMemoryAllocator)
-		If pProcessor = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = HttpProcessorCollectionQueryInterface(pProcessor, riid, ppv)
-		If FAILED(hr) Then
-			DestroyHttpProcessorCollection(pProcessor)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_HTTPREADER, rclsid) Then
 		Dim pReader As HttpReader Ptr = CreateHttpReader(pIMemoryAllocator)
 		If pReader = NULL Then
@@ -226,20 +198,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_THREADPOOL, rclsid) Then
-		Dim pPool As ThreadPool Ptr = CreateThreadPool(pIMemoryAllocator)
-		If pPool = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = ThreadPoolQueryInterface(pPool, riid, ppv)
-		If FAILED(hr) Then
-			DestroyThreadPool(pPool)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_WEBSERVER, rclsid) Then
 		Dim pWebServer As WebServer Ptr = CreateWebServer(pIMemoryAllocator)
 		If pWebServer = NULL Then
@@ -268,34 +226,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_WEBSITE, rclsid) Then
-		Dim pWebSite As WebSite Ptr = CreateWebSite(pIMemoryAllocator)
-		If pWebSite = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = WebSiteQueryInterface(pWebSite, riid, ppv)
-		If FAILED(hr) Then
-			DestroyWebSite(pWebSite)
-		End If
-		
-		Return hr
-	End If
-	
-	If IsEqualCLSID(@CLSID_WEBSITECOLLECTION, rclsid) Then
-		Dim pWebSites As WebSiteCollection Ptr = CreateWebSiteCollection(pIMemoryAllocator)
-		If pWebSites = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = WebSiteCollectionQueryInterface(pWebSites, riid, ppv)
-		If FAILED(hr) Then
-			DestroyWebSiteCollection(pWebSites)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_WRITEERRORASYNCTASK, rclsid) Then
 		Dim pTask As WriteErrorAsyncTask Ptr = CreateWriteErrorAsyncTask(pIMemoryAllocator)
 		If pTask = NULL Then
@@ -319,6 +249,89 @@ Function CreateInstance( _
 		Dim hr As HRESULT = WriteResponseAsyncTaskQueryInterface(pTask, riid, ppv)
 		If FAILED(hr) Then
 			DestroyWriteResponseAsyncTask(pTask)
+		End If
+		
+		Return hr
+	End If
+	
+	Return CLASS_E_CLASSNOTAVAILABLE
+	
+End Function
+
+Function CreatePermanentInstance( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal rclsid As REFCLSID, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	*ppv = NULL
+	
+	If IsEqualCLSID(@CLSID_HTTPGETASYNCPROCESSOR, rclsid) Then
+		Dim pProcessor As HttpGetProcessor Ptr = CreatePermanentHttpGetProcessor(pIMemoryAllocator)
+		If pProcessor = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpGetProcessorQueryInterface(pProcessor, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpGetProcessor(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_HTTPPROCESSORCOLLECTION, rclsid) Then
+		Dim pProcessor As HttpProcessorCollection Ptr = CreatePermanentHttpProcessorCollection(pIMemoryAllocator)
+		If pProcessor = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpProcessorCollectionQueryInterface(pProcessor, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpProcessorCollection(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_THREADPOOL, rclsid) Then
+		Dim pPool As ThreadPool Ptr = CreatePermanentThreadPool(pIMemoryAllocator)
+		If pPool = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = ThreadPoolQueryInterface(pPool, riid, ppv)
+		If FAILED(hr) Then
+			DestroyThreadPool(pPool)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_WEBSITE, rclsid) Then
+		Dim pWebSite As WebSite Ptr = CreatePermanentWebSite(pIMemoryAllocator)
+		If pWebSite = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WebSiteQueryInterface(pWebSite, riid, ppv)
+		If FAILED(hr) Then
+			DestroyWebSite(pWebSite)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_WEBSITECOLLECTION, rclsid) Then
+		Dim pWebSites As WebSiteCollection Ptr = CreatePermanentWebSiteCollection(pIMemoryAllocator)
+		If pWebSites = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = WebSiteCollectionQueryInterface(pWebSites, riid, ppv)
+		If FAILED(hr) Then
+			DestroyWebSiteCollection(pWebSites)
 		End If
 		
 		Return hr
