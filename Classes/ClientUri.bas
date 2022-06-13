@@ -546,7 +546,7 @@ Function ClientUriUriFromString( _
 	this->Uri = bstrUri
 	
 	If SchemeLength <> 0 Then
-		this->Scheme = HeapSysAllocStringLen( _
+		this->Scheme = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pScheme, _
 			SchemeLength _
@@ -554,7 +554,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If UserNameLength <> 0 Then
-		this->UserName = HeapSysAllocStringLen( _
+		this->UserName = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pUserName, _
 			UserNameLength _
@@ -562,7 +562,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If PasswordLength <> 0 Then
-		this->Password = HeapSysAllocStringLen( _
+		this->Password = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pPassword, _
 			PasswordLength _
@@ -570,7 +570,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If HostLength <> 0 Then
-		this->Host = HeapSysAllocStringLen( _
+		this->Host = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pHost, _
 			HostLength _
@@ -578,7 +578,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If PortLength <> 0 Then
-		this->Port = HeapSysAllocStringLen( _
+		this->Port = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pPort, _
 			PortLength _
@@ -586,7 +586,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If PathLength <> 0 Then
-		this->Path = HeapSysAllocStringLen( _
+		this->Path = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pPath, _
 			PathLength _
@@ -594,7 +594,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If QueryLength <> 0 Then
-		this->Query = HeapSysAllocStringLen( _
+		this->Query = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pQuery, _
 			QueryLength _
@@ -602,7 +602,7 @@ Function ClientUriUriFromString( _
 	End If
 	
 	If FragmentLength <> 0 Then
-		this->Fragment = HeapSysAllocStringLen( _
+		this->Fragment = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pFragment, _
 			FragmentLength _

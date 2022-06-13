@@ -139,7 +139,7 @@ Function RawBufferGetLine( _
 	
 	Dim StartLineIndex As Integer = pBufer->StartLine
 	
-	Dim bstrLine As HeapBSTR = HeapSysAllocZStringLen( _
+	Dim bstrLine As HeapBSTR = CreateHeapZStringLen( _
 		pIMemoryAllocator, _
 		@pBufer->Bytes(StartLineIndex), _
 		LineLength _

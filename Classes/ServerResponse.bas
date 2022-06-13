@@ -483,7 +483,7 @@ Function ServerResponseAddKnownResponseHeaderWstrLen( _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	Dim hBstr As HeapBSTR = HeapSysAllocStringLen( _
+	Dim hBstr As HeapBSTR = CreateHeapStringLen( _
 		this->pIMemoryAllocator, _
 		Value, _
 		Length _

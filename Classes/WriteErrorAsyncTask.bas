@@ -1189,19 +1189,19 @@ Function WriteErrorAsyncTaskPrepare( _
 					@pIWebSiteWeakPtr _
 				)
 				If FAILED(hrFindSite) Then
-					VirtualPath = HeapSysAllocStringLen( _
+					VirtualPath = CreateHeapStringLen( _
 						this->pIMemoryAllocator, _
-						@WStr("/"), _
-						1 _
+						@WStr(DefaultVirtualPath), _
+						Len(DefaultVirtualPath) _
 					)
 				Else
 					IWebSite_GetVirtualPath(pIWebSiteWeakPtr, @VirtualPath)
 				End If
 			Else
-				VirtualPath = HeapSysAllocStringLen( _
+				VirtualPath = CreateHeapStringLen( _
 					this->pIMemoryAllocator, _
-					@WStr("/"), _
-					1 _
+					@WStr(DefaultVirtualPath), _
+					Len(DefaultVirtualPath) _
 				)
 			End If
 			

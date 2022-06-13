@@ -2,6 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
+Extern GlobalInternalPermanentStringVirtualTable As Const IStringVirtualTable
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
 Type _InternalHeapBSTR
@@ -9,7 +10,7 @@ Type _InternalHeapBSTR
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IStringVirtualTable Ptr
-	ReferenceCounter As Integer
+	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	#ifdef __FB_64BIT__
 		Padding As DWORD
@@ -18,84 +19,12 @@ Type _InternalHeapBSTR
 	wszNullChar(0 To 7) As OLECHAR
 End Type
 
-Function HeapSysAllocString( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		byval pwsz As Const WString Ptr _
-	)As HeapBSTR
-	
-	Dim pszlen As UINT = Any
-	If pwsz = NULL Then
-		pszlen = 0
-	Else
-		pszlen = lstrlenW(pwsz)
-	End If
-	
-	Return HeapSysAllocStringLen(pIMemoryAllocator, pwsz, pszlen)
-	
-End Function
-
-Function HeapSysAllocStringLen( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		byval pwsz As Const WString Ptr, _
-		ByVal Length As UINT _
-	)As HeapBSTR
-	
-	Dim this As InternalHeapBSTR Ptr = CreateInternalHeapBSTR( _
-		pIMemoryAllocator, _
-		pwsz, _
-		Length _
-	)
-	If this = NULL Then
-		Return NULL
-	End If
-	
-	Dim pIString As IString Ptr = Any
-	Dim hr As HRESULT = InternalHeapBSTRQueryInterface( _
-		this, _
-		@IID_IString, _
-		@pIString _
-	)
-	If FAILED(hr) Then
-		DestroyInternalHeapBSTR(this)
-		Return NULL
-	End If
-	
-	Dim pHeapBstr As HeapBSTR = Any
-	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
-	
-	Return pHeapBstr
-	
-End Function
-
-Function HeapSysAddRefString( _
-		ByVal bstrString As HeapBSTR _
-	)As HRESULT
-	
-	If bstrString <> NULL Then
-		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
-		InternalHeapBSTRAddRef(this)
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Sub HeapSysFreeString( _
-		byval bstrString As HeapBSTR _ 
-	)
-	
-	If bstrString <> NULL Then
-		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
-		InternalHeapBSTRRelease(this)
-	End If
-	
-End Sub
-
 Sub InitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
-		ByVal Length As UINT _
+		ByVal Length As UINT, _
+		ByVal Permanent As Boolean _
 	)
 	
 	#if __FB_DEBUG__
@@ -105,8 +34,15 @@ Sub InitializeInternalHeapBSTR( _
 			Len(InternalHeapBSTR.IdString) _
 		)
 	#endif
-	this->lpVtbl = @GlobalInternalStringVirtualTable
-	this->ReferenceCounter = 0
+	
+	If Permanent Then
+		this->lpVtbl = @GlobalInternalPermanentStringVirtualTable
+		this->ReferenceCounter = CUInt(-1)
+	Else
+		this->lpVtbl = @GlobalInternalStringVirtualTable
+		this->ReferenceCounter = 0
+	End If
+	
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
@@ -131,7 +67,107 @@ Sub UnInitializeInternalHeapBSTR( _
 	
 End Sub
 
-Function HeapSysAllocZStringLen( _
+Function CreateHeapString( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr _
+	)As HeapBSTR
+	
+	Dim pszlen As UINT = Any
+	If pwsz = NULL Then
+		pszlen = 0
+	Else
+		pszlen = lstrlenW(pwsz)
+	End If
+	
+	Return CreateHeapStringLen(pIMemoryAllocator, pwsz, pszlen)
+	
+End Function
+
+Function CreateHeapStringLen( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr, _
+		ByVal Length As UINT _
+	)As HeapBSTR
+	
+	Dim this As InternalHeapBSTR Ptr = CreateInternalHeapBSTR( _
+		pIMemoryAllocator, _
+		pwsz, _
+		Length, _
+		False _
+	)
+	If this = NULL Then
+		Return NULL
+	End If
+	
+	Dim pIString As IString Ptr = Any
+	Dim hr As HRESULT = InternalHeapBSTRQueryInterface( _
+		this, _
+		@IID_IString, _
+		@pIString _
+	)
+	If FAILED(hr) Then
+		DestroyInternalHeapBSTR(this)
+		Return NULL
+	End If
+	
+	Dim pHeapBstr As HeapBSTR = Any
+	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
+	
+	Return pHeapBstr
+	
+End Function
+
+Function CreatePermanentHeapString( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr _
+	)As HeapBSTR
+	
+	Dim pszlen As UINT = Any
+	If pwsz = NULL Then
+		pszlen = 0
+	Else
+		pszlen = lstrlenW(pwsz)
+	End If
+	
+	Return CreatePermanentHeapStringLen(pIMemoryAllocator, pwsz, pszlen)
+	
+End Function
+
+Function CreatePermanentHeapStringLen( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr, _
+		ByVal Length As UINT _
+	)As HeapBSTR
+	
+	Dim this As InternalHeapBSTR Ptr = CreateInternalHeapBSTR( _
+		pIMemoryAllocator, _
+		pwsz, _
+		Length, _
+		True _
+	)
+	If this = NULL Then
+		Return NULL
+	End If
+	
+	Dim pIString As IString Ptr = Any
+	Dim hr As HRESULT = InternalPermanentHeapBSTRQueryInterface( _
+		this, _
+		@IID_IString, _
+		@pIString _
+	)
+	If FAILED(hr) Then
+		DestroyInternalHeapBSTR(this)
+		Return NULL
+	End If
+	
+	Dim pHeapBstr As HeapBSTR = Any
+	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
+	
+	Return pHeapBstr
+	
+End Function
+
+Function CreateHeapZStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal psz As Const ZString Ptr, _
 		ByVal Length As UINT _
@@ -166,7 +202,8 @@ Function HeapSysAllocZStringLen( _
 		this, _
 		pIMemoryAllocator, _
 		NULL, _
-		0 _
+		0, _
+		False _
 	)
 	
 	Dim pIString As IString Ptr = Any
@@ -215,7 +252,8 @@ End Function
 Function CreateInternalHeapBSTR( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
-		ByVal Length As UINT _
+		ByVal Length As UINT, _
+		ByVal Permanent As Boolean _
 	)As InternalHeapBSTR Ptr
 	
 	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
@@ -247,7 +285,8 @@ Function CreateInternalHeapBSTR( _
 		this, _
 		pIMemoryAllocator, _
 		pwsz, _
-		Length _
+		Length, _
+		Permanent _
 	)
 	
 	#if __FB_DEBUG__
@@ -272,12 +311,13 @@ Sub DestroyInternalHeapBSTR( _
 	
 	#if __FB_DEBUG__
 	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
+		Dim vtString As VARIANT = Any
+		vtString.vt = VT_BSTR
+		vtString.bstrVal = @this->wszNullChar(0)
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr("HeapBSTR destroying"), _
-			@vtEmpty _
+			WStr(!"HeapBSTR destroying:\t"), _
+			@vtString _
 		)
 	End Scope
 	#endif
@@ -303,6 +343,69 @@ Sub DestroyInternalHeapBSTR( _
 	IMalloc_Release(pIMemoryAllocator)
 	
 End Sub
+
+Function HeapSysAddRefString( _
+		ByVal bstrString As HeapBSTR _
+	)As HRESULT
+	
+	If bstrString <> NULL Then
+		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
+		InternalHeapBSTRAddRef(this)
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Sub HeapSysFreeString( _
+		byval bstrString As HeapBSTR _ 
+	)
+	
+	If bstrString <> NULL Then
+		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
+		InternalHeapBSTRRelease(this)
+	End If
+	
+End Sub
+
+Function InternalPermanentHeapBSTRQueryInterface( _
+		ByVal this As InternalHeapBSTR Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IString, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	InternalPermanentHeapBSTRAddRef(this)
+	
+	Return S_OK
+	
+End Function
+
+Function InternalPermanentHeapBSTRAddRef( _
+		ByVal this As InternalHeapBSTR Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Function InternalPermanentHeapBSTRRelease( _
+		ByVal this As InternalHeapBSTR Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
 
 Function InternalHeapBSTRQueryInterface( _
 		ByVal this As InternalHeapBSTR Ptr, _
@@ -331,11 +434,7 @@ Function InternalHeapBSTRAddRef( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		InterlockedIncrement64(@this->ReferenceCounter)
-	#else
-		InterlockedIncrement(@this->ReferenceCounter)
-	#endif
+	this->ReferenceCounter += 1
 	
 	Return 1
 	
@@ -345,15 +444,11 @@ Function InternalHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
-	#ifdef __FB_64BIT__
-		If InterlockedDecrement64(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#else
-		If InterlockedDecrement(@this->ReferenceCounter) Then
-			Return 1
-		End If
-	#endif
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
 	
 	DestroyInternalHeapBSTR(this)
 	
@@ -372,18 +467,26 @@ Function InternalHeapBSTRGetHeapBSTR( _
 	
 End Function
 
-Function GetIStringFromHeapBSTR( _
-		ByVal bs As HeapBSTR _
-	)As IString Ptr
-	
-	Dim this As InternalHeapBSTR Ptr = ContainerOf(bs, InternalHeapBSTR, wszNullChar(0))
-	
-	Dim pIString As IString Ptr = CPtr(IString Ptr, @this->lpVtbl)
-	
-	Return pIString
-	
+
+Function IPermanentStringQueryInterface( _
+		ByVal this As IString Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return InternalPermanentHeapBSTRQueryInterface(ContainerOf(this, InternalHeapBSTR, lpVtbl), riid, ppvObject)
 End Function
 
+Function IPermanentStringAddRef( _
+		ByVal this As IString Ptr _
+	)As ULONG
+	Return InternalPermanentHeapBSTRAddRef(ContainerOf(this, InternalHeapBSTR, lpVtbl))
+End Function
+
+Function IPermanentStringRelease( _
+		ByVal this As IString Ptr _
+	)As ULONG
+	Return InternalPermanentHeapBSTRRelease(ContainerOf(this, InternalHeapBSTR, lpVtbl))
+End Function
 
 Function IStringQueryInterface( _
 		ByVal this As IString Ptr, _
@@ -411,6 +514,13 @@ Function IStringGetHeapBSTR( _
 	)As HRESULT
 	Return InternalHeapBSTRGetHeapBSTR(ContainerOf(this, InternalHeapBSTR, lpVtbl), pcHeapBSTR)
 End Function
+
+Dim GlobalInternalPermanentStringVirtualTable As Const IStringVirtualTable = Type( _
+	@IPermanentStringQueryInterface, _
+	@IPermanentStringAddRef, _
+	@IPermanentStringRelease, _
+	@IStringGetHeapBSTR _
+)
 
 Dim GlobalInternalStringVirtualTable As Const IStringVirtualTable = Type( _
 	@IStringQueryInterface, _

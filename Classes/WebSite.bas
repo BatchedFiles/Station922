@@ -439,7 +439,7 @@ Function WebSiteOpenRequestedFile( _
 		
 		If SUCCEEDED(hrGetFile) Then
 			
-			Dim fp As HeapBSTR = HeapSysAllocString( _
+			Dim fp As HeapBSTR = CreateHeapString( _
 				pIMalloc, _
 				@FullDefaultFilename _
 			)
@@ -469,7 +469,7 @@ Function WebSiteOpenRequestedFile( _
 		
 		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
 		
-		Dim fp As HeapBSTR = HeapSysAllocString( _
+		Dim fp As HeapBSTR = CreateHeapString( _
 			pIMalloc, _
 			@FullDefaultFilename _
 		)
@@ -1012,7 +1012,7 @@ Function WebSiteGetBuffer( _
 					ZipMode _
 				)
 				
-				Dim ETag As HeapBSTR = HeapSysAllocString( _
+				Dim ETag As HeapBSTR = CreateHeapString( _
 					pIMalloc, _
 					ETagBuffer _
 				)

@@ -64,7 +64,7 @@ Function ClientRequestParseRequestedLine( _
 		Dim pVerb As WString Ptr = pFirstChar
 		
 		Dim VerbLength As Integer = pSpace - pVerb
-		this->pHttpMethod = HeapSysAllocStringLen( _
+		this->pHttpMethod = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
 			pVerb, _
 			VerbLength _
@@ -98,13 +98,13 @@ Function ClientRequestParseRequestedLine( _
 			Characters.WhiteSpace _
 		)
 		If pSpace = NULL Then
-			bstrUri = HeapSysAllocString( _
+			bstrUri = CreateHeapString( _
 				this->pIMemoryAllocator, _
 				pUri _
 			)
 		Else
 			Dim UriLength As Integer = pSpace - pUri
-			bstrUri = HeapSysAllocStringLen( _
+			bstrUri = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pUri, _
 				UriLength _
@@ -145,7 +145,7 @@ Function ClientRequestParseRequestedLine( _
 				Return CLIENTREQUEST_E_BADREQUEST
 			End If
 			
-			Dim bstrVersion As HeapBSTR = HeapSysAllocString( _
+			Dim bstrVersion As HeapBSTR = CreateHeapString( _
 				this->pIMemoryAllocator, _
 				pVersion _
 			)
@@ -228,7 +228,7 @@ Function ClientRequestAddRequestHeaders( _
 			
 			Dim pNullChar As WString Ptr = @pLine[LineLength]
 			Dim ValueLength As Integer = pNullChar - pwszValue
-			Dim Value As HeapBSTR = HeapSysAllocStringLen( _
+			Dim Value As HeapBSTR = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pwszValue, _
 				ValueLength _

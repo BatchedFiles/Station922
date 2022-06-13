@@ -524,7 +524,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			Return hr2
 		End If
 		
-		Dim bstrWebSite As HeapBSTR = HeapSysAllocString( _
+		Dim bstrWebSite As HeapBSTR = CreatePermanentHeapString( _
 			this->pIMemoryAllocator, _
 			@WebSiteName _
 		)
@@ -549,7 +549,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrPhisycalDir As HeapBSTR = HeapSysAllocString( _
+			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapString( _
 				this->pIMemoryAllocator, _
 				@PhisycalDir _
 			)
@@ -575,7 +575,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrVirtualPath As HeapBSTR = HeapSysAllocString( _
+			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapString( _
 				this->pIMemoryAllocator, _
 				@VirtualPath _
 			)
@@ -601,7 +601,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrMovedUrl As HeapBSTR = HeapSysAllocString( _
+			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapString( _
 				this->pIMemoryAllocator, _
 				@MovedUrl _
 			)
@@ -689,7 +689,7 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Const AllMethodsString = "GET, HEAD"
-		Dim AllMethods As HeapBSTR = HeapSysAllocStringLen( _
+		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
 			this->pIMemoryAllocator, _
 			WStr(AllMethodsString), _
 			Len(AllMethodsString) _
