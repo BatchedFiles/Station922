@@ -1225,7 +1225,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		IArrayStringWriter_GetLength(pIWriter, @BodyLength)
 		
 		SendBufferLength = WideCharToMultiByte( _
-			CP_ACP, _
+			CP_UTF8, _
 			0, _
 			@BodyBuffer, _
 			BodyLength, _
@@ -1247,7 +1247,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		End If
 		
 		WideCharToMultiByte( _
-			CP_ACP, _
+			CP_UTF8, _
 			0, _
 			@BodyBuffer, _
 			BodyLength, _
