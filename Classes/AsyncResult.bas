@@ -8,9 +8,9 @@ Type _AsyncResult
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	OverLap As OVERLAPPED
 	lpVtbl As Const IAsyncResultVirtualTable Ptr
 	ReferenceCounter As UInteger
+	OverLap As OVERLAPPED
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
 	callback As AsyncCallback

@@ -19,10 +19,10 @@ Type _ClientRequest
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	ContentLength As LongInt
-	RequestByteRange As ByteRange
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	ReferenceCounter As UInteger
+	ContentLength As LongInt
+	RequestByteRange As ByteRange
 	pIMemoryAllocator As IMalloc Ptr
 	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr

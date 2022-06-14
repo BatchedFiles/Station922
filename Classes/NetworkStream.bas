@@ -13,12 +13,12 @@ Type _NetworkStream
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	RemoteAddress As SOCKADDR_STORAGE
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	RemoteAddressLength As Integer
 	ClientSocket As SOCKET
+	RemoteAddress As SOCKADDR_STORAGE
+	RemoteAddressLength As Integer
 End Type
 
 Sub InitializeNetworkStream( _
