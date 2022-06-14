@@ -71,4 +71,9 @@ Declare Function HeapMemoryAllocatorRevokeMallocSpy( _
 	ByVal this As HeapMemoryAllocator Ptr _
 )As HRESULT
 
+Declare Function HeapMemoryAllocatorGetClientBuffer( _
+	ByVal this As HeapMemoryAllocator Ptr, _
+	ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
+)As HRESULT
+
 #endif

@@ -4,7 +4,6 @@
 #include once "IHttpReader.bi"
 
 Const RTTI_ID_HTTPREADER              = !"\001Http____Reader\001"
-Const RTTI_ID_HTTPREADERBUFFER        = !"\001Reader__Buffer\001"
 
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
@@ -81,6 +80,11 @@ Declare Function HttpReaderGetRequestedBytes( _
 Declare Function HttpReaderIsCompleted( _
 	ByVal this As HttpReader Ptr, _
 	ByVal pCompleted As Boolean Ptr _
+)As HRESULT
+
+Declare Function HttpReaderSetClientBuffer( _
+	ByVal this As HttpReader Ptr, _
+	ByVal pBuffer As ClientRequestBuffer Ptr _
 )As HRESULT
 
 #endif

@@ -1,9 +1,9 @@
 #ifndef IHTTPREADER_BI
 #define IHTTPREADER_BI
 
+#include once "ClientBuffer.bi"
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
-#include once "IString.bi"
 
 ' ITextReader.ReadLine:
 ' S_OK, S_FALSE
@@ -122,6 +122,11 @@ Type IHttpReaderVirtualTable
 		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
 	
+	SetClientBuffer As Function( _
+		ByVal this As IHttpReader Ptr, _
+		ByVal pBuffer As ClientRequestBuffer Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IHttpReader_
@@ -140,5 +145,6 @@ End Type
 #define IHttpReader_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IHttpReader_GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes) (this)->lpVtbl->GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes)
 ' #define IHttpReader_IsCompleted(this, pCompleted) (this)->lpVtbl->IsCompleted(this, pCompleted)
+#define IHttpReader_SetClientBuffer(this, pBuffer) (this)->lpVtbl->SetClientBuffer(this, pBuffer)
 
 #endif

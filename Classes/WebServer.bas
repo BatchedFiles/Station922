@@ -242,13 +242,13 @@ Function CreateReadTask( _
 		ByVal RemoteAddressLength As Integer _
 	)As IReadRequestAsyncIoTask Ptr
 	
-	Dim pIClientMemoryAllocator As IMalloc Ptr = GetHeapMemoryAllocatorInstance()
+	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
 	
 	If pIClientMemoryAllocator <> NULL Then
 		
 		Dim pIHttpReader As IHttpReader Ptr = Any
 		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
-			pIClientMemoryAllocator, _
+			CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
 			@CLSID_HTTPREADER, _
 			@IID_IHttpReader, _
 			@pIHttpReader _
@@ -256,9 +256,43 @@ Function CreateReadTask( _
 		
 		If SUCCEEDED(hrCreateHttpReader) Then
 			
+			Dim pBuffer As ClientRequestBuffer Ptr = Any
+			IHeapMemoryAllocator_GetClientBuffer(pIClientMemoryAllocator, @pBuffer)
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtResponse As VARIANT = Any
+				vtResponse.vt = VT_BSTR
+				vtResponse.bstrVal = SysAllocString(WStr(!"GetBuffer\r\n"))
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					NULL, _
+					@vtResponse _
+				)
+				VariantClear(@vtResponse)
+			End Scope
+			#endif
+			
+			IHttpReader_SetClientBuffer(pIHttpReader, pBuffer)
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtResponse As VARIANT = Any
+				vtResponse.vt = VT_BSTR
+				vtResponse.bstrVal = SysAllocString(WStr(!"SetBuffer\r\n"))
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					NULL, _
+					@vtResponse _
+				)
+				VariantClear(@vtResponse)
+			End Scope
+			#endif
+			
+			
 			Dim pINetworkStream As INetworkStream Ptr = Any
 			Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
-				pIClientMemoryAllocator, _
+				CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
 				@CLSID_NETWORKSTREAM, _
 				@IID_INetworkStream, _
 				@pINetworkStream _
@@ -281,7 +315,7 @@ Function CreateReadTask( _
 				
 				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
 				Dim hrCreateTask As HRESULT = CreateInstance( _
-					pIClientMemoryAllocator, _
+					CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
 					@CLSID_READREQUESTASYNCTASK, _
 					@IID_IReadRequestAsyncIoTask, _
 					@pTask _
@@ -303,7 +337,7 @@ Function CreateReadTask( _
 					
 					INetworkStream_Release(pINetworkStream)
 					IHttpReader_Release(pIHttpReader)
-					IMalloc_Release(pIClientMemoryAllocator)
+					IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 					
 					pIClientMemoryAllocator = NULL
 					pINetworkStream = NULL
@@ -323,7 +357,7 @@ Function CreateReadTask( _
 		End If
 		
 		If pIClientMemoryAllocator <> NULL Then
-			IMalloc_Release(pIClientMemoryAllocator)
+			IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 		End If
 	End If
 	

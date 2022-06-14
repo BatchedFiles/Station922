@@ -1,5 +1,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
+#include once "ClientBuffer.bi"
 #include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
@@ -10,7 +11,6 @@ Const PRIVATEHEAP_INITIALSIZE As DWORD = 1 * MEMORY_ALLOCATION_GRANULARITY
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
-' Const HEAP_NO_SERIALIZE_FLAG = 0
 
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
@@ -20,11 +20,13 @@ Type _HeapMemoryAllocator
 	ReferenceCounter As UInteger
 	pISpyObject As IMallocSpy Ptr
 	hHeap As HANDLE
+	pReadedData As ClientRequestBuffer Ptr
 End Type
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE _
+		ByVal hHeap As HANDLE, _
+		ByVal pReadedData As ClientRequestBuffer Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -38,6 +40,8 @@ Sub InitializeHeapMemoryAllocator( _
 	this->ReferenceCounter = 0
 	this->pISpyObject = NULL
 	this->hHeap = hHeap
+	this->pReadedData = pReadedData
+	InitializeClientRequestBuffer(pReadedData)
 	
 End Sub
 
@@ -47,6 +51,14 @@ Sub UnInitializeHeapMemoryAllocator( _
 	
 	If this->pISpyObject <> NULL Then
 		IMallocSpy_Release(this->pISpyObject)
+	End If
+	
+	If this->pReadedData <> NULL Then
+		HeapFree( _
+			this->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			this->pReadedData _
+		)
 	End If
 	
 End Sub
@@ -89,36 +101,59 @@ Function CreateHeapMemoryAllocator( _
 		End Scope
 		#endif
 		
-		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+		Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
 			hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
-			SizeOf(HeapMemoryAllocator) _
+			SizeOf(ClientRequestBuffer) _
 		)
 		
-		If this <> NULL Then
-			#if __FB_DEBUG__
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
-					@vtAllocatedBytes _
-				)
-			#endif
-			
-			InitializeHeapMemoryAllocator(this, hHeap)
+		If pReadedData <> NULL Then
 			
 			#if __FB_DEBUG__
 			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
+				Dim vtHeapBytes As VARIANT = Any
+				vtHeapBytes.vt = VT_I4
+				vtHeapBytes.lVal = SizeOf(ClientRequestBuffer)
 				LogWriteEntry( _
 					LogEntryType.Debug, _
-					WStr("HeapMemoryAllocator created"), _
-					@vtEmpty _
+					WStr(!"\t\t\t\tClientRequestBuffer created, size:\t"), _
+					@vtHeapBytes _
 				)
 			End Scope
 			#endif
 			
-			Return this
+			Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+				hHeap, _
+				HEAP_NO_SERIALIZE_FLAG, _
+				SizeOf(HeapMemoryAllocator) _
+			)
+			
+			If this <> NULL Then
+				#if __FB_DEBUG__
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
+						@vtAllocatedBytes _
+					)
+				#endif
+				
+				InitializeHeapMemoryAllocator(this, hHeap, pReadedData)
+				
+				#if __FB_DEBUG__
+				Scope
+					Dim vtEmpty As VARIANT = Any
+					VariantInit(@vtEmpty)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr("HeapMemoryAllocator created"), _
+						@vtEmpty _
+					)
+				End Scope
+				#endif
+				
+				Return this
+			End If
+			
 		End If
 		
 		LogWriteEntry( _
@@ -126,6 +161,7 @@ Function CreateHeapMemoryAllocator( _
 			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
 			@vtAllocatedBytes _
 		)
+		
 		HeapDestroy(hHeap)
 	End If
 	
@@ -430,6 +466,17 @@ End Sub
 	' ByVal this As HeapMemoryAllocator Ptr _
 ' )As HRESULT
 
+Function HeapMemoryAllocatorGetClientBuffer( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
+	)As HRESULT
+	
+	*ppBuffer = this->pReadedData
+	
+	Return S_OK
+	
+End Function
+
 
 Function IHeapMemoryAllocatorQueryInterface( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
@@ -493,6 +540,13 @@ Sub IHeapMemoryAllocatorHeapMinimize( _
 	HeapMemoryAllocatorHeapMinimize(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Sub
 
+Function IHeapMemoryAllocatorGetClientBuffer( _
+		ByVal this As IHeapMemoryAllocator Ptr, _
+		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorGetClientBuffer(ContainerOf(this, HeapMemoryAllocator, lpVtbl), ppBuffer)
+End Function
+
 Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _
 	@IHeapMemoryAllocatorQueryInterface, _
 	@IHeapMemoryAllocatorAddRef, _
@@ -503,6 +557,7 @@ Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTa
 	@IHeapMemoryAllocatorGetSize, _
 	@IHeapMemoryAllocatorDidAlloc, _
 	@IHeapMemoryAllocatorHeapMinimize, _
-	NULL, _
-	NULL _
+	NULL, _ /' RegisterMallocSpy '/
+	NULL, _ /' RevokeMallocSpy '/
+	@IHeapMemoryAllocatorGetClientBuffer _
 )

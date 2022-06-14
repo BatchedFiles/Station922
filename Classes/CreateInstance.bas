@@ -342,13 +342,13 @@ Function CreatePermanentInstance( _
 End Function
 
 Function GetHeapMemoryAllocatorInstance( _
-	)As IMalloc Ptr
+	)As IHeapMemoryAllocator Ptr
 	
-	Dim pMalloc As IMalloc Ptr = Any
+	Dim pMalloc As IHeapMemoryAllocator Ptr = Any
 	Dim hrCreateMalloc As HRESULT = CreateInstance( _
 		NULL, _
 		@CLSID_HEAPMEMORYALLOCATOR, _
-		@IID_IMALLOC, _
+		@IID_IHeapMemoryAllocator, _
 		@pMalloc _
 	)
 	If FAILED(hrCreateMalloc) Then

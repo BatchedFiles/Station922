@@ -302,6 +302,19 @@ $(OBJ_RELEASE_DIR)\WriteResponseAsyncTask$(FILE_SUFFIX_TEST).c: Classes\WriteRes
 $(OBJ_DEBUG_DIR)\WriteResponseAsyncTask$(FILE_SUFFIX_TEST).c:   Classes\WriteResponseAsyncTask.bas Classes\WriteResponseAsyncTask.bi Interfaces\IWriteResponseAsyncIoTask.bi Interfaces\IClientRequest.bi Interfaces\IClientUri.bi Interfaces\IString.bi Modules\Http.bi Interfaces\IHttpReader.bi Interfaces\IAsyncResult.bi Interfaces\IBaseStream.bi Interfaces\IHttpAsyncIoTask.bi Interfaces\IAsyncIoTask.bi Interfaces\IHttpProcessorCollection.bi Interfaces\IEnumHttpProcessor.bi Interfaces\IHttpAsyncProcessor.bi Interfaces\IHttpWriter.bi Interfaces\IBuffer.bi Modules\Mime.bi Interfaces\IServerResponse.bi Interfaces\IWebSite.bi Interfaces\IWebSiteCollection.bi Interfaces\IEnumWebSite.bi Classes\ReadRequestAsyncTask.bi Interfaces\IReadRequestAsyncIoTask.bi Classes\ClientRequest.bi Classes\ContainerOf.bi Classes\CreateInstance.bi Classes\HeapBSTR.bi Classes\HttpWriter.bi Interfaces\INetworkStream.bi Modules\Logger.bi Classes\ServerResponse.bi Modules\WebUtils.bi
 
 
+$(OBJ_RELEASE_DIR)\ClientBuffer$(FILE_SUFFIX_CONSOLE).c: Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+$(OBJ_DEBUG_DIR)\ClientBuffer$(FILE_SUFFIX_CONSOLE).c:   Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+$(OBJ_RELEASE_DIR)\ClientBuffer$(FILE_SUFFIX_SERVICE).c: Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+$(OBJ_DEBUG_DIR)\ClientBuffer$(FILE_SUFFIX_SERVICE).c:   Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+$(OBJ_RELEASE_DIR)\ClientBuffer$(FILE_SUFFIX_TEST).c: Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+$(OBJ_DEBUG_DIR)\ClientBuffer$(FILE_SUFFIX_TEST).c:   Modules\ClientBuffer.bas Modules\ClientBuffer.bi
+
+
 $(OBJ_RELEASE_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c: Modules\ConsoleMain.bas Classes\CreateInstance.bi Modules\Logger.bi Classes\WebServer.bi Interfaces\IRunnable.bi
 
 $(OBJ_DEBUG_DIR)\ConsoleMain$(FILE_SUFFIX_CONSOLE).c:   Modules\ConsoleMain.bas Classes\CreateInstance.bi Modules\Logger.bi Classes\WebServer.bi Interfaces\IRunnable.bi

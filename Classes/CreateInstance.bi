@@ -1,8 +1,7 @@
 #ifndef CREATEINSTANCE_BI
 #define CREATEINSTANCE_BI
 
-#include once "windows.bi"
-#include once "win\ole2.bi"
+#include once "IHeapMemoryAllocator.bi"
 
 Declare Function CreateInstance( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -19,6 +18,6 @@ Declare Function CreatePermanentInstance( _
 )As HRESULT
 
 Declare Function GetHeapMemoryAllocatorInstance( _
-)As IMalloc Ptr
+)As IHeapMemoryAllocator Ptr
 
 #endif
