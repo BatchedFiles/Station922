@@ -258,37 +258,7 @@ Function CreateReadTask( _
 			
 			Dim pBuffer As ClientRequestBuffer Ptr = Any
 			IHeapMemoryAllocator_GetClientBuffer(pIClientMemoryAllocator, @pBuffer)
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtResponse As VARIANT = Any
-				vtResponse.vt = VT_BSTR
-				vtResponse.bstrVal = SysAllocString(WStr(!"GetBuffer\r\n"))
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					NULL, _
-					@vtResponse _
-				)
-				VariantClear(@vtResponse)
-			End Scope
-			#endif
-			
 			IHttpReader_SetClientBuffer(pIHttpReader, pBuffer)
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtResponse As VARIANT = Any
-				vtResponse.vt = VT_BSTR
-				vtResponse.bstrVal = SysAllocString(WStr(!"SetBuffer\r\n"))
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					NULL, _
-					@vtResponse _
-				)
-				VariantClear(@vtResponse)
-			End Scope
-			#endif
-			
 			
 			Dim pINetworkStream As INetworkStream Ptr = Any
 			Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
@@ -299,6 +269,13 @@ Function CreateReadTask( _
 			)
 			
 			If SUCCEEDED(hrCreateNetworkStream) Then
+				
+				CopyMemory( _
+					@pBuffer->RemoteAddress, _
+					pRemoteAddress, _
+					min(RemoteAddressLength, SOCKET_ADDRESS_STORAGE_LENGTH) _
+				)
+				pBuffer->RemoteAddressLength = RemoteAddressLength
 				
 				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
 				INetworkStream_SetRemoteAddress( _

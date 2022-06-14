@@ -17,7 +17,7 @@ Type _NetworkStream
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	ClientSocket As SOCKET
-	RemoteAddress As SOCKADDR_STORAGE
+	pRemoteAddress As SOCKADDR Ptr
 	RemoteAddressLength As Integer
 End Type
 
@@ -493,7 +493,7 @@ Function NetworkStreamGetRemoteAddress( _
 	)As HRESULT
 	
 	*pRemoteAddressLength = this->RemoteAddressLength
-	CopyMemory(pRemoteAddress, @this->RemoteAddress, this->RemoteAddressLength)
+	CopyMemory(pRemoteAddress, @this->pRemoteAddress, this->RemoteAddressLength)
 	
 	Return S_OK
 	
@@ -506,7 +506,7 @@ Function NetworkStreamSetRemoteAddress( _
 	)As HRESULT
 	
 	this->RemoteAddressLength = RemoteAddressLength
-	CopyMemory(@this->RemoteAddress, RemoteAddress, RemoteAddressLength)
+	this->pRemoteAddress = RemoteAddress
 	
 	Return S_OK
 	
