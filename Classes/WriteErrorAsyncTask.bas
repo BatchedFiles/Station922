@@ -1152,6 +1152,17 @@ Function WriteErrorAsyncTaskPrepare( _
 	End Scope
 	
 	Scope
+		Dim HttpMethod As HeapBSTR = Any
+		IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
+		
+		If lstrcmp(HttpMethod, WStr("HEAD")) = 0 Then
+			IServerResponse_SetSendOnlyHeaders(this->pIResponse, True)
+		End If
+		
+		HeapSysFreeString(HttpMethod)
+	End Scope
+	
+	Scope
 		IServerResponse_AddKnownResponseHeaderWstrLen( _
 			this->pIResponse, _
 			HttpResponseHeaders.HeaderContentLanguage, _
