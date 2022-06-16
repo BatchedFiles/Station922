@@ -110,6 +110,11 @@ DEFINE_CLSID(CLSID_SERVERRESPONSE, _
 	&h33c9eb2, &hab1f, &h4ac1, &ha6, &h41, &hb5, &h4d, &h4a, &h9c, &h83, &hd7 _
 )
 
+' {304ED50E-CBA9-44AF-B396-11E1E88688A8}
+DEFINE_CLSID(CLSID_TCPLISTENER, _
+	&h304ed50e, &hcba9, &h44af, &hb3, &h96, &h11, &he1, &he8, &h86, &h88, &ha8 _
+)
+
 ' {EE0793B6-B903-4C0F-8205-AB8A13D22316}
 DEFINE_CLSID(CLSID_THREADPOOL, _
 	&hee0793b6, &hb903, &h4c0f, &h82, &h5, &hab, &h8a, &h13, &hd2, &h23, &h16 _
@@ -288,6 +293,11 @@ DEFINE_IID(IID_IStreamWriter, _
 ' {D38929B0-17C1-47A2-A1AC-B07318B4C3C9}
 DEFINE_IID(IID_IString, _
 	&hd38929b0, &h17c1, &h47a2, &ha1, &hac, &hb0, &h73, &h18, &hb4, &hc3, &hc9 _
+)
+
+' {E1D64351-AB82-415B-9551-5923632EDCF4}
+DEFINE_IID(IID_ITcpListener, _
+	&he1d64351, &hab82, &h415b, &h95, &h51, &h59, &h23, &h63, &h2e, &hdc, &hf4 _
 )
 
 ' {667DFC1A-466E-40BF-BEE3-7A34882BE2F9}
