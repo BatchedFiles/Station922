@@ -1,6 +1,4 @@
 #include once "AcceptConnectionAsyncTask.bi"
-#include once "win\winsock2.bi"
-#include once "win\mswsock.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HttpReader.bi"
@@ -20,29 +18,15 @@ Type _AcceptConnectionAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
-	ListenSocket As SOCKET
 	pIPoolWeakPtr As IThreadPool Ptr
+	ListenSocket As SOCKET
+	pListener As ITcpListener Ptr
+	pReadTask As IReadRequestAsyncIoTask Ptr
 End Type
 
-/'
-Создать:
-	Аллокатор
-	Буфер байтов запроса + адресов
-	NetworkStream
-	HttpReader
-	ReadRequestAsyncIoTask
-	
-	При ошибке всё равно возвращать S_IO_PENDING?
-	Иначе задачу уничтожит сборщик мусора
-	Или возвращать специальное значение
-	Это значит, что задача должна быть пересоздана
-	
-'/
 Function CreateReadTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
+		ByVal ClientSocket As SOCKET _
 	)As IReadRequestAsyncIoTask Ptr
 	
 	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
@@ -73,18 +57,11 @@ Function CreateReadTask( _
 			
 			If SUCCEEDED(hrCreateNetworkStream) Then
 				
-				CopyMemory( _
-					@pBuffer->RemoteAddress, _
-					pRemoteAddress, _
-					min(RemoteAddressLength, SOCKET_ADDRESS_STORAGE_LENGTH) _
-				)
-				pBuffer->RemoteAddressLength = RemoteAddressLength
-				
 				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
 				INetworkStream_SetRemoteAddress( _
 					pINetworkStream, _
-					pRemoteAddress, _
-					RemoteAddressLength _
+					CPtr(SOCKADDR Ptr, @pBuffer->RemoteAddress), _
+					SOCKET_ADDRESS_STORAGE_LENGTH _
 				)
 				
 				' TODO Запросить интерфейс вместо конвертирования указателя
@@ -147,7 +124,8 @@ End Function
 
 Sub InitializeAcceptConnectionAsyncTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pListener As ITcpListener Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -163,14 +141,20 @@ Sub InitializeAcceptConnectionAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSitesWeakPtr = NULL
 	this->pIProcessorsWeakPtr = NULL
-	this->ListenSocket = INVALID_SOCKET
 	this->pIPoolWeakPtr = NULL
+	this->ListenSocket = INVALID_SOCKET
+	this->pListener = pListener
+	this->pReadTask = NULL
 	
 End Sub
 
 Sub UnInitializeAcceptConnectionAsyncTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)
+	
+	If this->pReadTask <> NULL Then
+		IReadRequestAsyncIoTask_Release(this->pReadTask)
+	End If
 	
 End Sub
 
@@ -191,30 +175,44 @@ Function CreateAcceptConnectionAsyncTask( _
 	End Scope
 	#endif
 	
-	Dim this As AcceptConnectionAsyncTask Ptr = IMalloc_Alloc( _
+	Dim pListener As ITcpListener Ptr = Any
+	Dim hrCreateListener As HRESULT = CreateInstance( _
 		pIMemoryAllocator, _
-		SizeOf(AcceptConnectionAsyncTask) _
+		@CLSID_TCPLISTENER, _
+		@IID_ITcpListener, _
+		@pListener _
 	)
 	
-	If this <> NULL Then
-		InitializeAcceptConnectionAsyncTask( _
-			this, _
-			pIMemoryAllocator _
+	If SUCCEEDED(hrCreateListener) Then
+		
+		Dim this As AcceptConnectionAsyncTask Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(AcceptConnectionAsyncTask) _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("AcceptConnectionAsyncTask created"), _
-				@vtEmpty _
+		If this <> NULL Then
+			InitializeAcceptConnectionAsyncTask( _
+				this, _
+				pIMemoryAllocator, _
+				pListener _
 			)
-		End Scope
-		#endif
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("AcceptConnectionAsyncTask created"), _
+					@vtEmpty _
+				)
+			End Scope
+			#endif
+			
+			Return this
+		End If
 		
-		Return this
+		ITcpListener_Release(pListener)
 	End If
 	
 	Return NULL
@@ -322,20 +320,44 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 	)As HRESULT
 	
 	/'
-	Dim hrBeginProcess As HRESULT = IHttpAsyncProcessor_BeginProcess( _
-		this->pIProcessorWeakPtr, _
-		@pc, _
+	Создать:
+		Клиентский сокет
+		Задачу чтения {
+			Аллокатор
+			Буфер байтов запроса
+			Буфер IP-адресов
+			NetworkStream
+			HttpReader
+		}
+		
+	'/
+	Dim ClientSocket As SOCKET = WSASocket( _
+		AF_INET6, _
+		SOCK_STREAM, _
+		IPPROTO_TCP, _
+		CPtr(WSAPROTOCOL_INFO Ptr, NULL), _
+		0, _
+		WSA_FLAG_OVERLAPPED _
+	)
+	
+	this->pReadTask = CreateReadTask( _
+		this, _
+		ClientSocket _
+	)
+	
+	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
+		this->pListener, _
+		ClientSocket, _
+		NULL, _ /' ByVal Buffer As Any Ptr, _ '/
+		0, _ /' ByVal BufferLength As DWORD, _ '/
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
-	If FAILED(hrBeginProcess) Then
-		Return hrBeginProcess
+	If FAILED(hrBeginAccept) Then
+		Return hrBeginAccept
 	End If
 	
 	Return ASYNCTASK_S_IO_PENDING
-	'/
-	
-	Return E_FAIL
 	
 End Function
 
@@ -496,6 +518,8 @@ Function AcceptConnectionAsyncTaskSetListenSocket( _
 	)As HRESULT
 	
 	this->ListenSocket = ListenSocket
+	
+	ITcpListener_SetListenSocket(this->pListener, ListenSocket)
 	
 	Return S_OK
 	

@@ -15,6 +15,7 @@
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ServerResponse.bi"
+#include once "TcpListener.bi"
 #include once "ThreadPool.bi"
 #include once "WebServer.bi"
 #include once "WebSite.bi"
@@ -208,6 +209,20 @@ Function CreateInstance( _
 		Dim hr As HRESULT = ServerResponseQueryInterface(pResponse, riid, ppv)
 		If FAILED(hr) Then
 			DestroyServerResponse(pResponse)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_TCPLISTENER, rclsid) Then
+		Dim pListener As TcpListener Ptr = CreateTcpListener(pIMemoryAllocator)
+		If pListener = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = TcpListenerQueryInterface(pListener, riid, ppv)
+		If FAILED(hr) Then
+			DestroyTcpListener(pListener)
 		End If
 		
 		Return hr

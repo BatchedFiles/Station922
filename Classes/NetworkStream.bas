@@ -7,8 +7,6 @@
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 
-Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
-
 Type _NetworkStream
 	#if __FB_DEBUG__
 		IdString As ZString * 16

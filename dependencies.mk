@@ -237,6 +237,19 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)ServerResponse$(FILE_SUFFIX_TEST).c: Classes$(PATH_
 $(OBJ_DEBUG_DIR)$(PATH_SEP)ServerResponse$(FILE_SUFFIX_TEST).c:   Classes$(PATH_SEP)ServerResponse.bas Classes$(PATH_SEP)ServerResponse.bi Interfaces$(PATH_SEP)IServerResponse.bi Modules$(PATH_SEP)Http.bi Interfaces$(PATH_SEP)IString.bi Modules$(PATH_SEP)Mime.bi Classes$(PATH_SEP)ArrayStringWriter.bi Interfaces$(PATH_SEP)IArrayStringWriter.bi Headers$(PATH_SEP)CharacterConstants.bi Classes$(PATH_SEP)ContainerOf.bi Classes$(PATH_SEP)CreateInstance.bi Classes$(PATH_SEP)HeapBSTR.bi Modules$(PATH_SEP)Logger.bi Headers$(PATH_SEP)StringConstants.bi Modules$(PATH_SEP)WebUtils.bi Interfaces$(PATH_SEP)IClientRequest.bi Interfaces$(PATH_SEP)IClientUri.bi Interfaces$(PATH_SEP)IHttpReader.bi Interfaces$(PATH_SEP)IAsyncResult.bi Interfaces$(PATH_SEP)IBaseStream.bi Interfaces$(PATH_SEP)IWebSiteCollection.bi Interfaces$(PATH_SEP)IEnumWebSite.bi Interfaces$(PATH_SEP)IWebSite.bi Interfaces$(PATH_SEP)IBuffer.bi
 
 
+$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_SERVICE).c: Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_SERVICE).c:   Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_TEST).c: Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX_TEST).c:   Classes$(PATH_SEP)TcpListener.bas Classes$(PATH_SEP)TcpListener.bi
+
+
 $(OBJ_RELEASE_DIR)$(PATH_SEP)ThreadPool$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)ThreadPool.bas Classes$(PATH_SEP)ThreadPool.bi Interfaces$(PATH_SEP)IThreadPool.bi Interfaces$(PATH_SEP)IAsyncIoTask.bi Interfaces$(PATH_SEP)IAsyncResult.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)ThreadPool$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)ThreadPool.bas Classes$(PATH_SEP)ThreadPool.bi Interfaces$(PATH_SEP)IThreadPool.bi Interfaces$(PATH_SEP)IAsyncIoTask.bi Interfaces$(PATH_SEP)IAsyncResult.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi

@@ -422,18 +422,20 @@ Function CreateWebServer( _
 	#endif
 	
 	Dim pIPool As IThreadPool Ptr = Any
-	Dim hr As HRESULT = CreatePermanentInstance( _
+	Dim hrCreateThreadPool As HRESULT = CreatePermanentInstance( _
 		pIMemoryAllocator, _
 		@CLSID_THREADPOOL, _
 		@IID_IThreadPool, _
 		@pIPool _
 	)
-	If SUCCEEDED(hr) Then
+	
+	If SUCCEEDED(hrCreateThreadPool) Then
 		
 		Dim this As WebServer Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
 			SizeOf(WebServer) _
 		)
+		
 		If this <> NULL Then
 			
 			InitializeWebServer( _
