@@ -3,6 +3,19 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX_BASE).c: Classes$(PATH_SEP)Guids
 $(OBJ_DEBUG_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX_BASE).c: Classes$(PATH_SEP)Guids.bas
 
 
+$(OBJ_RELEASE_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_SERVICE).c: Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_SERVICE).c:   Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_TEST).c: Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX_TEST).c:   Classes$(PATH_SEP)AcceptConnectionAsyncTask.bas Classes$(PATH_SEP)AcceptConnectionAsyncTask.bi Interfaces$(PATH_SEP)IAcceptConnectionAsyncIoTask.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
+
+
 $(OBJ_RELEASE_DIR)$(PATH_SEP)ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)ArrayStringWriter.bas Classes$(PATH_SEP)ArrayStringWriter.bi Interfaces$(PATH_SEP)IArrayStringWriter.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi Headers$(PATH_SEP)StringConstants.bi
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)ArrayStringWriter$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)ArrayStringWriter.bas Classes$(PATH_SEP)ArrayStringWriter.bi Interfaces$(PATH_SEP)IArrayStringWriter.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi Headers$(PATH_SEP)StringConstants.bi
