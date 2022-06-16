@@ -1,4 +1,5 @@
 #include once "CreateInstance.bi"
+#include once "AcceptConnectionAsyncTask.bi"
 #include once "ArrayStringWriter.bi"
 #include once "AsyncResult.bi"
 #include once "ClientRequest.bi"
@@ -29,6 +30,20 @@ Function CreateInstance( _
 	)As HRESULT
 	
 	*ppv = NULL
+	
+	If IsEqualCLSID(@CLSID_ACCEPTCONNECTIONASYNCTASK, rclsid) Then
+		Dim pTask As AcceptConnectionAsyncTask Ptr = CreateAcceptConnectionAsyncTask(pIMemoryAllocator)
+		If pTask = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = AcceptConnectionAsyncTaskQueryInterface(pTask, riid, ppv)
+		If FAILED(hr) Then
+			DestroyAcceptConnectionAsyncTask(pTask)
+		End If
+		
+		Return hr
+	End If
 	
 	If IsEqualCLSID(@CLSID_ARRAYSTRINGWRITER, rclsid) Then
 		Dim pWriter As ArrayStringWriter Ptr = CreateArrayStringWriter(pIMemoryAllocator)
