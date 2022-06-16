@@ -18,7 +18,7 @@ Function RunnableStatusHandler( _
 		vtSCode.scode = Status
 		LogWriteEntry( _
 			LogEntryType.Debug, _
-			WStr(!"RunnableStatusHandler\t"), _
+			WStr(!"Station922 Status\t"), _
 			@vtSCode _
 		)
 	End Scope
@@ -55,7 +55,11 @@ Function wMain()As Long
 		.pIWebServer = pIWebServer
 	End With
 	
-	IRunnable_RegisterStatusHandler(pIWebServer, @Context, @RunnableStatusHandler)
+	IRunnable_RegisterStatusHandler( _
+		pIWebServer, _
+		@Context, _
+		@RunnableStatusHandler _
+	)
 	
 	Dim hrRun As HRESULT = IRunnable_Run(pIWebServer)
 	If FAILED(hrRun) Then
