@@ -1,12 +1,11 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
-#include once "ClientBuffer.bi"
 #include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 
 Const MEMORY_ALLOCATION_GRANULARITY As DWORD = 64 * 1024
-Const PRIVATEHEAP_INITIALSIZE As DWORD = 1 * MEMORY_ALLOCATION_GRANULARITY
+Const PRIVATEHEAP_INITIALSIZE As DWORD = MEMORY_ALLOCATION_GRANULARITY
 
 Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
