@@ -20,6 +20,11 @@
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
+' {B40214BB-DFB6-4ACE-ACF4-8A66700F7CD0}
+DEFINE_CLSID(CLSID_ACCEPTCONNECTIONASYNCTASK, _
+	&hb40214bb, &hdfb6, &h4ace, &hac, &hf4, &h8a, &h66, &h70, &hf, &h7c, &hd0 _
+)
+
 ' {BAA2C5A2-E3D0-4AA4-BA7E-E7D13E3FA68D}
 DEFINE_CLSID(CLSID_ARRAYSTRINGWRITER, _
 	&hbaa2c5a2, &he3d0, &h4aa4, &hba, &h7e, &he7, &hd1, &h3e, &h3f, &ha6, &h8d _
@@ -139,9 +144,15 @@ DEFINE_CLSID(CLSID_WRITEERRORASYNCTASK, _
 DEFINE_CLSID(CLSID_WRITERESPONSEASYNCTASK, _
 	&h6d9085b7, &h2309, &h4c33, &hab, &h53, &h9d, &h8e, &hca, &hb6, &h7, &hc3 _
 )
+
 ' {BC192A6D-7ACC-4219-A7AB-2900107366A4}
 DEFINE_IID(IID_IArrayStringWriter, _
 	&hbc192a6d, &h7acc, &h4219, &ha7, &hab, &h29, &h0, &h10, &h73, &h66, &ha4 _
+)
+
+' {9A15537E-64B6-4470-80EC-C3348C968C55}
+DEFINE_IID(IID_IAcceptConnectionAsyncIoTask, _
+	&h9a15537e, &h64b6, &h4470, &h80, &hec, &hc3, &h34, &h8c, &h96, &h8c, &h55 _
 )
 
 ' {01640F76-0385-43D3-8878-D6DED3B468D1}
