@@ -1,13 +1,10 @@
 #include once "WebServer.bi"
-#include once "ClientRequest.bi"
+#include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HttpReader.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
-#include once "NetworkStream.bi"
-#include once "ReadRequestAsyncTask.bi"
-#include once "ServerResponse.bi"
 #include once "ThreadPool.bi"
 #include once "IniConfiguration.bi"
 
@@ -29,12 +26,8 @@ Type _WebServer
 	pIPool As IThreadPool Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	pIProcessors As IHttpProcessorCollection Ptr
-	pDefaultStream As INetworkStream Ptr
-	pDefaultRequest As IClientRequest Ptr
-	pDefaultResponse As IServerResponse Ptr
 	
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
-	hEvents(0 To SocketListCapacity - 1) As WSAEVENT
 	SocketListLength As Integer
 	
 	Context As Any Ptr
@@ -235,199 +228,60 @@ Function ThreadPoolCallBack( _
 	
 End Function
 
-Function CreateReadTask( _
+Function CreateAcceptConnectionTask( _
 		ByVal this As WebServer Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal pRemoteAddress As SOCKADDR Ptr, _
-		ByVal RemoteAddressLength As Integer _
-	)As IReadRequestAsyncIoTask Ptr
+		ByVal ServerSocket As SOCKET, _
+		ByVal ppTask As IAcceptConnectionAsyncIoTask Ptr Ptr _
+	)As HRESULT
 	
 	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
 	
-	If pIClientMemoryAllocator <> NULL Then
-		
-		Dim pIHttpReader As IHttpReader Ptr = Any
-		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
-			CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-			@CLSID_HTTPREADER, _
-			@IID_IHttpReader, _
-			@pIHttpReader _
-		)
-		
-		If SUCCEEDED(hrCreateHttpReader) Then
-			
-			Dim pBuffer As ClientRequestBuffer Ptr = Any
-			IHeapMemoryAllocator_GetClientBuffer(pIClientMemoryAllocator, @pBuffer)
-			IHttpReader_SetClientBuffer(pIHttpReader, pBuffer)
-			
-			Dim pINetworkStream As INetworkStream Ptr = Any
-			Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
-				CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-				@CLSID_NETWORKSTREAM, _
-				@IID_INetworkStream, _
-				@pINetworkStream _
-			)
-			
-			If SUCCEEDED(hrCreateNetworkStream) Then
-				
-				CopyMemory( _
-					@pBuffer->RemoteAddress, _
-					pRemoteAddress, _
-					min(RemoteAddressLength, SOCKET_ADDRESS_STORAGE_LENGTH) _
-				)
-				pBuffer->RemoteAddressLength = RemoteAddressLength
-				
-				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
-				INetworkStream_SetRemoteAddress( _
-					pINetworkStream, _
-					pRemoteAddress, _
-					RemoteAddressLength _
-				)
-				
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				IHttpReader_SetBaseStream( _
-					pIHttpReader, _
-					CPtr(IBaseStream Ptr, pINetworkStream) _
-				)
-				
-				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-				Dim hrCreateTask As HRESULT = CreateInstance( _
-					CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-					@CLSID_READREQUESTASYNCTASK, _
-					@IID_IReadRequestAsyncIoTask, _
-					@pTask _
-				)
-				
-				If SUCCEEDED(hrCreateTask) Then
-					IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
-					IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
-					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
-					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-					
-					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
-						this->pIPool, _
-						CPtr(IAsyncIoTask Ptr, pTask) _
-					)
-					If FAILED(hrAssociate) Then
-						
-					End If
-					
-					INetworkStream_Release(pINetworkStream)
-					IHttpReader_Release(pIHttpReader)
-					IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-					
-					pIClientMemoryAllocator = NULL
-					pINetworkStream = NULL
-					pIHttpReader = NULL
-					
-					Return pTask
-				End If
-				
-				If pINetworkStream <> NULL Then
-					INetworkStream_Release(pINetworkStream)
-				End If
-			End If
-			
-			If pIHttpReader <> NULL Then
-				IHttpReader_Release(pIHttpReader)
-			End If
-		End If
-		
-		If pIClientMemoryAllocator <> NULL Then
-			IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-		End If
+	If pIClientMemoryAllocator = NULL Then
+		*ppTask = NULL
+		Return E_OUTOFMEMORY
 	End If
 	
-	Return NULL
-				
-End Function
-
-Function AcceptConnection( _
-		ByVal this As WebServer Ptr _
-	)As HRESULT
-	
-	Dim dwIndex As DWORD = WSAWaitForMultipleEvents( _
-		Cast(DWORD, this->SocketListLength), _
-		@this->hEvents(0), _
-		False, _
-		WSA_INFINITE, _
-		False _
+	Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
+	Dim hrCreateTask As HRESULT = CreateInstance( _
+		CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
+		@CLSID_ACCEPTCONNECTIONASYNCTASK, _
+		@IID_IAcceptConnectionAsyncIoTask, _
+		@pTask _
 	)
-	
-	If dwIndex <> WSA_WAIT_FAILED Then
-		
-		Dim EventIndex As Integer = CInt(dwIndex - WSA_WAIT_EVENT_0)
-		
-		Dim EventType As WSANETWORKEVENTS = Any
-		Dim dwEnumEventResult As Long = WSAEnumNetworkEvents( _
-			this->SocketList(EventIndex).ClientSocket, _
-			this->hEvents(EventIndex), _
-			@EventType _
+	If FAILED(hrCreateTask) Then
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrCreateTask
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
 		)
-		
-		If dwEnumEventResult <> SOCKET_ERROR Then
-			
-			Dim AcceptFlag As Integer = EventType.lNetworkEvents And FD_ACCEPT
-			
-			If AcceptFlag Then
-				
-				Dim errorCode As Integer = EventType.iErrorCode(FD_ACCEPT_BIT)
-				
-				If errorCode = 0 Then
-					
-					Dim RemoteAddress As SOCKADDR_STORAGE = Any
-					Dim RemoteAddressLength As Long = SizeOf(SOCKADDR_STORAGE)
-					Dim ClientSocket As SOCKET = accept( _
-						this->SocketList(EventIndex).ClientSocket, _
-						CPtr(SOCKADDR Ptr, @RemoteAddress), _
-						@RemoteAddressLength _
-					)
-					
-					If ClientSocket <> INVALID_SOCKET Then
-						
-						Dim pTask As IReadRequestAsyncIoTask Ptr = CreateReadTask( _
-							this, _
-							ClientSocket, _
-							CPtr(SOCKADDR Ptr, @RemoteAddress), _
-							RemoteAddressLength _
-						)
-						
-						If pTask <> NULL Then
-							
-							Dim hrBeginExecute As HRESULT = StartExecuteTask( _
-								CPtr(IAsyncIoTask Ptr, pTask) _
-							)
-							
-							If SUCCEEDED(hrBeginExecute) Then
-								' Сейчас мы не уменьшаем счётчик ссылок на задачу
-								' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
-								Return S_OK
-							End If
-							
-						End If
-						
-						CloseSocketConnection(ClientSocket)
-					End If
-					
-					Dim dwErrorAccept As Long = WSAGetLastError()
-					Dim vtErrorCode As VARIANT = Any
-					vtErrorCode.vt = VT_UI4
-					vtErrorCode.ulVal = dwErrorAccept
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"\t\t\t\tAccept failed\t"), _
-						@vtErrorCode _
-					)
-					
-				End If
-				
-			End If
-			
-		End If
-		
+		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
+		*ppTask = NULL
+		Return hrCreateTask
 	End If
 	
-	Return E_FAIL
+	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
+	IAcceptConnectionAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
+	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
+	IAcceptConnectionAsyncIoTask_SetThreadPoolWeakPtr(pTask, this->pIPool)
+	
+	Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
+		this->pIPool, _
+		CPtr(IAsyncIoTask Ptr, pTask) _
+	)
+	If FAILED(hrAssociate) Then
+		IAcceptConnectionAsyncIoTask_Release(pTask)
+		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
+		*ppTask = NULL
+		Return hrAssociate
+	End If
+	
+	IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
+	
+	*ppTask = pTask
+	Return S_OK
 	
 End Function
 
@@ -482,14 +336,6 @@ Function CreateServerSocket( _
 		Return hr
 	End If
 	
-	For i As Integer = 0 To this->SocketListLength - 1
-		WSAEventSelect( _
-			this->SocketList(i).ClientSocket, _
-			this->hEvents(i), _
-			FD_ACCEPT _
-		)
-	Next
-	
 	Return S_OK
 	
 End Function
@@ -507,60 +353,10 @@ Sub SetCurrentStatus( _
 	
 End Sub
 
-Sub ServerThread( _
-		ByVal this As WebServer Ptr _
-	)
-	
-	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
-	
-	Do
-		' If this->CachedClientMemoryContextIndex >= this->CachedClientMemoryContextLength Then
-			' this->CachedClientMemoryContextIndex = 0
-			' DestroyCachedClientMemoryContext(this)
-			' CreateCachedClientMemoryContext(this)
-		' End If
-		
-		' IClientRequest_Clear(this->pDefaultRequest)
-		' IServerResponse_Clear(this->pDefaultResponse)
-		
-		Dim hrAccept As HRESULT = AcceptConnection( _
-			this _
-		)
-		
-		' INetworkStream_Close(this->pDefaultStream)
-		
-		' this->CachedClientMemoryContextIndex += 1
-		
-		If FAILED(hrAccept) Then
-			Dim vtSCode As VARIANT = Any
-			vtSCode.vt = VT_ERROR
-			vtSCode.scode = hrAccept
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				WStr(!"AcceptConnection Error\t"), _
-				@vtSCode _
-			)
-			
-			If this->CurrentStatus = RUNNABLE_S_RUNNING Then
-				' Sleep_(THREAD_SLEEPING_TIME)
-			Else
-				Exit Do
-			End If
-		End If
-		
-	Loop While this->CurrentStatus = RUNNABLE_S_RUNNING
-	
-	WebServerStop(this)
-	
-End Sub
-
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIPool As IThreadPool Ptr, _
-		ByVal pINetworkStream As INetworkStream Ptr, _
-		ByVal pIRequest As IClientRequest Ptr, _
-		ByVal pIResponse As IServerResponse Ptr _
+		ByVal pIPool As IThreadPool Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -581,10 +377,6 @@ Sub InitializeWebServer( _
 	this->pIWebSites = NULL
 	this->pIProcessors = NULL
 	
-	this->pDefaultStream = pINetworkStream
-	this->pDefaultRequest = pIRequest
-	this->pDefaultResponse = pIResponse
-	
 	this->Context = NULL
 	this->StatusHandler = NULL
 	
@@ -598,28 +390,12 @@ Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	For i As Integer = SocketListCapacity - 1 To 0 Step -1
-		WSACloseEvent(this->hEvents(i))
-	Next
-	
 	If this->pIWebSites <> NULL Then
 		IWebSiteCollection_Release(this->pIWebSites)
 	End If
 	
 	If this->pIProcessors <> NULL Then
 		IHttpProcessorCollection_Release(this->pIProcessors)
-	End If
-	
-	If this->pDefaultStream <> NULL Then
-		INetworkStream_Release(this->pDefaultStream)
-	End If
-	
-	If this->pDefaultRequest <> NULL Then
-		IClientRequest_Release(this->pDefaultRequest)
-	End If
-	
-	If this->pDefaultResponse <> NULL Then
-		IServerResponse_Release(this->pDefaultResponse)
 	End If
 	
 	If this->pIPool <> NULL Then
@@ -653,82 +429,32 @@ Function CreateWebServer( _
 		@pIPool _
 	)
 	If SUCCEEDED(hr) Then
-		Dim pIRequest As IClientRequest Ptr = Any
-		hr = CreateInstance( _
+		
+		Dim this As WebServer Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
-			@CLSID_CLIENTREQUEST, _
-			@IID_IClientRequest, _
-			@pIRequest _
+			SizeOf(WebServer) _
 		)
-		If SUCCEEDED(hr) Then
-			Dim pIResponse As IServerResponse Ptr = Any
-			hr = CreateInstance( _
+		If this <> NULL Then
+			
+			InitializeWebServer( _
+				this, _
 				pIMemoryAllocator, _
-				@CLSID_SERVERRESPONSE, _
-				@IID_IServerResponse, _
-				@pIResponse _
+				pIPool _
 			)
-			If SUCCEEDED(hr) Then
-				Dim pINetworkStream As INetworkStream Ptr = Any
-				hr = CreateInstance( _
-					pIMemoryAllocator, _
-					@CLSID_NETWORKSTREAM, _
-					@IID_INetworkStream, _
-					@pINetworkStream _
+			
+			#if __FB_DEBUG__
+			Scope
+				Dim vtEmpty As VARIANT = Any
+				VariantInit(@vtEmpty)
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("WebServer created"), _
+					@vtEmpty _
 				)
-				If SUCCEEDED(hr) Then
-					Dim this As WebServer Ptr = IMalloc_Alloc( _
-						pIMemoryAllocator, _
-						SizeOf(WebServer) _
-					)
-					If this <> NULL Then
-						
-						Dim EventsCreated As Boolean = True
-						
-						For i As Integer = 0 To SocketListCapacity - 1
-							this->hEvents(i) = WSACreateEvent()
-							If this->hEvents(i) = NULL Then
-								EventsCreated = False
-								Exit For
-							End If
-						Next
-						
-						If EventsCreated Then
-							InitializeWebServer( _
-								this, _
-								pIMemoryAllocator, _
-								pIPool, _
-								pINetworkStream, _
-								pIRequest, _
-								pIResponse _
-							)
-							
-							#if __FB_DEBUG__
-							Scope
-								Dim vtEmpty As VARIANT = Any
-								VariantInit(@vtEmpty)
-								LogWriteEntry( _
-									LogEntryType.Debug, _
-									WStr("WebServer created"), _
-									@vtEmpty _
-								)
-							End Scope
-							#endif
-							
-							Return this
-						End If
-					End If
-					
-					INetworkStream_Release(pINetworkStream)
-					
-				End If
-				
-				IServerResponse_Release(pIResponse)
-				
-			End If
+			End Scope
+			#endif
 			
-			IClientRequest_Release(pIRequest)
-			
+			Return this
 		End If
 		
 		IThreadPool_Release(pIPool)
@@ -841,11 +567,15 @@ Function WebServerRun( _
 		Return hrConfig
 	End If
 	
+	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
+	
 	Dim hrSocket As HRESULT = CreateServerSocket(this)
 	If FAILED(hrSocket) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 		Return hrSocket
 	End If
+	
+	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
 	
 	IThreadPool_SetMaxThreads(this->pIPool, this->WorkerThreadsCount)
 	
@@ -859,7 +589,39 @@ Function WebServerRun( _
 		Return hrPool
 	End If
 	
-	ServerThread(this)
+	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
+	
+	For i As Integer = 0 To this->SocketListLength
+		
+		Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
+		Dim hrCreate As HRESULT = CreateAcceptConnectionTask( _
+			this, _
+			this->SocketList(i).ClientSocket, _
+			@pTask _
+		)
+		If FAILED(hrCreate) Then
+			IThreadPool_Stop(this->pIPool)
+			SetCurrentStatus(this, RUNNABLE_S_STOPPED)
+			Return hrCreate
+		End If
+		
+		SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
+		
+		Dim hrBeginExecute As HRESULT = StartExecuteTask( _
+			CPtr(IAsyncIoTask Ptr, pTask) _
+		)
+		If FAILED(hrBeginExecute) Then
+			Return hrBeginExecute
+		End If
+		
+		SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
+		
+		' Сейчас мы не уменьшаем счётчик ссылок на задачу
+		' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
+		
+	Next
+	
+	SetCurrentStatus(this, RUNNABLE_S_RUNNING)
 	
 	Return S_OK
 	
@@ -869,18 +631,13 @@ Function WebServerStop( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
-	If this->CurrentStatus = RUNNABLE_S_STOPPED Then
-		Return S_FALSE
-	End If
-	
 	SetCurrentStatus(this, RUNNABLE_S_STOP_PENDING)
 	
+	IThreadPool_Stop(this->pIPool)
+	
 	For i As Integer = 0 To this->SocketListLength - 1
-		WSASetEvent(this->hEvents(i))
 		closesocket(this->SocketList(i).ClientSocket)
 	Next
-	
-	IThreadPool_Stop(this->pIPool)
 	
 	SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 	
