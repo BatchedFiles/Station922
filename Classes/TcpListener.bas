@@ -226,6 +226,7 @@ Function TcpListenerBeginAccept( _
 		@pINewAsyncResult _
 	)
 	If FAILED(hrCreateAsyncResult) Then
+		closesocket(this->ClientSocket)
 		*ppIAsyncResult = NULL
 		Return hrCreateAsyncResult
 	End If
@@ -251,6 +252,7 @@ Function TcpListenerBeginAccept( _
 	If resAccept = 0 Then
 		Dim dwError As Long = WSAGetLastError()
 		If dwError <> WSA_IO_PENDING OrElse dwError <> ERROR_IO_PENDING Then
+			closesocket(this->ClientSocket)
 			*ppIAsyncResult = NULL
 			IAsyncResult_Release(pINewAsyncResult)
 			Return HRESULT_FROM_WIN32(dwError)
