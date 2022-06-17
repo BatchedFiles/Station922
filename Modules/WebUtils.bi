@@ -1,6 +1,7 @@
 #ifndef WEBUTILS_BI
 #define WEBUTILS_BI
 
+#include once "IAsyncIoTask.bi"
 #include once "IClientRequest.bi"
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
@@ -58,5 +59,9 @@ Declare Function Integer64Division( _
 	ByVal Dividend As LongInt, _
 	ByVal Divisor As LongInt _
 )As LongInt
+
+Declare Function StartExecuteTask( _
+	ByVal pTask As IAsyncIoTask Ptr _
+)As HRESULT
 
 #endif

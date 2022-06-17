@@ -4,6 +4,7 @@
 #include once "CharacterConstants.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
+#include once "Logger.bi"
 #include once "Mime.bi"
 #include once "StringConstants.bi"
 
@@ -228,5 +229,47 @@ Function Integer64Division( _
 	End If
 	
 	Return varResult.llVal
+	
+End Function
+
+Function StartExecuteTask( _
+		ByVal pTask As IAsyncIoTask Ptr _
+	)As HRESULT
+	
+	#if __FB_DEBUG__
+	Scope
+		Dim vtResponse As VARIANT = Any
+		vtResponse.vt = VT_BSTR
+		vtResponse.bstrVal = SysAllocString(WStr(!"IAsyncIoTask_BeginExecute"))
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			NULL, _
+			@vtResponse _
+		)
+		VariantClear(@vtResponse)
+	End Scope
+	#endif
+	
+	Dim pIResult As IAsyncResult Ptr = Any
+	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
+		pTask, _
+		@pIResult _
+	)
+	If FAILED(hrBeginExecute) Then
+		IAsyncIoTask_Release(pTask)
+		
+		Dim vtSCode As VARIANT = Any
+		vtSCode.vt = VT_ERROR
+		vtSCode.scode = hrBeginExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			@vtSCode _
+		)
+		
+		Return hrBeginExecute
+	End If
+	
+	Return S_OK
 	
 End Function
