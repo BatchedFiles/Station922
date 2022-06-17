@@ -2,6 +2,18 @@
 #define ITCPLISTENER_BI
 
 #include once "IAsyncResult.bi"
+#include once "ClientBuffer.bi"
+
+' BeginAccept:
+' TCPLISTENER_S_IO_PENDING
+' Any E_FAIL
+
+' EndAccept:
+' S_OK
+' S_FALSE
+' Any E_FAIL
+
+Const TCPLISTENER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Type ITcpListener As ITcpListener_
 
@@ -28,7 +40,7 @@ Type ITcpListenerVirtualTable
 	BeginAccept As Function( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal ClientSocket As SOCKET, _
-		ByVal Buffer As Any Ptr, _
+		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _

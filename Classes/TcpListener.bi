@@ -36,7 +36,7 @@ Declare Function TcpListenerRelease( _
 Declare Function TcpListenerBeginAccept( _
 	ByVal this As TcpListener Ptr, _
 	ByVal ClientSocket As SOCKET, _
-	ByVal Buffer As Any Ptr, _
+	ByVal Buffer As ClientRequestBuffer Ptr, _
 	ByVal BufferLength As DWORD, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _

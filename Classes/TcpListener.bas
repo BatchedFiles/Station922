@@ -183,28 +183,54 @@ End Function
 Function TcpListenerBeginAccept( _
 		ByVal this As TcpListener Ptr, _
 		ByVal ClientSocket As SOCKET, _
-		ByVal Buffer As Any Ptr, _
+		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	' Dim dwBytes As DWORD = Any
-	' Dim bRetVal As BOOL = lpfnAcceptEx( _
-		' this->ListenSocket, _
-		' this->ClientSocket, _
-		' lpOutputBuf, _
-		' outBufLen - ((sizeof (sockaddr_in) + 16) * 2), _
-		' sizeof (sockaddr_in) + 16, _
-		' sizeof (sockaddr_in) + 16, _
-		' NULL, _ /' @dwBytes, _ '/
-		' @olOverlap _
-	' )
-	' If bRetVal = 0 Then
-		' Return HRESULT_FROM_WIN32(WSAGetLastError())
-	' End If
+	Dim pINewAsyncResult As IAsyncResult Ptr = Any
+	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+		this->pIMemoryAllocator, _
+		@CLSID_ASYNCRESULT, _
+		@IID_IAsyncResult, _
+		@pINewAsyncResult _
+	)
+	If FAILED(hrCreateAsyncResult) Then
+		*ppIAsyncResult = NULL
+		Return hrCreateAsyncResult
+	End If
 	
-	Return E_FAIL
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
+	
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	IAsyncResult_SetAsyncCallback(pINewAsyncResult, NULL)
+	
+	Dim dwBytes As DWORD = Any
+	Dim resAccept As BOOL = lpfnAcceptEx( _
+		this->ListenSocket, _
+		ClientSocket, _
+		@Buffer->LocalAddress, _
+		0, _
+		SOCKET_ADDRESS_STORAGE_LENGTH, _
+		SOCKET_ADDRESS_STORAGE_LENGTH, _
+		@dwBytes, _
+		pOverlap _
+	)
+	If resAccept = 0 Then
+		Dim dwError As Long = WSAGetLastError()
+		If dwError <> WSA_IO_PENDING OrElse dwError <> ERROR_IO_PENDING Then
+			*ppIAsyncResult = NULL
+			IAsyncResult_Release(pINewAsyncResult)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+	End If
+	
+	*ppIAsyncResult = pINewAsyncResult
+	
+	Return TCPLISTENER_S_IO_PENDING
 	
 End Function
 
@@ -264,7 +290,7 @@ End Function
 Function ITcpListenerBeginAccept( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal ClientSocket As SOCKET, _
-		ByVal Buffer As Any Ptr, _
+		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
