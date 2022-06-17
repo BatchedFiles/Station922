@@ -4,12 +4,15 @@
 
 Type ServerContext
 	pIWebServer As IRunnable Ptr
+	hStopEvent As HANDLE
 End Type
 
 Function RunnableStatusHandler( _
 		ByVal Context As Any Ptr, _
 		ByVal Status As HRESULT _
 	)As HRESULT
+	
+	Dim pServerContext As ServerContext Ptr = Context
 	
 	#if __FB_DEBUG__
 	Scope
@@ -23,6 +26,21 @@ Function RunnableStatusHandler( _
 		)
 	End Scope
 	#endif
+	
+	Select Case Status
+		
+		Case RUNNABLE_S_STOPPED
+			SetEvent(pServerContext->hStopEvent)
+			
+		Case RUNNABLE_S_START_PENDING
+			
+		Case RUNNABLE_S_RUNNING
+			
+		Case RUNNABLE_S_STOP_PENDING
+			
+		Case RUNNABLE_S_CONTINUE
+			
+	End Select
 	
 	Return S_OK
 	
@@ -51,9 +69,18 @@ Function wMain()As Long
 	IMalloc_Release(pIMemoryAllocator)
 	
 	Dim Context As ServerContext = Any
-	With Context
-		.pIWebServer = pIWebServer
-	End With
+	Context.pIWebServer = pIWebServer
+	
+	Context.hStopEvent = CreateEvent( _
+		NULL, _
+		TRUE, _
+		FALSE, _
+		NULL _
+	)
+	If Context.hStopEvent = NULL Then
+		IRunnable_Release(Context.pIWebServer)
+		Return 1
+	End If
 	
 	IRunnable_RegisterStatusHandler( _
 		pIWebServer, _
@@ -65,6 +92,8 @@ Function wMain()As Long
 	If FAILED(hrRun) Then
 		Return 2
 	End If
+	
+	WaitForSingleObject(Context.hStopEvent, INFINITE)
 	
 	Dim hrStop As HRESULT = IRunnable_Stop(pIWebServer)
 	If FAILED(hrStop) Then
