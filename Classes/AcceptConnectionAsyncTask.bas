@@ -6,6 +6,7 @@
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "TcpListener.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable
 
@@ -19,15 +20,17 @@ Type _AcceptConnectionAsyncTask
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 	pIPoolWeakPtr As IThreadPool Ptr
-	ListenSocket As SOCKET
 	pListener As ITcpListener Ptr
+	ListenSocket As SOCKET
 	pReadTask As IReadRequestAsyncIoTask Ptr
+	pStream As INetworkStream Ptr
+	pBuffer As ClientRequestBuffer Ptr
 End Type
 
 Function CreateReadTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ClientSocket As SOCKET, _
-		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
+		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr, _
+		ByVal ppStream As INetworkStream Ptr Ptr _
 	)As IReadRequestAsyncIoTask Ptr
 	
 	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
@@ -59,10 +62,10 @@ Function CreateReadTask( _
 			
 			If SUCCEEDED(hrCreateNetworkStream) Then
 				
-				INetworkStream_SetSocket(pINetworkStream, ClientSocket)
+				*ppStream = pINetworkStream
 				INetworkStream_SetRemoteAddress( _
 					pINetworkStream, _
-					CPtr(SOCKADDR Ptr, @pBuffer->RemoteAddress), _
+					CPtr(SOCKADDR Ptr, @this->pBuffer->RemoteAddress), _
 					SOCKET_ADDRESS_STORAGE_LENGTH _
 				)
 				
@@ -121,7 +124,7 @@ Function CreateReadTask( _
 	End If
 	
 	Return NULL
-				
+	
 End Function
 
 Sub InitializeAcceptConnectionAsyncTask( _
@@ -321,48 +324,22 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	/'
-	Создать:
-		Клиентский сокет
-		Задачу чтения {
-			Аллокатор
-			Буфер байтов запроса
-			Буфер IP-адресов
-			NetworkStream
-			HttpReader
-		}
-		
-	'/
-	Dim ClientSocket As SOCKET = WSASocket( _
-		AF_INET6, _ /' AF_INET6 '/
-		SOCK_STREAM, _
-		IPPROTO_TCP, _
-		CPtr(WSAPROTOCOL_INFO Ptr, NULL), _
-		0, _
-		WSA_FLAG_OVERLAPPED _
-	)
-	
-	Dim pBuffer As ClientRequestBuffer Ptr = Any
 	this->pReadTask = CreateReadTask( _
 		this, _
-		ClientSocket, _
-		@pBuffer _
+		@this->pBuffer, _
+		@this->pStream _
 	)
 	If this->pReadTask = NULL Then
-		closesocket(ClientSocket)
 		Return E_OUTOFMEMORY
 	End If
 	
 	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
 		this->pListener, _
-		ClientSocket, _
-		pBuffer, _
-		SizeOf(ClientRequestBuffer), _
+		this->pBuffer, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
 	If FAILED(hrBeginAccept) Then
-		closesocket(ClientSocket)
 		IReadRequestAsyncIoTask_Release(this->pReadTask)
 		this->pReadTask = NULL
 		*ppIResult = NULL
@@ -380,53 +357,48 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
-		this->pIPoolWeakPtr, _
-		CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+	Dim ClientSocket As SOCKET = Any
+	Dim hrEndAccept As HRESULT = ITcpListener_EndAccept( _
+		this->pListener, _
+		pIResult, _
+		BytesTransferred, _
+		@ClientSocket _
 	)
-	If FAILED(hrAssociate) Then
-		'closesocket(ClientSocket)
+	
+	If SUCCEEDED(hrEndAccept) Then
+		INetworkStream_SetSocket( _
+			this->pStream, _
+			ClientSocket _
+		)
+		
+		Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
+			this->pIPoolWeakPtr, _
+			CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+		)
+		
+		If SUCCEEDED(hrAssociate) Then
+			
+			Dim hrBeginExecute As HRESULT = StartExecuteTask( _
+				CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+			)
+			If FAILED(hrBeginExecute) Then
+				IReadRequestAsyncIoTask_Release(this->pReadTask)
+				this->pReadTask = NULL
+			End If
+			
+		Else
+			IReadRequestAsyncIoTask_Release(this->pReadTask)
+			this->pReadTask = NULL
+		End If
+	Else
 		IReadRequestAsyncIoTask_Release(this->pReadTask)
 		this->pReadTask = NULL
-		*ppNextTask = NULL
-		Return hrAssociate
 	End If
 	
-	/'
-	Dim hrEndProcess As HRESULT = IHttpAsyncProcessor_EndProcess( _
-		this->pIProcessorWeakPtr, _
-		@pc, _
-		pIResult _
-	)
-	If FAILED(hrEndProcess) Then
-		*ppNextTask = NULL
-		Return hrEndProcess
-	End If
+	AcceptConnectionAsyncTaskAddRef(this)
+	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
 	
-	Select Case hrEndProcess
-		
-		Case S_OK
-			
-			' Сейчас мы не уменьшаем счётчик ссылок на задачу
-			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
-			*ppNextTask = CPtr(IAsyncIoTask Ptr, pTask)
-			Return S_OK
-			
-		Case S_FALSE
-			' Read 0 bytes
-			*ppNextTask = NULL
-			Return S_FALSE
-			
-		Case HTTPASYNCPROCESSOR_S_IO_PENDING
-			' Продолжить отправку ответа
-			AcceptConnectionAsyncTaskAddRef(this)
-			*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
-			Return S_OK
-			
-	End Select
-	'/
-	
-	Return E_FAIL
+	Return S_OK
 	
 End Function
 
