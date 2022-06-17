@@ -248,6 +248,9 @@ Function CreateAcceptConnectionTask( _
 		@IID_IAcceptConnectionAsyncIoTask, _
 		@pTask _
 	)
+	
+	IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
+	
 	If FAILED(hrCreateTask) Then
 		Dim vtSCode As VARIANT = Any
 		vtSCode.vt = VT_ERROR
@@ -257,7 +260,6 @@ Function CreateAcceptConnectionTask( _
 			WStr(!"IAsyncTask_BeginExecute Error\t"), _
 			@vtSCode _
 		)
-		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 		*ppTask = NULL
 		Return hrCreateTask
 	End If
@@ -273,12 +275,9 @@ Function CreateAcceptConnectionTask( _
 	)
 	If FAILED(hrAssociate) Then
 		IAcceptConnectionAsyncIoTask_Release(pTask)
-		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 		*ppTask = NULL
 		Return hrAssociate
 	End If
-	
-	IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 	
 	*ppTask = pTask
 	Return S_OK
@@ -593,7 +592,7 @@ Function WebServerRun( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
 	
-	For i As Integer = 0 To this->SocketListLength
+	For i As Integer = 0 To this->SocketListLength - 1
 		
 		Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
 		Dim hrCreate As HRESULT = CreateAcceptConnectionTask( _
