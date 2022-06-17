@@ -35,9 +35,7 @@ Declare Function TcpListenerRelease( _
 
 Declare Function TcpListenerBeginAccept( _
 	ByVal this As TcpListener Ptr, _
-	ByVal ClientSocket As SOCKET, _
 	ByVal Buffer As ClientRequestBuffer Ptr, _
-	ByVal BufferLength As DWORD, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
@@ -45,7 +43,8 @@ Declare Function TcpListenerBeginAccept( _
 Declare Function TcpListenerEndAccept( _
 	ByVal this As TcpListener Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pReadedBytes As DWORD Ptr _
+	ByVal ReadedBytes As DWORD, _
+	ByVal pClientSocket As SOCKET Ptr _
 )As HRESULT
 
 Declare Function TcpListenerGetListenSocket( _

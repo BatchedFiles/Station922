@@ -18,6 +18,8 @@ Type _TcpListener
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	ListenSocket As SOCKET
+	ClientSocket As SOCKET
+	Buffer As ClientRequestBuffer Ptr
 End Type
 
 Sub InitializeTcpListener( _
@@ -182,12 +184,19 @@ End Function
 
 Function TcpListenerBeginAccept( _
 		ByVal this As TcpListener Ptr, _
-		ByVal ClientSocket As SOCKET, _
 		ByVal Buffer As ClientRequestBuffer Ptr, _
-		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
+	
+	this->ClientSocket = WSASocket( _
+		AF_INET6, _ /' AF_INET6 '/
+		SOCK_STREAM, _
+		IPPROTO_TCP, _
+		CPtr(WSAPROTOCOL_INFO Ptr, NULL), _
+		0, _
+		WSA_FLAG_OVERLAPPED _
+	)
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
@@ -207,15 +216,16 @@ Function TcpListenerBeginAccept( _
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IAsyncResult_SetAsyncCallback(pINewAsyncResult, NULL)
 	
-	Dim dwBytes As DWORD = Any
+	this->Buffer = Buffer
+	' Dim dwBytes As DWORD = Any
 	Dim resAccept As BOOL = lpfnAcceptEx( _
 		this->ListenSocket, _
-		ClientSocket, _
+		this->ClientSocket, _
 		@Buffer->LocalAddress, _
 		0, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
-		@dwBytes, _
+		NULL, _ /' @dwBytes, _ '/
 		pOverlap _
 	)
 	If resAccept = 0 Then
@@ -237,10 +247,42 @@ End Function
 Function TcpListenerEndAccept( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As DWORD Ptr _
+		ByVal ReadedBytes As DWORD, _
+		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
 	
-	Return E_FAIL
+	Dim pLocalSockaddr As sockaddr Ptr = Any
+	Dim LocalSockaddrLength As INT_ = Any
+	Dim pRemoteSockaddr As sockaddr Ptr = Any
+	Dim RemoteSockaddrLength As INT_ = Any
+	
+	lpfnGetAcceptExSockaddrs( _
+		@this->Buffer->LocalAddress, _
+		0, _
+		SOCKET_ADDRESS_STORAGE_LENGTH, _
+		SOCKET_ADDRESS_STORAGE_LENGTH, _
+		@pLocalSockaddr, _
+		@LocalSockaddrLength, _
+		@pRemoteSockaddr, _
+		@RemoteSockaddrLength _
+	)
+	
+	Dim resSetOptions As Long = setsockopt( _
+		this->ClientSocket, _
+		SOL_SOCKET, _
+		SO_UPDATE_ACCEPT_CONTEXT, _
+		CPtr(Zstring Ptr, @this->ListenSocket), _
+		SizeOf(SOCKET) _
+	)
+	If resSetOptions = SOCKET_ERROR Then
+		Dim dwError As Long = WSAGetLastError()
+		*pClientSocket = INVALID_SOCKET
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	*pClientSocket = this->ClientSocket
+	
+	Return S_OK
 	
 End Function
 
@@ -289,21 +331,20 @@ End Function
 
 Function ITcpListenerBeginAccept( _
 		ByVal this As ITcpListener Ptr, _
-		ByVal ClientSocket As SOCKET, _
 		ByVal Buffer As ClientRequestBuffer Ptr, _
-		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), ClientSocket, Buffer, BufferLength, StateObject, ppIAsyncResult)
+	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), Buffer, StateObject, ppIAsyncResult)
 End Function
 
 Function ITcpListenerEndAccept( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As DWORD Ptr _
+		ByVal ReadedBytes As DWORD, _
+		ByVal pClientSocket As SOCKET Ptr _
 	)As ULONG
-	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, pReadedBytes)
+	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, ReadedBytes, pClientSocket)
 End Function
 
 Function ITcpListenerGetListenSocket( _

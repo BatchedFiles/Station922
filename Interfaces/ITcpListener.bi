@@ -39,9 +39,7 @@ Type ITcpListenerVirtualTable
 	
 	BeginAccept As Function( _
 		ByVal this As ITcpListener Ptr, _
-		ByVal ClientSocket As SOCKET, _
 		ByVal Buffer As ClientRequestBuffer Ptr, _
-		ByVal BufferLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -49,7 +47,8 @@ Type ITcpListenerVirtualTable
 	EndAccept As Function( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As DWORD Ptr _
+		ByVal ReadedBytes As DWORD, _
+		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
 	
 	GetListenSocket As Function( _
@@ -71,8 +70,8 @@ End Type
 #define ITcpListener_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define ITcpListener_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define ITcpListener_Release(this) (this)->lpVtbl->Release(this)
-#define ITcpListener_BeginAccept(this, ClientSocket, Buffer, BufferLength, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginAccept(this, ClientSocket, Buffer, BufferLength, StateObject, ppIAsyncResult)
-#define ITcpListener_EndAccept(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndAccept(this, pIAsyncResult, pReadedBytes)
+#define ITcpListener_BeginAccept(this, Buffer, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginAccept(this, Buffer, StateObject, ppIAsyncResult)
+#define ITcpListener_EndAccept(this, pIAsyncResult, ReadedBytes, pClientSocket) (this)->lpVtbl->EndAccept(this, pIAsyncResult, ReadedBytes, pClientSocket)
 #define ITcpListener_GetListenSocket(this, pListenSocket) (this)->lpVtbl->GetListenSocket(this, pListenSocket)
 #define ITcpListener_SetListenSocket(this, ListenSocket) (this)->lpVtbl->SetListenSocket(this, ListenSocket)
 
