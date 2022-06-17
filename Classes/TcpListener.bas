@@ -189,14 +189,34 @@ Function TcpListenerBeginAccept( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	Dim ProtInfo As WSAPROTOCOL_INFO = Any
+	Dim ProtLength As Long = SizeOf(WSAPROTOCOL_INFO)
+	Dim resOptions As Long = getsockopt( _
+		this->ListenSocket, _
+		SOL_SOCKET, _
+		SO_PROTOCOL_INFO, _
+		CPtr(ZString Ptr, @ProtInfo), _
+		@ProtLength _
+	)
+	If resOptions = SOCKET_ERROR Then
+		Dim dwError As Long = WSAGetLastError()
+		*ppIAsyncResult = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
 	this->ClientSocket = WSASocket( _
-		AF_INET6, _ /' AF_INET6 '/
-		SOCK_STREAM, _
-		IPPROTO_TCP, _
-		CPtr(WSAPROTOCOL_INFO Ptr, NULL), _
+		0, _ /' AF_INET6 '/
+		0, _ /' SOCK_STREAM '/
+		0, _ /' IPPROTO_TCP '/
+		@ProtInfo, _
 		0, _
 		WSA_FLAG_OVERLAPPED _
 	)
+	If this->ClientSocket = INVALID_SOCKET Then
+		Dim dwError As Long = WSAGetLastError()
+		*ppIAsyncResult = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
