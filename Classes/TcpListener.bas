@@ -260,6 +260,7 @@ Function TcpListenerEndAccept( _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
 	
+	/'
 	Dim pLocalSockaddr As sockaddr Ptr = Any
 	Dim LocalSockaddrLength As INT_ = Any
 	Dim pRemoteSockaddr As sockaddr Ptr = Any
@@ -288,6 +289,7 @@ Function TcpListenerEndAccept( _
 		*pClientSocket = INVALID_SOCKET
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
+	'/
 	
 	*pClientSocket = this->ClientSocket
 	
