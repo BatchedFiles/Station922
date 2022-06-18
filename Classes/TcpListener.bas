@@ -240,8 +240,8 @@ Function TcpListenerBeginAccept( _
 		Dim dwError As Long = WSAGetLastError()
 		If dwError <> WSA_IO_PENDING OrElse dwError <> ERROR_IO_PENDING Then
 			closesocket(this->ClientSocket)
-			*ppIAsyncResult = NULL
 			IAsyncResult_Release(pINewAsyncResult)
+			*ppIAsyncResult = NULL
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 		

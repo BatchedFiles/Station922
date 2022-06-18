@@ -10,7 +10,6 @@
 
 ' EndExecute:
 ' S_OK
-' S_FALSE
 ' Any E_FAIL
 
 Type IAcceptConnectionAsyncIoTask As IAcceptConnectionAsyncIoTask_

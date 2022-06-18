@@ -383,17 +383,16 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 			)
 			If FAILED(hrBeginExecute) Then
 				IReadRequestAsyncIoTask_Release(this->pReadTask)
-				this->pReadTask = NULL
 			End If
 			
 		Else
 			IReadRequestAsyncIoTask_Release(this->pReadTask)
-			this->pReadTask = NULL
 		End If
 	Else
 		IReadRequestAsyncIoTask_Release(this->pReadTask)
-		this->pReadTask = NULL
 	End If
+	
+	this->pReadTask = NULL
 	
 	AcceptConnectionAsyncTaskAddRef(this)
 	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
