@@ -491,7 +491,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	Dim lpwszHost As WString Ptr = @AllSections
 	Dim HostLength As Integer = lstrlenW(lpwszHost)
 	
-	Do While HostLength > 0
+	Do While HostLength
 		
 		Dim WebSiteName As WString * (MAX_PATH + 1) = Any
 		lstrcpyW(WebSiteName, lpwszHost)

@@ -33,60 +33,6 @@ Declare Function NetworkStreamRelease( _
 	ByVal this As NetworkStream Ptr _
 )As ULONG
 
-Declare Function NetworkStreamCanRead( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As WINBOOLEAN Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamCanSeek( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As WINBOOLEAN Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamCanWrite( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As WINBOOLEAN Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamFlush( _
-	ByVal this As NetworkStream Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamGetLength( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As LARGE_INTEGER Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamPosition( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal pResult As LARGE_INTEGER Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamRead( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal buffer As LPVOID, _
-	ByVal Count As DWORD, _
-	ByVal pReadedBytes As DWORD Ptr _
-)As HRESULT
-
-Declare Function NetworkStreamSeek( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal offset As LARGE_INTEGER, _
-	ByVal origin As SeekOrigin _
-)As HRESULT
-
-Declare Function NetworkStreamSetLength( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal length As LARGE_INTEGER _
-)As HRESULT
-
-Declare Function NetworkStreamWrite( _
-	ByVal this As NetworkStream Ptr, _
-	ByVal buffer As LPVOID, _
-	ByVal Count As DWORD, _
-	ByVal pWritedBytes As DWORD Ptr _
-)As HRESULT
-
 Declare Function NetworkStreamBeginRead( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal Buffer As LPVOID, _

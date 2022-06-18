@@ -26,60 +26,6 @@ Type INetworkStreamVirtualTable
 		ByVal this As INetworkStream Ptr _
 	)As ULONG
 	
-	CanRead As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As WINBOOLEAN Ptr _
-	)As HRESULT
-	
-	CanSeek As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As WINBOOLEAN Ptr _
-	)As HRESULT
-	
-	CanWrite As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As WINBOOLEAN Ptr _
-	)As HRESULT
-	
-	Flush As Function( _
-		ByVal this As INetworkStream Ptr _
-	)As HRESULT
-	
-	GetLength As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As LARGE_INTEGER Ptr _
-	)As HRESULT
-	
-	Position As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal pResult As LARGE_INTEGER Ptr _
-	)As HRESULT
-	
-	Read As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pReadedBytes As DWORD Ptr _
-	)As HRESULT
-	
-	Seek As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Offset As LARGE_INTEGER, _
-		ByVal Origin As SeekOrigin _
-	)As HRESULT
-	
-	SetLength As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Length As LARGE_INTEGER _
-	)As HRESULT
-	
-	Write As Function( _
-		ByVal this As INetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal pWritedBytes As DWORD Ptr _
-	)As HRESULT
-	
 	BeginRead As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
@@ -163,16 +109,6 @@ End Type
 #define INetworkStream_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define INetworkStream_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define INetworkStream_Release(this) (this)->lpVtbl->Release(this)
-' #define INetworkStream_CanRead(this, pResult) (this)->lpVtbl->CanRead(this, pResult)
-' #define INetworkStream_CanSeek(this, pResult) (this)->lpVtbl->CanSeek(this, pResult)
-' #define INetworkStream_CanWrite(this, pResult) (this)->lpVtbl->CanWrite(this, pResult)
-' #define INetworkStream_Flush(this) (this)->lpVtbl->Flush(this)
-' #define INetworkStream_GetLength(this, pResult) (this)->lpVtbl->GetLength(this, pResult)
-' #define INetworkStream_Position(this, pResult) (this)->lpVtbl->Position(this, pResult)
-#define INetworkStream_Read(this, Buffer, Count, pReadedBytes) (this)->lpVtbl->Read(this, Buffer, Count, pReadedBytes)
-' #define INetworkStream_Seek(this, Offset, Origin) (this)->lpVtbl->Seek(this, Offset, Origin)
-' #define INetworkStream_SetLength(this, Length) (this)->lpVtbl->SetLength(this, Length)
-#define INetworkStream_Write(this, Buffer, Count, pWritedBytes) (this)->lpVtbl->Write(this, Buffer, Count, pWritedBytes)
 #define INetworkStream_BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
 #define INetworkStream_BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
 #define INetworkStream_EndRead(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndRead(this, pIAsyncResult, pReadedBytes)

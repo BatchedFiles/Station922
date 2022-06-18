@@ -633,16 +633,6 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamQueryInterface, _
 	@INetworkStreamAddRef, _
 	@INetworkStreamRelease, _
-	NULL, _ /' @INetworkStreamCanRead, _ '/
-	NULL, _ /' @INetworkStreamCanSeek, _ '/
-	NULL, _ /' @INetworkStreamCanWrite, _ '/
-	NULL, _ /' @INetworkStreamFlush, _ '/
-	NULL, _ /' @INetworkStreamGetLength, _ '/
-	NULL, _ /' @INetworkStreamPosition, _ '/
-	NULL, _ /' @INetworkStreamRead, _ '/
-	NULL, _ /' @INetworkStreamSeek, _ '/
-	NULL, _ /' @INetworkStreamSetLength, _ '/
-	NULL, _ /' @INetworkStreamWrite, _ '/
 	@INetworkStreamBeginRead, _
 	@INetworkStreamBeginWrite, _ 
 	@INetworkStreamEndRead, _
