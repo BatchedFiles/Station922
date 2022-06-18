@@ -21,7 +21,7 @@ Type _TcpListener
 	ClientSocket As SOCKET
 	Buffer As ClientRequestBuffer Ptr
 	ProtInfo As WSAPROTOCOL_INFO
-	ProtLength As Long = SizeOf(WSAPROTOCOL_INFO)
+	ProtLength As Long
 End Type
 
 Sub InitializeTcpListener( _
