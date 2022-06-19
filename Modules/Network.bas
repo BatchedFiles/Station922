@@ -106,27 +106,8 @@ Function CloseSocketConnection( _
 		ByVal ClientSocket As SOCKET _
 	)As HRESULT
 	
-	Dim res As Integer = shutdown(ClientSocket, SD_BOTH)
-	
-	If res <> 0 Then
-		
-		Dim e As ULONG = WSAGetLastError()
-		Dim hr As HRESULT = HRESULT_FROM_WIN32(e)
-		
-		Return hr
-		
-	End If
-	
-	res = closesocket(ClientSocket)
-	
-	If res <> 0 Then
-		
-		Dim e As ULONG = WSAGetLastError()
-		Dim hr As HRESULT = HRESULT_FROM_WIN32(e)
-		
-		Return hr
-		
-	End If
+	shutdown(ClientSocket, SD_BOTH)
+	closesocket(ClientSocket)
 	
 	Return S_OK
 	
