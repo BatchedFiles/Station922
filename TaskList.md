@@ -41,7 +41,7 @@
 
 Использовать асинхронные функции:
 
-* [ ] AcceptEx
+* [x] AcceptEx
 * [ ] ConnectEx
 * [ ] DisconnectEx
 * [ ] TransmitPackets
