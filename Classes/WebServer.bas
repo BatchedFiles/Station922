@@ -283,15 +283,15 @@ Function CreateServerSocket( _
 	Dim wszListenPort As WString * (255 + 1) = Any
 	_itow(this->ListenPort, @wszListenPort, 10)
 	
-	Dim hr As HRESULT = CreateSocketAndListenW( _
+	Dim hrCreateSocket As HRESULT = CreateSocketAndListenW( _
 		this->ListenAddress, _
 		wszListenPort, _
 		@this->SocketList(0), _
 		SocketListCapacity, _
 		@this->SocketListLength _
 	)
-	If FAILED(hr) Then
-		Return hr
+	If FAILED(hrCreateSocket) Then
+		Return hrCreateSocket
 	End If
 	
 	Return S_OK
