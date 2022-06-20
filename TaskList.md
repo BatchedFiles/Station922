@@ -44,9 +44,8 @@
 * [x] AcceptEx
 * [ ] ConnectEx
 * [ ] DisconnectEx
-* [ ] TransmitPackets
+* [x] TransmitPackets
 * [x] WSARecv
-* [x] WSASend
 
 
 ## Строки
