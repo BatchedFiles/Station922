@@ -1,4 +1,5 @@
 #include once "NetworkStream.bi"
+#include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
@@ -6,6 +7,8 @@
 #include once "Network.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
+
+Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
 Type _NetworkStream
 	#if __FB_DEBUG__
@@ -212,7 +215,7 @@ Function NetworkStreamBeginRead( _
 	Dim pRecvBuffers As WSABUF Ptr = Any
 	Dim hrAllocBuffer As HRESULT = IAsyncResult_AllocBuffers( _
 		pINewAsyncResult, _
-		CInt(ReceiveBuffersCount), _
+		CInt(ReceiveBuffersCount) * SizeOf(WSABUF), _
 		@pRecvBuffers _
 	)
 	If FAILED(hrAllocBuffer) Then
@@ -332,7 +335,7 @@ Function NetworkStreamBeginWriteGather( _
 	Dim pSendBuffers As WSABUF Ptr = Any
 	Dim hrAllocBuffer As HRESULT = IAsyncResult_AllocBuffers( _
 		pINewAsyncResult, _
-		CInt(BuffersCount), _
+		CInt(BuffersCount) * SizeOf(WSABUF), _
 		@pSendBuffers _
 	)
 	If FAILED(hrAllocBuffer) Then
@@ -381,7 +384,17 @@ Function NetworkStreamBeginWriteGather( _
 	
 	Const Flags As DWORD = 0
 	
-	Dim WSASendResult As Long = WSASend( _
+	' Dim resTransmit As BOOL = LpfnTransmitpackets( _
+		' this->ClientSocket, _
+		' LPTRANSMIT_PACKETS_ELEMENT lpPacketArray,
+		' DWORD nElementCount,
+		' 0, _
+		' pOverlap, _
+		' 0 _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
+	' )	
+	' If resTransmit = 0 Then
+	
+	Dim resSend As Long = WSASend( _
 		this->ClientSocket, _
 		pSendBuffers, _
 		BuffersCount, _
@@ -390,11 +403,10 @@ Function NetworkStreamBeginWriteGather( _
 		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		lpCompletionRoutine _
 	)
-	
-	If WSASendResult <> 0 Then
+	If resSend <> 0 Then
 		
 		Dim intError As Long = WSAGetLastError()
-		If intError <> WSA_IO_PENDING Then
+		If intError <> WSA_IO_PENDING OrElse intError <> ERROR_IO_PENDING Then
 			IAsyncResult_Release(pINewAsyncResult)
 			*ppIAsyncResult = NULL
 			Return HRESULT_FROM_WIN32(intError)

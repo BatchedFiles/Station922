@@ -4,6 +4,7 @@
 
 Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
 Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
 #ifdef WSAID_ACCEPTEX
 #undef WSAID_ACCEPTEX

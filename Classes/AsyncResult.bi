@@ -72,8 +72,8 @@ Declare Function AsyncResultGetWsaOverlapped( _
 
 Declare Function AsyncResultAllocBuffers( _
 	ByVal this As AsyncResult Ptr, _
-	ByVal Count As Integer, _
-	ByVal ppBuffers As WSABUF Ptr Ptr _
+	ByVal Length As Integer, _
+	ByVal ppBuffers As Any Ptr Ptr _
 )As HRESULT
 
 #endif

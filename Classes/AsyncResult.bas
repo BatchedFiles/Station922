@@ -14,7 +14,7 @@ Type _AsyncResult
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
 	callback As AsyncCallback
-	pBuffers As WSABUF Ptr
+	pBuffers As Any Ptr
 	BytesTransferred As DWORD
 	Completed As Boolean
 End Type
@@ -281,13 +281,13 @@ End Function
 
 Function AsyncResultAllocBuffers( _
 		ByVal this As AsyncResult Ptr, _
-		ByVal Count As Integer, _
-		ByVal ppBuffers As WSABUF Ptr Ptr _
+		ByVal Length As Integer, _
+		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
 	
 	this->pBuffers = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
-		SizeOf(WSABUF) * Count _
+		Length _
 	)
 	If this->pBuffers = NULL Then
 		*ppBuffers = NULL
@@ -374,10 +374,10 @@ End Function
 
 Function IAsyncResultAllocBuffers( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal Count As Integer, _
-		ByVal ppBuffers As WSABUF Ptr Ptr _
+		ByVal Length As Integer, _
+		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultAllocBuffers(ContainerOf(this, AsyncResult, lpVtbl), Count, ppBuffers)
+	Return AsyncResultAllocBuffers(ContainerOf(this, AsyncResult, lpVtbl), Length, ppBuffers)
 End Function
 
 Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _

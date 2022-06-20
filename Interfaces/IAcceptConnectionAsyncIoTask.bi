@@ -1,6 +1,8 @@
 #ifndef IACCEPTCONNECTIONASYNCIOTASK_BI
 #define IACCEPTCONNECTIONASYNCIOTASK_BI
 
+#include once "windows.bi"
+#include once "win\winsock2.bi"
 #include once "IHttpAsyncIoTask.bi"
 #include once "IThreadPool.bi"
 

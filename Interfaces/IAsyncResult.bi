@@ -3,7 +3,6 @@
 
 #include once "windows.bi"
 #include once "win\ole2.bi"
-#include once "win\winsock2.bi"
 
 Type IAsyncResult As IAsyncResult_
 
@@ -72,8 +71,8 @@ Type IAsyncResultVirtualTable
 	
 	AllocBuffers As Function( _
 		ByVal this As IAsyncResult Ptr, _
-		ByVal Count As Integer, _
-		ByVal ppBuffers As WSABUF Ptr Ptr _
+		ByVal Length As Integer, _
+		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
 	
 End Type
