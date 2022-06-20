@@ -1,6 +1,8 @@
 #ifndef ITCPLISTENER_BI
 #define ITCPLISTENER_BI
 
+#include once "windows.bi"
+#include once "win\winsock2.bi"
 #include once "IAsyncResult.bi"
 #include once "ClientBuffer.bi"
 
