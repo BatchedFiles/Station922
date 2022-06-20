@@ -316,15 +316,14 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				Dim MovedUrl As HeapBSTR = Any
 				IWebSite_GetMovedUrl(pIWebSiteWeakPtr, @MovedUrl)
 				
-				Dim buf As WString * (INTERNET_MAX_URL_LENGTH + 1 * 2 + 1) = Any
-				lstrcpyW(@buf, MovedUrl)
-				
 				Dim ClientURI As IClientUri Ptr = Any
 				IClientRequest_GetUri(this->pIRequest, @ClientURI)
 				
 				Dim Path As HeapBSTR = Any
 				IClientUri_GetPath(ClientURI, @Path)
 				
+				Dim buf As WString * (INTERNET_MAX_URL_LENGTH * 2 + 1) = Any
+				lstrcpyW(@buf, MovedUrl)
 				lstrcatW(@buf, Path)
 				
 				IServerResponse_AddKnownResponseHeaderWstr( _
