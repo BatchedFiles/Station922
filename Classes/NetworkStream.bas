@@ -235,29 +235,6 @@ Function NetworkStreamBeginRead( _
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
-	If callback = NULL Then
-		' Const ManualReset As Boolean = True
-		' Const NonsignaledState As Boolean = False
-		
-		' hEvent = NULL
-		'hEvent = CreateEvent(NULL, ManualReset, NonsignaledState, NULL)
-		'
-		'If hEvent = NULL Then
-		'	Dim dwError As DWORD = GetLastError()
-		'	INetworkStreamAsyncResult_Release(pINewAsyncResult)
-		'	
-		'	Return HRESULT_FROM_WIN32(dwError)
-		'End If
-		
-		' lpRecvOverlapped->hEvent = pINewAsyncResult ' WSACreateEvent()  WSACloseEvent()
-		' INetworkStreamAsyncResult_SetWaitHandle(pINewAsyncResult, hEvent)
-		lpCompletionRoutine = NULL
-	Else
-		' TODO Реализовать для функции завершения ввода-вывода
-		' lpRecvOverlapped->hEvent = pINewAsyncResult
-		lpCompletionRoutine = NULL
-	End If
-	
 	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 	
@@ -268,7 +245,7 @@ Function NetworkStreamBeginRead( _
 		lpNumberOfBytesReceived, _
 		@Flags, _
 		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
-		lpCompletionRoutine _
+		NULL _
 	)
 	If resWSARecv <> 0 Then
 		
@@ -350,49 +327,11 @@ Function NetworkStreamBeginWriteGather( _
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
-	' Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
-	
-	' If callback = NULL Then
-		' Const ManualReset As Boolean = True
-		' Const NonsignaledState As Boolean = False
-		
-		' hEvent = NULL
-		'hEvent = CreateEvent(NULL, ManualReset, NonsignaledState, NULL)
-		'
-		'If hEvent = NULL Then
-		'	Dim dwError As DWORD = GetLastError()
-		'	INetworkStreamAsyncResult_Release(pINewAsyncResult)
-		'	
-		'	Return HRESULT_FROM_WIN32(dwError)
-		'End If
-		
-		' lpRecvOverlapped->hEvent = pINewAsyncResult ' WSACreateEvent()  WSACloseEvent()
-		' INetworkStreamAsyncResult_SetWaitHandle(pINewAsyncResult, hEvent)
-		' lpCompletionRoutine = NULL
-	' Else
-		' TODO Реализовать для функции завершения ввода-вывода
-		' lpRecvOverlapped->hEvent = pINewAsyncResult
-		' lpCompletionRoutine = NULL
-	' End If
-	
 	For i As DWORD = 0 To BuffersCount - 1
 		pSendBuffers[i].dwElFlags = TP_ELEMENT_MEMORY
 		pSendBuffers[i].cLength = Cast(ULONG, pBuffer[i].Length)
 		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
-	
-	' Const lpNumberOfBytesSend As LPDWORD = NULL
-	' Const Flags As DWORD = 0
-	' Dim resSend As Long = WSASend( _
-		' this->ClientSocket, _
-		' pSendBuffers, _
-		' BuffersCount, _
-		' lpNumberOfBytesSend, _
-		' Flags, _
-		' CPtr(WSAOVERLAPPED Ptr, pOverlap), _
-		' lpCompletionRoutine _
-	' )
-	' If resSend <> 0 Then
 	
 	Dim resTransmit As BOOL = LpfnTransmitpackets( _
 		this->ClientSocket, _
