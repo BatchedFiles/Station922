@@ -16,6 +16,11 @@ Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 #define WSAID_GETACCEPTEXSOCKADDRS &hb5367df2, &hcbac, &h11cf, {&h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92}
 #endif
 
+#ifdef WSAID_TRANSMITPACKETS
+#undef WSAID_TRANSMITPACKETS
+#define WSAID_TRANSMITPACKETS &hd9689da0, &h1f90, &h11d3, {&h99, &h71, &h00, &hc0, &h4f, &h68, &hc8, &h76}
+#endif
+
 Declare Function wMain()As Long
 
 Function LoadWsaFunctions()As Long
@@ -66,6 +71,27 @@ Function LoadWsaFunctions()As Long
 			NULL _
 		)
 		If resGetAcceptExSockaddrs = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return 1
+		End If
+	End Scope
+	
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim GuidTransmitPackets As GUID = Type(WSAID_TRANSMITPACKETS)
+		
+		Dim resGetTransmitPackets As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GuidTransmitPackets, _
+			SizeOf(GUID), _
+			@lpfnTransmitPackets, _
+			SizeOf(lpfnTransmitPackets), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resGetTransmitPackets = SOCKET_ERROR Then
 			closesocket(ListenSocket)
 			return 1
 		End If

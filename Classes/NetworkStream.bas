@@ -332,10 +332,10 @@ Function NetworkStreamBeginWriteGather( _
 		Return hrCreateAsyncResult
 	End If
 	
-	Dim pSendBuffers As WSABUF Ptr = Any
+	Dim pSendBuffers As TRANSMIT_PACKETS_ELEMENT Ptr = Any
 	Dim hrAllocBuffer As HRESULT = IAsyncResult_AllocBuffers( _
 		pINewAsyncResult, _
-		CInt(BuffersCount) * SizeOf(WSABUF), _
+		CInt(BuffersCount) * SizeOf(TRANSMIT_PACKETS_ELEMENT), _
 		@pSendBuffers _
 	)
 	If FAILED(hrAllocBuffer) Then
@@ -350,9 +350,9 @@ Function NetworkStreamBeginWriteGather( _
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
-	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
+	' Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
-	If callback = NULL Then
+	' If callback = NULL Then
 		' Const ManualReset As Boolean = True
 		' Const NonsignaledState As Boolean = False
 		
@@ -368,42 +368,42 @@ Function NetworkStreamBeginWriteGather( _
 		
 		' lpRecvOverlapped->hEvent = pINewAsyncResult ' WSACreateEvent()  WSACloseEvent()
 		' INetworkStreamAsyncResult_SetWaitHandle(pINewAsyncResult, hEvent)
-		lpCompletionRoutine = NULL
-	Else
+		' lpCompletionRoutine = NULL
+	' Else
 		' TODO Реализовать для функции завершения ввода-вывода
 		' lpRecvOverlapped->hEvent = pINewAsyncResult
-		lpCompletionRoutine = NULL
-	End If
+		' lpCompletionRoutine = NULL
+	' End If
 	
 	For i As DWORD = 0 To BuffersCount - 1
-		pSendBuffers[i].len = Cast(ULONG, pBuffer[i].Length)
-		pSendBuffers[i].buf = Cast(CHAR Ptr, pBuffer[i].Buffer)
+		pSendBuffers[i].dwElFlags = TP_ELEMENT_MEMORY
+		pSendBuffers[i].cLength = Cast(ULONG, pBuffer[i].Length)
+		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
 	
-	Const lpNumberOfBytesSend As LPDWORD = NULL
-	
-	Const Flags As DWORD = 0
-	
-	' Dim resTransmit As BOOL = LpfnTransmitpackets( _
+	' Const lpNumberOfBytesSend As LPDWORD = NULL
+	' Const Flags As DWORD = 0
+	' Dim resSend As Long = WSASend( _
 		' this->ClientSocket, _
-		' LPTRANSMIT_PACKETS_ELEMENT lpPacketArray,
-		' DWORD nElementCount,
-		' 0, _
-		' pOverlap, _
-		' 0 _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
-	' )	
-	' If resTransmit = 0 Then
+		' pSendBuffers, _
+		' BuffersCount, _
+		' lpNumberOfBytesSend, _
+		' Flags, _
+		' CPtr(WSAOVERLAPPED Ptr, pOverlap), _
+		' lpCompletionRoutine _
+	' )
+	' If resSend <> 0 Then
 	
-	Dim resSend As Long = WSASend( _
+	Dim resTransmit As BOOL = LpfnTransmitpackets( _
 		this->ClientSocket, _
 		pSendBuffers, _
 		BuffersCount, _
-		lpNumberOfBytesSend, _
-		Flags, _
-		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
-		lpCompletionRoutine _
-	)
-	If resSend <> 0 Then
+		0, _
+		pOverlap, _
+		0 _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
+	)	
+	If resTransmit = 0 Then
+	
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING OrElse intError <> ERROR_IO_PENDING Then
