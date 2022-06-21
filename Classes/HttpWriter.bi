@@ -70,4 +70,9 @@ Declare Function HttpWriterEndWrite( _
 	ByVal pIAsyncResult As IAsyncResult Ptr _
 )As HRESULT
 
+Declare Function HttpWriterSetKeepAlive( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal KeepAlive As Boolean _
+)As HRESULT
+
 #endif

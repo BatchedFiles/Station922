@@ -27,6 +27,7 @@ Type _HttpWriter
 	HeadersSended As Boolean
 	BodySended As Boolean
 	SendOnlyHeaders As Boolean
+	KeepAlive As Boolean
 End Type
 
 Sub InitializeHttpWriter( _
@@ -49,6 +50,7 @@ Sub InitializeHttpWriter( _
 	this->pIBuffer = NULL
 	this->BodyOffset = 0
 	this->BodyContentLength = 0
+	this->KeepAlive = True
 	
 End Sub
 
@@ -368,14 +370,28 @@ Function HttpWriterBeginWrite( _
 		End If
 	End If
 	
-	Dim hrBeginWrite As HRESULT = IBaseStream_BeginWriteGather( _
-		this->pIStream, _
-		@StreamBuffer.Buf(0), _
-		StreamBufferLength, _
-		NULL, _
-		StateObject, _
-		ppIAsyncResult _
-	)
+	Dim hrBeginWrite As HRESULT = Any
+	
+	If this->KeepAlive Then
+		hrBeginWrite = IBaseStream_BeginWriteGather( _
+			this->pIStream, _
+			@StreamBuffer.Buf(0), _
+			StreamBufferLength, _
+			NULL, _
+			StateObject, _
+			ppIAsyncResult _
+		)
+	Else
+		hrBeginWrite = IBaseStream_BeginWriteGatherAndShutdown( _
+			this->pIStream, _
+			@StreamBuffer.Buf(0), _
+			StreamBufferLength, _
+			NULL, _
+			StateObject, _
+			ppIAsyncResult _
+		)
+	End If
+	
 	If FAILED(hrBeginWrite) Then
 		Return hrBeginWrite
 	End If
@@ -436,6 +452,17 @@ Function HttpWriterEndWrite( _
 	End Select
 	
 	Return HTTPWRITER_S_IO_PENDING
+	
+End Function
+
+Function HttpWriterSetKeepAlive( _
+		ByVal this As HttpWriter Ptr, _
+		ByVal KeepAlive As Boolean _
+	)As HRESULT
+	
+	this->KeepAlive = KeepAlive
+	
+	Return S_OK
 	
 End Function
 
@@ -511,6 +538,13 @@ Function IHttpWriterEndWrite( _
 	Return HttpWriterEndWrite(ContainerOf(this, HttpWriter, lpVtbl), pIAsyncResult)
 End Function
 
+Function IHttpWriterSetKeepAlive( _
+		ByVal this As IHttpWriter Ptr, _
+		ByVal KeepAlive As Boolean _
+	)As HRESULT
+	Return HttpWriterSetKeepAlive(ContainerOf(this, HttpWriter, lpVtbl), KeepAlive)
+End Function
+
 Dim GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable = Type( _
 	@IHttpWriterQueryInterface, _
 	@IHttpWriterAddRef, _
@@ -521,5 +555,6 @@ Dim GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable = Type( _
 	@IHttpWriterSetBuffer, _
 	@IHttpWriterPrepare, _
 	@IHttpWriterBeginWrite, _
-	@IHttpWriterEndWrite _
+	@IHttpWriterEndWrite, _
+	@IHttpWriterSetKeepAlive _
 )

@@ -73,6 +73,11 @@ Type IHttpWriterVirtualTable
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
+	SetKeepAlive As Function( _
+		ByVal this As IHttpWriter Ptr, _
+		ByVal KeepAlive As Boolean _
+	)As HRESULT
+	
 End Type
 
 Type IHttpWriter_
@@ -89,5 +94,6 @@ End Type
 #define IHttpWriter_Prepare(this, pIResponse, ContentLength) (this)->lpVtbl->Prepare(this, pIResponse, ContentLength)
 #define IHttpWriter_BeginWrite(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, StateObject, ppIAsyncResult)
 #define IHttpWriter_EndWrite(this, pIAsyncResult) (this)->lpVtbl->EndWrite(this, pIAsyncResult)
+#define IHttpWriter_SetKeepAlive(this, KeepAlive) (this)->lpVtbl->SetKeepAlive(this, KeepAlive)
 
 #endif

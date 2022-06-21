@@ -1138,6 +1138,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim KeepAlive As Boolean = True
 		IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
 		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
+		IHttpWriter_SetKeepAlive(this->pIHttpWriter, KeepAlive)
 	End Scope
 	
 	Scope

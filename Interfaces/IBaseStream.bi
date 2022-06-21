@@ -101,6 +101,15 @@ Type IBaseStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	BeginWriteGatherAndShutdown As Function( _
+		ByVal this As IBaseStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IBaseStream_
@@ -116,5 +125,6 @@ End Type
 #define IBaseStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
 #define IBaseStream_BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
 #define IBaseStream_BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
 
 #endif

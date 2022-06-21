@@ -102,17 +102,6 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	
 End Function
 
-Function CloseSocketConnection( _
-		ByVal ClientSocket As SOCKET _
-	)As HRESULT
-	
-	shutdown(ClientSocket, SD_BOTH)
-	closesocket(ClientSocket)
-	
-	Return S_OK
-	
-End Function
-
 Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _

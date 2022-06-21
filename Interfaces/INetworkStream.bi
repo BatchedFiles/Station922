@@ -74,6 +74,15 @@ Type INetworkStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	BeginWriteGatherAndShutdown As Function( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
 	GetSocket As Function( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
@@ -113,6 +122,9 @@ End Type
 #define INetworkStream_BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
 #define INetworkStream_EndRead(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndRead(this, pIAsyncResult, pReadedBytes)
 #define INetworkStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
+#define INetworkStream_BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define INetworkStream_BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define INetworkStream_BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
 #define INetworkStream_GetSocket(this, pResult) (this)->lpVtbl->GetSocket(this, pResult)
 #define INetworkStream_SetSocket(this, sock) (this)->lpVtbl->SetSocket(this, sock)
 #define INetworkStream_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)

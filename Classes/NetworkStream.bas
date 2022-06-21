@@ -48,7 +48,7 @@ Sub UnInitializeNetworkStream( _
 	)
 	
 	If this->ClientSocket <> INVALID_SOCKET Then
-		CloseSocketConnection(this->ClientSocket)
+		closesocket(this->ClientSocket)
 	End If
 	#if __FB_DEBUG__
 		this->ClientSocket = INVALID_SOCKET
@@ -288,12 +288,13 @@ Function NetworkStreamBeginWrite( _
 	
 End Function
 
-Function NetworkStreamBeginWriteGather( _
+Function NetworkStreamBeginWriteGatherWithFlags( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
 		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
+		ByVal Flags As DWORD, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -339,7 +340,7 @@ Function NetworkStreamBeginWriteGather( _
 		BuffersCount, _
 		0, _
 		pOverlap, _
-		0 _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
+		Flags _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
 	)	
 	If resTransmit = 0 Then
 	
@@ -358,6 +359,49 @@ Function NetworkStreamBeginWriteGather( _
 	Return BASESTREAM_S_IO_PENDING
 	
 End Function
+
+Function NetworkStreamBeginWriteGather( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal BuffersCount As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Return NetworkStreamBeginWriteGatherWithFlags( _
+		this, _
+		pBuffer, _
+		BuffersCount, _
+		callback, _
+		StateObject, _
+		0, _
+		ppIAsyncResult _
+	)
+	
+End Function
+
+Function NetworkStreamBeginWriteGatherAndShutdown( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal BuffersCount As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Return NetworkStreamBeginWriteGatherWithFlags( _
+		this, _
+		pBuffer, _
+		BuffersCount, _
+		callback, _
+		StateObject, _
+		TF_DISCONNECT, _
+		ppIAsyncResult _
+	)
+	
+End Function
+
 
 Function NetworkStreamEndRead( _
 		ByVal this As NetworkStream Ptr, _
@@ -466,7 +510,7 @@ Function NetworkStreamClose( _
 	)As HRESULT
 	
 	If this->ClientSocket <> INVALID_SOCKET Then
-		CloseSocketConnection(this->ClientSocket)
+		closesocket(this->ClientSocket)
 		this->ClientSocket = INVALID_SOCKET
 	End If
 	
@@ -544,6 +588,17 @@ Function INetworkStreamBeginWriteGather( _
 	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, callback, StateObject, ppIAsyncResult)
 End Function
 
+Function INetworkStreamBeginWriteGatherAndShutdown( _
+		ByVal this As INetworkStream Ptr, _
+		ByVal pBuffer As BaseStreamBuffer Ptr, _
+		ByVal Count As DWORD, _
+		ByVal callback As AsyncCallback, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	Return NetworkStreamBeginWriteGatherAndShutdown(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, callback, StateObject, ppIAsyncResult)
+End Function
+
 Function INetworkStreamGetSocket( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
@@ -590,6 +645,7 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamEndWrite, _
 	NULL, _ /' BeginReadScatter '/
 	@INetworkStreamBeginWriteGather, _
+	@INetworkStreamBeginWriteGatherAndShutdown, _
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
 	@INetworkStreamGetRemoteAddress, _
