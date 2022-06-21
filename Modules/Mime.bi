@@ -125,15 +125,11 @@ Enum DocumentCharsets
 	Utf16BE
 End Enum
 
-Type _MimeType
+Type MimeType
 	ContentType As ContentTypes
 	Charset As DocumentCharsets
 	IsTextFormat As Boolean
 End Type
-
-Type MimeType As _MimeType
-
-Type LPMimeType As MimeType Ptr
 
 Declare Sub GetContentTypeOfMimeType( _
 	ByVal ContentType As WString Ptr, _

@@ -1145,8 +1145,8 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim Mime As MimeType = Any
 		With Mime
 			.ContentType = ContentTypes.TextHtml
-			.IsTextFormat = True
 			.Charset = DocumentCharsets.Utf8BOM
+			.IsTextFormat = True
 		End With
 		IServerResponse_SetMimeType(this->pIResponse, @Mime)
 	End Scope
