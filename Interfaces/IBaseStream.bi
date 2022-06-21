@@ -27,8 +27,8 @@ Enum SeekOrigin
 End Enum
 
 Type BaseStreamBuffer
-	Buffer As LPVOID
-	Length As DWORD
+	Buffer As ZString Ptr
+	Length As Integer
 End Type
 
 Type IBaseStream As IBaseStream_

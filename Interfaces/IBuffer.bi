@@ -19,8 +19,8 @@ Enum FileAccess
 End Enum
 
 Type BufferSlice
-	pSlice As LPVOID
-	Length As DWORD
+	pSlice As ZString Ptr
+	Length As Integer
 End Type
 
 Type IBuffer As IBuffer_
