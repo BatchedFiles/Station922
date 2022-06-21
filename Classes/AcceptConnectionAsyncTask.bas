@@ -93,19 +93,21 @@ Function CreateReadTask( _
 						this->pIPoolWeakPtr, _
 						CPtr(IAsyncIoTask Ptr, pTask) _
 					)
-					If FAILED(hrAssociate) Then
-						
-					End If
 					
 					INetworkStream_Release(pINetworkStream)
 					IHttpReader_Release(pIHttpReader)
 					IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 					
-					pIClientMemoryAllocator = NULL
+					If SUCCEEDED(hrAssociate) Then
+						Return pTask
+					End If
+					
+					IReadRequestAsyncIoTask_Release(pTask)
+					
 					pINetworkStream = NULL
 					pIHttpReader = NULL
+					pIClientMemoryAllocator = NULL
 					
-					Return pTask
 				End If
 				
 				If pINetworkStream <> NULL Then
