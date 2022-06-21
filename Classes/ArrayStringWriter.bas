@@ -1,9 +1,10 @@
 #include once "ArrayStringWriter.bi"
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
-#include once "StringConstants.bi"
 
 Extern GlobalArrayStringWriterVirtualTable As Const IArrayStringWriterVirtualTable
+
+Const NewLineString = WStr(!"\r\n")
 
 Type _ArrayStringWriter
 	#if __FB_DEBUG__
@@ -198,7 +199,7 @@ Function ArrayStringWriterWriteNewLine( _
 		ByVal this As ArrayStringWriter Ptr _
 	)As HRESULT
 	
-	Return ArrayStringWriterWriteLengthString(this, @NewLineString, 2)
+	Return ArrayStringWriterWriteLengthString(this, @NewLineString, Len(NewLineString))
 	
 End Function
 

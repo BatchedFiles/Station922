@@ -5,7 +5,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
-#include once "StringConstants.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable
@@ -14,6 +13,7 @@ Const BytesString = WStr("bytes")
 Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
 Const MaxResponseBufferLength As Integer = 8 * 4096 - 1
+Const ColonWithSpaceString = WStr(": ")
 
 Type _ServerResponse
 	#if __FB_DEBUG__

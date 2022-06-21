@@ -6,7 +6,6 @@
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
-#include once "StringConstants.bi"
 
 Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 Const TimeFormatString = WStr("HH:mm:ss GMT")
