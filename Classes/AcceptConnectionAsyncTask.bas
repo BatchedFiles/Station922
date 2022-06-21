@@ -307,29 +307,31 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	this->pReadTask = CreateReadTask( _
-		this, _
-		@this->pBuffer, _
-		@this->pStream _
-	)
-	If this->pReadTask = NULL Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
-		this->pListener, _
-		this->pBuffer, _
-		CPtr(IUnknown Ptr, @this->lpVtbl), _
-		ppIResult _
-	)
-	If FAILED(hrBeginAccept) Then
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
-		this->pReadTask = NULL
-		*ppIResult = NULL
-		Return hrBeginAccept
-	End If
-	
-	Return ASYNCTASK_S_IO_PENDING
+	Do
+		this->pReadTask = CreateReadTask( _
+			this, _
+			@this->pBuffer, _
+			@this->pStream _
+		)
+		
+		If this->pReadTask <> NULL Then
+			
+			Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
+				this->pListener, _
+				this->pBuffer, _
+				CPtr(IUnknown Ptr, @this->lpVtbl), _
+				ppIResult _
+			)
+			
+			If SUCCEEDED(hrBeginAccept) Then
+				Return ASYNCTASK_S_IO_PENDING
+			End If
+			
+			IReadRequestAsyncIoTask_Release(this->pReadTask)
+			this->pReadTask = NULL
+			*ppIResult = NULL
+		End If
+	Loop
 	
 End Function
 
