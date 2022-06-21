@@ -25,10 +25,13 @@ Declare Function wMain()As Long
 
 Function LoadWsaFunctions()As Long
 	
-	Dim ListenSocket As SOCKET = socket_( _
-		AF_INET, _
+	Dim ListenSocket As SOCKET = WSASocket( _
+		AF_INET6, _
 		SOCK_STREAM, _
-		IPPROTO_TCP _
+		IPPROTO_TCP, _
+		NULL, _
+		0, _
+		WSA_FLAG_OVERLAPPED _
 	)
 	If ListenSocket = INVALID_SOCKET Then
 		Return 1
