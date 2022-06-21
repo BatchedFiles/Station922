@@ -188,7 +188,7 @@ End Function
 Sub FormatErrorMessageBody( _
 		ByVal pIWriter As IArrayStringWriter Ptr, _
 		ByVal StatusCode As HttpStatusCodes, _
-		ByVal VirtualPath As WString Ptr, _
+		ByVal VirtualPath As HeapBSTR, _
 		ByVal BodyText As WString Ptr, _
 		ByVal hrErrorCode As HRESULT _
 	)
@@ -249,7 +249,7 @@ Sub FormatErrorMessageBody( _
 	End Select
 	
 	IArrayStringWriter_WriteString(pIWriter, HttpErrorInApplicationString)
-	IArrayStringWriter_WriteString(pIWriter, VirtualPath)
+	IArrayStringWriter_WriteLengthString(pIWriter, VirtualPath, SysStringLen(VirtualPath))
 	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
 	
 	
@@ -1185,7 +1185,12 @@ Function WriteErrorAsyncTaskPrepare( _
 		
 		Scope
 			Dim VirtualPath As HeapBSTR = Any
-			
+			VirtualPath = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				@WStr(DefaultVirtualPath), _
+				Len(DefaultVirtualPath) _
+			)
+			/'
 			Dim HeaderHost As HeapBSTR = Any
 			IClientRequest_GetHttpHeader( _
 				this->pIRequest, _
@@ -1193,6 +1198,8 @@ Function WriteErrorAsyncTaskPrepare( _
 				@HeaderHost _
 			)
 			If SysStringLen(HeaderHost) Then
+				' TODO Исправить получение строки из недействительной памяти
+				
 				Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
 				Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
 					this->pIWebSitesWeakPtr, _
@@ -1217,7 +1224,7 @@ Function WriteErrorAsyncTaskPrepare( _
 			End If
 			
 			HeapSysFreeString(HeaderHost)
-			
+			'/
 			Dim StatusCode As HttpStatusCodes = Any
 			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
 			
