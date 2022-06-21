@@ -20,6 +20,18 @@
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
+DEFINE_GUID(GUID_WSAID_ACCEPTEX, _
+	&hb5367df1, &hcbac, &h11cf, &h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92 _
+)
+
+DEFINE_GUID(GUID_WSAID_GETACCEPTEXSOCKADDRS, _
+	&hb5367df2, &hcbac, &h11cf, &h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92 _
+)
+
+DEFINE_GUID(GUID_WSAID_TRANSMITPACKETS, _
+	&hd9689da0, &h1f90, &h11d3, &h99, &h71, &h00, &hc0, &h4f, &h68, &hc8, &h76 _
+)
+
 ' {B40214BB-DFB6-4ACE-ACF4-8A66700F7CD0}
 DEFINE_CLSID(CLSID_ACCEPTCONNECTIONASYNCTASK, _
 	&hb40214bb, &hdfb6, &h4ace, &hac, &hf4, &h8a, &h66, &h70, &hf, &h7c, &hd0 _

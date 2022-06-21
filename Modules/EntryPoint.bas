@@ -2,28 +2,17 @@
 #include once "win\winsock2.bi"
 #include once "win\mswsock.bi"
 
+Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
+Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
+Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
+
 Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
 Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
 Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
-#ifdef WSAID_ACCEPTEX
-#undef WSAID_ACCEPTEX
-#define WSAID_ACCEPTEX &hb5367df1, &hcbac, &h11cf, {&h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92}
-#endif
-
-#ifdef WSAID_GETACCEPTEXSOCKADDRS
-#undef WSAID_GETACCEPTEXSOCKADDRS
-#define WSAID_GETACCEPTEXSOCKADDRS &hb5367df2, &hcbac, &h11cf, {&h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92}
-#endif
-
-#ifdef WSAID_TRANSMITPACKETS
-#undef WSAID_TRANSMITPACKETS
-#define WSAID_TRANSMITPACKETS &hd9689da0, &h1f90, &h11d3, {&h99, &h71, &h00, &hc0, &h4f, &h68, &hc8, &h76}
-#endif
-
 Declare Function wMain()As Long
 
-Function LoadWsaFunctions()As Long
+Function LoadWsaFunctions()As Boolean
 	
 	Dim ListenSocket As SOCKET = WSASocket( _
 		AF_INET6, _
@@ -34,17 +23,16 @@ Function LoadWsaFunctions()As Long
 		WSA_FLAG_OVERLAPPED _
 	)
 	If ListenSocket = INVALID_SOCKET Then
-		Return 1
+		Return False
 	End If
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		Dim GuidAcceptEx As GUID = Type(WSAID_ACCEPTEX)
 		
 		Dim resLoadAcceptEx As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
-			@GuidAcceptEx, _
+			@GUID_WSAID_ACCEPTEX, _
 			SizeOf(GUID), _
 			@lpfnAcceptEx, _
 			SizeOf(lpfnAcceptEx), _
@@ -54,18 +42,17 @@ Function LoadWsaFunctions()As Long
 		)
 		If resLoadAcceptEx = SOCKET_ERROR Then
 			closesocket(ListenSocket)
-			return 1
+			return False
 		End If
 	End Scope
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		Dim GuidGetAcceptExSockaddrs As GUID = Type(WSAID_GETACCEPTEXSOCKADDRS)
 		
 		Dim resGetAcceptExSockaddrs As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
-			@GuidGetAcceptExSockaddrs, _
+			@GUID_WSAID_GETACCEPTEXSOCKADDRS, _
 			SizeOf(GUID), _
 			@lpfnGetAcceptExSockaddrs, _
 			SizeOf(lpfnGetAcceptExSockaddrs), _
@@ -75,18 +62,17 @@ Function LoadWsaFunctions()As Long
 		)
 		If resGetAcceptExSockaddrs = SOCKET_ERROR Then
 			closesocket(ListenSocket)
-			return 1
+			return False
 		End If
 	End Scope
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		Dim GuidTransmitPackets As GUID = Type(WSAID_TRANSMITPACKETS)
 		
 		Dim resGetTransmitPackets As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
-			@GuidTransmitPackets, _
+			@GUID_WSAID_TRANSMITPACKETS, _
 			SizeOf(GUID), _
 			@lpfnTransmitPackets, _
 			SizeOf(lpfnTransmitPackets), _
@@ -96,13 +82,13 @@ Function LoadWsaFunctions()As Long
 		)
 		If resGetTransmitPackets = SOCKET_ERROR Then
 			closesocket(ListenSocket)
-			return 1
+			return False
 		End If
 	End Scope
 	
 	closesocket(ListenSocket)
 	
-	Return 0
+	Return True
 	
 End Function
 
@@ -120,8 +106,8 @@ Function main Alias "main"()As Long
 		End If
 	End Scope
 	
-	Dim resLoadWsa As Long = LoadWsaFunctions()
-	If resLoadWsa Then
+	Dim resLoadWsa As Boolean = LoadWsaFunctions()
+	If resLoadWsa = False Then
 		Return 1
 	End If
 	
