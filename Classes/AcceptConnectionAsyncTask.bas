@@ -89,40 +89,21 @@ Function CreateReadTask( _
 					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
 					
-					Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
-						this->pIPoolWeakPtr, _
-						CPtr(IAsyncIoTask Ptr, pTask) _
-					)
-					
 					INetworkStream_Release(pINetworkStream)
 					IHttpReader_Release(pIHttpReader)
 					IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 					
-					If SUCCEEDED(hrAssociate) Then
-						Return pTask
-					End If
-					
-					IReadRequestAsyncIoTask_Release(pTask)
-					
-					pINetworkStream = NULL
-					pIHttpReader = NULL
-					pIClientMemoryAllocator = NULL
+					Return pTask
 					
 				End If
 				
-				If pINetworkStream <> NULL Then
-					INetworkStream_Release(pINetworkStream)
-				End If
+				INetworkStream_Release(pINetworkStream)
 			End If
 			
-			If pIHttpReader <> NULL Then
-				IHttpReader_Release(pIHttpReader)
-			End If
+			IHttpReader_Release(pIHttpReader)
 		End If
 		
-		If pIClientMemoryAllocator <> NULL Then
-			IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-		End If
+		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
 	End If
 	
 	Return NULL
