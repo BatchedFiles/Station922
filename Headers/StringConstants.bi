@@ -1,7 +1,6 @@
 #ifndef STRINGCONSTANTS_BI
 #define STRINGCONSTANTS_BI
 
-Const EmptyString = WStr("")
 Const NewLineString = WStr(!"\r\n")
 Const DoubleNewLineString = WStr(!"\r\n\r\n")
 Const NewLineStringLength As Integer = 2

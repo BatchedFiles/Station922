@@ -7,12 +7,12 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "Logger.bi"
-#include once "StringConstants.bi"
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
 
+Const EmptyString = WStr("")
 Const WebServerIniFileString = WStr("WebServer.ini")
 Const WebServerSectionString = WStr("WebServer")
 Const ListenAddressKeyString = WStr("ListenAddress")
