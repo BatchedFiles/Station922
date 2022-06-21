@@ -350,7 +350,8 @@ Function HeapSysAddRefString( _
 	
 	If bstrString <> NULL Then
 		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
-		InternalHeapBSTRAddRef(this)
+		Dim ps As IString Ptr = CPtr(IString Ptr, @this->lpVtbl)
+		IString_AddRef(ps)
 	End If
 	
 	Return S_OK
@@ -363,7 +364,8 @@ Sub HeapSysFreeString( _
 	
 	If bstrString <> NULL Then
 		Dim this As InternalHeapBSTR Ptr = ContainerOf(bstrString, InternalHeapBSTR, wszNullChar(0))
-		InternalHeapBSTRRelease(this)
+		Dim ps As IString Ptr = CPtr(IString Ptr, @this->lpVtbl)
+		IString_Release(ps)
 	End If
 	
 End Sub

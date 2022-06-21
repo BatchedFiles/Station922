@@ -1185,20 +1185,15 @@ Function WriteErrorAsyncTaskPrepare( _
 		
 		Scope
 			Dim VirtualPath As HeapBSTR = Any
-			VirtualPath = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@WStr(DefaultVirtualPath), _
-				Len(DefaultVirtualPath) _
-			)
-			/'
+			
 			Dim HeaderHost As HeapBSTR = Any
 			IClientRequest_GetHttpHeader( _
 				this->pIRequest, _
 				HttpRequestHeaders.HeaderHost, _
 				@HeaderHost _
 			)
+			
 			If SysStringLen(HeaderHost) Then
-				' TODO Исправить получение строки из недействительной памяти
 				
 				Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
 				Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
@@ -1224,7 +1219,7 @@ Function WriteErrorAsyncTaskPrepare( _
 			End If
 			
 			HeapSysFreeString(HeaderHost)
-			'/
+			
 			Dim StatusCode As HttpStatusCodes = Any
 			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
 			
