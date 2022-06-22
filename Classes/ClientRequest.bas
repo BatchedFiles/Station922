@@ -21,12 +21,14 @@ Type _ClientRequest
 	#endif
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	ReferenceCounter As UInteger
-	ContentLength As LongInt
-	RequestByteRange As ByteRange
 	pIMemoryAllocator As IMalloc Ptr
-	pHttpMethod As HeapBSTR
 	pClientURI As IClientUri Ptr
+	
+	pHttpMethod As HeapBSTR
 	HttpVersion As HttpVersions
+	ContentLength As LongInt
+	
+	RequestByteRange As ByteRange
 	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
@@ -453,19 +455,20 @@ Sub InitializeClientRequest( _
 			Len(ClientRequest.IdString) _
 		)
 	#endif
-	this->ContentLength = 0
-	this->RequestByteRange.FirstBytePosition = 0
-	this->RequestByteRange.LastBytePosition = 0
-	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
-	
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->pClientURI = NULL
 	
 	this->pHttpMethod = NULL
-	this->pClientURI = NULL
 	this->HttpVersion = HttpVersions.Http11
+	this->ContentLength = 0
+	
+	this->RequestByteRange.FirstBytePosition = 0
+	this->RequestByteRange.LastBytePosition = 0
+	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
+	
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
 	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
 	this->KeepAlive = False
@@ -476,11 +479,11 @@ Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-	HeapSysFreeString(this->pHttpMethod)
-	
 	If this->pClientURI <> NULL Then
 		IClientUri_Release(this->pClientURI)
 	End If
+	
+	HeapSysFreeString(this->pHttpMethod)
 	
 	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
 		HeapSysFreeString(this->RequestHeaders(i))
