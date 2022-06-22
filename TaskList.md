@@ -74,7 +74,7 @@
 * [ ] PROPFIND
 * [ ] PROPPATCH
 * [ ] PUT
-* [ ] TRACE
+* [x] TRACE
 * [ ] UNLOCK
 
 

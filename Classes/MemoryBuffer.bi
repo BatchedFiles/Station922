@@ -82,4 +82,10 @@ Declare Function MemoryBufferAllocBuffer( _
 	ByVal ppBuffer As Any Ptr Ptr _
 )As HRESULT
 
+Declare Function MemoryBufferSetBuffer( _
+	ByVal this As MemoryBuffer Ptr, _
+	ByVal pBuffer As Any Ptr, _
+	ByVal Length As LongInt _
+)As HRESULT
+
 #endif

@@ -9,6 +9,7 @@
 #include once "HttpGetProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpReader.bi"
+#include once "HttpTraceProcessor.bi"
 #include once "HttpWriter.bi"
 #include once "IniConfiguration.bi"
 #include once "MemoryBuffer.bi"
@@ -312,14 +313,28 @@ Function CreatePermanentInstance( _
 	End If
 	
 	If IsEqualCLSID(@CLSID_HTTPPROCESSORCOLLECTION, rclsid) Then
-		Dim pProcessor As HttpProcessorCollection Ptr = CreatePermanentHttpProcessorCollection(pIMemoryAllocator)
+		Dim pProcessors As HttpProcessorCollection Ptr = CreatePermanentHttpProcessorCollection(pIMemoryAllocator)
+		If pProcessors = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpProcessorCollectionQueryInterface(pProcessors, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpProcessorCollection(pProcessors)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_HTTPTRACEASYNCPROCESSOR, rclsid) Then
+		Dim pProcessor As HttpTraceProcessor Ptr = CreatePermanentHttpTraceProcessor(pIMemoryAllocator)
 		If pProcessor = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim hr As HRESULT = HttpProcessorCollectionQueryInterface(pProcessor, riid, ppv)
+		Dim hr As HRESULT = HttpTraceProcessorQueryInterface(pProcessor, riid, ppv)
 		If FAILED(hr) Then
-			DestroyHttpProcessorCollection(pProcessor)
+			DestroyHttpTraceProcessor(pProcessor)
 		End If
 		
 		Return hr

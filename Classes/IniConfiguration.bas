@@ -6,6 +6,7 @@
 #include once "HeapBSTR.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpProcessorCollection.bi"
+#include once "HttpTraceProcessor.bi"
 #include once "Logger.bi"
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
@@ -660,16 +661,16 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrGetProcessor As HRESULT = CreatePermanentInstance( _
+		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
 			this->pIMemoryAllocator, _
 			@CLSID_HTTPGETASYNCPROCESSOR, _
 			@IID_IHttpGetAsyncProcessor, _
 			@pIHttpGetProcessor _
 		)
-		If FAILED(hrGetProcessor) Then
+		If FAILED(hrCreateProcessor) Then
 			IHttpProcessorCollection_Release(pIProcessorCollection)
 			*ppIHttpProcessorCollection = NULL
-			Return hrGetProcessor
+			Return hrCreateProcessor
 		End If
 		
 		IHttpProcessorCollection_Add( _
@@ -688,7 +689,30 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	End Scope
 	
 	Scope
-		Const AllMethodsString = "GET, HEAD"
+		Dim pIHttpTraceProcessor As IHttpAsyncProcessor Ptr = Any
+		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_HTTPTRACEASYNCPROCESSOR, _
+			@IID_IHttpTraceAsyncProcessor, _
+			@pIHttpTraceProcessor _
+		)
+		If FAILED(hrCreateProcessor) Then
+			IHttpProcessorCollection_Release(pIProcessorCollection)
+			*ppIHttpProcessorCollection = NULL
+			Return hrCreateProcessor
+		End If
+		
+		IHttpProcessorCollection_Add( _
+			pIProcessorCollection, _
+			WStr("TRACE"), _
+			pIHttpTraceProcessor _
+		)
+		
+		IHttpAsyncProcessor_Release(pIHttpTraceProcessor)
+	End Scope
+	
+	Scope
+		Const AllMethodsString = "GET, HEAD, TRACE"
 		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
 			this->pIMemoryAllocator, _
 			WStr(AllMethodsString), _

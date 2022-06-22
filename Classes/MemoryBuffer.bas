@@ -13,6 +13,7 @@ Type _MemoryBuffer
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
+	pOuterBuffer As Byte Ptr
 	Capacity As LongInt
 	Offset As LongInt
 	Language As HeapBSTR
@@ -38,6 +39,7 @@ Sub InitializeMemoryBuffer( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pBuffer = NULL
+	this->pOuterBuffer = NULL
 	this->Capacity = 0
 	this->Offset = 0
 	this->ZipMode = ZipModes.None
@@ -284,7 +286,14 @@ Function MemoryBufferGetSlice( _
 		Return E_OUTOFMEMORY
 	End If
 	
-	pBufferSlice->pSlice = @this->pBuffer[VirtualIndex]
+	Dim pBuffer As Byte Ptr = Any
+	If this->pOuterBuffer = NULL Then
+		pBuffer = this->pBuffer
+	Else
+		pBuffer = this->pOuterBuffer
+	End If
+	
+	pBufferSlice->pSlice = @pBuffer[VirtualIndex]
 	pBufferSlice->Length = this->Capacity - StartIndex - this->Offset
 	
 	If pBufferSlice->Length <= this->Capacity Then
@@ -340,6 +349,20 @@ Function MemoryBufferAllocBuffer( _
 	this->OffSet = Offset
 	
 	*ppBuffer = @this->pBuffer[Offset]
+	
+	Return S_OK
+	
+End Function
+
+Function MemoryBufferSetBuffer( _
+		ByVal this As MemoryBuffer Ptr, _
+		ByVal pBuffer As Any Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
+	this->pOuterBuffer = pBuffer
+	this->Capacity = Length 
+	this->OffSet = 0
 	
 	Return S_OK
 	
@@ -432,6 +455,14 @@ Function IMemoryBufferAllocBuffer( _
 	Return MemoryBufferAllocBuffer(ContainerOf(this, MemoryBuffer, lpVtbl), Length, ppBuffer)
 End Function
 
+Function IMemoryBufferSetBuffer( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal pBuffer As Any Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return MemoryBufferSetBuffer(ContainerOf(this, MemoryBuffer, lpVtbl), pBuffer, Length)
+End Function
+
 Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferQueryInterface, _
 	@IMemoryBufferAddRef, _
@@ -444,5 +475,6 @@ Dim GlobalMemoryBufferVirtualTable As Const IMemoryBufferVirtualTable = Type( _
 	@IMemoryBufferGetLength, _
 	@IMemoryBufferGetSlice, _
 	@IMemoryBufferSetContentType, _
-	@IMemoryBufferAllocBuffer _
+	@IMemoryBufferAllocBuffer, _
+	@IMemoryBufferSetBuffer _
 )

@@ -92,6 +92,12 @@ DEFINE_CLSID(CLSID_HTTPREADER, _
 	&h80eb706, &h1d70, &h428e, &h81, &h9e, &h4b, &hca, &h42, &h15, &h42, &h12 _
 )
 
+
+' {EE548635-A2D8-43E3-BCB5-FC8BA0A2982E}
+DEFINE_CLSID(CLSID_HTTPTRACEASYNCPROCESSOR, _
+	&hee548635, &ha2d8, &h43e3, &hbc, &hb5, &hfc, &h8b, &ha0, &ha2, &h98, &h2e _
+)
+
 ' {CA5DD19B-D8A6-467D-8919-CB419E0E8024}
 DEFINE_CLSID(CLSID_HTTPWRITER, _
 	&hca5dd19b, &hd8a6, &h467d, &h89, &h19, &hcb, &h41, &h9e, &he, &h80, &h24 _
@@ -240,6 +246,11 @@ DEFINE_IID(IID_IHttpAsyncProcessor, _
 ' {D596BBD2-86F2-4850-A807-34DA01953D61}
 DEFINE_IID(IID_IHttpGetAsyncProcessor, _
 	&hd596bbd2, &h86f2, &h4850, &ha8, &h7, &h34, &hda, &h1, &h95, &h3d, &h61 _
+)
+
+' {7FF2C598-DB91-4691-905D-174DF30D467B}
+DEFINE_IID(IID_IHttpTraceAsyncProcessor, _
+	&h7ff2c598, &hdb91, &h4691, &h90, &h5d, &h17, &h4d, &hf3, &hd, &h46, &h7b _
 )
 
 ' {7C6F76B6-989B-4995-B312-AAC3DEEC673D}

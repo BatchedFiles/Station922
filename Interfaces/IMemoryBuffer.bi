@@ -73,6 +73,12 @@ Type IMemoryBufferVirtualTable
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 	
+	SetBuffer As Function( _
+		ByVal this As IMemoryBuffer Ptr, _
+		ByVal pBuffer As Any Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
 End Type
 
 Type IMemoryBuffer_
@@ -91,5 +97,6 @@ End Type
 #define IMemoryBuffer_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IMemoryBuffer_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IMemoryBuffer_AllocBuffer(this, Length, ppBuffer) (this)->lpVtbl->AllocBuffer(this, Length, ppBuffer)
+#define IMemoryBuffer_SetBuffer(this, pBuffer, Length) (this)->lpVtbl->SetBuffer(this, pBuffer, Length)
 
 #endif

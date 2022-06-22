@@ -1,6 +1,4 @@
 #include once "HttpGetProcessor.bi"
-#include once "win\shlwapi.bi"
-#include once "win\mswsock.bi"
 #include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"

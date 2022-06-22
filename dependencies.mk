@@ -111,6 +111,15 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX_SERVICE).c: Classes$(PATH_S
 $(OBJ_DEBUG_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX_SERVICE).c:   Classes$(PATH_SEP)HttpReader.bas Classes$(PATH_SEP)HttpReader.bi Interfaces$(PATH_SEP)IHttpReader.bi Interfaces$(PATH_SEP)IAsyncResult.bi Interfaces$(PATH_SEP)IBaseStream.bi Interfaces$(PATH_SEP)IString.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Http.bi Classes$(PATH_SEP)HeapBSTR.bi Modules$(PATH_SEP)Logger.bi
 
 
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)HttpTraceProcessor.bas Classes$(PATH_SEP)HttpTraceProcessor.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)HttpTraceProcessor.bas Classes$(PATH_SEP)HttpTraceProcessor.bi
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX_SERVICE).c: Classes$(PATH_SEP)HttpTraceProcessor.bas Classes$(PATH_SEP)HttpTraceProcessor.bi
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX_SERVICE).c:   Classes$(PATH_SEP)HttpTraceProcessor.bas Classes$(PATH_SEP)HttpTraceProcessor.bi
+
+
 $(OBJ_RELEASE_DIR)$(PATH_SEP)HttpWriter$(FILE_SUFFIX_CONSOLE).c: Classes$(PATH_SEP)HttpWriter.bas Classes$(PATH_SEP)HttpWriter.bi Interfaces$(PATH_SEP)IHttpWriter.bi Interfaces$(PATH_SEP)IAsyncResult.bi Interfaces$(PATH_SEP)IBaseStream.bi Interfaces$(PATH_SEP)IBuffer.bi Modules$(PATH_SEP)Http.bi Interfaces$(PATH_SEP)IString.bi Modules$(PATH_SEP)Mime.bi Interfaces$(PATH_SEP)IServerResponse.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)HttpWriter$(FILE_SUFFIX_CONSOLE).c:   Classes$(PATH_SEP)HttpWriter.bas Classes$(PATH_SEP)HttpWriter.bi Interfaces$(PATH_SEP)IHttpWriter.bi Interfaces$(PATH_SEP)IAsyncResult.bi Interfaces$(PATH_SEP)IBaseStream.bi Interfaces$(PATH_SEP)IBuffer.bi Modules$(PATH_SEP)Http.bi Interfaces$(PATH_SEP)IString.bi Modules$(PATH_SEP)Mime.bi Interfaces$(PATH_SEP)IServerResponse.bi Classes$(PATH_SEP)ContainerOf.bi Modules$(PATH_SEP)Logger.bi
