@@ -297,21 +297,28 @@ Function HttpReaderEndReadLine( _
 			0, _
 			SizeOf(ClientRequestBuffer) _
 		)
-		Dim bytes As UByte Ptr = Any
-		SafeArrayAccessData(psa, @bytes)
-		CopyMemory(bytes, this->pClientBuffer, SizeOf(ClientRequestBuffer))
-		SafeArrayUnaccessData(psa)
 		
-		Dim vtArrayBytes As VARIANT = Any
-		vtArrayBytes.vt = VT_ARRAY Or VT_UI1
-		vtArrayBytes.parray = psa
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			NULL, _
-			@vtArrayBytes _
-		)
-		
-		SafeArrayDestroy(psa)
+		If psa <> NULL Then
+			
+			Dim bytes As UByte Ptr = Any
+			Dim hrAccessData As HRESULT = SafeArrayAccessData(psa, @bytes)
+			
+			If SUCCEEDED(hrAccessData) Then
+				CopyMemory(bytes, this->pClientBuffer, SizeOf(ClientRequestBuffer))
+				SafeArrayUnaccessData(psa)
+				
+				Dim vtArrayBytes As VARIANT = Any
+				vtArrayBytes.vt = VT_ARRAY Or VT_UI1
+				vtArrayBytes.parray = psa
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					NULL, _
+					@vtArrayBytes _
+				)
+			End If
+			
+			SafeArrayDestroy(psa)
+		End If
 	End Scope
 	#endif
 	
