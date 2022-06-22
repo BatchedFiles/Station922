@@ -255,7 +255,6 @@ Function StartExecuteTask( _
 		@pIResult _
 	)
 	If FAILED(hrBeginExecute) Then
-		IAsyncIoTask_Release(pTask)
 		
 		Dim vtSCode As VARIANT = Any
 		vtSCode.vt = VT_ERROR

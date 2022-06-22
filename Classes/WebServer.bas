@@ -148,7 +148,10 @@ Function ThreadPoolCallBack( _
 				End Scope
 				#endif
 				
-				StartExecuteTask(pNextTask)
+				Dim hrStart As HRESULT = StartExecuteTask(pNextTask)
+				If FAILED(hrStart) Then
+					IAsyncIoTask_Release(pNextTask)
+				End If
 				
 			Case S_FALSE
 				#if __FB_DEBUG__
