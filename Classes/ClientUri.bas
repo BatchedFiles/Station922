@@ -492,46 +492,6 @@ Function ClientUriUriFromString( _
 		End If
 	Else
 		Return CLIENTURI_E_PATHNOTFOUND
-		/'
-		Dim pSolidusChar As WString Ptr = StrChrW( _
-			pFirstChar, _
-			Characters.Solidus _
-		)
-		If pSolidusChar = NULL Then
-			Return STATION922URI_E_PATHNOTFOUND
-		Else
-			PathLength = pQuestionMark - pFirstChar
-			this->Query = HeapSysAllocString( _
-				this->pIMemoryAllocator, _
-				pQuestionMark + 1 _
-			)
-			Scope
-				pScheme = NULL
-				SchemeLength = 0
-				
-				pUserName = NULL
-				UserNameLength = 0
-				
-				pPassword = NULL
-				PasswordLength = 0
-				
-				pHost = NULL
-				HostLength = 0
-				
-				pPort = NULL
-				PortLength = 0
-				
-				pPath = NULL
-				PathLength = 0
-				
-				pQuery = NULL
-				QueryLength = 0
-				
-				pFragment = NULL
-				FragmentLength = 0
-			End Scope
-		End If
-		'/
 	End If
 	
 	Dim hrContainsBadChar As HRESULT = ContainsBadCharSequence( _
@@ -545,69 +505,97 @@ Function ClientUriUriFromString( _
 	HeapSysAddRefString(bstrUri)
 	this->Uri = bstrUri
 	
-	If SchemeLength <> 0 Then
-		this->Scheme = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pScheme, _
-			SchemeLength _
-		)
-	End If
+	Scope
+		If SchemeLength <> 0 Then
+			this->Scheme = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pScheme, _
+				SchemeLength _
+			)
+			If this->Scheme = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If UserNameLength <> 0 Then
+			this->UserName = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pUserName, _
+				UserNameLength _
+			)
+			If this->UserName = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If PasswordLength <> 0 Then
+			this->Password = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pPassword, _
+				PasswordLength _
+			)
+			If this->Password = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If HostLength <> 0 Then
+			this->Host = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pHost, _
+				HostLength _
+			)
+			If this->Host = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If PortLength <> 0 Then
+			this->Port = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pPort, _
+				PortLength _
+			)
+			If this->Port = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+	End Scope
 	
-	If UserNameLength <> 0 Then
-		this->UserName = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pUserName, _
-			UserNameLength _
-		)
-	End If
-	
-	If PasswordLength <> 0 Then
-		this->Password = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pPassword, _
-			PasswordLength _
-		)
-	End If
-	
-	If HostLength <> 0 Then
-		this->Host = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pHost, _
-			HostLength _
-		)
-	End If
-	
-	If PortLength <> 0 Then
-		this->Port = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pPort, _
-			PortLength _
-		)
-	End If
-	
-	If PathLength <> 0 Then
-		this->Path = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pPath, _
-			PathLength _
-		)
-	End If
-	
-	If QueryLength <> 0 Then
-		this->Query = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pQuery, _
-			QueryLength _
-		)
-	End If
-	
-	If FragmentLength <> 0 Then
-		this->Fragment = CreateHeapStringLen( _
-			this->pIMemoryAllocator, _
-			pFragment, _
-			FragmentLength _
-		)
-	End If
+	Scope
+		If PathLength <> 0 Then
+			this->Path = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pPath, _
+				PathLength _
+			)
+			If this->Path = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If QueryLength <> 0 Then
+			this->Query = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pQuery, _
+				QueryLength _
+			)
+			If this->Query = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+		
+		If FragmentLength <> 0 Then
+			this->Fragment = CreateHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pFragment, _
+				FragmentLength _
+			)
+			If this->Fragment = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End If
+	End Scope
 	
 	Return S_OK
 	
