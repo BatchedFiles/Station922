@@ -37,7 +37,7 @@ Sub InitializeTcpListener( _
 		)
 	#endif
 	this->lpVtbl = @GlobalTcpListenerVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->ListenSocket = INVALID_SOCKET
@@ -50,7 +50,7 @@ Sub UnInitializeTcpListener( _
 	
 End Sub
 
-Function CreateTcpListener( _
+Function CreatePermanentTcpListener( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As TcpListener Ptr
 	
@@ -162,8 +162,6 @@ Function TcpListenerAddRef( _
 		ByVal this As TcpListener Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter += 1
-	
 	Return 1
 	
 End Function
@@ -171,14 +169,6 @@ End Function
 Function TcpListenerRelease( _
 		ByVal this As TcpListener Ptr _
 	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyTcpListener(this)
 	
 	Return 0
 	

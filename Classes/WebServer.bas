@@ -196,30 +196,20 @@ Function CreateAcceptConnectionTask( _
 		ByVal ppTask As IAcceptConnectionAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
-	
-	If pIClientMemoryAllocator = NULL Then
-		*ppTask = NULL
-		Return E_OUTOFMEMORY
-	End If
-	
 	Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreateInstance( _
-		CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
+	Dim hrCreateTask As HRESULT = CreatePermanentInstance( _
+		this->pIMemoryAllocator, _
 		@CLSID_ACCEPTCONNECTIONASYNCTASK, _
 		@IID_IAcceptConnectionAsyncIoTask, _
 		@pTask _
 	)
-	
-	IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-	
 	If FAILED(hrCreateTask) Then
 		Dim vtSCode As VARIANT = Any
 		vtSCode.vt = VT_ERROR
 		vtSCode.scode = hrCreateTask
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			WStr(!"IAcceptConnectionAsyncIoTask Create Error\t"), _
 			@vtSCode _
 		)
 		*ppTask = NULL
@@ -552,9 +542,9 @@ Function WebServerRun( _
 		Return hrPool
 	End If
 	
-	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
-	
 	For i As Integer = 0 To this->SocketListLength - 1
+		
+		SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
 		
 		Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
 		Dim hrCreate As HRESULT = CreateAcceptConnectionTask( _
@@ -576,8 +566,6 @@ Function WebServerRun( _
 		If FAILED(hrBeginExecute) Then
 			Return hrBeginExecute
 		End If
-		
-		SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
 		
 		' Сейчас мы не уменьшаем счётчик ссылок на задачу
 		' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute

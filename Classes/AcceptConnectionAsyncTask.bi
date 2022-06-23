@@ -11,7 +11,7 @@ Type AcceptConnectionAsyncTask As _AcceptConnectionAsyncTask
 
 Type LPAcceptConnectionAsyncTask As _AcceptConnectionAsyncTask Ptr
 
-Declare Function CreateAcceptConnectionAsyncTask( _
+Declare Function CreatePermanentAcceptConnectionAsyncTask( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As AcceptConnectionAsyncTask Ptr
 

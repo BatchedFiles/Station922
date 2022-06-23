@@ -124,7 +124,7 @@ Sub InitializeAcceptConnectionAsyncTask( _
 		)
 	#endif
 	this->lpVtbl = @GlobalAcceptConnectionAsyncIoTaskVirtualTable
-	this->ReferenceCounter = 0
+	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSitesWeakPtr = NULL
@@ -146,7 +146,7 @@ Sub UnInitializeAcceptConnectionAsyncTask( _
 	
 End Sub
 
-Function CreateAcceptConnectionAsyncTask( _
+Function CreatePermanentAcceptConnectionAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AcceptConnectionAsyncTask Ptr
 	
@@ -164,7 +164,7 @@ Function CreateAcceptConnectionAsyncTask( _
 	#endif
 	
 	Dim pListener As ITcpListener Ptr = Any
-	Dim hrCreateListener As HRESULT = CreateInstance( _
+	Dim hrCreateListener As HRESULT = CreatePermanentInstance( _
 		pIMemoryAllocator, _
 		@CLSID_TCPLISTENER, _
 		@IID_ITcpListener, _
@@ -280,8 +280,6 @@ Function AcceptConnectionAsyncTaskAddRef( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)As ULONG
 	
-	this->ReferenceCounter += 1
-	
 	Return 1
 	
 End Function
@@ -289,14 +287,6 @@ End Function
 Function AcceptConnectionAsyncTaskRelease( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyAcceptConnectionAsyncTask(this)
 	
 	Return 0
 	

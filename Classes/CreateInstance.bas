@@ -33,20 +33,6 @@ Function CreateInstance( _
 	
 	*ppv = NULL
 	
-	If IsEqualCLSID(@CLSID_ACCEPTCONNECTIONASYNCTASK, rclsid) Then
-		Dim pTask As AcceptConnectionAsyncTask Ptr = CreateAcceptConnectionAsyncTask(pIMemoryAllocator)
-		If pTask = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = AcceptConnectionAsyncTaskQueryInterface(pTask, riid, ppv)
-		If FAILED(hr) Then
-			DestroyAcceptConnectionAsyncTask(pTask)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_ARRAYSTRINGWRITER, rclsid) Then
 		Dim pWriter As ArrayStringWriter Ptr = CreateArrayStringWriter(pIMemoryAllocator)
 		If pWriter = NULL Then
@@ -215,20 +201,6 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_TCPLISTENER, rclsid) Then
-		Dim pListener As TcpListener Ptr = CreateTcpListener(pIMemoryAllocator)
-		If pListener = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = TcpListenerQueryInterface(pListener, riid, ppv)
-		If FAILED(hr) Then
-			DestroyTcpListener(pListener)
-		End If
-		
-		Return hr
-	End If
-	
 	If IsEqualCLSID(@CLSID_WEBSERVER, rclsid) Then
 		Dim pWebServer As WebServer Ptr = CreateWebServer(pIMemoryAllocator)
 		If pWebServer = NULL Then
@@ -298,6 +270,20 @@ Function CreatePermanentInstance( _
 	
 	*ppv = NULL
 	
+	If IsEqualCLSID(@CLSID_ACCEPTCONNECTIONASYNCTASK, rclsid) Then
+		Dim pTask As AcceptConnectionAsyncTask Ptr = CreatePermanentAcceptConnectionAsyncTask(pIMemoryAllocator)
+		If pTask = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = AcceptConnectionAsyncTaskQueryInterface(pTask, riid, ppv)
+		If FAILED(hr) Then
+			DestroyAcceptConnectionAsyncTask(pTask)
+		End If
+		
+		Return hr
+	End If
+	
 	If IsEqualCLSID(@CLSID_HTTPGETASYNCPROCESSOR, rclsid) Then
 		Dim pProcessor As HttpGetProcessor Ptr = CreatePermanentHttpGetProcessor(pIMemoryAllocator)
 		If pProcessor = NULL Then
@@ -335,6 +321,20 @@ Function CreatePermanentInstance( _
 		Dim hr As HRESULT = HttpTraceProcessorQueryInterface(pProcessor, riid, ppv)
 		If FAILED(hr) Then
 			DestroyHttpTraceProcessor(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_TCPLISTENER, rclsid) Then
+		Dim pListener As TcpListener Ptr = CreatePermanentTcpListener(pIMemoryAllocator)
+		If pListener = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = TcpListenerQueryInterface(pListener, riid, ppv)
+		If FAILED(hr) Then
+			DestroyTcpListener(pListener)
 		End If
 		
 		Return hr

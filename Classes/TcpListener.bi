@@ -11,7 +11,7 @@ Type TcpListener As _TcpListener
 
 Type LPTcpListener As _TcpListener Ptr
 
-Declare Function CreateTcpListener( _
+Declare Function CreatePermanentTcpListener( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As TcpListener Ptr
 
