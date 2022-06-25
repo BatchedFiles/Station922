@@ -47,11 +47,6 @@ DEFINE_CLSID(CLSID_ASYNCRESULT, _
 	&hBD54524E, &hFFA8, &h4182, &h81, &h7D, &h9D, &h10, &hF9, &h0A, &h2B, &h5B _
 )
 
-' {F103EB8A-22EC-4A4F-AB51-CBE7DE29B354}
-DEFINE_CLSID(CLSID_CLIENTCONTEXT, _
-	&hf103eb8a, &h22ec, &h4a4f, &hab, &h51, &hcb, &he7, &hde, &h29, &hb3, &h54 _
-)
-
 ' {FB96C7A7-1B31-4351-A300-C17F30D1AF3C}
 DEFINE_CLSID(CLSID_CLIENTREQUEST, _
 	&hfb96c7a7, &h1b31, &h4351, &ha3, &h0, &hc1, &h7f, &h30, &hd1, &haf, &h3c _
@@ -153,11 +148,6 @@ DEFINE_CLSID(CLSID_WEBSITECOLLECTION, _
 	&hea837873, &hf90, &h4dd6, &h83, &h8c, &h60, &h39, &h1f, &hcf, &h29, &h3e _
 )
 
-' {D1185FAE-8A30-4519-A532-5A37BEA6AD4D}
-DEFINE_CLSID(CLSID_WORKERTHREADCONTEXT, _
-	&hd1185fae, &h8a30, &h4519, &ha5, &h32, &h5a, &h37, &hbe, &ha6, &had, &h4d _
-)
-
 ' {BBA17F8D-AC89-4491-898A-72F3BBF80552}
 DEFINE_CLSID(CLSID_WRITEERRORASYNCTASK, _
 	&hbba17f8d, &hac89, &h4491, &h89, &h8a, &h72, &hf3, &hbb, &hf8, &h5, &h52 _
@@ -198,11 +188,6 @@ DEFINE_IID(IID_IBuffer, _
 	&hfac287de, &h4e2c, &h4f51, &h8e, &h7e, &hb0, &hb7, &h7e, &h2a, &he9, &h18 _
 )
 
-' {DBFDAAD7-BEB7-4551-A432-FD87DCA6E7CD}
-DEFINE_IID(IID_IClientContext, _
-	&hdbfdaad7, &hbeb7, &h4551, &ha4, &h32, &hfd, &h87, &hdc, &ha6, &he7, &hcd _
-)
-
 ' {E998CAB4-5559-409C-93BC-97AFDF6A3921}
 DEFINE_IID(IID_IClientRequest, _
 	&he998cab4, &h5559, &h409c, &h93, &hbc, &h97, &haf, &hdf, &h6a, &h39, &h21 _
@@ -221,11 +206,6 @@ DEFINE_IID(IID_IEnumWebSite, _
 ' {A44A1AB3-A0D5-42E6-A4FF-ADBAE8CE3682}
 DEFINE_IID(IID_IFileBuffer, _
 	&ha44a1ab3, &ha0d5, &h42e6, &ha4, &hff, &had, &hba, &he8, &hce, &h36, &h82 _
-)
-
-' {C409DE11-C44F-4EF8-8A4C-4CE38C61C8E3}
-DEFINE_IID(IID_IFileStream, _
-	&hc409de11, &hc44f, &h4ef8, &h8a, &h4c, &h4c, &he3, &h8c, &h61, &hc8, &he3 _
 )
 
 ' {6C7428A7-2E13-453C-90E9-534281710B85}
@@ -298,21 +278,6 @@ DEFINE_IID(IID_IServerResponse, _
 	&hc1bfb23d, &h79b3, &h4ae9, &hbe, &hf9, &h5b, &hf9, &hd3, &h7, &h3b, &h84 _
 )
 
-' {226A7229-6122-45C4-AFFB-C7DEB403A13A}
-DEFINE_IID(IID_IServerState, _
-	&h226a7229, &h6122, &h45c4, &haf, &hfb, &hc7, &hde, &hb4, &h3, &ha1, &h3a _
-)
-
-' {C34BFD65-8D8D-486A-97A3-85ADA013F83D}
-DEFINE_IID(IID_IStreamReader, _
-	&hc34bfd65, &h8d8d, &h486a, &h97, &ha3, &h85, &had, &ha0, &h13, &hf8, &h3d _
-)
-
-' {2B67DF5D-D44E-4D1E-87BE-9609B1E2E10A}
-DEFINE_IID(IID_IStreamWriter, _
-	&h2b67df5d, &hd44e, &h4d1e, &h87, &hbe, &h96, &h9, &hb1, &he2, &he1, &ha _
-)
-
 ' {D38929B0-17C1-47A2-A1AC-B07318B4C3C9}
 DEFINE_IID(IID_IString, _
 	&hd38929b0, &h17c1, &h47a2, &ha1, &hac, &hb0, &h73, &h18, &hb4, &hc3, &hc9 _
@@ -336,11 +301,6 @@ DEFINE_IID(IID_IWebSite, _
 ' {146ED9B9-B372-4F53-BC1A-AD31380633DA}
 DEFINE_IID(IID_IWebSiteCollection, _
 	&h146ed9b9, &hb372, &h4f53, &hbc, &h1a, &had, &h31, &h38, &h6, &h33, &hda _
-)
-
-' {263066C6-31B4-42EF-8982-6B58994E2D8F}
-DEFINE_IID(IID_IWorkerThreadContext, _
-	&h263066c6, &h31b4, &h42ef, &h89, &h82, &h6b, &h58, &h99, &h4e, &h2d, &h8f _
 )
 
 ' {6964B4FE-BDAE-4B3B-BDF8-6C467BF35BFA}
