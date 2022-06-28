@@ -198,7 +198,7 @@ Function HttpOptionsProcessorPrepare( _
 	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, TRACE")
 	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, TRACE")
 	
-	If lstrcmp(Path, "*") = 0 Then
+	If lstrcmp(Path, WStr("*")) = 0 Then
 		IServerResponse_AddKnownResponseHeaderWstrLen( _
 			pContext->pIResponse, _
 			HttpResponseHeaders.HeaderAllow, _

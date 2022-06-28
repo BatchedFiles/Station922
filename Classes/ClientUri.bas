@@ -122,8 +122,6 @@ Function ContainsBadCharSequence( _
 		ByVal Length As Integer _
 	)As HRESULT
 	
-	' TODO Звёздочка в пути допустима при методе OPTIONS
-	
 	If Length = 0 Then
 		Return E_FAIL
 	End If
@@ -491,7 +489,33 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 	Else
-		Return CLIENTURI_E_PATHNOTFOUND
+		If lstrcmp(pFirstChar, WStr("*")) = 0 Then
+			pScheme = NULL
+			SchemeLength = 0
+			
+			pUserName = NULL
+			UserNameLength = 0
+			
+			pPassword = NULL
+			PasswordLength = 0
+			
+			pHost = NULL
+			HostLength = 0
+			
+			pPort = NULL
+			PortLength = 0
+			
+			pPath = pFirstChar
+			PathLength = 1
+			
+			pQuery = NULL
+			QueryLength = 0
+			
+			pFragment = NULL
+			FragmentLength = 0
+		Else
+			Return CLIENTURI_E_PATHNOTFOUND
+		End If
 	End If
 	
 	Dim hrContainsBadChar As HRESULT = ContainsBadCharSequence( _
