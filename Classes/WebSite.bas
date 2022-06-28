@@ -1115,22 +1115,6 @@ Function WebSiteGetBuffer( _
 	
 End Function
 
-Function WebSiteNeedCgiProcessing( _
-		ByVal this As WebSite Ptr, _
-		ByVal path As HeapBSTR, _
-		ByVal pResult As Boolean Ptr _
-	)As HRESULT
-	
-	If StrStrIW(Path, WStr("/cgi-bin/")) = NULL Then
-		*pResult = False
-	Else
-		*pResult = True
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Function WebSiteNeedDllProcessing( _
 		ByVal this As WebSite Ptr, _
 		ByVal path As HeapBSTR, _
@@ -1197,6 +1181,22 @@ Function MutableWebSiteSetMovedUrl( _
 	)As HRESULT
 	
 	LET_HEAPSYSSTRING(this->pMovedUrl, pMovedUrl)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteNeedCgiProcessing( _
+		ByVal this As WebSite Ptr, _
+		ByVal path As HeapBSTR, _
+		ByVal pResult As Boolean Ptr _
+	)As HRESULT
+	
+	If StrStrIW(Path, WStr("/cgi-bin/")) = NULL Then
+		*pResult = False
+	Else
+		*pResult = True
+	End If
 	
 	Return S_OK
 	
@@ -1305,6 +1305,14 @@ Function IMutableWebSiteSetMovedUrl( _
 	Return MutableWebSiteSetMovedUrl(ContainerOf(this, WebSite, lpVtbl), pMovedUrl)
 End Function
 
+Function IMutableWebSiteNeedCgiProcessing( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Path As HeapBSTR, _
+		ByVal pResult As Boolean Ptr _
+	)As HRESULT
+	Return WebSiteNeedCgiProcessing(ContainerOf(this, WebSite, lpVtbl), Path, pResult)
+End Function
+
 Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteQueryInterface, _
 	@IMutableWebSiteAddRef, _
@@ -1319,6 +1327,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetSitePhysicalDirectory, _
 	@IMutableWebSiteSetVirtualPath, _
 	@IMutableWebSiteSetIsMoved, _
-	@IMutableWebSiteSetMovedUrl _
+	@IMutableWebSiteSetMovedUrl, _
+	@IMutableWebSiteNeedCgiProcessing _
 )
 

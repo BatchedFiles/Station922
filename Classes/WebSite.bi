@@ -68,18 +68,6 @@ Declare Function WebSiteGetBuffer( _
 	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT
 
-Declare Function WebSiteNeedCgiProcessing( _
-	ByVal this As WebSite Ptr, _
-	ByVal path As HeapBSTR, _
-	ByVal pResult As Boolean Ptr _
-)As HRESULT
-
-Declare Function WebSiteNeedDllProcessing( _
-	ByVal this As WebSite Ptr, _
-	ByVal path As HeapBSTR, _
-	ByVal pResult As Boolean Ptr _
-)As HRESULT
-
 Declare Function WebSiteSetHostName( _
 	ByVal this As WebSite Ptr, _
 	ByVal pHost As HeapBSTR _
@@ -103,6 +91,12 @@ Declare Function WebSiteSetIsMoved( _
 Declare Function WebSiteSetMovedUrl( _
 	ByVal this As WebSite Ptr, _
 	ByVal pMovedUrl As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteNeedCgiProcessing( _
+	ByVal this As WebSite Ptr, _
+	ByVal Path As HeapBSTR, _
+	ByVal pResult As Boolean Ptr _
 )As HRESULT
 
 #endif

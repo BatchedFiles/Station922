@@ -98,6 +98,12 @@ Type IWebSiteVirtualTable
 		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	
+	NeedCgiProcessing As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Path As HeapBSTR, _
+		ByVal pResult As Boolean Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IWebSite_
@@ -118,5 +124,6 @@ End Type
 #define IWebSite_SetVirtualPath(this, pVirtualPath) (this)->lpVtbl->SetVirtualPath(this, pVirtualPath)
 #define IWebSite_SetIsMoved(this, IsMoved) (this)->lpVtbl->SetIsMoved(this, IsMoved)
 #define IWebSite_SetMovedUrl(this, pMovedUrl) (this)->lpVtbl->SetMovedUrl(this, pMovedUrl)
+#define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif

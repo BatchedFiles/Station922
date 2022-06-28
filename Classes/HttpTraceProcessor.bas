@@ -175,7 +175,6 @@ Function HttpTraceProcessorPrepare( _
 		ByVal ppIBuffer As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	' Нужно буфер создать с данными для отправки
 	Dim pIBuffer As IMemoryBuffer Ptr = Any
 	Dim hrCreateBuffer As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _

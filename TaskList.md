@@ -68,7 +68,7 @@
 * [ ] LOCK
 * [ ] MKCOL
 * [ ] MOVE
-* [ ] OPTIONS
+* [x] OPTIONS
 * [ ] POST
 * [ ] PATCH
 * [ ] PROPFIND
