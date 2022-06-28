@@ -62,9 +62,9 @@
 
 * [ ] CONNECT
 * [ ] COPY
+* [ ] DELETE
 * [x] GET
 * [x] HEAD
-* [ ] DELETE
 * [ ] LOCK
 * [ ] MKCOL
 * [ ] MOVE

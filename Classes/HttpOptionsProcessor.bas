@@ -240,6 +240,7 @@ Function HttpOptionsProcessorPrepare( _
 	)
 	
 	IServerResponse_SetSendOnlyHeaders(pContext->pIResponse, True)
+	IServerResponse_SetStatusCode(pContext->pIResponse, HttpStatusCodes.NoContent)
 	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
