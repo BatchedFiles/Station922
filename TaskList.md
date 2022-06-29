@@ -58,24 +58,29 @@
 
 ## Методы
 
-Обработчики запросов — в свои отдельные классы:
+Стандартные запросы:
 
 * [ ] CONNECT
-* [ ] COPY
 * [ ] DELETE
 * [x] GET
 * [x] HEAD
-* [ ] LOCK
-* [ ] MKCOL
-* [ ] MOVE
 * [x] OPTIONS
 * [ ] POST
 * [ ] PATCH
-* [ ] PROPFIND
-* [ ] PROPPATCH
 * [ ] PUT
 * [x] TRACE
+
+WebDAV:
+
+* [ ] COPY
+* [ ] LOCK
+* [ ] MKCOL
+* [ ] MOVE
+* [ ] PROPFIND
+* [ ] PROPPATCH
 * [ ] UNLOCK
+
+https://webconcepts.info/concepts/http-method/
 
 
 ## Сделать
