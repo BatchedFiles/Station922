@@ -558,7 +558,7 @@ Function ServerResponseAllHeadersToZString( _
 		ServerResponseAddKnownResponseHeaderWstr( _
 			this, _
 			HttpResponseHeaders.HeaderServer, _
-			@WStr("Station922/0.9.0") _
+			@WStr("Station922/1.0.0") _
 		)
 	#endif
 	
