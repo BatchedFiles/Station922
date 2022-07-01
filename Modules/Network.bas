@@ -8,14 +8,19 @@ Function ResolveHostW Alias "ResolveHostW"( _
 	
 	Dim hints As ADDRINFOW
 	With hints
-		.ai_family = AF_UNSPEC ' AF_INET или AF_INET6
+		.ai_family = AF_UNSPEC ' AF_INET, AF_INET6
 		.ai_socktype = SOCK_STREAM
 		.ai_protocol = IPPROTO_TCP
 	End With
 	
 	*ppAddressList = NULL
 	
-	Dim resAddrInfo As INT_ = GetAddrInfoW(Host, Port, @hints, ppAddressList)
+	Dim resAddrInfo As INT_ = GetAddrInfoW( _
+		Host, _
+		Port, _
+		@hints, _
+		ppAddressList _
+	)
 	If resAddrInfo <> 0 Then
 		Return HRESULT_FROM_WIN32(resAddrInfo)
 	End If
@@ -33,7 +38,11 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	)As HRESULT
 	
 	Dim pAddressList As ADDRINFOW Ptr = NULL
-	Dim hr As HRESULT = ResolveHostW(LocalAddress, LocalPort, @pAddressList)
+	Dim hr As HRESULT = ResolveHostW( _
+		LocalAddress, _
+		LocalPort, _
+		@pAddressList _
+	)
 	If FAILED(hr) Then
 		*pSockets = 0
 		Return hr
