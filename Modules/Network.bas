@@ -15,14 +15,12 @@ Function ResolveHostW Alias "ResolveHostW"( _
 	
 	*ppAddressList = NULL
 	
-	If GetAddrInfoW(Host, Port, @hints, ppAddressList) = 0 Then
-		
-		Return S_OK
-		
+	Dim resAddrInfo As INT_ = GetAddrInfoW(Host, Port, @hints, ppAddressList)
+	If resAddrInfo <> 0 Then
+		Return HRESULT_FROM_WIN32(resAddrInfo)
 	End If
 	
-	Dim dwError As Long = WSAGetLastError()
-	Return HRESULT_FROM_WIN32(dwError)
+	Return S_OK
 	
 End Function
 
@@ -98,6 +96,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	End If
 	
 	*pSockets = SocketCount
+	
 	Return S_OK
 	
 End Function
@@ -123,13 +122,12 @@ Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 	End If
 	
 	For i As Integer = 0 To *pSockets - 1
-		If listen(pSocketList[i].ClientSocket, SOMAXCONN) <> 0 Then
+		
+		Dim resListen As Long = listen(pSocketList[i].ClientSocket, SOMAXCONN)
+		If resListen <> 0 Then
 			Dim dwError As Long = WSAGetLastError()
-			
 			closesocket(pSocketList[i].ClientSocket)
-			
 			Return HRESULT_FROM_WIN32(dwError)
-			
 		End If
 		
 	Next
