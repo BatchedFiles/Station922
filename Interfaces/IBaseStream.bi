@@ -3,20 +3,17 @@
 
 #include once "IAsyncResult.bi"
 
-' IBaseStream.Read:
-' S_OK, S_FALSE, E_FAIL
-
 ' IBaseStream.BeginRead:
 ' BASESTREAM_S_IO_PENDING, Any E_FAIL
 
 ' IBaseStream.EndRead:
-' S_OK, S_FALSE, BASESTREAM_S_IO_PENDING, E_FAIL
+' S_OK, S_FALSE, E_FAIL
 
 ' IBaseStream.BeginWrite:
 ' BASESTREAM_S_IO_PENDING, Any E_FAIL
 
 ' IBaseStream.EndWrite:
-' S_OK, S_FALSE, BASESTREAM_S_IO_PENDING, E_FAIL
+' S_OK, S_FALSE, E_FAIL
 
 Const BASESTREAM_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 

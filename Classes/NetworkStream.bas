@@ -402,7 +402,6 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 	
 End Function
 
-
 Function NetworkStreamEndRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _

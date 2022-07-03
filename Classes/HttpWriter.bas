@@ -436,20 +436,13 @@ Function HttpWriterEndWrite( _
 		this->BodySended = True
 	End If
 	
-	Select Case hrEndWrite
-		
-		Case S_OK
-			If this->BodySended Then
-				Return S_OK
-			End If
-			
-		Case S_FALSE
-			Return S_FALSE
-			
-		Case BASESTREAM_S_IO_PENDING
-			Return HTTPWRITER_S_IO_PENDING
-			
-	End Select
+	If hrEndWrite = S_FALSE Then
+		Return S_FALSE
+	End If
+	
+	If this->BodySended Then
+		Return S_OK
+	End If
 	
 	Return HTTPWRITER_S_IO_PENDING
 	

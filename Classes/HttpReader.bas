@@ -258,17 +258,11 @@ Function HttpReaderEndReadLine( _
 			Return hrRead
 		End If
 		
-		Select Case hrRead
-			
-			Case BASESTREAM_S_IO_PENDING
-				*ppLine = NULL
-				Return HTTPREADER_S_IO_PENDING
-				
-			Case S_FALSE
-				*ppLine = NULL
-				Return S_FALSE
-				
-		End Select
+		If hrRead = S_FALSE Then
+			*ppLine = NULL
+			Return S_FALSE
+		End If
+		
 	End Scope
 	
 	Dim cbNewLength As Integer = this->pClientBuffer->cbLength + cbReceived
