@@ -1,3 +1,4 @@
+#include once "WindowsServiceMain.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
 #include once "WebServer.bi"
@@ -194,7 +195,7 @@ Sub SvcMain( _
 	
 End Sub
 
-Function wMain()As Long
+Function WindowsServiceMain()As Long
 	
 	Dim DispatchTable As SERVICE_TABLE_ENTRYW_ZERO = Type( _
 		Type<SERVICE_TABLE_ENTRY>(@ServiceName, @SvcMain), _

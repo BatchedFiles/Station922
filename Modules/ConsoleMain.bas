@@ -1,3 +1,4 @@
+#include once "ConsoleMain.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
 #include once "WebServer.bi"
@@ -7,7 +8,7 @@ Type ServerContext
 	hStopEvent As HANDLE
 End Type
 
-Function RunnableStatusHandler( _
+Function ConsoleRunnableStatusHandler( _
 		ByVal Context As Any Ptr, _
 		ByVal Status As HRESULT _
 	)As HRESULT
@@ -46,7 +47,7 @@ Function RunnableStatusHandler( _
 	
 End Function
 
-Function wMain()As Long
+Function ConsoleMain()As Long
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim hrGetAllocator As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)
@@ -85,7 +86,7 @@ Function wMain()As Long
 	IRunnable_RegisterStatusHandler( _
 		pIWebServer, _
 		@Context, _
-		@RunnableStatusHandler _
+		@ConsoleRunnableStatusHandler _
 	)
 	
 	Dim hrRun As HRESULT = IRunnable_Run(pIWebServer)

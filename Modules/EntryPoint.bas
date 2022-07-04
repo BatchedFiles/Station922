@@ -1,16 +1,19 @@
 #include once "windows.bi"
+#include once "win\shellapi.bi"
 #include once "win\winsock2.bi"
 #include once "win\mswsock.bi"
+#include once "ConsoleMain.bi"
+#include once "WindowsServiceMain.bi"
 
 Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
 Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
 
+Const ServiceParam = WStr("/service")
+
 Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
 Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
 Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
-
-Declare Function wMain()As Long
 
 Function LoadWsaFunctions()As Boolean
 	
@@ -111,7 +114,21 @@ Function main Alias "main"()As Long
 		Return 1
 	End If
 	
-	Dim RetCode As Long = wMain()
+	Dim pLine As LPWSTR = GetCommandLineW()
+	Dim Args As Long = Any
+	Dim ppLines As LPWSTR Ptr = CommandLineToArgvW( _
+		pLine, _
+		@Args _
+	)
+	
+	Dim RetCode As Long = Any
+	If lstrcmpi(ppLines[1], ServiceParam) = 0 Then
+		RetCode = WindowsServiceMain()
+	Else
+		RetCode = ConsoleMain()
+	End If
+	
+	LocalFree(ppLines)
 	
 	WSACleanup()
 	
