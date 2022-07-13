@@ -20,6 +20,8 @@ Type _TcpListener
 	ListenSocket As SOCKET
 	ClientSocket As SOCKET
 	Buffer As ClientRequestBuffer Ptr
+	ProtInfo As WSAPROTOCOL_INFO
+	ProtLength As Long
 End Type
 
 Sub InitializeTcpListener( _
@@ -180,10 +182,10 @@ Function TcpListenerBeginAccept( _
 	)As HRESULT
 	
 	this->ClientSocket = WSASocket( _
-		AF_UNSPEC, _
-		SOCK_STREAM, _
-		IPPROTO_TCP, _
-		NULL, _
+		0, _ /' AF_INET6 '/
+		0, _ /' SOCK_STREAM '/
+		0, _ /' IPPROTO_TCP '/
+		@this->ProtInfo, _
 		0, _
 		WSA_FLAG_OVERLAPPED _
 	)
@@ -300,6 +302,19 @@ Function TcpListenerSetListenSocket( _
 		ByVal this As TcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
+	
+	this->ProtLength = SizeOf(WSAPROTOCOL_INFO)
+	Dim resOptions As Long = getsockopt( _
+		ListenSocket, _
+		SOL_SOCKET, _
+		SO_PROTOCOL_INFO, _
+		CPtr(ZString Ptr, @this->ProtInfo), _
+		@this->ProtLength _
+	)
+	If resOptions = SOCKET_ERROR Then
+		Dim dwError As Long = WSAGetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	this->ListenSocket = ListenSocket
 	
