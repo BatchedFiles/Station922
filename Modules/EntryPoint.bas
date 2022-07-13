@@ -122,8 +122,12 @@ Function main Alias "main"()As Long
 	)
 	
 	Dim RetCode As Long = Any
-	If lstrcmpi(ppLines[1], ServiceParam) = 0 Then
-		RetCode = WindowsServiceMain()
+	If Args > 1 Then
+		If lstrcmpi(ppLines[1], ServiceParam) = 0 Then
+			RetCode = WindowsServiceMain()
+		Else
+			RetCode = ConsoleMain()
+		End If
 	Else
 		RetCode = ConsoleMain()
 	End If
