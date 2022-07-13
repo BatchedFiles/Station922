@@ -20,7 +20,7 @@ Type _TcpListener
 	ListenSocket As SOCKET
 	ClientSocket As SOCKET
 	Buffer As ClientRequestBuffer Ptr
-	ProtInfo As WSAPROTOCOL_INFO
+	ProtInfo As WSAPROTOCOL_INFOW
 	ProtLength As Long
 End Type
 
@@ -181,7 +181,7 @@ Function TcpListenerBeginAccept( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	this->ClientSocket = WSASocket( _
+	this->ClientSocket = WSASocketW( _
 		0, _ /' AF_INET6 '/
 		0, _ /' SOCK_STREAM '/
 		0, _ /' IPPROTO_TCP '/
@@ -303,7 +303,7 @@ Function TcpListenerSetListenSocket( _
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
 	
-	this->ProtLength = SizeOf(WSAPROTOCOL_INFO)
+	this->ProtLength = SizeOf(WSAPROTOCOL_INFOW)
 	Dim resOptions As Long = getsockopt( _
 		ListenSocket, _
 		SOL_SOCKET, _

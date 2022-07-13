@@ -489,7 +489,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 	Else
-		If lstrcmp(pFirstChar, WStr("*")) = 0 Then
+		If lstrcmpW(pFirstChar, WStr("*")) = 0 Then
 			pScheme = NULL
 			SchemeLength = 0
 			

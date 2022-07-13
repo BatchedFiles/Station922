@@ -59,11 +59,11 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			Exit Do
 		End If
 		
-		Dim ClientSocket As SOCKET = WSASocket( _
+		Dim ClientSocket As SOCKET = WSASocketW( _
 			pAddressNode->ai_family, _
 			pAddressNode->ai_socktype, _
 			pAddressNode->ai_protocol, _
-			CPtr(WSAPROTOCOL_INFO Ptr, NULL), _
+			CPtr(WSAPROTOCOL_INFOW Ptr, NULL), _
 			0, _
 			WSA_FLAG_OVERLAPPED _
 		)

@@ -231,7 +231,7 @@ Function GetFileMappingHandle( _
 	Select Case fAccess
 		
 		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-			FileMapHandle = CreateFileMapping( _
+			FileMapHandle = CreateFileMappingW( _
 				FileHandle, _
 				NULL, _
 				PAGE_READWRITE, _
@@ -246,7 +246,7 @@ Function GetFileMappingHandle( _
 			End If
 			
 		Case FileAccess.ReadAccess
-			FileMapHandle = CreateFileMapping( _
+			FileMapHandle = CreateFileMappingW( _
 				FileHandle, _
 				NULL, _
 				PAGE_READONLY, _

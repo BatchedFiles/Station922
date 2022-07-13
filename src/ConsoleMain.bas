@@ -72,7 +72,7 @@ Function ConsoleMain()As Long
 	Dim Context As ServerContext = Any
 	Context.pIWebServer = pIWebServer
 	
-	Context.hStopEvent = CreateEvent( _
+	Context.hStopEvent = CreateEventW( _
 		NULL, _
 		TRUE, _
 		FALSE, _

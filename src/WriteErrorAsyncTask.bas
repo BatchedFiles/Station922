@@ -1155,7 +1155,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim HttpMethod As HeapBSTR = Any
 		IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 		
-		If lstrcmp(HttpMethod, WStr("HEAD")) = 0 Then
+		If lstrcmpW(HttpMethod, WStr("HEAD")) = 0 Then
 			IServerResponse_SetSendOnlyHeaders(this->pIResponse, True)
 		End If
 		

@@ -17,7 +17,7 @@ Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
 Function LoadWsaFunctions()As Boolean
 	
-	Dim ListenSocket As SOCKET = WSASocket( _
+	Dim ListenSocket As SOCKET = WSASocketW( _
 		AF_INET6, _
 		SOCK_STREAM, _
 		IPPROTO_TCP, _
@@ -97,21 +97,27 @@ End Function
 
 #ifdef WITHOUT_RUNTIME
 Function EntryPoint()As Integer
-#else
-Function main Alias "main"()As Long
 #endif
 	
 	Scope
 		Dim wsa As WSAData = Any
 		Dim resWsaStartup As Long = WSAStartup(MAKEWORD(2, 2), @wsa)
 		If resWsaStartup <> NO_ERROR Then
+#ifdef WITHOUT_RUNTIME
 			Return 1
+#else
+			End(1)
+#endif
 		End If
 	End Scope
 	
 	Dim resLoadWsa As Boolean = LoadWsaFunctions()
 	If resLoadWsa = False Then
+#ifdef WITHOUT_RUNTIME
 		Return 1
+#else
+		End(1)
+#endif
 	End If
 	
 	Dim pLine As LPWSTR = GetCommandLineW()
@@ -123,7 +129,7 @@ Function main Alias "main"()As Long
 	
 	Dim RetCode As Long = Any
 	If Args > 1 Then
-		If lstrcmpi(ppLines[1], ServiceParam) = 0 Then
+		If lstrcmpiW(ppLines[1], ServiceParam) = 0 Then
 			RetCode = WindowsServiceMain()
 		Else
 			RetCode = ConsoleMain()
@@ -136,10 +142,12 @@ Function main Alias "main"()As Long
 	
 	WSACleanup()
 	
+#ifdef WITHOUT_RUNTIME
 	Return RetCode
+#else
+	End(RetCode)
+#endif
 	
 #ifdef WITHOUT_RUNTIME
-End Function
-#else
 End Function
 #endif

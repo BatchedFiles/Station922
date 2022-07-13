@@ -4,7 +4,7 @@
 #include once "WebServer.bi"
 
 Const MaxWaitHint As DWORD = 3000
-Const ServiceName = __TEXT("Station922")
+Const ServiceName = WStr("Station922")
 
 Type ServiceContext
 	hStopEvent As HANDLE
@@ -15,8 +15,8 @@ Type ServiceContext
 End Type
 
 Type SERVICE_TABLE_ENTRYW_ZERO
-	Dim Table As SERVICE_TABLE_ENTRY
-	Dim Zero As SERVICE_TABLE_ENTRY
+	Dim Table As SERVICE_TABLE_ENTRYW
+	Dim Zero As SERVICE_TABLE_ENTRYW
 End Type
 
 Function RunnableStatusHandler( _
@@ -119,7 +119,7 @@ Sub SvcMain( _
 	Dim Context As ServiceContext = Any
 	ZeroMemory(@Context, SizeOf(ServiceContext))
 	
-	Context.ServiceStatusHandle = RegisterServiceCtrlHandlerEx( _
+	Context.ServiceStatusHandle = RegisterServiceCtrlHandlerExW( _
 		@ServiceName, _
 		@SvcCtrlHandlerEx, _
 		@Context _
@@ -158,7 +158,7 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	Context.hStopEvent = CreateEvent( _
+	Context.hStopEvent = CreateEventW( _
 		NULL, _
 		TRUE, _
 		FALSE, _
@@ -198,12 +198,12 @@ End Sub
 Function WindowsServiceMain()As Long
 	
 	Dim DispatchTable As SERVICE_TABLE_ENTRYW_ZERO = Type( _
-		Type<SERVICE_TABLE_ENTRY>(@ServiceName, @SvcMain), _
-		Type<SERVICE_TABLE_ENTRY>(NULL, NULL) _
+		Type<SERVICE_TABLE_ENTRYW>(@ServiceName, @SvcMain), _
+		Type<SERVICE_TABLE_ENTRYW>(NULL, NULL) _
 	)
 	
-	Dim resStartService As BOOL = StartServiceCtrlDispatcher( _
-		CPtr(SERVICE_TABLE_ENTRY Ptr, _
+	Dim resStartService As BOOL = StartServiceCtrlDispatcherW( _
+		CPtr(SERVICE_TABLE_ENTRYW Ptr, _
 		@DispatchTable) _
 	)
 	If resStartService = 0 Then
