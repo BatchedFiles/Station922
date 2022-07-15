@@ -178,9 +178,9 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)WindowsServiceMain$(FILE_SUFFIX_CONSOLE).c: src$(PA
 $(OBJ_DEBUG_DIR)$(PATH_SEP)WindowsServiceMain$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)WindowsServiceMain.bas src$(PATH_SEP)CreateInstance.bi src$(PATH_SEP)Logger.bi src$(PATH_SEP)WebServer.bi src$(PATH_SEP)IRunnable.bi
 
 
-$(OBJ_RELEASE_DIR)$(PATH_SEP)EntryPoint$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)EntryPoint.bas
+$(OBJ_RELEASE_DIR)$(PATH_SEP)Station922$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)Station922.bas
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)EntryPoint$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)EntryPoint.bas
+$(OBJ_DEBUG_DIR)$(PATH_SEP)Station922$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)Station922.bas
 
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX_CONSOLE).obj: src$(PATH_SEP)Resources.RC src$(PATH_SEP)Resources.RH src$(PATH_SEP)app.exe.manifest
