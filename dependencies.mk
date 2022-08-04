@@ -38,6 +38,11 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)FileBuffer$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)F
 $(OBJ_DEBUG_DIR)$(PATH_SEP)FileBuffer$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)FileBuffer.bas src$(PATH_SEP)FileBuffer.bi src$(PATH_SEP)IFileBuffer.bi src$(PATH_SEP)IBuffer.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Mime.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)Logger.bi src$(PATH_SEP)WebUtils.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IServerResponse.bi src$(PATH_SEP)IWebSiteCollection.bi src$(PATH_SEP)IEnumWebSite.bi src$(PATH_SEP)IWebSite.bi
 
 
+$(OBJ_RELEASE_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)Guids.bas
+
+$(OBJ_DEBUG_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)Guids.bas
+
+
 $(OBJ_RELEASE_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)HeapBSTR.bas src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Logger.bi
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX_CONSOLE).c:   src$(PATH_SEP)HeapBSTR.bas src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Logger.bi
