@@ -176,9 +176,7 @@ $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX_CONSOLE).c: src$(PATH_SEP)%.bas
 	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.c $@
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX_CONSOLE).obj: src$(PATH_SEP)%.RC
-	$(GORC) $(GORCFLAGS) /o /fo src$(PATH_SEP)$*.obj $<
-	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.obj $@
+	$(GORC) $(GORCFLAGS) /o /fo $@ $<
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX_CONSOLE).obj:
-	$(GORC) $(GORCFLAGS) /o /fo src$(PATH_SEP)$*.obj $<
-	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.obj $@
+	$(GORC) $(GORCFLAGS) /o /fo $@ $<
