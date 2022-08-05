@@ -75,7 +75,7 @@ LD ?= ld.exe
 # OBJECTS
 # OBJECTS_DIR
 
-LDFLAGS+=-subsystem console $(ENTRY_POINT_PARAM) --stack 1048576,1048576 --no-seh --nxcompat -L "$(LIB_DIR)"
+LDFLAGS+=-subsystem console -T $(LD_SCRIPT) $(ENTRY_POINT_PARAM) --stack 1048576,1048576 --no-seh --nxcompat -L $(LIB_DIR)
 
 OUTPUT_FILE_NAME_CONSOLE=Station922$(FILE_SUFFIX).exe
 
