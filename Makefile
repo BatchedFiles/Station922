@@ -74,12 +74,15 @@ GORCFLAGS_DEBUG=/d DEBUG
 
 LD ?= ld.exe
 
-LDFLAGS+=-subsystem console -T $(LD_SCRIPT) $(ENTRY_POINT_PARAM) --stack 1048576,1048576 --no-seh --nxcompat -L $(LIB_DIR)
+LDFLAGS+=--major-image-version 1 --minor-image-version 0 -subsystem console --stack 1048576,1048576 --no-seh --nxcompat $(ENTRY_POINT_PARAM) -L "$(LIB_DIR)"
+LDFLAGS+=-T "$(LIB_DIR)$(PATH_SEP)fbextra.x"
+LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luuid -lws2_32
+LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
 
 
 all: release debug
 
-release: CFLAGS+=$(CFLAGS_RELEASE)
+release: CFLAGS+=$(CFLAGS_RELEASE) -fstrict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fomit-frame-pointer -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 release: ASFLAGS+=--strip-local-absolute
 release: LDFLAGS+=-s --gc-sections -L "$(OBJ_RELEASE_DIR)"
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME_CONSOLE)
@@ -98,7 +101,6 @@ debug: $(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME_CONSOLE)
 .PRECIOUS: $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(C_EXT)
 
 clean:
-	echo $(DELETE_COMMAND) %C_FILES% %ASM_FILES% %O_FILES% %OBJ_FILES% %EXE_FILES%
 	$(DELETE_COMMAND) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)*.$(C_EXT)
 	$(DELETE_COMMAND) $(OBJ_DEBUG_DIR_MOVE)$(MOVE_PATH_SEP)*.$(C_EXT)
 	$(DELETE_COMMAND) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)*.$(ASM_EXT)
