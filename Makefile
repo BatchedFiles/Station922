@@ -54,21 +54,26 @@ GORCFLAGS+=
 endif
 
 FBC ?= fbc.exe
-FBCFLAGS+=-i src -r -s console -O 0
+EMITTER ?= gcc
+FBCFLAGS+=-gen $(EMITTER) -i src -r -s console -O 0
 FBCFLAGS_DEBUG+=-g
 
 CC ?= gcc.exe
+C_EXT ?= c
 EXTRA_CFLAGS+=-S
 CFLAGS+=-Wall -Werror -Wno-main -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Werror-implicit-function-declaration
 CFLAGS_DEBUG+=-g
 
 AS ?= as.exe
+ASM_EXT ?= asm
+O_EXT ?= o
 ASFLAGS+=
 ASFLAGS_DEBUG+=
 
 AR ?= ar.exe
 
 GORC ?= GoRC.exe
+OBJ_EXT ?= obj
 GORCFLAGS+=/ni /o /d FROM_MAKEFILE
 GORCFLAGS_DEBUG=/d DEBUG
 
