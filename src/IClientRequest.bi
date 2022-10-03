@@ -8,8 +8,6 @@
 ' IClientRequest.Parse:
 ' S_OK, E_FAIL, CLIENTREQUEST_E_...
 
-Const CLIENTREQUEST_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
-
 Enum ByteRangeIsSet
 	NotSet
 	FirstBytePositionIsSet
