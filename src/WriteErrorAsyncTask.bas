@@ -76,6 +76,7 @@ Type _WriteErrorAsyncTask
 	pIResponse As IServerResponse Ptr
 	pIBuffer As IMemoryBuffer Ptr
 	pIHttpWriter As IHttpWriter Ptr
+	ComplectionPort As HANDLE
 	BodyText As WString Ptr
 	HttpError As ResponseErrorCode
 	hrCode As HRESULT
@@ -639,6 +640,7 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->pIBuffer = pIBuffer
 	this->pIHttpWriter = pIHttpWriter
 	IHttpWriter_SetBuffer(pIHttpWriter, CPtr(IBuffer Ptr, pIBuffer))
+	this->ComplectionPort = NULL
 	this->HttpError = ResponseErrorCode.InternalServerError
 	this->hrCode = E_UNEXPECTED
 	
@@ -858,6 +860,41 @@ Function WriteErrorAsyncTaskRelease( _
 	
 End Function
 
+Function WriteErrorAsyncTaskBindToThreadPool( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	
+	Dim ClientSocket As SOCKET = Any
+	
+	Scope
+		Dim Stream As INetworkStream Ptr = Any
+		IBaseStream_QueryInterface( _
+			this->pIStream, _
+			@IID_INetworkStream, _
+			@Stream _
+		)
+		INetworkStream_GetSocket(Stream, @ClientSocket)
+		INetworkStream_Release(Stream)
+	End Scope
+	
+	IThreadPool_GetIOCompletionPort(pPool, @this->ComplectionPort)
+	
+	Dim NewPort As HANDLE = CreateIoCompletionPort( _
+		Cast(HANDLE, ClientSocket), _
+		this->ComplectionPort, _
+		Cast(ULONG_PTR, this), _
+		0 _
+	)
+	If NewPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Function WriteErrorAsyncTaskBeginExecute( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -947,25 +984,6 @@ Function WriteErrorAsyncTaskEndExecute( _
 			Return S_OK
 			
 	End Select
-	
-End Function
-
-Function WriteErrorAsyncTaskGetFileHandle( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As HRESULT
-	
-	Dim ns As INetworkStream Ptr = Any
-	IBaseStream_QueryInterface(this->pIStream, @IID_INetworkStream, @ns)
-	
-	Dim s As SOCKET = Any
-	INetworkStream_GetSocket(ns, @s)
-	
-	*pFileHandle = Cast(HANDLE, s)
-	
-	INetworkStream_Release(ns)
-	
-	Return S_OK
 	
 End Function
 
@@ -1321,6 +1339,13 @@ Function IWriteErrorAsyncTaskRelease( _
 	Return WriteErrorAsyncTaskRelease(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
+Function IWriteErrorAsyncTaskBindToThreadPool( _
+		ByVal this As IWriteErrorAsyncIoTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As ULONG
+	Return WriteErrorAsyncTaskBindToThreadPool(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pPool)
+End Function
+
 Function IWriteErrorAsyncTaskBeginExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -1335,13 +1360,6 @@ Function IWriteErrorAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
 	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
-End Function
-
-Function IWriteErrorAsyncTaskGetFileHandle( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As ULONG
-	Return WriteErrorAsyncTaskGetFileHandle(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pFileHandle)
 End Function
 
 Function IWriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _
@@ -1432,9 +1450,9 @@ Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtu
 	@IWriteErrorAsyncTaskQueryInterface, _
 	@IWriteErrorAsyncTaskAddRef, _
 	@IWriteErrorAsyncTaskRelease, _
+	@IWriteErrorAsyncTaskBindToThreadPool, _
 	@IWriteErrorAsyncTaskBeginExecute, _
 	@IWriteErrorAsyncTaskEndExecute, _
-	@IWriteErrorAsyncTaskGetFileHandle, _
 	@IWriteErrorAsyncTaskGetWebSiteCollectionWeakPtr, _
 	@IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IWriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr, _

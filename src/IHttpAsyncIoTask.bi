@@ -41,6 +41,11 @@ Type IHttpAsyncIoTaskVirtualTable
 		ByVal this As IHttpAsyncIoTask Ptr _
 	)As ULONG
 	
+	BindToThreadPool As Function( _
+		ByVal this As IHttpAsyncIoTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	
 	BeginExecute As Function( _
 		ByVal this As IHttpAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -51,11 +56,6 @@ Type IHttpAsyncIoTaskVirtualTable
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	GetFileHandle As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
 	
 	GetWebSiteCollectionWeakPtr As Function( _
@@ -107,9 +107,9 @@ End Type
 #define IHttpAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IHttpAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
+#define IHttpAsyncIoTask_BindToThreadPool(this, pPool) (this)->lpVtbl->BindToThreadPool(this, pPool)
 #define IHttpAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IHttpAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
-#define IHttpAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 #define IHttpAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
 #define IHttpAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
 #define IHttpAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)

@@ -33,6 +33,11 @@ Declare Function WriteResponseAsyncTaskRelease( _
 	ByVal this As WriteResponseAsyncTask Ptr _
 )As ULONG
 
+Declare Function WriteResponseAsyncTaskBindToThreadPool( _
+	ByVal this As WriteResponseAsyncTask Ptr, _
+	ByVal pPool As IThreadPool Ptr _
+)As HRESULT
+
 Declare Function WriteResponseAsyncTaskBeginExecute( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -43,11 +48,6 @@ Declare Function WriteResponseAsyncTaskEndExecute( _
 	ByVal pIResult As IAsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskGetFileHandle( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _

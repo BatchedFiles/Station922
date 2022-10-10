@@ -1,7 +1,8 @@
 #ifndef ITHREADPOOL_BI
 #define ITHREADPOOL_BI
 
-#include once "IAsyncIoTask.bi"
+#include once "windows.bi"
+#include once "win\ole2.bi"
 
 Type ThreadPoolCallBack As Function( _
 	ByVal param As Any Ptr, _
@@ -52,9 +53,9 @@ Type IThreadPoolVirtualTable
 		ByVal this As IThreadPool Ptr _
 	)As HRESULT
 	
-	AssociateTask As Function( _
+	GetIOCompletionPort As Function( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal pTask As IAsyncIoTask Ptr _
+		ByVal pPort As HANDLE Ptr _
 	)As HRESULT
 	
 End Type
@@ -70,6 +71,6 @@ End Type
 #define IThreadPool_SetMaxThreads(this, MaxThreads) (this)->lpVtbl->SetMaxThreads(this, MaxThreads)
 #define IThreadPool_Run(this, CallBack, param) (this)->lpVtbl->Run(this, CallBack, param)
 #define IThreadPool_Stop(this) (this)->lpVtbl->Stop(this)
-#define IThreadPool_AssociateTask(this, pTask) (this)->lpVtbl->AssociateTask(this, pTask)
+#define IThreadPool_GetIOCompletionPort(this, pPort) (this)->lpVtbl->GetIOCompletionPort(this, pPort)
 
 #endif

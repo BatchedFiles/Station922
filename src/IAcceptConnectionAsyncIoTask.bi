@@ -4,7 +4,6 @@
 #include once "windows.bi"
 #include once "win\winsock2.bi"
 #include once "IHttpAsyncIoTask.bi"
-#include once "IThreadPool.bi"
 
 ' BeginExecute:
 ' ASYNCTASK_S_IO_PENDING
@@ -36,6 +35,11 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr _
 	)As ULONG
 	
+	BindToThreadPool As Function( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	
 	BeginExecute As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -46,11 +50,6 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	GetFileHandle As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
 	)As HRESULT
 	
 	GetWebSiteCollectionWeakPtr As Function( _
@@ -103,16 +102,6 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
 	
-	GetThreadPoolWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppPool As IThreadPool Ptr Ptr _
-	)As HRESULT
-	
-	SetThreadPoolWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IAcceptConnectionAsyncIoTask_
@@ -122,9 +111,9 @@ End Type
 #define IAcceptConnectionAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAcceptConnectionAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAcceptConnectionAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
+#define IAcceptConnectionAsyncIoTask_BindToThreadPool(this, pPool) (this)->lpVtbl->BindToThreadPool(this, pPool)
 #define IAcceptConnectionAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
-#define IAcceptConnectionAsyncIoTask_GetFileHandle(this, pFileHandle) (this)->lpVtbl->GetFileHandle(this, pFileHandle)
 #define IAcceptConnectionAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
 #define IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
 #define IAcceptConnectionAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)
@@ -135,7 +124,5 @@ End Type
 #define IAcceptConnectionAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
 #define IAcceptConnectionAsyncIoTask_GetListenSocket(this, pListenSocket) (this)->lpVtbl->GetListenSocket(this, pListenSocket)
 #define IAcceptConnectionAsyncIoTask_SetListenSocket(this, ListenSocket) (this)->lpVtbl->SetListenSocket(this, ListenSocket)
-#define IAcceptConnectionAsyncIoTask_GetThreadPoolWeakPtr(this, ppPool) (this)->lpVtbl->GetThreadPoolWeakPtr(this, ppPool)
-#define IAcceptConnectionAsyncIoTask_SetThreadPoolWeakPtr(this, pPool) (this)->lpVtbl->SetThreadPoolWeakPtr(this, pPool)
 
 #endif

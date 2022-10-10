@@ -53,9 +53,9 @@ Declare Function ThreadPoolStop( _
 	ByVal this As ThreadPool Ptr _
 )As HRESULT
 
-Declare Function ThreadPoolAssociateTask( _
+Declare Function ThreadPoolGetIOCompletionPort( _
 	ByVal this As ThreadPool Ptr, _
-	ByVal pTask As IAsyncIoTask Ptr _
+	ByVal pPort As HANDLE Ptr _
 )As HRESULT
 
 #endif

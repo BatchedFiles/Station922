@@ -219,17 +219,7 @@ Function CreateAcceptConnectionTask( _
 	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
 	IAcceptConnectionAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
 	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
-	IAcceptConnectionAsyncIoTask_SetThreadPoolWeakPtr(pTask, this->pIPool)
-	
-	Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
-		this->pIPool, _
-		CPtr(IAsyncIoTask Ptr, pTask) _
-	)
-	If FAILED(hrAssociate) Then
-		IAcceptConnectionAsyncIoTask_Release(pTask)
-		*ppTask = NULL
-		Return hrAssociate
-	End If
+	IAcceptConnectionAsyncIoTask_BindToThreadPool(pTask, this->pIPool)
 	
 	*ppTask = pTask
 	Return S_OK

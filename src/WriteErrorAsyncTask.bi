@@ -33,6 +33,11 @@ Declare Function WriteErrorAsyncTaskRelease( _
 	ByVal this As WriteErrorAsyncTask Ptr _
 )As ULONG
 
+Declare Function WriteErrorAsyncTaskBindToThreadPool( _
+	ByVal this As WriteErrorAsyncTask Ptr, _
+	ByVal pPool As IThreadPool Ptr _
+)As HRESULT
+
 Declare Function WriteErrorAsyncTaskBeginExecute( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -43,11 +48,6 @@ Declare Function WriteErrorAsyncTaskEndExecute( _
 	ByVal pIResult As IAsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskGetFileHandle( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _

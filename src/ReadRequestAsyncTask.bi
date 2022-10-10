@@ -33,6 +33,11 @@ Declare Function ReadRequestAsyncTaskRelease( _
 	ByVal this As ReadRequestAsyncTask Ptr _
 )As ULONG
 
+Declare Function ReadRequestAsyncTaskBindToThreadPool( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	ByVal pPool As IThreadPool Ptr _
+)As HRESULT
+
 Declare Function ReadRequestAsyncTaskBeginExecute( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -43,11 +48,6 @@ Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal pIResult As IAsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskGetFileHandle( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _

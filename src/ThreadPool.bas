@@ -363,24 +363,12 @@ Function ThreadPoolStop( _
 	
 End Function
 
-Function ThreadPoolAssociateTask( _
+Function ThreadPoolGetIOCompletionPort( _
 		ByVal this As ThreadPool Ptr, _
-		ByVal pTask As IAsyncIoTask Ptr _
+		ByVal pPort As HANDLE Ptr _
 	)As HRESULT
 	
-	Dim FileHandle As HANDLE = Any
-	IAsyncIoTask_GetFileHandle(pTask, @FileHandle)
-	
-	Dim hPort As HANDLE = CreateIoCompletionPort( _
-		FileHandle, _
-		this->hIOCompletionPort, _
-		Cast(ULONG_PTR, FileHandle), _
-		0 _
-	)
-	If hPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
+	*pPort = this->hIOCompletionPort
 	
 	Return S_OK
 	
@@ -435,11 +423,11 @@ Function IThreadPoolStop( _
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolAssociateTask( _
+Function IThreadPoolGetIOCompletionPort( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal pTask As IAsyncIoTask Ptr _
+		ByVal pPort As HANDLE Ptr _
 	)As HRESULT
-	Return ThreadPoolAssociateTask(ContainerOf(this, ThreadPool, lpVtbl), pTask)
+	Return ThreadPoolGetIOCompletionPort(ContainerOf(this, ThreadPool, lpVtbl), pPort)
 End Function
 
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
@@ -450,5 +438,5 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolSetMaxThreads, _
 	@IThreadPoolRun, _
 	@IThreadPoolStop, _
-	@IThreadPoolAssociateTask _
+	@IThreadPoolGetIOCompletionPort _
 )

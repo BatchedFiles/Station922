@@ -262,6 +262,42 @@ Function WriteResponseAsyncTaskRelease( _
 	
 End Function
 
+Function WriteResponseAsyncTaskBindToThreadPool( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	
+	Dim ClientSocket As SOCKET = Any
+	
+	Scope
+		Dim Stream As INetworkStream Ptr = Any
+		IBaseStream_QueryInterface( _
+			this->pIStream, _
+			@IID_INetworkStream, _
+			@Stream _
+		)
+		INetworkStream_GetSocket(Stream, @ClientSocket)
+		INetworkStream_Release(Stream)
+	End Scope
+	
+	Dim Port As HANDLE = Any
+	IThreadPool_GetIOCompletionPort(pPool, @Port)
+	
+	Dim NewPort As HANDLE = CreateIoCompletionPort( _
+		Cast(HANDLE, ClientSocket), _
+		Port, _
+		Cast(ULONG_PTR, this), _
+		0 _
+	)
+	If NewPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Function WriteResponseAsyncTaskBeginExecute( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -364,25 +400,6 @@ Function WriteResponseAsyncTaskEndExecute( _
 			Return S_OK
 			
 	End Select
-	
-End Function
-
-Function WriteResponseAsyncTaskGetFileHandle( _
-		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As HRESULT
-	
-	Dim ns As INetworkStream Ptr = Any
-	IBaseStream_QueryInterface(this->pIStream, @IID_INetworkStream, @ns)
-	
-	Dim s As SOCKET = Any
-	INetworkStream_GetSocket(ns, @s)
-	
-	*pFileHandle = Cast(HANDLE, s)
-	
-	INetworkStream_Release(ns)
-	
-	Return S_OK
 	
 End Function
 
@@ -656,6 +673,13 @@ Function IWriteResponseAsyncTaskRelease( _
 	Return WriteResponseAsyncTaskRelease(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
+Function IWriteResponseAsyncTaskBindToThreadPool( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As ULONG
+	Return WriteResponseAsyncTaskBindToThreadPool(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pPool)
+End Function
+
 Function IWriteResponseAsyncTaskBeginExecute( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -670,13 +694,6 @@ Function IWriteResponseAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
 	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
-End Function
-
-Function IWriteResponseAsyncTaskGetFileHandle( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As ULONG
-	Return WriteResponseAsyncTaskGetFileHandle(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pFileHandle)
 End Function
 
 Function IWriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
@@ -759,9 +776,9 @@ Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTas
 	@IWriteResponseAsyncTaskQueryInterface, _
 	@IWriteResponseAsyncTaskAddRef, _
 	@IWriteResponseAsyncTaskRelease, _
+	@IWriteResponseAsyncTaskBindToThreadPool, _
 	@IWriteResponseAsyncTaskBeginExecute, _
 	@IWriteResponseAsyncTaskEndExecute, _
-	@IWriteResponseAsyncTaskGetFileHandle, _
 	@IWriteResponseAsyncTaskGetWebSiteCollectionWeakPtr, _
 	@IWriteResponseAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IWriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr, _

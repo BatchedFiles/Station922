@@ -33,6 +33,11 @@ Declare Function AcceptConnectionAsyncTaskRelease( _
 	ByVal this As AcceptConnectionAsyncTask Ptr _
 )As ULONG
 
+Declare Function AcceptConnectionAsyncTaskBindToThreadPool( _
+	ByVal this As AcceptConnectionAsyncTask Ptr, _
+	ByVal pPool As IThreadPool Ptr _
+)As HRESULT
+
 Declare Function AcceptConnectionAsyncTaskBeginExecute( _
 	ByVal this As AcceptConnectionAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -43,11 +48,6 @@ Declare Function AcceptConnectionAsyncTaskEndExecute( _
 	ByVal pIResult As IAsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskGetFileHandle( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal pFileHandle As HANDLE Ptr _
 )As HRESULT
 
 Declare Function AcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr( _
@@ -98,16 +98,6 @@ Declare Function AcceptConnectionAsyncTaskGetListenSocket( _
 Declare Function AcceptConnectionAsyncTaskSetListenSocket( _
 	ByVal this As AcceptConnectionAsyncTask Ptr, _
 	ByVal ListenSocket As SOCKET _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskGetThreadPoolWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal ppPool As IThreadPool Ptr Ptr _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskSetThreadPoolWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr _
 )As HRESULT
 
 #endif

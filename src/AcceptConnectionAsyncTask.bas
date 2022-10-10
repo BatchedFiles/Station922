@@ -292,6 +292,31 @@ Function AcceptConnectionAsyncTaskRelease( _
 	
 End Function
 
+Function AcceptConnectionAsyncTaskBindToThreadPool( _
+		ByVal this As AcceptConnectionAsyncTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	
+	this->pIPoolWeakPtr = pPool
+	
+	Dim Port As HANDLE = Any
+	IThreadPool_GetIOCompletionPort(pPool, @Port)
+	
+	Dim NewPort As HANDLE = CreateIoCompletionPort( _
+		Cast(HANDLE, this->ListenSocket), _
+		Port, _
+		Cast(ULONG_PTR, this), _
+		0 _
+	)
+	If NewPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -346,9 +371,9 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 			ClientSocket _
 		)
 		
-		Dim hrAssociate As HRESULT = IThreadPool_AssociateTask( _
-			this->pIPoolWeakPtr, _
-			CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+		Dim hrAssociate As HRESULT = IReadRequestAsyncIoTask_BindToThreadPool( _
+			this->pReadTask, _
+			this->pIPoolWeakPtr _
 		)
 		
 		If SUCCEEDED(hrAssociate) Then
@@ -371,17 +396,6 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 	
 	AcceptConnectionAsyncTaskAddRef(this)
 	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
-	
-	Return S_OK
-	
-End Function
-
-Function AcceptConnectionAsyncTaskGetFileHandle( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As HRESULT
-	
-	*pFileHandle = Cast(HANDLE, this->ListenSocket)
 	
 	Return S_OK
 	
@@ -495,28 +509,6 @@ Function AcceptConnectionAsyncTaskSetListenSocket( _
 	
 End Function
 
-Function AcceptConnectionAsyncTaskGetThreadPoolWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppPool As IThreadPool Ptr Ptr _
-	)As HRESULT
-	
-	*ppPool = this->pIPoolWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function AcceptConnectionAsyncTaskSetThreadPoolWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
-	this->pIPoolWeakPtr = pPool
-	
-	Return S_OK
-	
-End Function
-
 
 Function IAcceptConnectionAsyncTaskQueryInterface( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
@@ -538,6 +530,13 @@ Function IAcceptConnectionAsyncTaskRelease( _
 	Return AcceptConnectionAsyncTaskRelease(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl))
 End Function
 
+Function IAcceptConnectionAsyncTaskBindToThreadPool( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pPool As IThreadPool Ptr _
+	)As HRESULT
+	Return AcceptConnectionAsyncTaskBindToThreadPool(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pPool)
+End Function
+
 Function IAcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -552,13 +551,6 @@ Function IAcceptConnectionAsyncTaskEndExecute( _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
 	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
-End Function
-
-Function IAcceptConnectionAsyncTaskGetFileHandle( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pFileHandle As HANDLE Ptr _
-	)As ULONG
-	Return AcceptConnectionAsyncTaskGetFileHandle(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pFileHandle)
 End Function
 
 Function IAcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr( _
@@ -631,27 +623,13 @@ Function IAcceptConnectionAsyncTaskSetListenSocket( _
 	Return AcceptConnectionAsyncTaskSetListenSocket(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ListenSocket)
 End Function
 
-Function IAcceptConnectionAsyncTaskGetThreadPoolWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppPool As IThreadPool Ptr Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetThreadPoolWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppPool)
-End Function
-
-Function IAcceptConnectionAsyncTaskSetThreadPoolWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetThreadPoolWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pPool)
-End Function
-
 Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable = Type( _
 	@IAcceptConnectionAsyncTaskQueryInterface, _
 	@IAcceptConnectionAsyncTaskAddRef, _
 	@IAcceptConnectionAsyncTaskRelease, _
+	@IAcceptConnectionAsyncTaskBindToThreadPool, _
 	@IAcceptConnectionAsyncTaskBeginExecute, _
 	@IAcceptConnectionAsyncTaskEndExecute, _
-	@IAcceptConnectionAsyncTaskGetFileHandle, _
 	@IAcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr, _
 	@IAcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IAcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr, _
@@ -661,7 +639,5 @@ Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyn
 	@IAcceptConnectionAsyncTaskGetHttpReader, _
 	@IAcceptConnectionAsyncTaskSetHttpReader, _
 	@IAcceptConnectionAsyncTaskGetListenSocket, _
-	@IAcceptConnectionAsyncTaskSetListenSocket, _
-	@IAcceptConnectionAsyncTaskGetThreadPoolWeakPtr, _
-	@IAcceptConnectionAsyncTaskSetThreadPoolWeakPtr _
+	@IAcceptConnectionAsyncTaskSetListenSocket _
 )
