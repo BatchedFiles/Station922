@@ -66,22 +66,15 @@ Sub UnInitializeAsyncResult( _
 	
 End Sub
 
+Sub AsyncResultCreated( _
+		ByVal this As AsyncResult Ptr _
+	)
+	
+End Sub
+
 Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AsyncResult Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(AsyncResult)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"AsyncResult creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -93,37 +86,21 @@ Function CreateAsyncResult( _
 	
 	InitializeAsyncResult(this, pIMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("AsyncResult created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	AsyncResultCreated(this)
 	
 	Return this
 	
 End Function
 
-Sub DestroyAsyncResult( _
+Sub AsyncResultDestroyed( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("AsyncResult destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyAsyncResult( _
+		ByVal this As AsyncResult Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -131,22 +108,11 @@ Sub DestroyAsyncResult( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("AsyncResult destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	AsyncResultDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
 End Sub
-
 
 Function AsyncResultQueryInterface( _
 		ByVal this As AsyncResult Ptr, _

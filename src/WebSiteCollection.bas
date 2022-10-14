@@ -150,19 +150,6 @@ Function CreatePermanentWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebSiteCollection Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(WebSiteCollection)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"WebSiteCollection creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSiteCollection) _
@@ -173,18 +160,6 @@ Function CreatePermanentWebSiteCollection( _
 	
 	InitializeWebSiteCollection(this, pIMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebSiteCollection created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Return this
 	
 End Function
@@ -193,35 +168,11 @@ Sub DestroyWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebSiteCollection destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebSiteCollection(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebSiteCollection destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

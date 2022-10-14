@@ -245,22 +245,15 @@ Sub UnInitializeClientUri( _
 	
 End Sub
 
+Sub ClientUriCreated( _
+		ByVal this As ClientUri Ptr _
+	)
+	
+End Sub
+
 Function CreateClientUri( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientUri Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ClientUri)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ClientUri creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As ClientUri Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -274,17 +267,7 @@ Function CreateClientUri( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("ClientUri created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		ClientUriCreated(this)
 		
 		Return this
 	End If
@@ -293,21 +276,15 @@ Function CreateClientUri( _
 	
 End Function
 
-Sub DestroyClientUri( _
+Sub ClientUriDestroyed( _
 		ByVal this As ClientUri Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ClientUri destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyClientUri( _
+		ByVal this As ClientUri Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -315,17 +292,7 @@ Sub DestroyClientUri( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ClientUri destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	ClientUriDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

@@ -56,20 +56,6 @@ Function FinishExecuteTaskSink( _
 	Dim pTask As IAsyncIoTask Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtResponse As VARIANT = Any
-		vtResponse.vt = VT_BSTR
-		vtResponse.bstrVal = SysAllocString(WStr(!"IAsyncIoTask_EndExecute"))
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			NULL, _
-			@vtResponse _
-		)
-		VariantClear(@vtResponse)
-	End Scope
-	#endif
-	
 	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
 		pTask, _
 		pIResult, _
@@ -104,19 +90,6 @@ Function ThreadPoolCallBack( _
 		ByVal pOverlap As OVERLAPPED Ptr _
 	)As Integer
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtBytesTransferred As VARIANT = Any
-		vtBytesTransferred.vt = VT_UI4
-		vtBytesTransferred.ulVal = BytesTransferred
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"\t\t\t\tBytesTransferred\t"), _
-			@vtBytesTransferred _
-		)
-	End Scope
-	#endif
-	
 	Dim hrFinishExecute As HRESULT = Any
 	Dim pNextTask As IAsyncIoTask Ptr = Any
 	Scope
@@ -134,54 +107,14 @@ Function ThreadPoolCallBack( _
 		Select Case hrFinishExecute
 			
 			Case S_OK
-				#if __FB_DEBUG__
-				Scope
-					Dim vtResponse As VARIANT = Any
-					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tÑontinue reading socket\r\n\r\n\r\n\r\n"))
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						NULL, _
-						@vtResponse _
-					)
-					VariantClear(@vtResponse)
-				End Scope
-				#endif
-				
 				Dim hrStart As HRESULT = StartExecuteTask(pNextTask)
 				If FAILED(hrStart) Then
 					IAsyncIoTask_Release(pNextTask)
 				End If
 				
 			Case S_FALSE
-				#if __FB_DEBUG__
-				Scope
-					Dim vtResponse As VARIANT = Any
-					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tEnd of file\r\n\r\n\r\n\r\n"))
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						NULL, _
-						@vtResponse _
-					)
-					VariantClear(@vtResponse)
-				End Scope
-				#endif
 				
 			Case ASYNCTASK_S_KEEPALIVE_FALSE
-				#if __FB_DEBUG__
-				Scope
-					Dim vtResponse As VARIANT = Any
-					vtResponse.vt = VT_BSTR
-					vtResponse.bstrVal = SysAllocString(WStr(!"\t\t\t\tClient refused connection\r\n\r\n\r\n\r\n"))
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						NULL, _
-						@vtResponse _
-					)
-					VariantClear(@vtResponse)
-				End Scope
-				#endif
 				
 		End Select
 	End If
@@ -349,19 +282,6 @@ Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServer Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(WebServer)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"WebServer creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim pIPool As IThreadPool Ptr = Any
 	Dim hrCreateThreadPool As HRESULT = CreatePermanentInstance( _
 		pIMemoryAllocator, _
@@ -385,18 +305,6 @@ Function CreateWebServer( _
 				pIPool _
 			)
 			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("WebServer created"), _
-					@vtEmpty _
-				)
-			End Scope
-			#endif
-			
 			Return this
 		End If
 		
@@ -411,35 +319,11 @@ Sub DestroyWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebServer destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebServer(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebServer destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

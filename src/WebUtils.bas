@@ -235,27 +235,12 @@ Function StartExecuteTask( _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtResponse As VARIANT = Any
-		vtResponse.vt = VT_BSTR
-		vtResponse.bstrVal = SysAllocString(WStr(!"IAsyncIoTask_BeginExecute"))
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			NULL, _
-			@vtResponse _
-		)
-		VariantClear(@vtResponse)
-	End Scope
-	#endif
-	
 	Dim pIResult As IAsyncResult Ptr = Any
 	Dim hrBeginExecute As HRESULT = IAsyncIoTask_BeginExecute( _
 		pTask, _
 		@pIResult _
 	)
 	If FAILED(hrBeginExecute) Then
-		
 		Dim vtSCode As VARIANT = Any
 		vtSCode.vt = VT_ERROR
 		vtSCode.scode = hrBeginExecute

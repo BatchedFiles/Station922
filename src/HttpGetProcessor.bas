@@ -69,22 +69,15 @@ Sub UnInitializeHttpGetProcessor( _
 	
 End Sub
 
+Sub HttpGetProcessorCreated( _
+		ByVal this As HttpGetProcessor Ptr _
+	)
+	
+End Sub
+
 Function CreatePermanentHttpGetProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpGetProcessor Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HttpGetProcessor)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HttpGetProcessor creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -98,17 +91,7 @@ Function CreatePermanentHttpGetProcessor( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("HttpGetProcessor created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		HttpGetProcessorCreated(this)
 		
 		Return this
 	End If
@@ -117,21 +100,15 @@ Function CreatePermanentHttpGetProcessor( _
 	
 End Function
 
-Sub DestroyHttpGetProcessor( _
+Sub HttpGetProcessorDestroyed( _
 		ByVal this As HttpGetProcessor Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpGetProcessor destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyHttpGetProcessor( _
+		ByVal this As HttpGetProcessor Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -139,17 +116,7 @@ Sub DestroyHttpGetProcessor( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpGetProcessor destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HttpGetProcessorDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

@@ -491,22 +491,15 @@ Sub UnInitializeClientRequest( _
 	
 End Sub
 
+Sub ClientRequestCreated( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+End Sub
+
 Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ClientRequest Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ClientRequest)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ClientRequest creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -520,17 +513,7 @@ Function CreateClientRequest( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("ClientRequest created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		ClientRequestCreated(this)
 		
 		Return this
 	End If
@@ -539,21 +522,15 @@ Function CreateClientRequest( _
 	
 End Function
 
-Sub DestroyClientRequest( _
+Sub ClientRequestDestroyed( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ClientRequest destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyClientRequest( _
+		ByVal this As ClientRequest Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -561,17 +538,7 @@ Sub DestroyClientRequest( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ClientRequest destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	ClientRequestDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

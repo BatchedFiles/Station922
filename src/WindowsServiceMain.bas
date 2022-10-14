@@ -24,19 +24,6 @@ Function RunnableStatusHandler( _
 		ByVal Status As HRESULT _
 	)As HRESULT
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = Status
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"RunnableStatusHandler\t"), _
-			@vtSCode _
-		)
-	End Scope
-	#endif
-	
 	Return S_OK
 	
 End Function

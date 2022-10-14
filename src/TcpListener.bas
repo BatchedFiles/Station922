@@ -54,19 +54,6 @@ Function CreatePermanentTcpListener( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As TcpListener Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(TcpListener)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"TcpListener creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As TcpListener Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(TcpListener) _
@@ -77,18 +64,6 @@ Function CreatePermanentTcpListener( _
 			this, _
 			pIMemoryAllocator _
 		)
-		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("TcpListener created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
 		
 		Return this
 	End If
@@ -101,35 +76,11 @@ Sub DestroyTcpListener( _
 		ByVal this As TcpListener Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("TcpListener destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeTcpListener(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("TcpListener destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

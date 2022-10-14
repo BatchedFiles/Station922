@@ -52,22 +52,15 @@ Sub UnInitializeHttpReader( _
 	
 End Sub
 
+Sub HttpReaderCreated( _
+		ByVal this As HttpReader Ptr _
+	)
+	
+End Sub
+
 Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpReader Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HttpReader)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HttpReader creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -80,17 +73,7 @@ Function CreateHttpReader( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("HttpReader created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		HttpReaderCreated(this)
 		
 		Return this
 	End If
@@ -99,21 +82,15 @@ Function CreateHttpReader( _
 	
 End Function
 
-Sub DestroyHttpReader( _
+Sub HttpReaderDestroyed( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpReader destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyHttpReader( _
+		ByVal this As HttpReader Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -121,17 +98,7 @@ Sub DestroyHttpReader( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpReader destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HttpReaderDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
@@ -239,6 +206,12 @@ Function HttpReaderBeginReadLine( _
 	
 End Function
 
+Sub HttpReaderPrintClientBuffer( _
+		ByVal this As HttpReader Ptr _
+	)
+	
+End Sub
+
 Function HttpReaderEndReadLine( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
@@ -284,37 +257,7 @@ Function HttpReaderEndReadLine( _
 		Return HTTPREADER_S_IO_PENDING
 	End If
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim psa As SAFEARRAY Ptr = SafeArrayCreateVector( _
-			VT_UI1, _
-			0, _
-			SizeOf(ClientRequestBuffer) _
-		)
-		
-		If psa <> NULL Then
-			
-			Dim bytes As UByte Ptr = Any
-			Dim hrAccessData As HRESULT = SafeArrayAccessData(psa, @bytes)
-			
-			If SUCCEEDED(hrAccessData) Then
-				CopyMemory(bytes, this->pClientBuffer, SizeOf(ClientRequestBuffer))
-				SafeArrayUnaccessData(psa)
-				
-				Dim vtArrayBytes As VARIANT = Any
-				vtArrayBytes.vt = VT_ARRAY Or VT_UI1
-				vtArrayBytes.parray = psa
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					NULL, _
-					@vtArrayBytes _
-				)
-			End If
-			
-			SafeArrayDestroy(psa)
-		End If
-	End Scope
-	#endif
+	HttpReaderPrintClientBuffer(this)
 	
 	Dim NewEndOfHeaders As Integer = DoubleCrLfIndex + Len(DoubleNewLineStringA)
 	this->pClientBuffer->EndOfHeaders = NewEndOfHeaders

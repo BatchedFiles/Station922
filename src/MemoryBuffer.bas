@@ -68,19 +68,6 @@ Function CreateMemoryBuffer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As MemoryBuffer Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(MemoryBuffer)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"MemoryBuffer creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As MemoryBuffer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(MemoryBuffer) _
@@ -93,18 +80,6 @@ Function CreateMemoryBuffer( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("MemoryBuffer created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
-		
 		Return this
 	End If
 	
@@ -116,35 +91,11 @@ Sub DestroyMemoryBuffer( _
 		ByVal this As MemoryBuffer Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("MemoryBuffer destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeMemoryBuffer(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("MemoryBuffer destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

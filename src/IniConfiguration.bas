@@ -100,19 +100,6 @@ Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WebServerIniConfiguration Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(WebServerIniConfiguration)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"WebServerIniConfiguration creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim pWebServerIniFileName As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		(MAX_PATH + 1) * SizeOf(WString) _
@@ -169,18 +156,6 @@ Function CreateWebServerIniConfiguration( _
 						pUsersIniFileName _
 					)
 					
-					#if __FB_DEBUG__
-					Scope
-						Dim vtEmpty As VARIANT = Any
-						VariantInit(@vtEmpty)
-						LogWriteEntry( _
-							LogEntryType.Debug, _
-							WStr("WebServerIniConfiguration created"), _
-							@vtEmpty _
-						)
-					End Scope
-					#endif
-					
 					Return this
 					
 				End If
@@ -202,35 +177,11 @@ Sub DestroyWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebServerIniConfiguration destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeWebServerIniConfiguration(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WebServerIniConfiguration destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

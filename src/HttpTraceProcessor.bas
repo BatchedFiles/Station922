@@ -44,19 +44,6 @@ Function CreatePermanentHttpTraceProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpTraceProcessor Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HttpTraceProcessor)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HttpTraceProcessor creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As HttpTraceProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpTraceProcessor) _
@@ -69,18 +56,6 @@ Function CreatePermanentHttpTraceProcessor( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("HttpTraceProcessor created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
-		
 		Return this
 	End If
 	
@@ -92,35 +67,11 @@ Sub DestroyHttpTraceProcessor( _
 		ByVal this As HttpTraceProcessor Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpTraceProcessor destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpTraceProcessor(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpTraceProcessor destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

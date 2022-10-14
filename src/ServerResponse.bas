@@ -93,19 +93,6 @@ Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ServerResponse Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ServerResponse)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ServerResponse creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ServerResponse) _
@@ -118,18 +105,6 @@ Function CreateServerResponse( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("ServerResponse created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
-		
 		Return this
 	End If
 	
@@ -141,35 +116,11 @@ Sub DestroyServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ServerResponse destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeServerResponse(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ServerResponse destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
@@ -527,6 +478,12 @@ Function ServerResponseSetByteRange( _
 	
 End Function
 
+Sub ServerResponsePrintServerHeaders( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+End Sub
+
 Function ServerResponseAllHeadersToZString( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
@@ -700,20 +657,6 @@ Function ServerResponseAllHeadersToZString( _
 	
 	IArrayStringWriter_Release(pIWriter)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtResponse As VARIANT = Any
-		vtResponse.vt = VT_BSTR
-		vtResponse.bstrVal = SysAllocString(HeadersBuffer)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			NULL, _
-			@vtResponse _
-		)
-		VariantClear(@vtResponse)
-	End Scope
-	#endif
-	
 	this->ResponseHeaderLine = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
 		this->ResponseHeaderLineLength _
@@ -734,6 +677,8 @@ Function ServerResponseAllHeadersToZString( _
 		0, _
 		0 _
 	)
+	
+	ServerResponsePrintServerHeaders(this)
 	
 	*ppHeaders = this->ResponseHeaderLine
 	*pHeadersLength = this->ResponseHeaderLineLength

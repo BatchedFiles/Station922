@@ -46,18 +46,18 @@ Sub InitializeInternalHeapBSTR( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	
-	If Length = 0 Then
-		this->cbBytes = 0
-		this->wszNullChar(0) = 0
-	Else
-		this->cbBytes = Length * SizeOf(OLECHAR)
+	Dim cbBytes As DWORD = Length * SizeOf(OLECHAR)
+	this->cbBytes = cbBytes
+	
+	If Length Then
 		CopyMemory( _
 			@this->wszNullChar(0), _
 			pwsz, _
-			(Length) * SizeOf(OLECHAR) _
+			cbBytes _
 		)
-		this->wszNullChar(Length) = 0
 	End If
+	
+	this->wszNullChar(Length) = 0
 	
 End Sub
 
@@ -73,10 +73,10 @@ Function CreateHeapString( _
 	)As HeapBSTR
 	
 	Dim pszlen As UINT = Any
-	If pwsz = NULL Then
-		pszlen = 0
-	Else
+	If pwsz Then
 		pszlen = lstrlenW(pwsz)
+	Else
+		pszlen = 0
 	End If
 	
 	Return CreateHeapStringLen(pIMemoryAllocator, pwsz, pszlen)
@@ -167,6 +167,12 @@ Function CreatePermanentHeapStringLen( _
 	
 End Function
 
+Sub HeapBSTRCreated( _
+		ByVal this As InternalHeapBSTR Ptr _
+	)
+	
+End Sub
+
 Function CreateHeapZStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal psz As Const ZString Ptr, _
@@ -176,19 +182,6 @@ Function CreateHeapZStringLen( _
 	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
 	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
 	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = cbBytes
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HeapBSTR creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -230,17 +223,7 @@ Function CreateHeapZStringLen( _
 	this->cbBytes = Length * SizeOf(OLECHAR)
 	this->wszNullChar(Length) = 0
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapBSTR created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HeapBSTRCreated(this)
 	
 	Dim pHeapBstr As HeapBSTR = Any
 	InternalHeapBSTRGetHeapBSTR(this, @pHeapBstr)
@@ -260,19 +243,6 @@ Function CreateInternalHeapBSTR( _
 	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
 	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = cbBytes
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HeapBSTR creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		cbBytes _
@@ -289,38 +259,21 @@ Function CreateInternalHeapBSTR( _
 		Permanent _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapBSTR created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HeapBSTRCreated(this)
 	
 	Return this
 	
 End Function
 
-Sub DestroyInternalHeapBSTR( _
+Sub HeapBSTRDestroyed( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtString As VARIANT = Any
-		vtString.vt = VT_BSTR
-		vtString.bstrVal = @this->wszNullChar(0)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HeapBSTR destroying:\t"), _
-			@vtString _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyInternalHeapBSTR( _
+		ByVal this As InternalHeapBSTR Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -328,17 +281,7 @@ Sub DestroyInternalHeapBSTR( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapBSTR destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HeapBSTRDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

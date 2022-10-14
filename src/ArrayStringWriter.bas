@@ -48,22 +48,15 @@ Sub UnInitializeArrayStringWriter( _
 	
 End Sub
 
+Sub ArrayStringWriterCreated( _
+		ByVal this As ArrayStringWriter Ptr _
+	)
+	
+End Sub
+
 Function CreateArrayStringWriter( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ArrayStringWriter Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ArrayStringWriter)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ArrayStringWriter creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As ArrayStringWriter Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -75,37 +68,21 @@ Function CreateArrayStringWriter( _
 	
 	InitializeArrayStringWriter(this, pIMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ArrayStringWriter created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	ArrayStringWriterCreated(this)
 	
 	Return this
 	
 End Function
 
-Sub DestroyArrayStringWriter( _
+Sub ArrayStringWriterDestroyed( _
 		ByVal this As ArrayStringWriter Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ArrayStringWriter destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyArrayStringWriter( _
+		ByVal this As ArrayStringWriter Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -113,17 +90,7 @@ Sub DestroyArrayStringWriter( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ArrayStringWriter destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	ArrayStringWriterDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

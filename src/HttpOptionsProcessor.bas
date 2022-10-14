@@ -41,22 +41,15 @@ Sub UnInitializeHttpOptionsProcessor( _
 	
 End Sub
 
+Sub HttpOptionsProcessorCreated( _
+		ByVal this As HttpOptionsProcessor Ptr _
+	)
+	
+End Sub
+
 Function CreatePermanentHttpOptionsProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpOptionsProcessor Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HttpOptionsProcessor)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HttpOptionsProcessor creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As HttpOptionsProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -70,17 +63,7 @@ Function CreatePermanentHttpOptionsProcessor( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("HttpOptionsProcessor created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		HttpOptionsProcessorCreated(this)
 		
 		Return this
 	End If
@@ -89,21 +72,15 @@ Function CreatePermanentHttpOptionsProcessor( _
 	
 End Function
 
-Sub DestroyHttpOptionsProcessor( _
+Sub HttpOptionsProcessorDestroyed( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpOptionsProcessor destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyHttpOptionsProcessor( _
+		ByVal this As HttpOptionsProcessor Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -111,17 +88,7 @@ Sub DestroyHttpOptionsProcessor( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpOptionsProcessor destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HttpOptionsProcessorDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

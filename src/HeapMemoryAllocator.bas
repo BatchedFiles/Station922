@@ -48,17 +48,23 @@ Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		IMallocSpy_Release(this->pISpyObject)
 	End If
 	
-	If this->pReadedData <> NULL Then
+	If this->pReadedData Then
 		HeapFree( _
 			this->hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
 			this->pReadedData _
 		)
 	End If
+	
+End Sub
+
+Sub HeapMemoryAllocatorCreated( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
 	
 End Sub
 
@@ -69,36 +75,13 @@ Function CreateHeapMemoryAllocator( _
 	vtAllocatedBytes.vt = VT_I4
 	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HeapMemoryAllocator creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
 	
-	If hHeap <> NULL Then
-		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtHeapBytes As VARIANT = Any
-			vtHeapBytes.vt = VT_I4
-			vtHeapBytes.lVal = PRIVATEHEAP_MAXIMUMSIZE
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr(!"\t\t\t\tPrivateHeap created, maximum size:\t"), _
-				@vtHeapBytes _
-			)
-		End Scope
-		#endif
+	If hHeap Then
 		
 		Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
 			hHeap, _
@@ -106,20 +89,7 @@ Function CreateHeapMemoryAllocator( _
 			SizeOf(ClientRequestBuffer) _
 		)
 		
-		If pReadedData <> NULL Then
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtHeapBytes As VARIANT = Any
-				vtHeapBytes.vt = VT_I4
-				vtHeapBytes.lVal = SizeOf(ClientRequestBuffer)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr(!"\t\t\t\tClientRequestBuffer created, size:\t"), _
-					@vtHeapBytes _
-				)
-			End Scope
-			#endif
+		If pReadedData Then
 			
 			Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 				hHeap, _
@@ -127,28 +97,10 @@ Function CreateHeapMemoryAllocator( _
 				SizeOf(HeapMemoryAllocator) _
 			)
 			
-			If this <> NULL Then
-				#if __FB_DEBUG__
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
-						@vtAllocatedBytes _
-					)
-				#endif
-				
+			If this Then
 				InitializeHeapMemoryAllocator(this, hHeap, pReadedData)
 				
-				#if __FB_DEBUG__
-				Scope
-					Dim vtEmpty As VARIANT = Any
-					VariantInit(@vtEmpty)
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						WStr("HeapMemoryAllocator created"), _
-						@vtEmpty _
-					)
-				End Scope
-				#endif
+				HeapMemoryAllocatorCreated(this)
 				
 				Return this
 			End If
@@ -168,27 +120,21 @@ Function CreateHeapMemoryAllocator( _
 	
 End Function
 
-Sub DestroyHeapMemoryAllocator( _
+Sub HeapMemoryAllocatorDestroyed( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapMemoryAllocator destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
 	
 	Dim hHeap As HANDLE = this->hHeap
 	
 	UnInitializeHeapMemoryAllocator(this)
 	
-	If hHeap <> NULL Then
+	If hHeap Then
 		HeapFree( _
 			this->hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
@@ -199,6 +145,7 @@ Sub DestroyHeapMemoryAllocator( _
 		If bLock Then
 			Dim phe As PROCESS_HEAP_ENTRY = Any
 			phe.lpData = NULL
+			
 			' Dim res As Long = 0
 			Do While HeapWalk(hHeap, @phe)
 				Dim AllocatedFlag As Boolean = phe.wFlags And PROCESS_HEAP_ENTRY_BUSY
@@ -219,33 +166,10 @@ Sub DestroyHeapMemoryAllocator( _
 		
 		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
 		If resHeapDestroy = 0 Then
-			#if __FB_DEBUG__
-			Scope
-				Dim dwError As DWORD = GetLastError()
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_UI4
-				vtErrorCode.ulVal = dwError
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"HeapDestroy error\t"), _
-					@vtErrorCode _
-				)
-			End Scope
-			#endif
 		End If
 	End If
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HeapMemoryAllocator destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	HeapMemoryAllocatorDestroyed(this)
 	
 End Sub
 
@@ -329,18 +253,9 @@ Function HeapMemoryAllocatorAlloc( _
 			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
 			@vtAllocatedBytes _
 		)
-	Else
-		#if __FB_DEBUG__
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr(!"\t\t\t\tAllocMemory Succeeded\t"), _
-				@vtAllocatedBytes _
-			)
-		#endif
-		
 	End If
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		pMemory = IMallocSpy_PostAlloc(this->pISpyObject, pMemory)
 	End If
 	
@@ -355,13 +270,13 @@ Function HeapMemoryAllocatorRealloc( _
 	)As Any Ptr
 	
 	Dim ppNewRequest As Any Ptr Ptr = pv
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		cb = IMallocSpy_PreRealloc(this->pISpyObject, pv, cb, ppNewRequest, True)
 	End If
 	
 	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, HEAP_NO_SERIALIZE_FLAG, ppNewRequest, cb)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		pMemory = IMallocSpy_PostRealloc(this->pISpyObject, pMemory, True)
 	End If
 	
@@ -374,7 +289,7 @@ Sub HeapMemoryAllocatorFree( _
 		ByVal pMemory As Any Ptr _
 	)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		pMemory = IMallocSpy_PreFree(this->pISpyObject, pMemory, True)
 	End If
 	
@@ -384,7 +299,7 @@ Sub HeapMemoryAllocatorFree( _
 		pMemory _
 	)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		IMallocSpy_PostFree(this->pISpyObject, True)
 	End If
 	
@@ -395,7 +310,7 @@ Function HeapMemoryAllocatorGetSize( _
 		ByVal pMemory As Any Ptr _
 	)As SIZE_T_
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		pMemory = IMallocSpy_PreGetSize(this->pISpyObject, pMemory, True)
 	End If
 	
@@ -405,7 +320,7 @@ Function HeapMemoryAllocatorGetSize( _
 		pMemory _
 	)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		Size = IMallocSpy_PostGetSize(this->pISpyObject, Size, True)
 	End If
 	
@@ -418,7 +333,7 @@ Function HeapMemoryAllocatorDidAlloc( _
 		ByVal pMemory As Any Ptr _
 	)As Long
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		pMemory = IMallocSpy_PreDidAlloc(this->pISpyObject, pMemory, True)
 	End If
 	
@@ -432,7 +347,7 @@ Function HeapMemoryAllocatorDidAlloc( _
 		End If
 	Loop
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		res = IMallocSpy_PostDidAlloc(this->pISpyObject, pMemory, True, res)
 	End If
 	
@@ -444,13 +359,13 @@ Sub HeapMemoryAllocatorHeapMinimize( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		IMallocSpy_PreHeapMinimize(this->pISpyObject)
 	End If
 	
 	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE_FLAG)
 	
-	If this->pISpyObject <> NULL Then
+	If this->pISpyObject Then
 		IMallocSpy_PostHeapMinimize(this->pISpyObject)
 	End If
 	

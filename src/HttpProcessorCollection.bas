@@ -62,19 +62,6 @@ Function CreatePermanentHttpProcessorCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HttpProcessorCollection Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(HttpProcessorCollection)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"HttpProcessorCollection creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As HttpProcessorCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpProcessorCollection) _
@@ -85,18 +72,6 @@ Function CreatePermanentHttpProcessorCollection( _
 	
 	InitializeHttpProcessorCollection(this, pIMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpProcessorCollection created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Return this
 	
 End Function
@@ -105,35 +80,11 @@ Sub DestroyHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpProcessorCollection destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHttpProcessorCollection(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("HttpProcessorCollection destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

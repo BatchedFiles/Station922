@@ -50,36 +50,8 @@ Function WorkerThread( _
 			)
 		Else
 			If pOverlap = NULL Then
-				#if __FB_DEBUG__
-				Scope
-					Dim dwError As DWORD = GetLastError()
-					Dim vtErrorCode As VARIANT = Any
-					vtErrorCode.vt = VT_UI4
-					vtErrorCode.ulVal = dwError
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"Completion port error\t"), _
-						@vtErrorCode _
-					)
-				End Scope
-				#endif
-				
 				Exit Do
 			End If
-			
-			#if __FB_DEBUG__
-			Scope
-				Dim dwError As DWORD = GetLastError()
-				Dim vtErrorCode As VARIANT = Any
-				vtErrorCode.vt = VT_UI4
-				vtErrorCode.ulVal = dwError
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"Failed I/O operation\t"), _
-					@vtErrorCode _
-				)
-			End Scope
-			#endif
 			
 			this->CallBack( _
 				this->param, _
@@ -137,19 +109,6 @@ Function CreatePermanentThreadPool( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ThreadPool Ptr
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ThreadPool)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ThreadPool creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
-	
 	Dim this As ThreadPool Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ThreadPool) _
@@ -159,18 +118,6 @@ Function CreatePermanentThreadPool( _
 			this, _
 			pIMemoryAllocator _
 		)
-		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("ThreadPool created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
 		
 		Return this
 	End If
@@ -183,35 +130,11 @@ Sub DestroyThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ThreadPool destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
-	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeThreadPool(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ThreadPool destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

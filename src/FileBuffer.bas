@@ -89,22 +89,15 @@ Sub UnInitializeFileBuffer( _
 	
 End Sub
 
+Sub FileBufferCreated( _
+		ByVal this As FileBuffer Ptr _
+	)
+	
+End Sub
+
 Function CreateFileBuffer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As FileBuffer Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(FileBuffer)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"FileBuffer creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As FileBuffer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -117,17 +110,7 @@ Function CreateFileBuffer( _
 			pIMemoryAllocator _
 		)
 		
-		#if __FB_DEBUG__
-		Scope
-			Dim vtEmpty As VARIANT = Any
-			VariantInit(@vtEmpty)
-			LogWriteEntry( _
-				LogEntryType.Debug, _
-				WStr("FileBuffer created"), _
-				@vtEmpty _
-			)
-		End Scope
-		#endif
+		FileBufferCreated(this)
 		
 		Return this
 		
@@ -137,21 +120,15 @@ Function CreateFileBuffer( _
 	
 End Function
 
-Sub DestroyFileBuffer( _
+Sub FileBufferDestroyed( _
 		ByVal this As FileBuffer Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("FileBuffer destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyFileBuffer( _
+		ByVal this As FileBuffer Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -159,17 +136,7 @@ Sub DestroyFileBuffer( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("FileBuffer destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	FileBufferDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

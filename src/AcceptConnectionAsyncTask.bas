@@ -146,22 +146,15 @@ Sub UnInitializeAcceptConnectionAsyncTask( _
 	
 End Sub
 
+Sub AcceptConnectionAsyncTaskCreated( _
+		ByVal this As AcceptConnectionAsyncTask Ptr _
+	)
+	
+End Sub
+
 Function CreatePermanentAcceptConnectionAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As AcceptConnectionAsyncTask Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(AcceptConnectionAsyncTask)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"AcceptConnectionAsyncTask creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim pListener As ITcpListener Ptr = Any
 	Dim hrCreateListener As HRESULT = CreatePermanentInstance( _
@@ -185,17 +178,7 @@ Function CreatePermanentAcceptConnectionAsyncTask( _
 				pListener _
 			)
 			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("AcceptConnectionAsyncTask created"), _
-					@vtEmpty _
-				)
-			End Scope
-			#endif
+			AcceptConnectionAsyncTaskCreated(this)
 			
 			Return this
 		End If
@@ -207,21 +190,15 @@ Function CreatePermanentAcceptConnectionAsyncTask( _
 	
 End Function
 
-Sub DestroyAcceptConnectionAsyncTask( _
+Sub AcceptConnectionAsyncTaskDestroyed( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("AcceptConnectionAsyncTask destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyAcceptConnectionAsyncTask( _
+		ByVal this As AcceptConnectionAsyncTask Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -229,17 +206,7 @@ Sub DestroyAcceptConnectionAsyncTask( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("AcceptConnectionAsyncTask destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	AcceptConnectionAsyncTaskDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

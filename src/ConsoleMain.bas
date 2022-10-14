@@ -15,19 +15,6 @@ Function ConsoleRunnableStatusHandler( _
 	
 	Dim pServerContext As ServerContext Ptr = Context
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = Status
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"Station922 Status\t"), _
-			@vtSCode _
-		)
-	End Scope
-	#endif
-	
 	Select Case Status
 		
 		Case RUNNABLE_S_STOPPED

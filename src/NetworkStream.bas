@@ -56,22 +56,15 @@ Sub UnInitializeNetworkStream( _
 	
 End Sub
 
+Sub NetworkStreamCreated( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+End Sub
+
 Function CreateNetworkStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As NetworkStream Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(NetworkStream)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"NetworkStream creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -83,37 +76,21 @@ Function CreateNetworkStream( _
 	
 	InitializeNetworkStream(this, pIMemoryAllocator)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("NetworkStream created"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	NetworkStreamCreated(this)
 	
 	Return this
 	
 End Function
 
-Sub DestroyNetworkStream( _
+Sub NetworkStreamDestroyed( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("NetworkStream destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyNetworkStream( _
+		ByVal this As NetworkStream Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -121,17 +98,7 @@ Sub DestroyNetworkStream( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("NetworkStream destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	NetworkStreamDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

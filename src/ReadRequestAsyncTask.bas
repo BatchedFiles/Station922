@@ -71,22 +71,15 @@ Sub UnInitializeReadRequestAsyncTask( _
 	
 End Sub
 
+Sub ReadRequestAsyncTaskCreated( _
+		ByVal this As ReadRequestAsyncTask Ptr _
+	)
+	
+End Sub
+
 Function CreateReadRequestAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As ReadRequestAsyncTask Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(ReadRequestAsyncTask)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"ReadRequestAsyncTask creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hrCreateRequest As HRESULT = CreateInstance( _
@@ -109,17 +102,7 @@ Function CreateReadRequestAsyncTask( _
 				pIRequest _
 			)
 			
-			#if __FB_DEBUG__
-			Scope
-				Dim vtEmpty As VARIANT = Any
-				VariantInit(@vtEmpty)
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					WStr("ReadRequestAsyncTask created"), _
-					@vtEmpty _
-				)
-			End Scope
-			#endif
+			ReadRequestAsyncTaskCreated(this)
 			
 			Return this
 		End If
@@ -131,21 +114,15 @@ Function CreateReadRequestAsyncTask( _
 	
 End Function
 
-Sub DestroyReadRequestAsyncTask( _
+Sub ReadRequestAsyncTaskDestroyed( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ReadRequestAsyncTask destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyReadRequestAsyncTask( _
+		ByVal this As ReadRequestAsyncTask Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -153,17 +130,7 @@ Sub DestroyReadRequestAsyncTask( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("ReadRequestAsyncTask destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	ReadRequestAsyncTaskDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
