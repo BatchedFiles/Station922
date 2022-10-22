@@ -60,7 +60,7 @@ Sub UnInitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
-	If this->pBuffers <> NULL Then
+	If this->pBuffers Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffers)
 	End If
 	

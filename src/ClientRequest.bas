@@ -142,7 +142,7 @@ Function ClientRequestParseRequestedLine( _
 				pSpace, _
 				Characters.WhiteSpace _
 			)
-			If pSpace <> NULL Then
+			If pSpace Then
 				' Слишком много пробелов
 				Return CLIENTREQUEST_E_BADREQUEST
 			End If
@@ -219,7 +219,7 @@ Function ClientRequestAddRequestHeaders( _
 		
 		Dim pColon As WString Ptr = StrChrW(pLine, Characters.Colon)
 		
-		If pColon <> 0 Then
+		If pColon Then
 			pColon[0] = 0
 			
 			Dim pwszValue As WString Ptr = @pColon[0]
@@ -253,14 +253,14 @@ Function ClientRequestParseRequestHeaders( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
 			@CloseString _
 		)
-		If pCloseString <> NULL Then
+		If pCloseString Then
 			this->KeepAlive = False
 		Else
 			Dim pKeepAliveString As PCWSTR = StrStrIW( _
 				this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
 				@KeepAliveString _
 			)
-			If pKeepAliveString <> NULL Then
+			If pKeepAliveString Then
 				this->KeepAlive = True
 			End If
 		End If
@@ -273,7 +273,7 @@ Function ClientRequestParseRequestHeaders( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
 			@GzipString _
 		)
-		If pGzipString <> NULL Then
+		If pGzipString Then
 			this->RequestZipModes(ZipModes.GZip) = True
 		End If
 		
@@ -281,7 +281,7 @@ Function ClientRequestParseRequestHeaders( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
 			@DeflateString _
 		)
-		If pDeflateString <> 0 Then
+		If pDeflateString Then
 			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
@@ -296,7 +296,7 @@ Function ClientRequestParseRequestHeaders( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), _
 			WStr("UTC") _
 		)
-		If pUTCInModifiedSince <> 0 Then
+		If pUTCInModifiedSince Then
 			lstrcpyW(pUTCInModifiedSince, WStr("GMT"))
 		End If
 		/'
@@ -304,7 +304,7 @@ Function ClientRequestParseRequestHeaders( _
 			pHeaderIfModifiedSince, _
 			Characters.Semicolon _
 		)
-		If wSeparator <> 0 Then
+		If wSeparator Then
 			wSeparator[0] = 0
 		End If
 		'/
@@ -313,7 +313,7 @@ Function ClientRequestParseRequestHeaders( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), _
 			WStr("UTC") _
 		)
-		If pUTCInUnModifiedSince <> 0 Then
+		If pUTCInUnModifiedSince Then
 			lstrcpyW(pUTCInUnModifiedSince, WStr("GMT"))
 		End If
 		/'
@@ -321,7 +321,7 @@ Function ClientRequestParseRequestHeaders( _
 			pHeaderIfUnModifiedSince, _
 			Characters.Semicolon _
 		)
-		If wSeparator <> 0 Then
+		If wSeparator Then
 			wSeparator[0] = 0
 		End If
 		'/
@@ -333,12 +333,12 @@ Function ClientRequestParseRequestHeaders( _
 		Dim HeaderRangeLength As Integer = SysStringLen( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
 		)
-		If HeaderRangeLength <> 0 Then
+		If HeaderRangeLength Then
 			Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 			
 			' TODO Обрабатывать несколько байтовых диапазонов
 			Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
-			If pCommaChar <> 0 Then
+			If pCommaChar Then
 				pCommaChar[0] = 0
 			End If
 			
@@ -352,7 +352,7 @@ Function ClientRequestParseRequestHeaders( _
 					wStartIndex, _
 					Characters.HyphenMinus _
 				)
-				If wHyphenMinusChar <> 0 Then
+				If wHyphenMinusChar Then
 					wHyphenMinusChar[0] = 0
 					
 					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
@@ -392,7 +392,7 @@ Function ClientRequestParseRequestHeaders( _
 		Dim HeaderContentLength As Integer = SysStringLen( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) _
 		)
-		If HeaderContentLength <> NULL Then
+		If HeaderContentLength Then
 			StrToInt64ExW( _
 				this->RequestHeaders(HttpRequestHeaders.HeaderContentLength), _
 				STIF_DEFAULT, _
@@ -479,7 +479,7 @@ Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
-	If this->pClientURI <> NULL Then
+	If this->pClientURI Then
 		IClientUri_Release(this->pClientURI)
 	End If
 	
@@ -506,7 +506,7 @@ Function CreateClientRequest( _
 		SizeOf(ClientRequest) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeClientRequest( _
 			this, _
@@ -644,7 +644,7 @@ Function ClientRequestGetUri( _
 		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
 	
-	If this->pClientURI <> NULL Then
+	If this->pClientURI Then
 		IClientUri_AddRef(this->pClientURI)
 	End If
 	

@@ -7,6 +7,8 @@
 
 Extern GlobalHttpOptionsProcessorVirtualTable As Const IHttpOptionsAsyncProcessorVirtualTable
 
+Const CompareResultEqual As Long = 0
+
 Type _HttpOptionsProcessor
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -56,7 +58,7 @@ Function CreatePermanentHttpOptionsProcessor( _
 		SizeOf(HttpOptionsProcessor) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeHttpOptionsProcessor( _
 			this, _
@@ -165,7 +167,8 @@ Function HttpOptionsProcessorPrepare( _
 	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, TRACE")
 	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, TRACE")
 	
-	If lstrcmpW(Path, WStr("*")) = 0 Then
+	Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
+	If CompareResult = CompareResultEqual Then
 		IServerResponse_AddKnownResponseHeaderWstrLen( _
 			pContext->pIResponse, _
 			HttpResponseHeaders.HeaderAllow, _

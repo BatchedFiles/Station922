@@ -58,7 +58,7 @@ Sub UnInitializeMemoryBuffer( _
 	HeapSysFreeString(this->ETag)
 	HeapSysFreeString(this->Language)
 	
-	If this->pBuffer <> NULL Then
+	If this->pBuffer Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffer)
 	End If
 	
@@ -73,7 +73,7 @@ Function CreateMemoryBuffer( _
 		SizeOf(MemoryBuffer) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeMemoryBuffer( _
 			this, _

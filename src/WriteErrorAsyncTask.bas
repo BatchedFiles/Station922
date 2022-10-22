@@ -61,6 +61,8 @@ Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 
 Const DefaultVirtualPath = WStr("/")
 
+Const CompareResultEqual As Long = 0
+
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -283,7 +285,7 @@ Sub FormatErrorMessageBody( _
 		256 - 1, _
 		NULL _
 	)
-	If CharsCount <> 0 Then
+	If CharsCount Then
 		IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
 		IArrayStringWriter_WriteString(pIWriter, wBuffer)
 		IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
@@ -650,27 +652,27 @@ Sub UnInitializeWriteErrorAsyncTask( _
 		ByVal this As WriteErrorAsyncTask Ptr _
 	)
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If this->pIBuffer <> NULL Then
+	If this->pIBuffer Then
 		IMemoryBuffer_Release(this->pIBuffer)
 	End If
 	
-	If this->pIHttpWriter <> NULL Then
+	If this->pIHttpWriter Then
 		IHttpWriter_Release(this->pIHttpWriter)
 	End If
 	
-	If this->pIResponse <> NULL Then
+	If this->pIResponse Then
 		IServerResponse_Release(this->pIResponse)
 	End If
 	
@@ -721,7 +723,7 @@ Function CreateWriteErrorAsyncTask( _
 					SizeOf(WriteErrorAsyncTask) _
 				)
 				
-				If this <> NULL Then
+				If this Then
 					InitializeWriteErrorAsyncTask( _
 						this, _
 						pIMemoryAllocator, _
@@ -1003,7 +1005,7 @@ Function WriteErrorAsyncTaskGetBaseStream( _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_AddRef(this->pIStream)
 	End If
 	
@@ -1018,11 +1020,11 @@ Function WriteErrorAsyncTaskSetBaseStream( _
 		ByVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If pStream <> NULL Then
+	If pStream Then
 		IBaseStream_AddRef(pStream)
 	End If
 	
@@ -1039,7 +1041,7 @@ Function WriteErrorAsyncTaskGetHttpReader( _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_AddRef(this->pIHttpReader)
 	End If
 	
@@ -1054,11 +1056,11 @@ Function WriteErrorAsyncTaskSetHttpReader( _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If pReader <> NULL Then
+	If pReader Then
 		IHttpReader_AddRef(pReader)
 	End If
 	
@@ -1073,7 +1075,7 @@ Function WriteErrorAsyncTaskGetClientRequest( _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_AddRef(this->pIRequest)
 	End If
 	
@@ -1088,11 +1090,11 @@ Function WriteErrorAsyncTaskSetClientRequest( _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
-	If pIRequest <> NULL Then
+	If pIRequest Then
 		IClientRequest_AddRef(pIRequest)
 	End If
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
@@ -1140,7 +1142,8 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim HttpMethod As HeapBSTR = Any
 		IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
 		
-		If lstrcmpW(HttpMethod, WStr("HEAD")) = 0 Then
+		Dim CompareResult As Long = lstrcmpW(HttpMethod, WStr("HEAD"))
+		If CompareResult = CompareResultEqual Then
 			IServerResponse_SetSendOnlyHeaders(this->pIResponse, True)
 		End If
 		

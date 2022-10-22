@@ -59,7 +59,7 @@ Function CreatePermanentTcpListener( _
 		SizeOf(TcpListener) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		InitializeTcpListener( _
 			this, _
 			pIMemoryAllocator _

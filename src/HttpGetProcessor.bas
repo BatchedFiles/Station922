@@ -12,6 +12,7 @@ Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtual
 Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 Const BytesStringWithSpace = WStr("bytes ")
+Const CompareResultEqual As Long = 0
 
 Type _HttpGetProcessor
 	#if __FB_DEBUG__
@@ -84,7 +85,7 @@ Function CreatePermanentHttpGetProcessor( _
 		SizeOf(HttpGetProcessor) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeHttpGetProcessor( _
 			this, _
@@ -191,7 +192,8 @@ Function HttpGetProcessorPrepare( _
 		Dim HttpMethod As HeapBSTR = Any
 		IClientRequest_GetHttpMethod(pContext->pIRequest, @HttpMethod)
 		
-		If lstrcmpW(HttpMethod, WStr("HEAD")) = 0 Then
+		Dim CompareResult As Long = lstrcmpW(HttpMethod, WStr("HEAD"))
+		If CompareResult = CompareResultEqual Then
 			IServerResponse_SetSendOnlyHeaders(pContext->pIResponse, True)
 		End If
 		

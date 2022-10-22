@@ -148,6 +148,8 @@ Const HttpStatusCodeString509 = WStr("Bandwidth Limit Exceeded")
 Const HttpStatusCodeString510 = WStr("Not Extended")
 Const HttpStatusCodeString511 = WStr("Network Authentication Required")
 
+Const CompareResultEqual As Long = 0
+
 Type StatusCodeNode
 	pDescription As WString Ptr
 	DescriptionLength As Integer
@@ -385,7 +387,7 @@ Function GetStatusDescription( _
 		End If
 	Next
 	
-	If pDescriptionLength <> NULL Then
+	If pDescriptionLength Then
 		*pDescriptionLength = DescriptionLength
 	End If
 	
@@ -404,15 +406,21 @@ Function GetHttpVersionIndex( _
 		Return True
 	End If
 	
-	If lstrcmpW(s, @HttpVersion11String) = 0 Then
-		*pVersion = HttpVersions.Http11
-		Return True
-	End If
+	Scope
+		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion11String)
+		If CompareResult = CompareResultEqual Then
+			*pVersion = HttpVersions.Http11
+			Return True
+		End If
+	End Scope
 	
-	If lstrcmpW(s, @HttpVersion10String) = 0 Then
-		*pVersion = HttpVersions.Http10
-		Return True
-	End If
+	Scope
+		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion10String)
+		If CompareResult = CompareResultEqual Then
+			*pVersion = HttpVersions.Http10
+			Return True
+		End If
+	End Scope
 	
 	Return False
 	
@@ -441,7 +449,7 @@ Function HttpVersionToString( _
 			
 	End Select
 	
-	If pBufferLength <> NULL Then
+	If pBufferLength Then
 		*pBufferLength = intBufferLength
 	End If
 	
@@ -458,7 +466,7 @@ Function GetKnownRequestHeaderIndex( _
 			RequestHeaderNodesVector(i).pHeader, _
 			pHeader _
 		)
-		If CompareResult = 0 Then
+		If CompareResult = CompareResultEqual Then
 			*pIndex = RequestHeaderNodesVector(i).HeaderIndex
 			Return True
 		End If
@@ -481,12 +489,11 @@ Function GetKnownResponseHeaderIndex( _
 	)As Boolean
 	
 	For i As Integer = 1 To HttpResponseHeadersSize
-		Dim CompareResult As Long = memcmp( _
+		Dim CompareResult As Long = lstrcmpW( _
 			ResponseHeaderNodesVector(i).pHeader, _
-			pHeader, _
-			ResponseHeaderNodesVector(i).HeaderLength * SizeOf(WString) _
+			pHeader _
 		)
-		If CompareResult = 0 Then
+		If CompareResult = CompareResultEqual Then
 			*pIndex = ResponseHeaderNodesVector(i).HeaderIndex
 			Return True
 		End If
@@ -513,7 +520,7 @@ Function KnownResponseHeaderToString( _
 		End If
 	Next
 	
-	If pHeaderLength <> NULL Then
+	If pHeaderLength Then
 		*pHeaderLength = HeaderLength
 	End If
 	
@@ -537,7 +544,7 @@ Function KnownRequestCgiHeaderToString( _
 		End If
 	Next
 	
-	If pHeaderLength <> NULL Then
+	If pHeaderLength Then
 		*pHeaderLength = HeaderLength
 	End If
 	

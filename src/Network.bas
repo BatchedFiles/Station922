@@ -21,7 +21,7 @@ Function ResolveHostW Alias "ResolveHostW"( _
 		@hints, _
 		ppAddressList _
 	)
-	If resAddrInfo <> 0 Then
+	If resAddrInfo Then
 		Return HRESULT_FROM_WIN32(resAddrInfo)
 	End If
 	
@@ -78,7 +78,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			Cast(LPSOCKADDR, pAddressNode->ai_addr), _
 			pAddressNode->ai_addrlen _
 		)
-		If BindResult <> 0 Then
+		If BindResult Then
 			e = WSAGetLastError()
 			closesocket(ClientSocket)
 			pAddressNode = pAddressNode->ai_next
@@ -93,11 +93,11 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 		SocketCount += 1
 		pAddressNode = pAddressNode->ai_next
 		
-	Loop While pAddressNode <> NULL
+	Loop While pAddressNode
 	
 	FreeAddrInfoW(pAddressList)
 	
-	If BindResult <> 0 Then
+	If BindResult Then
 		
 		*pSockets = 0
 		Return HRESULT_FROM_WIN32(e)
@@ -133,7 +133,7 @@ Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 	For i As Integer = 0 To *pSockets - 1
 		
 		Dim resListen As Long = listen(pSocketList[i].ClientSocket, SOMAXCONN)
-		If resListen <> 0 Then
+		If resListen Then
 			Dim dwError As Long = WSAGetLastError()
 			closesocket(pSocketList[i].ClientSocket)
 			Return HRESULT_FROM_WIN32(dwError)

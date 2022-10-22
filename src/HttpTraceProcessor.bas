@@ -49,7 +49,7 @@ Function CreatePermanentHttpTraceProcessor( _
 		SizeOf(HttpTraceProcessor) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeHttpTraceProcessor( _
 			this, _

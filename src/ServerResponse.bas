@@ -80,7 +80,7 @@ Sub UnInitializeServerResponse( _
 	
 	HeapSysFreeString(this->StatusDescription)
 	
-	If this->ResponseHeaderLine <> NULL Then
+	If this->ResponseHeaderLine Then
 		IMalloc_Free( _
 			this->pIMemoryAllocator, _
 			this->ResponseHeaderLine _
@@ -98,7 +98,7 @@ Function CreateServerResponse( _
 		SizeOf(ServerResponse) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeServerResponse( _
 			this, _
@@ -623,7 +623,7 @@ Function ServerResponseAllHeadersToZString( _
 			
 			Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
 			
-			If this->ResponseHeaders(HeaderIndex) <> NULL Then
+			If this->ResponseHeaders(HeaderIndex) Then
 				
 				Dim BufferLength As Integer = Any
 				Dim wBuffer As WString Ptr = KnownResponseHeaderToString( _

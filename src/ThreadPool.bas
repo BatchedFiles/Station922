@@ -95,11 +95,11 @@ Sub UnInitializeThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
-	If this->hIOCompletionPort <> NULL Then
+	If this->hIOCompletionPort Then
 		CloseHandle(this->hIOCompletionPort)
 	End If
 	
-	If this->hThreads <> NULL Then
+	If this->hThreads Then
 		IMalloc_Free(this->pIMemoryAllocator, this->hThreads)
 	End If
 	
@@ -113,7 +113,8 @@ Function CreatePermanentThreadPool( _
 		pIMemoryAllocator, _
 		SizeOf(ThreadPool) _
 	)
-	If this <> NULL Then
+	
+	If this Then
 		InitializeThreadPool( _
 			this, _
 			pIMemoryAllocator _

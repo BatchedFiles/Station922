@@ -6,6 +6,7 @@
 Extern GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable
 
 Const HttpProcessorCollectionCapacity As Integer = 20
+Const CompareResultEqual As Long = 0
 
 Type HttpProcessorCollectionKeyValuePair
 	Key As WString * 16
@@ -137,7 +138,8 @@ Function HttpProcessorCollectionItem( _
 	
 	For i As Integer = 0 To this->CollectionLength - 1
 		
-		If lstrcmpW(pKey, @this->Collection(i).Key) = 0 Then
+		Dim CompareResult As Long = lstrcmpW(pKey, @this->Collection(i).Key)
+		If CompareResult = CompareResultEqual Then
 			
 			IHttpAsyncProcessor_AddRef(this->Collection(i).Value)
 			*ppIProcessor = this->Collection(i).Value
@@ -207,7 +209,8 @@ Function HttpProcessorCollectionItemWeakPtr( _
 	
 	For i As Integer = 0 To this->CollectionLength - 1
 		
-		If lstrcmpW(pKey, @this->Collection(i).Key) = 0 Then
+		Dim CompareResult As Long = lstrcmpW(pKey, @this->Collection(i).Key)
+		If CompareResult = CompareResultEqual Then
 			
 			*ppIProcessor = this->Collection(i).Value
 			

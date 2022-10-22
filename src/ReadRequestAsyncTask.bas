@@ -55,15 +55,15 @@ Sub UnInitializeReadRequestAsyncTask( _
 		ByVal this As ReadRequestAsyncTask Ptr _
 	)
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
@@ -95,7 +95,7 @@ Function CreateReadRequestAsyncTask( _
 			SizeOf(ReadRequestAsyncTask) _
 		)
 		
-		If this <> NULL Then
+		If this Then
 			InitializeReadRequestAsyncTask( _
 				this, _
 				pIMemoryAllocator, _
@@ -446,7 +446,7 @@ Function ReadRequestAsyncTaskGetBaseStream( _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_AddRef(this->pIStream)
 	End If
 	
@@ -461,11 +461,11 @@ Function ReadRequestAsyncTaskSetBaseStream( _
 		ByVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If pStream <> NULL Then
+	If pStream Then
 		IBaseStream_AddRef(pStream)
 	End If
 	
@@ -480,7 +480,7 @@ Function ReadRequestAsyncTaskGetHttpReader( _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_AddRef(this->pIHttpReader)
 	End If
 	
@@ -495,11 +495,11 @@ Function ReadRequestAsyncTaskSetHttpReader( _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If pReader <> NULL Then
+	If pReader Then
 		IHttpReader_AddRef(pReader)
 	End If
 	

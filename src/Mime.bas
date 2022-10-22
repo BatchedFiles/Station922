@@ -191,6 +191,8 @@ Const ContentTypesVideoXflv = WStr("video/x-flv")
 Const ContentTypesVideo3gpp = WStr("video/3gpp")
 Const ContentTypesVideo3gpp2 = WStr("video/3gpp2")
 
+Const CompareResultEqual As Long = 0
+
 Sub GetContentTypeOfMimeType( _
 		ByVal ContentType As WString Ptr, _
 		ByVal mt As MimeType Ptr _
@@ -541,355 +543,557 @@ Function GetMimeOfFileExtension( _
 	mt->IsTextFormat = False
 	mt->Charset = DocumentCharsets.ASCII
 	
-	If lstrcmpiW(ext, @ExtensionHtm) = 0 Then
-		mt->ContentType = ContentTypes.TextHtml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionXhtml) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationXhtml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionCss) = 0 Then
-		mt->ContentType = ContentTypes.TextCss
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionPng) = 0 Then
-		mt->ContentType = ContentTypes.ImagePng
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionGif) = 0 Then
-		mt->ContentType = ContentTypes.ImageGif
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionJpg) = 0 Then
-		mt->ContentType = ContentTypes.ImageJpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionIco) = 0 Then
-		mt->ContentType = ContentTypes.ImageIco
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionXml) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationXml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionXsl) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationXmlXslt
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionXslt) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationXmlXslt
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionTxt) = 0 Then
-		mt->ContentType = ContentTypes.TextPlain
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionRss) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationRssXml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionJs) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationJavascript
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionZip) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationZip
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionHtml) = 0 Then
-		mt->ContentType = ContentTypes.TextHtml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionSvg) = 0 Then
-		mt->ContentType = ContentTypes.ImageSvg
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionJpe) = 0 Then
-		mt->ContentType = ContentTypes.ImageJpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionJpeg) = 0 Then
-		mt->ContentType = ContentTypes.ImageJpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionTif) = 0 Then
-		mt->ContentType = ContentTypes.ImageTiff
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionTiff) = 0 Then
-		mt->ContentType = ContentTypes.ImageTiff
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionAtom) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationAtom
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @Extension7z) = 0 Then
-		mt->ContentType = ContentTypes.Application7z
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionRar) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationRar
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionGz) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationGzip
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionTgz) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationXCompressed
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionRtf) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationRtf
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMp3) = 0 Then
-		mt->ContentType = ContentTypes.AudioMpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMpg) = 0 Then
-		mt->ContentType = ContentTypes.VideoMpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMpeg) = 0 Then
-		mt->ContentType = ContentTypes.VideoMpeg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMkv) = 0 Then
-		mt->ContentType = ContentTypes.VideoXMatroska
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionAvi) = 0 Then
-		mt->ContentType = ContentTypes.VideoXMsvideo
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOgv) = 0 Then
-		mt->ContentType = ContentTypes.VideoOgg
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMp4) = 0 Then
-		mt->ContentType = ContentTypes.VideoMp4
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionWebm) = 0 Then
-		mt->ContentType = ContentTypes.VideoWebm
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionWmv) = 0 Then
-		mt->ContentType = ContentTypes.VideoXmswmv
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionBin) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionExe) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionDll) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionDeb) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionDmg) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionEot) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionIso) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionImg) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMsi) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMsp) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionMsm) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionSwf) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationFlash
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionRam) = 0 Then
-		mt->ContentType = ContentTypes.AudioRealaudio
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionCrt) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationCertx509
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionCer) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationCertx509
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionPdf) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationPdf
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdt) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentText
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOtt) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentTextTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdg) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphics
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOtg) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphicsTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdp) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentation
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOtp) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentationTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOds) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheet
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOts) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdc) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentChart
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOtc) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentChartTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdi) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentImage
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOti) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentImageTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdf) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentFormula
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOtf) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentFormulaTemplate
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOdm) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentMaster
-		Return True
-	End If
-	
-	If lstrcmpiW(ext, @ExtensionOth) = 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentWeb
-		Return True
-	End If
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtm)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.TextHtml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXhtml)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationXhtml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCss)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.TextCss
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionPng)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImagePng
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionGif)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageGif
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageJpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionIco)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageIco
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXml)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationXml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXsl)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationXmlXslt
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXslt)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationXmlXslt
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTxt)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.TextPlain
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRss)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationRssXml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJs)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationJavascript
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionZip)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationZip
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtml)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.TextHtml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionSvg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageSvg
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpe)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageJpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpeg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageJpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTif)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageTiff
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTiff)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageTiff
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionAtom)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationAtom
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @Extension7z)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.Application7z
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRar)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationRar
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionGz)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationGzip
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTgz)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationXCompressed
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRtf)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationRtf
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMp3)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.AudioMpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMpg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoMpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMpeg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoMpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMkv)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoXMatroska
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionAvi)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoXMsvideo
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOgv)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoOgg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMp4)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoMp4
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWebm)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoWebm
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWmv)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.VideoXmswmv
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionBin)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionExe)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDll)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDeb)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDmg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionEot)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionIso)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionImg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsi)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsp)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsm)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionSwf)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationFlash
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRam)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.AudioRealaudio
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCrt)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationCertx509
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCer)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationCertx509
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionPdf)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationPdf
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdt)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentText
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtt)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentTextTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphics
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtg)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphicsTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdp)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentation
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtp)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentationTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOds)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheet
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOts)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdc)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentChart
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtc)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentChartTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdi)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentImage
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOti)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentImageTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdf)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormula
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtf)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormulaTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdm)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentMaster
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOth)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentWeb
+			Return True
+		End If
+	End Scope
 	
 	Return False
+	
 End Function
 
 Function GetMimeOfStringContentType( _
@@ -899,570 +1103,893 @@ Function GetMimeOfStringContentType( _
 	
 	mt->IsTextFormat = False
 	
-	If StrStrIW(ContentType, @ContentCharsetUtf8) <> 0 Then
-		mt->Charset = DocumentCharsets.Utf8BOM
-	Else
-		If StrStrIW(ContentType, @ContentCharsetUtf16LE) <> 0 Then
-			mt->Charset = DocumentCharsets.Utf16LE
+	Scope
+		Dim pUtf8 As PCWSTR = StrStrIW(ContentType, @ContentCharsetUtf8)
+		
+		If pUtf8 Then
+			mt->Charset = DocumentCharsets.Utf8BOM
 		Else
-			If StrStrIW(ContentType, @ContentCharsetUtf16BE) <> 0 Then
-				mt->Charset = DocumentCharsets.Utf16BE
+			Dim pUtf16LE As PCWSTR = StrStrIW(ContentType, @ContentCharsetUtf16LE)
+			
+			If pUtf16LE Then
+				mt->Charset = DocumentCharsets.Utf16LE
 			Else
-				mt->Charset = DocumentCharsets.ASCII
+				Dim pUtf16BE As PCWSTR = StrStrIW(ContentType, @ContentCharsetUtf16BE)
+				
+				If pUtf16BE Then
+					mt->Charset = DocumentCharsets.Utf16BE
+				Else
+					mt->Charset = DocumentCharsets.ASCII
+				End If
 			End If
 		End If
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAnyAny) <> 0 Then
-		mt->ContentType = ContentTypes.AnyAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationAny) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplication7z) <> 0 Then
-		mt->ContentType = ContentTypes.Application7z
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationAtom) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationAtom
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationCertx509) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationCertx509
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationFlash) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationFlash
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationFontwoff) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationFontwoff
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationGzip) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationGzip
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationJavascript) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationJavascript
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationJson) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationJson
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationMsword) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationMsword
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOctetStream) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOctetStream
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOgg) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOgg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentChart) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentChart
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentChartTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentChartTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentFormula) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentFormula
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentFormulaTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentFormulaTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentGraphics) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphics
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentGraphicsTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphicsTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentImage) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentImage
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentImageTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentImageTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentMaster) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentMaster
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentPresentation) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentation
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentPresentationTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentationTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheet) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheet
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheetTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentText) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentText
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentTextTemplate) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentTextTemplate
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentWeb) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationOpenDocumentWeb
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationPdf) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationPdf
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationRar) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationRar
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationRssXml) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationRssXml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationRtf) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationRtf
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationSoapxml) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationSoapxml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationVndmsexcel) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationVndmsexcel
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationVndmspowerpoint) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationVndmspowerpoint
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXbittorrent) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXbittorrent
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXCompressed) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXCompressed
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXfontttf) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXfontttf
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXhtml) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXhtml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXJavascript) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXJavascript
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXml) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXmldtd) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXmldtd
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXmlXslt) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXmlXslt
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationXwwwformurlencoded) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationXwwwformurlencoded
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesApplicationZip) <> 0 Then
-		mt->ContentType = ContentTypes.ApplicationZip
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioAny) <> 0 Then
-		mt->ContentType = ContentTypes.AudioAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioAac) <> 0 Then
-		mt->ContentType = ContentTypes.AudioAac
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioBasic) <> 0 Then
-		mt->ContentType = ContentTypes.AudioBasic
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioBasic) <> 0 Then
-		mt->ContentType = ContentTypes.AudioBasic
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioL24) <> 0 Then
-		mt->ContentType = ContentTypes.AudioL24
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioMp4) <> 0 Then
-		mt->ContentType = ContentTypes.AudioMp4
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioMpeg) <> 0 Then
-		mt->ContentType = ContentTypes.AudioMpeg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioOgg) <> 0 Then
-		mt->ContentType = ContentTypes.AudioOgg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioRealaudio) <> 0 Then
-		mt->ContentType = ContentTypes.AudioRealaudio
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioVndwave) <> 0 Then
-		mt->ContentType = ContentTypes.AudioVndwave
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioVorbis) <> 0 Then
-		mt->ContentType = ContentTypes.AudioVorbis
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioWebm) <> 0 Then
-		mt->ContentType = ContentTypes.AudioWebm
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioXmswma) <> 0 Then
-		mt->ContentType = ContentTypes.AudioXmswma
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesAudioXmswax) <> 0 Then
-		mt->ContentType = ContentTypes.AudioXmswax
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageAny) <> 0 Then
-		mt->ContentType = ContentTypes.ImageAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageGif) <> 0 Then
-		mt->ContentType = ContentTypes.ImageGif
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageIco) <> 0 Then
-		mt->ContentType = ContentTypes.ImageIco
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageJpeg) <> 0 Then
-		mt->ContentType = ContentTypes.ImageJpeg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImagePJpeg) <> 0 Then
-		mt->ContentType = ContentTypes.ImagePjpeg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImagePng) <> 0 Then
-		mt->ContentType = ContentTypes.ImagePng
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageSvg) <> 0 Then
-		mt->ContentType = ContentTypes.ImageSvg
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageTiff) <> 0 Then
-		mt->ContentType = ContentTypes.ImageTiff
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageWbmp) <> 0 Then
-		mt->ContentType = ContentTypes.ImageWbmp
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesImageWebp) <> 0 Then
-		mt->ContentType = ContentTypes.ImageWebp
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMessageAny) <> 0 Then
-		mt->ContentType = ContentTypes.MessageAny
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMessageHttp) <> 0 Then
-		mt->ContentType = ContentTypes.MessageHttp
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMessageImdnxml) <> 0 Then
-		mt->ContentType = ContentTypes.MessageImdnxml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMessagePartial) <> 0 Then
-		mt->ContentType = ContentTypes.MessagePartial
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMessageRfc822) <> 0 Then
-		mt->ContentType = ContentTypes.MessageRfc822
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartAny) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartAlternative) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartAlternative
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartEncrypted) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartEncrypted
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartFormdata) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartFormdata
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartMixed) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartMixed
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartRelated) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartRelated
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesMultipartSigned) <> 0 Then
-		mt->ContentType = ContentTypes.MultipartSigned
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextAny) <> 0 Then
-		mt->ContentType = ContentTypes.TextAny
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextCmd) <> 0 Then
-		mt->ContentType = ContentTypes.TextCmd
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextCss) <> 0 Then
-		mt->ContentType = ContentTypes.TextCss
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextCsv) <> 0 Then
-		mt->ContentType = ContentTypes.TextCsv
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextHtml) <> 0 Then
-		mt->ContentType = ContentTypes.TextHtml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextPlain) <> 0 Then
-		mt->ContentType = ContentTypes.TextPlain
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextPhp) <> 0 Then
-		mt->ContentType = ContentTypes.TextPhp
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesTextXml) <> 0 Then
-		mt->ContentType = ContentTypes.TextXml
-		mt->IsTextFormat = True
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoAny) <> 0 Then
-		mt->ContentType = ContentTypes.VideoAny
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideo3gpp) <> 0 Then
-		mt->ContentType = ContentTypes.Video3gpp
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideo3gpp2) <> 0 Then
-		mt->ContentType = ContentTypes.Video3gpp2
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoQuicktime) <> 0 Then
-		mt->ContentType = ContentTypes.VideoQuicktime
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoMp4) <> 0 Then
-		mt->ContentType = ContentTypes.VideoMp4
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoMpeg) <> 0 Then
-		mt->ContentType = ContentTypes.VideoMpeg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoOgg) <> 0 Then
-		mt->ContentType = ContentTypes.VideoOgg
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoXflv) <> 0 Then
-		mt->ContentType = ContentTypes.VideoXflv
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoWebm) <> 0 Then
-		mt->ContentType = ContentTypes.VideoWebm
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoXMatroska) <> 0 Then
-		mt->ContentType = ContentTypes.VideoXMatroska
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoXMsvideo) <> 0 Then
-		mt->ContentType = ContentTypes.VideoXMsvideo
-		Return True
-	End If
-	
-	If StrStrIW(ContentType, @ContentTypesVideoXmswmv) <> 0 Then
-		mt->ContentType = ContentTypes.VideoXmswmv
-		Return True
-	End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAnyAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AnyAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplication7z)
+		If pFindString Then
+			mt->ContentType = ContentTypes.Application7z
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationAtom)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationAtom
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationCertx509)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationCertx509
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationFlash)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationFlash
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationFontwoff)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationFontwoff
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationGzip)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationGzip
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationJavascript)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationJavascript
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationJson)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationJson
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationMsword)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationMsword
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOctetStream)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOgg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOgg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentChart)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentChart
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentChartTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentChartTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentFormula)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormula
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentFormulaTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormulaTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentGraphics)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphics
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentGraphicsTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphicsTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentImage)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentImage
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentImageTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentImageTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentMaster)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentMaster
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentPresentation)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentation
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentPresentationTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentationTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheet)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheet
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheetTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentText)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentText
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentTextTemplate)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentTextTemplate
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationOpenDocumentWeb)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationOpenDocumentWeb
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationPdf)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationPdf
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationRar)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationRar
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationRssXml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationRssXml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationRtf)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationRtf
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationSoapxml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationSoapxml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationVndmsexcel)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationVndmsexcel
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationVndmspowerpoint)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationVndmspowerpoint
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXbittorrent)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXbittorrent
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXCompressed)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXCompressed
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXfontttf)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXfontttf
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXhtml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXhtml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXJavascript)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXJavascript
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXmldtd)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXmldtd
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXmlXslt)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXmlXslt
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationXwwwformurlencoded)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationXwwwformurlencoded
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationZip)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationZip
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioAac)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioAac
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioBasic)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioBasic
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioBasic)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioBasic
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioL24)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioL24
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioMp4)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioMp4
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioMpeg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioMpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioOgg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioOgg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioRealaudio)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioRealaudio
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioVndwave)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioVndwave
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioVorbis)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioVorbis
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioWebm)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioWebm
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioXmswma)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioXmswma
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesAudioXmswax)
+		If pFindString Then
+			mt->ContentType = ContentTypes.AudioXmswax
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageGif)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageGif
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageIco)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageIco
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageJpeg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageJpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImagePJpeg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImagePjpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImagePng)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImagePng
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageSvg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageSvg
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageTiff)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageTiff
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageWbmp)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageWbmp
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesImageWebp)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ImageWebp
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMessageAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MessageAny
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMessageHttp)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MessageHttp
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMessageImdnxml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MessageImdnxml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMessagePartial)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MessagePartial
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMessageRfc822)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MessageRfc822
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartAlternative)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartAlternative
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartEncrypted)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartEncrypted
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartFormdata)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartFormdata
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartMixed)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartMixed
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartRelated)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartRelated
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesMultipartSigned)
+		If pFindString Then
+			mt->ContentType = ContentTypes.MultipartSigned
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextAny
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextCmd)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextCmd
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextCss)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextCss
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextCsv)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextCsv
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextHtml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextHtml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextPlain)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextPlain
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextPhp)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextPhp
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesTextXml)
+		If pFindString Then
+			mt->ContentType = ContentTypes.TextXml
+			mt->IsTextFormat = True
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoAny)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoAny
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideo3gpp)
+		If pFindString Then
+			mt->ContentType = ContentTypes.Video3gpp
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideo3gpp2)
+		If pFindString Then
+			mt->ContentType = ContentTypes.Video3gpp2
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoQuicktime)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoQuicktime
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoMp4)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoMp4
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoMpeg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoMpeg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoOgg)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoOgg
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoXflv)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoXflv
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoWebm)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoWebm
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoXMatroska)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoXMatroska
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoXMsvideo)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoXMsvideo
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesVideoXmswmv)
+		If pFindString Then
+			mt->ContentType = ContentTypes.VideoXmswmv
+			Return True
+		End If
+	End Scope
 	
 	Return False
 	

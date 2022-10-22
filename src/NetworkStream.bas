@@ -214,7 +214,7 @@ Function NetworkStreamBeginRead( _
 		CPtr(WSAOVERLAPPED Ptr, pOverlap), _
 		NULL _
 	)
-	If resWSARecv <> 0 Then
+	If resWSARecv Then
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING Then

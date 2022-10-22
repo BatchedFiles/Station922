@@ -221,7 +221,7 @@ Sub SetCurrentStatus( _
 	
 	this->CurrentStatus = Status
 	
-	If this->StatusHandler <> NULL Then
+	If this->StatusHandler Then
 		this->StatusHandler(this->Context, Status)
 	End If
 	
@@ -264,15 +264,15 @@ Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	If this->pIWebSites <> NULL Then
+	If this->pIWebSites Then
 		IWebSiteCollection_Release(this->pIWebSites)
 	End If
 	
-	If this->pIProcessors <> NULL Then
+	If this->pIProcessors Then
 		IHttpProcessorCollection_Release(this->pIProcessors)
 	End If
 	
-	If this->pIPool <> NULL Then
+	If this->pIPool Then
 		IThreadPool_Release(this->pIPool)
 	End If
 	
@@ -297,7 +297,7 @@ Function CreateWebServer( _
 			SizeOf(WebServer) _
 		)
 		
-		If this <> NULL Then
+		If this Then
 			
 			InitializeWebServer( _
 				this, _

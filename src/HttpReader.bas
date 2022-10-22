@@ -46,7 +46,7 @@ Sub UnInitializeHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
@@ -67,7 +67,7 @@ Function CreateHttpReader( _
 		SizeOf(HttpReader) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		InitializeHttpReader( _
 			this, _
 			pIMemoryAllocator _
@@ -308,11 +308,11 @@ Function HttpReaderSetBaseStream( _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If pIStream <> NULL Then
+	If pIStream Then
 		IBaseStream_AddRef(pIStream)
 	End If
 	

@@ -9,6 +9,8 @@
 
 Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
 
+Const CompareResultEqual As Long = 0
+
 Type _ClientUri
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -46,7 +48,7 @@ Function DecodeUri( _
 		
 		Dim c As WCHAR = pUri[i]
 		
-		If iHex <> 0 Then
+		If iHex Then
 			' 0 = 30 = 48 = 0
 			' 1 = 31 = 49 = 1
 			' 2 = 32 = 50 = 2
@@ -260,7 +262,7 @@ Function CreateClientUri( _
 		SizeOf(ClientUri) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeClientUri( _
 			this, _
@@ -456,7 +458,8 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 	Else
-		If lstrcmpW(pFirstChar, WStr("*")) = 0 Then
+		Dim CompareResult As Long = lstrcmpW(pFirstChar, WStr("*"))
+		If CompareResult = 0 Then
 			pScheme = NULL
 			SchemeLength = 0
 			
@@ -497,7 +500,7 @@ Function ClientUriUriFromString( _
 	this->Uri = bstrUri
 	
 	Scope
-		If SchemeLength <> 0 Then
+		If SchemeLength Then
 			this->Scheme = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pScheme, _
@@ -508,7 +511,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If UserNameLength <> 0 Then
+		If UserNameLength Then
 			this->UserName = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pUserName, _
@@ -519,7 +522,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If PasswordLength <> 0 Then
+		If PasswordLength Then
 			this->Password = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pPassword, _
@@ -530,7 +533,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If HostLength <> 0 Then
+		If HostLength Then
 			this->Host = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pHost, _
@@ -541,7 +544,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If PortLength <> 0 Then
+		If PortLength Then
 			this->Port = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pPort, _
@@ -554,7 +557,7 @@ Function ClientUriUriFromString( _
 	End Scope
 	
 	Scope
-		If PathLength <> 0 Then
+		If PathLength Then
 			this->Path = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pPath, _
@@ -565,7 +568,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If QueryLength <> 0 Then
+		If QueryLength Then
 			this->Query = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pQuery, _
@@ -576,7 +579,7 @@ Function ClientUriUriFromString( _
 			End If
 		End If
 		
-		If FragmentLength <> 0 Then
+		If FragmentLength Then
 			this->Fragment = CreateHeapStringLen( _
 				this->pIMemoryAllocator, _
 				pFragment, _

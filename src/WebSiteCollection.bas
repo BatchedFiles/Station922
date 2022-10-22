@@ -58,7 +58,9 @@ Function TreeFindNode( _
 		ByVal HostName As WString Ptr _
 	)As WebSiteNode Ptr
 	
-	Select Case lstrcmpiW(HostName, pNode->HostName)
+	Dim CompareResult As Long = lstrcmpiW(HostName, pNode->HostName)
+	
+	Select Case CompareResult
 		
 		Case Is > 0
 			If pNode->RightNode = NULL Then

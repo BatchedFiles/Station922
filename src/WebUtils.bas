@@ -12,6 +12,8 @@ Const TimeFormatString = WStr("HH:mm:ss GMT")
 Const DefaultCacheControl = WStr("max-age=2678400")
 Const BasicAuthorization = WStr("Basic")
 
+Const CompareResultEqual As Long = 0
+
 Declare Function GetBase64Sha1( _
 	ByVal pDestination As WString Ptr, _
 	ByVal pSource As WString Ptr _
@@ -73,7 +75,7 @@ Sub AddResponseCacheHeaders( _
 				@strFileLastModifiedHttpDate, _
 				pHeaderIfModifiedSince _
 			)
-			If resCompare = 0 Then
+			If resCompare = CompareResultEqual Then
 				IsFileModified = False
 			End If
 		End If
@@ -93,7 +95,7 @@ Sub AddResponseCacheHeaders( _
 				@strFileLastModifiedHttpDate, _
 				pHeaderIfUnModifiedSince _
 			)
-			If resCompare = 0 Then
+			If resCompare = CompareResultEqual Then
 				IsFileModified = True
 			End If
 		End If
@@ -118,7 +120,8 @@ Sub AddResponseCacheHeaders( _
 			)
 			
 			If SysStringLen(HeaderIfNoneMatch) Then
-				If lstrcmpiW(HeaderIfNoneMatch, ETag) = 0 Then
+				Dim CompareResult As Long = lstrcmpiW(HeaderIfNoneMatch, ETag)
+				If CompareResult = CompareResultEqual Then
 					IsFileModified = False
 				End If
 			End If
@@ -136,7 +139,8 @@ Sub AddResponseCacheHeaders( _
 			)
 			
 			If SysStringLen(HeaderIfMatch) Then
-				If lstrcmpiW(HeaderIfMatch, ETag) = 0 Then
+				Dim CompareResult As Long = lstrcmpiW(HeaderIfMatch, ETag)
+				If CompareResult = CompareResultEqual Then
 					IsFileModified = True
 				End If
 			End If

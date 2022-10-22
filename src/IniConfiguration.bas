@@ -39,6 +39,7 @@ Const UsersIniFileString = WStr("users.config")
 Const AdministratorsSectionString = WStr("admins")
 
 Const MaxSectionsLength As Integer = 32000 - 1
+Const CompareResultEqual As Long = 0
 
 ' Const ListenAddressLengthMaximum As Integer = 255
 ' Const ListenPortLengthMaximum As Integer = 15
@@ -84,13 +85,13 @@ Sub UnInitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
-	If this->pUsersIniFileName <> NULL Then
+	If this->pUsersIniFileName Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pUsersIniFileName)
 	End If
-	If this->pWebSitesIniFileName <> NULL Then
+	If this->pWebSitesIniFileName Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pWebSitesIniFileName)
 	End If
-	If this->pWebServerIniFileName <> NULL Then
+	If this->pWebServerIniFileName Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pWebServerIniFileName)
 	End If
 	
@@ -105,21 +106,21 @@ Function CreateWebServerIniConfiguration( _
 		(MAX_PATH + 1) * SizeOf(WString) _
 	)
 	
-	If pWebServerIniFileName <> NULL Then
+	If pWebServerIniFileName Then
 		
 		Dim pWebSitesIniFileName As WString Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
 			(MAX_PATH + 1) * SizeOf(WString) _
 		)
 		
-		If pWebSitesIniFileName <> NULL Then
+		If pWebSitesIniFileName Then
 			
 			Dim pUsersIniFileName As WString Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
 				(MAX_PATH + 1) * SizeOf(WString) _
 			)
 			
-			If pUsersIniFileName <> NULL Then
+			If pUsersIniFileName Then
 				
 				Dim ExeFileName As WString * (MAX_PATH + 1) = Any
 				Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
@@ -136,7 +137,7 @@ Function CreateWebServerIniConfiguration( _
 					SizeOf(WebServerIniConfiguration) _
 				)
 				
-				If this <> NULL Then
+				If this Then
 					
 					Scope
 						Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
@@ -386,12 +387,14 @@ Function WebServerIniConfigurationGetIsPasswordValid( _
 		Return S_FALSE
 	End If
 	
-	If lstrlenW(@PasswordBuffer) = 0 Then
+	Dim PasswordLength As Long = lstrlenW(@PasswordBuffer)
+	If PasswordLength = 0 Then
 		*pIsPasswordValid = False
 		Return S_FALSE
 	End If
 	
-	If lstrcmpW(@PasswordBuffer, pPassword) <> 0 Then
+	Dim CompareResult As Long = lstrcmpW(@PasswordBuffer, pPassword)
+	If CompareResult Then
 		*pIsPasswordValid = False
 		Return S_FALSE
 	End If

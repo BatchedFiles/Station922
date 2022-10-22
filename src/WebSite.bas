@@ -1043,11 +1043,11 @@ Function WebSiteGetBuffer( _
 			End Scope
 			
 			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
-				If FileBytes <> NULL Then
+				If FileBytes Then
 					UnmapViewOfFile(FileBytes)
 				End If
 				
-				If hMapOroginalFileHandle <> NULL Then
+				If hMapOroginalFileHandle Then
 					CloseHandle(hMapOroginalFileHandle)
 				End If
 			End If

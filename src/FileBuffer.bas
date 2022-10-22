@@ -71,11 +71,11 @@ Sub UnInitializeFileBuffer( _
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->pFilePath)
 	
-	If this->FileBytes <> NULL Then
+	If this->FileBytes Then
 		UnmapViewOfFile(this->FileBytes)
 	End If
 	
-	If this->hMapFile <> NULL Then
+	If this->hMapFile Then
 		CloseHandle(this->hMapFile)
 	End If
 	
@@ -103,7 +103,7 @@ Function CreateFileBuffer( _
 		pIMemoryAllocator, _
 		SizeOf(FileBuffer) _
 	)
-	If this <> NULL Then
+	If this Then
 		
 		InitializeFileBuffer( _
 			this, _
@@ -285,7 +285,7 @@ Function FileBufferGetSlice( _
 	)
 	
 	If this->ChunkIndex <> RequestChunkIndex Then
-		If this->FileBytes <> NULL Then
+		If this->FileBytes Then
 			UnmapViewOfFile(this->FileBytes)
 			this->FileBytes = NULL
 		End If

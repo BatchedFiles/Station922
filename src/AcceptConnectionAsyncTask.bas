@@ -35,7 +35,7 @@ Function CreateReadTask( _
 	
 	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
 	
-	If pIClientMemoryAllocator <> NULL Then
+	If pIClientMemoryAllocator Then
 		
 		Dim pIHttpReader As IHttpReader Ptr = Any
 		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
@@ -140,7 +140,7 @@ Sub UnInitializeAcceptConnectionAsyncTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)
 	
-	If this->pReadTask <> NULL Then
+	If this->pReadTask Then
 		IReadRequestAsyncIoTask_Release(this->pReadTask)
 	End If
 	
@@ -171,7 +171,7 @@ Function CreatePermanentAcceptConnectionAsyncTask( _
 			SizeOf(AcceptConnectionAsyncTask) _
 		)
 		
-		If this <> NULL Then
+		If this Then
 			InitializeAcceptConnectionAsyncTask( _
 				this, _
 				pIMemoryAllocator, _
@@ -296,7 +296,7 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 			@this->pStream _
 		)
 		
-		If this->pReadTask <> NULL Then
+		If this->pReadTask Then
 			
 			Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
 				this->pListener, _

@@ -12,6 +12,8 @@
 
 Extern GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTaskVirtualTable
 
+Const CompareResultEqual As Long = 0
+
 Type _WriteResponseAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -66,27 +68,27 @@ Sub UnInitializeWriteResponseAsyncTask( _
 		ByVal this As WriteResponseAsyncTask Ptr _
 	)
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If this->pIBuffer <> NULL Then
+	If this->pIBuffer Then
 		IBuffer_Release(this->pIBuffer)
 	End If
 	
-	If this->pIHttpWriter <> NULL Then
+	If this->pIHttpWriter Then
 		IHttpWriter_Release(this->pIHttpWriter)
 	End If
 	
-	If this->pIResponse <> NULL Then
+	If this->pIResponse Then
 		IServerResponse_Release(this->pIResponse)
 	End If
 	
@@ -121,7 +123,7 @@ Function CreateWriteResponseAsyncTask( _
 				SizeOf(WriteResponseAsyncTask) _
 			)
 			
-			If this <> NULL Then
+			If this Then
 				InitializeWriteResponseAsyncTask( _
 					this, _
 					pIMemoryAllocator, _
@@ -403,7 +405,7 @@ Function WriteResponseAsyncTaskGetBaseStream( _
 		ByVal ppStream As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_AddRef(this->pIStream)
 	End If
 	
@@ -418,11 +420,11 @@ Function WriteResponseAsyncTaskSetBaseStream( _
 		ByVal pStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If pStream <> NULL Then
+	If pStream Then
 		IBaseStream_AddRef(pStream)
 	End If
 	
@@ -439,7 +441,7 @@ Function WriteResponseAsyncTaskGetHttpReader( _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_AddRef(this->pIHttpReader)
 	End If
 	
@@ -454,11 +456,11 @@ Function WriteResponseAsyncTaskSetHttpReader( _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader <> NULL Then
+	If this->pIHttpReader Then
 		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
-	If pReader <> NULL Then
+	If pReader Then
 		IHttpReader_AddRef(pReader)
 	End If
 	
@@ -473,7 +475,7 @@ Function WriteResponseAsyncTaskGetClientRequest( _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_AddRef(this->pIRequest)
 	End If
 	
@@ -488,11 +490,11 @@ Function WriteResponseAsyncTaskSetClientRequest( _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
 	
-	If pIRequest <> NULL Then
+	If pIRequest Then
 		IClientRequest_AddRef(pIRequest)
 	End If
 	
-	If this->pIRequest <> NULL Then
+	If this->pIRequest Then
 		IClientRequest_Release(this->pIRequest)
 	End If
 	
@@ -539,8 +541,8 @@ Function WriteResponseAsyncTaskPrepare( _
 			Dim ClientURI As IClientUri Ptr = Any
 			IClientRequest_GetUri(this->pIRequest, @ClientURI)
 		
-			Dim IsRobotsTxt As Integer = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
-			If IsRobotsTxt = 0 Then
+			Dim IsRobotsTxt As Long = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
+			If IsRobotsTxt = CompareResultEqual Then
 				IsSiteMoved = False
 			Else
 				IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
@@ -574,7 +576,7 @@ Function WriteResponseAsyncTaskPrepare( _
 				pc.pIReader = this->pIHttpReader
 				pc.pIWriter = this->pIHttpWriter
 				
-				If this->pIBuffer <> NULL Then
+				If this->pIBuffer Then
 					IBuffer_Release(this->pIBuffer)
 				End If
 				

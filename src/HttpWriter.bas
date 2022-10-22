@@ -58,11 +58,11 @@ Sub UnInitializeHttpWriter( _
 		ByVal this As HttpWriter Ptr _
 	)
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If this->pIBuffer <> NULL Then
+	If this->pIBuffer Then
 		IBuffer_Release(this->pIBuffer)
 	End If
 	
@@ -77,7 +77,7 @@ Function CreateHttpWriter( _
 		SizeOf(HttpWriter) _
 	)
 	
-	If this <> NULL Then
+	If this Then
 		
 		InitializeHttpWriter( _
 			this, _
@@ -159,7 +159,7 @@ Function HttpWriterGetBaseStream( _
 		ByVal ppResult As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_AddRef(this->pIStream)
 	End If
 	
@@ -174,11 +174,11 @@ Function HttpWriterSetBaseStream( _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
 	
-	If this->pIStream <> NULL Then
+	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
 	End If
 	
-	If pIStream <> NULL Then
+	If pIStream Then
 		IBaseStream_AddRef(pIStream)
 	End If
 	
@@ -193,7 +193,7 @@ Function HttpWriterGetBuffer( _
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIBuffer <> NULL Then
+	If this->pIBuffer Then
 		IBuffer_AddRef(this->pIBuffer)
 	End If
 	
@@ -208,11 +208,11 @@ Function HttpWriterSetBuffer( _
 		ByVal pIBuffer As IBuffer Ptr _
 	)As HRESULT
 	
-	If this->pIBuffer <> NULL Then
+	If this->pIBuffer Then
 		IBuffer_Release(this->pIBuffer)
 	End If
 	
-	If pIBuffer <> NULL Then
+	If pIBuffer Then
 		IBuffer_AddRef(pIBuffer)
 	End If
 	

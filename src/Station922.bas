@@ -10,6 +10,7 @@ Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" A
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
 
 Const ServiceParam = WStr("/service")
+Const CompareResultEqual As Long = 0
 
 Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
 Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
@@ -129,7 +130,8 @@ Function EntryPoint()As Integer
 	
 	Dim RetCode As Long = Any
 	If Args > 1 Then
-		If lstrcmpiW(ppLines[1], ServiceParam) = 0 Then
+		Dim CompareResult As Long = lstrcmpiW(ppLines[1], ServiceParam)
+		If CompareResult = CompareResultEqual Then
 			RetCode = WindowsServiceMain()
 		Else
 			RetCode = ConsoleMain()
