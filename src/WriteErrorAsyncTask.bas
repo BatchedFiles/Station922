@@ -676,22 +676,15 @@ Sub UnInitializeWriteErrorAsyncTask( _
 	
 End Sub
 
+Sub WriteErrorAsyncTaskCreated( _
+		ByVal this As WriteErrorAsyncTask Ptr _
+	)
+	
+End Sub
+
 Function CreateWriteErrorAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As WriteErrorAsyncTask Ptr
-	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = SizeOf(WriteErrorAsyncTask)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr(!"WriteErrorAsyncTask creating\t"), _
-			@vtAllocatedBytes _
-		)
-	End Scope
-	#endif
 	
 	Dim pIHttpWriter As IHttpWriter Ptr = Any
 	Dim hrCreateWriter As HRESULT = CreateInstance( _
@@ -737,17 +730,7 @@ Function CreateWriteErrorAsyncTask( _
 						pIHttpWriter _
 					)
 					
-					#if __FB_DEBUG__
-					Scope
-						Dim vtEmpty As VARIANT = Any
-						VariantInit(@vtEmpty)
-						LogWriteEntry( _
-							LogEntryType.Debug, _
-							WStr("WriteErrorAsyncTask created"), _
-							@vtEmpty _
-						)
-					End Scope
-					#endif
+					WriteErrorAsyncTaskCreated(this)
 					
 					Return this
 				End If
@@ -765,21 +748,15 @@ Function CreateWriteErrorAsyncTask( _
 	
 End Function
 
-Sub DestroyWriteErrorAsyncTask( _
+Sub WriteErrorAsyncTaskDestroyed( _
 		ByVal this As WriteErrorAsyncTask Ptr _
 	)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WriteErrorAsyncTask destroying"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+End Sub
+
+Sub DestroyWriteErrorAsyncTask( _
+		ByVal this As WriteErrorAsyncTask Ptr _
+	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
@@ -787,17 +764,7 @@ Sub DestroyWriteErrorAsyncTask( _
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	#if __FB_DEBUG__
-	Scope
-		Dim vtEmpty As VARIANT = Any
-		VariantInit(@vtEmpty)
-		LogWriteEntry( _
-			LogEntryType.Debug, _
-			WStr("WriteErrorAsyncTask destroyed"), _
-			@vtEmpty _
-		)
-	End Scope
-	#endif
+	WriteErrorAsyncTaskDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

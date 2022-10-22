@@ -40,7 +40,6 @@ Sub InitializeHeapMemoryAllocator( _
 	this->pISpyObject = NULL
 	this->hHeap = hHeap
 	this->pReadedData = pReadedData
-	InitializeClientRequestBuffer(pReadedData)
 	
 End Sub
 
@@ -71,10 +70,6 @@ End Sub
 Function CreateHeapMemoryAllocator( _
 	)As HeapMemoryAllocator Ptr
 	
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
-	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
 		PRIVATEHEAP_INITIALSIZE, _
@@ -90,6 +85,7 @@ Function CreateHeapMemoryAllocator( _
 		)
 		
 		If pReadedData Then
+			InitializeClientRequestBuffer(pReadedData)
 			
 			Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 				hHeap, _
@@ -105,11 +101,15 @@ Function CreateHeapMemoryAllocator( _
 				Return this
 			End If
 			
+			' No need to HeapFree(pReadedData)
 		End If
 		
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = SizeOf(HeapMemoryAllocator)
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
+			WStr(!"AllocMemory Failed\t"), _
 			@vtAllocatedBytes _
 		)
 		
@@ -155,7 +155,7 @@ Sub DestroyHeapMemoryAllocator( _
 					vtMemoryLeaksSize.llVal = phe.cbData
 					LogWriteEntry( _
 						LogEntryType.Error, _
-						WStr(!"\t\t\t\tMemoryLeak Bytes\t"), _
+						WStr(!"MemoryLeak Bytes\t"), _
 						@vtMemoryLeaksSize _
 					)
 				End If
@@ -238,16 +238,15 @@ Function HeapMemoryAllocatorAlloc( _
 		BytesCount = IMallocSpy_PreAlloc(this->pISpyObject, cb)
 	End If
 	
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = CLng(BytesCount)
-	
 	Dim pMemory As Any Ptr = HeapAlloc( _
 		this->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
 		BytesCount _
 	)
 	If pMemory = NULL Then
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = CLng(BytesCount)
 		LogWriteEntry( _
 			LogEntryType.Error, _
 			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
