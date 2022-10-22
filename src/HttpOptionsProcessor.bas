@@ -275,6 +275,8 @@ Function HttpOptionsProcessorEndProcess( _
 			Return HTTPASYNCPROCESSOR_S_IO_PENDING
 			
 	End Select
+
+	Return S_OK
 	
 End Function
 

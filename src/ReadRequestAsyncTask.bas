@@ -395,6 +395,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 			
 	End Select
 	
+	Return S_OK
+	
 End Function
 
 Function ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _

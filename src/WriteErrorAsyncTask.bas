@@ -954,6 +954,8 @@ Function WriteErrorAsyncTaskEndExecute( _
 			
 	End Select
 	
+	Return S_OK
+	
 End Function
 
 Function WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _

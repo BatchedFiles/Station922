@@ -227,6 +227,8 @@ Function HttpTraceProcessorEndProcess( _
 			
 	End Select
 	
+	Return S_OK
+	
 End Function
 
 
