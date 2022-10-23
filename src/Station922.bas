@@ -5,6 +5,12 @@
 #include once "ConsoleMain.bi"
 #include once "WindowsServiceMain.bi"
 
+#ifdef WITHOUT_RUNTIME
+#define ExitProgram(RetCode) Return RetCode
+#else
+#define ExitProgram(RetCode) End(RetCode)
+#endif
+
 Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
 Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
@@ -32,7 +38,6 @@ Function LoadWsaFunctions()As Boolean
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		
 		Dim resLoadAcceptEx As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
@@ -52,7 +57,6 @@ Function LoadWsaFunctions()As Boolean
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		
 		Dim resGetAcceptExSockaddrs As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
@@ -72,7 +76,6 @@ Function LoadWsaFunctions()As Boolean
 	
 	Scope
 		Dim dwBytes As DWORD = Any
-		
 		Dim resGetTransmitPackets As Long = WSAIoctl( _
 			ListenSocket, _
 			SIO_GET_EXTENSION_FUNCTION_POINTER, _
@@ -104,51 +107,44 @@ Function EntryPoint()As Integer
 		Dim wsa As WSAData = Any
 		Dim resWsaStartup As Long = WSAStartup(MAKEWORD(2, 2), @wsa)
 		If resWsaStartup <> NO_ERROR Then
-#ifdef WITHOUT_RUNTIME
-			Return 1
-#else
-			End(1)
-#endif
+			ExitProgram(1)
 		End If
 	End Scope
 	
-	Dim resLoadWsa As Boolean = LoadWsaFunctions()
-	If resLoadWsa = False Then
-#ifdef WITHOUT_RUNTIME
-		Return 1
-#else
-		End(1)
-#endif
-	End If
-	
-	Dim pLine As LPWSTR = GetCommandLineW()
-	Dim Args As Long = Any
-	Dim ppLines As LPWSTR Ptr = CommandLineToArgvW( _
-		pLine, _
-		@Args _
-	)
+	Scope
+		Dim resLoadWsa As Boolean = LoadWsaFunctions()
+		If resLoadWsa = False Then
+			WSACleanup()
+			ExitProgram(1)
+		End If
+	End Scope
 	
 	Dim RetCode As Long = Any
-	If Args > 1 Then
-		Dim CompareResult As Long = lstrcmpiW(ppLines[1], ServiceParam)
-		If CompareResult = CompareResultEqual Then
-			RetCode = WindowsServiceMain()
+	Scope
+		Dim pLine As LPWSTR = GetCommandLineW()
+		Dim Args As Long = Any
+		Dim ppLines As LPWSTR Ptr = CommandLineToArgvW( _
+			pLine, _
+			@Args _
+		)
+		
+		If Args > 1 Then
+			Dim CompareResult As Long = lstrcmpiW(ppLines[1], ServiceParam)
+			If CompareResult = CompareResultEqual Then
+				RetCode = WindowsServiceMain()
+			Else
+				RetCode = ConsoleMain()
+			End If
 		Else
 			RetCode = ConsoleMain()
 		End If
-	Else
-		RetCode = ConsoleMain()
-	End If
-	
-	LocalFree(ppLines)
+		
+		LocalFree(ppLines)
+	End Scope
 	
 	WSACleanup()
 	
-#ifdef WITHOUT_RUNTIME
-	Return RetCode
-#else
-	End(RetCode)
-#endif
+	ExitProgram(RetCode)
 	
 #ifdef WITHOUT_RUNTIME
 End Function
