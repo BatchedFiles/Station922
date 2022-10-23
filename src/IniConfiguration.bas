@@ -129,6 +129,9 @@ Function CreateWebServerIniConfiguration( _
 					MAX_PATH _
 				)
 				If ExeFileNameLength = 0 Then
+					IMalloc_Free(pIMemoryAllocator, pUsersIniFileName)
+					IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
+					IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
 					Return NULL
 				End If
 				
@@ -332,7 +335,7 @@ Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal pWorkerThreadsCount As Integer Ptr _
 	)As HRESULT
 	
-	Dim si As SYSTEM_INFO
+	Dim si As SYSTEM_INFO = Any
 	GetSystemInfo(@si)
 	
 	Dim DefaultWorkerThreadsCount As INT_ = Cast(INT_, 2 * si.dwNumberOfProcessors)
@@ -423,7 +426,6 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	End Scope
 	
 	Dim AllSections As WString * (MaxSectionsLength + 1) = Any
-	
 	Scope
 		Dim DefaultValue As WString * 4 = Any
 		ZeroMemory(@DefaultValue, 4 * SizeOf(WString))
@@ -445,28 +447,11 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	End Scope
 	
 	Dim lpwszHost As WString Ptr = @AllSections
-	Dim HostLength As Integer = lstrlenW(lpwszHost)
+	Dim HostLength As Integer = CInt(lstrlenW(lpwszHost))
 	
-	Do While HostLength
+	Do
 		
-		Dim WebSiteName As WString * (MAX_PATH + 1) = Any
-		lstrcpyW(WebSiteName, lpwszHost)
-		
-		For i As Integer = 0 To HostLength - 1
-			
-			Dim character As Integer = WebSiteName[i]
-			
-			Select Case character
-				
-				Case Characters.LeftCurlyBracket
-					WebSiteName[i] = Characters.LeftSquareBracket
-					
-				Case Characters.RightCurlyBracket
-					WebSiteName[i] = Characters.RightSquareBracket
-					
-			End Select
-		Next
-		
+		Dim bstrWebSite As HeapBSTR = Any
 		Dim pIWebSite As IWebSite Ptr = Any
 		Dim hr2 As HRESULT = CreatePermanentInstance( _
 			this->pIMemoryAllocator, _
@@ -480,12 +465,33 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			Return hr2
 		End If
 		
-		Dim bstrWebSite As HeapBSTR = CreatePermanentHeapString( _
-			this->pIMemoryAllocator, _
-			@WebSiteName _
-		)
-		IWebSite_SetHostName(pIWebSite, bstrWebSite)
-		HeapSysFreeString(bstrWebSite)
+		Scope
+			Dim WebSiteName As WString * (MAX_PATH + 1) = Any
+			Dim cbBytes As UInteger = HostLength * SizeOf(WString)
+			CopyMemory(@WebSiteName, lpwszHost, cbBytes)
+			
+			For i As Integer = 0 To HostLength - 1
+				
+				Dim character As wchar_t = WebSiteName[i]
+				
+				Select Case character
+					
+					Case Characters.LeftCurlyBracket
+						WebSiteName[i] = Characters.LeftSquareBracket
+						
+					Case Characters.RightCurlyBracket
+						WebSiteName[i] = Characters.RightSquareBracket
+						
+				End Select
+			Next
+			
+			bstrWebSite = CreatePermanentHeapStringLen( _
+				this->pIMemoryAllocator, _
+				@WebSiteName, _
+				HostLength _
+			)
+			IWebSite_SetHostName(pIWebSite, bstrWebSite)
+		End Scope
 		
 		Scope
 			Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
@@ -505,9 +511,10 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapString( _
+			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
 				this->pIMemoryAllocator, _
-				@PhisycalDir _
+				@PhisycalDir, _
+				ValueLength _
 			)
 			IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
 			HeapSysFreeString(bstrPhisycalDir)
@@ -531,9 +538,10 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapString( _
+			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
 				this->pIMemoryAllocator, _
-				@VirtualPath _
+				@VirtualPath, _
+				ValueLength _
 			)
 			IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
 			HeapSysFreeString(bstrVirtualPath)
@@ -557,9 +565,10 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapString( _
+			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
 				this->pIMemoryAllocator, _
-				@MovedUrl _
+				@MovedUrl, _
+				ValueLength _
 			)
 			IWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
 			HeapSysFreeString(bstrMovedUrl)
@@ -579,14 +588,14 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			End If
 		End Scope
 		
-		IWebSiteCollection_Add(pIWebSiteCollection, WebSiteName, pIWebSite)
-		
+		IWebSiteCollection_Add(pIWebSiteCollection, bstrWebSite, pIWebSite)
 		IWebSite_Release(pIWebSite)
+		HeapSysFreeString(bstrWebSite)
 		
 		lpwszHost = @lpwszHost[HostLength + 1]
-		HostLength = lstrlenW(lpwszHost)
+		HostLength = CInt(lstrlenW(lpwszHost))
 		
-	Loop
+	Loop While HostLength
 	
 	*ppIWebSiteCollection = pIWebSiteCollection
 	
