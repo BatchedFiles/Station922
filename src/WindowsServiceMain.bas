@@ -182,7 +182,7 @@ Sub SvcMain( _
 	
 End Sub
 
-Function WindowsServiceMain()As Long
+Function WindowsServiceMain()As Integer
 	
 	Dim DispatchTable As SERVICE_TABLE_ENTRYW_ZERO = Type( _
 		Type<SERVICE_TABLE_ENTRYW>(@ServiceName, @SvcMain), _

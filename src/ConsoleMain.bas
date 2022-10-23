@@ -34,7 +34,7 @@ Function ConsoleRunnableStatusHandler( _
 	
 End Function
 
-Function ConsoleMain()As Long
+Function ConsoleMain()As Integer
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim hrGetAllocator As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)

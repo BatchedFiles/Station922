@@ -2,6 +2,6 @@
 #define CONSOLEMAIN_BI
 
 Declare Function ConsoleMain( _
-)As Long
+)As Integer
 
 #endif

@@ -5,12 +5,6 @@
 #include once "ConsoleMain.bi"
 #include once "WindowsServiceMain.bi"
 
-#ifdef WITHOUT_RUNTIME
-#define ExitProgram(RetCode) Return RetCode
-#else
-#define ExitProgram(RetCode) End(RetCode)
-#endif
-
 Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
 Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
@@ -99,15 +93,13 @@ Function LoadWsaFunctions()As Boolean
 	
 End Function
 
-#ifdef WITHOUT_RUNTIME
 Function EntryPoint()As Integer
-#endif
 	
 	Scope
 		Dim wsa As WSAData = Any
 		Dim resWsaStartup As Long = WSAStartup(MAKEWORD(2, 2), @wsa)
 		If resWsaStartup <> NO_ERROR Then
-			ExitProgram(1)
+			Return 1
 		End If
 	End Scope
 	
@@ -115,11 +107,11 @@ Function EntryPoint()As Integer
 		Dim resLoadWsa As Boolean = LoadWsaFunctions()
 		If resLoadWsa = False Then
 			WSACleanup()
-			ExitProgram(1)
+			Return 1
 		End If
 	End Scope
 	
-	Dim RetCode As Long = Any
+	Dim RetCode As Integer = Any
 	Scope
 		Dim pLine As LPWSTR = GetCommandLineW()
 		Dim Args As Long = Any
@@ -144,8 +136,11 @@ Function EntryPoint()As Integer
 	
 	WSACleanup()
 	
-	ExitProgram(RetCode)
+	Return RetCode
 	
-#ifdef WITHOUT_RUNTIME
 End Function
+
+#ifndef WITHOUT_RUNTIME
+Dim RetCode As Long = CLng(EntryPoint())
+End(RetCode)
 #endif

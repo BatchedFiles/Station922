@@ -2,6 +2,6 @@
 #define WINDOWSSERVICEMAIN_BI
 
 Declare Function WindowsServiceMain( _
-)As Long
+)As Integer
 
 #endif
