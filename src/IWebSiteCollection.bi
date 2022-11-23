@@ -53,6 +53,16 @@ Type IWebSiteCollectionVirtualTable
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
+	GetDefaultWebSite As Function( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
+	SetDefaultWebSite As Function( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
 	' Для коллекций:
 	' Count()
 	' Item()
@@ -73,5 +83,7 @@ End Type
 #define IWebSiteCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
 #define IWebSiteCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
 #define IWebSiteCollection_ItemWeakPtr(this, pKey, ppIWebSite) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIWebSite)
+#define IWebSiteCollection_GetDefaultWebSite(this, ppIWebSite) (this)->lpVtbl->GetDefaultWebSite(this, ppIWebSite)
+#define IWebSiteCollection_SetDefaultWebSite(this, pIWebSite) (this)->lpVtbl->SetDefaultWebSite(this, pIWebSite)
 
 #endif

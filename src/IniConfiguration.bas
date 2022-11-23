@@ -449,7 +449,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	Dim lpwszHost As WString Ptr = @AllSections
 	Dim HostLength As Integer = CInt(lstrlenW(lpwszHost))
 	
-	Do
+	Do While HostLength
 		
 		Dim bstrWebSite As HeapBSTR = Any
 		Dim pIWebSite As IWebSite Ptr = Any
@@ -595,7 +595,107 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		lpwszHost = @lpwszHost[HostLength + 1]
 		HostLength = CInt(lstrlenW(lpwszHost))
 		
-	Loop While HostLength
+	Loop
+	
+	Scope
+		Dim pIDefaultWebSite As IWebSite Ptr = Any
+		Dim hr2 As HRESULT = CreatePermanentInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_WEBSITE, _
+			@IID_IWebSite, _
+			@pIDefaultWebSite _
+		)
+		If FAILED(hr2) Then
+			IWebSiteCollection_Release(pIWebSiteCollection)
+			*ppIWebSiteCollection = NULL
+			Return hr2
+		End If
+		
+		/'
+		Scope
+			Const DefaultWebSiteName = WStr("/")
+			Dim pWebSiteName As WString Ptr = @DefaultWebSiteName
+			
+			Dim bstrWebSite As HeapBSTR = CreatePermanentHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pWebSiteName, _
+				HostLength _
+			)
+			IWebSite_SetHostName(pIDefaultWebSite, bstrWebSite)
+			HeapSysFreeString(bstrWebSite)
+		End Scope
+		'/
+		
+		Scope
+			Dim ExeFileName As WString * (MAX_PATH + 1) = Any
+			GetModuleFileNameW( _
+				0, _
+				@ExeFileName, _
+				MAX_PATH _
+			)
+			
+			Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@ExecutableDirectory, @ExeFileName)
+			PathRemoveFileSpecW(@ExecutableDirectory)
+			
+			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapString( _
+				this->pIMemoryAllocator, _
+				@ExecutableDirectory _
+			)
+			IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, bstrPhisycalDir)
+			HeapSysFreeString(bstrPhisycalDir)
+		End Scope
+		
+		Scope
+			Const DefaultVirtualPath = WStr("/")
+			Dim pVirtualPath As WString Ptr = @DefaultVirtualPath
+			
+			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
+				this->pIMemoryAllocator, _
+				pVirtualPath, _
+				Len(DefaultVirtualPath) _
+			)
+			IWebSite_SetVirtualPath(pIDefaultWebSite, bstrVirtualPath)
+			HeapSysFreeString(bstrVirtualPath)
+		End Scope
+		
+		/'
+		Scope
+			Dim MovedUrl As WString * (MAX_PATH + 1) = Any
+			Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+				lpwszHost, _
+				@MovedUrlKeyString, _
+				@EmptyString, _
+				@MovedUrl, _
+				Cast(DWORD, MAX_PATH), _
+				this->pWebSitesIniFileName _
+			)
+			If ValueLength = 0 Then
+				Dim dwError As DWORD = GetLastError()
+				IWebSite_Release(pIWebSite)
+				IWebSiteCollection_Release(pIWebSiteCollection)
+				*ppIWebSiteCollection = NULL
+				Return HRESULT_FROM_WIN32(dwError)
+			End If
+			
+			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
+				this->pIMemoryAllocator, _
+				@MovedUrl, _
+				ValueLength _
+			)
+			IWebSite_SetMovedUrl(pIDefaultWebSite, bstrMovedUrl)
+			HeapSysFreeString(bstrMovedUrl)
+		End Scope
+		'/
+		
+		Scope
+			IWebSite_SetIsMoved(pIDefaultWebSite, False)
+		End Scope
+		
+		IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
+		IWebSite_Release(pIDefaultWebSite)
+		
+	End Scope
 	
 	*ppIWebSiteCollection = pIWebSiteCollection
 	

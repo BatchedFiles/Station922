@@ -110,15 +110,4 @@ Declare Function WriteErrorAsyncTaskPrepare( _
 	ByVal this As WriteErrorAsyncTask Ptr _
 )As HRESULT
 
-Declare Function ProcessErrorRequestResponse( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr, _
-	ByVal pIStream As IBaseStream Ptr, _
-	ByVal pIHttpReader As IHttpReader Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr, _
-	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal hrReadError As HRESULT, _
-	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
-)As HRESULT
-
 #endif

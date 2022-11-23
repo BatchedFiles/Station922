@@ -68,6 +68,15 @@ Declare Function WebSiteGetBuffer( _
 	ByVal ppResult As IBuffer Ptr Ptr _
 )As HRESULT
 
+Declare Function WebSiteGetErrorBuffer( _
+	ByVal this As WebSite Ptr, _
+	ByVal pIMalloc As IMalloc Ptr, _
+	ByVal HttpError As ResponseErrorCode, _
+	ByVal hrErrorCode As HRESULT, _
+	ByVal StatusCode As HttpStatusCodes, _
+	ByVal ppResult As IBuffer Ptr Ptr _
+)As HRESULT
+
 Declare Function WebSiteSetHostName( _
 	ByVal this As WebSite Ptr, _
 	ByVal pHost As HeapBSTR _

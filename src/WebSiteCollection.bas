@@ -21,8 +21,8 @@ Type _WebSiteCollection
 	lpVtbl As Const IWebSiteCollectionVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	pDefaultNode As WebSiteNode Ptr
 	pTree As WebSiteNode Ptr
+	pDefaultWebSite As IWebSite Ptr
 	WebSitesCount As Integer
 End Type
 
@@ -136,7 +136,6 @@ Sub InitializeWebSiteCollection( _
 	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pDefaultNode = NULL
 	this->pTree = NULL
 	this->WebSitesCount = 0
 	
@@ -298,6 +297,28 @@ Function WebSiteCollectionItemWeakPtr( _
 	
 End Function
 
+Function WebSiteCollectionGetDefaultWebSite( _
+		ByVal this As WebSiteCollection Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	
+	*ppIWebSite = this->pDefaultWebSite
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteCollectionSetDefaultWebSite( _
+		ByVal this As WebSiteCollection Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	this->pDefaultWebSite = pIWebSite
+	
+	Return S_OK
+	
+End Function
+
 
 Function IWebSiteCollectionQueryInterface( _
 		ByVal this As IWebSiteCollection Ptr, _
@@ -357,6 +378,20 @@ Function IWebSiteCollectionItemWeakPtr( _
 	Return WebSiteCollectionItemWeakPtr(ContainerOf(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
 End Function
 
+Function IWebSiteCollectionGetDefaultWebSite( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
+	)As HRESULT
+	Return WebSiteCollectionGetDefaultWebSite(ContainerOf(this, WebSiteCollection, lpVtbl), ppIWebSite)
+End Function
+
+Function IWebSiteCollectionSetDefaultWebSite( _
+		ByVal this As IWebSiteCollection Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	Return WebSiteCollectionSetDefaultWebSite(ContainerOf(this, WebSiteCollection, lpVtbl), pIWebSite)
+End Function
+
 Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable = Type( _
 	@IWebSiteCollectionQueryInterface, _
 	@IWebSiteCollectionAddRef, _
@@ -365,5 +400,7 @@ Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable 
 	@IWebSiteCollectionItem, _
 	@IWebSiteCollectionCount, _
 	@IWebSiteCollectionAdd, _
-	@IWebSiteCollectionItemWeakPtr _
+	@IWebSiteCollectionItemWeakPtr, _
+	@IWebSiteCollectionGetDefaultWebSite, _
+	@IWebSiteCollectionSetDefaultWebSite _
 )

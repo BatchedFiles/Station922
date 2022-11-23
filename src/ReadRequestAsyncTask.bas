@@ -5,6 +5,7 @@
 #include once "HeapBSTR.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
+#include once "WebUtils.bi"
 #include once "WriteErrorAsyncTask.bi"
 #include once "WriteResponseAsyncTask.bi"
 

@@ -73,6 +73,15 @@ Type IWebSiteVirtualTable
 		ByVal ppResult As IBuffer Ptr Ptr _
 	)As HRESULT
 	
+	GetErrorBuffer As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal HttpError As ResponseErrorCode, _
+		ByVal hrErrorCode As HRESULT, _
+		ByVal StatusCode As HttpStatusCodes, _
+		ByVal ppResult As IBuffer Ptr Ptr _
+	)As HRESULT
+	
 	SetHostName As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pHost As HeapBSTR _
@@ -119,6 +128,7 @@ End Type
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
 #define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
+#define IWebSite_GetErrorBuffer(this, pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult) (this)->lpVtbl->GetErrorBuffer(this, pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
 #define IWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)
 #define IWebSite_SetSitePhysicalDirectory(this, pPhysicalDirectory) (this)->lpVtbl->SetSitePhysicalDirectory(this, pPhysicalDirectory)
 #define IWebSite_SetVirtualPath(this, pVirtualPath) (this)->lpVtbl->SetVirtualPath(this, pVirtualPath)

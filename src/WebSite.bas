@@ -1,17 +1,21 @@
 #include once "WebSite.bi"
 #include once "win\shlwapi.bi"
+#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "FileBuffer.bi"
 #include once "HeapBSTR.bi"
+#include once "IArrayStringWriter.bi"
 #include once "Logger.bi"
+#include once "MemoryBuffer.bi"
 #include once "Mime.bi"
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
 Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
+Const DefaultFileNames As Integer = 8
 
 Const WebSocketGuidString = WStr("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
 Const UpgradeString = WStr("Upgrade")
@@ -22,6 +26,47 @@ Const FileGoneExtension = WStr(".410")
 Const QuoteString = WStr("""")
 Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
+
+' Размер буфера в символах для записи в него кода html страницы с ошибкой
+Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
+
+Const DefaultContentLanguage = WStr("en")
+Const DefaultCacheControlNoCache = WStr("no-cache")
+
+Const MovedPermanently = WStr("Moved Permanently.")
+Const HttpError400BadRequest = WStr("Bad Request.")
+Const HttpError400BadPath = WStr("Bad Path.")
+Const HttpError400Host = WStr("Bad Host Header.")
+Const HttpError403Forbidden = WStr("Forbidden.")
+Const HttpError404FileNotFound = WStr("File Not Found.")
+Const HttpError404SiteNotFound = WStr("Website Not Found.")
+Const HttpError405NotAllowed = WStr("Method Not Allowed.")
+Const HttpError410Gone = WStr("File Gone.")
+Const HttpError411LengthRequired = WStr("Length Header Required.")
+Const HttpError413RequestEntityTooLarge = WStr("Request Entity Too Large.")
+Const HttpError414RequestUrlTooLarge = WStr("Request URL Too Large.")
+Const HttpError416RangeNotSatisfiable = WStr("Range Not Satisfiable.")
+Const HttpError431RequestRequestHeaderFieldsTooLarge = WStr("Request Header Fields Too Large")
+
+Const HttpError500InternalServerError = WStr("Internal Server Error.")
+Const HttpError500FileNotAvailable = WStr("File Not Available.")
+Const HttpError500CannotCreateChildProcess = WStr("Can not Create Child Process")
+Const HttpError500CannotCreatePipe = WStr("Can not Create Pipe.")
+Const HttpError501NotImplemented = WStr("Method Not Implemented.")
+Const HttpError501ContentTypeEmpty = WStr("Content-Type Header Empty.")
+Const HttpError501ContentEncoding = WStr("Content Encoding is wrong.")
+Const HttpError502BadGateway = WStr("Bad GateAway.")
+Const HttpError503ThreadError = WStr("Can not create Thread.")
+Const HttpError503Memory = WStr("Can not Allocate Memory.")
+Const HttpError504GatewayTimeout = WStr("GateAway Timeout")
+Const HttpError505VersionNotSupported = WStr("HTTP Version Not Supported.")
+
+Const NeedUsernamePasswordString = WStr("Need Username And Password")
+Const NeedUsernamePasswordString1 = WStr("Authorization wrong")
+Const NeedUsernamePasswordString2 = WStr("Need Basic Authorization")
+Const NeedUsernamePasswordString3 = WStr("Password must not be empty")
+
+Const DefaultVirtualPath = WStr("/")
 
 Type _WebSite
 	#if __FB_DEBUG__
@@ -36,6 +81,216 @@ Type _WebSite
 	pMovedUrl As HeapBSTR
 	IsMoved As Boolean
 End Type
+
+Sub FormatMessageErrorBody( _
+		ByVal pIWriter As IArrayStringWriter Ptr, _
+		ByVal StatusCode As HttpStatusCodes, _
+		ByVal VirtualPath As HeapBSTR, _
+		ByVal BodyText As WString Ptr, _
+		ByVal hrErrorCode As HRESULT _
+	)
+	
+	Const HttpStartHeadTag = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" />")
+	Const HttpStartTitleTag = WStr("<title>")
+	Const HttpEndTitleTag = WStr("</title>")
+	Const HttpEndHeadTag = WStr("</head>")
+	Const HttpStartBodyTag = WStr("<body>")
+	Const HttpStartH1Tag = WStr("<h1>")
+	Const HttpEndH1Tag = WStr("</h1>")
+	
+	' 300
+	Const ClientMovedString = WStr("Redirection")
+	' 400
+	Const ClientErrorString = WStr("Client Error")
+	' 500
+	Const ServerErrorString = WStr("Server Error")
+	Const HttpErrorInApplicationString = WStr(" in application ")
+	
+	Const HttpStartH2Tag = WStr("<h2>")
+	Const HttpStatusCodeString = WStr("HTTP Status Code ")
+	Const HttpEndH2Tag = WStr("</h2>")
+	Const HttpHresultErrorCodeString = WStr("HRESULT Error Code")
+	Const HttpStartPTag = WStr("<p>")
+	Const HttpEndPTag = WStr("</p>")
+	
+	'<p>Visit <a href=""/"">website main page</a>.</p>
+	
+	Const HttpEndBodyTag = WStr("</body></html>")
+	
+	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartHeadTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartTitleTag)
+	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndTitleTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndHeadTag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartBodyTag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH1Tag)
+	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH1Tag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	
+	Select Case StatusCode
+		
+		Case 300 To 399
+			IArrayStringWriter_WriteString(pIWriter, ClientMovedString)
+			
+		Case 400 To 499
+			IArrayStringWriter_WriteString(pIWriter, ClientErrorString)
+			
+		Case 500 To 599
+			IArrayStringWriter_WriteString(pIWriter, ServerErrorString)
+			
+	End Select
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpErrorInApplicationString)
+	IArrayStringWriter_WriteLengthString(pIWriter, VirtualPath, SysStringLen(VirtualPath))
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
+	IArrayStringWriter_WriteString(pIWriter, HttpStatusCodeString)
+	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	IArrayStringWriter_WriteString(pIWriter, BodyText)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
+	IArrayStringWriter_WriteString(pIWriter, HttpHresultErrorCodeString)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	IArrayStringWriter_WriteUInt32(pIWriter, hrErrorCode)
+	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	
+	Dim wBuffer As WString * 256 = Any
+	Dim CharsCount As DWORD = FormatMessageW( _
+		FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
+		NULL, _
+		hrErrorCode, _
+		MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
+		@wBuffer, _
+		256 - 1, _
+		NULL _
+	)
+	If CharsCount Then
+		IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+		IArrayStringWriter_WriteString(pIWriter, wBuffer)
+		IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	End If
+	
+	IArrayStringWriter_WriteString(pIWriter, HttpEndBodyTag)
+	
+End Sub
+
+Function GetErrorBodyText( _
+		ByVal HttpError As ResponseErrorCode _
+	)As WString Ptr
+	
+	Select Case HttpError
+		
+		Case ResponseErrorCode.MovedPermanently
+			Return @MovedPermanently
+			
+		Case ResponseErrorCode.BadRequest
+			Return @HttpError400BadRequest
+			
+		Case ResponseErrorCode.PathNotValid
+			Return @HttpError400BadPath
+			
+		Case ResponseErrorCode.HostNotFound
+			Return @HttpError400Host
+			
+		Case ResponseErrorCode.SiteNotFound
+			Return @HttpError404SiteNotFound
+			
+		Case ResponseErrorCode.NeedAuthenticate
+			Return @NeedUsernamePasswordString
+			
+		Case ResponseErrorCode.BadAuthenticateParam
+			Return @NeedUsernamePasswordString1
+			
+		Case ResponseErrorCode.NeedBasicAuthenticate
+			Return @NeedUsernamePasswordString2
+			
+		Case ResponseErrorCode.EmptyPassword
+			Return @NeedUsernamePasswordString3
+			
+		Case ResponseErrorCode.BadUserNamePassword
+			Return @NeedUsernamePasswordString
+			
+		Case ResponseErrorCode.Forbidden
+			Return @HttpError403Forbidden
+			
+		Case ResponseErrorCode.FileNotFound
+			Return @HttpError404FileNotFound
+			
+		Case ResponseErrorCode.MethodNotAllowed
+			Return @HttpError405NotAllowed
+			
+		Case ResponseErrorCode.FileGone
+			Return @HttpError410Gone
+			
+		Case ResponseErrorCode.LengthRequired
+			Return @HttpError411LengthRequired
+			
+		Case ResponseErrorCode.RequestEntityTooLarge
+			Return @HttpError413RequestEntityTooLarge
+			
+		Case ResponseErrorCode.RequestUrlTooLarge
+			Return @HttpError414RequestUrlTooLarge
+			
+		Case ResponseErrorCode.RequestRangeNotSatisfiable
+			Return @HttpError416RangeNotSatisfiable
+			
+		Case ResponseErrorCode.RequestHeaderFieldsTooLarge
+			Return @HttpError431RequestRequestHeaderFieldsTooLarge
+			
+		Case ResponseErrorCode.InternalServerError
+			Return @HttpError500InternalServerError
+			
+		Case ResponseErrorCode.FileNotAvailable
+			Return @HttpError500FileNotAvailable
+			
+		Case ResponseErrorCode.CannotCreateChildProcess
+			Return @HttpError500CannotCreateChildProcess
+			
+		Case ResponseErrorCode.CannotCreatePipe
+			Return @HttpError500CannotCreatePipe
+			
+		Case ResponseErrorCode.NotImplemented
+			Return @HttpError501NotImplemented
+			
+		Case ResponseErrorCode.ContentTypeEmpty
+			Return @HttpError501ContentTypeEmpty
+			
+		Case ResponseErrorCode.ContentEncodingNotEmpty
+			Return @HttpError501ContentEncoding
+			
+		Case ResponseErrorCode.BadGateway
+			Return @HttpError502BadGateway
+			
+		Case ResponseErrorCode.NotEnoughMemory
+			Return @HttpError503Memory
+			
+		Case ResponseErrorCode.CannotCreateThread
+			Return @HttpError503ThreadError
+			
+		Case ResponseErrorCode.GatewayTimeout
+			Return @HttpError504GatewayTimeout
+			
+		Case ResponseErrorCode.VersionNotSupported
+			Return @HttpError505VersionNotSupported
+			
+		Case Else
+			Return @HttpError500InternalServerError
+			
+	End Select
+	
+End Function
 
 Sub GetETag( _
 		ByVal wETag As WString Ptr, _
@@ -108,7 +363,7 @@ Function GetDefaultFileName( _
 			lstrcpyW(Buffer, @DefaultFileNameIndexHtml)
 			
 		Case Else
-			Buffer[0] = 0
+			lstrcpyW(Buffer, @DefaultFileNameDefaultXml)
 			Return False
 			
 	End Select
@@ -284,136 +539,6 @@ Sub ReplaceSolidus( _
 	
 End Sub
 
-Function WebSiteMapPath( _
-		ByVal this As WebSite Ptr, _
-		ByVal pPath As WString Ptr, _
-		ByVal pBuffer As WString Ptr _
-	)As HRESULT
-	
-	lstrcpyW(pBuffer, this->pPhysicalDirectory)
-	
-	Scope
-		Dim BufferLength As Integer = SysStringLen(this->pPhysicalDirectory)
-		
-		If pBuffer[BufferLength - 1] <> Characters.ReverseSolidus Then
-			pBuffer[BufferLength] = Characters.ReverseSolidus
-			pBuffer[BufferLength + 1] = 0
-		End If
-	End Scope
-	
-	If pPath[0] = Characters.Solidus Then
-		lstrcatW(pBuffer, @pPath[1])
-	Else
-		lstrcatW(pBuffer, pPath)
-	End If
-	
-	Dim BufferLength As Integer = lstrlenW(pBuffer)
-	ReplaceSolidus(pBuffer, BufferLength)
-	
-	Return S_OK
-	
-End Function
-
-Function WebSiteOpenRequestedFile( _
-		ByVal this As WebSite Ptr, _
-		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal pFileBuffer As IFileBuffer Ptr, _
-		ByVal Path As HeapBSTR, _
-		ByVal pFileName As WString Ptr, _
-		ByVal fAccess As FileAccess _
-	)As HRESULT
-	
-	Dim PathLength As Integer = SysStringLen(Path)
-	Dim LastChar As Integer = Path[PathLength - 1]
-	
-	If LastChar <> Characters.Solidus Then
-		
-		WebSiteMapPath(this, Path, pFileName)
-		
-		Dim hFile As HANDLE = Any
-		Dim hrGetFileHandle As HRESULT = GetFileHandle( _
-			pFileName, _
-			fAccess, _
-			@hFile _
-		)
-		
-		IFileBuffer_SetFilePath(pFileBuffer, Path)
-		IFileBuffer_SetFileHandle(pFileBuffer, hFile)
-		
-		Return hrGetFileHandle
-		
-	End If
-	
-	Dim DefaultFilenameIndex As Integer = 0
-	Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
-	Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
-	Dim hrGetFile As HRESULT = Any
-	
-	Dim GetDefaultFileNameResult As Boolean = GetDefaultFileName( _
-		@DefaultFilename, _
-		DefaultFilenameIndex _
-	)
-	
-	Do
-		lstrcpyW(@FullDefaultFilename, Path)
-		lstrcatW(@FullDefaultFilename, DefaultFilename)
-		
-		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
-		
-		Dim hFile As HANDLE = Any
-		hrGetFile = GetFileHandle( _
-			pFileName, _
-			fAccess, _
-			@hFile _
-		)
-		
-		If SUCCEEDED(hrGetFile) Then
-			
-			Dim fp As HeapBSTR = CreateHeapString( _
-				pIMalloc, _
-				@FullDefaultFilename _
-			)
-			
-			IFileBuffer_SetFilePath(pFileBuffer, fp)
-			IFileBuffer_SetFileHandle(pFileBuffer, hFile)
-			
-			HeapSysFreeString(fp)
-			
-			Return S_OK
-			
-		End If
-		
-		DefaultFilenameIndex += 1
-		GetDefaultFileNameResult = GetDefaultFileName( _
-			@DefaultFilename, _
-			DefaultFilenameIndex _
-		)
-		
-	Loop While GetDefaultFileNameResult
-	
-	Scope
-		GetDefaultFileName(DefaultFilename, 0)
-		
-		lstrcpyW(@FullDefaultFilename, Path)
-		lstrcatW(@FullDefaultFilename, @DefaultFilename)
-		
-		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
-		
-		Dim fp As HeapBSTR = CreateHeapString( _
-			pIMalloc, _
-			@FullDefaultFilename _
-		)
-		
-		IFileBuffer_SetFilePath(pFileBuffer, fp)
-		IFileBuffer_SetFileHandle(pFileBuffer, INVALID_HANDLE_VALUE)
-		
-		HeapSysFreeString(fp)
-	End Scope
-	
-	Return hrGetFile
-	
-End Function
-
 Function GetCompressionHandle( _
 		ByVal PathTranslated As WString Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -574,6 +699,108 @@ Function GetFileBytesOffset( _
 	End If
 	
 	Return offset
+	
+End Function
+
+Function WebSiteMapPath( _
+		ByVal this As WebSite Ptr, _
+		ByVal pPath As WString Ptr, _
+		ByVal pBuffer As WString Ptr _
+	)As HRESULT
+	
+	lstrcpyW(pBuffer, this->pPhysicalDirectory)
+	
+	Scope
+		Dim BufferLength As Integer = SysStringLen(this->pPhysicalDirectory)
+		
+		If pBuffer[BufferLength - 1] <> Characters.ReverseSolidus Then
+			pBuffer[BufferLength] = Characters.ReverseSolidus
+			pBuffer[BufferLength + 1] = 0
+		End If
+	End Scope
+	
+	If pPath[0] = Characters.Solidus Then
+		lstrcatW(pBuffer, @pPath[1])
+	Else
+		lstrcatW(pBuffer, pPath)
+	End If
+	
+	Dim BufferLength As Integer = lstrlenW(pBuffer)
+	ReplaceSolidus(pBuffer, BufferLength)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteOpenRequestedFile( _
+		ByVal this As WebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal pFileBuffer As IFileBuffer Ptr, _
+		ByVal Path As HeapBSTR, _
+		ByVal pFileName As WString Ptr, _
+		ByVal fAccess As FileAccess _
+	)As HRESULT
+	
+	Dim PathLength As Integer = SysStringLen(Path)
+	Dim LastChar As Integer = Path[PathLength - 1]
+	
+	Dim IsLastCharNotSolidus As Boolean = LastChar <> Characters.Solidus
+	If IsLastCharNotSolidus Then
+		
+		WebSiteMapPath(this, Path, pFileName)
+		
+		Dim hFile As HANDLE = Any
+		Dim hrGetFileHandle As HRESULT = GetFileHandle( _
+			pFileName, _
+			fAccess, _
+			@hFile _
+		)
+		
+		IFileBuffer_SetFilePath(pFileBuffer, Path)
+		IFileBuffer_SetFileHandle(pFileBuffer, hFile)
+		
+		Return hrGetFileHandle
+		
+	End If
+	
+	Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+	Dim hrGetFile As HRESULT = Any
+	
+	For i As Integer = 0 To DefaultFileNames
+		Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
+		GetDefaultFileName(@DefaultFilename, i)
+		
+		lstrcpyW(@FullDefaultFilename, Path)
+		lstrcatW(@FullDefaultFilename, DefaultFilename)
+		
+		WebSiteMapPath(this, @FullDefaultFilename, pFileName)
+		
+		Dim hFile As HANDLE = Any
+		hrGetFile = GetFileHandle( _
+			pFileName, _
+			fAccess, _
+			@hFile _
+		)
+		
+		If SUCCEEDED(hrGetFile) Then
+			
+			Dim fp As HeapBSTR = CreateHeapString( _
+				pIMalloc, _
+				@FullDefaultFilename _
+			)
+			
+			IFileBuffer_SetFilePath(pFileBuffer, fp)
+			IFileBuffer_SetFileHandle(pFileBuffer, hFile)
+			
+			HeapSysFreeString(fp)
+			
+			Return S_OK
+			
+		End If
+		
+	Next
+	
+	Return hrGetFile
 	
 End Function
 
@@ -1066,6 +1293,106 @@ Function WebSiteGetBuffer( _
 	
 End Function
 
+Function WebSiteGetErrorBuffer( _
+		ByVal this As WebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal HttpError As ResponseErrorCode, _
+		ByVal hrErrorCode As HRESULT, _
+		ByVal StatusCode As HttpStatusCodes, _
+		ByVal ppResult As IBuffer Ptr Ptr _
+	)As HRESULT
+	
+	Dim pIBuffer As IMemoryBuffer Ptr = Any
+	Dim hrCreateBuffer As HRESULT = CreateInstance( _
+		pIMalloc, _
+		@CLSID_MEMORYBUFFER, _
+		@IID_IMemoryBuffer, _
+		@pIBuffer _
+	)
+	If FAILED(hrCreateBuffer) Then
+		Return hrCreateBuffer
+	End If
+	
+	Dim pIWriter As IArrayStringWriter Ptr = Any
+	Dim hrCreateArrayStringWriter As HRESULT = CreateInstance( _
+		pIMalloc, _
+		@CLSID_ARRAYSTRINGWRITER, _
+		@IID_IArrayStringWriter, _
+		@pIWriter _
+	)
+	If FAILED(hrCreateArrayStringWriter) Then
+		IMemoryBuffer_Release(pIBuffer)
+		Return hrCreateArrayStringWriter
+	End If
+	
+	Scope
+		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
+		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
+		
+		Dim pBodyText As WString Ptr = GetErrorBodyText(HttpError)
+		FormatMessageErrorBody( _
+			pIWriter, _
+			StatusCode, _
+			this->pVirtualPath, _
+			pBodyText, _
+			hrErrorCode _
+		)
+		
+		Dim BodyLength As Integer = Any
+		IArrayStringWriter_GetLength(pIWriter, @BodyLength)
+		
+		Dim SendBufferLength As Integer = WideCharToMultiByte( _
+			CP_UTF8, _
+			0, _
+			@BodyBuffer, _
+			BodyLength, _
+			NULL, _
+			0, _
+			0, _
+			0 _
+		)
+		
+		Dim pBuffer As Any Ptr = Any
+		Dim hrAllocBuffer As HRESULT = IMemoryBuffer_AllocBuffer( _
+			pIBuffer, _
+			SendBufferLength, _
+			@pBuffer _
+		)
+		If FAILED(hrAllocBuffer) Then
+			IArrayStringWriter_Release(pIWriter)
+			IMemoryBuffer_Release(pIBuffer)
+			Return E_OUTOFMEMORY
+		End If
+		
+		WideCharToMultiByte( _
+			CP_UTF8, _
+			0, _
+			@BodyBuffer, _
+			BodyLength, _
+			pBuffer, _
+			SendBufferLength, _
+			0, _
+			0 _
+		)
+		
+	End Scope
+	
+	IArrayStringWriter_Release(pIWriter)
+	
+	Dim Mime As MimeType = Any
+	With Mime
+		.ContentType = ContentTypes.TextHtml
+		.Charset = DocumentCharsets.Utf8BOM
+		.IsTextFormat = True
+	End With
+	IMemoryBuffer_SetContentType(pIBuffer, @Mime)
+	
+	*ppResult = CPtr(IBuffer Ptr, pIBuffer)
+	
+	Return S_OK
+	
+End Function
+
 Function WebSiteNeedDllProcessing( _
 		ByVal this As WebSite Ptr, _
 		ByVal path As HeapBSTR, _
@@ -1221,6 +1548,17 @@ Function IMutableWebSiteGetBuffer( _
 	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
 End Function
 
+Function IMutableWebSiteGetErrorBuffer( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal HttpError As ResponseErrorCode, _
+		ByVal hrErrorCode As HRESULT, _
+		ByVal StatusCode As HttpStatusCodes, _
+		ByVal ppResult As IBuffer Ptr Ptr _
+	)As HRESULT
+	Return WebSiteGetErrorBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
+End Function
+
 Function IMutableWebSiteSetHostName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pHost As HeapBSTR _
@@ -1274,6 +1612,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteGetIsMoved, _
 	@IMutableWebSiteGetMovedUrl, _
 	@IMutableWebSiteGetBuffer, _
+	@IMutableWebSiteGetErrorBuffer, _
 	@IMutableWebSiteSetHostName, _
 	@IMutableWebSiteSetSitePhysicalDirectory, _
 	@IMutableWebSiteSetVirtualPath, _
@@ -1281,4 +1620,3 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetMovedUrl, _
 	@IMutableWebSiteNeedCgiProcessing _
 )
-

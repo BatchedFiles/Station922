@@ -1,6 +1,5 @@
 #include once "WriteErrorAsyncTask.bi"
 #include once "win\wininet.bi"
-#include once "ArrayStringWriter.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
@@ -9,59 +8,17 @@
 #include once "HttpWriter.bi"
 #include once "INetworkStream.bi"
 #include once "Logger.bi"
-#include once "MemoryBuffer.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtualTable
 
-' Размер буфера в символах для записи в него кода html страницы с ошибкой
-Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
-
-Const DefaultContentLanguage = WStr("en")
-Const DefaultCacheControlNoCache = WStr("no-cache")
-Const DefaultRetryAfterString = WStr("300")
-
-Const MovedPermanently = WStr("Moved Permanently.")
-Const HttpError400BadRequest = WStr("Bad Request.")
-Const HttpError400BadPath = WStr("Bad Path.")
-Const HttpError400Host = WStr("Bad Host Header.")
-Const HttpError403Forbidden = WStr("Forbidden.")
-Const HttpError404FileNotFound = WStr("File Not Found.")
-Const HttpError404SiteNotFound = WStr("Website Not Found.")
-Const HttpError405NotAllowed = WStr("Method Not Allowed.")
-Const HttpError410Gone = WStr("File Gone.")
-Const HttpError411LengthRequired = WStr("Length Header Required.")
-Const HttpError413RequestEntityTooLarge = WStr("Request Entity Too Large.")
-Const HttpError414RequestUrlTooLarge = WStr("Request URL Too Large.")
-Const HttpError416RangeNotSatisfiable = WStr("Range Not Satisfiable.")
-Const HttpError431RequestRequestHeaderFieldsTooLarge = WStr("Request Header Fields Too Large")
-
-Const HttpError500InternalServerError = WStr("Internal Server Error.")
-Const HttpError500FileNotAvailable = WStr("File Not Available.")
-Const HttpError500CannotCreateChildProcess = WStr("Can not Create Child Process")
-Const HttpError500CannotCreatePipe = WStr("Can not Create Pipe.")
-Const HttpError501NotImplemented = WStr("Method Not Implemented.")
-Const HttpError501ContentTypeEmpty = WStr("Content-Type Header Empty.")
-Const HttpError501ContentEncoding = WStr("Content Encoding is wrong.")
-Const HttpError502BadGateway = WStr("Bad GateAway.")
-Const HttpError503ThreadError = WStr("Can not create Thread.")
-Const HttpError503Memory = WStr("Can not Allocate Memory.")
-Const HttpError504GatewayTimeout = WStr("GateAway Timeout")
-Const HttpError505VersionNotSupported = WStr("HTTP Version Not Supported.")
-
-Const NeedUsernamePasswordString = WStr("Need Username And Password")
-Const NeedUsernamePasswordString1 = WStr("Authorization wrong")
-Const NeedUsernamePasswordString2 = WStr("Need Basic Authorization")
-Const NeedUsernamePasswordString3 = WStr("Password must not be empty")
+Const CompareResultEqual As Long = 0
 
 Const DefaultHeaderWwwAuthenticate = WStr("Basic realm=""Need username and password""")
 Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
-
-Const DefaultVirtualPath = WStr("/")
-
-Const CompareResultEqual As Long = 0
+Const DefaultRetryAfterString = WStr("300")
 
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
@@ -76,238 +33,20 @@ Type _WriteErrorAsyncTask
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pIBuffer As IMemoryBuffer Ptr
+	pIBuffer As IBuffer Ptr
 	pIHttpWriter As IHttpWriter Ptr
 	ComplectionPort As HANDLE
-	BodyText As WString Ptr
 	HttpError As ResponseErrorCode
-	hrCode As HRESULT
+	hrErrorCode As HRESULT
 End Type
 
-Function ProcessErrorRequestResponse( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr, _
-		ByVal pIStream As IBaseStream Ptr, _
-		ByVal pIHttpReader As IHttpReader Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr, _
-		ByVal pIRequest As IClientRequest Ptr, _
-		ByVal hrReadError As HRESULT, _
-		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreateInstance( _
-		pIMemoryAllocator, _
-		@CLSID_WRITEERRORASYNCTASK, _
-		@IID_IWriteErrorAsyncIoTask, _
-		@pTask _
-	)
-	If FAILED(hrCreateTask) Then
-		*ppTask = NULL
-		Return hrCreateTask
-	End If
-	
-	Dim HttpError As ResponseErrorCode = Any
-	
-	Select Case hrReadError
-		
-		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER
-			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
-			
-		Case CLIENTURI_E_CONTAINSBADCHAR, CLIENTURI_E_PATHNOTFOUND
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case HTTPREADER_E_SOCKETERROR
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADHOST
-			HttpError = ResponseErrorCode.HostNotFound
-			
-		Case CLIENTREQUEST_E_BADREQUEST
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADPATH, CLIENTURI_E_PATHNOTFOUND
-			HttpError = ResponseErrorCode.PathNotValid
-			
-		Case CLIENTURI_E_URITOOLARGE, CLIENTREQUEST_E_URITOOLARGE
-			HttpError = ResponseErrorCode.RequestUrlTooLarge
-			
-		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			HttpError = ResponseErrorCode.VersionNotSupported
-			
-		Case HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
-			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
-			
-		Case WEBSITE_E_SITENOTFOUND
-			HttpError = ResponseErrorCode.SiteNotFound
-			
-		Case WEBSITE_E_REDIRECTED
-			HttpError = ResponseErrorCode.MovedPermanently
-			
-		Case WEBSITE_E_FILENOTFOUND
-			HttpError = ResponseErrorCode.FileNotFound
-			
-		Case WEBSITE_E_FILEGONE
-			HttpError = ResponseErrorCode.FileGone
-			
-		Case WEBSITE_E_FORBIDDEN
-			HttpError = ResponseErrorCode.Forbidden
-			
-		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
-			HttpError = ResponseErrorCode.NotImplemented
-			
-		Case E_OUTOFMEMORY
-			HttpError = ResponseErrorCode.NotEnoughMemory
-			
-		Case Else
-			HttpError = ResponseErrorCode.InternalServerError
-			
-	End Select
-	
-	IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, pIWebSites)
-	IWriteErrorAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, pIProcessors)
-	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
-	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-	
-	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
-	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrReadError)
-	
-	Dim hrPrepare As HRESULT = IWriteErrorAsyncIoTask_Prepare(pTask)
-	If FAILED(hrPrepare) Then
-		IWriteErrorAsyncIoTask_Release(pTask)
-		*ppTask = NULL
-		Return hrPrepare
-	End If
-	
-	*ppTask = pTask
-	
-	Return S_OK
-	
-End Function
-
-Sub FormatErrorMessageBody( _
-		ByVal pIWriter As IArrayStringWriter Ptr, _
-		ByVal StatusCode As HttpStatusCodes, _
-		ByVal VirtualPath As HeapBSTR, _
-		ByVal BodyText As WString Ptr, _
-		ByVal hrErrorCode As HRESULT _
-	)
-	
-	Const HttpStartHeadTag = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" />")
-	Const HttpStartTitleTag = WStr("<title>")
-	Const HttpEndTitleTag = WStr("</title>")
-	Const HttpEndHeadTag = WStr("</head>")
-	Const HttpStartBodyTag = WStr("<body>")
-	Const HttpStartH1Tag = WStr("<h1>")
-	Const HttpEndH1Tag = WStr("</h1>")
-	
-	' 300
-	Const ClientMovedString = WStr("Redirection")
-	' 400
-	Const ClientErrorString = WStr("Client Error")
-	' 500
-	Const ServerErrorString = WStr("Server Error")
-	Const HttpErrorInApplicationString = WStr(" in application ")
-	
-	Const HttpStartH2Tag = WStr("<h2>")
-	Const HttpStatusCodeString = WStr("HTTP Status Code ")
-	Const HttpEndH2Tag = WStr("</h2>")
-	Const HttpHresultErrorCodeString = WStr("HRESULT Error Code")
-	Const HttpStartPTag = WStr("<p>")
-	Const HttpEndPTag = WStr("</p>")
-	
-	'<p>Visit <a href=""/"">website main page</a>.</p>
-	
-	Const HttpEndBodyTag = WStr("</body></html>")
-	
-	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartHeadTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStartTitleTag)
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndTitleTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndHeadTag)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartBodyTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH1Tag)
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH1Tag)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-	
-	Select Case StatusCode
-		
-		Case 300 To 399
-			IArrayStringWriter_WriteString(pIWriter, ClientMovedString)
-			
-		Case 400 To 499
-			IArrayStringWriter_WriteString(pIWriter, ClientErrorString)
-			
-		Case 500 To 599
-			IArrayStringWriter_WriteString(pIWriter, ServerErrorString)
-			
-	End Select
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorInApplicationString)
-	IArrayStringWriter_WriteLengthString(pIWriter, VirtualPath, SysStringLen(VirtualPath))
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
-	
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStatusCodeString)
-	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
-
-
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-	IArrayStringWriter_WriteString(pIWriter, BodyText)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
-	
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
-	IArrayStringWriter_WriteString(pIWriter, HttpHresultErrorCodeString)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-	IArrayStringWriter_WriteUInt32(pIWriter, hrErrorCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
-	
-	Dim wBuffer As WString * 256 = Any
-	Dim CharsCount As DWORD = FormatMessageW( _
-		FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
-		NULL, _
-		hrErrorCode, _
-		MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
-		@wBuffer, _
-		256 - 1, _
-		NULL _
-	)
-	If CharsCount Then
-		IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-		IArrayStringWriter_WriteString(pIWriter, wBuffer)
-		IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
-	End If
-	
-	IArrayStringWriter_WriteString(pIWriter, HttpEndBodyTag)
-	
-End Sub
-
-Sub WriteErrorAsyncTaskSetBodyText( _
+Function WriteErrorAsyncTaskGetStatusCode( _
 		ByVal this As WriteErrorAsyncTask Ptr _
-	)
+	)As HttpStatusCodes
 	
 	Select Case this->HttpError
 		
 		Case ResponseErrorCode.MovedPermanently
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.MovedPermanently _
-			)
-			this->BodyText = @MovedPermanently
-			
 			Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
 			Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
 				this->pIRequest, _
@@ -340,33 +79,19 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				HeapSysFreeString(MovedUrl)
 			End If
 			
+			Return HttpStatusCodes.MovedPermanently
+			
 		Case ResponseErrorCode.BadRequest
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400BadRequest
+			Return HttpStatusCodes.BadRequest
 			
 		Case ResponseErrorCode.PathNotValid
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400BadPath
+			Return HttpStatusCodes.BadRequest
 			
 		Case ResponseErrorCode.HostNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadRequest _
-			)
-			this->BodyText = @HttpError400Host
+			Return HttpStatusCodes.BadRequest
 			
 		Case ResponseErrorCode.SiteNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotFound _
-			)
-			this->BodyText = @HttpError404SiteNotFound
+			Return HttpStatusCodes.NotFound
 			
 		Case ResponseErrorCode.NeedAuthenticate
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -375,11 +100,7 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultHeaderWwwAuthenticate, _
 				Len(DefaultHeaderWwwAuthenticate) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString
+			Return HttpStatusCodes.Unauthorized
 			
 		Case ResponseErrorCode.BadAuthenticateParam
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -388,11 +109,7 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultHeaderWwwAuthenticate1, _
 				Len(DefaultHeaderWwwAuthenticate1) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString1
+			Return HttpStatusCodes.Unauthorized
 			
 		Case ResponseErrorCode.NeedBasicAuthenticate
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -401,11 +118,7 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultHeaderWwwAuthenticate2, _
 				Len(DefaultHeaderWwwAuthenticate2) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString2
+			Return HttpStatusCodes.Unauthorized
 			
 		Case ResponseErrorCode.EmptyPassword
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -414,11 +127,7 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultHeaderWwwAuthenticate, _
 				Len(DefaultHeaderWwwAuthenticate) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString3
+			Return HttpStatusCodes.Unauthorized
 			
 		Case ResponseErrorCode.BadUserNamePassword
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -427,108 +136,48 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultHeaderWwwAuthenticate, _
 				Len(DefaultHeaderWwwAuthenticate) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Unauthorized _
-			)
-			this->BodyText = @NeedUsernamePasswordString
+			Return HttpStatusCodes.Unauthorized
 			
 		Case ResponseErrorCode.Forbidden
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Forbidden _
-			)
-			this->BodyText = @HttpError403Forbidden
+			Return HttpStatusCodes.Forbidden
 			
 		Case ResponseErrorCode.FileNotFound
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotFound _
-			)
-			this->BodyText = @HttpError404FileNotFound
+			Return HttpStatusCodes.NotFound
 			
 		Case ResponseErrorCode.MethodNotAllowed
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.MethodNotAllowed _
-			)
-			this->BodyText = @HttpError405NotAllowed
+			Return HttpStatusCodes.MethodNotAllowed
 			
 		Case ResponseErrorCode.FileGone
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.Gone _
-			)
-			this->BodyText = @HttpError410Gone
+			Return HttpStatusCodes.Gone
 			
 		Case ResponseErrorCode.LengthRequired
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.LengthRequired _
-			)
-			this->BodyText = @HttpError411LengthRequired
+			Return HttpStatusCodes.LengthRequired
 			
 		Case ResponseErrorCode.RequestEntityTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestEntityTooLarge _
-			)
-			this->BodyText = @HttpError413RequestEntityTooLarge
+			Return HttpStatusCodes.RequestEntityTooLarge
 			
 		Case ResponseErrorCode.RequestUrlTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestURITooLarge _
-			)
-			this->BodyText = @HttpError414RequestUrlTooLarge
+			Return HttpStatusCodes.RequestURITooLarge
 			
 		Case ResponseErrorCode.RequestRangeNotSatisfiable
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RangeNotSatisfiable _
-			)
-			this->BodyText = @HttpError416RangeNotSatisfiable
+			Return HttpStatusCodes.RangeNotSatisfiable
 			
 		Case ResponseErrorCode.RequestHeaderFieldsTooLarge
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.RequestHeaderFieldsTooLarge _
-			)
-			this->BodyText = @HttpError431RequestRequestHeaderFieldsTooLarge
+			Return HttpStatusCodes.RequestHeaderFieldsTooLarge
 			
 		Case ResponseErrorCode.InternalServerError
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500InternalServerError
+			Return HttpStatusCodes.InternalServerError
 			
 		Case ResponseErrorCode.FileNotAvailable
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500FileNotAvailable
+			Return HttpStatusCodes.InternalServerError
 			
 		Case ResponseErrorCode.CannotCreateChildProcess
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500CannotCreateChildProcess
+			Return HttpStatusCodes.InternalServerError
 			
 		Case ResponseErrorCode.CannotCreatePipe
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500CannotCreatePipe
+			Return HttpStatusCodes.InternalServerError
 			
 		Case ResponseErrorCode.NotImplemented
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
 			Dim AllMethods As HeapBSTR = Any
 			IHttpProcessorCollection_GetAllMethods( _
 				this->pIProcessorsWeakPtr, _
@@ -540,28 +189,16 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				AllMethods _
 			)
 			HeapSysFreeString(AllMethods)
-			this->BodyText = @HttpError501NotImplemented
+			Return HttpStatusCodes.NotImplemented
 			
 		Case ResponseErrorCode.ContentTypeEmpty
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
-			this->BodyText = @HttpError501ContentTypeEmpty
+			Return HttpStatusCodes.NotImplemented
 			
 		Case ResponseErrorCode.ContentEncodingNotEmpty
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.NotImplemented _
-			)
-			this->BodyText = @HttpError501ContentEncoding
+			Return HttpStatusCodes.NotImplemented
 			
 		Case ResponseErrorCode.BadGateway
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.BadGateway _
-			)
-			this->BodyText = @HttpError502BadGateway
+			Return HttpStatusCodes.BadGateway
 			
 		Case ResponseErrorCode.NotEnoughMemory
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -570,11 +207,7 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultRetryAfterString, _
 				Len(DefaultRetryAfterString) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.ServiceUnavailable _
-			)
-			this->BodyText = @HttpError503Memory
+			Return HttpStatusCodes.ServiceUnavailable
 			
 		Case ResponseErrorCode.CannotCreateThread
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
@@ -583,42 +216,25 @@ Sub WriteErrorAsyncTaskSetBodyText( _
 				@DefaultRetryAfterString, _
 				Len(DefaultRetryAfterString) _
 			)
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.ServiceUnavailable _
-			)
-			this->BodyText = @HttpError503ThreadError
+			Return HttpStatusCodes.ServiceUnavailable
 			
 		Case ResponseErrorCode.GatewayTimeout
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.GatewayTimeout _
-			)
-			this->BodyText = @HttpError504GatewayTimeout
+			Return HttpStatusCodes.GatewayTimeout
 			
 		Case ResponseErrorCode.VersionNotSupported
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.HTTPVersionNotSupported _
-			)
-			this->BodyText = @HttpError505VersionNotSupported
+			Return HttpStatusCodes.HTTPVersionNotSupported
 			
 		Case Else
-			IServerResponse_SetStatusCode( _
-				this->pIResponse, _
-				HttpStatusCodes.InternalServerError _
-			)
-			this->BodyText = @HttpError500InternalServerError
+			Return HttpStatusCodes.InternalServerError
 			
 	End Select
 	
-End Sub
+End Function
 
 Sub InitializeWriteErrorAsyncTask( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal pIBuffer As IMemoryBuffer Ptr, _
 		ByVal pIHttpWriter As IHttpWriter Ptr _
 	)
 	
@@ -639,12 +255,9 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->pIStream = NULL
 	this->pIRequest = NULL
 	this->pIResponse = pIResponse
-	this->pIBuffer = pIBuffer
+	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
-	IHttpWriter_SetBuffer(pIHttpWriter, CPtr(IBuffer Ptr, pIBuffer))
 	this->ComplectionPort = NULL
-	this->HttpError = ResponseErrorCode.InternalServerError
-	this->hrCode = E_UNEXPECTED
 	
 End Sub
 
@@ -665,7 +278,7 @@ Sub UnInitializeWriteErrorAsyncTask( _
 	End If
 	
 	If this->pIBuffer Then
-		IMemoryBuffer_Release(this->pIBuffer)
+		IBuffer_Release(this->pIBuffer)
 	End If
 	
 	If this->pIHttpWriter Then
@@ -708,36 +321,22 @@ Function CreateWriteErrorAsyncTask( _
 		
 		If SUCCEEDED(hrCreateResponse) Then
 			
-			Dim pIBuffer As IMemoryBuffer Ptr = Any
-			Dim hrCreateBuffer As HRESULT = CreateInstance( _
+			Dim this As WriteErrorAsyncTask Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
-				@CLSID_MEMORYBUFFER, _
-				@IID_IMemoryBuffer, _
-				@pIBuffer _
+				SizeOf(WriteErrorAsyncTask) _
 			)
 			
-			If SUCCEEDED(hrCreateBuffer) Then
-				
-				Dim this As WriteErrorAsyncTask Ptr = IMalloc_Alloc( _
+			If this Then
+				InitializeWriteErrorAsyncTask( _
+					this, _
 					pIMemoryAllocator, _
-					SizeOf(WriteErrorAsyncTask) _
+					pIResponse, _
+					pIHttpWriter _
 				)
 				
-				If this Then
-					InitializeWriteErrorAsyncTask( _
-						this, _
-						pIMemoryAllocator, _
-						pIResponse, _
-						pIBuffer, _
-						pIHttpWriter _
-					)
-					
-					WriteErrorAsyncTaskCreated(this)
-					
-					Return this
-				End If
+				WriteErrorAsyncTaskCreated(this)
 				
-				IMemoryBuffer_Release(pIBuffer)
+				Return this
 			End If
 			
 			IServerResponse_Release(pIResponse)
@@ -1110,34 +709,76 @@ Function WriteErrorAsyncTaskPrepare( _
 		ByVal this As WriteErrorAsyncTask Ptr _
 	)As HRESULT
 	
-	Dim pIWriter As IArrayStringWriter Ptr = Any
-	Dim hrCreateArrayStringWriter As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_ARRAYSTRINGWRITER, _
-		@IID_IArrayStringWriter, _
-		@pIWriter _
+	Dim StatusCode As HttpStatusCodes = WriteErrorAsyncTaskGetStatusCode(this)
+	IServerResponse_SetStatusCode( _
+		this->pIResponse, _
+		StatusCode _
 	)
-	If FAILED(hrCreateArrayStringWriter) Then
-		Return hrCreateArrayStringWriter
-	End If
 	
-	WriteErrorAsyncTaskSetBodyText(this)
+	Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
+	Scope
+		Dim HeaderHost As HeapBSTR = Any
+		IClientRequest_GetHttpHeader( _
+			this->pIRequest, _
+			HttpRequestHeaders.HeaderHost, _
+			@HeaderHost _
+		)
+		
+		Dim HeaderHostLength As Integer = SysStringLen(HeaderHost)
+		If HeaderHostLength Then
+			Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
+				this->pIWebSitesWeakPtr, _
+				HeaderHost, _
+				@pIWebSiteWeakPtr _
+			)
+			If FAILED(hrFindSite) Then
+				IWebSiteCollection_GetDefaultWebSite( _
+					this->pIWebSitesWeakPtr, _
+					@pIWebSiteWeakPtr _
+				)
+			End If
+		Else
+			IWebSiteCollection_GetDefaultWebSite( _
+				this->pIWebSitesWeakPtr, _
+				@pIWebSiteWeakPtr _
+			)
+		End If
+		
+		HeapSysFreeString(HeaderHost)
+		
+	End Scope
+	
+	Dim SendBufferLength As LongInt = Any
+	Scope
+		Dim pIBuffer As IBuffer Ptr = Any
+		Dim hrGetBuffer As HRESULT = IWebSite_GetErrorBuffer( _
+			pIWebSiteWeakPtr, _
+			this->pIMemoryAllocator, _
+			this->HttpError, _
+			this->hrErrorCode, _
+			StatusCode, _
+			@pIBuffer _
+		)
+		If FAILED(hrGetBuffer) Then
+			Return hrGetBuffer
+		End If
+		
+		IHttpWriter_SetBuffer(this->pIHttpWriter, pIBuffer)
+		
+		Dim Mime As MimeType = Any
+		IBuffer_GetContentType(pIBuffer, @Mime)
+		IServerResponse_SetMimeType(this->pIResponse, @Mime)
+		
+		IBuffer_GetLength(pIBuffer, @SendBufferLength)
+		
+		IBuffer_Release(pIBuffer)
+	End Scope
 	
 	Scope
 		Dim KeepAlive As Boolean = True
 		IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
 		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
 		IHttpWriter_SetKeepAlive(this->pIHttpWriter, KeepAlive)
-	End Scope
-	
-	Scope
-		Dim Mime As MimeType = Any
-		With Mime
-			.ContentType = ContentTypes.TextHtml
-			.Charset = DocumentCharsets.Utf8BOM
-			.IsTextFormat = True
-		End With
-		IServerResponse_SetMimeType(this->pIResponse, @Mime)
 	End Scope
 	
 	Scope
@@ -1152,6 +793,7 @@ Function WriteErrorAsyncTaskPrepare( _
 		HeapSysFreeString(HttpMethod)
 	End Scope
 	
+	/'
 	Scope
 		IServerResponse_AddKnownResponseHeaderWstrLen( _
 			this->pIResponse, _
@@ -1166,103 +808,7 @@ Function WriteErrorAsyncTaskPrepare( _
 			Len(DefaultCacheControlNoCache) _
 		)
 	End Scope
-	
-	Dim SendBufferLength As Integer = Any
-	
-	Scope
-		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
-		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
-		
-		Scope
-			Dim VirtualPath As HeapBSTR = Any
-			
-			Dim HeaderHost As HeapBSTR = Any
-			IClientRequest_GetHttpHeader( _
-				this->pIRequest, _
-				HttpRequestHeaders.HeaderHost, _
-				@HeaderHost _
-			)
-			
-			If SysStringLen(HeaderHost) Then
-				
-				Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
-				Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
-					this->pIWebSitesWeakPtr, _
-					HeaderHost, _
-					@pIWebSiteWeakPtr _
-				)
-				If FAILED(hrFindSite) Then
-					VirtualPath = CreateHeapStringLen( _
-						this->pIMemoryAllocator, _
-						@WStr(DefaultVirtualPath), _
-						Len(DefaultVirtualPath) _
-					)
-				Else
-					IWebSite_GetVirtualPath(pIWebSiteWeakPtr, @VirtualPath)
-				End If
-			Else
-				VirtualPath = CreateHeapStringLen( _
-					this->pIMemoryAllocator, _
-					@WStr(DefaultVirtualPath), _
-					Len(DefaultVirtualPath) _
-				)
-			End If
-			
-			HeapSysFreeString(HeaderHost)
-			
-			Dim StatusCode As HttpStatusCodes = Any
-			IServerResponse_GetStatusCode(this->pIResponse, @StatusCode)
-			
-			FormatErrorMessageBody( _
-				pIWriter, _
-				StatusCode, _
-				VirtualPath, _
-				this->BodyText, _
-				this->hrCode _
-			)
-			
-			HeapSysFreeString(VirtualPath)
-		End Scope
-		
-		Dim BodyLength As Integer = Any
-		IArrayStringWriter_GetLength(pIWriter, @BodyLength)
-		
-		SendBufferLength = WideCharToMultiByte( _
-			CP_UTF8, _
-			0, _
-			@BodyBuffer, _
-			BodyLength, _
-			NULL, _
-			0, _
-			0, _
-			0 _
-		)
-		
-		Dim pBuffer As Any Ptr = Any
-		Dim hrAllocBuffer As HRESULT = IMemoryBuffer_AllocBuffer( _
-			this->pIBuffer, _
-			SendBufferLength, _
-			@pBuffer _
-		)
-		If FAILED(hrAllocBuffer) Then
-			IArrayStringWriter_Release(pIWriter)
-			Return E_OUTOFMEMORY
-		End If
-		
-		WideCharToMultiByte( _
-			CP_UTF8, _
-			0, _
-			@BodyBuffer, _
-			BodyLength, _
-			pBuffer, _
-			SendBufferLength, _
-			0, _
-			0 _
-		)
-		
-	End Scope
-	
-	IArrayStringWriter_Release(pIWriter)
+	'/
 	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		this->pIHttpWriter, _
@@ -1284,7 +830,7 @@ Function WriteErrorAsyncTaskSetErrorCode( _
 	)As HRESULT
 	
 	this->HttpError = HttpError
-	this->hrCode = hrCode
+	this->hrErrorCode = hrCode
 	
 	Return S_OK
 	

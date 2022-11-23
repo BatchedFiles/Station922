@@ -96,8 +96,9 @@ End Function
 Function EntryPoint()As Integer
 	
 	Scope
+		Dim WsaVrsion22 As WORD = MAKEWORD(2, 2)
 		Dim wsa As WSAData = Any
-		Dim resWsaStartup As Long = WSAStartup(MAKEWORD(2, 2), @wsa)
+		Dim resWsaStartup As Long = WSAStartup(WsaVrsion22, @wsa)
 		If resWsaStartup <> NO_ERROR Then
 			Return 1
 		End If

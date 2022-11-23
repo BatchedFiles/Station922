@@ -17,7 +17,6 @@ Type _HeapMemoryAllocator
 	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	ReferenceCounter As UInteger
-	pISpyObject As IMallocSpy Ptr
 	hHeap As HANDLE
 	pReadedData As ClientRequestBuffer Ptr
 End Type
@@ -37,7 +36,6 @@ Sub InitializeHeapMemoryAllocator( _
 	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0
-	this->pISpyObject = NULL
 	this->hHeap = hHeap
 	this->pReadedData = pReadedData
 	
@@ -46,10 +44,6 @@ End Sub
 Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
-	
-	If this->pISpyObject Then
-		IMallocSpy_Release(this->pISpyObject)
-	End If
 	
 	If this->pReadedData Then
 		HeapFree( _
@@ -228,15 +222,8 @@ End Function
 
 Function HeapMemoryAllocatorAlloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal cb As SIZE_T_ _
+		ByVal BytesCount As SIZE_T_ _
 	)As Any Ptr
-	
-	Dim BytesCount As SIZE_T_ = Any
-	If this->pISpyObject = NULL Then
-		BytesCount = cb
-	Else
-		BytesCount = IMallocSpy_PreAlloc(this->pISpyObject, cb)
-	End If
 	
 	Dim pMemory As Any Ptr = HeapAlloc( _
 		this->hHeap, _
@@ -254,32 +241,34 @@ Function HeapMemoryAllocatorAlloc( _
 		)
 	End If
 	
-	If this->pISpyObject Then
-		pMemory = IMallocSpy_PostAlloc(this->pISpyObject, pMemory)
-	End If
-	
 	Return pMemory
 	
 End Function
 
 Function HeapMemoryAllocatorRealloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pv As Any Ptr, _
-		ByVal cb As SIZE_T_ _
+		ByVal pMemory As Any Ptr, _
+		ByVal BytesCount As SIZE_T_ _
 	)As Any Ptr
 	
-	Dim ppNewRequest As Any Ptr Ptr = pv
-	If this->pISpyObject Then
-		cb = IMallocSpy_PreRealloc(this->pISpyObject, pv, cb, ppNewRequest, True)
+	Dim pReallocMemory As Any Ptr = HeapReAlloc( _
+		this->hHeap, _
+		HEAP_NO_SERIALIZE_FLAG, _
+		pMemory, _
+		BytesCount _
+	)
+	If pReallocMemory = NULL Then
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_I4
+		vtAllocatedBytes.lVal = CLng(BytesCount)
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"\t\t\t\tReAllocMemory Failed\t"), _
+			@vtAllocatedBytes _
+		)
 	End If
 	
-	Dim pMemory As Any Ptr = HeapReAlloc(this->hHeap, HEAP_NO_SERIALIZE_FLAG, ppNewRequest, cb)
-	
-	If this->pISpyObject Then
-		pMemory = IMallocSpy_PostRealloc(this->pISpyObject, pMemory, True)
-	End If
-	
-	Return pMemory
+	Return pReallocMemory
 	
 End Function
 
@@ -288,19 +277,11 @@ Sub HeapMemoryAllocatorFree( _
 		ByVal pMemory As Any Ptr _
 	)
 	
-	If this->pISpyObject Then
-		pMemory = IMallocSpy_PreFree(this->pISpyObject, pMemory, True)
-	End If
-	
 	HeapFree( _
 		this->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
 		pMemory _
 	)
-	
-	If this->pISpyObject Then
-		IMallocSpy_PostFree(this->pISpyObject, True)
-	End If
 	
 End Sub
 
@@ -309,19 +290,11 @@ Function HeapMemoryAllocatorGetSize( _
 		ByVal pMemory As Any Ptr _
 	)As SIZE_T_
 	
-	If this->pISpyObject Then
-		pMemory = IMallocSpy_PreGetSize(this->pISpyObject, pMemory, True)
-	End If
-	
 	Dim Size As SIZE_T_ = HeapSize( _
 		this->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
 		pMemory _
 	)
-	
-	If this->pISpyObject Then
-		Size = IMallocSpy_PostGetSize(this->pISpyObject, Size, True)
-	End If
 	
 	Return Size
 	
@@ -332,25 +305,17 @@ Function HeapMemoryAllocatorDidAlloc( _
 		ByVal pMemory As Any Ptr _
 	)As Long
 	
-	If this->pISpyObject Then
-		pMemory = IMallocSpy_PreDidAlloc(this->pISpyObject, pMemory, True)
-	End If
-	
 	Dim phe As PROCESS_HEAP_ENTRY = Any
 	phe.lpData = NULL
-	Dim res As Long = 0
-	Do While HeapWalk(this->hHeap, @phe)
+	Dim resHeapWalk As BOOL = HeapWalk(this->hHeap, @phe)
+	Do
 		If phe.lpData = pMemory Then
-			res = 1
-			Exit Do
+			Return 1
 		End If
-	Loop
+		resHeapWalk = HeapWalk(this->hHeap, @phe)
+	Loop While resHeapWalk
 	
-	If this->pISpyObject Then
-		res = IMallocSpy_PostDidAlloc(this->pISpyObject, pMemory, True, res)
-	End If
-	
-	Return res
+	Return 0
 	
 End Function
 
@@ -358,15 +323,7 @@ Sub HeapMemoryAllocatorHeapMinimize( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	If this->pISpyObject Then
-		IMallocSpy_PreHeapMinimize(this->pISpyObject)
-	End If
-	
 	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE_FLAG)
-	
-	If this->pISpyObject Then
-		IMallocSpy_PostHeapMinimize(this->pISpyObject)
-	End If
 	
 End Sub
 

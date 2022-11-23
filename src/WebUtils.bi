@@ -6,6 +6,7 @@
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
 #include once "IWebSiteCollection.bi"
+#include once "IWriteErrorAsyncIoTask.bi"
 
 ' Заполняет буфер экранированной строкой, безопасной для html
 ' Принимающий буфер должен быть в 6 раз длиннее строки
@@ -17,11 +18,7 @@
 ' )As Boolean
 
 ' Заполняет буфер датой и временем в http формате
-Declare Sub GetHttpDate Overload( _
-	ByVal Buffer As WString Ptr _
-)
-
-Declare Sub GetHttpDate Overload( _
+Declare Sub GetHttpDate( _
 	ByVal Buffer As WString Ptr, _
 	ByVal dt As SYSTEMTIME Ptr _
 )
@@ -62,6 +59,17 @@ Declare Function Integer64Division( _
 
 Declare Function StartExecuteTask( _
 	ByVal pTask As IAsyncIoTask Ptr _
+)As HRESULT
+
+Declare Function ProcessErrorRequestResponse( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal pIWebSites As IWebSiteCollection Ptr, _
+	ByVal pIStream As IBaseStream Ptr, _
+	ByVal pIHttpReader As IHttpReader Ptr, _
+	ByVal pIProcessors As IHttpProcessorCollection Ptr, _
+	ByVal pIRequest As IClientRequest Ptr, _
+	ByVal hrReadError As HRESULT, _
+	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 )As HRESULT
 
 #endif

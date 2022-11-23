@@ -6,6 +6,7 @@
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
+#include once "WriteErrorAsyncTask.bi"
 
 Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 Const TimeFormatString = WStr("HH:mm:ss GMT")
@@ -14,10 +15,10 @@ Const BasicAuthorization = WStr("Basic")
 
 Const CompareResultEqual As Long = 0
 
-Declare Function GetBase64Sha1( _
-	ByVal pDestination As WString Ptr, _
-	ByVal pSource As WString Ptr _
-)As Boolean
+' Declare Function GetBase64Sha1( _
+' 	ByVal pDestination As WString Ptr, _
+' 	ByVal pSource As WString Ptr _
+' )As Boolean
 
 Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _
@@ -25,11 +26,26 @@ Sub GetHttpDate( _
 	)
 	
 	' Tue, 15 Nov 1994 12:45:26 GMT
-	Dim dtBufferLength As Integer = GetDateFormatW(LOCALE_INVARIANT, 0, dt, @DateFormatString, Buffer, 31) - 1
-	GetTimeFormatW(LOCALE_INVARIANT, 0, dt, @TimeFormatString, @Buffer[dtBufferLength], 31 - dtBufferLength)
+	Dim dtBufferLength As Integer = GetDateFormatW( _
+		LOCALE_INVARIANT, _
+		0, _
+		dt, _
+		@DateFormatString, _
+		Buffer, _
+		31 _
+	) - 1
+	
+	GetTimeFormatW( _
+		LOCALE_INVARIANT, _
+		0, _
+		dt, _
+		@TimeFormatString, _
+		@Buffer[dtBufferLength], _
+		31 - dtBufferLength _
+	)
 	
 End Sub
-
+/'
 Sub GetHttpDate(ByVal Buffer As WString Ptr)
 	
 	Dim dt As SYSTEMTIME = Any
@@ -37,8 +53,7 @@ Sub GetHttpDate(ByVal Buffer As WString Ptr)
 	GetHttpDate(Buffer, @dt)
 	
 End Sub
-
-
+'/
 Sub AddResponseCacheHeaders( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
@@ -49,7 +64,7 @@ Sub AddResponseCacheHeaders( _
 	Dim IsFileModified As Boolean = True
 	
 	Scope
-		' TODO Уметь распознавать все три HTTP-формата даты
+		' TODO пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ HTTP-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		Dim dFileLastModified As SYSTEMTIME = Any
 		FileTimeToSystemTime(pDateLastFileModified, @dFileLastModified)
 		
@@ -256,6 +271,110 @@ Function StartExecuteTask( _
 		
 		Return hrBeginExecute
 	End If
+	
+	Return S_OK
+	
+End Function
+
+Function ProcessErrorRequestResponse( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr, _
+		ByVal pIStream As IBaseStream Ptr, _
+		ByVal pIHttpReader As IHttpReader Ptr, _
+		ByVal pIProcessors As IHttpProcessorCollection Ptr, _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal hrErrorCode As HRESULT, _
+		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
+	)As HRESULT
+	
+	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
+	Dim hrCreateTask As HRESULT = CreateInstance( _
+		pIMemoryAllocator, _
+		@CLSID_WRITEERRORASYNCTASK, _
+		@IID_IWriteErrorAsyncIoTask, _
+		@pTask _
+	)
+	If FAILED(hrCreateTask) Then
+		*ppTask = NULL
+		Return hrCreateTask
+	End If
+	
+	IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, pIWebSites)
+	IWriteErrorAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, pIProcessors)
+	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
+	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
+	
+	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
+	
+	Dim HttpError As ResponseErrorCode = Any
+	Select Case hrErrorCode
+		
+		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER
+			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
+			
+		Case CLIENTURI_E_CONTAINSBADCHAR, CLIENTURI_E_PATHNOTFOUND
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case HTTPREADER_E_SOCKETERROR
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_BADHOST
+			HttpError = ResponseErrorCode.HostNotFound
+			
+		Case CLIENTREQUEST_E_BADREQUEST
+			HttpError = ResponseErrorCode.BadRequest
+			
+		Case CLIENTREQUEST_E_BADPATH, CLIENTURI_E_PATHNOTFOUND
+			HttpError = ResponseErrorCode.PathNotValid
+			
+		Case CLIENTURI_E_URITOOLARGE, CLIENTREQUEST_E_URITOOLARGE
+			HttpError = ResponseErrorCode.RequestUrlTooLarge
+			
+		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
+			HttpError = ResponseErrorCode.VersionNotSupported
+			
+		Case HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
+			
+		Case WEBSITE_E_SITENOTFOUND
+			HttpError = ResponseErrorCode.SiteNotFound
+			
+		Case WEBSITE_E_REDIRECTED
+			HttpError = ResponseErrorCode.MovedPermanently
+			
+		Case WEBSITE_E_FILENOTFOUND
+			HttpError = ResponseErrorCode.FileNotFound
+			
+		Case WEBSITE_E_FILEGONE
+			HttpError = ResponseErrorCode.FileGone
+			
+		Case WEBSITE_E_FORBIDDEN
+			HttpError = ResponseErrorCode.Forbidden
+			
+		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
+			HttpError = ResponseErrorCode.NotImplemented
+			
+		Case E_OUTOFMEMORY
+			HttpError = ResponseErrorCode.NotEnoughMemory
+			
+		Case Else
+			HttpError = ResponseErrorCode.InternalServerError
+			
+	End Select
+	
+	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrErrorCode)
+	
+	Dim hrPrepare As HRESULT = IWriteErrorAsyncIoTask_Prepare(pTask)
+	If FAILED(hrPrepare) Then
+		IWriteErrorAsyncIoTask_Release(pTask)
+		*ppTask = NULL
+		Return hrPrepare
+	End If
+	
+	*ppTask = pTask
 	
 	Return S_OK
 	
