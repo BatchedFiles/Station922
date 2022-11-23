@@ -274,24 +274,25 @@ Vary
 | deflate | `*.deflate` |
 
 
-## Компиляция
+## Сборка
 
 Вебсервер можно скомпилировать как обычное консольное приложение и как службу Windows.
 
 
-### Обычная версия
+### Компиляция «одной строкой»
 
 ```
-make.cmd exe release withoutruntime
+set OPTIMIZATIONS=-O 3 -gen gcc -Wc -ffunction-sections,-fdata-sections -Wl --gc-sections
+
+fbc64.exe -m Station922 -x Station922_64.exe %OPTIMIZATIONS% *.bas *.rc
+fbc32.exe -m Station922 -x Station922_86.exe %OPTIMIZATIONS% *.bas *.rc
 ```
 
+### Компиляция утилитой make
 
-### В виде службы Windows
 
+### Установка службы
 
-```
-make.cmd service release withoutruntime
-```
 
 Для регистрации службы в системе можно использовать утилиту `sc`:
 
