@@ -35,12 +35,12 @@ Declare Function ThreadPoolRelease( _
 
 Declare Function ThreadPoolGetMaxThreads( _
 	ByVal this As ThreadPool Ptr, _
-	ByVal pMaxThreads As Integer Ptr _
+	ByVal pMaxThreads As UInteger Ptr _
 )As HRESULT
 
 Declare Function ThreadPoolSetMaxThreads( _
 	ByVal this As ThreadPool Ptr, _
-	ByVal MaxThreads As Integer _
+	ByVal MaxThreads As UInteger _
 )As HRESULT
 
 Declare Function ThreadPoolRun( _

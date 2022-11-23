@@ -12,7 +12,7 @@ Type _ThreadPool
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	hIOCompletionPort As HANDLE
-	WorkerThreadsCount As Integer
+	WorkerThreadsCount As UInteger
 	hThreads As HANDLE Ptr
 	CallBack As ThreadPoolCallBack
 	param As Any Ptr
@@ -182,7 +182,7 @@ End Function
 
 Function ThreadPoolGetMaxThreads( _
 		ByVal this As ThreadPool Ptr, _
-		ByVal pMaxThreads As Integer Ptr _
+		ByVal pMaxThreads As UInteger Ptr _
 	)As HRESULT
 	
 	*pMaxThreads = this->WorkerThreadsCount
@@ -193,7 +193,7 @@ End Function
 
 Function ThreadPoolSetMaxThreads( _
 		ByVal this As ThreadPool Ptr, _
-		ByVal MaxThreads As Integer _
+		ByVal MaxThreads As UInteger _
 	)As HRESULT
 	
 	this->WorkerThreadsCount = MaxThreads
@@ -232,7 +232,7 @@ Function ThreadPoolRun( _
 	
 	Const DefaultStackSize As SIZE_T_ = 0
 	
-	For i As Integer = 0 To this->WorkerThreadsCount - 1
+	For i As UInteger = 0 To this->WorkerThreadsCount - 1
 		
 		ThreadPoolAddRef(this)
 		
@@ -321,14 +321,14 @@ End Function
 
 Function IThreadPoolGetMaxThreads( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal pMaxThreads As Integer Ptr _
+		ByVal pMaxThreads As UInteger Ptr _
 	)As HRESULT
 	Return ThreadPoolGetMaxThreads(ContainerOf(this, ThreadPool, lpVtbl), pMaxThreads)
 End Function
 
 Function IThreadPoolSetMaxThreads( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal MaxThreads As Integer _
+		ByVal MaxThreads As UInteger _
 	)As HRESULT
 	Return ThreadPoolSetMaxThreads(ContainerOf(this, ThreadPool, lpVtbl), MaxThreads)
 End Function

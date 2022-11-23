@@ -48,12 +48,12 @@ Type IWebServerConfigurationVirtualTable
 	
 	GetWorkerThreadsCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As Integer Ptr _
+		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	
 	GetCachedClientMemoryContextCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As Integer Ptr _
+		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	
 	GetIsPasswordValid As Function( _

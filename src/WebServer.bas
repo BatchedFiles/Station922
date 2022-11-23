@@ -23,14 +23,14 @@ Type _WebServer
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	
-	WorkerThreadsCount As Integer
+	WorkerThreadsCount As UInteger
 	pIPool As IThreadPool Ptr
 	pIWebSites As IWebSiteCollection Ptr
 	pIProcessors As IHttpProcessorCollection Ptr
 	
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
 	SocketListLength As Integer
-	
+	CachedClientMemoryContextLength As UInteger
 	Context As Any Ptr
 	StatusHandler As RunnableStatusHandler
 	
@@ -180,7 +180,7 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetWorkerThreadsCount(pIConfig, @this->WorkerThreadsCount)
 	
-	' IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
+	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
 	
 	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
 	
@@ -400,6 +400,14 @@ Function WebServerRun( _
 	If FAILED(hrSocket) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 		Return hrSocket
+	End If
+	
+	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
+	
+	Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool(this->CachedClientMemoryContextLength)
+	If FAILED(hrCreateMemoryPool) Then
+		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
+		Return hrCreateMemoryPool
 	End If
 	
 	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)

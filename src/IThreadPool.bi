@@ -35,12 +35,12 @@ Type IThreadPoolVirtualTable
 	
 	GetMaxThreads As Function( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal pMaxThreads As Integer Ptr _
+		ByVal pMaxThreads As UInteger Ptr _
 	)As HRESULT
 	
 	SetMaxThreads As Function( _
 		ByVal this As IThreadPool Ptr, _
-		ByVal MaxThreads As Integer _
+		ByVal MaxThreads As UInteger _
 	)As HRESULT
 	
 	Run As Function( _

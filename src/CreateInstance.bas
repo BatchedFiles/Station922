@@ -400,21 +400,3 @@ Function CreatePermanentInstance( _
 	Return CLASS_E_CLASSNOTAVAILABLE
 	
 End Function
-
-Function GetHeapMemoryAllocatorInstance( _
-	)As IHeapMemoryAllocator Ptr
-	
-	Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-	Dim hrCreateMalloc As HRESULT = CreateInstance( _
-		NULL, _
-		@CLSID_HEAPMEMORYALLOCATOR, _
-		@IID_IHeapMemoryAllocator, _
-		@pMalloc _
-	)
-	If FAILED(hrCreateMalloc) Then
-		Return NULL
-	End If
-	
-	Return pMalloc
-	
-End Function

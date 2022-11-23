@@ -11,6 +11,17 @@ Type HeapMemoryAllocator As _HeapMemoryAllocator
 
 Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
 
+Declare Function GetHeapMemoryAllocatorInstance( _
+)As IHeapMemoryAllocator Ptr
+
+Declare Sub ReleaseHeapMemoryAllocatorInstance( _
+	ByVal pMalloc As IHeapMemoryAllocator Ptr _
+)
+
+Declare Function CreateMemoryPool( _
+	ByVal Length As UInteger _
+)As HRESULT
+
 Declare Function CreateHeapMemoryAllocator( _
 )As HeapMemoryAllocator Ptr
 

@@ -1,4 +1,5 @@
 #include once "HeapMemoryAllocator.bi"
+#include once "CreateInstance.bi"
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
@@ -11,6 +12,11 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = PRIVATEHEAP_INITIALSIZE
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
+Type MemoryPoolRecord
+	pMalloc As IHeapMemoryAllocator Ptr
+	IsUsed As Boolean
+End Type
+
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -20,6 +26,111 @@ Type _HeapMemoryAllocator
 	hHeap As HANDLE
 	pReadedData As ClientRequestBuffer Ptr
 End Type
+
+Dim Shared MemoryPoolCapacity As UInteger
+Dim Shared pMemoryPoolRecord As MemoryPoolRecord Ptr
+Dim Shared MemoryPoolSection As CRITICAL_SECTION
+
+Sub ReleaseHeapMemoryAllocatorInstance( _
+		ByVal pMalloc As IHeapMemoryAllocator Ptr _
+	)
+	
+	Dim Releaseflag As Boolean = False
+	EnterCriticalSection(@MemoryPoolSection)
+	For i As UInteger = 0 To MemoryPoolCapacity - 1
+		If pMemoryPoolRecord[i].pMalloc = pMalloc Then
+			pMemoryPoolRecord[i].IsUsed = False
+			Releaseflag = True
+			Exit For
+		End If
+	Next
+	LeaveCriticalSection(@MemoryPoolSection)
+	
+	If Releaseflag = False Then
+		Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+		DestroyHeapMemoryAllocator(this)
+	End If
+	
+End Sub
+
+Function GetHeapMemoryAllocatorInstance( _
+	)As IHeapMemoryAllocator Ptr
+	
+	Scope
+		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+		EnterCriticalSection(@MemoryPoolSection)
+		For i As UInteger = 0 To MemoryPoolCapacity - 1
+			If pMemoryPoolRecord[i].IsUsed = False Then
+				pMemoryPoolRecord[i].IsUsed = True
+				pMalloc = pMemoryPoolRecord[i].pMalloc
+				Exit For
+			End If
+		Next
+		LeaveCriticalSection(@MemoryPoolSection)
+		
+		If pMalloc Then
+			Return pMalloc
+		End If
+	End Scope
+	
+	Scope
+		Dim pMalloc As IHeapMemoryAllocator Ptr = Any
+		Dim hrCreateMalloc As HRESULT = CreateInstance( _
+			NULL, _
+			@CLSID_HEAPMEMORYALLOCATOR, _
+			@IID_IHeapMemoryAllocator, _
+			@pMalloc _
+		)
+		If FAILED(hrCreateMalloc) Then
+			Return NULL
+		End If
+		
+		Return pMalloc
+	End Scope
+	
+End Function
+
+Function CreateMemoryPool( _
+		ByVal Length As UInteger _
+	)As HRESULT
+	
+	Const dwSpinCount As DWORD = 4000
+	Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
+		@MemoryPoolSection, _
+		dwSpinCount _
+	)
+	If resInitialize = 0 Then
+		Dim dwError As DWORD =  GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	MemoryPoolCapacity = Length
+	pMemoryPoolRecord = CoTaskMemAlloc( _
+		SizeOf(MemoryPoolRecord) * Length _
+	)
+	If pMemoryPoolRecord = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	For i As UInteger = 0 To Length - 1
+		Dim pMalloc As IHeapMemoryAllocator Ptr = Any
+		Dim hrCreateMalloc As HRESULT = CreateInstance( _
+			NULL, _
+			@CLSID_HEAPMEMORYALLOCATOR, _
+			@IID_IHeapMemoryAllocator, _
+			@pMalloc _
+		)
+		If FAILED(hrCreateMalloc) Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		pMemoryPoolRecord[i].pMalloc = pMalloc
+		pMemoryPoolRecord[i].IsUsed = False
+	Next
+	
+	Return S_OK
+	
+End Function
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
@@ -214,7 +325,9 @@ Function HeapMemoryAllocatorRelease( _
 		Return 1
 	End If
 	
-	DestroyHeapMemoryAllocator(this)
+	' DestroyHeapMemoryAllocator(this)
+	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
+	ReleaseHeapMemoryAllocatorInstance(pInterface)
 	
 	Return 0
 	

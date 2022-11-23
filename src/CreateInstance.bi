@@ -17,7 +17,4 @@ Declare Function CreatePermanentInstance( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Function GetHeapMemoryAllocatorInstance( _
-)As IHeapMemoryAllocator Ptr
-
 #endif

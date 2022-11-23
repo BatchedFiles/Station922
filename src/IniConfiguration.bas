@@ -332,7 +332,7 @@ End Function
 
 Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As Integer Ptr _
+		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	
 	Dim si As SYSTEM_INFO = Any
@@ -340,12 +340,14 @@ Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	
 	Dim DefaultWorkerThreadsCount As INT_ = Cast(INT_, 2 * si.dwNumberOfProcessors)
 	
-	*pWorkerThreadsCount = GetPrivateProfileIntW( _
+	Dim WorkerThreadsCount As UINT = GetPrivateProfileIntW( _
 		@WebServerSectionString, _
 		@MaxWorkerThreadsKeyString, _
 		DefaultWorkerThreadsCount, _
 		this->pWebServerIniFileName _
 	)
+	
+	*pWorkerThreadsCount = CUInt(WorkerThreadsCount)
 	
 	Return S_OK
 	
@@ -353,15 +355,17 @@ End Function
 
 Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As Integer Ptr _
+		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	
-	*pCachedClientMemoryContextCount = GetPrivateProfileIntW( _
+	Dim MemoryContextCount As UINT = GetPrivateProfileIntW( _
 		@WebServerSectionString, _
 		@MaxCachedClientMemoryContextKeyString, _
 		DefaultCachedClientMemoryContextMaximum, _
 		this->pWebServerIniFileName _
 	)
+	
+	*pCachedClientMemoryContextCount = CUInt(MemoryContextCount)
 	
 	Return S_OK
 	
@@ -871,14 +875,14 @@ End Function
 
 Function IWebServerConfigurationGetWorkerThreadsCount( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As Integer Ptr _
+		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetWorkerThreadsCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
 End Function
 
 Function IWebServerConfigurationGetCachedClientMemoryContextCount( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As Integer Ptr _
+		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetCachedClientMemoryContextCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
 End Function

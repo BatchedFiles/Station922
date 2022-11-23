@@ -55,12 +55,12 @@ Declare Function WebServerIniConfigurationGetConnectBindPort( _
 
 Declare Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pWorkerThreadsCount As Integer Ptr _
+	ByVal pWorkerThreadsCount As UInteger Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pCachedClientMemoryContextCount As Integer Ptr _
+	ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetIsPasswordValid( _
