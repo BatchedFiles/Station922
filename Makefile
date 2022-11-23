@@ -32,7 +32,7 @@ OBJECTFILES_DEBUG_CONSOLE=  $(OBJECTFILES_DEBUG_CONSOLE_BASE)   $(OBJ_DEBUG_DIR)
 
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-CFLAGS+=-m64 -march=native
+CFLAGS+=-m64
 ASFLAGS+=--64
 ifeq ($(WITHOUT_RUNTIME_FLAG),true)
 ENTRY_POINT_PARAM=-e ENTRYPOINT
@@ -42,7 +42,7 @@ endif
 LDFLAGS+=-m i386pep
 GORCFLAGS+=/machine X64
 else
-CFLAGS+=-m32 -march=native
+CFLAGS+=-m32
 ASFLAGS+=--32
 ifeq ($(WITHOUT_RUNTIME_FLAG),true)
 ENTRY_POINT_PARAM=-e _ENTRYPOINT@0
@@ -54,8 +54,7 @@ GORCFLAGS+=
 endif
 
 FBC ?= fbc.exe
-EMITTER ?= gcc
-FBCFLAGS+=-gen $(EMITTER) -i src -r -s console -O 0
+FBCFLAGS+=-i src -r -s console -O 0
 FBCFLAGS_DEBUG+=-g
 
 CC ?= gcc.exe
@@ -78,7 +77,6 @@ GORCFLAGS+=/ni /o /d FROM_MAKEFILE
 GORCFLAGS_DEBUG=/d DEBUG
 
 LD ?= ld.exe
-
 LDFLAGS+=--major-image-version 1 --minor-image-version 0 -subsystem console --stack 1048576,1048576 --no-seh --nxcompat $(ENTRY_POINT_PARAM) -L "$(LIB_DIR)"
 LDFLAGS+=-T "$(LIB_DIR)$(PATH_SEP)fbextra.x"
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32 -lshell32 -lshlwapi -luuid -lws2_32
