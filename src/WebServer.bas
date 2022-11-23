@@ -2,6 +2,7 @@
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "IniConfiguration.bi"
 #include once "Logger.bi"
