@@ -65,7 +65,6 @@ Enum ResponseErrorCode
 	VersionNotSupported
 End Enum
 
-
 ' Требуемый размер буфера для описания кода состояния Http
 Const MaxHttpStatusCodeBufferLength As Integer = 32 - 1
 
