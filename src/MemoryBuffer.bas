@@ -260,7 +260,7 @@ Function MemoryBufferSetContentType( _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
 	
-	memcpy(@this->ContentType, pType, SizeOf(MimeType))
+	CopyMemory(@this->ContentType, pType, SizeOf(MimeType))
 	
 	Return S_OK
 	
@@ -279,9 +279,10 @@ Function MemoryBufferAllocBuffer( _
 		Offset = 0
 	#endif
 	
+	Dim BufferLength As LongInt = Length + Offset
 	this->pBuffer = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
-		Length + Offset _
+		CULngInt(BufferLength) _
 	)
 	If this->pBuffer = NULL Then
 		*ppBuffer = NULL
@@ -296,7 +297,7 @@ Function MemoryBufferAllocBuffer( _
 		)
 	#endif
 	
-	this->Capacity = Length + Offset
+	this->Capacity = BufferLength
 	this->OffSet = Offset
 	
 	*ppBuffer = @this->pBuffer[Offset]
