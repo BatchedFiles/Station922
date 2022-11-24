@@ -39,6 +39,9 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 	EnterCriticalSection(@MemoryPoolSection)
 	For i As UInteger = 0 To MemoryPoolCapacity - 1
 		If pMemoryPoolRecord[i].pMalloc = pMalloc Then
+			Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+			InitializeClientRequestBuffer(this->pReadedData)
+			
 			pMemoryPoolRecord[i].IsUsed = False
 			Releaseflag = True
 			Exit For
@@ -149,6 +152,7 @@ Sub InitializeHeapMemoryAllocator( _
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
 	this->pReadedData = pReadedData
+	InitializeClientRequestBuffer(pReadedData)
 	
 End Sub
 
@@ -190,7 +194,6 @@ Function CreateHeapMemoryAllocator( _
 		)
 		
 		If pReadedData Then
-			InitializeClientRequestBuffer(pReadedData)
 			
 			Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 				hHeap, _
