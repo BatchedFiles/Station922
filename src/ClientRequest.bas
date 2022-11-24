@@ -264,6 +264,7 @@ Function ClientRequestParseRequestHeaders( _
 				this->KeepAlive = True
 			End If
 		End If
+		
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
 		this->RequestHeaders(HttpRequestHeaders.HeaderConnection) = NULL
 	End Scope
@@ -284,6 +285,7 @@ Function ClientRequestParseRequestHeaders( _
 		If pDeflateString Then
 			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
+		
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
 		this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding) = NULL
 	End Scope
@@ -299,6 +301,7 @@ Function ClientRequestParseRequestHeaders( _
 		If pUTCInModifiedSince Then
 			lstrcpyW(pUTCInModifiedSince, WStr("GMT"))
 		End If
+		
 		/'
 		Dim wSeparator As WString Ptr = StrChrW( _
 			pHeaderIfModifiedSince, _
@@ -316,6 +319,7 @@ Function ClientRequestParseRequestHeaders( _
 		If pUTCInUnModifiedSince Then
 			lstrcpyW(pUTCInUnModifiedSince, WStr("GMT"))
 		End If
+		
 		/'
 		Dim wSeparator As WString Ptr = StrChrW( _
 			pHeaderIfUnModifiedSince, _
@@ -384,6 +388,7 @@ Function ClientRequestParseRequestHeaders( _
 			End If
 			
 		End If
+		
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderRange))
 		this->RequestHeaders(HttpRequestHeaders.HeaderRange) = NULL
 	End Scope
@@ -399,6 +404,7 @@ Function ClientRequestParseRequestHeaders( _
 				@this->ContentLength _
 			)
 		End If
+		
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderContentLength))
 		this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
 	End Scope
