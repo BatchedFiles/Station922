@@ -167,9 +167,12 @@ Function HttpReaderReadLine( _
 		this->pClientBuffer, _
 		this->pIMemoryAllocator _
 	)
+	If bstrLine = NULL Then
+		*ppLine = NULL
+		Return E_OUTOFMEMORY
+	End If
 	
 	*ppLine = bstrLine
-	
 	Return S_OK
 	
 End Function
@@ -268,9 +271,12 @@ Function HttpReaderEndReadLine( _
 		this->pClientBuffer, _
 		this->pIMemoryAllocator _
 	)
+	If bstrLine = NULL Then
+		*ppLine = NULL
+		Return E_OUTOFMEMORY
+	End If
 	
 	*ppLine = bstrLine
-	
 	Return S_OK
 	
 End Function
