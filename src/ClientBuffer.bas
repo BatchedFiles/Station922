@@ -102,11 +102,6 @@ Function ClientRequestBufferGetLine( _
 	' Если начинается — объединить обе строки
 	
 	Dim LineLength As Integer = CrLfIndex
-	
-	If LineLength = 0 Then
-		Return NULL
-	End If
-	
 	Dim StartLineIndex As Integer = pBufer->StartLine
 	
 	Dim bstrLine As HeapBSTR = CreateHeapZStringLen( _
@@ -114,6 +109,9 @@ Function ClientRequestBufferGetLine( _
 		@pBufer->Bytes(StartLineIndex), _
 		LineLength _
 	)
+	If bstrLine = NULL Then
+		Return NULL
+	End If
 	
 	Dim NewStartIndex As Integer = StartLineIndex + LineLength + Len(NewLineStringA)
 	pBufer->StartLine = NewStartIndex
