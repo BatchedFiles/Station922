@@ -24,7 +24,8 @@ Type _HeapMemoryAllocator
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
-	pReadedData As ClientRequestBuffer Ptr
+	Padding As Integer
+	ReadedData As ClientRequestBuffer
 End Type
 
 Dim Shared MemoryPoolCapacity As UInteger
@@ -35,24 +36,24 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
 	
-	Dim Releaseflag As Boolean = False
+	Dim Finded As Boolean = False
 	
 	If MemoryPoolCapacity Then
 		EnterCriticalSection(@MemoryPoolSection)
 		For i As UInteger = 0 To MemoryPoolCapacity - 1
 			If pMemoryPoolItem[i].pMalloc = pMalloc Then
 				Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-				InitializeClientRequestBuffer(this->pReadedData)
+				InitializeClientRequestBuffer(@this->ReadedData)
 				
 				pMemoryPoolItem[i].IsUsed = False
-				Releaseflag = True
+				Finded = True
 				Exit For
 			End If
 		Next
 		LeaveCriticalSection(@MemoryPoolSection)
 	End If
 	
-	If Releaseflag = False Then
+	If Finded = False Then
 		Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
 		DestroyHeapMemoryAllocator(this)
 	End If
@@ -145,8 +146,7 @@ End Function
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE, _
-		ByVal pReadedData As ClientRequestBuffer Ptr _
+		ByVal hHeap As HANDLE _
 	)
 	
 	#if __FB_DEBUG__
@@ -159,22 +159,13 @@ Sub InitializeHeapMemoryAllocator( _
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
-	this->pReadedData = pReadedData
-	InitializeClientRequestBuffer(pReadedData)
+	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
 
 Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
-	
-	If this->pReadedData Then
-		HeapFree( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			this->pReadedData _
-		)
-	End If
 	
 End Sub
 
@@ -195,29 +186,18 @@ Function CreateHeapMemoryAllocator( _
 	
 	If hHeap Then
 		
-		Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 			hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
-			SizeOf(ClientRequestBuffer) _
+			SizeOf(HeapMemoryAllocator) _
 		)
 		
-		If pReadedData Then
+		If this Then
+			InitializeHeapMemoryAllocator(this, hHeap)
 			
-			Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-				hHeap, _
-				HEAP_NO_SERIALIZE_FLAG, _
-				SizeOf(HeapMemoryAllocator) _
-			)
+			HeapMemoryAllocatorCreated(this)
 			
-			If this Then
-				InitializeHeapMemoryAllocator(this, hHeap, pReadedData)
-				
-				HeapMemoryAllocatorCreated(this)
-				
-				Return this
-			End If
-			
-			' No need to HeapFree(pReadedData)
+			Return this
 		End If
 		
 		Dim vtAllocatedBytes As VARIANT = Any
@@ -337,7 +317,6 @@ Function HeapMemoryAllocatorRelease( _
 		Return 1
 	End If
 	
-	' DestroyHeapMemoryAllocator(this)
 	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
 	ReleaseHeapMemoryAllocatorInstance(pInterface)
 	
@@ -466,7 +445,7 @@ Function HeapMemoryAllocatorGetClientBuffer( _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
 	)As HRESULT
 	
-	*ppBuffer = this->pReadedData
+	*ppBuffer = @this->ReadedData
 	
 	Return S_OK
 	
