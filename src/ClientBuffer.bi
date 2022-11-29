@@ -27,11 +27,11 @@ Type ClientRequestBuffer
 	cbLength As Integer
 	EndOfHeaders As Integer
 	StartLine As Integer
+	Padding1 As Integer
 	LocalAddressLength As Integer
 	RemoteAddressLength As Integer
-	Padding6 As Integer
-	Padding7 As Integer
-	Padding8 As Integer
+	Padding2 As Integer
+	Padding3 As Integer
 	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
 	LocalAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
 	RemoteAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
