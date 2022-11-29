@@ -324,6 +324,22 @@ Function HeapMemoryAllocatorRelease( _
 	
 End Function
 
+Sub HeapMemoryAllocatorAllocFailed( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal BytesCount As SIZE_T_ _
+	)
+	
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = CLng(BytesCount)
+	LogWriteEntry( _
+		LogEntryType.Error, _
+		WStr(!"\t\t\t\tAllocMemory Failed\t"), _
+		@vtAllocatedBytes _
+	)
+	
+End Sub
+
 Function HeapMemoryAllocatorAlloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal BytesCount As SIZE_T_ _
@@ -335,14 +351,7 @@ Function HeapMemoryAllocatorAlloc( _
 		BytesCount _
 	)
 	If pMemory = NULL Then
-		Dim vtAllocatedBytes As VARIANT = Any
-		vtAllocatedBytes.vt = VT_I4
-		vtAllocatedBytes.lVal = CLng(BytesCount)
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"\t\t\t\tAllocMemory Failed\t"), _
-			@vtAllocatedBytes _
-		)
+		HeapMemoryAllocatorAllocFailed(this, BytesCount)
 	End If
 	
 	Return pMemory
