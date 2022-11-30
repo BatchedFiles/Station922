@@ -5,6 +5,8 @@
 Extern GlobalInternalPermanentStringVirtualTable As Const IStringVirtualTable
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
+Const ReservedCharactersLength As Integer = 16
+
 Type _InternalHeapBSTR
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -16,7 +18,7 @@ Type _InternalHeapBSTR
 		Padding As DWORD
 	#endif
 	cbBytes As DWORD
-	wszNullChar(0 To 7) As OLECHAR
+	wszNullChar(0 To ReservedCharactersLength - 1) As OLECHAR
 End Type
 
 Sub InitializeInternalHeapBSTR( _
@@ -157,15 +159,25 @@ Sub HeapBSTRCreated( _
 	
 End Sub
 
+Function GetAllocatedValueBstrBytes( _
+		ByVal Characters As UINT _
+	)As Integer
+	
+	Dim cbValueBstrHeader As Integer = SizeOf(InternalHeapBSTR) - (ReservedCharactersLength) * SizeOf(OLECHAR)
+	Dim cbValueBstrData As Integer = (Characters + 1) * SizeOf(OLECHAR)
+	Dim cbBytes As Integer = cbValueBstrHeader + cbValueBstrData
+	
+	Return cbBytes
+	
+End Function
+
 Function CreateHeapZStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal psz As Const ZString Ptr, _
 		ByVal Length As UINT _
 	)As HeapBSTR
 	
-	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
-	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
-	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
+	Dim cbBytes As Integer = GetAllocatedValueBstrBytes(Length)
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -217,9 +229,7 @@ Function CreateInternalHeapBSTR( _
 		ByVal Permanent As Boolean _
 	)As InternalHeapBSTR Ptr
 	
-	Dim cbInternalHeapBSTR As Integer = SizeOf(InternalHeapBSTR) - SizeOf(OLECHAR)
-	Dim cbValueBstr As Integer = (Length + 1) * SizeOf(OLECHAR)
-	Dim cbBytes As Integer = cbInternalHeapBSTR + cbValueBstr
+	Dim cbBytes As Integer = GetAllocatedValueBstrBytes(Length)
 	
 	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
