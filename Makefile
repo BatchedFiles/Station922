@@ -87,14 +87,14 @@ all: release debug
 
 release: CFLAGS+=$(CFLAGS_RELEASE) -fstrict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fomit-frame-pointer -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 release: ASFLAGS+=--strip-local-absolute
-release: LDFLAGS+=-s --gc-sections -L "$(OBJ_RELEASE_DIR)"
+release: LDFLAGS+=-s --gc-sections
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME_CONSOLE)
 
 debug: FBCFLAGS+=$(FBCFLAGS_DEBUG)
 debug: CFLAGS+=$(CFLAGS_DEBUG)
 debug: ASFLAGS+=$(ASFLAGS_DEBUG)
 debug: GORCFLAGS+=$(GORCFLAGS_DEBUG)
-debug: LDFLAGS+=$(LDFLAGS_DEBUG) -L "$(OBJ_DEBUG_DIR)"
+debug: LDFLAGS+=$(LDFLAGS_DEBUG)
 debug: LDLIBS+=$(LDLIBS_DEBUG)
 debug: $(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME_CONSOLE)
 
