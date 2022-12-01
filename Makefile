@@ -1,13 +1,6 @@
 .PHONY: all debug release clean
 
-ifeq ($(WITHOUT_RUNTIME_FLAG),true)
-WITHOUT_RUNTIME_SUFFIX=-Rt
-else
-WITHOUT_RUNTIME_SUFFIX=+Rt
-endif
-
-FILE_SUFFIX_BASE=_$(GCC_VER)_$(FBC_VER)_$(WITHOUT_RUNTIME_SUFFIX)
-FILE_SUFFIX=$(FILE_SUFFIX_BASE)
+FILE_SUFFIX=_$(GCC_VER)_$(FBC_VER)_-Rt
 
 OUTPUT_FILE_NAME=Station922$(FILE_SUFFIX).exe
 
@@ -34,37 +27,45 @@ else
 FBCFLAGS+=-gen gcc
 endif
 
+PATH_SEP ?= /
+MOVE_PATH_SEP ?= \\
+
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 CFLAGS+=-m64
 ASFLAGS+=--64
-ifeq ($(WITHOUT_RUNTIME_FLAG),true)
 ENTRY_POINT_PARAM=-e ENTRYPOINT
-else
-ENTRY_POINT_PARAM=
-endif
 LDFLAGS+=-m i386pep
 GORCFLAGS+=/machine X64
+BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x64
+BIN_RELEASE_DIR ?= bin$(PATH_SEP)Release$(PATH_SEP)x64
+OBJ_DEBUG_DIR ?= obj$(PATH_SEP)Debug$(PATH_SEP)x64
+OBJ_RELEASE_DIR ?= obj$(PATH_SEP)Release$(PATH_SEP)x64
+BIN_DEBUG_DIR_MOVE ?= bin$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x64
+BIN_RELEASE_DIR_MOVE ?= bin$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x64
+OBJ_DEBUG_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x64
+OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x64
 else
 CFLAGS+=-m32
 ASFLAGS+=--32
-ifeq ($(WITHOUT_RUNTIME_FLAG),true)
 ENTRY_POINT_PARAM=-e _ENTRYPOINT@0
-else
-ENTRY_POINT_PARAM=
-endif
 LDFLAGS+=-m i386pe --large-address-aware
 GORCFLAGS+=
+BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x86
+BIN_RELEASE_DIR ?= bin$(PATH_SEP)Release$(PATH_SEP)x86
+OBJ_DEBUG_DIR ?= obj$(PATH_SEP)Debug$(PATH_SEP)x86
+OBJ_RELEASE_DIR ?= obj$(PATH_SEP)Release$(PATH_SEP)x86
+BIN_DEBUG_DIR_MOVE ?= bin$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x86
+BIN_RELEASE_DIR_MOVE ?= bin$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x86
+OBJ_DEBUG_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x86
+OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x86
 endif
 
 MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
 
 FBC ?= fbc.exe
-FBCFLAGS+=-d UNICODE -w error -maxerr 1 -i src -r -s console -O 0
+FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME -w error -maxerr 1 -i src -r -s console -O 0
 FBCFLAGS_DEBUG+=-g
-ifeq ($(WITHOUT_RUNTIME_FLAG),true)
-FBCFLAGS+=-d WITHOUT_RUNTIME
-endif
 
 CC ?= gcc.exe
 C_EXT ?= c
@@ -98,10 +99,6 @@ LDFLAGS+=-L $(LIB_DIR) -T "src$(PATH_SEP)fbextra.x"
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32
 LDLIBS+=-lshell32 -lshlwapi -luuid -lws2_32
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
-ifeq ($(WITHOUT_RUNTIME_FLAG),true)
-else
-LDLIBS+=crt2.o crtbegin.o crtend.o fbrt0.o gcrt2.o -lfbmt
-endif
 
 
 all: release debug
