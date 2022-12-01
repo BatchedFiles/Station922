@@ -18,12 +18,13 @@
 
 ```
 [WebServer]
-ListenAddress=0.0.0.0
+[WebServer]
+ListenAddress=localhost
 Port=80
 ConnectBindAddress=0.0.0.0
 ConnectBindPort=0
-MaxWorkerThreads=1
-MaxCachedClientMemoryContext=10
+MaxWorkerThreads=4
+MaxCachedClientMemoryContext=0
 ```
 
 #### Описание
