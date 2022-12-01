@@ -222,6 +222,42 @@ Sub HeapMemoryAllocatorDestroyed( _
 	
 End Sub
 
+Function CheckMemoryLeak( _
+		ByVal hHeap As HANDLE _
+	)As Integer
+	
+	Dim LeakedCount As Integer = 0
+	
+	Dim bLock As BOOL = HeapLock(hHeap)
+	If bLock Then
+		Dim phe As PROCESS_HEAP_ENTRY = Any
+		phe.lpData = NULL
+		
+		Dim resHeapWalk As BOOL = HeapWalk(hHeap, @phe)
+		Do While resHeapWalk
+			Dim AllocatedFlag As Boolean = phe.wFlags And PROCESS_HEAP_ENTRY_BUSY
+			If AllocatedFlag Then
+				LeakedCount += 1
+				
+				Dim vtMemoryLeaksSize As VARIANT = Any
+				vtMemoryLeaksSize.vt = VT_I8
+				vtMemoryLeaksSize.llVal = phe.cbData
+				LogWriteEntry( _
+					LogEntryType.Error, _
+					WStr(!"MemoryLeak Bytes\t"), _
+					@vtMemoryLeaksSize _
+				)
+			End If
+			resHeapWalk = HeapWalk(hHeap, @phe)
+		Loop
+		
+		HeapUnlock(hHeap)
+	End If
+	
+	Return LeakedCount
+	
+End Function
+
 Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
@@ -236,30 +272,6 @@ Sub DestroyHeapMemoryAllocator( _
 			HEAP_NO_SERIALIZE_FLAG, _
 			this _
 		)
-		/'
-		Dim bLock As BOOL = HeapLock(hHeap)
-		If bLock Then
-			Dim phe As PROCESS_HEAP_ENTRY = Any
-			phe.lpData = NULL
-			
-			' Dim res As Long = 0
-			Do While HeapWalk(hHeap, @phe)
-				Dim AllocatedFlag As Boolean = phe.wFlags And PROCESS_HEAP_ENTRY_BUSY
-				If AllocatedFlag Then
-					Dim vtMemoryLeaksSize As VARIANT = Any
-					vtMemoryLeaksSize.vt = VT_I8
-					vtMemoryLeaksSize.llVal = phe.cbData
-					LogWriteEntry( _
-						LogEntryType.Error, _
-						WStr(!"MemoryLeak Bytes\t"), _
-						@vtMemoryLeaksSize _
-					)
-				End If
-			Loop
-			
-			HeapUnlock(hHeap)
-		End If
-		'/
 		
 		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
 		If resHeapDestroy = 0 Then
