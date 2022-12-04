@@ -10,6 +10,7 @@
 #include once "Logger.bi"
 #include once "MemoryBuffer.bi"
 #include once "Mime.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
@@ -390,7 +391,7 @@ Function GetFileHandle( _
 				0, _
 				NULL, _
 				CREATE_ALWAYS, _
-				FILE_ATTRIBUTE_NORMAL, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			
@@ -413,7 +414,7 @@ Function GetFileHandle( _
 				FILE_SHARE_READ, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			If FileHandle = INVALID_HANDLE_VALUE Then
@@ -430,7 +431,7 @@ Function GetFileHandle( _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			
@@ -453,7 +454,7 @@ Function GetFileHandle( _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			If FileHandle = INVALID_HANDLE_VALUE Then
@@ -464,6 +465,18 @@ Function GetFileHandle( _
 			End If
 			
 	End Select
+	
+	If SUCCEEDED(hrErrorCode) Then
+		Dim hrBind As HRESULT = BindToThreadPool( _
+			FileHandle, _
+			FileHandle _
+		)
+		If FAILED(hrBind) Then
+			CloseHandle(FileHandle)
+			*pFileHandle = INVALID_HANDLE_VALUE
+			Return hrBind
+		End If
+	End If
 	
 	*pFileHandle = FileHandle
 	Return hrErrorCode
