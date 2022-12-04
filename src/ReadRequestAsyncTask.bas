@@ -193,44 +193,6 @@ Function ReadRequestAsyncTaskRelease( _
 	
 End Function
 
-/'
-Function ReadRequestAsyncTaskBindToThreadPool( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
-	Dim ClientSocket As SOCKET = Any
-	
-	Scope
-		Dim Stream As INetworkStream Ptr = Any
-		IBaseStream_QueryInterface( _
-			this->pIStream, _
-			@IID_INetworkStream, _
-			@Stream _
-		)
-		INetworkStream_GetSocket(Stream, @ClientSocket)
-		INetworkStream_Release(Stream)
-	End Scope
-	
-	Dim Port As HANDLE = Any
-	IThreadPool_GetIOCompletionPort(pPool, @Port)
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, ClientSocket), _
-		Port, _
-		Cast(ULONG_PTR, this), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-'/
-
 Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _

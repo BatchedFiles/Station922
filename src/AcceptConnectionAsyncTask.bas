@@ -258,33 +258,6 @@ Function AcceptConnectionAsyncTaskRelease( _
 	
 End Function
 
-/'
-Function AcceptConnectionAsyncTaskBindToThreadPool( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
-	this->pIPoolWeakPtr = pPool
-	
-	Dim Port As HANDLE = Any
-	IThreadPool_GetIOCompletionPort(pPool, @Port)
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, this->ListenSocket), _
-		Port, _
-		Cast(ULONG_PTR, this), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-'/
-
 Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
