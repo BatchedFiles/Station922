@@ -35,11 +35,6 @@ Type IWriteErrorAsyncIoTaskVirtualTable
 		ByVal this As IWriteErrorAsyncIoTask Ptr _
 	)As ULONG
 	
-	BindToThreadPool As Function( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
 	BeginExecute As Function( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -121,7 +116,6 @@ End Type
 #define IWriteErrorAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IWriteErrorAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWriteErrorAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
-#define IWriteErrorAsyncIoTask_BindToThreadPool(this, pPool) (this)->lpVtbl->BindToThreadPool(this, pPool)
 #define IWriteErrorAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IWriteErrorAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IWriteErrorAsyncIoTask_GetAssociatedWithIOCP(this, pAssociated) (this)->lpVtbl->GetAssociatedWithIOCP(this, pAssociated)

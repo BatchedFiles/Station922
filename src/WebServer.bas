@@ -138,14 +138,6 @@ Function CreateAcceptConnectionTask( _
 		@pTask _
 	)
 	If FAILED(hrCreateTask) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrCreateTask
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IAcceptConnectionAsyncIoTask Create Error\t"), _
-			@vtSCode _
-		)
 		*ppTask = NULL
 		Return hrCreateTask
 	End If
@@ -153,7 +145,16 @@ Function CreateAcceptConnectionTask( _
 	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
 	IAcceptConnectionAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
 	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
-	IAcceptConnectionAsyncIoTask_BindToThreadPool(pTask, this->pIPool)
+	
+	Dim hrBind As HRESULT = BindToThreadPool( _
+		Cast(HANDLE, ServerSocket), _
+		pTask _
+	)
+	If FAILED(hrBind) Then
+		IAcceptConnectionAsyncIoTask_Release(pTask)
+		*ppTask = NULL
+		Return hrBind
+	End If
 	
 	*ppTask = pTask
 	Return S_OK

@@ -20,7 +20,6 @@ Type _AcceptConnectionAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
-	pIPoolWeakPtr As IThreadPool Ptr
 	pListener As ITcpListener Ptr
 	ListenSocket As SOCKET
 	pReadTask As IReadRequestAsyncIoTask Ptr
@@ -130,7 +129,6 @@ Sub InitializeAcceptConnectionAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSitesWeakPtr = NULL
 	this->pIProcessorsWeakPtr = NULL
-	this->pIPoolWeakPtr = NULL
 	this->ListenSocket = INVALID_SOCKET
 	this->pListener = pListener
 	this->pReadTask = NULL
@@ -260,6 +258,7 @@ Function AcceptConnectionAsyncTaskRelease( _
 	
 End Function
 
+/'
 Function AcceptConnectionAsyncTaskBindToThreadPool( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr _
@@ -284,6 +283,7 @@ Function AcceptConnectionAsyncTaskBindToThreadPool( _
 	Return S_OK
 	
 End Function
+'/
 
 Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
@@ -339,12 +339,12 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 			ClientSocket _
 		)
 		
-		Dim hrAssociate As HRESULT = IReadRequestAsyncIoTask_BindToThreadPool( _
-			this->pReadTask, _
-			this->pIPoolWeakPtr _
+		Dim hrBind As HRESULT = BindToThreadPool( _
+			Cast(HANDLE, ClientSocket), _
+			this->pReadTask _
 		)
 		
-		If SUCCEEDED(hrAssociate) Then
+		If SUCCEEDED(hrBind) Then
 			
 			Dim hrBeginExecute As HRESULT = StartExecuteTask( _
 				CPtr(IAsyncIoTask Ptr, this->pReadTask) _
@@ -498,13 +498,6 @@ Function IAcceptConnectionAsyncTaskRelease( _
 	Return AcceptConnectionAsyncTaskRelease(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl))
 End Function
 
-Function IAcceptConnectionAsyncTaskBindToThreadPool( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskBindToThreadPool(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pPool)
-End Function
-
 Function IAcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -595,7 +588,6 @@ Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyn
 	@IAcceptConnectionAsyncTaskQueryInterface, _
 	@IAcceptConnectionAsyncTaskAddRef, _
 	@IAcceptConnectionAsyncTaskRelease, _
-	@IAcceptConnectionAsyncTaskBindToThreadPool, _
 	@IAcceptConnectionAsyncTaskBeginExecute, _
 	@IAcceptConnectionAsyncTaskEndExecute, _
 	@IAcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr, _

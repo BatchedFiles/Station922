@@ -33,11 +33,6 @@ Declare Function WriteErrorAsyncTaskRelease( _
 	ByVal this As WriteErrorAsyncTask Ptr _
 )As ULONG
 
-Declare Function WriteErrorAsyncTaskBindToThreadPool( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr _
-)As HRESULT
-
 Declare Function WriteErrorAsyncTaskBeginExecute( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _

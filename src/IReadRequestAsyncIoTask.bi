@@ -34,11 +34,6 @@ Type IReadRequestAsyncIoTaskVirtualTable
 		ByVal this As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
 	
-	BindToThreadPool As Function( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
 	BeginExecute As Function( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -100,7 +95,6 @@ End Type
 #define IReadRequestAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IReadRequestAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IReadRequestAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
-#define IReadRequestAsyncIoTask_BindToThreadPool(this, pPool) (this)->lpVtbl->BindToThreadPool(this, pPool)
 #define IReadRequestAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IReadRequestAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IReadRequestAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)

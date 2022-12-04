@@ -5,7 +5,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpWriter.bi"
-#include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
@@ -212,42 +211,6 @@ Function WriteResponseAsyncTaskRelease( _
 	DestroyWriteResponseAsyncTask(this)
 	
 	Return 0
-	
-End Function
-
-Function WriteResponseAsyncTaskBindToThreadPool( _
-		ByVal this As WriteResponseAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
-	Dim ClientSocket As SOCKET = Any
-	
-	Scope
-		Dim Stream As INetworkStream Ptr = Any
-		IBaseStream_QueryInterface( _
-			this->pIStream, _
-			@IID_INetworkStream, _
-			@Stream _
-		)
-		INetworkStream_GetSocket(Stream, @ClientSocket)
-		INetworkStream_Release(Stream)
-	End Scope
-	
-	Dim Port As HANDLE = Any
-	IThreadPool_GetIOCompletionPort(pPool, @Port)
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, ClientSocket), _
-		Port, _
-		Cast(ULONG_PTR, this), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
 	
 End Function
 
@@ -628,13 +591,6 @@ Function IWriteResponseAsyncTaskRelease( _
 	Return WriteResponseAsyncTaskRelease(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
-Function IWriteResponseAsyncTaskBindToThreadPool( _
-		ByVal this As IWriteResponseAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As ULONG
-	Return WriteResponseAsyncTaskBindToThreadPool(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pPool)
-End Function
-
 Function IWriteResponseAsyncTaskBeginExecute( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -731,7 +687,6 @@ Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTas
 	@IWriteResponseAsyncTaskQueryInterface, _
 	@IWriteResponseAsyncTaskAddRef, _
 	@IWriteResponseAsyncTaskRelease, _
-	@IWriteResponseAsyncTaskBindToThreadPool, _
 	@IWriteResponseAsyncTaskBeginExecute, _
 	@IWriteResponseAsyncTaskEndExecute, _
 	@IWriteResponseAsyncTaskGetWebSiteCollectionWeakPtr, _

@@ -6,7 +6,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpWriter.bi"
-#include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
@@ -428,41 +427,6 @@ Function WriteErrorAsyncTaskRelease( _
 	
 End Function
 
-Function WriteErrorAsyncTaskBindToThreadPool( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	
-	Dim ClientSocket As SOCKET = Any
-	
-	Scope
-		Dim Stream As INetworkStream Ptr = Any
-		IBaseStream_QueryInterface( _
-			this->pIStream, _
-			@IID_INetworkStream, _
-			@Stream _
-		)
-		INetworkStream_GetSocket(Stream, @ClientSocket)
-		INetworkStream_Release(Stream)
-	End Scope
-	
-	IThreadPool_GetIOCompletionPort(pPool, @this->ComplectionPort)
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		Cast(HANDLE, ClientSocket), _
-		this->ComplectionPort, _
-		Cast(ULONG_PTR, this), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Function WriteErrorAsyncTaskBeginExecute( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -857,13 +821,6 @@ Function IWriteErrorAsyncTaskRelease( _
 	Return WriteErrorAsyncTaskRelease(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
-Function IWriteErrorAsyncTaskBindToThreadPool( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As ULONG
-	Return WriteErrorAsyncTaskBindToThreadPool(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pPool)
-End Function
-
 Function IWriteErrorAsyncTaskBeginExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -968,7 +925,6 @@ Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtu
 	@IWriteErrorAsyncTaskQueryInterface, _
 	@IWriteErrorAsyncTaskAddRef, _
 	@IWriteErrorAsyncTaskRelease, _
-	@IWriteErrorAsyncTaskBindToThreadPool, _
 	@IWriteErrorAsyncTaskBeginExecute, _
 	@IWriteErrorAsyncTaskEndExecute, _
 	@IWriteErrorAsyncTaskGetWebSiteCollectionWeakPtr, _

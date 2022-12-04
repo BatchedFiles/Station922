@@ -3,7 +3,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "INetworkStream.bi"
 #include once "Logger.bi"
 #include once "WebUtils.bi"
 #include once "WriteErrorAsyncTask.bi"
@@ -194,6 +193,7 @@ Function ReadRequestAsyncTaskRelease( _
 	
 End Function
 
+/'
 Function ReadRequestAsyncTaskBindToThreadPool( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal pPool As IThreadPool Ptr _
@@ -229,6 +229,7 @@ Function ReadRequestAsyncTaskBindToThreadPool( _
 	Return S_OK
 	
 End Function
+'/
 
 Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
@@ -533,13 +534,6 @@ Function IReadRequestAsyncTaskRelease( _
 	Return ReadRequestAsyncTaskRelease(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
-Function IReadRequestAsyncTaskBindToThreadPool( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal pPool As IThreadPool Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskBindToThreadPool(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pPool)
-End Function
-
 Function IReadRequestAsyncTaskBeginExecute( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -616,7 +610,6 @@ Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVir
 	@IReadRequestAsyncTaskQueryInterface, _
 	@IReadRequestAsyncTaskAddRef, _
 	@IReadRequestAsyncTaskRelease, _
-	@IReadRequestAsyncTaskBindToThreadPool, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
 	@IReadRequestAsyncTaskGetWebSiteCollectionWeakPtr, _

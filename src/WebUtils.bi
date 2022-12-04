@@ -72,4 +72,9 @@ Declare Function ProcessErrorRequestResponse( _
 	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 )As HRESULT
 
+Declare Function BindToThreadPool( _
+	ByVal hHandle As Handle, _
+	ByVal pUserData As Any Ptr _
+)As HRESULT
+
 #endif

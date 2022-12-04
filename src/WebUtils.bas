@@ -20,6 +20,8 @@ Const CompareResultEqual As Long = 0
 ' 	ByVal pSource As WString Ptr _
 ' )As Boolean
 
+Common Shared ThreadPoolCompletionPort As HANDLE
+
 Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
@@ -375,6 +377,26 @@ Function ProcessErrorRequestResponse( _
 	End If
 	
 	*ppTask = pTask
+	
+	Return S_OK
+	
+End Function
+
+Function BindToThreadPool( _
+		ByVal hHandle As Handle, _
+		ByVal pUserData As Any Ptr _
+	)As HRESULT
+	
+	Dim NewPort As HANDLE = CreateIoCompletionPort( _
+		hHandle, _
+		ThreadPoolCompletionPort, _
+		Cast(ULONG_PTR, pUserData), _
+		0 _
+	)
+	If NewPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	Return S_OK
 	

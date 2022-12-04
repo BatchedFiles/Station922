@@ -33,11 +33,6 @@ Declare Function WriteResponseAsyncTaskRelease( _
 	ByVal this As WriteResponseAsyncTask Ptr _
 )As ULONG
 
-Declare Function WriteResponseAsyncTaskBindToThreadPool( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr _
-)As HRESULT
-
 Declare Function WriteResponseAsyncTaskBeginExecute( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _

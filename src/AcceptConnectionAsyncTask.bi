@@ -33,11 +33,6 @@ Declare Function AcceptConnectionAsyncTaskRelease( _
 	ByVal this As AcceptConnectionAsyncTask Ptr _
 )As ULONG
 
-Declare Function AcceptConnectionAsyncTaskBindToThreadPool( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal pPool As IThreadPool Ptr _
-)As HRESULT
-
 Declare Function AcceptConnectionAsyncTaskBeginExecute( _
 	ByVal this As AcceptConnectionAsyncTask Ptr, _
 	ByVal ppIResult As IAsyncResult Ptr Ptr _

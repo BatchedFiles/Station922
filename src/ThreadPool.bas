@@ -4,6 +4,8 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
+Common Shared ThreadPoolCompletionPort As HANDLE
+
 Type _ThreadPool
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -11,7 +13,6 @@ Type _ThreadPool
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	hIOCompletionPort As HANDLE
 	WorkerThreadsCount As UInteger
 	hThreads As HANDLE Ptr
 	CallBack As ThreadPoolCallBack
@@ -31,7 +32,7 @@ Function WorkerThread( _
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		
 		Dim resCompletionStatus As BOOL = GetQueuedCompletionStatus( _
-			this->hIOCompletionPort, _
+			ThreadPoolCompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
 			@pOverlap, _
@@ -85,7 +86,6 @@ Sub InitializeThreadPool( _
 	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->hIOCompletionPort = NULL
 	this->WorkerThreadsCount = 0
 	this->hThreads = NULL
 	
@@ -95,8 +95,8 @@ Sub UnInitializeThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
-	If this->hIOCompletionPort Then
-		CloseHandle(this->hIOCompletionPort)
+	If ThreadPoolCompletionPort Then
+		CloseHandle(ThreadPoolCompletionPort)
 	End If
 	
 	If this->hThreads Then
@@ -208,13 +208,13 @@ Function ThreadPoolRun( _
 		ByVal param As Any Ptr _
 	)As HRESULT
 	
-	this->hIOCompletionPort = CreateIoCompletionPort( _
+	ThreadPoolCompletionPort = CreateIoCompletionPort( _
 		INVALID_HANDLE_VALUE, _
 		NULL, _
 		Cast(ULONG_PTR, 0), _
 		this->WorkerThreadsCount _
 	)
-	If this->hIOCompletionPort = NULL Then
+	If ThreadPoolCompletionPort = NULL Then
 		Dim dwError As DWORD = GetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
@@ -262,7 +262,7 @@ Function ThreadPoolStop( _
 	
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
 		PostQueuedCompletionStatus( _
-			this->hIOCompletionPort, _
+			ThreadPoolCompletionPort, _
 			0, _
 			0, _
 			NULL _
@@ -282,17 +282,6 @@ Function ThreadPoolStop( _
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
 		CloseHandle(this->hThreads[i])
 	Next
-	
-	Return S_OK
-	
-End Function
-
-Function ThreadPoolGetIOCompletionPort( _
-		ByVal this As ThreadPool Ptr, _
-		ByVal pPort As HANDLE Ptr _
-	)As HRESULT
-	
-	*pPort = this->hIOCompletionPort
 	
 	Return S_OK
 	
@@ -347,13 +336,6 @@ Function IThreadPoolStop( _
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolGetIOCompletionPort( _
-		ByVal this As IThreadPool Ptr, _
-		ByVal pPort As HANDLE Ptr _
-	)As HRESULT
-	Return ThreadPoolGetIOCompletionPort(ContainerOf(this, ThreadPool, lpVtbl), pPort)
-End Function
-
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolQueryInterface, _
 	@IThreadPoolAddRef, _
@@ -361,6 +343,5 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolGetMaxThreads, _
 	@IThreadPoolSetMaxThreads, _
 	@IThreadPoolRun, _
-	@IThreadPoolStop, _
-	@IThreadPoolGetIOCompletionPort _
+	@IThreadPoolStop _
 )
