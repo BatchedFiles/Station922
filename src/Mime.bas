@@ -77,6 +77,7 @@ Const ExtensionXslt = WStr(".xslt")
 Const ExtensionRss = WStr(".rss")
 Const ExtensionAtom = WStr(".atom")
 Const ExtensionJs = WStr(".js")
+Const ExtensionWasm = WStr(".wasm")
 
 Const ContentTypesAnyAny = WStr("*/*")
 
@@ -128,6 +129,7 @@ Const ContentTypesApplicationXbittorrent = WStr("application/x-bittorrent")
 Const ContentTypesApplicationOgg = WStr("application/ogg")
 Const ContentTypesApplicationFlash = WStr("application/x-shockwave-flash")
 Const ContentTypesApplicationCertx509 = WStr("application/x-x509-ca-cert")
+Const ContentTypesApplicationWasm = WStr("application/wasm")
 
 Const ContentTypesAudioAny = WStr("audio/*")
 Const ContentTypesAudioBasic = WStr("audio/basic")
@@ -400,6 +402,9 @@ Sub GetContentTypeOfMimeType( _
 			
 		Case ContentTypes.ApplicationCertx509
 			lstrcpyW(ContentType, @ContentTypesApplicationCertx509)
+			
+		Case ContentTypes.ApplicationWasm
+			lstrcpyW(ContentType, @ContentTypesApplicationWasm)
 			
 		Case ContentTypes.AudioAny
 			lstrcpyW(ContentType, @ContentTypesAudioAny)
@@ -1092,6 +1097,14 @@ Function GetMimeOfFileExtension( _
 		End If
 	End Scope
 	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWasm)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ApplicationWasm
+			Return True
+		End If
+	End Scope
+	
 	Return False
 	
 End Function
@@ -1525,6 +1538,14 @@ Function GetMimeOfStringContentType( _
 		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationZip)
 		If pFindString Then
 			mt->ContentType = ContentTypes.ApplicationZip
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim pFindString As PCWSTR = StrStrIW(ContentType, @ContentTypesApplicationWasm)
+		If pFindString Then
+			mt->ContentType = ContentTypes.ApplicationWasm
 			Return True
 		End If
 	End Scope

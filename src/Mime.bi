@@ -53,6 +53,7 @@ Enum ContentTypes
 	ApplicationXmldtd
 	ApplicationXmlXslt
 	ApplicationXwwwformurlencoded
+	ApplicationWasm
 	ApplicationZip
 	
 	AudioAny
