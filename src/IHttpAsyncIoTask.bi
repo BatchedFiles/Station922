@@ -53,26 +53,6 @@ Type IHttpAsyncIoTaskVirtualTable
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	GetWebSiteCollectionWeakPtr As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetWebSiteCollectionWeakPtr As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	GetHttpProcessorCollectionWeakPtr As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpProcessorCollectionWeakPtr As Function( _
-		ByVal this As IHttpAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
 	GetBaseStream As Function( _
 		ByVal this As IHttpAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -104,10 +84,6 @@ End Type
 #define IHttpAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IHttpAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IHttpAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
-#define IHttpAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
-#define IHttpAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
-#define IHttpAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)
-#define IHttpAsyncIoTask_SetHttpProcessorCollectionWeakPtr(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollectionWeakPtr(this, pIProcessors)
 #define IHttpAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IHttpAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IHttpAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)

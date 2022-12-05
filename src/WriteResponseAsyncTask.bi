@@ -45,26 +45,6 @@ Declare Function WriteResponseAsyncTaskEndExecute( _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
-Declare Function WriteResponseAsyncTaskGetWebSiteCollectionWeakPtr( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteResponseAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-	ByVal this As WriteResponseAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
-)As HRESULT
-
 Declare Function WriteResponseAsyncTaskGetBaseStream( _
 	ByVal this As WriteResponseAsyncTask Ptr, _
 	ByVal ppStream As IBaseStream Ptr Ptr _

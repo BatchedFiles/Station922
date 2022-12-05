@@ -5,7 +5,6 @@
 #include once "IClientRequest.bi"
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
-#include once "IWebSiteCollection.bi"
 #include once "IWriteErrorAsyncIoTask.bi"
 
 ' Заполняет буфер экранированной строкой, безопасной для html
@@ -47,8 +46,8 @@ Declare Sub AddResponseCacheHeaders( _
 )
 
 Declare Function FindWebSiteWeakPtr( _
-	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIWebSites As IWebSiteCollection Ptr, _
+	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 )As HRESULT
 
@@ -63,10 +62,8 @@ Declare Function StartExecuteTask( _
 
 Declare Function ProcessErrorRequestResponse( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr, _
 	ByVal pIStream As IBaseStream Ptr, _
 	ByVal pIHttpReader As IHttpReader Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr, _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal hrReadError As HRESULT, _
 	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _

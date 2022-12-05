@@ -16,6 +16,9 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
 
+Common Shared pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Common Shared pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+
 Type _WebServer
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -26,8 +29,6 @@ Type _WebServer
 	
 	WorkerThreadsCount As UInteger
 	pIPool As IThreadPool Ptr
-	pIWebSites As IWebSiteCollection Ptr
-	pIProcessors As IHttpProcessorCollection Ptr
 	
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
 	SocketListLength As Integer
@@ -142,8 +143,6 @@ Function CreateAcceptConnectionTask( _
 		Return hrCreateTask
 	End If
 	
-	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
-	IAcceptConnectionAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessors)
 	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
 	
 	Dim hrBind As HRESULT = BindToThreadPool( _
@@ -184,9 +183,9 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
 	
-	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @this->pIWebSites)
+	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @pIWebSitesWeakPtr)
 	
-	IWebServerConfiguration_GetHttpProcessorCollection(pIConfig, @this->pIProcessors)
+	IWebServerConfiguration_GetHttpProcessorCollection(pIConfig, @pIProcessorsWeakPtr)
 	
 	IWebServerConfiguration_Release(pIConfig)
 	
@@ -250,8 +249,6 @@ Sub InitializeWebServer( _
 	
 	this->WorkerThreadsCount = 0
 	this->pIPool = pIPool
-	this->pIWebSites = NULL
-	this->pIProcessors = NULL
 	
 	this->Context = NULL
 	this->StatusHandler = NULL
@@ -266,12 +263,12 @@ Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	If this->pIWebSites Then
-		IWebSiteCollection_Release(this->pIWebSites)
+	If pIWebSitesWeakPtr Then
+		IWebSiteCollection_Release(pIWebSitesWeakPtr)
 	End If
 	
-	If this->pIProcessors Then
-		IHttpProcessorCollection_Release(this->pIProcessors)
+	If pIProcessorsWeakPtr Then
+		IHttpProcessorCollection_Release(pIProcessorsWeakPtr)
 	End If
 	
 	If this->pIPool Then

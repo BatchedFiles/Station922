@@ -47,26 +47,6 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
-	GetWebSiteCollectionWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetWebSiteCollectionWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	GetHttpProcessorCollectionWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpProcessorCollectionWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
 	GetBaseStream As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -108,10 +88,6 @@ End Type
 #define IAcceptConnectionAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAcceptConnectionAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
-#define IAcceptConnectionAsyncIoTask_GetWebSiteCollectionWeakPtr(this, ppIWebSites) (this)->lpVtbl->GetWebSiteCollectionWeakPtr(this, ppIWebSites)
-#define IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pIWebSites) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pIWebSites)
-#define IAcceptConnectionAsyncIoTask_GetHttpProcessorCollectionWeakPtr(this, ppIProcessors) (this)->lpVtbl->GetHttpProcessorCollectionWeakPtr(this, ppIProcessors)
-#define IAcceptConnectionAsyncIoTask_SetHttpProcessorCollectionWeakPtr(this, pIProcessors) (this)->lpVtbl->SetHttpProcessorCollectionWeakPtr(this, pIProcessors)
 #define IAcceptConnectionAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IAcceptConnectionAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IAcceptConnectionAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)

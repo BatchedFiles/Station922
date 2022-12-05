@@ -19,6 +19,9 @@ Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 Const DefaultRetryAfterString = WStr("300")
 
+Common Shared pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Common Shared pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -26,8 +29,6 @@ Type _WriteErrorAsyncTask
 	lpVtbl As Const IWriteErrorAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	pIWebSitesWeakPtr As IWebSiteCollection Ptr
-	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
@@ -48,8 +49,8 @@ Function WriteErrorAsyncTaskGetStatusCode( _
 		Case ResponseErrorCode.MovedPermanently
 			Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
 			Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
+				pIWebSitesWeakPtr, _
 				this->pIRequest, _
-				this->pIWebSitesWeakPtr, _
 				@pIWebSiteWeakPtr _
 			)
 			
@@ -179,7 +180,7 @@ Function WriteErrorAsyncTaskGetStatusCode( _
 		Case ResponseErrorCode.NotImplemented
 			Dim AllMethods As HeapBSTR = Any
 			IHttpProcessorCollection_GetAllMethods( _
-				this->pIProcessorsWeakPtr, _
+				pIProcessorsWeakPtr, _
 				@AllMethods _
 			)
 			IServerResponse_AddKnownResponseHeader( _
@@ -248,8 +249,6 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSitesWeakPtr = NULL
-	this->pIProcessorsWeakPtr = NULL
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = NULL
@@ -494,8 +493,6 @@ Function WriteErrorAsyncTaskEndExecute( _
 			
 			IHttpReader_Clear(this->pIHttpReader)
 			
-			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
-			IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessorsWeakPtr)
 			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
 			
@@ -516,50 +513,6 @@ Function WriteErrorAsyncTaskEndExecute( _
 			Return S_OK
 			
 	End Select
-	
-	Return S_OK
-	
-End Function
-
-Function WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIWebSites = this->pIWebSitesWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	this->pIWebSitesWeakPtr = pIWebSites
-	
-	Return S_OK
-	
-End Function
-
-Function WriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIProcessors = this->pIProcessorsWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function WriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As WriteErrorAsyncTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
-	this->pIProcessorsWeakPtr = pIProcessors
 	
 	Return S_OK
 	
@@ -691,19 +644,19 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim HeaderHostLength As Integer = SysStringLen(HeaderHost)
 		If HeaderHostLength Then
 			Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
-				this->pIWebSitesWeakPtr, _
+				pIWebSitesWeakPtr, _
 				HeaderHost, _
 				@pIWebSiteWeakPtr _
 			)
 			If FAILED(hrFindSite) Then
 				IWebSiteCollection_GetDefaultWebSite( _
-					this->pIWebSitesWeakPtr, _
+					pIWebSitesWeakPtr, _
 					@pIWebSiteWeakPtr _
 				)
 			End If
 		Else
 			IWebSiteCollection_GetDefaultWebSite( _
-				this->pIWebSitesWeakPtr, _
+				pIWebSitesWeakPtr, _
 				@pIWebSiteWeakPtr _
 			)
 		End If
@@ -837,34 +790,6 @@ Function IWriteErrorAsyncTaskEndExecute( _
 	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
 End Function
 
-Function IWriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	Return WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIWebSites)
-End Function
-
-Function IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	Return WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIWebSites)
-End Function
-
-Function IWriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	Return WriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIProcessors)
-End Function
-
-Function IWriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IWriteErrorAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	Return WriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIProcessors)
-End Function
-
 Function IWriteErrorAsyncTaskGetBaseStream( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -927,10 +852,6 @@ Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtu
 	@IWriteErrorAsyncTaskRelease, _
 	@IWriteErrorAsyncTaskBeginExecute, _
 	@IWriteErrorAsyncTaskEndExecute, _
-	@IWriteErrorAsyncTaskGetWebSiteCollectionWeakPtr, _
-	@IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr, _
-	@IWriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr, _
-	@IWriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr, _
 	@IWriteErrorAsyncTaskGetBaseStream, _
 	@IWriteErrorAsyncTaskSetBaseStream, _
 	@IWriteErrorAsyncTaskGetHttpReader, _

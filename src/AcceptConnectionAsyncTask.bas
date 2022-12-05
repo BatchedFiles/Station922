@@ -18,8 +18,6 @@ Type _AcceptConnectionAsyncTask
 	lpVtbl As Const IAcceptConnectionAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	pIWebSitesWeakPtr As IWebSiteCollection Ptr
-	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 	pListener As ITcpListener Ptr
 	ListenSocket As SOCKET
 	pReadTask As IReadRequestAsyncIoTask Ptr
@@ -84,8 +82,6 @@ Function CreateReadTask( _
 				)
 				
 				If SUCCEEDED(hrCreateTask) Then
-					IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
-					IReadRequestAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessorsWeakPtr)
 					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
 					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
 					
@@ -127,8 +123,6 @@ Sub InitializeAcceptConnectionAsyncTask( _
 	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSitesWeakPtr = NULL
-	this->pIProcessorsWeakPtr = NULL
 	this->ListenSocket = INVALID_SOCKET
 	this->pListener = pListener
 	this->pReadTask = NULL
@@ -342,50 +336,6 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 	
 End Function
 
-Function AcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIWebSites = this->pIWebSitesWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	this->pIWebSitesWeakPtr = pIWebSites
-	
-	Return S_OK
-	
-End Function
-
-Function AcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIProcessors = this->pIProcessorsWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function AcceptConnectionAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
-	this->pIProcessorsWeakPtr = pIProcessors
-	
-	Return S_OK
-	
-End Function
-
 Function AcceptConnectionAsyncTaskGetBaseStream( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -487,34 +437,6 @@ Function IAcceptConnectionAsyncTaskEndExecute( _
 	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
 End Function
 
-Function IAcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppIWebSites)
-End Function
-
-Function IAcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIWebSites)
-End Function
-
-Function IAcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppIProcessors)
-End Function
-
-Function IAcceptConnectionAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetHttpProcessorCollectionWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIProcessors)
-End Function
-
 Function IAcceptConnectionAsyncTaskGetBaseStream( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -563,10 +485,6 @@ Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyn
 	@IAcceptConnectionAsyncTaskRelease, _
 	@IAcceptConnectionAsyncTaskBeginExecute, _
 	@IAcceptConnectionAsyncTaskEndExecute, _
-	@IAcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr, _
-	@IAcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr, _
-	@IAcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr, _
-	@IAcceptConnectionAsyncTaskSetHttpProcessorCollectionWeakPtr, _
 	@IAcceptConnectionAsyncTaskGetBaseStream, _
 	@IAcceptConnectionAsyncTaskSetBaseStream, _
 	@IAcceptConnectionAsyncTaskGetHttpReader, _

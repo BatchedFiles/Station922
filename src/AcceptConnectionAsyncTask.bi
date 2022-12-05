@@ -45,26 +45,6 @@ Declare Function AcceptConnectionAsyncTaskEndExecute( _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
-Declare Function AcceptConnectionAsyncTaskGetWebSiteCollectionWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function AcceptConnectionAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-	ByVal this As AcceptConnectionAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
-)As HRESULT
-
 Declare Function AcceptConnectionAsyncTaskGetBaseStream( _
 	ByVal this As AcceptConnectionAsyncTask Ptr, _
 	ByVal ppStream As IBaseStream Ptr Ptr _

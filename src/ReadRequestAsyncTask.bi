@@ -45,26 +45,6 @@ Declare Function ReadRequestAsyncTaskEndExecute( _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
-Declare Function ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskSetWebSiteCollectionWeakPtr( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function ReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-	ByVal this As ReadRequestAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
-)As HRESULT
-
 Declare Function ReadRequestAsyncTaskGetBaseStream( _
 	ByVal this As ReadRequestAsyncTask Ptr, _
 	ByVal ppStream As IBaseStream Ptr Ptr _

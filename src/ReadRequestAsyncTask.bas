@@ -17,8 +17,6 @@ Type _ReadRequestAsyncTask
 	lpVtbl As Const IReadRequestAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	pIWebSitesWeakPtr As IWebSiteCollection Ptr
-	pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 	pIHttpReader As IHttpReader Ptr
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
@@ -42,8 +40,6 @@ Sub InitializeReadRequestAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSitesWeakPtr = NULL
-	this->pIProcessorsWeakPtr = NULL
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = pIRequest
@@ -235,10 +231,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 		
 		Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 			this->pIMemoryAllocator, _
-			this->pIWebSitesWeakPtr, _
 			this->pIStream, _
 			this->pIHttpReader, _
-			this->pIProcessorsWeakPtr, _
 			this->pIRequest, _
 			hrEndReadLine, _
 			CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
@@ -265,10 +259,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 				If FAILED(hrParse) Then
 					Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 						this->pIMemoryAllocator, _
-						this->pIWebSitesWeakPtr, _
 						this->pIStream, _
 						this->pIHttpReader, _
-						this->pIProcessorsWeakPtr, _
 						this->pIRequest, _
 						hrParse, _
 						CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
@@ -294,10 +286,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 					If FAILED(hrCreateTask) Then
 						Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 							this->pIMemoryAllocator, _
-							this->pIWebSitesWeakPtr, _
 							this->pIStream, _
 							this->pIHttpReader, _
-							this->pIProcessorsWeakPtr, _
 							this->pIRequest, _
 							hrCreateTask, _
 							CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
@@ -311,8 +301,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 				End Scope
 				
 				Scope
-					IWriteResponseAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
-					IWriteResponseAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, this->pIProcessorsWeakPtr)
 					IWriteResponseAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 					IWriteResponseAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
 					IWriteResponseAsyncIoTask_SetClientRequest(pTask, this->pIRequest)
@@ -323,10 +311,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 						
 						Dim hrProcessError As HRESULT = ProcessErrorRequestResponse( _
 							this->pIMemoryAllocator, _
-							this->pIWebSitesWeakPtr, _
 							this->pIStream, _
 							this->pIHttpReader, _
-							this->pIProcessorsWeakPtr, _
 							this->pIRequest, _
 							hrPrepareResponse, _
 							CPtr(IWriteErrorAsyncIoTask Ptr Ptr, ppNextTask) _
@@ -358,50 +344,6 @@ Function ReadRequestAsyncTaskEndExecute( _
 			Return S_OK
 			
 	End Select
-	
-	Return S_OK
-	
-End Function
-
-Function ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIWebSites = this->pIWebSitesWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function ReadRequestAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	this->pIWebSitesWeakPtr = pIWebSites
-	
-	Return S_OK
-	
-End Function
-
-Function ReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	
-	*ppIProcessors = this->pIProcessorsWeakPtr
-	
-	Return S_OK
-	
-End Function
-
-Function ReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	
-	this->pIProcessorsWeakPtr = pIProcessors
 	
 	Return S_OK
 	
@@ -512,34 +454,6 @@ Function IReadRequestAsyncTaskEndExecute( _
 	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
 End Function
 
-Function IReadRequestAsyncTaskGetWebSiteCollectionWeakPtr( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskGetWebSiteCollectionWeakPtr(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIWebSites)
-End Function
-
-Function IReadRequestAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIWebSites)
-End Function
-
-Function IReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppIProcessors)
-End Function
-
-Function IReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIProcessors)
-End Function
-
 Function IReadRequestAsyncTaskGetBaseStream( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseStream Ptr Ptr _
@@ -574,10 +488,6 @@ Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVir
 	@IReadRequestAsyncTaskRelease, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
-	@IReadRequestAsyncTaskGetWebSiteCollectionWeakPtr, _
-	@IReadRequestAsyncTaskSetWebSiteCollectionWeakPtr, _
-	@IReadRequestAsyncTaskGetHttpProcessorCollectionWeakPtr, _
-	@IReadRequestAsyncTaskSetHttpProcessorCollectionWeakPtr, _
 	@IReadRequestAsyncTaskGetBaseStream, _
 	@IReadRequestAsyncTaskSetBaseStream, _
 	@IReadRequestAsyncTaskGetHttpReader, _

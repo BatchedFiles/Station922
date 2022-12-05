@@ -188,8 +188,8 @@ Sub AddResponseCacheHeaders( _
 End Sub
 
 Function FindWebSiteWeakPtr( _
-		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr, _
+		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 	)As HRESULT
 	
@@ -280,10 +280,8 @@ End Function
 
 Function ProcessErrorRequestResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIWebSites As IWebSiteCollection Ptr, _
 		ByVal pIStream As IBaseStream Ptr, _
 		ByVal pIHttpReader As IHttpReader Ptr, _
-		ByVal pIProcessors As IHttpProcessorCollection Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal hrErrorCode As HRESULT, _
 		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
@@ -301,8 +299,6 @@ Function ProcessErrorRequestResponse( _
 		Return hrCreateTask
 	End If
 	
-	IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, pIWebSites)
-	IWriteErrorAsyncIoTask_SetHttpProcessorCollectionWeakPtr(pTask, pIProcessors)
 	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
 	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
 	
