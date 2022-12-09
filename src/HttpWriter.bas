@@ -16,7 +16,7 @@ Type _HttpWriter
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
-	pIBuffer As IBuffer Ptr
+	pIBuffer As IAttributedStream Ptr
 	Headers As ZString Ptr
 	HeadersOffset As LongInt
 	HeadersLength As LongInt
@@ -63,7 +63,7 @@ Sub UnInitializeHttpWriter( _
 	End If
 	
 	If this->pIBuffer Then
-		IBuffer_Release(this->pIBuffer)
+		IAttributedStream_Release(this->pIBuffer)
 	End If
 	
 End Sub
@@ -190,11 +190,11 @@ End Function
 
 Function HttpWriterGetBuffer( _
 		ByVal this As HttpWriter Ptr, _
-		ByVal ppResult As IBuffer Ptr Ptr _
+		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
 	If this->pIBuffer Then
-		IBuffer_AddRef(this->pIBuffer)
+		IAttributedStream_AddRef(this->pIBuffer)
 	End If
 	
 	*ppResult = this->pIBuffer
@@ -205,15 +205,15 @@ End Function
 
 Function HttpWriterSetBuffer( _
 		ByVal this As HttpWriter Ptr, _
-		ByVal pIBuffer As IBuffer Ptr _
+		ByVal pIBuffer As IAttributedStream Ptr _
 	)As HRESULT
 	
 	If this->pIBuffer Then
-		IBuffer_Release(this->pIBuffer)
+		IAttributedStream_Release(this->pIBuffer)
 	End If
 	
 	If pIBuffer Then
-		IBuffer_AddRef(pIBuffer)
+		IAttributedStream_AddRef(pIBuffer)
 	End If
 	
 	this->pIBuffer = pIBuffer
@@ -284,7 +284,6 @@ Function HttpWriterBeginWrite( _
 			Return S_FALSE
 		End If
 		
-		' Отправить только заголовки
 		StreamBufferLength = 1
 		
 		StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
@@ -293,7 +292,7 @@ Function HttpWriterBeginWrite( _
 		Dim DesiredSliceLength As LongInt = min(BUFFERSLICECHUNK_SIZE, this->BodyEndIndex - this->BodyOffset)
 		
 		Dim Slice As BufferSlice = Any
-		Dim hrGetSlice As HRESULT = IBuffer_GetSlice( _
+		Dim hrGetSlice As HRESULT = IAttributedStream_GetSlice( _
 			this->pIBuffer, _
 			this->BodyOffset, _
 			Cast(DWORD, DesiredSliceLength), _
@@ -304,13 +303,11 @@ Function HttpWriterBeginWrite( _
 		End If
 		
 		If this->HeadersSended Then
-			' Отправить только тело
 			StreamBufferLength = 1
 			
 			StreamBuffer.Buf(0).Buffer = Slice.pSlice
 			StreamBuffer.Buf(0).Length = Slice.Length
 		Else
-			' Отправить заголовки и тело
 			StreamBufferLength = 2
 			
 			StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
@@ -447,14 +444,14 @@ End Function
 
 Function IHttpWriterGetBuffer( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal ppResult As IBuffer Ptr Ptr _
+		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	Return HttpWriterGetBuffer(ContainerOf(this, HttpWriter, lpVtbl), ppResult)
 End Function
 
 Function IHttpWriterSetBuffer( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal pIBuffer As IBuffer Ptr _
+		ByVal pIBuffer As IAttributedStream Ptr _
 	)As HRESULT
 	Return HttpWriterSetBuffer(ContainerOf(this, HttpWriter, lpVtbl), pIBuffer)
 End Function

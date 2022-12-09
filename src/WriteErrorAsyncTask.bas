@@ -33,7 +33,7 @@ Type _WriteErrorAsyncTask
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pIBuffer As IBuffer Ptr
+	pIBuffer As IAttributedStream Ptr
 	pIHttpWriter As IHttpWriter Ptr
 	ComplectionPort As HANDLE
 	HttpError As ResponseErrorCode
@@ -276,7 +276,7 @@ Sub UnInitializeWriteErrorAsyncTask( _
 	End If
 	
 	If this->pIBuffer Then
-		IBuffer_Release(this->pIBuffer)
+		IAttributedStream_Release(this->pIBuffer)
 	End If
 	
 	If this->pIHttpWriter Then
@@ -667,7 +667,7 @@ Function WriteErrorAsyncTaskPrepare( _
 	
 	Dim SendBufferLength As LongInt = Any
 	Scope
-		Dim pIBuffer As IBuffer Ptr = Any
+		Dim pIBuffer As IAttributedStream Ptr = Any
 		Dim hrGetBuffer As HRESULT = IWebSite_GetErrorBuffer( _
 			pIWebSiteWeakPtr, _
 			this->pIMemoryAllocator, _
@@ -683,12 +683,12 @@ Function WriteErrorAsyncTaskPrepare( _
 		IHttpWriter_SetBuffer(this->pIHttpWriter, pIBuffer)
 		
 		Dim Mime As MimeType = Any
-		IBuffer_GetContentType(pIBuffer, @Mime)
+		IAttributedStream_GetContentType(pIBuffer, @Mime)
 		IServerResponse_SetMimeType(this->pIResponse, @Mime)
 		
-		IBuffer_GetLength(pIBuffer, @SendBufferLength)
+		IAttributedStream_GetLength(pIBuffer, @SendBufferLength)
 		
-		IBuffer_Release(pIBuffer)
+		IAttributedStream_Release(pIBuffer)
 	End Scope
 	
 	Scope

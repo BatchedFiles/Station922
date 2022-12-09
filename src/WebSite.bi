@@ -65,7 +65,7 @@ Declare Function WebSiteGetBuffer( _
 	ByVal pRequest As IClientRequest Ptr, _
 	ByVal BufferLength As LongInt, _
 	ByVal pFlags As ContentNegotiationFlags Ptr, _
-	ByVal ppResult As IBuffer Ptr Ptr _
+	ByVal ppResult As IAttributedStream Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteGetErrorBuffer( _
@@ -74,7 +74,7 @@ Declare Function WebSiteGetErrorBuffer( _
 	ByVal HttpError As ResponseErrorCode, _
 	ByVal hrErrorCode As HRESULT, _
 	ByVal StatusCode As HttpStatusCodes, _
-	ByVal ppResult As IBuffer Ptr Ptr _
+	ByVal ppResult As IAttributedStream Ptr Ptr _
 )As HRESULT
 
 Declare Function WebSiteSetHostName( _

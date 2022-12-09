@@ -3,7 +3,7 @@
 
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
-#include once "IBuffer.bi"
+#include once "IAttributedStream.bi"
 #include once "IServerResponse.bi"
 
 ' ITextWriter.BeginWrite:
@@ -48,12 +48,12 @@ Type IHttpWriterVirtualTable
 	
 	GetBuffer As Function( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal ppResult As IBuffer Ptr Ptr _
+		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
 	SetBuffer As Function( _
 		ByVal this As IHttpWriter Ptr, _
-		ByVal pIBuffer As IBuffer Ptr _
+		ByVal pIBuffer As IAttributedStream Ptr _
 	)As HRESULT
 	
 	Prepare As Function( _

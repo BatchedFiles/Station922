@@ -2,7 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "Logger.bi"
-#include once "MemoryBuffer.bi"
+#include once "MemoryStream.bi"
 
 Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable
 
@@ -123,14 +123,14 @@ End Function
 Function HttpTraceProcessorPrepare( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IBuffer Ptr Ptr _
+		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIBuffer As IMemoryBuffer Ptr = Any
+	Dim pIBuffer As IMemoryStream Ptr = Any
 	Dim hrCreateBuffer As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
-		@CLSID_MEMORYBUFFER, _
-		@IID_IMemoryBuffer, _
+		@CLSID_MEMORYSTREAM, _
+		@IID_IMemoryStream, _
 		@pIBuffer _
 	)
 	If FAILED(hrCreateBuffer) Then
@@ -146,7 +146,7 @@ Function HttpTraceProcessorPrepare( _
 		@pRequestedBytes _
 	)
 	
-	IMemoryBuffer_SetBuffer( _
+	IMemoryStream_SetBuffer( _
 		pIBuffer, _
 		pRequestedBytes, _
 		RequestedBytesLength _
@@ -169,12 +169,12 @@ Function HttpTraceProcessorPrepare( _
 		CLngInt(RequestedBytesLength) _
 	)
 	If FAILED(hrPrepareResponse) Then
-		IBuffer_Release(pIBuffer)
+		IMemoryStream_Release(pIBuffer)
 		*ppIBuffer = NULL
 		Return hrPrepareResponse
 	End If
 	
-	*ppIBuffer = CPtr(IBuffer Ptr, pIBuffer)
+	*ppIBuffer = CPtr(IAttributedStream Ptr, pIBuffer)
 	
 	Return S_OK
 	
@@ -255,7 +255,7 @@ End Function
 Function IHttpTraceProcessorPrepare( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IBuffer Ptr Ptr _
+		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	Return HttpTraceProcessorPrepare(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, ppIBuffer)
 End Function

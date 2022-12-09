@@ -4,7 +4,7 @@
 #include once "AsyncResult.bi"
 #include once "ClientRequest.bi"
 #include once "ClientUri.bi"
-#include once "FileBuffer.bi"
+#include once "FileStream.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpOptionsProcessor.bi"
@@ -13,7 +13,7 @@
 #include once "HttpTraceProcessor.bi"
 #include once "HttpWriter.bi"
 #include once "IniConfiguration.bi"
-#include once "MemoryBuffer.bi"
+#include once "MemoryStream.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ServerResponse.bi"
@@ -90,15 +90,15 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_FILEBUFFER, rclsid) Then
-		Dim pFileBuffer As FileBuffer Ptr = CreateFileBuffer(pIMemoryAllocator)
+	If IsEqualCLSID(@CLSID_FILESTREAM, rclsid) Then
+		Dim pFileBuffer As FileStream Ptr = CreateFileStream(pIMemoryAllocator)
 		If pFileBuffer = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim hr As HRESULT = FileBufferQueryInterface(pFileBuffer, riid, ppv)
+		Dim hr As HRESULT = FileStreamQueryInterface(pFileBuffer, riid, ppv)
 		If FAILED(hr) Then
-			DestroyFileBuffer(pFileBuffer)
+			DestroyFileStream(pFileBuffer)
 		End If
 		
 		Return hr
@@ -146,15 +146,15 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
-	If IsEqualCLSID(@CLSID_MEMORYBUFFER, rclsid) Then
-		Dim pBuffer As MemoryBuffer Ptr = CreateMemoryBuffer(pIMemoryAllocator)
+	If IsEqualCLSID(@CLSID_MEMORYSTREAM, rclsid) Then
+		Dim pBuffer As MemoryStream Ptr = CreateMemoryStream(pIMemoryAllocator)
 		If pBuffer = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		Dim hr As HRESULT = MemoryBufferQueryInterface(pBuffer, riid, ppv)
+		Dim hr As HRESULT = MemoryStreamQueryInterface(pBuffer, riid, ppv)
 		If FAILED(hr) Then
-			DestroyMemoryBuffer(pBuffer)
+			DestroyMemoryStream(pBuffer)
 		End If
 		
 		Return hr

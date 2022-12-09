@@ -45,12 +45,12 @@ Declare Function HttpWriterSetBaseStream( _
 
 Declare Function HttpWriterGetBuffer( _
 	ByVal this As HttpWriter Ptr, _
-	ByVal ppResult As IBuffer Ptr Ptr _
+	ByVal ppResult As IAttributedStream Ptr Ptr _
 )As HRESULT
 
 Declare Function HttpWriterSetBuffer( _
 	ByVal this As HttpWriter Ptr, _
-	ByVal pIBuffer As IBuffer Ptr _
+	ByVal pIBuffer As IAttributedStream Ptr _
 )As HRESULT
 
 Declare Function HttpWriterPrepare( _

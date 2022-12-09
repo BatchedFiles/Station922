@@ -43,7 +43,7 @@ Type IHttpAsyncProcessorVirtualTable
 	Prepare As Function( _
 		ByVal this As IHttpAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IBuffer Ptr Ptr _
+		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
 	BeginProcess As Function( _

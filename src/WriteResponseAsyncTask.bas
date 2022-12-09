@@ -27,7 +27,7 @@ Type _WriteResponseAsyncTask
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
-	pIBuffer As IBuffer Ptr
+	pIBuffer As IAttributedStream Ptr
 	pIHttpWriter As IHttpWriter Ptr
 	pIProcessorWeakPtr As IHttpAsyncProcessor Ptr
 	pIWebSiteWeakPtr As IWebSite Ptr
@@ -79,7 +79,7 @@ Sub UnInitializeWriteResponseAsyncTask( _
 	End If
 	
 	If this->pIBuffer Then
-		IBuffer_Release(this->pIBuffer)
+		IAttributedStream_Release(this->pIBuffer)
 	End If
 	
 	If this->pIHttpWriter Then
@@ -495,7 +495,7 @@ Function WriteResponseAsyncTaskPrepare( _
 				pc.pIWriter = this->pIHttpWriter
 				
 				If this->pIBuffer Then
-					IBuffer_Release(this->pIBuffer)
+					IAttributedStream_Release(this->pIBuffer)
 				End If
 				
 				Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _

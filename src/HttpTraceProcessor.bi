@@ -36,7 +36,7 @@ Declare Function HttpTraceProcessorRelease( _
 Declare Function HttpTraceProcessorPrepare( _
 	ByVal this As HttpTraceProcessor Ptr, _
 	ByVal pContext As ProcessorContext Ptr, _
-	ByVal ppIBuffer As IBuffer Ptr Ptr _
+	ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 )As HRESULT
 
 Declare Function HttpTraceProcessorBeginProcess( _

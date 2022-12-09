@@ -58,7 +58,7 @@ DEFINE_CLSID(CLSID_CLIENTURI, _
 )
 
 ' {9377B23F-E796-4CF9-9F36-3992C79F8A26}
-DEFINE_CLSID(CLSID_FILEBUFFER, _
+DEFINE_CLSID(CLSID_FILESTREAM, _
 	&h9377b23f, &he796, &h4cf9, &h9f, &h36, &h39, &h92, &hc7, &h9f, &h8a, &h26 _
 )
 
@@ -109,7 +109,7 @@ DEFINE_CLSID(CLSID_INICONFIGURATION, _
 )
 
 ' {381E6704-C5E4-40AB-9863-C420B6DE25D7}
-DEFINE_CLSID(CLSID_MEMORYBUFFER, _
+DEFINE_CLSID(CLSID_MEMORYSTREAM, _
 	&h381e6704, &hc5e4, &h40ab, &h98, &h63, &hc4, &h20, &hb6, &hde, &h25, &hd7 _
 )
 
@@ -183,14 +183,14 @@ DEFINE_IID(IID_IAsyncIoTask, _
 	&h53989192, &h3f47, &h4309, &ha5, &h82, &h8a, &he2, &h4c, &h3, &hc9, &hb3 _
 )
 
+' {FAC287DE-4E2C-4F51-8E7E-B0B77E2AE918}
+DEFINE_IID(IID_IAttributedStream, _
+	&hfac287de, &h4e2c, &h4f51, &h8e, &h7e, &hb0, &hb7, &h7e, &h2a, &he9, &h18 _
+)
+
 ' {B6AC4CEF-9B3D-4B41-B2F6-DEA27D085EB7}
 DEFINE_IID(IID_IBaseStream, _
 	&hb6ac4cef, &h9b3d, &h4b41, &hb2, &hf6, &hde, &ha2, &h7d, &h8, &h5e, &hb7 _
-)
-
-' {FAC287DE-4E2C-4F51-8E7E-B0B77E2AE918}
-DEFINE_IID(IID_IBuffer, _
-	&hfac287de, &h4e2c, &h4f51, &h8e, &h7e, &hb0, &hb7, &h7e, &h2a, &he9, &h18 _
 )
 
 ' {E998CAB4-5559-409C-93BC-97AFDF6A3921}
@@ -209,7 +209,7 @@ DEFINE_IID(IID_IEnumWebSite, _
 )
 
 ' {A44A1AB3-A0D5-42E6-A4FF-ADBAE8CE3682}
-DEFINE_IID(IID_IFileBuffer, _
+DEFINE_IID(IID_IFileStream, _
 	&ha44a1ab3, &ha0d5, &h42e6, &ha4, &hff, &had, &hba, &he8, &hce, &h36, &h82 _
 )
 
@@ -264,7 +264,7 @@ DEFINE_IID(IID_IIniConfiguration, _
 )
 
 ' {0BDF996F-284C-4CD5-B010-C88D5533FA50}
-DEFINE_IID(IID_IMemoryBuffer, _
+DEFINE_IID(IID_IMemoryStream, _
 	&hbdf996f, &h284c, &h4cd5, &hb0, &h10, &hc8, &h8d, &h55, &h33, &hfa, &h50 _
 )
 

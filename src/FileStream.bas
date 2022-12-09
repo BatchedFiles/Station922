@@ -1,16 +1,15 @@
-#include once "FileBuffer.bi"
+#include once "FileStream.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 #include once "WebUtils.bi"
 
-Extern GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable
+Extern GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable
 
-Type _FileBuffer
+Type _FileStream
 	#if __FB_DEBUG__
 		IdString As ZString * 16
 	#endif
-	lpVtbl As Const IFileBufferVirtualTable Ptr
+	lpVtbl As Const IFileStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
 	FileSize As LongInt
 	FileOffset As LongInt
@@ -29,19 +28,19 @@ Type _FileBuffer
 	ContentType As MimeType
 End Type
 
-Sub InitializeFileBuffer( _
-		ByVal this As FileBuffer Ptr, _
+Sub InitializeFileStream( _
+		ByVal this As FileStream Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->IdString, _
-			@Str(RTTI_ID_FILEBUFFER), _
-			Len(FileBuffer.IdString) _
+			@Str(RTTI_ID_FILESTREAM), _
+			Len(FileStream.IdString) _
 		)
 	#endif
-	this->lpVtbl = @GlobalFileBufferVirtualTable
+	this->lpVtbl = @GlobalFileStreamVirtualTable
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
@@ -63,8 +62,8 @@ Sub InitializeFileBuffer( _
 	
 End Sub
 
-Sub UnInitializeFileBuffer( _
-		ByVal this As FileBuffer Ptr _
+Sub UnInitializeFileStream( _
+		ByVal this As FileStream Ptr _
 	)
 	
 	HeapSysFreeString(this->ETag)
@@ -89,28 +88,28 @@ Sub UnInitializeFileBuffer( _
 	
 End Sub
 
-Sub FileBufferCreated( _
-		ByVal this As FileBuffer Ptr _
+Sub FileStreamCreated( _
+		ByVal this As FileStream Ptr _
 	)
 	
 End Sub
 
-Function CreateFileBuffer( _
+Function CreateFileStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As FileBuffer Ptr
+	)As FileStream Ptr
 	
-	Dim this As FileBuffer Ptr = IMalloc_Alloc( _
+	Dim this As FileStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(FileBuffer) _
+		SizeOf(FileStream) _
 	)
 	If this Then
 		
-		InitializeFileBuffer( _
+		InitializeFileStream( _
 			this, _
 			pIMemoryAllocator _
 		)
 		
-		FileBufferCreated(this)
+		FileStreamCreated(this)
 		
 		Return this
 		
@@ -120,57 +119,61 @@ Function CreateFileBuffer( _
 	
 End Function
 
-Sub FileBufferDestroyed( _
-		ByVal this As FileBuffer Ptr _
+Sub FileStreamDestroyed( _
+		ByVal this As FileStream Ptr _
 	)
 	
 End Sub
 
-Sub DestroyFileBuffer( _
-		ByVal this As FileBuffer Ptr _
+Sub DestroyFileStream( _
+		ByVal this As FileStream Ptr _
 	)
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
-	UnInitializeFileBuffer(this)
+	UnInitializeFileStream(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
 	
-	FileBufferDestroyed(this)
+	FileStreamDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
 End Sub
 
-Function FileBufferQueryInterface( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamQueryInterface( _
+		ByVal this As FileStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IFileBuffer, riid) Then
+	If IsEqualIID(@IID_IFileStream, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IBuffer, riid) Then
+		If IsEqualIID(@IID_IAttributedStream, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
+			If IsEqualIID(@IID_IBaseStream, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
+				If IsEqualIID(@IID_IUnknown, riid) Then
+					*ppv = @this->lpVtbl
+				Else
+					*ppv = NULL
+					Return E_NOINTERFACE
+				End If
 			End If
 		End If
 	End If
 	
-	FileBufferAddRef(this)
+	FileStreamAddRef(this)
 	
 	Return S_OK
 	
 End Function
 
-Function FileBufferAddRef( _
-		ByVal this As FileBuffer Ptr _
+Function FileStreamAddRef( _
+		ByVal this As FileStream Ptr _
 	)As ULONG
 	
 	this->ReferenceCounter += 1
@@ -179,8 +182,8 @@ Function FileBufferAddRef( _
 	
 End Function
 
-Function FileBufferRelease( _
-		ByVal this As FileBuffer Ptr _
+Function FileStreamRelease( _
+		ByVal this As FileStream Ptr _
 	)As ULONG
 	
 	this->ReferenceCounter -= 1
@@ -189,14 +192,14 @@ Function FileBufferRelease( _
 		Return 1
 	End If
 	
-	DestroyFileBuffer(this)
+	DestroyFileStream(this)
 	
 	Return 0
 	
 End Function
 
-Function FileBufferGetContentType( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetContentType( _
+		ByVal this As FileStream Ptr, _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
 	
@@ -206,8 +209,8 @@ Function FileBufferGetContentType( _
 	
 End Function
 
-Function FileBufferGetEncoding( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetEncoding( _
+		ByVal this As FileStream Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	
@@ -217,8 +220,8 @@ Function FileBufferGetEncoding( _
 	
 End Function
 
-Function FileBufferGetLanguage( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetLanguage( _
+		ByVal this As FileStream Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
 	)As HRESULT
 	
@@ -229,8 +232,8 @@ Function FileBufferGetLanguage( _
 	
 End Function
 
-Function FileBufferGetETag( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetETag( _
+		ByVal this As FileStream Ptr, _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
 	
@@ -241,8 +244,8 @@ Function FileBufferGetETag( _
 	
 End Function
 
-Function FileBufferGetLastFileModifiedDate( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetLastFileModifiedDate( _
+		ByVal this As FileStream Ptr, _
 		ByVal pResult As FILETIME Ptr _
 	)As HRESULT
 	
@@ -252,8 +255,8 @@ Function FileBufferGetLastFileModifiedDate( _
 	
 End Function
 
-Function FileBufferGetLength( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetLength( _
+		ByVal this As FileStream Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
@@ -265,8 +268,8 @@ Function FileBufferGetLength( _
 	
 End Function
 
-Function FileBufferGetSlice( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetSlice( _
+		ByVal this As FileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
 		ByVal pBufferSlice As BufferSlice Ptr _
@@ -350,8 +353,30 @@ Function FileBufferGetSlice( _
 	
 End Function
 
-Function FileBufferGetFilePath( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamBeginGetSlice( _
+		ByVal this As FileStream Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Return E_NOTIMPL
+	
+End Function
+
+Function FileStreamEndGetSlice( _
+		ByVal this As FileStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	
+	Return E_NOTIMPL
+	
+End Function
+
+Function FileStreamGetFilePath( _
+		ByVal this As FileStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
 	
@@ -362,8 +387,8 @@ Function FileBufferGetFilePath( _
 	
 End Function
 
-Function FileBufferSetFilePath( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFilePath( _
+		ByVal this As FileStream Ptr, _
 		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	
@@ -373,8 +398,8 @@ Function FileBufferSetFilePath( _
 	
 End Function
 
-Function FileBufferGetFileHandle( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetFileHandle( _
+		ByVal this As FileStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
@@ -384,8 +409,8 @@ Function FileBufferGetFileHandle( _
 	
 End Function
 
-Function FileBufferSetFileHandle( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFileHandle( _
+		ByVal this As FileStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
@@ -395,8 +420,8 @@ Function FileBufferSetFileHandle( _
 	
 End Function
 
-Function FileBufferGetZipFileHandle( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamGetZipFileHandle( _
+		ByVal this As FileStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	
@@ -406,8 +431,8 @@ Function FileBufferGetZipFileHandle( _
 	
 End Function
 
-Function FileBufferSetZipFileHandle( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetZipFileHandle( _
+		ByVal this As FileStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
@@ -417,8 +442,8 @@ Function FileBufferSetZipFileHandle( _
 	
 End Function
 
-Function FileBufferSetFileMappingHandle( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFileMappingHandle( _
+		ByVal this As FileStream Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
@@ -430,8 +455,8 @@ Function FileBufferSetFileMappingHandle( _
 	
 End Function
 
-Function FileBufferSetContentType( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetContentType( _
+		ByVal this As FileStream Ptr, _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
 	
@@ -441,8 +466,8 @@ Function FileBufferSetContentType( _
 	
 End Function
 
-Function FileBufferSetFileOffset( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFileOffset( _
+		ByVal this As FileStream Ptr, _
 		ByVal Offset As LongInt _
 	)As HRESULT
 	
@@ -452,8 +477,8 @@ Function FileBufferSetFileOffset( _
 	
 End Function
 
-Function FileBufferSetFileSize( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFileSize( _
+		ByVal this As FileStream Ptr, _
 		ByVal FileSize As LongInt _
 	)As HRESULT
 	
@@ -463,8 +488,8 @@ Function FileBufferSetFileSize( _
 	
 End Function
 
-Function FileBufferSetEncoding( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetEncoding( _
+		ByVal this As FileStream Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 	
@@ -474,8 +499,8 @@ Function FileBufferSetEncoding( _
 	
 End Function
 
-Function FileBufferSetFileTime( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetFileTime( _
+		ByVal this As FileStream Ptr, _
 		ByVal pTime As FILETIME Ptr _
 	)As HRESULT
 	
@@ -485,8 +510,8 @@ Function FileBufferSetFileTime( _
 	
 End Function
 
-Function FileBufferSetETag( _
-		ByVal this As FileBuffer Ptr, _
+Function FileStreamSetETag( _
+		ByVal this As FileStream Ptr, _
 		ByVal ETag As HeapBSTR _
 	)As HRESULT
 	
@@ -497,191 +522,218 @@ Function FileBufferSetETag( _
 End Function
 
 
-Function IFileBufferQueryInterface( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamQueryInterface( _
+		ByVal this As IFileStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return FileBufferQueryInterface(ContainerOf(this, FileBuffer, lpVtbl), riid, ppvObject)
+	Return FileStreamQueryInterface(ContainerOf(this, FileStream, lpVtbl), riid, ppvObject)
 End Function
 
-Function IFileBufferAddRef( _
-		ByVal this As IFileBuffer Ptr _
+Function IFileStreamAddRef( _
+		ByVal this As IFileStream Ptr _
 	)As ULONG
-	Return FileBufferAddRef(ContainerOf(this, FileBuffer, lpVtbl))
+	Return FileStreamAddRef(ContainerOf(this, FileStream, lpVtbl))
 End Function
 
-Function IFileBufferRelease( _
-		ByVal this As IFileBuffer Ptr _
+Function IFileStreamRelease( _
+		ByVal this As IFileStream Ptr _
 	)As ULONG
-	Return FileBufferRelease(ContainerOf(this, FileBuffer, lpVtbl))
+	Return FileStreamRelease(ContainerOf(this, FileStream, lpVtbl))
 End Function
 
-Function IFileBufferGetContentType( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetContentType( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
-	Return FileBufferGetContentType(ContainerOf(this, FileBuffer, lpVtbl), ppType)
+	Return FileStreamGetContentType(ContainerOf(this, FileStream, lpVtbl), ppType)
 End Function
 
-Function IFileBufferGetEncoding( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetEncoding( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	Return FileBufferGetEncoding(ContainerOf(this, FileBuffer, lpVtbl), pZipMode)
+	Return FileStreamGetEncoding(ContainerOf(this, FileStream, lpVtbl), pZipMode)
 End Function
 
-Function IFileBufferGetLanguage( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetLanguage( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
 	)As HRESULT
-	Return FileBufferGetLanguage(ContainerOf(this, FileBuffer, lpVtbl), ppLanguage)
+	Return FileStreamGetLanguage(ContainerOf(this, FileStream, lpVtbl), ppLanguage)
 End Function
 
-Function IFileBufferGetETag( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetETag( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
-	Return FileBufferGetETag(ContainerOf(this, FileBuffer, lpVtbl), ppETag)
+	Return FileStreamGetETag(ContainerOf(this, FileStream, lpVtbl), ppETag)
 End Function
 
-Function IFileBufferGetLastFileModifiedDate( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetLastFileModifiedDate( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
-	Return FileBufferGetLastFileModifiedDate(ContainerOf(this, FileBuffer, lpVtbl), ppDate)
+	Return FileStreamGetLastFileModifiedDate(ContainerOf(this, FileStream, lpVtbl), ppDate)
 End Function
 
-Function IFileBufferGetLength( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetLength( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
-	Return FileBufferGetLength(ContainerOf(this, FileBuffer, lpVtbl), pLength)
+	Return FileStreamGetLength(ContainerOf(this, FileStream, lpVtbl), pLength)
 End Function
 
-Function IFileBufferGetSlice( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetSlice( _
+		ByVal this As IFileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
-	Return FileBufferGetSlice(ContainerOf(this, FileBuffer, lpVtbl), StartIndex, Length, pBufferSlice)
+	Return FileStreamGetSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, pBufferSlice)
 End Function
 
-Function IFileBufferGetFilePath( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamBeginGetSlice( _
+		ByVal this As IFileStream Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	Return FileStreamBeginGetSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, StateObject, ppIAsyncResult)
+End Function
+
+Function IFileStreamEndGetSlice( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	Return FileStreamEndGetSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pBufferSlice)
+End Function
+
+Function IFileStreamGetFilePath( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
-	Return FileBufferGetFilePath(ContainerOf(this, FileBuffer, lpVtbl), ppFilePath)
+	Return FileStreamGetFilePath(ContainerOf(this, FileStream, lpVtbl), ppFilePath)
 End Function
 
-Function IFileBufferSetFilePath( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFilePath( _
+		ByVal this As IFileStream Ptr, _
 		ByVal FilePath As HeapBSTR _
 	)As HRESULT
-	Return FileBufferSetFilePath(ContainerOf(this, FileBuffer, lpVtbl), FilePath)
+	Return FileStreamSetFilePath(ContainerOf(this, FileStream, lpVtbl), FilePath)
 End Function
 
-Function IFileBufferGetFileHandle( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetFileHandle( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
-	Return FileBufferGetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), pResult)
+	Return FileStreamGetFileHandle(ContainerOf(this, FileStream, lpVtbl), pResult)
 End Function
 
-Function IFileBufferSetFileHandle( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFileHandle( _
+		ByVal this As IFileStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
-	Return FileBufferSetFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
+	Return FileStreamSetFileHandle(ContainerOf(this, FileStream, lpVtbl), hFile)
 End Function
 
-Function IFileBufferGetZipFileHandle( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamGetZipFileHandle( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
-	Return FileBufferGetZipFileHandle(ContainerOf(this, FileBuffer, lpVtbl), pResult)
+	Return FileStreamGetZipFileHandle(ContainerOf(this, FileStream, lpVtbl), pResult)
 End Function
 
-Function IFileBufferSetZipFileHandle( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetZipFileHandle( _
+		ByVal this As IFileStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
-	Return FileBufferSetZipFileHandle(ContainerOf(this, FileBuffer, lpVtbl), hFile)
+	Return FileStreamSetZipFileHandle(ContainerOf(this, FileStream, lpVtbl), hFile)
 End Function
 
-Function IFileBufferSetFileMappingHandle( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFileMappingHandle( _
+		ByVal this As IFileStream Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
-	Return FileBufferSetFileMappingHandle(ContainerOf(this, FileBuffer, lpVtbl), fAccess, hFile)
+	Return FileStreamSetFileMappingHandle(ContainerOf(this, FileStream, lpVtbl), fAccess, hFile)
 End Function
 
-Function IFileBufferSetContentType( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetContentType( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
-	Return FileBufferSetContentType(ContainerOf(this, FileBuffer, lpVtbl), pType)
+	Return FileStreamSetContentType(ContainerOf(this, FileStream, lpVtbl), pType)
 End Function
 
-Function IFileBufferSetFileOffset( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFileOffset( _
+		ByVal this As IFileStream Ptr, _
 		ByVal Offset As LongInt _
 	)As HRESULT
-	Return FileBufferSetFileOffset(ContainerOf(this, FileBuffer, lpVtbl), Offset)
+	Return FileStreamSetFileOffset(ContainerOf(this, FileStream, lpVtbl), Offset)
 End Function
 
-Function IFileBufferSetFileSize( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFileSize( _
+		ByVal this As IFileStream Ptr, _
 		ByVal FileSize As LongInt _
 	)As HRESULT
-	Return FileBufferSetFileSize(ContainerOf(this, FileBuffer, lpVtbl), FileSize)
+	Return FileStreamSetFileSize(ContainerOf(this, FileStream, lpVtbl), FileSize)
 End Function
 
-Function IFileBufferSetEncoding( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetEncoding( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
-	Return FileBufferSetEncoding(ContainerOf(this, FileBuffer, lpVtbl), ZipMode)
+	Return FileStreamSetEncoding(ContainerOf(this, FileStream, lpVtbl), ZipMode)
 End Function
 
-Function IFileBufferSetFileTime( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetFileTime( _
+		ByVal this As IFileStream Ptr, _
 		ByVal pTime As FILETIME Ptr _
 	)As HRESULT
-	Return FileBufferSetFileTime(ContainerOf(this, FileBuffer, lpVtbl), pTime)
+	Return FileStreamSetFileTime(ContainerOf(this, FileStream, lpVtbl), pTime)
 End Function
 
-Function IFileBufferSetETag( _
-		ByVal this As IFileBuffer Ptr, _
+Function IFileStreamSetETag( _
+		ByVal this As IFileStream Ptr, _
 		ByVal ETag As HeapBSTR _
 	)As HRESULT
-	Return FileBufferSetETag(ContainerOf(this, FileBuffer, lpVtbl), ETag)
+	Return FileStreamSetETag(ContainerOf(this, FileStream, lpVtbl), ETag)
 End Function
 
-Dim GlobalFileBufferVirtualTable As Const IFileBufferVirtualTable = Type( _
-	@IFileBufferQueryInterface, _
-	@IFileBufferAddRef, _
-	@IFileBufferRelease, _
-	@IFileBufferGetContentType, _
-	@IFileBufferGetEncoding, _
-	@IFileBufferGetLanguage, _
-	@IFileBufferGetETag, _
-	@IFileBufferGetLastFileModifiedDate, _
-	@IFileBufferGetLength, _
-	@IFileBufferGetSlice, _
-	@IFileBufferGetFilePath, _
-	@IFileBufferSetFilePath, _
-	@IFileBufferGetFileHandle, _
-	@IFileBufferSetFileHandle, _
-	@IFileBufferGetZipFileHandle, _
-	@IFileBufferSetZipFileHandle, _
-	@IFileBufferSetFileMappingHandle, _
-	@IFileBufferSetContentType, _
-	@IFileBufferSetFileOffset, _
-	@IFileBufferSetFileSize, _
-	@IFileBufferSetEncoding, _
-	@IFileBufferSetFileTime, _
-	@IFileBufferSetETag _
+Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
+	@IFileStreamQueryInterface, _
+	@IFileStreamAddRef, _
+	@IFileStreamRelease, _
+	NULL, _ /'BeginRead'/
+	NULL, _ /'BeginWrite'/
+	NULL, _ /'EndRead'/
+	NULL, _ /'EndWrite'/
+	NULL, _ /'BeginReadScatter'/
+	NULL, _ /'BeginWriteGather'/
+	NULL, _ /'BeginWriteGatherAndShutdown'/
+	@IFileStreamGetContentType, _
+	@IFileStreamGetEncoding, _
+	@IFileStreamGetLanguage, _
+	@IFileStreamGetETag, _
+	@IFileStreamGetLastFileModifiedDate, _
+	@IFileStreamGetLength, _
+	@IFileStreamGetSlice, _
+	@IFileStreamBeginGetSlice, _
+	@IFileStreamEndGetSlice, _
+	@IFileStreamGetFilePath, _
+	@IFileStreamSetFilePath, _
+	@IFileStreamGetFileHandle, _
+	@IFileStreamSetFileHandle, _
+	@IFileStreamGetZipFileHandle, _
+	@IFileStreamSetZipFileHandle, _
+	@IFileStreamSetFileMappingHandle, _
+	@IFileStreamSetContentType, _
+	@IFileStreamSetFileOffset, _
+	@IFileStreamSetFileSize, _
+	@IFileStreamSetEncoding, _
+	@IFileStreamSetFileTime, _
+	@IFileStreamSetETag _
 )

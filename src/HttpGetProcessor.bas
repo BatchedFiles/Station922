@@ -169,11 +169,11 @@ End Function
 Function HttpGetProcessorPrepare( _
 		ByVal this As HttpGetProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IBuffer Ptr Ptr _
+		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim Flags As ContentNegotiationFlags = Any
-	Dim pIBuffer As IBuffer Ptr = Any
+	Dim pIBuffer As IAttributedStream Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
@@ -202,7 +202,7 @@ Function HttpGetProcessorPrepare( _
 	
 	Scope
 		Dim Language As HeapBSTR = Any
-		IBuffer_GetLanguage(pIBuffer, @Language)
+		IAttributedStream_GetLanguage(pIBuffer, @Language)
 		
 		IServerResponse_AddKnownResponseHeader( _
 			pContext->pIResponse, _
@@ -215,15 +215,15 @@ Function HttpGetProcessorPrepare( _
 	
 	Scope
 		Dim Mime As MimeType = Any
-		IBuffer_GetContentType(pIBuffer, @Mime)
+		IAttributedStream_GetContentType(pIBuffer, @Mime)
 		
 		IServerResponse_SetMimeType(pContext->pIResponse, @Mime)
 		
 		Dim DateLastFileModified As FILETIME = Any
-		IBuffer_GetLastFileModifiedDate(pIBuffer, @DateLastFileModified)
+		IAttributedStream_GetLastFileModifiedDate(pIBuffer, @DateLastFileModified)
 		
 		Dim ETag As HeapBSTR = Any
-		IBuffer_GetETag(pIBuffer, @ETag)
+		IAttributedStream_GetETag(pIBuffer, @ETag)
 		
 		AddResponseCacheHeaders( _
 			pContext->pIRequest, _
@@ -237,7 +237,7 @@ Function HttpGetProcessorPrepare( _
 	
 	Scope
 		Dim ZipMode As ZipModes = Any
-		IBuffer_GetEncoding(pIBuffer, @ZipMode)
+		IAttributedStream_GetEncoding(pIBuffer, @ZipMode)
 		
 		Select Case ZipMode
 			
@@ -278,7 +278,7 @@ Function HttpGetProcessorPrepare( _
 	Dim FileBytesOffset As LongInt = Any
 	
 	If RequestedByteRange.IsSet = ByteRangeIsSet.NotSet Then
-		IBuffer_GetLength(pIBuffer, @ContentLength)
+		IAttributedStream_GetLength(pIBuffer, @ContentLength)
 		FileBytesOffset = 0
 	Else
 		Dim pIWriter As IArrayStringWriter Ptr = Any
@@ -289,7 +289,7 @@ Function HttpGetProcessorPrepare( _
 			@pIWriter _
 		)
 		If FAILED(hrCreateWriter) Then
-			IBuffer_Release(pIBuffer)
+			IAttributedStream_Release(pIBuffer)
 			*ppIBuffer = NULL
 			Return hrCreateWriter
 		End If
@@ -304,7 +304,7 @@ Function HttpGetProcessorPrepare( _
 		)
 		
 		Dim VirtualFileLength As LongInt = Any
-		IBuffer_GetLength(pIBuffer, @VirtualFileLength)
+		IAttributedStream_GetLength(pIBuffer, @VirtualFileLength)
 		
 		Select Case RequestedByteRange.IsSet
 			
@@ -329,7 +329,7 @@ Function HttpGetProcessorPrepare( _
 					)
 					
 					IArrayStringWriter_Release(pIWriter)
-					IBuffer_Release(pIBuffer)
+					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
 					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
@@ -387,7 +387,7 @@ Function HttpGetProcessorPrepare( _
 					)
 					
 					IArrayStringWriter_Release(pIWriter)
-					IBuffer_Release(pIBuffer)
+					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
 					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
@@ -443,7 +443,7 @@ Function HttpGetProcessorPrepare( _
 					)
 					
 					IArrayStringWriter_Release(pIWriter)
-					IBuffer_Release(pIBuffer)
+					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
 					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
@@ -489,7 +489,7 @@ Function HttpGetProcessorPrepare( _
 		ContentLength _
 	)
 	If FAILED(hrPrepareResponse) Then
-		IBuffer_Release(pIBuffer)
+		IAttributedStream_Release(pIBuffer)
 		*ppIBuffer = NULL
 		Return hrPrepareResponse
 	End If
@@ -575,7 +575,7 @@ End Function
 Function IHttpGetProcessorPrepare( _
 		ByVal this As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IBuffer Ptr Ptr _
+		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	Return HttpGetProcessorPrepare(ContainerOf(this, HttpGetProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
