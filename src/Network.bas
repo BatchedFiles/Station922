@@ -1,4 +1,117 @@
 #include once "Network.bi"
+#include once "win\mswsock.bi"
+
+Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
+Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
+Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
+
+Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
+Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
+
+Function NetworkStartUp()As HRESULT
+	
+	Dim WsaVrsion22 As WORD = MAKEWORD(2, 2)
+	Dim wsa As WSAData = Any
+	
+	Dim resWsaStartup As Long = WSAStartup(WsaVrsion22, @wsa)
+	If resWsaStartup <> NO_ERROR Then
+		Dim dwError As Long = WSAGetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function NetworkCleanUp()As HRESULT
+	
+	Dim resStartup As Long = WSACleanup()
+	If resStartup <> 0 Then
+		Dim dwError As Long = WSAGetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function LoadWsaFunctions()As Boolean
+	
+	Dim ListenSocket As SOCKET = WSASocketW( _
+		AF_INET6, _
+		SOCK_STREAM, _
+		IPPROTO_TCP, _
+		NULL, _
+		0, _
+		WSA_FLAG_OVERLAPPED _
+	)
+	If ListenSocket = INVALID_SOCKET Then
+		Return False
+	End If
+	
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim resLoadAcceptEx As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GUID_WSAID_ACCEPTEX, _
+			SizeOf(GUID), _
+			@lpfnAcceptEx, _
+			SizeOf(lpfnAcceptEx), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resLoadAcceptEx = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return False
+		End If
+	End Scope
+	
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim resGetAcceptExSockaddrs As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GUID_WSAID_GETACCEPTEXSOCKADDRS, _
+			SizeOf(GUID), _
+			@lpfnGetAcceptExSockaddrs, _
+			SizeOf(lpfnGetAcceptExSockaddrs), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resGetAcceptExSockaddrs = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return False
+		End If
+	End Scope
+	
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim resGetTransmitPackets As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GUID_WSAID_TRANSMITPACKETS, _
+			SizeOf(GUID), _
+			@lpfnTransmitPackets, _
+			SizeOf(lpfnTransmitPackets), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resGetTransmitPackets = SOCKET_ERROR Then
+			closesocket(ListenSocket)
+			return False
+		End If
+	End Scope
+	
+	closesocket(ListenSocket)
+	
+	Return True
+	
+End Function
 
 Function ResolveHostW Alias "ResolveHostW"( _
 		ByVal Host As PCWSTR, _

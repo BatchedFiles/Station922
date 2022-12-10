@@ -12,6 +12,12 @@ Type SocketNode
 	Protocol As Long
 End Type
 
+Declare Function NetworkStartUp()As HRESULT
+
+Declare Function NetworkCleanUp()As HRESULT
+
+Declare Function LoadWsaFunctions()As Boolean
+
 Declare Function ResolveHostA Alias "ResolveHostA"( _
 	ByVal Host As PCSTR, _
 	ByVal Port As PCSTR, _
