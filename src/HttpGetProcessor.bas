@@ -24,7 +24,7 @@ Type _HttpGetProcessor
 End Type
 
 Sub MakeContentRangeHeader( _
-		ByVal pIWriter As IArrayStringWriter Ptr, _
+		ByRef Writer As ArrayStringWriter, _
 		ByVal FirstBytePosition As LongInt, _
 		ByVal LastBytePosition As LongInt, _
 		ByVal TotalLength As LongInt _
@@ -33,15 +33,15 @@ Sub MakeContentRangeHeader( _
 	' Example:
 	' Content-Range: bytes 88080384-160993791/160993792
 	
-	IArrayStringWriter_WriteLengthString(pIWriter, @BytesStringWithSpace, Len(BytesStringWithSpace))
+	Writer.WriteLengthString(@BytesStringWithSpace, Len(BytesStringWithSpace))
 	
-	IArrayStringWriter_WriteUInt64(pIWriter, FirstBytePosition)
-	IArrayStringWriter_WriteChar(pIWriter, Characters.HyphenMinus)
+	Writer.WriteUInt64(FirstBytePosition)
+	Writer.WriteChar(Characters.HyphenMinus)
 	
-	IArrayStringWriter_WriteUInt64(pIWriter, LastBytePosition)
-	IArrayStringWriter_WriteChar(pIWriter, Characters.Solidus)
+	Writer.WriteUInt64(LastBytePosition)
+	Writer.WriteChar(Characters.Solidus)
 	
-	IArrayStringWriter_WriteUInt64(pIWriter, TotalLength)
+	Writer.WriteUInt64(TotalLength)
 	
 End Sub
 
@@ -281,24 +281,13 @@ Function HttpGetProcessorPrepare( _
 		IAttributedStream_GetLength(pIBuffer, @ContentLength)
 		FileBytesOffset = 0
 	Else
-		Dim pIWriter As IArrayStringWriter Ptr = Any
-		Dim hrCreateWriter As HRESULT = CreateInstance( _
-			pContext->pIMemoryAllocator, _
-			@CLSID_ARRAYSTRINGWRITER, _
-			@IID_IArrayStringWriter, _
-			@pIWriter _
-		)
-		If FAILED(hrCreateWriter) Then
-			IAttributedStream_Release(pIBuffer)
-			*ppIBuffer = NULL
-			Return hrCreateWriter
-		End If
+		Dim Writer As ArrayStringWriter = Any
+		InitializeArrayStringWriter(@Writer)
 		
 		Const ContentRangeMaximumBufferLength As Integer = 512 - 1
 		Dim wContentRange As WString * (ContentRangeMaximumBufferLength + 1) = Any
 		
-		IArrayStringWriter_SetBuffer( _
-			pIWriter, _
+		Writer.SetBuffer( _
 			@wContentRange, _
 			ContentRangeMaximumBufferLength _
 		)
@@ -316,7 +305,7 @@ Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 					
 					MakeContentRangeHeader( _
-						pIWriter, _
+						Writer, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -328,7 +317,6 @@ Function HttpGetProcessorPrepare( _
 						@wContentRange _
 					)
 					
-					IArrayStringWriter_Release(pIWriter)
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
@@ -348,7 +336,7 @@ Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = VirtualFileLength - 1
 				
 				MakeContentRangeHeader( _
-					pIWriter, _
+					Writer, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
@@ -374,7 +362,7 @@ Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 					
 					MakeContentRangeHeader( _
-						pIWriter, _
+						Writer, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -386,7 +374,6 @@ Function HttpGetProcessorPrepare( _
 						@wContentRange _
 					)
 					
-					IArrayStringWriter_Release(pIWriter)
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
@@ -406,7 +393,7 @@ Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = VirtualFileLength - 1
 				
 				MakeContentRangeHeader( _
-					pIWriter, _
+					Writer, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
@@ -430,7 +417,7 @@ Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 					
 					MakeContentRangeHeader( _
-						pIWriter, _
+						Writer, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -442,7 +429,6 @@ Function HttpGetProcessorPrepare( _
 						@wContentRange _
 					)
 					
-					IArrayStringWriter_Release(pIWriter)
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
@@ -462,7 +448,7 @@ Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, VirtualFileLength - 1)
 				
 				MakeContentRangeHeader( _
-					pIWriter, _
+					Writer, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
@@ -480,7 +466,6 @@ Function HttpGetProcessorPrepare( _
 				
 		End Select
 		
-		IArrayStringWriter_Release(pIWriter)
 	End If
 	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _

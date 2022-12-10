@@ -1,108 +1,73 @@
 #ifndef ARRAYSTRINGWRITER_BI
 #define ARRAYSTRINGWRITER_BI
 
-#include once "IArrayStringWriter.bi"
+Type ArrayStringWriter
+	
+	CodePage As Integer
+	Capacity As Integer
+	BufferLength As Integer
+	Buffer As WString Ptr
+	
+	Declare Function WriteLengthString( _
+		ByVal w As WString Ptr, _
+		ByVal Length As Integer _
+	)As Boolean
 
-Extern CLSID_ARRAYSTRINGWRITER Alias "CLSID_ARRAYSTRINGWRITER" As Const CLSID
+	Declare Function WriteNewLine( _
+	)As Boolean
 
-Const RTTI_ID_ARRAYSTRINGWRITER       = !"\001String_Builder\001"
+	Declare Function WriteString( _
+		ByVal w As WString Ptr _
+	)As Boolean
 
-Type ArrayStringWriter As _ArrayStringWriter
+	Declare Function WriteLengthStringLine( _
+		ByVal w As WString Ptr, _
+		ByVal Length As Integer _
+	)As Boolean
 
-Type LPArrayStringWriter As _ArrayStringWriter Ptr
+	Declare Function WriteStringLine( _
+		ByVal w As WString Ptr _
+	)As Boolean
 
-Declare Function CreateArrayStringWriter( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ArrayStringWriter Ptr
+	Declare Function WriteChar( _
+		ByVal wc As Integer _
+	)As Boolean
 
-Declare Sub DestroyArrayStringWriter( _
+	Declare Function WriteInt32( _
+		ByVal Value As Long _
+	)As Boolean
+
+	Declare Function WriteUInt32( _
+		ByVal Value As ULong _
+	)As Boolean
+
+	Declare Function WriteInt64( _
+		ByVal Value As LongInt _
+	)As Boolean
+
+	Declare Function WriteUInt64( _
+		ByVal Value As ULongInt _
+	)As Boolean
+
+	Declare Function GetCodePage( _
+	)As Integer
+
+	Declare Sub SetCodePage( _
+		ByVal CodePage As Integer _
+	)
+
+	Declare Sub SetBuffer( _
+		ByVal Buffer As WString Ptr, _
+		ByVal Capacity As Integer _
+	)
+
+	Declare Function GetLength( _
+	)As Integer
+	
+End Type
+
+Declare Sub InitializeArrayStringWriter( _
 	ByVal this As ArrayStringWriter Ptr _
 )
-
-Declare Function ArrayStringWriterQueryInterface( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function ArrayStringWriterAddRef( _
-	ByVal this As ArrayStringWriter Ptr _
-)As ULONG
-
-Declare Function ArrayStringWriterRelease( _
-	ByVal this As ArrayStringWriter Ptr _
-)As ULONG
-
-Declare Function ArrayStringWriterWriteLengthString( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal w As WString Ptr, _
-	ByVal Length As Integer _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteNewLine( _
-	ByVal this As ArrayStringWriter Ptr _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteString( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal w As WString Ptr _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteLengthStringLine( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal w As WString Ptr, _
-	ByVal Length As Integer _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteStringLine( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal w As WString Ptr _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteChar( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal wc As wchar_t _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteInt32( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal Value As Long _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteUInt32( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal Value As ULong _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteInt64( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal Value As LongInt _
-)As HRESULT
-
-Declare Function ArrayStringWriterWriteUInt64( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal Value As ULongInt _
-)As HRESULT
-
-Declare Function ArrayStringWriterGetCodePage( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal CodePage As Integer Ptr _
-)As HRESULT
-
-Declare Function ArrayStringWriterSetCodePage( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal CodePage As Integer _
-)As HRESULT
-
-Declare Function ArrayStringWriterSetBuffer( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal Buffer As WString Ptr, _
-	ByVal Capacity As Integer _
-)As HRESULT
-
-Declare Function ArrayStringWriterGetLength( _
-	ByVal this As ArrayStringWriter Ptr, _
-	ByVal pLength As Integer Ptr _
-)As HRESULT
 
 #endif

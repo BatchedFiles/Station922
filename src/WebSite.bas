@@ -83,7 +83,7 @@ Type _WebSite
 End Type
 
 Sub FormatMessageErrorBody( _
-		ByVal pIWriter As IArrayStringWriter Ptr, _
+		ByRef Writer As ArrayStringWriter, _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal VirtualPath As HeapBSTR, _
 		ByVal BodyText As WString Ptr, _
@@ -119,52 +119,52 @@ Sub FormatMessageErrorBody( _
 	
 	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartHeadTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStartTitleTag)
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndTitleTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndHeadTag)
+	Writer.WriteString(HttpStartHeadTag)
+	Writer.WriteString(HttpStartTitleTag)
+	Writer.WriteString(DescriptionBuffer)
+	Writer.WriteString(HttpEndTitleTag)
+	Writer.WriteString(HttpEndHeadTag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartBodyTag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH1Tag)
-	IArrayStringWriter_WriteString(pIWriter, DescriptionBuffer)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH1Tag)
+	Writer.WriteString(HttpStartBodyTag)
+	Writer.WriteString(HttpStartH1Tag)
+	Writer.WriteString(DescriptionBuffer)
+	Writer.WriteString(HttpEndH1Tag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
+	Writer.WriteString(HttpStartPTag)
 	
 	Select Case StatusCode
 		
 		Case 300 To 399
-			IArrayStringWriter_WriteString(pIWriter, ClientMovedString)
+			Writer.WriteString(ClientMovedString)
 			
 		Case 400 To 499
-			IArrayStringWriter_WriteString(pIWriter, ClientErrorString)
+			Writer.WriteString(ClientErrorString)
 			
 		Case 500 To 599
-			IArrayStringWriter_WriteString(pIWriter, ServerErrorString)
+			Writer.WriteString(ServerErrorString)
 			
 	End Select
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpErrorInApplicationString)
-	IArrayStringWriter_WriteLengthString(pIWriter, VirtualPath, SysStringLen(VirtualPath))
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	Writer.WriteString(HttpErrorInApplicationString)
+	Writer.WriteLengthString(VirtualPath, SysStringLen(VirtualPath))
+	Writer.WriteString(HttpEndPTag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
-	IArrayStringWriter_WriteString(pIWriter, HttpStatusCodeString)
-	IArrayStringWriter_WriteInt32(pIWriter, StatusCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+	Writer.WriteString(HttpStartH2Tag)
+	Writer.WriteString(HttpStatusCodeString)
+	Writer.WriteInt32(StatusCode)
+	Writer.WriteString(HttpEndH2Tag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-	IArrayStringWriter_WriteString(pIWriter, BodyText)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	Writer.WriteString(HttpStartPTag)
+	Writer.WriteString(BodyText)
+	Writer.WriteString(HttpEndPTag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartH2Tag)
-	IArrayStringWriter_WriteString(pIWriter, HttpHresultErrorCodeString)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndH2Tag)
+	Writer.WriteString(HttpStartH2Tag)
+	Writer.WriteString(HttpHresultErrorCodeString)
+	Writer.WriteString(HttpEndH2Tag)
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-	IArrayStringWriter_WriteUInt32(pIWriter, hrErrorCode)
-	IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+	Writer.WriteString(HttpStartPTag)
+	Writer.WriteUInt32(hrErrorCode)
+	Writer.WriteString(HttpEndPTag)
 	
 	Dim wBuffer As WString * 256 = Any
 	Dim CharsCount As DWORD = FormatMessageW( _
@@ -177,12 +177,12 @@ Sub FormatMessageErrorBody( _
 		NULL _
 	)
 	If CharsCount Then
-		IArrayStringWriter_WriteString(pIWriter, HttpStartPTag)
-		IArrayStringWriter_WriteString(pIWriter, wBuffer)
-		IArrayStringWriter_WriteString(pIWriter, HttpEndPTag)
+		Writer.WriteString(HttpStartPTag)
+		Writer.WriteString(wBuffer)
+		Writer.WriteString(HttpEndPTag)
 	End If
 	
-	IArrayStringWriter_WriteString(pIWriter, HttpEndBodyTag)
+	Writer.WriteString(HttpEndBodyTag)
 	
 End Sub
 
@@ -1325,33 +1325,23 @@ Function WebSiteGetErrorBuffer( _
 		Return hrCreateBuffer
 	End If
 	
-	Dim pIWriter As IArrayStringWriter Ptr = Any
-	Dim hrCreateArrayStringWriter As HRESULT = CreateInstance( _
-		pIMalloc, _
-		@CLSID_ARRAYSTRINGWRITER, _
-		@IID_IArrayStringWriter, _
-		@pIWriter _
-	)
-	If FAILED(hrCreateArrayStringWriter) Then
-		IMemoryStream_Release(pIBuffer)
-		Return hrCreateArrayStringWriter
-	End If
+	Dim Writer As ArrayStringWriter = Any
+	InitializeArrayStringWriter(@Writer)
 	
 	Scope
 		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
-		IArrayStringWriter_SetBuffer(pIWriter, @BodyBuffer, MaxHttpErrorBuffer)
+		Writer.SetBuffer(@BodyBuffer, MaxHttpErrorBuffer)
 		
 		Dim pBodyText As WString Ptr = GetErrorBodyText(HttpError)
 		FormatMessageErrorBody( _
-			pIWriter, _
+			Writer, _
 			StatusCode, _
 			this->pVirtualPath, _
 			pBodyText, _
 			hrErrorCode _
 		)
 		
-		Dim BodyLength As Integer = Any
-		IArrayStringWriter_GetLength(pIWriter, @BodyLength)
+		Dim BodyLength As Integer = Writer.GetLength()
 		
 		Dim SendBufferLength As Integer = WideCharToMultiByte( _
 			CP_UTF8, _
@@ -1371,7 +1361,6 @@ Function WebSiteGetErrorBuffer( _
 			@pBuffer _
 		)
 		If FAILED(hrAllocBuffer) Then
-			IArrayStringWriter_Release(pIWriter)
 			IMemoryStream_Release(pIBuffer)
 			Return E_OUTOFMEMORY
 		End If
@@ -1388,8 +1377,6 @@ Function WebSiteGetErrorBuffer( _
 		)
 		
 	End Scope
-	
-	IArrayStringWriter_Release(pIWriter)
 	
 	Dim Mime As MimeType = Any
 	With Mime

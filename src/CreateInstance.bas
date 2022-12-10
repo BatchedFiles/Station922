@@ -1,6 +1,5 @@
 #include once "CreateInstance.bi"
 #include once "AcceptConnectionAsyncTask.bi"
-#include once "ArrayStringWriter.bi"
 #include once "AsyncResult.bi"
 #include once "ClientRequest.bi"
 #include once "ClientUri.bi"
@@ -33,20 +32,6 @@ Function CreateInstance( _
 	)As HRESULT
 	
 	*ppv = NULL
-	
-	If IsEqualCLSID(@CLSID_ARRAYSTRINGWRITER, rclsid) Then
-		Dim pWriter As ArrayStringWriter Ptr = CreateArrayStringWriter(pIMemoryAllocator)
-		If pWriter = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Dim hr As HRESULT = ArrayStringWriterQueryInterface(pWriter, riid, ppv)
-		If FAILED(hr) Then
-			DestroyArrayStringWriter(pWriter)
-		End If
-		
-		Return hr
-	End If
 	
 	If IsEqualCLSID(@CLSID_ASYNCRESULT, rclsid) Then
 		Dim pAsyncResult As AsyncResult Ptr = CreateAsyncResult(pIMemoryAllocator)

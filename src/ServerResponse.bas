@@ -491,19 +491,6 @@ Function ServerResponseAllHeadersToZString( _
 		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
 	
-	Dim pIWriter As IArrayStringWriter Ptr = Any
-	Dim hrCreateStringWriter As HRESULT = CreateInstance( _
-		this->pIMemoryAllocator, _
-		@CLSID_ARRAYSTRINGWRITER, _
-		@IID_IArrayStringWriter, _
-		@pIWriter _
-	)
-	If FAILED(hrCreateStringWriter) Then
-		*ppHeaders = NULL
-		*pHeadersLength = 0
-		Return hrCreateStringWriter
-	End If
-	
 	ServerResponseAddKnownResponseHeaderWstrLen( _
 		this, _
 		HttpResponseHeaders.HeaderAcceptRanges, _
@@ -574,8 +561,10 @@ Function ServerResponseAllHeadersToZString( _
 	Dim HeadersBuffer As WString * (MaxResponseBufferLength + 1) = Any
 	
 	Scope
-		IArrayStringWriter_SetBuffer( _
-			pIWriter, _
+		Dim Writer As ArrayStringWriter = Any
+		InitializeArrayStringWriter(@Writer)
+		
+		Writer.SetBuffer( _
 			@HeadersBuffer, _
 			MaxResponseBufferLength _
 		)
@@ -587,18 +576,18 @@ Function ServerResponseAllHeadersToZString( _
 				@HttpVersionLength _
 			)
 			
-			IArrayStringWriter_WriteLengthString(pIWriter, pwHttpVersion, HttpVersionLength)
-			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+			Writer.WriteLengthString(pwHttpVersion, HttpVersionLength)
+			Writer.WriteChar(Characters.WhiteSpace)
 			
-			IArrayStringWriter_WriteInt32(pIWriter, this->StatusCode)
-			IArrayStringWriter_WriteChar(pIWriter, Characters.WhiteSpace)
+			Writer.WriteInt32(this->StatusCode)
+			Writer.WriteChar(Characters.WhiteSpace)
 			
 			If this->StatusDescription = NULL Then
 				Dim BufferLength As Integer = Any
 				Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
-				IArrayStringWriter_WriteLengthStringLine(pIWriter, wBuffer, BufferLength)
+				Writer.WriteLengthStringLine(wBuffer, BufferLength)
 			Else
-				IArrayStringWriter_WriteStringLine(pIWriter, this->StatusDescription)
+				Writer.WriteStringLine(this->StatusDescription)
 			End If
 		End Scope
 		
@@ -631,31 +620,18 @@ Function ServerResponseAllHeadersToZString( _
 					@BufferLength _
 				)
 				
-				IArrayStringWriter_WriteLengthString( _
-					pIWriter, _
-					wBuffer, _
-					BufferLength _
-				)
-				IArrayStringWriter_WriteLengthString( _
-					pIWriter, _
-					@ColonWithSpaceString, _
-					Len(ColonWithSpaceString) _
-				)
-				IArrayStringWriter_WriteStringLine( _
-					pIWriter, _
-					this->ResponseHeaders(HeaderIndex) _
-				)
+				Writer.WriteLengthString(wBuffer, BufferLength)
+				Writer.WriteLengthString(@ColonWithSpaceString, Len(ColonWithSpaceString))
+				Writer.WriteStringLine(this->ResponseHeaders(HeaderIndex))
 			End If
 			
 		Next
 		
-		IArrayStringWriter_WriteNewLine(pIWriter)
+		Writer.WriteNewLine()
 		
-		IArrayStringWriter_GetLength(pIWriter, @this->ResponseHeaderLineLength)
+		this->ResponseHeaderLineLength = Writer.GetLength()
 		
 	End Scope
-	
-	IArrayStringWriter_Release(pIWriter)
 	
 	this->ResponseHeaderLine = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
