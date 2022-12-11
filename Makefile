@@ -10,6 +10,8 @@ endif
 
 PATH_SEP ?= /
 MOVE_PATH_SEP ?= \\
+MOVE_COMMAND ?= cmd.exe /c move /y
+DELETE_COMMAND ?= cmd.exe /c del /f /q
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 CFLAGS+=-m64
@@ -41,9 +43,6 @@ OBJ_DEBUG_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x86
 OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x86
 endif
 
-MOVE_COMMAND ?= cmd.exe /c move /y
-DELETE_COMMAND ?= cmd.exe /c del /f /q
-
 FBC ?= fbc.exe
 FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
 FBCFLAGS+=-w error -maxerr 1
@@ -58,9 +57,9 @@ C_EXT ?= c
 EXTRA_CFLAGS+=-S
 MARCH ?= native
 CFLAGS+=-march=$(MARCH)
-CFLAGS+=-nostdlib -nostdinc -Wall -Werror -Wno-main
-CFLAGS+=-Werror-implicit-function-declaration
-CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-variable
+CFLAGS+=-nostdlib -nostdinc
+CFLAGS+=-Wall -Werror -Werror-implicit-function-declaration
+CFLAGS+=-Wno-main -Wno-unused-label -Wno-unused-function -Wno-unused-variable
 CFLAGS_DEBUG+=-g -O0
 
 AS ?= as.exe
@@ -79,9 +78,11 @@ GORCFLAGS_DEBUG=/d DEBUG
 LD ?= ld.exe
 LDFLAGS+=--major-image-version 1 --minor-image-version 0
 LDFLAGS+=-subsystem console
-LDFLAGS+=--stack 1048576,1048576 --no-seh --nxcompat
+LDFLAGS+=--stack 1048576,1048576
+LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=$(ENTRY_POINT_PARAM)
-LDFLAGS+=-L $(LIB_DIR) -T "src$(PATH_SEP)fbextra.x"
+LDFLAGS+=-L $(LIB_DIR)
+LDFLAGS+=-T src$(PATH_SEP)fbextra.x
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32
 LDLIBS+=-lshell32 -lshlwapi -luuid -lws2_32
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
