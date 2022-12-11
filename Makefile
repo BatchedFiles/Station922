@@ -45,7 +45,12 @@ MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
 
 FBC ?= fbc.exe
-FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME -w error -maxerr 1 -i src -r -s console -O 0
+FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
+FBCFLAGS+=-w error -maxerr 1
+FBCFLAGS+=-i src
+FBCFLAGS+=-r
+FBCFLAGS+=-s console
+FBCFLAGS+=-O 0
 FBCFLAGS_DEBUG+=-g
 
 CC ?= gcc.exe
@@ -54,8 +59,8 @@ EXTRA_CFLAGS+=-S
 MARCH ?= native
 CFLAGS+=-march=$(MARCH)
 CFLAGS+=-nostdlib -nostdinc -Wall -Werror -Wno-main
-CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-variable
 CFLAGS+=-Werror-implicit-function-declaration
+CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-variable
 CFLAGS_DEBUG+=-g -O0
 
 AS ?= as.exe
@@ -86,9 +91,10 @@ all: release debug
 
 include dependencies.mk
 
-release: CFLAGS+=$(CFLAGS_RELEASE) -fstrict-aliasing -frounding-math
-release: CFLAGS+=-fno-math-errno -fno-exceptions -fomit-frame-pointer
-release: CFLAGS+=-mno-stack-arg-probe -fno-stack-check -fno-stack-protector
+release: CFLAGS+=$(CFLAGS_RELEASE)
+release: CFLAGS+=-fstrict-aliasing -frounding-math
+release: CFLAGS+=-fno-math-errno -fno-exceptions
+release: CFLAGS+=-mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
 release: CFLAGS+=-Ofast -fno-ident -fdata-sections -ffunction-sections
 release: ASFLAGS+=--strip-local-absolute
