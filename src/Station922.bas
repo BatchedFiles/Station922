@@ -17,7 +17,7 @@ Function EntryPoint()As Integer
 	Scope
 		Dim resLoadWsa As Boolean = LoadWsaFunctions()
 		If resLoadWsa = False Then
-			WSACleanup()
+			NetworkCleanup()
 			Return 1
 		End If
 	End Scope
@@ -45,10 +45,7 @@ Function EntryPoint()As Integer
 		LocalFree(ppLines)
 	End Scope
 	
-	Dim hrNetworkCleanUp As HRESULT = NetworkCleanUp()
-	If FAILED(hrNetworkCleanUp) Then
-		Return 1
-	End If
+	NetworkCleanUp()
 	
 	Return RetCode
 	
