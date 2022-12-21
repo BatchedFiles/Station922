@@ -1,8 +1,17 @@
+#include once "AsyncResult.bi"
 #include once "HttpWriter.bi"
 #include once "ContainerOf.bi"
+#include once "CreateInstance.bi"
 #include once "Logger.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
+
+Common Shared ThreadPoolCompletionPort As HANDLE
+
+Enum WriterTasks
+	ReadStream
+	WriteData
+End Enum
 
 Type HeadersBodyBuffer
 	Buf(1) As BaseStreamBuffer
@@ -17,13 +26,19 @@ Type _HttpWriter
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
 	pIBuffer As IAttributedStream Ptr
+	pIResponse As IServerResponse Ptr
+	CurrentTask As WriterTasks
+	
 	Headers As ZString Ptr
 	HeadersOffset As LongInt
 	HeadersLength As LongInt
 	HeadersEndIndex As LongInt
+	
+	StreamBuffer As HeadersBodyBuffer
+	StreamBufferLength As Integer
 	BodyOffset As LongInt
-	BodyContentLength As LongInt
 	BodyEndIndex As LongInt
+	
 	HeadersSended As Boolean
 	BodySended As Boolean
 	SendOnlyHeaders As Boolean
@@ -48,8 +63,9 @@ Sub InitializeHttpWriter( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
 	this->pIBuffer = NULL
+	this->pIResponse = NULL
 	this->BodyOffset = 0
-	this->BodyContentLength = 0
+	this->CurrentTask = WriterTasks.ReadStream
 	this->KeepAlive = True
 	
 End Sub
@@ -64,6 +80,10 @@ Sub UnInitializeHttpWriter( _
 	
 	If this->pIBuffer Then
 		IAttributedStream_Release(this->pIBuffer)
+	End If
+	
+	If this->pIResponse Then
+		IServerResponse_Release(this->pIResponse)
 	End If
 	
 End Sub
@@ -228,6 +248,18 @@ Function HttpWriterPrepare( _
 		ByVal ContentLength As LongInt _
 	)As HRESULT
 	
+	Scope
+		If this->pIResponse Then
+			IServerResponse_Release(this->pIResponse)
+		End If
+		
+		If pIResponse Then
+			IServerResponse_AddRef(pIResponse)
+		End If
+		
+		this->pIResponse = pIResponse
+	End Scope
+	
 	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
 		pIResponse, _
 		ContentLength, _
@@ -257,14 +289,15 @@ Function HttpWriterPrepare( _
 		@ByteRangeLength _
 	)
 	
-	If ByteRangeLength = 0 Then
-		this->BodyContentLength = ContentLength
+	Dim BodyContentLength As LongInt = Any
+	If ByteRangeLength Then
+		BodyContentLength = ByteRangeLength
 	Else
-		this->BodyContentLength = ByteRangeLength
+		BodyContentLength = ContentLength
 	End If
 	
 	this->HeadersEndIndex = this->HeadersOffset + this->HeadersLength
-	this->BodyEndIndex = this->BodyOffset + this->BodyContentLength
+	this->BodyEndIndex = this->BodyOffset + BodyContentLength
 	
 	Return S_OK
 	
@@ -276,73 +309,96 @@ Function HttpWriterBeginWrite( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim StreamBuffer As HeadersBodyBuffer = Any
-	Dim StreamBufferLength As Integer = Any
+	Dim cTask As WriterTasks = this->CurrentTask
 	
-	If this->BodySended Then
-		If this->HeadersSended Then
-			Return S_FALSE
-		End If
+	Select Case cTask
 		
-		StreamBufferLength = 1
-		
-		StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-		StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
-	Else
-		Dim DesiredSliceLength As LongInt = min(BUFFERSLICECHUNK_SIZE, this->BodyEndIndex - this->BodyOffset)
-		
-		Dim Slice As BufferSlice = Any
-		Dim hrGetSlice As HRESULT = IAttributedStream_GetSlice( _
-			this->pIBuffer, _
-			this->BodyOffset, _
-			Cast(DWORD, DesiredSliceLength), _
-			@Slice _
-		)
-		If FAILED(hrGetSlice) Then
-			Return hrGetSlice
-		End If
-		
-		If this->HeadersSended Then
-			StreamBufferLength = 1
+		Case WriterTasks.ReadStream
+			If this->BodySended Then
+				If this->HeadersSended Then
+					*ppIAsyncResult = NULL
+					Return S_FALSE
+				End If
+				
+				Dim pINewAsyncResult As IAsyncResult Ptr = Any
+				Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+					this->pIMemoryAllocator, _
+					@CLSID_ASYNCRESULT, _
+					@IID_IAsyncResult, _
+					@pINewAsyncResult _
+				)
+				If FAILED(hrCreateAsyncResult) Then
+					*ppIAsyncResult = NULL
+					Return hrCreateAsyncResult
+				End If
+				
+				Dim pOverlap As OVERLAPPED Ptr = Any
+				IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
+				
+				IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+				
+				*ppIAsyncResult = pINewAsyncResult
+				
+				Dim resStatus As BOOL = PostQueuedCompletionStatus( _
+					ThreadPoolCompletionPort, _
+					BUFFERSLICECHUNK_SIZE, _
+					Cast(ULONG_PTR, StateObject), _
+					pOverlap _
+				)
+				If resStatus = 0 Then
+					Dim dwError As DWORD = GetLastError()
+					IAsyncResult_Release(pINewAsyncResult)
+					*ppIAsyncResult = NULL
+					Return HRESULT_FROM_WIN32(dwError)
+				End If
+				
+			Else
+				Dim DesiredSliceLength As LongInt = min( _
+					BUFFERSLICECHUNK_SIZE, _
+					this->BodyEndIndex - this->BodyOffset _
+				)
+				
+				Dim hrBeginGetSlice As HRESULT = IAttributedStream_BeginGetSlice( _
+					this->pIBuffer, _
+					this->BodyOffset, _
+					DesiredSliceLength, _
+					StateObject, _
+					ppIAsyncResult _
+				)
+				If FAILED(hrBeginGetSlice) Then
+					Return hrBeginGetSlice
+				End If
+				
+			End If
 			
-			StreamBuffer.Buf(0).Buffer = Slice.pSlice
-			StreamBuffer.Buf(0).Length = Slice.Length
-		Else
-			StreamBufferLength = 2
+		Case WriterTasks.WriteData
+			Dim hrBeginWrite As HRESULT = Any
 			
-			StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-			StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+			If this->KeepAlive Then
+				hrBeginWrite = IBaseStream_BeginWriteGather( _
+					this->pIStream, _
+					@this->StreamBuffer.Buf(0), _
+					this->StreamBufferLength, _
+					NULL, _
+					StateObject, _
+					ppIAsyncResult _
+				)
+			Else
+				hrBeginWrite = IBaseStream_BeginWriteGatherAndShutdown( _
+					this->pIStream, _
+					@this->StreamBuffer.Buf(0), _
+					this->StreamBufferLength, _
+					NULL, _
+					StateObject, _
+					ppIAsyncResult _
+				)
+			End If
 			
-			StreamBuffer.Buf(1).Buffer = Slice.pSlice
-			StreamBuffer.Buf(1).Length = Slice.Length
-		End If
-	End If
-	
-	Dim hrBeginWrite As HRESULT = Any
-	
-	If this->KeepAlive Then
-		hrBeginWrite = IBaseStream_BeginWriteGather( _
-			this->pIStream, _
-			@StreamBuffer.Buf(0), _
-			StreamBufferLength, _
-			NULL, _
-			StateObject, _
-			ppIAsyncResult _
-		)
-	Else
-		hrBeginWrite = IBaseStream_BeginWriteGatherAndShutdown( _
-			this->pIStream, _
-			@StreamBuffer.Buf(0), _
-			StreamBufferLength, _
-			NULL, _
-			StateObject, _
-			ppIAsyncResult _
-		)
-	End If
-	
-	If FAILED(hrBeginWrite) Then
-		Return hrBeginWrite
-	End If
+			If FAILED(hrBeginWrite) Then
+				Return hrBeginWrite
+			End If
+			
+	End Select
 	
 	Return HTTPWRITER_S_IO_PENDING
 	
@@ -353,44 +409,92 @@ Function HttpWriterEndWrite( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim WritedBytes As DWORD = Any
-	Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
-		this->pIStream, _
-		pIAsyncResult, _
-		@WritedBytes _
-	)
-	If FAILED(hrEndWrite) Then
-		Return hrEndWrite
-	End If
+	Dim cTask As WriterTasks = this->CurrentTask
 	
-	If this->HeadersSended Then
-		this->BodyOffset += CLngInt(WritedBytes)
-	Else
-		Dim HeadersSize As LongInt = this->HeadersLength - this->HeadersOffset
-		Dim HeadersWritedBytes As LongInt = min(CLngInt(WritedBytes), HeadersSize)
+	Select Case cTask
 		
-		this->HeadersOffset += HeadersWritedBytes
-		
-		If this->HeadersOffset >= this->HeadersEndIndex Then
-			this->HeadersSended = True
-		End If
-		
-		Dim BodyWritedBytes As LongInt = CLngInt(WritedBytes) - HeadersWritedBytes
-		this->BodyOffset += CLngInt(BodyWritedBytes)
-		
-	End If
-	
-	If this->BodyOffset >= this->BodyEndIndex Then
-		this->BodySended = True
-	End If
-	
-	If hrEndWrite = S_FALSE Then
-		Return S_FALSE
-	End If
-	
-	If this->BodySended Then
-		Return S_OK
-	End If
+		Case WriterTasks.ReadStream
+			If this->BodySended Then
+				If this->HeadersSended Then
+					Return S_FALSE
+				End If
+				
+				this->StreamBufferLength = 1
+				this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+				this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+			Else
+				
+				Dim Slice As BufferSlice = Any
+				Dim hrEndGetSlice As HRESULT = IAttributedStream_EndGetSlice( _
+					this->pIBuffer, _
+					pIAsyncResult, _
+					@Slice _
+				)
+				If FAILED(hrEndGetSlice) Then
+					Return hrEndGetSlice
+				End If
+				
+				If this->HeadersSended Then
+					this->StreamBufferLength = 1
+					
+					this->StreamBuffer.Buf(0).Buffer = Slice.pSlice
+					this->StreamBuffer.Buf(0).Length = Slice.Length
+				Else
+					this->StreamBufferLength = 2
+					
+					this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+					this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+					this->StreamBuffer.Buf(1).Buffer = Slice.pSlice
+					this->StreamBuffer.Buf(1).Length = Slice.Length
+				End If
+				
+			End If
+			
+			this->CurrentTask = WriterTasks.WriteData
+			
+		Case WriterTasks.WriteData
+			Dim dwWritedBytes As DWORD = Any
+			Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
+				this->pIStream, _
+				pIAsyncResult, _
+				@dwWritedBytes _
+			)
+			If FAILED(hrEndWrite) Then
+				Return hrEndWrite
+			End If
+			
+			If this->HeadersSended Then
+				this->BodyOffset += CLngInt(dwWritedBytes)
+			Else
+				Dim HeadersSize As LongInt = this->HeadersLength - this->HeadersOffset
+				Dim HeadersWritedBytes As LongInt = min(CLngInt(dwWritedBytes), HeadersSize)
+				
+				this->HeadersOffset += HeadersWritedBytes
+				
+				If this->HeadersOffset >= this->HeadersEndIndex Then
+					this->HeadersSended = True
+				End If
+				
+				Dim BodyWritedBytes As LongInt = CLngInt(dwWritedBytes) - HeadersWritedBytes
+				this->BodyOffset += CLngInt(BodyWritedBytes)
+				
+			End If
+			
+			If this->BodyOffset >= this->BodyEndIndex Then
+				this->BodySended = True
+			End If
+			
+			If hrEndWrite = S_FALSE Then
+				Return S_FALSE
+			End If
+			
+			If this->BodySended Then
+				Return S_OK
+			End If
+			
+			this->CurrentTask = WriterTasks.ReadStream
+			
+	End Select
 	
 	Return HTTPWRITER_S_IO_PENDING
 	

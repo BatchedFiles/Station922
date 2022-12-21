@@ -1,8 +1,13 @@
 #include once "MemoryStream.bi"
+#include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
+#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
+
+Common Shared ThreadPoolCompletionPort As HANDLE
 
 Type _MemoryStream
 	#if __FB_DEBUG__
@@ -18,6 +23,8 @@ Type _MemoryStream
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	ZipMode As ZipModes
+	RequestStartIndex As LongInt
+	RequestLength As DWORD
 	ContentType As MimeType
 End Type
 
@@ -112,15 +119,11 @@ Function MemoryStreamQueryInterface( _
 		If IsEqualIID(@IID_IAttributedStream, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IBaseStream, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				If IsEqualIID(@IID_IUnknown, riid) Then
-					*ppv = @this->lpVtbl
-				Else
-					*ppv = NULL
-					Return E_NOINTERFACE
-				End If
+				*ppv = NULL
+				Return E_NOINTERFACE
 			End If
 		End If
 	End If
@@ -154,6 +157,135 @@ Function MemoryStreamRelease( _
 	DestroyMemoryStream(this)
 	
 	Return 0
+	
+End Function
+
+/'
+Function MemoryStreamGetSlice( _
+		ByVal this As MemoryStream Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	
+	Dim VirtualIndex As LongInt = StartIndex + this->Offset
+	
+	If VirtualIndex > this->Capacity Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim pBuffer As Byte Ptr = Any
+	If this->pOuterBuffer = NULL Then
+		pBuffer = this->pBuffer
+	Else
+		pBuffer = this->pOuterBuffer
+	End If
+	
+	pBufferSlice->pSlice = @pBuffer[VirtualIndex]
+	pBufferSlice->Length = this->Capacity - StartIndex - this->Offset
+	
+	If pBufferSlice->Length <= this->Capacity Then
+		Return S_FALSE
+	End If
+	
+	Return S_OK
+	
+End Function
+'/
+Function MemoryStreamBeginGetSlice( _
+		ByVal this As MemoryStream Ptr, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Dim VirtualStartIndex As LongInt = StartIndex + this->Offset
+	
+	If VirtualStartIndex >= this->Capacity Then
+		*ppIAsyncResult = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim pINewAsyncResult As IAsyncResult Ptr = Any
+	Scope
+		Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_ASYNCRESULT, _
+			@IID_IAsyncResult, _
+			@pINewAsyncResult _
+		)
+		If FAILED(hrCreateAsyncResult) Then
+			*ppIAsyncResult = NULL
+			Return hrCreateAsyncResult
+		End If
+	End Scope
+	
+	this->RequestStartIndex = StartIndex
+	this->RequestLength = Length
+	
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
+	
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	
+	*ppIAsyncResult = pINewAsyncResult
+	
+	Dim resStatus As BOOL = PostQueuedCompletionStatus( _
+		ThreadPoolCompletionPort, _
+		Length, _
+		Cast(ULONG_PTR, StateObject), _
+		pOverlap _
+	)
+	If resStatus = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		IAsyncResult_Release(pINewAsyncResult)
+		*ppIAsyncResult = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return ATTRIBUTEDSTREAM_S_IO_PENDING
+	
+End Function
+
+Function MemoryStreamEndGetSlice( _
+		ByVal this As MemoryStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr _
+	)As HRESULT
+	
+	Dim dwBytesTransferred As DWORD = Any
+	Dim Completed As Boolean = Any
+	IAsyncResult_GetCompleted( _
+		pIAsyncResult, _
+		@dwBytesTransferred, _
+		@Completed _
+	)
+	If Completed Then
+		Scope
+			Dim pMem As Byte Ptr = Any
+			If this->pOuterBuffer = NULL Then
+				pMem = this->pBuffer
+			Else
+				pMem = this->pOuterBuffer
+			End If
+			
+			Dim VirtualIndex As LongInt = this->RequestStartIndex + this->Offset
+			pBufferSlice->pSlice = @pMem[VirtualIndex]
+			pBufferSlice->Length = CInt(dwBytesTransferred)
+		End Scope
+		
+		If dwBytesTransferred = 0 Then
+			Return S_FALSE
+		End If
+		
+		If dwBytesTransferred <= this->Capacity Then
+			Return S_FALSE
+		End If
+		
+	End If
+	
+	Return S_OK
 	
 End Function
 
@@ -224,59 +356,6 @@ Function MemoryStreamGetLength( _
 	*pLength = VirtualLength
 	
 	Return S_OK
-	
-End Function
-
-Function MemoryStreamGetSlice( _
-		ByVal this As MemoryStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	
-	Dim VirtualIndex As LongInt = StartIndex + this->Offset
-	
-	If VirtualIndex > this->Capacity Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Dim pBuffer As Byte Ptr = Any
-	If this->pOuterBuffer = NULL Then
-		pBuffer = this->pBuffer
-	Else
-		pBuffer = this->pOuterBuffer
-	End If
-	
-	pBufferSlice->pSlice = @pBuffer[VirtualIndex]
-	pBufferSlice->Length = this->Capacity - StartIndex - this->Offset
-	
-	If pBufferSlice->Length <= this->Capacity Then
-		Return S_FALSE
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function MemoryStreamBeginGetSlice( _
-		ByVal this As MemoryStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	Return E_NOTIMPL
-	
-End Function
-
-Function MemoryStreamEndGetSlice( _
-		ByVal this As MemoryStream Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	
-	Return E_NOTIMPL
 	
 End Function
 
@@ -408,15 +487,6 @@ Function IMemoryStreamGetLength( _
 	Return MemoryStreamGetLength(ContainerOf(this, MemoryStream, lpVtbl), pLength)
 End Function
 
-Function IMemoryStreamGetSlice( _
-		ByVal this As IMemoryStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	Return MemoryStreamGetSlice(ContainerOf(this, MemoryStream, lpVtbl), StartIndex, Length, pBufferSlice)
-End Function
-
 Function IMemoryStreamBeginGetSlice( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -462,22 +532,14 @@ Dim GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable = Type( _
 	@IMemoryStreamQueryInterface, _
 	@IMemoryStreamAddRef, _
 	@IMemoryStreamRelease, _
-	NULL, _ /'BeginRead'/
-	NULL, _ /'BeginWrite'/
-	NULL, _ /'EndRead'/
-	NULL, _ /'EndWrite'/
-	NULL, _ /'BeginReadScatter'/
-	NULL, _ /'BeginWriteGather'/
-	NULL, _ /'BeginWriteGatherAndShutdown'/
+	@IMemoryStreamBeginGetSlice, _
+	@IMemoryStreamEndGetSlice, _
 	@IMemoryStreamGetContentType, _
 	@IMemoryStreamGetEncoding, _
 	@IMemoryStreamGetLanguage, _
 	@IMemoryStreamGetETag, _
 	@IMemoryStreamGetLastFileModifiedDate, _
 	@IMemoryStreamGetLength, _
-	@IMemoryStreamGetSlice, _
-	@IMemoryStreamBeginGetSlice, _
-	@IMemoryStreamEndGetSlice, _
 	@IMemoryStreamSetContentType, _
 	@IMemoryStreamAllocBuffer, _
 	@IMemoryStreamSetBuffer _

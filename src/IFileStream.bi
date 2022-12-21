@@ -25,61 +25,18 @@ Type IFileStreamVirtualTable
 		ByVal this As IFileStream Ptr _
 	)As ULONG
 	
-	BeginRead As Function( _
+	BeginGetSlice As Function( _
 		ByVal this As IFileStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
+		ByVal StartIndex As LongInt, _
+		ByVal Length As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	BeginWrite As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	EndRead As Function( _
+	EndGetSlice As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pReadedBytes As DWORD Ptr _
-	)As HRESULT
-	
-	EndWrite As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pWritedBytes As DWORD Ptr _
-	)As HRESULT
-	
-	BeginReadScatter As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal pBuffer As BaseStreamBuffer Ptr, _
-		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	BeginWriteGather As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal pBuffer As BaseStreamBuffer Ptr, _
-		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	BeginWriteGatherAndShutdown As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal pBuffer As BaseStreamBuffer Ptr, _
-		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	
 	GetContentType As Function( _
@@ -112,27 +69,6 @@ Type IFileStreamVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
-	GetSlice As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	
-	BeginGetSlice As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	EndGetSlice As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	
 	GetFilePath As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
@@ -160,12 +96,6 @@ Type IFileStreamVirtualTable
 	
 	SetZipFileHandle As Function( _
 		ByVal this As IFileStream Ptr, _
-		ByVal hFile As HANDLE _
-	)As HRESULT
-	
-	SetFileMappingHandle As Function( _
-		ByVal this As IFileStream Ptr, _
-		ByVal fAccess As FileAccess, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	
@@ -228,7 +158,6 @@ End Type
 #define IFileStream_SetFileHandle(this, hFile) (this)->lpVtbl->SetFileHandle(this, hFile)
 #define IFileStream_GetZipFileHandle(this, pResult) (this)->lpVtbl->GetZipFileHandle(this, pResult)
 #define IFileStream_SetZipFileHandle(this, hFile) (this)->lpVtbl->SetZipFileHandle(this, hFile)
-#define IFileStream_SetFileMappingHandle(this, fAccess, hFile) (this)->lpVtbl->SetFileMappingHandle(this, fAccess, hFile)
 #define IFileStream_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IFileStream_SetFileOffset(this, Offset) (this)->lpVtbl->SetFileOffset(this, Offset)
 #define IFileStream_SetFileSize(this, FileSize) (this)->lpVtbl->SetFileSize(this, FileSize)

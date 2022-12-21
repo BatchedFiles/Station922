@@ -6,6 +6,7 @@
 Extern CLSID_FILESTREAM Alias "CLSID_FILESTREAM" As Const CLSID
 
 Const RTTI_ID_FILESTREAM              = !"\001File____Stream\001"
+Const RTTI_ID_FILEBYTES              = !"\001File_____Bytes\001"
 
 Type FileStream As _FileStream
 
@@ -32,6 +33,20 @@ Declare Function FileStreamAddRef( _
 Declare Function FileStreamRelease( _
 	ByVal this As FileStream Ptr _
 )As ULONG
+
+Declare Function FileStreamBeginGetSlice( _
+	ByVal this As FileStream Ptr, _
+	ByVal StartIndex As LongInt, _
+	ByVal Length As DWORD, _
+	ByVal StateObject As IUnknown Ptr, _
+	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+)As HRESULT
+
+Declare Function FileStreamEndGetSlice( _
+	ByVal this As FileStream Ptr, _
+	ByVal pIAsyncResult As IAsyncResult Ptr, _
+	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
 
 Declare Function FileStreamGetContentType( _
 	ByVal this As FileStream Ptr, _
@@ -63,27 +78,6 @@ Declare Function FileStreamGetLength( _
 	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
-Declare Function FileStreamGetSlice( _
-	ByVal this As FileStream Ptr, _
-	ByVal StartIndex As LongInt, _
-	ByVal Length As DWORD, _
-	ByVal pBufferSlice As BufferSlice Ptr _
-)As HRESULT
-
-Declare Function FileStreamBeginGetSlice( _
-	ByVal this As FileStream Ptr, _
-	ByVal StartIndex As LongInt, _
-	ByVal Length As DWORD, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function FileStreamEndGetSlice( _
-	ByVal this As FileStream Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pBufferSlice As BufferSlice Ptr _
-)As HRESULT
-
 Declare Function FileStreamGetFilePath( _
 	ByVal this As FileStream Ptr, _
 	ByVal ppFilePath As HeapBSTR Ptr _
@@ -111,12 +105,6 @@ Declare Function FileStreamGetZipFileHandle( _
 
 Declare Function FileStreamSetZipFileHandle( _
 	ByVal this As FileStream Ptr, _
-	ByVal hFile As HANDLE _
-)As HRESULT
-
-Declare Function FileStreamSetFileMappingHandle( _
-	ByVal this As FileStream Ptr, _
-	ByVal fAccess As FileAccess, _
 	ByVal hFile As HANDLE _
 )As HRESULT
 

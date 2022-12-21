@@ -34,6 +34,20 @@ Declare Function MemoryStreamRelease( _
 	ByVal this As MemoryStream Ptr _
 )As ULONG
 
+Declare Function MemoryStreamBeginGetSlice( _
+	ByVal this As MemoryStream Ptr, _
+	ByVal StartIndex As LongInt, _
+	ByVal Length As DWORD, _
+	ByVal StateObject As IUnknown Ptr, _
+	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+)As HRESULT
+
+Declare Function MemoryStreamEndGetSlice( _
+	ByVal this As MemoryStream Ptr, _
+	ByVal pIAsyncResult As IAsyncResult Ptr, _
+	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
+
 Declare Function MemoryStreamGetContentType( _
 	ByVal this As MemoryStream Ptr, _
 	ByVal ppType As MimeType Ptr _
@@ -62,27 +76,6 @@ Declare Function MemoryStreamGetLastFileModifiedDate( _
 Declare Function MemoryStreamGetLength( _
 	ByVal this As MemoryStream Ptr, _
 	ByVal pLength As LongInt Ptr _
-)As HRESULT
-
-Declare Function MemoryStreamGetSlice( _
-	ByVal this As MemoryStream Ptr, _
-	ByVal StartIndex As LongInt, _
-	ByVal Length As DWORD, _
-	ByVal pBufferSlice As BufferSlice Ptr _
-)As HRESULT
-
-Declare Function MemoryStreamBeginGetSlice( _
-	ByVal this As MemoryStream Ptr, _
-	ByVal StartIndex As LongInt, _
-	ByVal Length As DWORD, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function MemoryStreamEndGetSlice( _
-	ByVal this As MemoryStream Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr, _
-	ByVal pBufferSlice As BufferSlice Ptr _
 )As HRESULT
 
 Declare Function MemoryStreamSetContentType( _
