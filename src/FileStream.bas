@@ -80,12 +80,7 @@ Sub UnInitializeFileStream( _
 	HeapSysFreeString(this->pFilePath)
 	
 	If this->FileBytes Then
-		Dim hHeap As HANDLE = GetProcessHeap()
-		HeapFree( _
-			hHeap, _
-			0, _
-			this->FileBytes _
-		)
+		CoTaskMemFree(this->FileBytes)
 	End If
 	
 	If this->SmallFileBytes Then
@@ -217,12 +212,7 @@ Function FileStreamAllocateBufferSink( _
 	
 	If dwLength <= SmallFileBytesSize Then
 		If this->FileBytes Then
-			Dim hHeap As HANDLE = GetProcessHeap()
-			HeapFree( _
-				hHeap, _
-				0, _
-				this->FileBytes _
-			)
+			CoTaskMemFree(this->FileBytes)
 			this->FileBytes = NULL
 		End If
 		
@@ -235,7 +225,6 @@ Function FileStreamAllocateBufferSink( _
 					this->SmallFileBytes _
 				)
 			End If
-			
 			pMem = IMalloc_Alloc( _
 				this->pIMemoryAllocator, _
 				dwLength _
@@ -256,20 +245,10 @@ Function FileStreamAllocateBufferSink( _
 		If this->PreviousAllocatedLength >= dwLength Then
 			pMem = this->FileBytes
 		Else
-			Dim hHeap As HANDLE = GetProcessHeap()
 			If this->FileBytes Then
-				HeapFree( _
-					hHeap, _
-					0, _
-					this->FileBytes _
-				)
+				CoTaskMemFree(this->FileBytes)
 			End If
-			
-			pMem = HeapAlloc( _
-				hHeap, _
-				0, _
-				dwLength _
-			)
+			pMem = CoTaskMemAlloc(dwLength)
 			this->FileBytes = pMem
 			this->PreviousAllocatedLength = dwLength
 		End If
