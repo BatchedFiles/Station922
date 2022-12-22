@@ -18,6 +18,7 @@ Type _FileStream
 	FileSize As LongInt
 	FileOffset As LongInt
 	ChunkIndex As LongInt
+	RequestStartIndex As LongInt
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
 	FileHandle As Handle
@@ -29,7 +30,6 @@ Type _FileStream
 	LastFileModifiedDate As FILETIME
 	fAccess As FileAccess
 	ZipMode As ZipModes
-	RequestStartIndex As LongInt
 	RequestLength As DWORD
 	ContentType As MimeType
 End Type
@@ -204,10 +204,71 @@ Function FileStreamRelease( _
 	
 End Function
 
+Function FileStreamAllocateBufferSink( _
+		ByVal this As FileStream Ptr, _
+		ByVal dwLength As DWORD _
+	)As Any Ptr
+	
+	Dim pMem As Any Ptr = Any
+	
+	If dwLength <= SmallFileBytesSize Then
+		If this->FileBytes Then
+			Dim hHeap As HANDLE = GetProcessHeap()
+			HeapFree( _
+				hHeap, _
+				0, _
+				this->FileBytes _
+			)
+			this->FileBytes = NULL
+		End If
+		
+		If this->SmallFileBytes Then
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				this->SmallFileBytes _
+			)
+		End If
+		
+		pMem = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			dwLength _
+		)
+		this->SmallFileBytes = pMem
+		
+	Else
+		If this->SmallFileBytes Then
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				this->SmallFileBytes _
+			)
+			this->SmallFileBytes = NULL
+		End If
+		
+		Dim hHeap As HANDLE = GetProcessHeap()
+		If this->FileBytes Then
+			HeapFree( _
+				hHeap, _
+				0, _
+				this->FileBytes _
+			)
+		End If
+		
+		pMem = HeapAlloc( _
+			hHeap, _
+			0, _
+			dwLength _
+		)
+		this->FileBytes = pMem
+	End If
+	
+	Return pMem
+	
+End Function
+
 Function FileStreamBeginGetSlice( _
 		ByVal this As FileStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal dwLength As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -234,83 +295,33 @@ Function FileStreamBeginGetSlice( _
 	End Scope
 	
 	this->RequestStartIndex = StartIndex
-	this->RequestLength = Length
+	this->RequestLength = dwLength
 	
 	Dim dwNumberOfBytesToRead As DWORD = Any
 	Dim NumberOfBytesToRead As LongInt = Any
-	Dim RequestChunkIndex As LongInt = Any
 	Scope
-		RequestChunkIndex = Integer64Division( _
+		Dim RequestChunkIndex As LongInt = Integer64Division( _
 			VirtualStartIndex, _
 			CLngInt(BUFFERSLICECHUNK_SIZE) _
 		)
 		
 		Dim LastFileChunkSize As LongInt = this->FileSize - this->FileOffset - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE))
-		NumberOfBytesToRead = min( _
+		Dim NumberOfBytesInChunk As LongInt = min( _
 			CLngInt(BUFFERSLICECHUNK_SIZE), _
 			LastFileChunkSize _
+		)
+		
+		NumberOfBytesToRead = min( _
+			CLngInt(dwLength), _
+			NumberOfBytesInChunk _
 		)
 		dwNumberOfBytesToRead = Cast(DWORD, NumberOfBytesToRead)
 	End Scope
 	
-	Dim pMem As Any Ptr = Any
-	If dwNumberOfBytesToRead <= SmallFileBytesSize Then
-		Scope
-			If this->FileBytes Then
-				Dim hHeap As HANDLE = GetProcessHeap()
-				HeapFree( _
-					hHeap, _
-					0, _
-					this->FileBytes _
-				)
-				this->FileBytes = NULL
-			End If
-		End Scope
-		
-		Scope
-			If this->SmallFileBytes Then
-				IMalloc_Free( _
-					this->pIMemoryAllocator, _
-					this->SmallFileBytes _
-				)
-			End If
-			
-			pMem = IMalloc_Alloc( _
-				this->pIMemoryAllocator, _
-				dwNumberOfBytesToRead _
-			)
-			this->SmallFileBytes = pMem
-		End Scope
-	Else
-		Scope
-			If this->SmallFileBytes Then
-				IMalloc_Free( _
-					this->pIMemoryAllocator, _
-					this->SmallFileBytes _
-				)
-				this->SmallFileBytes = NULL
-			End If
-		End Scope
-		
-		Scope
-			Dim hHeap As HANDLE = GetProcessHeap()
-			If this->FileBytes Then
-				HeapFree( _
-					hHeap, _
-					0, _
-					this->FileBytes _
-				)
-			End If
-			
-			pMem = HeapAlloc( _
-				hHeap, _
-				0, _
-				dwNumberOfBytesToRead _
-			)
-			this->FileBytes = pMem
-		End Scope
-	End If
-	
+	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _
+		this, _
+		dwNumberOfBytesToRead _
+	)
 	If pMem = NULL Then
 		IAsyncResult_Release(pINewAsyncResult)
 		*ppIAsyncResult = NULL
@@ -324,7 +335,7 @@ Function FileStreamBeginGetSlice( _
 		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 		
 		Dim liStartIndex As LARGE_INTEGER = Any
-		liStartIndex.QuadPart = this->FileOffset + RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE)
+		liStartIndex.QuadPart = VirtualStartIndex
 		
 		pOverlap->Offset = liStartIndex.LowPart
 		pOverlap->OffsetHigh = liStartIndex.HighPart
