@@ -231,6 +231,7 @@ Sub HeapMemoryAllocatorDestroyed( _
 	
 End Sub
 
+/'
 Function CheckMemoryLeak( _
 		ByVal hHeap As HANDLE _
 	)As Integer
@@ -266,7 +267,7 @@ Function CheckMemoryLeak( _
 	Return LeakedCount
 	
 End Function
-
+'/
 Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
