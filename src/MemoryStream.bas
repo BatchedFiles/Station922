@@ -17,13 +17,13 @@ Type _MemoryStream
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
-	pOuterBuffer As Byte Ptr
 	Capacity As LongInt
 	Offset As LongInt
+	RequestStartIndex As LongInt
+	pOuterBuffer As Byte Ptr
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	ZipMode As ZipModes
-	RequestStartIndex As LongInt
 	RequestLength As DWORD
 	ContentType As MimeType
 End Type
