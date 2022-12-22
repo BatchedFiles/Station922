@@ -1,7 +1,6 @@
 #include once "HttpProcessorCollection.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 
 Extern GlobalHttpProcessorCollectionVirtualTable As Const IHttpProcessorCollectionVirtualTable
 

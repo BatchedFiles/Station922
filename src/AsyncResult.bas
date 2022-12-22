@@ -1,6 +1,5 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "Logger.bi"
 
 Extern GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable
 

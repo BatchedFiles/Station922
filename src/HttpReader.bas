@@ -2,7 +2,6 @@
 #include once "ContainerOf.bi"
 #include once "Http.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable
 

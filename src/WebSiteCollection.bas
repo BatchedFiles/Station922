@@ -1,6 +1,5 @@
 #include once "WebSiteCollection.bi"
 #include once "ContainerOf.bi"
-#include once "Logger.bi"
 
 Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable
 

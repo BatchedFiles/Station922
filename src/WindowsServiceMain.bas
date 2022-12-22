@@ -1,6 +1,5 @@
 #include once "WindowsServiceMain.bi"
 #include once "CreateInstance.bi"
-#include once "Logger.bi"
 #include once "WebServer.bi"
 
 Const MaxWaitHint As DWORD = 3000

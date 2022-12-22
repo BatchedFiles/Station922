@@ -2,7 +2,6 @@
 #include once "HttpWriter.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "Logger.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 

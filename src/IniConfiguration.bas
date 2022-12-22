@@ -8,7 +8,6 @@
 #include once "HttpOptionsProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpTraceProcessor.bi"
-#include once "Logger.bi"
 #include once "WebSite.bi"
 #include once "WebSiteCollection.bi"
 

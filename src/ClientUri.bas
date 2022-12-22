@@ -5,7 +5,6 @@
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "Http.bi"
-#include once "Logger.bi"
 
 Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
 

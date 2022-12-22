@@ -1,7 +1,6 @@
 #include once "HttpTraceProcessor.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "Logger.bi"
 #include once "MemoryStream.bi"
 
 Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable

@@ -1,6 +1,5 @@
 #include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
-#include once "Logger.bi"
 
 Extern GlobalInternalPermanentStringVirtualTable As Const IStringVirtualTable
 Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable

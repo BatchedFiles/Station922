@@ -3,7 +3,6 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
-#include once "Logger.bi"
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
 

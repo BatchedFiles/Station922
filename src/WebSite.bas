@@ -6,7 +6,6 @@
 #include once "CreateInstance.bi"
 #include once "FileStream.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 #include once "MemoryStream.bi"
 #include once "Mime.bi"
 #include once "WebUtils.bi"

@@ -3,7 +3,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
-#include once "Logger.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "TcpListener.bi"

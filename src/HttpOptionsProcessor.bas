@@ -2,7 +2,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 #include once "MemoryStream.bi"
 
 Extern GlobalHttpOptionsProcessorVirtualTable As Const IHttpOptionsAsyncProcessorVirtualTable

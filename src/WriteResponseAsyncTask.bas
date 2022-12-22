@@ -5,7 +5,6 @@
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpWriter.bi"
-#include once "Logger.bi"
 #include once "ServerResponse.bi"
 #include once "WebUtils.bi"
 

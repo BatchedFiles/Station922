@@ -1,6 +1,5 @@
 #include once "ThreadPool.bi"
 #include once "ContainerOf.bi"
-#include once "Logger.bi"
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 

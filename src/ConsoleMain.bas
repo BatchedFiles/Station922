@@ -1,6 +1,5 @@
 #include once "ConsoleMain.bi"
 #include once "CreateInstance.bi"
-#include once "Logger.bi"
 #include once "WebServer.bi"
 
 Type ServerContext

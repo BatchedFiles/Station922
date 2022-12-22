@@ -4,7 +4,6 @@
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
-#include once "Logger.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
