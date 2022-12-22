@@ -29,6 +29,7 @@ Const VirtualPathKeyString = WStr("VirtualPath")
 Const PhisycalDirKeyString = WStr("PhisycalDir")
 Const IsMovedKeyString = WStr("IsMoved")
 Const MovedUrlKeyString = WStr("MovedUrl")
+Const TextFileCharsetKeyString = WStr("TextFileCharset")
 
 Const DefaultAddressString = WStr("localhost")
 Const DefaultHttpPort As INT_ = 80
@@ -592,6 +593,16 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			End If
 		End Scope
 		
+		Scope
+			Dim Charset As INT_ = GetPrivateProfileIntW( _
+				lpwszHost, _
+				@TextFileCharsetKeyString, _
+				0, _
+				this->pWebSitesIniFileName _
+			)
+			IWebSite_SetTextFileEncoding(pIWebSite, Charset)
+		End Scope
+		
 		IWebSiteCollection_Add(pIWebSiteCollection, bstrWebSite, pIWebSite)
 		IWebSite_Release(pIWebSite)
 		HeapSysFreeString(bstrWebSite)
@@ -614,21 +625,6 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			*ppIWebSiteCollection = NULL
 			Return hr2
 		End If
-		
-		/'
-		Scope
-			Const DefaultWebSiteName = WStr("/")
-			Dim pWebSiteName As WString Ptr = @DefaultWebSiteName
-			
-			Dim bstrWebSite As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				pWebSiteName, _
-				HostLength _
-			)
-			IWebSite_SetHostName(pIDefaultWebSite, bstrWebSite)
-			HeapSysFreeString(bstrWebSite)
-		End Scope
-		'/
 		
 		Scope
 			Dim ExeFileName As WString * (MAX_PATH + 1) = Any

@@ -1304,6 +1304,8 @@ Function WebSiteSetTextFileEncoding( _
 		ByVal CodePage As TextFileCharsets _
 	)As HRESULT
 	
+	this->CodePage = CodePage
+	
 	Return S_OK
 	
 End Function
