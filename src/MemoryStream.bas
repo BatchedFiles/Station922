@@ -160,38 +160,6 @@ Function MemoryStreamRelease( _
 	
 End Function
 
-/'
-Function MemoryStreamGetSlice( _
-		ByVal this As MemoryStream Ptr, _
-		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
-		ByVal pBufferSlice As BufferSlice Ptr _
-	)As HRESULT
-	
-	Dim VirtualIndex As LongInt = StartIndex + this->Offset
-	
-	If VirtualIndex > this->Capacity Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Dim pBuffer As Byte Ptr = Any
-	If this->pOuterBuffer = NULL Then
-		pBuffer = this->pBuffer
-	Else
-		pBuffer = this->pOuterBuffer
-	End If
-	
-	pBufferSlice->pSlice = @pBuffer[VirtualIndex]
-	pBufferSlice->Length = this->Capacity - StartIndex - this->Offset
-	
-	If pBufferSlice->Length <= this->Capacity Then
-		Return S_FALSE
-	End If
-	
-	Return S_OK
-	
-End Function
-'/
 Function MemoryStreamBeginGetSlice( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
