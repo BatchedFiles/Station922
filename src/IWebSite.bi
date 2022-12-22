@@ -19,9 +19,9 @@ End Enum
 Enum TextFileCharsets
 	Utf8
 	Utf8WithBOM
-	ASCII
 	Utf16LE
 	Utf16BE
+	ASCII
 End Enum
 
 Type IWebSite As IWebSite_

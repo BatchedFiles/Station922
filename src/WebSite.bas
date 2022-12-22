@@ -583,87 +583,40 @@ Function GetCompressionHandle( _
 	
 End Function
 
-Function GetDocumentCharset( _
-		ByVal bytes As ZString Ptr, _
-		ByVal dwBytesLength As DWORD _
-	)As DocumentCharsets
-	
-	' TODO Remove magic values
-	If dwBytesLength Then
-		
-		Dim byte0 As UByte = bytes[0]
-		
-		Select Case byte0
-			
-			Case 239
-				If dwBytesLength > 1 Then
-					Dim byte1 As UByte = bytes[1]
-					If byte1 = 187 Then
-						If dwBytesLength > 2 Then
-							Dim byte2 As UByte = bytes[2]
-							If byte2 = 191 Then
-								Return DocumentCharsets.Utf8
-							End If
-						End If
-					End If
-				End If
-				
-			Case 254
-				If dwBytesLength > 1 Then
-					Dim byte1 As UByte = bytes[1]
-					If byte1 = 255 Then
-						Return DocumentCharsets.Utf16BE
-					End If
-				End If
-				
-			Case 255
-				If dwBytesLength > 1 Then
-					Dim byte1 As UByte = bytes[1]
-					If byte1 = 254 Then
-						Return DocumentCharsets.Utf16LE
-					End If
-				End If
-				
-		End Select
-	End If
-	
-	Return DocumentCharsets.ASCII
-	
-End Function
-
 Function GetFileBytesOffset( _
-		ByVal mt As MimeType Ptr, _
-		ByVal FileBytes As ZString Ptr, _
-		ByVal dwBytesLength As DWORD, _
-		ByVal hZipFile As HANDLE _
+		ByVal CodePage As TextFileCharsets, _
+		ByVal hZipFile As HANDLE, _
+		ByVal pMime As MimeType Ptr _
 	)As LongInt
 	
 	Dim offset As LongInt = Any
 	
-	mt->Charset = GetDocumentCharset( _
-		FileBytes, _
-		dwBytesLength _
-	)
+	Select Case CodePage
+		
+		Case TextFileCharsets.Utf8
+			pMime->Charset = DocumentCharsets.Utf8
+			offset = 0
+			
+		Case TextFileCharsets.Utf8WithBOM
+			pMime->Charset = DocumentCharsets.Utf8
+			offset = 3
+			
+		Case TextFileCharsets.Utf16LE
+			pMime->Charset = DocumentCharsets.Utf16LE
+			offset = 0
+			
+		Case TextFileCharsets.Utf16BE
+			pMime->Charset = DocumentCharsets.Utf16BE
+			offset = 2
+			
+		Case Else ' TextFileCharsets.ASCII
+			pMime->Charset = DocumentCharsets.ASCII
+			offset = 0
+			
+	End Select
 	
 	If hZipFile <> INVALID_HANDLE_VALUE Then
 		offset = 0
-	Else
-		
-		Select Case mt->Charset
-			
-			Case DocumentCharsets.Utf8
-				offset = 3
-				
-			Case DocumentCharsets.Utf16LE
-				offset = 0
-				
-			Case DocumentCharsets.Utf16BE
-				offset = 2
-				
-			Case Else
-				offset = 0
-				
-		End Select
 	End If
 	
 	Return offset
@@ -1160,75 +1113,17 @@ Function WebSiteGetBuffer( _
 			IFileStream_SetFileSize(pIFile, FileLength)
 		End Scope
 		
-		Scope
+		If Mime.IsTextFormat Then
 			If fAccess = FileAccess.ReadAccess Then
-				If Mime.IsTextFormat Then
-					Dim SyncFileHandle As HANDLE = CreateFileW( _
-						FileName, _
-						GENERIC_READ, _
-						FILE_SHARE_READ, _
-						NULL, _
-						OPEN_EXISTING, _
-						FILE_ATTRIBUTE_NORMAL, _
-						NULL _
-					)
-					If SyncFileHandle = INVALID_HANDLE_VALUE Then
-						Dim dwError As DWORD = GetLastError()
-						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.None
-						*ppResult = NULL
-						Return HRESULT_FROM_WIN32(dwError)
-					End If
-					
-					Dim FileSize As LARGE_INTEGER = Any
-					Dim resGetFileSize As BOOL = GetFileSizeEx( _
-						SyncFileHandle, _
-						@FileSize _
-					)
-					If resGetFileSize = 0 Then
-						Dim dwError As DWORD = GetLastError()
-						CloseHandle(SyncFileHandle)
-						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.None
-						*ppResult = NULL
-						Return HRESULT_FROM_WIN32(dwError)
-					End If
-					
-					If FileSize.QuadPart <= 3 Then
-						CloseHandle(SyncFileHandle)
-					Else
-						Dim FileBytes As ZString * 16 = Any
-						Dim dwReadedBytes As DWORD = Any
-						Dim resReadFile As BOOL = ReadFile( _
-							SyncFileHandle, _
-							@FileBytes, _
-							SizeOf(FileBytes), _
-							@dwReadedBytes, _
-							NULL _
-						)
-						If resReadFile = 0 Then
-							Dim dwError As DWORD = GetLastError()
-							CloseHandle(SyncFileHandle)
-							IFileStream_Release(pIFile)
-							*pFlags = ContentNegotiationFlags.None
-							*ppResult = NULL
-							Return HRESULT_FROM_WIN32(dwError)
-						End If
-						
-						CloseHandle(SyncFileHandle)
-						
-						Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
-							@Mime, _
-							@FileBytes, _
-							dwReadedBytes, _
-							ZipFileHandle _
-						)
-						
-						IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
-					End If
-				End If
+				Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
+					this->CodePage, _
+					ZipFileHandle, _
+					@Mime _
+				)
+				
+				IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
 			End If
-		End Scope
+		End If
 		
 		If IsAcceptEncoding Then
 			*pFlags = ContentNegotiationFlags.None Or ContentNegotiationFlags.AcceptEncoding
