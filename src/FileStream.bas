@@ -31,6 +31,8 @@ Type _FileStream
 	fAccess As FileAccess
 	ZipMode As ZipModes
 	RequestLength As DWORD
+	PreviousAllocatedLength As DWORD
+	PreviousAllocatedSmallLength As DWORD
 	ContentType As MimeType
 End Type
 
@@ -60,6 +62,8 @@ Sub InitializeFileStream( _
 	this->ETag = NULL
 	this->FileSize = 0
 	this->FileOffset = 0
+	this->PreviousAllocatedLength = 0
+	this->PreviousAllocatedSmallLength = 0
 	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.Charset = DocumentCharsets.ASCII
@@ -222,18 +226,23 @@ Function FileStreamAllocateBufferSink( _
 			this->FileBytes = NULL
 		End If
 		
-		If this->SmallFileBytes Then
-			IMalloc_Free( _
+		If this->PreviousAllocatedSmallLength >= dwLength Then
+			pMem = this->SmallFileBytes
+		Else
+			If this->SmallFileBytes Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					this->SmallFileBytes _
+				)
+			End If
+			
+			pMem = IMalloc_Alloc( _
 				this->pIMemoryAllocator, _
-				this->SmallFileBytes _
+				dwLength _
 			)
+			this->SmallFileBytes = pMem
+			this->PreviousAllocatedSmallLength = dwLength
 		End If
-		
-		pMem = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
-			dwLength _
-		)
-		this->SmallFileBytes = pMem
 		
 	Else
 		If this->SmallFileBytes Then
@@ -244,21 +253,26 @@ Function FileStreamAllocateBufferSink( _
 			this->SmallFileBytes = NULL
 		End If
 		
-		Dim hHeap As HANDLE = GetProcessHeap()
-		If this->FileBytes Then
-			HeapFree( _
+		If this->PreviousAllocatedLength >= dwLength Then
+			pMem = this->FileBytes
+		Else
+			Dim hHeap As HANDLE = GetProcessHeap()
+			If this->FileBytes Then
+				HeapFree( _
+					hHeap, _
+					0, _
+					this->FileBytes _
+				)
+			End If
+			
+			pMem = HeapAlloc( _
 				hHeap, _
 				0, _
-				this->FileBytes _
+				dwLength _
 			)
+			this->FileBytes = pMem
+			this->PreviousAllocatedLength = dwLength
 		End If
-		
-		pMem = HeapAlloc( _
-			hHeap, _
-			0, _
-			dwLength _
-		)
-		this->FileBytes = pMem
 	End If
 	
 	Return pMem
