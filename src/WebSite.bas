@@ -950,24 +950,29 @@ Function WebSiteGetBuffer( _
 		If FAILED(hrOpenFile) Then
 			Dim hrOpenFileTranslate As HRESULT = Any
 			
-			If hrOpenFile = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) Then
+			Select Case hrOpenFile
 				
-				Dim File410 As WString * (MAX_PATH + 1) = Any
-				lstrcpyW(@File410, @FileName)
-				lstrcatW(@File410, @FileGoneExtension)
-				
-				Dim Attributes As DWORD = GetFileAttributesW( _
-					@File410 _
-				)
-				If Attributes = INVALID_FILE_ATTRIBUTES Then
-					hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
-				Else
-					hrOpenFileTranslate = WEBSITE_E_FILEGONE
-				End If
-				
-			Else
-				hrOpenFileTranslate = hrOpenFile
-			End If
+				Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
+					Dim File410 As WString * (MAX_PATH + 1) = Any
+					lstrcpyW(@File410, @FileName)
+					lstrcatW(@File410, @FileGoneExtension)
+					
+					Dim Attributes As DWORD = GetFileAttributesW( _
+						@File410 _
+					)
+					If Attributes = INVALID_FILE_ATTRIBUTES Then
+						hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
+					Else
+						hrOpenFileTranslate = WEBSITE_E_FILEGONE
+					End If
+					
+				Case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED)
+					hrOpenFileTranslate = WEBSITE_E_FORBIDDEN
+					
+				Case Else
+					hrOpenFileTranslate = hrOpenFile
+					
+			End Select
 			
 			IFileStream_Release(pIFile)
 			*pFlags = ContentNegotiationFlags.None
@@ -994,13 +999,6 @@ Function WebSiteGetBuffer( _
 		' TODO Проверить идентификацию для запароленных ресурсов
 		
 	End Scope
-	
-	' Content negotiation the client headers are analyzed:
-	' Accept-Encoding: gzip, deflate
-	' Accept: text/css, */*
-	' Accept-Charset: utf-8
-	' Accept-Language: ru-RU
-	' User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063
 	
 	Scope
 		Dim ZipFileHandle As HANDLE = Any
