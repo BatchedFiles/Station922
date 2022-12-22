@@ -362,7 +362,7 @@ Function HeapMemoryAllocatorAlloc( _
 	Return pMemory
 	
 End Function
-
+/'
 Function HeapMemoryAllocatorRealloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr, _
@@ -382,7 +382,7 @@ Function HeapMemoryAllocatorRealloc( _
 	Return pReallocMemory
 	
 End Function
-
+'/
 Sub HeapMemoryAllocatorFree( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
@@ -395,7 +395,7 @@ Sub HeapMemoryAllocatorFree( _
 	)
 	
 End Sub
-
+/'
 Function HeapMemoryAllocatorGetSize( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
@@ -410,7 +410,8 @@ Function HeapMemoryAllocatorGetSize( _
 	Return Size
 	
 End Function
-
+'/
+/'
 Function HeapMemoryAllocatorDidAlloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
@@ -429,7 +430,8 @@ Function HeapMemoryAllocatorDidAlloc( _
 	Return 0
 	
 End Function
-
+'/
+/'
 Sub HeapMemoryAllocatorHeapMinimize( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
@@ -437,16 +439,7 @@ Sub HeapMemoryAllocatorHeapMinimize( _
 	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE_FLAG)
 	
 End Sub
-
-' Declare Function HeapMemoryAllocatorRegisterMallocSpy( _
-	' ByVal this As HeapMemoryAllocator Ptr, _
-	' ByVal pMallocSpy As LPMALLOCSPY _
-' )As HRESULT
-
-' Declare Function HeapMemoryAllocatorRevokeMallocSpy( _
-	' ByVal this As HeapMemoryAllocator Ptr _
-' )As HRESULT
-
+'/
 Function HeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
@@ -485,7 +478,7 @@ Function IHeapMemoryAllocatorAlloc( _
 	)As Any Ptr
 	Return HeapMemoryAllocatorAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), cb)
 End Function
-
+/'
 Function IHeapMemoryAllocatorRealloc( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr, _
@@ -493,34 +486,36 @@ Function IHeapMemoryAllocatorRealloc( _
 	)As Any Ptr
 	Return HeapMemoryAllocatorRealloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv, cb)
 End Function
-
+'/
 Sub IHeapMemoryAllocatorFree( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
 	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
-
+/'
 Function IHeapMemoryAllocatorGetSize( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As SIZE_T_
 	Return HeapMemoryAllocatorGetSize(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Function
-
+'/
+/'
 Function IHeapMemoryAllocatorDidAlloc( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)As Long
 	Return HeapMemoryAllocatorDidAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Function
-
+'/
+/'
 Sub IHeapMemoryAllocatorHeapMinimize( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)
 	HeapMemoryAllocatorHeapMinimize(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Sub
-
+'/
 Function IHeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
@@ -533,11 +528,11 @@ Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTa
 	@IHeapMemoryAllocatorAddRef, _
 	@IHeapMemoryAllocatorRelease, _
 	@IHeapMemoryAllocatorAlloc, _
-	@IHeapMemoryAllocatorRealloc, _
+	NULL, _ /' @IHeapMemoryAllocatorRealloc, _ '/
 	@IHeapMemoryAllocatorFree, _
-	@IHeapMemoryAllocatorGetSize, _
-	@IHeapMemoryAllocatorDidAlloc, _
-	@IHeapMemoryAllocatorHeapMinimize, _
+	NULL, _ /' @IHeapMemoryAllocatorGetSize, _ '/
+	NULL, _ /' @IHeapMemoryAllocatorDidAlloc, _ '/
+	NULL, _ /' @IHeapMemoryAllocatorHeapMinimize, _ '/
 	NULL, _ /' RegisterMallocSpy '/
 	NULL, _ /' RevokeMallocSpy '/
 	@IHeapMemoryAllocatorGetClientBuffer _
