@@ -79,6 +79,7 @@ Type _WebSite
 	pPhysicalDirectory As HeapBSTR
 	pVirtualPath As HeapBSTR
 	pMovedUrl As HeapBSTR
+	CodePage As TextFileCharsets
 	IsMoved As Boolean
 End Type
 
@@ -601,7 +602,7 @@ Function GetDocumentCharset( _
 						If dwBytesLength > 2 Then
 							Dim byte2 As UByte = bytes[2]
 							If byte2 = 191 Then
-								Return DocumentCharsets.Utf8BOM
+								Return DocumentCharsets.Utf8
 							End If
 						End If
 					End If
@@ -650,7 +651,7 @@ Function GetFileBytesOffset( _
 		
 		Select Case mt->Charset
 			
-			Case DocumentCharsets.Utf8BOM
+			Case DocumentCharsets.Utf8
 				offset = 3
 				
 			Case DocumentCharsets.Utf16LE
@@ -799,6 +800,7 @@ Sub InitializeWebSite( _
 	this->pPhysicalDirectory = NULL
 	this->pVirtualPath = NULL
 	this->pMovedUrl = NULL
+	this->CodePage = TextFileCharsets.Utf8
 	this->IsMoved = False
 	
 End Sub
@@ -963,7 +965,7 @@ Function WebSiteGetBuffer( _
 			@pIFile _
 		)
 		If FAILED(hrCreateFileBuffer) Then
-			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*pFlags = ContentNegotiationFlags.None
 			*ppResult = NULL
 			Return hrCreateFileBuffer
 		End If
@@ -1015,7 +1017,7 @@ Function WebSiteGetBuffer( _
 			End If
 			
 			IFileStream_Release(pIFile)
-			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*pFlags = ContentNegotiationFlags.None
 			*ppResult = NULL
 			Return hrOpenFileTranslate
 		End If
@@ -1031,7 +1033,7 @@ Function WebSiteGetBuffer( _
 		)
 		If resGetMimeOfFileExtension = False Then
 			IFileStream_Release(pIFile)
-			*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+			*pFlags = ContentNegotiationFlags.None
 			*ppResult = NULL
 			Return WEBSITE_E_FORBIDDEN
 		End If
@@ -1068,7 +1070,7 @@ Function WebSiteGetBuffer( _
 				If FAILED(hrBind) Then
 					CloseHandle(ZipFileHandle)
 					IFileStream_Release(pIFile)
-					*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+					*pFlags = ContentNegotiationFlags.None
 					*ppResult = NULL
 					Return hrBind
 				End If
@@ -1096,7 +1098,7 @@ Function WebSiteGetBuffer( _
 			If resFileTime = 0 Then
 				Dim dwError As DWORD = GetLastError()
 				IFileStream_Release(pIFile)
-				*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+				*pFlags = ContentNegotiationFlags.None
 				*ppResult = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
@@ -1143,7 +1145,7 @@ Function WebSiteGetBuffer( _
 					If resGetFileSize = 0 Then
 						Dim dwError As DWORD = GetLastError()
 						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+						*pFlags = ContentNegotiationFlags.None
 						*ppResult = NULL
 						Return HRESULT_FROM_WIN32(dwError)
 					End If
@@ -1173,7 +1175,7 @@ Function WebSiteGetBuffer( _
 					If SyncFileHandle = INVALID_HANDLE_VALUE Then
 						Dim dwError As DWORD = GetLastError()
 						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+						*pFlags = ContentNegotiationFlags.None
 						*ppResult = NULL
 						Return HRESULT_FROM_WIN32(dwError)
 					End If
@@ -1187,7 +1189,7 @@ Function WebSiteGetBuffer( _
 						Dim dwError As DWORD = GetLastError()
 						CloseHandle(SyncFileHandle)
 						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+						*pFlags = ContentNegotiationFlags.None
 						*ppResult = NULL
 						Return HRESULT_FROM_WIN32(dwError)
 					End If
@@ -1208,7 +1210,7 @@ Function WebSiteGetBuffer( _
 							Dim dwError As DWORD = GetLastError()
 							CloseHandle(SyncFileHandle)
 							IFileStream_Release(pIFile)
-							*pFlags = ContentNegotiationFlags.ContentNegotiationNone
+							*pFlags = ContentNegotiationFlags.None
 							*ppResult = NULL
 							Return HRESULT_FROM_WIN32(dwError)
 						End If
@@ -1229,7 +1231,7 @@ Function WebSiteGetBuffer( _
 		End Scope
 		
 		If IsAcceptEncoding Then
-			*pFlags = ContentNegotiationFlags.ContentNegotiationNone Or ContentNegotiationFlags.ContentNegotiationAcceptEncoding
+			*pFlags = ContentNegotiationFlags.None Or ContentNegotiationFlags.AcceptEncoding
 		End If
 		
 	End Scope
@@ -1320,7 +1322,7 @@ Function WebSiteGetErrorBuffer( _
 	Dim Mime As MimeType = Any
 	With Mime
 		.ContentType = ContentTypes.TextHtml
-		.Charset = DocumentCharsets.Utf8BOM
+		.Charset = DocumentCharsets.Utf8
 		.IsTextFormat = True
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
@@ -1397,6 +1399,15 @@ Function MutableWebSiteSetMovedUrl( _
 	)As HRESULT
 	
 	LET_HEAPSYSSTRING(this->pMovedUrl, pMovedUrl)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetTextFileEncoding( _
+		ByVal this As WebSite Ptr, _
+		ByVal CodePage As TextFileCharsets _
+	)As HRESULT
 	
 	Return S_OK
 	
@@ -1532,6 +1543,13 @@ Function IMutableWebSiteSetMovedUrl( _
 	Return MutableWebSiteSetMovedUrl(ContainerOf(this, WebSite, lpVtbl), pMovedUrl)
 End Function
 
+Function IMutableWebSiteSetTextFileEncoding( _
+		ByVal this As IWebSite Ptr, _
+		ByVal CodePage As TextFileCharsets _
+	)As HRESULT
+	Return WebSiteSetTextFileEncoding(ContainerOf(this, WebSite, lpVtbl), CodePage)
+End Function
+
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1556,5 +1574,6 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetVirtualPath, _
 	@IMutableWebSiteSetIsMoved, _
 	@IMutableWebSiteSetMovedUrl, _
+	@IMutableWebSiteSetTextFileEncoding, _
 	@IMutableWebSiteNeedCgiProcessing _
 )

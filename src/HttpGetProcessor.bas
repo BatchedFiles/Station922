@@ -261,12 +261,13 @@ Function HttpGetProcessorPrepare( _
 	End Scope
 	
 	Scope
-		If Flags And ContentNegotiationFlags.ContentNegotiationAcceptEncoding Then
+		Const AcceptEncoding = WStr("Accept-Encoding")
+		If Flags And ContentNegotiationFlags.AcceptEncoding Then
 			IServerResponse_AddKnownResponseHeaderWstrLen( _
 				pContext->pIResponse, _
 				HttpResponseHeaders.HeaderVary, _
-				WStr("Accept-Encoding"), _
-				Len(WSTR("Accept-Encoding")) _
+				AcceptEncoding, _
+				Len(AcceptEncoding) _
 			)
 		End If
 	End Scope

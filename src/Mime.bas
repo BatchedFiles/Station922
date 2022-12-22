@@ -524,7 +524,7 @@ Sub GetContentTypeOfMimeType( _
 	
 	Select Case mt->Charset
 		
-		Case DocumentCharsets.Utf8BOM
+		Case DocumentCharsets.Utf8
 			lstrcatW(ContentType, @ParamSeparator)
 			lstrcatW(ContentType, @ContentCharsetUtf8)
 			
@@ -1120,7 +1120,7 @@ Function GetMimeOfStringContentType( _
 		Dim pUtf8 As PCWSTR = StrStrIW(ContentType, @ContentCharsetUtf8)
 		
 		If pUtf8 Then
-			mt->Charset = DocumentCharsets.Utf8BOM
+			mt->Charset = DocumentCharsets.Utf8
 		Else
 			Dim pUtf16LE As PCWSTR = StrStrIW(ContentType, @ContentCharsetUtf16LE)
 			

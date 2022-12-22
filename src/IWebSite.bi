@@ -8,12 +8,20 @@
 Const WEBSITE_S_ALREADY_EXISTS As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, ERROR_ALREADY_EXISTS)
 
 Enum ContentNegotiationFlags
-	ContentNegotiationNone = 0
-	ContentNegotiationAcceptEncoding = 1
-	ContentNegotiationAcceptMime = 2
-	ContentNegotiationAcceptCharset = 4
-	ContentNegotiationAcceptLanguage = 8
-	ContentNegotiationUserAgent = 16
+	None = 0
+	AcceptEncoding = 1
+	AcceptMime = 2
+	AcceptCharset = 4
+	AcceptLanguage = 8
+	UserAgent = 16
+End Enum
+
+Enum TextFileCharsets
+	Utf8
+	Utf8WithBOM
+	ASCII
+	Utf16LE
+	Utf16BE
 End Enum
 
 Type IWebSite As IWebSite_
@@ -107,6 +115,11 @@ Type IWebSiteVirtualTable
 		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	
+	SetTextFileEncoding As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal CodePage As TextFileCharsets _
+	)As HRESULT
+	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -134,6 +147,7 @@ End Type
 #define IWebSite_SetVirtualPath(this, pVirtualPath) (this)->lpVtbl->SetVirtualPath(this, pVirtualPath)
 #define IWebSite_SetIsMoved(this, IsMoved) (this)->lpVtbl->SetIsMoved(this, IsMoved)
 #define IWebSite_SetMovedUrl(this, pMovedUrl) (this)->lpVtbl->SetMovedUrl(this, pMovedUrl)
+#define IWebSite_SetTextFileEncoding(this, CodePage) (this)->lpVtbl->SetTextFileEncoding(this, CodePage)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif

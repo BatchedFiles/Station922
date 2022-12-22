@@ -121,7 +121,7 @@ End Enum
 
 Enum DocumentCharsets
 	ASCII
-	Utf8BOM
+	Utf8
 	Utf16LE
 	Utf16BE
 End Enum
