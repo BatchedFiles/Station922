@@ -231,43 +231,6 @@ Sub HeapMemoryAllocatorDestroyed( _
 	
 End Sub
 
-/'
-Function CheckMemoryLeak( _
-		ByVal hHeap As HANDLE _
-	)As Integer
-	
-	Dim LeakedCount As Integer = 0
-	
-	Dim bLock As BOOL = HeapLock(hHeap)
-	If bLock Then
-		Dim phe As PROCESS_HEAP_ENTRY = Any
-		phe.lpData = NULL
-		
-		Dim resHeapWalk As BOOL = HeapWalk(hHeap, @phe)
-		Do While resHeapWalk
-			Dim AllocatedFlag As Boolean = phe.wFlags And PROCESS_HEAP_ENTRY_BUSY
-			If AllocatedFlag Then
-				LeakedCount += 1
-				
-				Dim vtMemoryLeaksSize As VARIANT = Any
-				vtMemoryLeaksSize.vt = VT_I8
-				vtMemoryLeaksSize.llVal = phe.cbData
-				LogWriteEntry( _
-					LogEntryType.Error, _
-					WStr(!"MemoryLeak Bytes\t"), _
-					@vtMemoryLeaksSize _
-				)
-			End If
-			resHeapWalk = HeapWalk(hHeap, @phe)
-		Loop
-		
-		HeapUnlock(hHeap)
-	End If
-	
-	Return LeakedCount
-	
-End Function
-'/
 Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
@@ -363,27 +326,7 @@ Function HeapMemoryAllocatorAlloc( _
 	Return pMemory
 	
 End Function
-/'
-Function HeapMemoryAllocatorRealloc( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pMemory As Any Ptr, _
-		ByVal BytesCount As SIZE_T_ _
-	)As Any Ptr
-	
-	Dim pReallocMemory As Any Ptr = HeapReAlloc( _
-		this->hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		pMemory, _
-		BytesCount _
-	)
-	If pReallocMemory = NULL Then
-		HeapMemoryAllocatorAllocFailed(this, BytesCount)
-	End If
-	
-	Return pReallocMemory
-	
-End Function
-'/
+
 Sub HeapMemoryAllocatorFree( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
@@ -396,51 +339,7 @@ Sub HeapMemoryAllocatorFree( _
 	)
 	
 End Sub
-/'
-Function HeapMemoryAllocatorGetSize( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pMemory As Any Ptr _
-	)As SIZE_T_
-	
-	Dim Size As SIZE_T_ = HeapSize( _
-		this->hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		pMemory _
-	)
-	
-	Return Size
-	
-End Function
-'/
-/'
-Function HeapMemoryAllocatorDidAlloc( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pMemory As Any Ptr _
-	)As Long
-	
-	Dim phe As PROCESS_HEAP_ENTRY = Any
-	phe.lpData = NULL
-	Dim resHeapWalk As BOOL = HeapWalk(this->hHeap, @phe)
-	Do
-		If phe.lpData = pMemory Then
-			Return 1
-		End If
-		resHeapWalk = HeapWalk(this->hHeap, @phe)
-	Loop While resHeapWalk
-	
-	Return 0
-	
-End Function
-'/
-/'
-Sub HeapMemoryAllocatorHeapMinimize( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-	HeapCompact(this->hHeap, HEAP_NO_SERIALIZE_FLAG)
-	
-End Sub
-'/
+
 Function HeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
@@ -479,44 +378,14 @@ Function IHeapMemoryAllocatorAlloc( _
 	)As Any Ptr
 	Return HeapMemoryAllocatorAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), cb)
 End Function
-/'
-Function IHeapMemoryAllocatorRealloc( _
-		ByVal this As IHeapMemoryAllocator Ptr, _
-		ByVal pv As Any Ptr, _
-		ByVal cb As SIZE_T_ _
-	)As Any Ptr
-	Return HeapMemoryAllocatorRealloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv, cb)
-End Function
-'/
+
 Sub IHeapMemoryAllocatorFree( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
 	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
-/'
-Function IHeapMemoryAllocatorGetSize( _
-		ByVal this As IHeapMemoryAllocator Ptr, _
-		ByVal pv As Any Ptr _
-	)As SIZE_T_
-	Return HeapMemoryAllocatorGetSize(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
-End Function
-'/
-/'
-Function IHeapMemoryAllocatorDidAlloc( _
-		ByVal this As IHeapMemoryAllocator Ptr, _
-		ByVal pv As Any Ptr _
-	)As Long
-	Return HeapMemoryAllocatorDidAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
-End Function
-'/
-/'
-Sub IHeapMemoryAllocatorHeapMinimize( _
-		ByVal this As IHeapMemoryAllocator Ptr _
-	)
-	HeapMemoryAllocatorHeapMinimize(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
-End Sub
-'/
+
 Function IHeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
