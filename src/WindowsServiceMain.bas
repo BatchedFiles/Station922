@@ -1,5 +1,6 @@
 #include once "WindowsServiceMain.bi"
 #include once "CreateInstance.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "WebServer.bi"
 
 Const MaxWaitHint As DWORD = 3000
@@ -121,9 +122,8 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = Any
-	Dim hrGetMalloc As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)
-	If FAILED(hrGetMalloc) Then
+	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetHeapMemoryAllocatorInstance())
+	If pIMemoryAllocator = NULL Then
 		ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
 		Exit Sub
 	End If

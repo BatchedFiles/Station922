@@ -116,7 +116,10 @@ Function CreateMemoryPool( _
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 		
-		pMemoryPoolItem = CoTaskMemAlloc( _
+		Dim hHeap As HANDLE = GetProcessHeap()
+		pMemoryPoolItem = HeapAlloc( _
+			hHeap, _
+			0, _
 			SizeOf(MemoryPoolItem) * Length _
 		)
 		If pMemoryPoolItem = NULL Then

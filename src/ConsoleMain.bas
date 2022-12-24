@@ -1,5 +1,6 @@
 #include once "ConsoleMain.bi"
 #include once "CreateInstance.bi"
+#include once "HeapMemoryAllocator.bi"
 #include once "WebServer.bi"
 
 Type ServerContext
@@ -35,9 +36,8 @@ End Function
 
 Function ConsoleMain()As Integer
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = Any
-	Dim hrGetAllocator As HRESULT = CoGetMalloc(1, @pIMemoryAllocator)
-	If FAILED(hrGetAllocator) Then
+	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetHeapMemoryAllocatorInstance())
+	If pIMemoryAllocator = NULL Then
 		Return 1
 	End If
 	
