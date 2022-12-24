@@ -31,11 +31,50 @@ Function ClientRequestBufferGetFreeSpaceLength( _
 	
 End Function
 
+Function FindStringA( _
+		ByVal pBufer As UByte Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal pStr As UByte Ptr, _
+		ByVal Length As Integer _
+	)As UByte Ptr
+	
+	For i As Integer = 0 To BufferLength - Length
+		Dim pDestination As UByte Ptr = @pBufer[i]
+		Dim Finded As Long = memcmp( _
+			pDestination, _
+			pStr, _
+			Length _
+		)
+		If Finded = 0 Then
+			Return pDestination
+		End If
+	Next
+	
+	Return NULL
+	
+End Function
+
 Function ClientRequestBufferFindDoubleCrLfIndexA( _
 		ByVal pBufer As ClientRequestBuffer Ptr, _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
 	
+	Dim pDoubleCrLf As UByte Ptr = FindStringA( _
+		@pBufer->Bytes(0), _
+		pBufer->cbLength, _
+		@DoubleNewLineStringA, _
+		Len(DoubleNewLineStringA) _
+	)
+	If pDoubleCrLf = NULL Then
+		*pFindIndex = 0
+		Return False
+	End If
+	
+	Dim FindIndex As Integer = pDoubleCrLf - @pBufer->Bytes(0)
+	*pFindIndex = FindIndex
+	Return True
+	
+	/'
 	For i As Integer = 0 To pBufer->cbLength - Len(DoubleNewLineStringA)
 		
 		Dim Destination As UByte Ptr = @pBufer->Bytes(i)
@@ -54,6 +93,7 @@ Function ClientRequestBufferFindDoubleCrLfIndexA( _
 	
 	*pFindIndex = 0
 	Return False
+	'/
 	
 End Function
 
@@ -62,6 +102,22 @@ Function ClientRequestBufferFindCrLfIndexA( _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
 	
+	Dim pCrLf As UByte Ptr = FindStringA( _
+		@pBufer->Bytes(pBufer->StartLine), _
+		pBufer->EndOfHeaders, _
+		@NewLineStringA, _
+		Len(NewLineStringA) _
+	)
+	If pCrLf = NULL Then
+		*pFindIndex = 0
+		Return False
+	End If
+	
+	Dim FindIndex As Integer = pCrLf - @pBufer->Bytes(pBufer->StartLine)
+	*pFindIndex = FindIndex
+	Return True
+	
+	/'
 	For i As Integer = pBufer->StartLine To pBufer->EndOfHeaders - Len(NewLineStringA)
 		
 		Dim Destination As UByte Ptr = @pBufer->Bytes(i)
@@ -81,6 +137,7 @@ Function ClientRequestBufferFindCrLfIndexA( _
 	
 	*pFindIndex = 0
 	Return False
+	'/
 	
 End Function
 
