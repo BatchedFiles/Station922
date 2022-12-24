@@ -79,7 +79,6 @@ LD ?= ld.exe
 LDFLAGS+=--major-image-version 1 --minor-image-version 0
 LDFLAGS+=-subsystem console
 LDFLAGS+=--stack 1048576,1048576
-LDFLAGS+=--heap 67108864
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=$(ENTRY_POINT_PARAM)
 LDFLAGS+=-L $(LIB_DIR)
