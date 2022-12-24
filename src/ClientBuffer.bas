@@ -74,27 +74,6 @@ Function ClientRequestBufferFindDoubleCrLfIndexA( _
 	*pFindIndex = FindIndex
 	Return True
 	
-	/'
-	For i As Integer = 0 To pBufer->cbLength - Len(DoubleNewLineStringA)
-		
-		Dim Destination As UByte Ptr = @pBufer->Bytes(i)
-		Dim Finded As BOOL = RtlEqualMemory( _
-			Destination, _
-			@DoubleNewLineStringA, _
-			Len(DoubleNewLineStringA) * SizeOf(ZString) _
-		)
-		
-		If Finded Then
-			*pFindIndex = i
-			Return True
-		End If
-		
-	Next
-	
-	*pFindIndex = 0
-	Return False
-	'/
-	
 End Function
 
 Function ClientRequestBufferFindCrLfIndexA( _
@@ -116,28 +95,6 @@ Function ClientRequestBufferFindCrLfIndexA( _
 	Dim FindIndex As Integer = pCrLf - @pBufer->Bytes(pBufer->StartLine)
 	*pFindIndex = FindIndex
 	Return True
-	
-	/'
-	For i As Integer = pBufer->StartLine To pBufer->EndOfHeaders - Len(NewLineStringA)
-		
-		Dim Destination As UByte Ptr = @pBufer->Bytes(i)
-		Dim Finded As BOOL = RtlEqualMemory( _
-			Destination, _
-			@NewLineStringA, _
-			Len(NewLineStringA) * SizeOf(ZString) _
-		)
-		
-		If Finded Then
-			Dim FindIndex As Integer = i - pBufer->StartLine
-			*pFindIndex = FindIndex
-			Return True
-		End If
-		
-	Next
-	
-	*pFindIndex = 0
-	Return False
-	'/
 	
 End Function
 
