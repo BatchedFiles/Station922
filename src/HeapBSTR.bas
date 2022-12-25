@@ -6,6 +6,11 @@ Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
 Const ReservedCharactersLength As Integer = 16
 
+Declare Function __builtin_alloca cdecl Alias "__builtin_alloca"(ByVal size As UInteger)As Any Ptr
+Declare Function __builtin_alloca_with_align cdecl Alias "__builtin_alloca_with_align"(ByVal size As UInteger, ByVal alignment As UInteger)As Any Ptr
+
+#define alloca(size) __builtin_alloca (size)
+
 Type _InternalHeapBSTR
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -40,6 +45,69 @@ Function FindStringW( _
 			Return pDestination
 		End If
 	Next
+	
+	Return NULL
+	
+End Function
+
+Sub StringToUpper( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal pSource As WString Ptr, _
+		ByVal SourceLength As Integer _
+	)
+	
+	For i As Integer = 0 To SourceLength
+		Dim Character As Integer = pSource[i]
+		
+		Dim UpperCharacter As Integer = Any
+		Select Case Character
+			
+			Case &h0061 To &h007A
+				UpperCharacter = Character - &h0020
+				
+			Case Else
+				UpperCharacter = Character
+				
+		End Select
+		
+		pBuffer[i] = UpperCharacter
+	Next
+	
+End Sub
+
+Function FindStringIW( _
+		ByVal pSource As WString Ptr, _
+		ByVal SourceLength As Integer, _
+		ByVal pSubstring As WString Ptr, _
+		ByVal SubstringLength As Integer _
+	)As WString Ptr
+	
+	Dim pSourceUpper As WString Ptr = alloca(SourceLength)
+	StringToUpper( _
+		pSourceUpper, _
+		pSource, _
+		SourceLength _
+	)
+	
+	Dim pSubstringUpper As WString Ptr = alloca(SubstringLength)
+	StringToUpper( _
+		pSubstringUpper, _
+		pSubstring, _
+		SubstringLength _
+	)
+	
+	Dim pFindUpper As WString Ptr = FindStringW( _
+		pSourceUpper, _
+		SourceLength, _
+		pSubstringUpper, _
+		SubstringLength _
+	)
+	
+	If pFindUpper Then
+		Dim Index As Integer = pFindUpper - pSourceUpper
+		Dim pFind As WString Ptr = @pSource[Index]
+		Return pFind
+	End If
 	
 	Return NULL
 	
