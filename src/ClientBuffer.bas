@@ -38,12 +38,14 @@ Function FindStringA( _
 		ByVal Length As Integer _
 	)As UByte Ptr
 	
+	Dim BytesCount As Integer = Length * SizeOf(UByte)
+	
 	For i As Integer = 0 To BufferLength - Length
 		Dim pDestination As UByte Ptr = @pBufer[i]
 		Dim Finded As Long = memcmp( _
 			pDestination, _
 			pStr, _
-			Length _
+			BytesCount _
 		)
 		If Finded = 0 Then
 			Return pDestination

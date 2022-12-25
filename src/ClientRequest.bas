@@ -243,6 +243,35 @@ Function ClientRequestAddRequestHeaders( _
 	
 End Function
 
+Sub ReplaceUtcToGmt( _
+		ByVal pSource As WString Ptr, _
+		ByVal SourceLength As Integer _
+	)
+	
+	Const UTC = WStr("UTC")
+	Const GMT = WStr("GMT")
+	
+	Dim UtcLength As Integer = Len(UTC)
+	Dim GmtLength As Integer = Len(GMT)
+	
+	Dim pUTC As WString Ptr = FindStringW( _
+		pSource, _
+		SourceLength, _
+		@UTC, _
+		UtcLength _
+	)
+	
+	Dim GmtBytes As Integer = GmtLength * SizeOf(WString)
+	If pUTC Then
+		CopyMemory( _
+			pUTC, _
+			@GMT, _
+			GmtBytes _
+		)
+	End If
+	
+End Sub
+
 Function ClientRequestParseRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
@@ -290,34 +319,17 @@ Function ClientRequestParseRequestHeaders( _
 	End Scope
 	
 	Scope
-		' Убрать UTC и заменить на GMT
-		'If-Modified-Since: Thu, 24 Mar 2016 16:10:31 UTC
-		'If-Modified-Since: Tue, 11 Mar 2014 20:07:57 GMT
-		Dim pUTCInModifiedSince As WString Ptr = StrStrW( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince), _
-			WStr("UTC") _
-		)
-		If pUTCInModifiedSince Then
-			lstrcpyW(pUTCInModifiedSince, WStr("GMT"))
-		End If
+		Scope
+			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince)
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince))
+			ReplaceUtcToGmt(pSource, SourceLength)
+		End Scope
 		
-		/'
-		Dim wSeparator As WString Ptr = StrChrW( _
-			pHeaderIfModifiedSince, _
-			Characters.Semicolon _
-		)
-		If wSeparator Then
-			wSeparator[0] = 0
-		End If
-		'/
-		
-		Dim pUTCInUnModifiedSince As WString Ptr = StrStrW( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince), _
-			WStr("UTC") _
-		)
-		If pUTCInUnModifiedSince Then
-			lstrcpyW(pUTCInUnModifiedSince, WStr("GMT"))
-		End If
+		Scope
+			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince)
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince))
+			ReplaceUtcToGmt(pSource, SourceLength)
+		End Scope
 		
 		/'
 		Dim wSeparator As WString Ptr = StrChrW( _
@@ -340,12 +352,19 @@ Function ClientRequestParseRequestHeaders( _
 			Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 			
 			' TODO Обрабатывать несколько байтовых диапазонов
+			/'
 			Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
 			If pCommaChar Then
 				pCommaChar[0] = 0
 			End If
+			'/
 			
-			Dim pwszBytesString As WString Ptr = StrStrW(pwszHeaderRange, BytesEqualString)
+			Dim pwszBytesString As WString Ptr = FindStringW( _
+				pwszHeaderRange, _
+				HeaderRangeLength, _
+				@BytesEqualString, _
+				Len(BytesEqualString) _
+			)
 			If pwszBytesString = pwszHeaderRange Then
 				Dim wStartIntegerData As WString Ptr = @pwszHeaderRange[Len(BytesEqualString)]
 				
