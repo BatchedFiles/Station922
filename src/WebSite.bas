@@ -1231,10 +1231,21 @@ Function WebSiteNeedDllProcessing( _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	If StrStrIW(Path, WStr("/cgi-dll/")) = NULL Then
-		*pResult = False
-	Else
+	Const CgiDll = WStr("/cgi-dll/")
+	
+	Dim pSource As WString Ptr = Path
+	Dim SourceLength As Integer = SysStringLen(Path)
+	Dim pRes As WString Ptr = FindStringIW( _
+		pSource, _
+		SourceLength, _
+		@CgiDll, _
+		Len(CgiDll) _
+	)
+	
+	If pRes Then
 		*pResult = True
+	Else
+		*pResult = False
 	End If
 	
 	Return S_OK
@@ -1313,10 +1324,21 @@ Function WebSiteNeedCgiProcessing( _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
-	If StrStrIW(Path, WStr("/cgi-bin/")) = NULL Then
-		*pResult = False
-	Else
+	Const CgiBin = WStr("/cgi-bin/")
+	
+	Dim pSource As WString Ptr = Path
+	Dim SourceLength As Integer = SysStringLen(Path)
+	Dim pRes As WString Ptr = FindStringIW( _
+		pSource, _
+		SourceLength, _
+		@CgiBin, _
+		Len(CgiBin) _
+	)
+	
+	If pRes Then
 		*pResult = True
+	Else
+		*pResult = False
 	End If
 	
 	Return S_OK
