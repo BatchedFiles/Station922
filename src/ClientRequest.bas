@@ -277,16 +277,22 @@ Function ClientRequestParseRequestHeaders( _
 	)As HRESULT
 	
 	Scope
-		Dim pCloseString As PCWSTR = StrStrIW( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
-			@CloseString _
+		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderConnection)
+		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
+		Dim pCloseString As WString Ptr = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@CloseString, _
+			Len(CloseString) _
 		)
 		If pCloseString Then
 			this->KeepAlive = False
 		Else
-			Dim pKeepAliveString As PCWSTR = StrStrIW( _
-				this->RequestHeaders(HttpRequestHeaders.HeaderConnection), _
-				@KeepAliveString _
+			Dim pKeepAliveString As WString Ptr = FindStringIW( _
+				pSource, _
+				SourceLength, _
+				@KeepAliveString, _
+				Len(KeepAliveString) _
 			)
 			If pKeepAliveString Then
 				this->KeepAlive = True
@@ -298,17 +304,23 @@ Function ClientRequestParseRequestHeaders( _
 	End Scope
 	
 	Scope
-		Dim pGzipString As PCWSTR = StrStrIW( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
-			@GzipString _
+		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding)
+		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
+		Dim pGzipString As PCWSTR = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@GzipString, _
+			Len(GzipString) _
 		)
 		If pGzipString Then
 			this->RequestZipModes(ZipModes.GZip) = True
 		End If
 		
-		Dim pDeflateString As PCWSTR = StrStrIW( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding), _
-			@DeflateString _
+		Dim pDeflateString As PCWSTR = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@DeflateString, _
+			Len(DeflateString) _
 		)
 		If pDeflateString Then
 			this->RequestZipModes(ZipModes.Deflate) = True
