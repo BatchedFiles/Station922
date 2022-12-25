@@ -97,4 +97,11 @@ Declare Function InternalHeapBSTRGetHeapBSTR( _
 	ByVal pcHeapBSTR As HeapBSTR Const Ptr _
 )As HRESULT
 
+Declare Function FindStringW( _
+	ByVal pSource As WString Ptr, _
+	ByVal SourceLength As Integer, _
+	ByVal pSubstring As WString Ptr, _
+	ByVal SubstringLength As Integer _
+)As WString Ptr
+
 #endif

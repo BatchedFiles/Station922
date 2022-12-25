@@ -20,6 +20,31 @@ Type _InternalHeapBSTR
 	wszNullChar(0 To ReservedCharactersLength - 1) As OLECHAR
 End Type
 
+Function FindStringW( _
+		ByVal pSource As WString Ptr, _
+		ByVal SourceLength As Integer, _
+		ByVal pSubstring As WString Ptr, _
+		ByVal SubstringLength As Integer _
+	)As WString Ptr
+	
+	Dim BytesCount As Integer = SubstringLength * SizeOf(WString)
+	
+	For i As Integer = 0 To SourceLength - SubstringLength
+		Dim pDestination As WString Ptr = @pSource[i]
+		Dim Finded As Long = memcmp( _
+			pDestination, _
+			pSubstring, _
+			BytesCount _
+		)
+		If Finded = 0 Then
+			Return pDestination
+		End If
+	Next
+	
+	Return NULL
+	
+End Function
+
 Sub InitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
