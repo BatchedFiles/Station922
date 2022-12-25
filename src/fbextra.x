@@ -8,7 +8,6 @@ SECTIONS
   /DISCARD/ :
   {
     *(.fbctinf)
-    *(.reloc)
   }
 }
 INSERT AFTER .data;
