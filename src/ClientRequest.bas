@@ -278,24 +278,26 @@ Function ClientRequestParseRequestHeaders( _
 	
 	Scope
 		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderConnection)
-		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
-		Dim pCloseString As WString Ptr = FindStringIW( _
-			pSource, _
-			SourceLength, _
-			@CloseString, _
-			Len(CloseString) _
-		)
-		If pCloseString Then
-			this->KeepAlive = False
-		Else
-			Dim pKeepAliveString As WString Ptr = FindStringIW( _
+		If pSource Then
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
+			Dim pCloseString As WString Ptr = FindStringIW( _
 				pSource, _
 				SourceLength, _
-				@KeepAliveString, _
-				Len(KeepAliveString) _
+				@CloseString, _
+				Len(CloseString) _
 			)
-			If pKeepAliveString Then
-				this->KeepAlive = True
+			If pCloseString Then
+				this->KeepAlive = False
+			Else
+				Dim pKeepAliveString As WString Ptr = FindStringIW( _
+					pSource, _
+					SourceLength, _
+					@KeepAliveString, _
+					Len(KeepAliveString) _
+				)
+				If pKeepAliveString Then
+					this->KeepAlive = True
+				End If
 			End If
 		End If
 		
@@ -305,25 +307,27 @@ Function ClientRequestParseRequestHeaders( _
 	
 	Scope
 		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding)
-		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
-		Dim pGzipString As PCWSTR = FindStringIW( _
-			pSource, _
-			SourceLength, _
-			@GzipString, _
-			Len(GzipString) _
-		)
-		If pGzipString Then
-			this->RequestZipModes(ZipModes.GZip) = True
-		End If
-		
-		Dim pDeflateString As PCWSTR = FindStringIW( _
-			pSource, _
-			SourceLength, _
-			@DeflateString, _
-			Len(DeflateString) _
-		)
-		If pDeflateString Then
-			this->RequestZipModes(ZipModes.Deflate) = True
+		If pSource Then
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
+			Dim pGzipString As PCWSTR = FindStringIW( _
+				pSource, _
+				SourceLength, _
+				@GzipString, _
+				Len(GzipString) _
+			)
+			If pGzipString Then
+				this->RequestZipModes(ZipModes.GZip) = True
+			End If
+			
+			Dim pDeflateString As PCWSTR = FindStringIW( _
+				pSource, _
+				SourceLength, _
+				@DeflateString, _
+				Len(DeflateString) _
+			)
+			If pDeflateString Then
+				this->RequestZipModes(ZipModes.Deflate) = True
+			End If
 		End If
 		
 		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
@@ -333,14 +337,18 @@ Function ClientRequestParseRequestHeaders( _
 	Scope
 		Scope
 			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince)
-			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince))
-			ReplaceUtcToGmt(pSource, SourceLength)
+			If pSource Then
+				Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince))
+				ReplaceUtcToGmt(pSource, SourceLength)
+			End If
 		End Scope
 		
 		Scope
 			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince)
-			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince))
-			ReplaceUtcToGmt(pSource, SourceLength)
+			If pSource Then
+				Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince))
+				ReplaceUtcToGmt(pSource, SourceLength)
+			End If
 		End Scope
 		
 		/'
@@ -357,11 +365,11 @@ Function ClientRequestParseRequestHeaders( _
 	Scope
 		Const BytesEqualString = WStr("bytes=")
 		
-		Dim HeaderRangeLength As Integer = SysStringLen( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
-		)
-		If HeaderRangeLength Then
-			Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
+		Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
+		If pwszHeaderRange Then
+			Dim HeaderRangeLength As Integer = SysStringLen( _
+				this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
+			)
 			
 			' TODO ќбрабатывать несколько байтовых диапазонов
 			/'
