@@ -5,7 +5,7 @@
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
-Common Shared ThreadPoolCompletionPort As HANDLE
+Extern ThreadPoolCompletionPort As HANDLE
 
 Enum WriterTasks
 	ReadStream

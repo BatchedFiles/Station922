@@ -11,15 +11,15 @@
 
 Extern GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtualTable
 
+Extern pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Extern pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+
 Const CompareResultEqual As Long = 0
 
 Const DefaultHeaderWwwAuthenticate = WStr("Basic realm=""Need username and password""")
 Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 Const DefaultRetryAfterString = WStr("300")
-
-Common Shared pIWebSitesWeakPtr As IWebSiteCollection Ptr
-Common Shared pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__

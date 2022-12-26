@@ -5,9 +5,9 @@ Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
 Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
 
-Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
-Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
-Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
+Extern lpfnAcceptEx As LPFN_ACCEPTEX
+Extern lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Extern lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
 Function NetworkStartUp()As HRESULT
 	
@@ -257,3 +257,7 @@ Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 	Return S_OK
 	
 End Function
+
+Dim lpfnAcceptEx As LPFN_ACCEPTEX
+Dim lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Dim lpfnTransmitPackets As LPFN_TRANSMITPACKETS

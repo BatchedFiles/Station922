@@ -3,7 +3,7 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
-Common Shared ThreadPoolCompletionPort As HANDLE
+Extern ThreadPoolCompletionPort As HANDLE
 
 Type _ThreadPool
 	#if __FB_DEBUG__
@@ -344,3 +344,5 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolRun, _
 	@IThreadPoolStop _
 )
+
+Dim ThreadPoolCompletionPort As HANDLE

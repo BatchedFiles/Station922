@@ -7,7 +7,7 @@
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 
-Common Shared lpfnTransmitPackets As LPFN_TRANSMITPACKETS
+Extern lpfnTransmitPackets As LPFN_TRANSMITPACKETS
 
 Type _NetworkStream
 	#if __FB_DEBUG__

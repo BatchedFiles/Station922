@@ -7,7 +7,7 @@
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
 
-Common Shared ThreadPoolCompletionPort As HANDLE
+Extern ThreadPoolCompletionPort As HANDLE
 
 Type _MemoryStream
 	#if __FB_DEBUG__

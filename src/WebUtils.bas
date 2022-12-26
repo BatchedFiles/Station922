@@ -20,7 +20,7 @@ Const CompareResultEqual As Long = 0
 ' 	ByVal pSource As WString Ptr _
 ' )As Boolean
 
-Common Shared ThreadPoolCompletionPort As HANDLE
+Extern ThreadPoolCompletionPort As HANDLE
 
 Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _

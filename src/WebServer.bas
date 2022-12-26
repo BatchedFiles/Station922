@@ -16,8 +16,8 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
 
-Common Shared pIWebSitesWeakPtr As IWebSiteCollection Ptr
-Common Shared pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+Extern pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Extern pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 
 Type _WebServer
 	#if __FB_DEBUG__
@@ -554,3 +554,6 @@ Dim GlobalWebServerVirtualTable As Const IRunnableVirtualTable = Type( _
 	@IWebServerIsRunning, _
 	@IWebServerRegisterStatusHandler _
 )
+
+Dim pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Dim pIProcessorsWeakPtr As IHttpProcessorCollection Ptr

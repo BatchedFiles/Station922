@@ -6,8 +6,8 @@
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
 
-Common Shared lpfnAcceptEx As LPFN_ACCEPTEX
-Common Shared lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Extern lpfnAcceptEx As LPFN_ACCEPTEX
+Extern lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
 
 Type _TcpListener
 	#if __FB_DEBUG__

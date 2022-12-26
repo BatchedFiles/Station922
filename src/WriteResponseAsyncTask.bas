@@ -10,10 +10,10 @@
 
 Extern GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTaskVirtualTable
 
-Const CompareResultEqual As Long = 0
+Extern pIWebSitesWeakPtr As IWebSiteCollection Ptr
+Extern pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 
-Common Shared pIWebSitesWeakPtr As IWebSiteCollection Ptr
-Common Shared pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+Const CompareResultEqual As Long = 0
 
 Type _WriteResponseAsyncTask
 	#if __FB_DEBUG__
