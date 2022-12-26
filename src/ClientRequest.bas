@@ -272,216 +272,255 @@ Sub ReplaceUtcToGmt( _
 	
 End Sub
 
+Sub ParseConnectionHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderConnection)
+	If pSource Then
+		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
+		Dim pCloseString As WString Ptr = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@CloseString, _
+			Len(CloseString) _
+		)
+		If pCloseString Then
+			this->KeepAlive = False
+		Else
+			Dim pKeepAliveString As WString Ptr = FindStringIW( _
+				pSource, _
+				SourceLength, _
+				@KeepAliveString, _
+				Len(KeepAliveString) _
+			)
+			If pKeepAliveString Then
+				this->KeepAlive = True
+			End If
+		End If
+	End If
+	
+	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
+	this->RequestHeaders(HttpRequestHeaders.HeaderConnection) = NULL
+	
+End Sub
+
+Sub ParseAcceptEncodingHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding)
+	If pSource Then
+		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
+		Dim pGzipString As PCWSTR = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@GzipString, _
+			Len(GzipString) _
+		)
+		If pGzipString Then
+			this->RequestZipModes(ZipModes.GZip) = True
+		End If
+		
+		Dim pDeflateString As PCWSTR = FindStringIW( _
+			pSource, _
+			SourceLength, _
+			@DeflateString, _
+			Len(DeflateString) _
+		)
+		If pDeflateString Then
+			this->RequestZipModes(ZipModes.Deflate) = True
+		End If
+	End If
+	
+	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
+	this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding) = NULL
+	
+End Sub
+
+Sub ParseIfModifiedSinceHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Scope
+		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince)
+		If pSource Then
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince))
+			ReplaceUtcToGmt(pSource, SourceLength)
+		End If
+	End Scope
+	
+	Scope
+		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince)
+		If pSource Then
+			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince))
+			ReplaceUtcToGmt(pSource, SourceLength)
+		End If
+	End Scope
+	
+	/'
+	Dim wSeparator As WString Ptr = StrChrW( _
+		pHeaderIfUnModifiedSince, _
+		Characters.Semicolon _
+	)
+	If wSeparator Then
+		wSeparator[0] = 0
+	End If
+	'/
+	
+End Sub
+
+Sub ParseRangeHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Const BytesEqualString = WStr("bytes=")
+	
+	Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
+	If pwszHeaderRange Then
+		Dim HeaderRangeLength As Integer = SysStringLen( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
+		)
+		
+		' TODO Обрабатывать несколько байтовых диапазонов
+		/'
+		Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
+		If pCommaChar Then
+			pCommaChar[0] = 0
+		End If
+		'/
+		
+		Dim pwszBytesString As WString Ptr = FindStringW( _
+			pwszHeaderRange, _
+			HeaderRangeLength, _
+			@BytesEqualString, _
+			Len(BytesEqualString) _
+		)
+		If pwszBytesString = pwszHeaderRange Then
+			Dim wStartIntegerData As WString Ptr = @pwszHeaderRange[Len(BytesEqualString)]
+			
+			Dim wStartIndex As WString Ptr = wStartIntegerData
+			
+			Dim wHyphenMinusChar As WString Ptr = StrChrW( _
+				wStartIndex, _
+				Characters.HyphenMinus _
+			)
+			If wHyphenMinusChar Then
+				wHyphenMinusChar[0] = 0
+				
+				Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
+				
+				Dim FirstConverted As BOOL = StrToInt64ExW( _
+					wStartIndex, _
+					STIF_DEFAULT, _
+					@this->RequestByteRange.FirstBytePosition _
+				)
+				If FirstConverted Then
+					this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
+				End If
+				
+				Dim LastConverted As BOOL = StrToInt64ExW( _
+					wEndIndex, _
+					STIF_DEFAULT, _
+					@this->RequestByteRange.LastBytePosition _
+				)
+				If LastConverted Then
+					If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
+						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
+					Else
+						this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
+					End If
+				End If
+				
+			End If
+			
+		End If
+		
+	End If
+	
+	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderRange))
+	this->RequestHeaders(HttpRequestHeaders.HeaderRange) = NULL
+	
+End Sub
+
+Sub ParseContentLengthHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
+	If pHeaderContentLength Then
+		StrToInt64ExW( _
+			this->RequestHeaders(HttpRequestHeaders.HeaderContentLength), _
+			STIF_DEFAULT, _
+			@this->ContentLength _
+		)
+	End If
+	
+	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderContentLength))
+	this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
+	
+End Sub
+
+Function ParseHostHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)As HRESULT
+	
+	/'
+	' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
+	Dim HeaderHost As HeapBSTR = Any
+	If HttpMethod = HttpMethods.HttpConnect Then
+		' HeaderHost = ClientURI.Authority.Host
+		IClientUri_GetHost(ClientURI, HeaderHost)
+	Else
+		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @HeaderHost)
+	End If
+	'/
+	
+	Dim HeaderHostLength As Integer = SysStringLen( _
+		this->RequestHeaders(HttpRequestHeaders.HeaderHost) _
+	)
+	If HeaderHostLength = 0 Then
+		If this->HttpVersion = HttpVersions.Http11 Then
+			Return CLIENTREQUEST_E_BADHOST
+		Else
+			Dim pHost As HeapBSTR = Any
+			IClientUri_GetHost(this->pClientURI, @pHost)
+			Dim ClientUriHostLength As Integer = SysStringLen( _
+				pHost _
+			)
+			If ClientUriHostLength = 0 Then
+				Return CLIENTREQUEST_E_BADHOST
+			End If
+			
+			LET_HEAPSYSSTRING( _
+				this->RequestHeaders(HttpRequestHeaders.HeaderHost), _
+				pHost _
+			)
+		End If
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Function ClientRequestParseRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
-	Scope
-		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderConnection)
-		If pSource Then
-			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
-			Dim pCloseString As WString Ptr = FindStringIW( _
-				pSource, _
-				SourceLength, _
-				@CloseString, _
-				Len(CloseString) _
-			)
-			If pCloseString Then
-				this->KeepAlive = False
-			Else
-				Dim pKeepAliveString As WString Ptr = FindStringIW( _
-					pSource, _
-					SourceLength, _
-					@KeepAliveString, _
-					Len(KeepAliveString) _
-				)
-				If pKeepAliveString Then
-					this->KeepAlive = True
-				End If
-			End If
-		End If
-		
-		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
-		this->RequestHeaders(HttpRequestHeaders.HeaderConnection) = NULL
-	End Scope
+	ParseConnectionHeaderSink(this)
 	
-	Scope
-		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding)
-		If pSource Then
-			Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
-			Dim pGzipString As PCWSTR = FindStringIW( _
-				pSource, _
-				SourceLength, _
-				@GzipString, _
-				Len(GzipString) _
-			)
-			If pGzipString Then
-				this->RequestZipModes(ZipModes.GZip) = True
-			End If
-			
-			Dim pDeflateString As PCWSTR = FindStringIW( _
-				pSource, _
-				SourceLength, _
-				@DeflateString, _
-				Len(DeflateString) _
-			)
-			If pDeflateString Then
-				this->RequestZipModes(ZipModes.Deflate) = True
-			End If
-		End If
-		
-		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
-		this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding) = NULL
-	End Scope
+	ParseAcceptEncodingHeaderSink(this)
 	
-	Scope
-		Scope
-			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince)
-			If pSource Then
-				Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince))
-				ReplaceUtcToGmt(pSource, SourceLength)
-			End If
-		End Scope
-		
-		Scope
-			Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince)
-			If pSource Then
-				Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince))
-				ReplaceUtcToGmt(pSource, SourceLength)
-			End If
-		End Scope
-		
-		/'
-		Dim wSeparator As WString Ptr = StrChrW( _
-			pHeaderIfUnModifiedSince, _
-			Characters.Semicolon _
-		)
-		If wSeparator Then
-			wSeparator[0] = 0
-		End If
-		'/
-	End Scope
+	ParseIfModifiedSinceHeaderSink(this)
 	
-	Scope
-		Const BytesEqualString = WStr("bytes=")
-		
-		Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
-		If pwszHeaderRange Then
-			Dim HeaderRangeLength As Integer = SysStringLen( _
-				this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
-			)
-			
-			' TODO Обрабатывать несколько байтовых диапазонов
-			/'
-			Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
-			If pCommaChar Then
-				pCommaChar[0] = 0
-			End If
-			'/
-			
-			Dim pwszBytesString As WString Ptr = FindStringW( _
-				pwszHeaderRange, _
-				HeaderRangeLength, _
-				@BytesEqualString, _
-				Len(BytesEqualString) _
-			)
-			If pwszBytesString = pwszHeaderRange Then
-				Dim wStartIntegerData As WString Ptr = @pwszHeaderRange[Len(BytesEqualString)]
-				
-				Dim wStartIndex As WString Ptr = wStartIntegerData
-				
-				Dim wHyphenMinusChar As WString Ptr = StrChrW( _
-					wStartIndex, _
-					Characters.HyphenMinus _
-				)
-				If wHyphenMinusChar Then
-					wHyphenMinusChar[0] = 0
-					
-					Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
-					
-					Dim FirstConverted As BOOL = StrToInt64ExW( _
-						wStartIndex, _
-						STIF_DEFAULT, _
-						@this->RequestByteRange.FirstBytePosition _
-					)
-					If FirstConverted Then
-						this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
-					End If
-					
-					Dim LastConverted As BOOL = StrToInt64ExW( _
-						wEndIndex, _
-						STIF_DEFAULT, _
-						@this->RequestByteRange.LastBytePosition _
-					)
-					If LastConverted Then
-						If this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet Then
-							this->RequestByteRange.IsSet = ByteRangeIsSet.FirstAndLastPositionIsSet
-						Else
-							this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
-						End If
-					End If
-					
-				End If
-				
-			End If
-			
-		End If
-		
-		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderRange))
-		this->RequestHeaders(HttpRequestHeaders.HeaderRange) = NULL
-	End Scope
+	ParseRangeHeaderSink(this)
 	
-	Scope
-		Dim HeaderContentLength As Integer = SysStringLen( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) _
-		)
-		If HeaderContentLength Then
-			StrToInt64ExW( _
-				this->RequestHeaders(HttpRequestHeaders.HeaderContentLength), _
-				STIF_DEFAULT, _
-				@this->ContentLength _
-			)
-		End If
-		
-		HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderContentLength))
-		this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
-	End Scope
+	ParseContentLengthHeaderSink(this)
 	
-	Scope
-		/'
-		' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
-		Dim HeaderHost As HeapBSTR = Any
-		If HttpMethod = HttpMethods.HttpConnect Then
-			' HeaderHost = ClientURI.Authority.Host
-			IClientUri_GetHost(ClientURI, HeaderHost)
-		Else
-			IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @HeaderHost)
-		End If
-		'/
-		
-		Dim HeaderHostLength As Integer = SysStringLen( _
-			this->RequestHeaders(HttpRequestHeaders.HeaderHost) _
-		)
-		If HeaderHostLength = 0 Then
-			If this->HttpVersion = HttpVersions.Http11 Then
-				Return CLIENTREQUEST_E_BADHOST
-			Else
-				Dim pHost As HeapBSTR = Any
-				IClientUri_GetHost(this->pClientURI, @pHost)
-				Dim ClientUriHostLength As Integer = SysStringLen( _
-					pHost _
-				)
-				If ClientUriHostLength = 0 Then
-					Return CLIENTREQUEST_E_BADHOST
-				End If
-				
-				LET_HEAPSYSSTRING( _
-					this->RequestHeaders(HttpRequestHeaders.HeaderHost), _
-					pHost _
-				)
-			End If
-		End If
-	End Scope
+	Dim hrParseHost As HRESULT = ParseHostHeaderSink(this)
+	If FAILED(hrParseHost) Then
+		Return hrParseHost
+	End If
 	
 	Return S_OK
 	
