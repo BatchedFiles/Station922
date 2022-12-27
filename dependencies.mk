@@ -18,6 +18,7 @@ OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpGetProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpOptionsProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpProcessorCollection$(FILE_SUFFIX).$(O_EXT)
+OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpPutProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpWriter$(FILE_SUFFIX).$(O_EXT)
@@ -57,6 +58,7 @@ OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpGetProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpOptionsProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpProcessorCollection$(FILE_SUFFIX).$(O_EXT)
+OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpPutProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpWriter$(FILE_SUFFIX).$(O_EXT)
@@ -144,6 +146,11 @@ $(OBJ_DEBUG_DIR)$(PATH_SEP)HttpOptionsProcessor$(FILE_SUFFIX_CONSOLE).$(C_EXT): 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)HttpProcessorCollection$(FILE_SUFFIX_CONSOLE).$(C_EXT): src$(PATH_SEP)HttpProcessorCollection.bi src$(PATH_SEP)IHttpProcessorCollection.bi src$(PATH_SEP)IEnumHttpProcessor.bi src$(PATH_SEP)IHttpAsyncProcessor.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IHttpWriter.bi src$(PATH_SEP)IBuffer.bi src$(PATH_SEP)Mime.bi src$(PATH_SEP)IServerResponse.bi src$(PATH_SEP)IWebSite.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)Logger.bi
  
 $(OBJ_DEBUG_DIR)$(PATH_SEP)HttpProcessorCollection$(FILE_SUFFIX_CONSOLE).$(C_EXT):   src$(PATH_SEP)HttpProcessorCollection.bi src$(PATH_SEP)IHttpProcessorCollection.bi src$(PATH_SEP)IEnumHttpProcessor.bi src$(PATH_SEP)IHttpAsyncProcessor.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IHttpWriter.bi src$(PATH_SEP)IBuffer.bi src$(PATH_SEP)Mime.bi src$(PATH_SEP)IServerResponse.bi src$(PATH_SEP)IWebSite.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)Logger.bi
+
+
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpPutProcessor$(FILE_SUFFIX_CONSOLE).$(C_EXT): src$(PATH_SEP)HttpPutProcessor.bi src$(PATH_SEP)IHttpPutAsyncProcessor.bi 
+ 
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpPutProcessor$(FILE_SUFFIX_CONSOLE).$(C_EXT):   src$(PATH_SEP)HttpPutProcessor.bi src$(PATH_SEP)IHttpPutAsyncProcessor.bi 
 
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX_CONSOLE).$(C_EXT): src$(PATH_SEP)HttpReader.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)Logger.bi
