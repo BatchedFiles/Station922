@@ -432,93 +432,93 @@ Function WriteResponseAsyncTaskPrepare( _
 		IHttpWriter_SetKeepAlive(this->pIHttpWriter, KeepAlive)
 	End Scope
 	
-	Dim HttpVersion As HttpVersions = Any
-	IClientRequest_GetHttpVersion(this->pIRequest, @HttpVersion)
-	IServerResponse_SetHttpVersion(this->pIResponse, HttpVersion)
+	Scope
+		Dim HttpVersion As HttpVersions = Any
+		IClientRequest_GetHttpVersion(this->pIRequest, @HttpVersion)
+		IServerResponse_SetHttpVersion(this->pIResponse, HttpVersion)
+	End Scope
 	
-	Dim hrPrepareResponse As HRESULT = Any
+	Scope
+		Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
+			pIWebSitesWeakPtr, _
+			this->pIRequest, _
+			@this->pIWebSiteWeakPtr _
+		)
+		If FAILED(hrFindSite) Then
+			Return WEBSITE_E_SITENOTFOUND
+		End If
+	End Scope
 	
-	Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
-		pIWebSitesWeakPtr, _
-		this->pIRequest, _
-		@this->pIWebSiteWeakPtr _
-	)
-	If FAILED(hrFindSite) Then
-		hrPrepareResponse = WEBSITE_E_SITENOTFOUND
-	Else
+	Scope
 		Dim IsSiteMoved As Boolean = Any
 		IWebSite_GetIsMoved(this->pIWebSiteWeakPtr, @IsSiteMoved)
 		
 		/'
-			Dim IsSiteMoved As Boolean = Any
-			
-			' TODO Грязный хак с robots.txt
-			' если запрошен документ /robots.txt то не перенаправлять
-			
-			Dim ClientURI As IClientUri Ptr = Any
-			IClientRequest_GetUri(this->pIRequest, @ClientURI)
+		Dim IsSiteMoved As Boolean = Any
 		
-			Dim IsRobotsTxt As Long = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
-			If IsRobotsTxt = CompareResultEqual Then
-				IsSiteMoved = False
-			Else
-				IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
-			End If
-			
-			IClientRequest_Release(ClientURI)
+		' TODO Грязный хак с robots.txt
+		' если запрошен документ /robots.txt то не перенаправлять
+		
+		Dim ClientURI As IClientUri Ptr = Any
+		IClientRequest_GetUri(this->pIRequest, @ClientURI)
+		
+		Dim IsRobotsTxt As Long = lstrcmpiW(ClientURI.Path, WStr("/robots.txt"))
+		If IsRobotsTxt = CompareResultEqual Then
+			IsSiteMoved = False
+		Else
+			IWebSite_GetIsMoved(this->pIWebSite, @IsSiteMoved)
+		End If
+		
+		IClientRequest_Release(ClientURI)
 		'/
 		
 		If IsSiteMoved Then
-			hrPrepareResponse = WEBSITE_E_REDIRECTED
-		Else
-			
-			Dim HttpMethod As HeapBSTR = Any
-			IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
-			
-			Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_ItemWeakPtr( _
-				pIProcessorsWeakPtr, _
-				HttpMethod, _
-				@this->pIProcessorWeakPtr _
-			)
-			HeapSysFreeString(HttpMethod)
-			
-			If FAILED(hrProcessorItem) Then
-				hrPrepareResponse = HTTPPROCESSOR_E_NOTIMPLEMENTED
-			Else
-				Dim pc As ProcessorContext = Any
-				pc.pIMemoryAllocator = this->pIMemoryAllocator
-				pc.pIWebSite = this->pIWebSiteWeakPtr
-				pc.pIRequest = this->pIRequest
-				pc.pIResponse = this->pIResponse
-				pc.pIReader = this->pIHttpReader
-				pc.pIWriter = this->pIHttpWriter
-				
-				If this->pIBuffer Then
-					IAttributedStream_Release(this->pIBuffer)
-				End If
-				
-				Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _
-					this->pIProcessorWeakPtr, _
-					@pc, _
-					@this->pIBuffer _
-				)
-				If FAILED(hrPrepareProcess) Then
-					hrPrepareResponse = hrPrepareProcess
-				Else
-					
-					IHttpWriter_SetBuffer(this->pIHttpWriter, this->pIBuffer)
-					
-					hrPrepareResponse = S_OK
-					
-				End If
-				
-			End If
-			
+			Return WEBSITE_E_REDIRECTED
+		End If
+	End Scope
+	
+	Scope
+		Dim HttpMethod As HeapBSTR = Any
+		IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
+		
+		Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_ItemWeakPtr( _
+			pIProcessorsWeakPtr, _
+			HttpMethod, _
+			@this->pIProcessorWeakPtr _
+		)
+		HeapSysFreeString(HttpMethod)
+		
+		If FAILED(hrProcessorItem) Then
+			Return HTTPPROCESSOR_E_NOTIMPLEMENTED
+		End If
+	End Scope
+	
+	Scope
+		Dim pc As ProcessorContext = Any
+		pc.pIMemoryAllocator = this->pIMemoryAllocator
+		pc.pIWebSite = this->pIWebSiteWeakPtr
+		pc.pIRequest = this->pIRequest
+		pc.pIResponse = this->pIResponse
+		pc.pIReader = this->pIHttpReader
+		pc.pIWriter = this->pIHttpWriter
+		
+		If this->pIBuffer Then
+			IAttributedStream_Release(this->pIBuffer)
 		End If
 		
-	End If
+		Dim hrPrepareProcess As HRESULT = IHttpAsyncProcessor_Prepare( _
+			this->pIProcessorWeakPtr, _
+			@pc, _
+			@this->pIBuffer _
+		)
+		If FAILED(hrPrepareProcess) Then
+			Return hrPrepareProcess
+		End If
+		
+		IHttpWriter_SetBuffer(this->pIHttpWriter, this->pIBuffer)
+	End Scope
 	
-	Return hrPrepareResponse
+	Return S_OK
 	
 End Function
 
