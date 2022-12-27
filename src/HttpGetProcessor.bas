@@ -275,12 +275,11 @@ Function HttpGetProcessorPrepare( _
 	IClientRequest_GetByteRange(pContext->pIRequest, @RequestedByteRange)
 	
 	Dim ContentLength As LongInt = Any
-	Dim FileBytesOffset As LongInt = Any
 	
 	If RequestedByteRange.IsSet = ByteRangeIsSet.NotSet Then
 		IAttributedStream_GetLength(pIBuffer, @ContentLength)
-		FileBytesOffset = 0
 	Else
+		Dim FileBytesOffset As LongInt = Any
 		Dim Writer As ArrayStringWriter = Any
 		InitializeArrayStringWriter(@Writer)
 		
