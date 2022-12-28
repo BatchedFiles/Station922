@@ -165,14 +165,14 @@ Function ReadConfiguration( _
 	)As HRESULT
 	
 	Dim pIConfig As IWebServerConfiguration Ptr = Any
-	Dim hr As HRESULT = CreateInstance( _
+	Dim hrCreateConfiguration As HRESULT = CreateInstance( _
 		this->pIMemoryAllocator, _
 		@CLSID_INICONFIGURATION, _
 		@IID_IIniConfiguration, _
 		@pIConfig _
 	)
-	If FAILED(hr) Then
-		Return E_OUTOFMEMORY
+	If FAILED(hrCreateConfiguration) Then
+		Return hrCreateConfiguration
 	End If
 	
 	IWebServerConfiguration_GetListenAddress(pIConfig, @this->ListenAddress)
@@ -183,9 +183,15 @@ Function ReadConfiguration( _
 	
 	IWebServerConfiguration_GetCachedClientMemoryContextCount(pIConfig, @this->CachedClientMemoryContextLength)
 	
-	IWebServerConfiguration_GetWebSiteCollection(pIConfig, @pIWebSitesWeakPtr)
+	Dim hrWebSites As HRESULT = IWebServerConfiguration_GetWebSiteCollection(pIConfig, @pIWebSitesWeakPtr)
+	If FAILED(hrWebSites) Then
+		Return hrWebSites
+	End If
 	
-	IWebServerConfiguration_GetHttpProcessorCollection(pIConfig, @pIProcessorsWeakPtr)
+	Dim hrProcessors As HRESULT = IWebServerConfiguration_GetHttpProcessorCollection(pIConfig, @pIProcessorsWeakPtr)
+	If FAILED(hrProcessors) Then
+		Return hrProcessors
+	End If
 	
 	IWebServerConfiguration_Release(pIConfig)
 	
