@@ -1,6 +1,7 @@
 #ifndef IINICONFIGURATION_BI
 #define IINICONFIGURATION_BI
 
+#include once "IString.bi"
 #include once "IWebSiteCollection.bi"
 #include once "IHttpProcessorCollection.bi"
 
@@ -28,7 +29,7 @@ Type IWebServerConfigurationVirtualTable
 		
 	GetListenAddress As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrListenAddress As BSTR Ptr _
+		ByVal bstrListenAddress As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetListenPort As Function( _
@@ -38,7 +39,7 @@ Type IWebServerConfigurationVirtualTable
 	
 	GetConnectBindAddress As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrConnectBindAddress As BSTR Ptr _
+		ByVal bstrConnectBindAddress As HeapBSTR Ptr _
 	)As HRESULT
 	
 	GetConnectBindPort As Function( _

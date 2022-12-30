@@ -2,6 +2,7 @@
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
 #include once "CreateInstance.bi"
+#include once "HeapBSTR.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "IniConfiguration.bi"
@@ -36,7 +37,7 @@ Type _WebServer
 	Context As Any Ptr
 	StatusHandler As RunnableStatusHandler
 	
-	ListenAddress As BSTR
+	ListenAddress As HeapBSTR
 	ListenPort As UINT
 	
 	CurrentStatus As HRESULT
@@ -263,6 +264,8 @@ Sub InitializeWebServer( _
 	' this->hEvents = {0}
 	this->CurrentStatus = RUNNABLE_S_STOPPED
 	
+	this->ListenAddress = NULL
+	
 End Sub
 
 Sub UnInitializeWebServer( _
@@ -279,6 +282,10 @@ Sub UnInitializeWebServer( _
 	
 	If this->pIPool Then
 		IThreadPool_Release(this->pIPool)
+	End If
+	
+	If this->ListenAddress Then
+		HeapSysFreeString(this->ListenAddress)
 	End If
 	
 End Sub

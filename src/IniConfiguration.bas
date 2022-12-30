@@ -242,7 +242,7 @@ End Function
 
 Function WebServerIniConfigurationGetListenAddress( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal bstrListenAddress As BSTR Ptr _
+		ByVal bstrListenAddress As HeapBSTR Ptr _
 	)As HRESULT
 	
 	Const BufferLength As DWORD = 255
@@ -257,7 +257,8 @@ Function WebServerIniConfigurationGetListenAddress( _
 		this->pWebServerIniFileName _
 	)
 	
-	*bstrListenAddress = SysAllocStringLen( _
+	*bstrListenAddress = CreateHeapStringLen( _
+		this->pIMemoryAllocator, _
 		CPtr(OLECHAR Ptr, @buf), _
 		Cast(UINT, ValueLength) _
 	)
@@ -842,7 +843,7 @@ End Function
 
 Function IWebServerConfigurationGetListenAddress( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrListenAddress As BSTR Ptr _
+		ByVal bstrListenAddress As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetListenAddress(ContainerOf(this, WebServerIniConfiguration, lpVtbl), bstrListenAddress)
 End Function

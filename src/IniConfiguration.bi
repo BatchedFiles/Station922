@@ -35,7 +35,7 @@ Declare Function WebServerIniConfigurationRelease( _
 
 Declare Function WebServerIniConfigurationGetListenAddress( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal bstrListenAddress As BSTR Ptr _
+	ByVal bstrListenAddress As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetListenPort( _
@@ -45,7 +45,7 @@ Declare Function WebServerIniConfigurationGetListenPort( _
 
 Declare Function WebServerIniConfigurationGetConnectBindAddress( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal bstrConnectBindAddress As BSTR Ptr _
+	ByVal bstrConnectBindAddress As HeapBSTR Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetConnectBindPort( _
