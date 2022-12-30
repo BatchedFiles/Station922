@@ -303,7 +303,8 @@ Function WebServerIniConfigurationGetConnectBindAddress( _
 		this->pWebServerIniFileName _
 	)
 	
-	*bstrConnectBindAddress = SysAllocStringLen( _
+	*bstrConnectBindAddress = CreateHeapStringLen( _
+		this->pIMemoryAllocator, _
 		CPtr(OLECHAR Ptr, @buf), _
 		Cast(UINT, ValueLength) _
 	)
