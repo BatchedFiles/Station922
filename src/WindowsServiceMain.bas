@@ -112,8 +112,6 @@ Sub SvcMain( _
 		@Context _
 	)
 	If Context.ServiceStatusHandle = 0 Then
-		' TODO Обработать ошибку
-		' Dim dwError As DWORD = GetLastError()
 		Exit Sub
 	End If
 	
