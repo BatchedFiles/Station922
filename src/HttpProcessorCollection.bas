@@ -20,8 +20,13 @@ Type _HttpProcessorCollection
 	lpVtbl As Const IHttpProcessorCollectionVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	Dim AllMethods As HeapBSTR
+	AllMethods As HeapBSTR
 	CollectionLength As Integer
+	Padding1 As Integer
+	#ifndef __FB_64BIT__
+		Padding2 As Integer
+		Padding3 As Integer
+	#endif
 	Collection(HttpProcessorCollectionCapacity - 1) As HttpProcessorCollectionKeyValuePair
 End Type
 
