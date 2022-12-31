@@ -1,6 +1,7 @@
 #ifndef IWEBSITECOLLECTION_BI
 #define IWEBSITECOLLECTION_BI
 
+#include once "IString.bi"
 #include once "IEnumWebSite.bi"
 
 Type IWebSiteCollection As IWebSiteCollection_
@@ -32,7 +33,7 @@ Type IWebSiteCollectionVirtualTable
 	
 	Item As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
@@ -43,13 +44,13 @@ Type IWebSiteCollectionVirtualTable
 	
 	Add As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	ItemWeakPtr As Function( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	

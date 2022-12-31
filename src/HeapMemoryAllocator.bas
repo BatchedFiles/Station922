@@ -28,6 +28,15 @@ Type _HeapMemoryAllocator
 	ReadedData As ClientRequestBuffer
 End Type
 
+Type _ServerHeapMemoryAllocator
+	#if __FB_DEBUG__
+		IdString As ZString * 16
+	#endif
+	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
+	ReferenceCounter As UInteger
+	hHeap As HANDLE
+End Type
+
 Dim Shared MemoryPoolCapacity As UInteger
 Dim Shared pMemoryPoolItem As MemoryPoolItem Ptr
 Dim Shared MemoryPoolSection As CRITICAL_SECTION
@@ -99,6 +108,24 @@ Function GetHeapMemoryAllocatorInstance( _
 	
 End Function
 
+Function GetServerHeapMemoryAllocatorInstance( _
+	)As IHeapMemoryAllocator Ptr
+	
+	Dim pMalloc As IHeapMemoryAllocator Ptr = Any
+	Dim hrCreateMalloc As HRESULT = CreateInstance( _
+		NULL, _
+		@CLSID_SERVERHEAPMEMORYALLOCATOR, _
+		@IID_IHeapMemoryAllocator, _
+		@pMalloc _
+	)
+	If FAILED(hrCreateMalloc) Then
+		Return NULL
+	End If
+	
+	Return pMalloc
+	
+End Function
+
 Function CreateMemoryPool( _
 		ByVal Length As UInteger _
 	)As HRESULT
@@ -147,7 +174,7 @@ Function CreateMemoryPool( _
 	
 End Function
 
-Sub InitializeHeapMemoryAllocator( _
+Sub InitializeServerHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal hHeap As HANDLE _
 	)
@@ -162,6 +189,15 @@ Sub InitializeHeapMemoryAllocator( _
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
+	
+End Sub
+
+Sub InitializeHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal hHeap As HANDLE _
+	)
+	
+	InitializeServerHeapMemoryAllocator(this, hHeap)
 	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
@@ -220,6 +256,36 @@ Function CreateHeapMemoryAllocator( _
 		End If
 		
 		HeapMemoryAllocatorAllocFailed(this, SizeOf(HeapMemoryAllocator))
+		
+		HeapDestroy(hHeap)
+	End If
+	
+	Return NULL
+	
+End Function
+
+Function CreateServerHeapMemoryAllocator( _
+	)As HeapMemoryAllocator Ptr
+	
+	Dim hHeap As HANDLE = HeapCreate( _
+		HEAP_NO_SERIALIZE_FLAG, _
+		PRIVATEHEAP_INITIALSIZE, _
+		PRIVATEHEAP_MAXIMUMSIZE _
+	)
+	
+	If hHeap Then
+		
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+			hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			SizeOf(ServerHeapMemoryAllocator) _
+		)
+		
+		If this Then
+			InitializeServerHeapMemoryAllocator(this, hHeap)
+			
+			Return this
+		End If
 		
 		HeapDestroy(hHeap)
 	End If

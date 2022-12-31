@@ -243,6 +243,20 @@ Function CreateInstance( _
 		Return hr
 	End If
 	
+	If IsEqualCLSID(@CLSID_SERVERHEAPMEMORYALLOCATOR, rclsid) Then
+		Dim pAllocator As HeapMemoryAllocator Ptr = CreateServerHeapMemoryAllocator()
+		If pAllocator = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HeapMemoryAllocatorQueryInterface(pAllocator, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHeapMemoryAllocator(pAllocator)
+		End If
+		
+		Return hr
+	End If
+	
 	Return CLASS_E_CLASSNOTAVAILABLE
 	
 End Function

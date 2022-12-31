@@ -41,7 +41,7 @@ Declare Function WebSiteCollection_NewEnum( _
 
 Declare Function WebSiteCollectionItem( _
 	ByVal this As WebSiteCollection Ptr, _
-	ByVal pKey As WString Ptr, _
+	ByVal pKey As HeapBSTR, _
 	ByVal ppIWebSite As IWebSite Ptr Ptr _
 )As HRESULT
 
@@ -52,13 +52,13 @@ Declare Function WebSiteCollectionCount( _
 
 Declare Function WebSiteCollectionAdd( _
 	ByVal this As WebSiteCollection Ptr, _
-	ByVal pKey As WString Ptr, _
+	ByVal pKey As HeapBSTR, _
 	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 
 Declare Function WebSiteCollectionItemWeakPtr( _
 	ByVal this As WebSiteCollection Ptr, _
-	ByVal pKey As WString Ptr, _
+	ByVal pKey As HeapBSTR, _
 	ByVal ppIWebSite As IWebSite Ptr Ptr _
 )As HRESULT
 

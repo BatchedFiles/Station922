@@ -1,4 +1,5 @@
 #include once "WebSiteCollection.bi"
+#include once "HeapBSTR.bi"
 #include once "ContainerOf.bi"
 
 Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable
@@ -9,7 +10,7 @@ Type WebSiteNode
 	#endif
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
-	HostName As BSTR
+	HostName As HeapBSTR
 	pIWebSite As IWebSite Ptr
 End Type
 
@@ -30,7 +31,10 @@ Sub TreeAddNode( _
 		ByVal pNode As WebSiteNode Ptr _
 	)
 	
-	Dim CompareResult As Long = lstrcmpiW(pNode->HostName, pTree->HostName)
+	Dim CompareResult As Long = lstrcmpiW( _
+		pNode->HostName, _
+		pTree->HostName _
+	)
 	
 	Select Case CompareResult
 		
@@ -54,10 +58,13 @@ End Sub
 
 Function TreeFindNode( _
 		ByVal pNode As WebSiteNode Ptr, _
-		ByVal HostName As WString Ptr _
+		ByVal HostName As HeapBSTR _
 	)As WebSiteNode Ptr
 	
-	Dim CompareResult As Long = lstrcmpiW(HostName, pNode->HostName)
+	Dim CompareResult As Long = lstrcmpiW( _
+		HostName, _
+		pNode->HostName _
+	)
 	
 	Select Case CompareResult
 		
@@ -84,21 +91,15 @@ End Function
 
 Function CreateWebSiteNode( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal bstrHostName As HeapBSTR, _
 		ByVal pValue As IWebSite Ptr _
 	)As WebSiteNode Ptr
-	
-	Dim bstrHostName As BSTR = SysAllocString(pKey)
-	If bstrHostName = NULL Then
-		Return NULL
-	End If
 	
 	Dim pNode As WebSiteNode Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSiteNode) _
 	)
 	If pNode = NULL Then
-		SysFreeString(bstrHostName)
 		Return NULL
 	End If
 	
@@ -109,6 +110,7 @@ Function CreateWebSiteNode( _
 			Len(WebSiteNode.IdString) _
 		)
 	#endif
+	HeapSysAddRefString(bstrHostName)
 	pNode->HostName = bstrHostName
 	IWebSite_AddRef(pValue)
 	pNode->pIWebSite = pValue
@@ -224,7 +226,7 @@ End Function
 
 Function WebSiteCollectionItem( _
 		ByVal this As WebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
@@ -255,7 +257,7 @@ End Function
 
 Function WebSiteCollectionAdd( _
 		ByVal this As WebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
@@ -280,7 +282,7 @@ End Function
 
 Function WebSiteCollectionItemWeakPtr( _
 		ByVal this As WebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
@@ -348,7 +350,7 @@ End Function
 
 Function IWebSiteCollectionItem( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal Host As WString Ptr, _
+		ByVal Host As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionItem(ContainerOf(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
@@ -363,7 +365,7 @@ End Function
 
 Function IWebSiteCollectionAdd( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal pKey As WString Ptr, _
+		ByVal pKey As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	Return WebSiteCollectionAdd(ContainerOf(this, WebSiteCollection, lpVtbl), pKey, pIWebSite)
@@ -371,7 +373,7 @@ End Function
 
 Function IWebSiteCollectionItemWeakPtr( _
 		ByVal this As IWebSiteCollection Ptr, _
-		ByVal Host As WString Ptr, _
+		ByVal Host As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionItemWeakPtr(ContainerOf(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)

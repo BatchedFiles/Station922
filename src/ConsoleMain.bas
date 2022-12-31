@@ -36,7 +36,7 @@ End Function
 
 Function ConsoleMain()As Integer
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetHeapMemoryAllocatorInstance())
+	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetServerHeapMemoryAllocatorInstance())
 	If pIMemoryAllocator = NULL Then
 		Return 1
 	End If

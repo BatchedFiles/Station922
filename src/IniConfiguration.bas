@@ -473,7 +473,7 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		
 		Scope
 			Dim WebSiteName As WString * (MAX_PATH + 1) = Any
-			Dim cbBytes As UInteger = HostLength * SizeOf(WString)
+			Dim cbBytes As UInteger = (HostLength + 1) * SizeOf(WString)
 			CopyMemory(@WebSiteName, lpwszHost, cbBytes)
 			
 			For i As Integer = 0 To HostLength - 1
@@ -587,10 +587,10 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 				0, _
 				this->pWebSitesIniFileName _
 			)
-			If IsMoved = 0 Then
-				IWebSite_SetIsMoved(pIWebSite, False)
-			Else
+			If IsMoved Then
 				IWebSite_SetIsMoved(pIWebSite, True)
+			Else
+				IWebSite_SetIsMoved(pIWebSite, False)
 			End If
 		End Scope
 		

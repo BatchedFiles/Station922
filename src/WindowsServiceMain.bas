@@ -120,7 +120,7 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetHeapMemoryAllocatorInstance())
+	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetServerHeapMemoryAllocatorInstance())
 	If pIMemoryAllocator = NULL Then
 		ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
 		Exit Sub

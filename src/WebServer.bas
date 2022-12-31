@@ -200,7 +200,7 @@ Function ReadConfiguration( _
 	
 End Function
 
-Function CreateServerSocket( _
+Function CreateServerSocketSink( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
@@ -214,6 +214,10 @@ Function CreateServerSocket( _
 		SocketListCapacity, _
 		@this->SocketListLength _
 	)
+	
+	HeapSysFreeString(this->ListenAddress)
+	this->ListenAddress = NULL
+	
 	If FAILED(hrCreateSocket) Then
 		Return hrCreateSocket
 	End If
@@ -408,7 +412,7 @@ Function WebServerRun( _
 	
 	SetCurrentStatus(this, RUNNABLE_S_CONTINUE)
 	
-	Dim hrSocket As HRESULT = CreateServerSocket(this)
+	Dim hrSocket As HRESULT = CreateServerSocketSink(this)
 	If FAILED(hrSocket) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)
 		Return hrSocket
