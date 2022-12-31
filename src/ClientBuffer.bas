@@ -74,6 +74,7 @@ Function ClientRequestBufferFindDoubleCrLfIndexA( _
 	
 	Dim FindIndex As Integer = pDoubleCrLf - @pBufer->Bytes(0)
 	*pFindIndex = FindIndex
+	
 	Return True
 	
 End Function
@@ -96,6 +97,7 @@ Function ClientRequestBufferFindCrLfIndexA( _
 	
 	Dim FindIndex As Integer = pCrLf - @pBufer->Bytes(pBufer->StartLine)
 	*pFindIndex = FindIndex
+	
 	Return True
 	
 End Function
@@ -135,3 +137,27 @@ Function ClientRequestBufferGetLine( _
 	Return bstrLine
 	
 End Function
+
+Sub ClientRequestBufferClear( _
+		ByVal this As ClientRequestBuffer Ptr _
+	)
+	
+	Dim cbPreloadedBytes As Integer = this->cbLength - this->EndOfHeaders
+	
+	If cbPreloadedBytes Then
+		Dim Index As Integer = this->EndOfHeaders
+		Dim Destination As UByte Ptr = @this->Bytes(0)
+		Dim Source As UByte Ptr = @this->Bytes(Index)
+		MoveMemory( _
+			Destination, _
+			Source, _
+			cbPreloadedBytes _
+		)
+		this->EndOfHeaders = 0
+		this->cbLength = cbPreloadedBytes
+	Else
+		this->EndOfHeaders = 0
+		this->cbLength = 0
+	End If
+	
+End Sub

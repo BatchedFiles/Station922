@@ -286,23 +286,7 @@ Function HttpReaderClear( _
 	
 	this->IsAllBytesReaded = False
 	
-	Dim cbPreloadedBytes As Integer = this->pClientBuffer->cbLength - this->pClientBuffer->EndOfHeaders
-	
-	If cbPreloadedBytes Then
-		Dim Index As Integer = this->pClientBuffer->EndOfHeaders
-		Dim Destination As UByte Ptr = @this->pClientBuffer->Bytes(0)
-		Dim Source As UByte Ptr = @this->pClientBuffer->Bytes(Index)
-		MoveMemory( _
-			Destination, _
-			Source, _
-			cbPreloadedBytes _
-		)
-		this->pClientBuffer->EndOfHeaders = 0
-		this->pClientBuffer->cbLength = cbPreloadedBytes
-	Else
-		this->pClientBuffer->EndOfHeaders = 0
-		this->pClientBuffer->cbLength = 0
-	End If
+	ClientRequestBufferClear(this->pClientBuffer)
 	
 	Return S_OK
 	

@@ -60,4 +60,8 @@ Declare Function ClientRequestBufferGetLine( _
 	ByVal pIMemoryAllocator As IMalloc Ptr _
 )As HeapBSTR
 
+Declare Sub ClientRequestBufferClear( _
+	ByVal this As ClientRequestBuffer Ptr _
+)
+
 #endif
