@@ -38,31 +38,9 @@ Type IHttpReaderVirtualTable
 		ByVal this As IHttpReader Ptr _
 	)As ULONG
 	
-	Peek As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pChar As wchar_t Ptr _
-	)As HRESULT
-	
-	ReadChar As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pChar As wchar_t Ptr _
-	)As HRESULT
-	
-	ReadCharArray As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal Buffer As WString Ptr, _
-		ByVal Count As Integer, _
-		ByVal pReadedChars As Integer Ptr _
-	)As HRESULT
-	
 	ReadLine As Function( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pLine As HeapBSTR Ptr _
-	)As HRESULT
-	
-	ReadToEnd As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
 	BeginReadLine As Function( _
@@ -78,26 +56,8 @@ Type IHttpReaderVirtualTable
 		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 	
-	BeginReadToEnd As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal callback As AsyncCallback, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	EndReadToEnd As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal pLines As HeapBSTR Ptr _
-	)As HRESULT
-	
 	Clear As Function( _
 		ByVal this As IHttpReader Ptr _
-	)As HRESULT
-	
-	GetBaseStream As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal ppResult As IBaseStream Ptr Ptr _
 	)As HRESULT
 	
 	SetBaseStream As Function( _
@@ -115,11 +75,6 @@ Type IHttpReaderVirtualTable
 		ByVal this As IHttpReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
-	)As HRESULT
-	
-	IsCompleted As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pCompleted As Boolean Ptr _
 	)As HRESULT
 	
 	SetClientBuffer As Function( _
@@ -140,11 +95,9 @@ End Type
 #define IHttpReader_BeginReadLine(this, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, callback, StateObject, ppIAsyncResult)
 #define IHttpReader_EndReadLine(this, pIAsyncResult, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLine)
 #define IHttpReader_Clear(this) (this)->lpVtbl->Clear(this)
-' #define IHttpReader_GetBaseStream(this, ppResult) (this)->lpVtbl->GetBaseStream(this, ppResult)
 #define IHttpReader_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)
 #define IHttpReader_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IHttpReader_GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes) (this)->lpVtbl->GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes)
-' #define IHttpReader_IsCompleted(this, pCompleted) (this)->lpVtbl->IsCompleted(this, pCompleted)
 #define IHttpReader_SetClientBuffer(this, pBuffer) (this)->lpVtbl->SetClientBuffer(this, pBuffer)
 
 #endif

@@ -440,20 +440,12 @@ Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	@IHttpReaderQueryInterface, _
 	@IHttpReaderAddRef, _
 	@IHttpReaderRelease, _
-	NULL, _ /' IHttpReaderPeek '/
-	NULL, _ /' IHttpReaderReadChar '/
-	NULL, _ /' IHttpReaderReadCharArray '/ 
 	@IHttpReaderReadLine, _
-	NULL, _ /' IHttpReaderReadToEnd '/
 	@IHttpReaderBeginReadLine, _
 	@IHttpReaderEndReadLine, _
-	NULL, _ /' BeginReadToEnd '/
-	NULL, _ /' EndReadToEnd '/
 	@IHttpReaderClear, _
-	NULL, _ /'@IHttpReaderGetBaseStream '/
 	@IHttpReaderSetBaseStream, _
 	@IHttpReaderGetPreloadedBytes, _
 	@IHttpReaderGetRequestedBytes, _
-	NULL, _ /' @IHttpReaderIsCompleted'/
 	@IHttpReaderSetClientBuffer _
 )
