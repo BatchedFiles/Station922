@@ -319,7 +319,7 @@ Function HttpGetProcessorPrepare( _
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				FileBytesOffset = RequestedByteRange.FirstBytePosition
@@ -376,7 +376,7 @@ Function HttpGetProcessorPrepare( _
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				ContentLength = min(VirtualFileLength, RequestedByteRange.LastBytePosition)
@@ -431,7 +431,7 @@ Function HttpGetProcessorPrepare( _
 					IAttributedStream_Release(pIBuffer)
 					*ppIBuffer = NULL
 					
-					Return HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
+					Return HTTPPROCESSOR_E_RANGENOTSATISFIABLE
 				End If
 				
 				ContentLength = min(RequestedByteRange.LastBytePosition - RequestedByteRange.FirstBytePosition + 1, VirtualFileLength)

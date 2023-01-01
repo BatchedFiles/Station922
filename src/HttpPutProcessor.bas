@@ -146,6 +146,14 @@ Function HttpPutProcessorPrepare( _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
+	Dim ContentLength As LongInt = Any
+	IClientRequest_GetContentLength(pContext->pIRequest, @ContentLength)
+	
+	If ContentLength <= 0 Then
+		*ppIBuffer = NULL
+		Return HTTPPROCESSOR_E_LENGTHREQUIRED
+	End If
+	
 	Dim Flags As ContentNegotiationFlags = Any
 	Dim pIBuffer As IAttributedStream Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
@@ -153,7 +161,7 @@ Function HttpPutProcessorPrepare( _
 		pContext->pIMemoryAllocator, _
 		FileAccess.CreateAccess, _
 		pContext->pIRequest, _
-		0, _
+		ContentLength, _
 		@Flags, _
 		@pIBuffer _
 	)
@@ -161,9 +169,6 @@ Function HttpPutProcessorPrepare( _
 		*ppIBuffer = NULL
 		Return hrGetBuffer
 	End If
-	
-	Dim ContentLength As LongInt = Any
-	IAttributedStream_GetLength(pIBuffer, @ContentLength)
 	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _

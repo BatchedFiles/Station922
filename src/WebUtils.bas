@@ -334,9 +334,6 @@ Function ProcessErrorRequestResponse( _
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			HttpError = ResponseErrorCode.VersionNotSupported
 			
-		Case HTTPASYNCPROCESSOR_E_RANGENOTSATISFIABLE
-			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
-			
 		Case WEBSITE_E_SITENOTFOUND
 			HttpError = ResponseErrorCode.SiteNotFound
 			
@@ -354,6 +351,12 @@ Function ProcessErrorRequestResponse( _
 			
 		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
 			HttpError = ResponseErrorCode.NotImplemented
+			
+		Case HTTPPROCESSOR_E_RANGENOTSATISFIABLE
+			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
+			
+		Case HTTPPROCESSOR_E_LENGTHREQUIRED
+			HttpError = ResponseErrorCode.LengthRequired
 			
 		Case E_OUTOFMEMORY
 			HttpError = ResponseErrorCode.NotEnoughMemory
