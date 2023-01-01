@@ -7,6 +7,7 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpOptionsProcessor.bi"
+#include once "HttpPutProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpReader.bi"
 #include once "HttpTraceProcessor.bi"
@@ -307,6 +308,20 @@ Function CreatePermanentInstance( _
 		Dim hr As HRESULT = HttpOptionsProcessorQueryInterface(pProcessor, riid, ppv)
 		If FAILED(hr) Then
 			DestroyHttpOptionsProcessor(pProcessor)
+		End If
+		
+		Return hr
+	End If
+	
+	If IsEqualCLSID(@CLSID_HTTPPUTASYNCPROCESSOR, rclsid) Then
+		Dim pProcessor As HttpPutProcessor Ptr = CreatePermanentHttpPutProcessor(pIMemoryAllocator)
+		If pProcessor = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Dim hr As HRESULT = HttpPutProcessorQueryInterface(pProcessor, riid, ppv)
+		If FAILED(hr) Then
+			DestroyHttpPutProcessor(pProcessor)
 		End If
 		
 		Return hr

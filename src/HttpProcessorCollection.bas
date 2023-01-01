@@ -213,7 +213,8 @@ Function HttpProcessorCollectionItemWeakPtr( _
 	
 	For i As Integer = 0 To this->CollectionLength - 1
 		
-		Dim CompareResult As Long = lstrcmpW(pKey, @this->Collection(i).Key)
+		Dim pCollectionKey As WString Ptr = @this->Collection(i).Key
+		Dim CompareResult As Long = lstrcmpW(pKey, pCollectionKey)
 		If CompareResult = CompareResultEqual Then
 			
 			*ppIProcessor = this->Collection(i).Value

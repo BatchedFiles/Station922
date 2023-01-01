@@ -6,6 +6,7 @@
 #include once "HeapBSTR.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpOptionsProcessor.bi"
+#include once "HttpPutProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpTraceProcessor.bi"
 #include once "WebSite.bi"
@@ -710,7 +711,6 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	)As HRESULT
 	
 	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
-	
 	Scope
 		Dim hr As HRESULT = CreatePermanentInstance( _
 			this->pIMemoryAllocator, _
@@ -751,6 +751,29 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 		)
 		
 		IHttpAsyncProcessor_Release(pIHttpGetProcessor)
+	End Scope
+	
+	Scope
+		Dim pIHttpPutProcessor As IHttpAsyncProcessor Ptr = Any
+		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+			this->pIMemoryAllocator, _
+			@CLSID_HTTPPUTASYNCPROCESSOR, _
+			@IID_IHttpPutAsyncProcessor, _
+			@pIHttpPutProcessor _
+		)
+		If FAILED(hrCreateProcessor) Then
+			IHttpProcessorCollection_Release(pIProcessorCollection)
+			*ppIHttpProcessorCollection = NULL
+			Return hrCreateProcessor
+		End If
+		
+		IHttpProcessorCollection_Add( _
+			pIProcessorCollection, _
+			WStr("PUT"), _
+			pIHttpPutProcessor _
+		)
+		
+		IHttpAsyncProcessor_Release(pIHttpPutProcessor)
 	End Scope
 	
 	Scope
@@ -800,7 +823,7 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	End Scope
 	
 	Scope
-		Const AllMethodsString = "GET, HEAD, OPTIONS, TRACE"
+		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
 		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
 			this->pIMemoryAllocator, _
 			WStr(AllMethodsString), _
