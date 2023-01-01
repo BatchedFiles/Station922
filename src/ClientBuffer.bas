@@ -142,22 +142,7 @@ Sub ClientRequestBufferClear( _
 		ByVal this As ClientRequestBuffer Ptr _
 	)
 	
-	Dim cbPreloadedBytes As Integer = this->cbLength - this->EndOfHeaders
-	
-	If cbPreloadedBytes Then
-		Dim Index As Integer = this->EndOfHeaders
-		Dim Destination As UByte Ptr = @this->Bytes(0)
-		Dim Source As UByte Ptr = @this->Bytes(Index)
-		MoveMemory( _
-			Destination, _
-			Source, _
-			cbPreloadedBytes _
-		)
-		this->EndOfHeaders = 0
-		this->cbLength = cbPreloadedBytes
-	Else
-		this->EndOfHeaders = 0
-		this->cbLength = 0
-	End If
+	this->cbLength = 0
+	this->EndOfHeaders = 0
 	
 End Sub
