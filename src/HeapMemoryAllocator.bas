@@ -73,22 +73,20 @@ Function GetHeapMemoryAllocatorInstance( _
 	)As IHeapMemoryAllocator Ptr
 	
 	If MemoryPoolCapacity Then
-		Scope
-			Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
-			EnterCriticalSection(@MemoryPoolSection)
-			For i As UInteger = 0 To MemoryPoolCapacity - 1
-				If pMemoryPoolItem[i].IsUsed = False Then
-					pMemoryPoolItem[i].IsUsed = True
-					pMalloc = pMemoryPoolItem[i].pMalloc
-					Exit For
-				End If
-			Next
-			LeaveCriticalSection(@MemoryPoolSection)
-			
-			If pMalloc Then
-				Return pMalloc
+		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+		EnterCriticalSection(@MemoryPoolSection)
+		For i As UInteger = 0 To MemoryPoolCapacity - 1
+			If pMemoryPoolItem[i].IsUsed = False Then
+				pMemoryPoolItem[i].IsUsed = True
+				pMalloc = pMemoryPoolItem[i].pMalloc
+				Exit For
 			End If
-		End Scope
+		Next
+		LeaveCriticalSection(@MemoryPoolSection)
+		
+		If pMalloc Then
+			Return pMalloc
+		End If
 	End If
 	
 	Scope
