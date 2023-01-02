@@ -17,8 +17,6 @@ Type _FileStream
 	ReferenceCounter As UInteger
 	FileSize As LongInt
 	FileOffset As LongInt
-	ChunkIndex As LongInt
-	RequestStartIndex As LongInt
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
 	FileHandle As Handle
@@ -30,7 +28,7 @@ Type _FileStream
 	LastFileModifiedDate As FILETIME
 	fAccess As FileAccess
 	ZipMode As ZipModes
-	RequestLength As DWORD
+	dwRequestedLength As DWORD
 	PreviousAllocatedLength As DWORD
 	PreviousAllocatedSmallLength As DWORD
 	ContentType As MimeType
@@ -306,29 +304,12 @@ Function FileStreamBeginGetSlice( _
 		End If
 	End Scope
 	
-	this->RequestStartIndex = StartIndex
-	this->RequestLength = dwLength
-	
-	Dim dwNumberOfBytesToRead As DWORD = Any
-	Dim NumberOfBytesToRead As LongInt = Any
-	Scope
-		Dim RequestChunkIndex As LongInt = Integer64Division( _
-			VirtualStartIndex, _
-			CLngInt(BUFFERSLICECHUNK_SIZE) _
-		)
-		
-		Dim LastFileChunkSize As LongInt = this->FileSize - this->FileOffset - (RequestChunkIndex * CLngInt(BUFFERSLICECHUNK_SIZE))
-		Dim NumberOfBytesInChunk As LongInt = min( _
-			CLngInt(BUFFERSLICECHUNK_SIZE), _
-			LastFileChunkSize _
-		)
-		
-		NumberOfBytesToRead = min( _
-			CLngInt(dwLength), _
-			NumberOfBytesInChunk _
-		)
-		dwNumberOfBytesToRead = Cast(DWORD, NumberOfBytesToRead)
-	End Scope
+	Dim NumberOfBytesToRead As LongInt = min( _
+		CLngInt(dwLength), _
+		BUFFERSLICECHUNK_SIZE _
+	)
+	Dim dwNumberOfBytesToRead As DWORD = Cast(DWORD, NumberOfBytesToRead)
+	this->dwRequestedLength = dwNumberOfBytesToRead
 	
 	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _
 		this, _
@@ -412,25 +393,12 @@ Function FileStreamEndGetSlice( _
 			Return S_FALSE
 		End If
 		
-		Scope
-			Dim VirtualStartIndex As LongInt = this->RequestStartIndex + this->FileOffset
-			
-			Dim RequestChunkIndex As LongInt = Integer64Division( _
-				VirtualStartIndex, _
-				CLngInt(BUFFERSLICECHUNK_SIZE) _
-			)
-			
-			Dim diff As LongInt = CLngInt(this->RequestLength - dwBytesTransferred)
-			Dim NextChunkIndex As LongInt = Integer64Division( _
-				VirtualStartIndex + diff, _
-				CLngInt(BUFFERSLICECHUNK_SIZE) _
-			)
-			If RequestChunkIndex < NextChunkIndex Then
-				Return S_OK
-			End If
-			
-			Return S_FALSE
-		End Scope
+		If this->dwRequestedLength < dwBytesTransferred Then
+			Return S_OK
+		End If
+		
+		Return S_FALSE
+		
 	End If
 	
 	Return S_OK

@@ -47,15 +47,7 @@ Sub GetHttpDate( _
 	)
 	
 End Sub
-/'
-Sub GetHttpDate(ByVal Buffer As WString Ptr)
-	
-	Dim dt As SYSTEMTIME = Any
-	GetSystemTime(@dt)
-	GetHttpDate(Buffer, @dt)
-	
-End Sub
-'/
+
 Sub AddResponseCacheHeaders( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
@@ -220,35 +212,6 @@ Function FindWebSiteWeakPtr( _
 	HeapSysFreeString(HeaderHost)
 	
 	Return hrFindSite
-	
-End Function
-
-Function Integer64Division( _
-		ByVal Dividend As LongInt, _
-		ByVal Divisor As LongInt _
-	)As LongInt
-	
-	Dim varLeft As VARIANT = Any
-	varLeft.vt = VT_I8
-	varLeft.llVal = Dividend
-	
-	Dim varRight As VARIANT = Any
-	varRight.vt = VT_I8
-	varRight.llVal = Divisor
-	
-	Dim varResult As VARIANT = Any
-	VariantInit(@varResult)
-	
-	Dim hr As HRESULT = VarIdiv( _
-		@varLeft, _
-		@varRight, _
-		@varResult _
-	)
-	If FAILED(hr) Then
-		Return 0
-	End If
-	
-	Return varResult.llVal
 	
 End Function
 
