@@ -52,8 +52,8 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 		For i As UInteger = 0 To MemoryPoolCapacity - 1
 			If pMemoryPoolItem[i].pMalloc = pMalloc Then
 				Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+				this->ReferenceCounter = 1
 				InitializeClientRequestBuffer(@this->ReadedData)
-				
 				pMemoryPoolItem[i].IsUsed = False
 				Finded = True
 				Exit For
