@@ -1,6 +1,5 @@
 #include once "HttpTraceProcessor.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "MemoryStream.bi"
 
 Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable
@@ -39,9 +38,17 @@ Sub UnInitializeHttpTraceProcessor( _
 	
 End Sub
 
-Function CreatePermanentHttpTraceProcessor( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpTraceProcessor Ptr
+Sub HttpTraceProcessorCreated( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)
+	
+End Sub
+
+Function CreateHttpTraceProcessor( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpTraceProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -49,16 +56,23 @@ Function CreatePermanentHttpTraceProcessor( _
 	)
 	
 	If this Then
+		InitializeHttpTraceProcessor(this, pIMemoryAllocator)
+		HttpTraceProcessorCreated(this)
 		
-		InitializeHttpTraceProcessor( _
+		Dim hrQueryInterface As HRESULT = HttpTraceProcessorQueryInterface( _
 			this, _
-			pIMemoryAllocator _
+			riid, _
+			ppv _
 		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpTraceProcessor(this)
+		End If
 		
-		Return this
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -126,9 +140,8 @@ Function HttpTraceProcessorPrepare( _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
-	Dim hrCreateBuffer As HRESULT = CreateInstance( _
+	Dim hrCreateBuffer As HRESULT = CreateMemoryStream( _
 		this->pIMemoryAllocator, _
-		@CLSID_MEMORYSTREAM, _
 		@IID_IMemoryStream, _
 		@pIBuffer _
 	)

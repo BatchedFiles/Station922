@@ -1,7 +1,6 @@
 #include once "FileStream.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
@@ -107,27 +106,34 @@ Sub FileStreamCreated( _
 End Sub
 
 Function CreateFileStream( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As FileStream Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As FileStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(FileStream) _
 	)
+	
 	If this Then
-		
-		InitializeFileStream( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeFileStream(this, pIMemoryAllocator)
 		FileStreamCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyFileStream(this)
+		End If
 		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -292,9 +298,8 @@ Function FileStreamBeginGetSlice( _
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Scope
-		Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+		Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 			this->pIMemoryAllocator, _
-			@CLSID_ASYNCRESULT, _
 			@IID_IAsyncResult, _
 			@pINewAsyncResult _
 		)

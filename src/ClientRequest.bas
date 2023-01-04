@@ -3,7 +3,6 @@
 #include once "CharacterConstants.bi"
 #include once "ClientUri.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
@@ -74,9 +73,8 @@ Function ClientRequestParseRequestedLine( _
 	
 	' Uri
 	Scope
-		Dim hrCreateUri As HRESULT = CreateInstance( _
+		Dim hrCreateUri As HRESULT = CreateClientUri( _
 			this->pIMemoryAllocator, _
-			@CLSID_CLIENTURI, _
 			@IID_IClientUri, _
 			@this->pClientURI _
 		)
@@ -581,8 +579,10 @@ Sub ClientRequestCreated( _
 End Sub
 
 Function CreateClientRequest( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ClientRequest Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -590,18 +590,23 @@ Function CreateClientRequest( _
 	)
 	
 	If this Then
-		
-		InitializeClientRequest( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeClientRequest(this, pIMemoryAllocator)
 		ClientRequestCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyClientRequest(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

@@ -11,9 +11,11 @@ Type WebSite As _WebSite
 
 Type LPWebSite As _WebSite Ptr
 
-Declare Function CreatePermanentWebSite( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WebSite Ptr
+Declare Function CreateWebSite( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWebSite( _
 	ByVal this As WebSite Ptr _

@@ -72,22 +72,34 @@ Sub AsyncResultCreated( _
 End Sub
 
 Function CreateAsyncResult( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As AsyncResult Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(AsyncResult) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If this Then
+		InitializeAsyncResult(this, pIMemoryAllocator)
+		AsyncResultCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = AsyncResultQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyAsyncResult(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	InitializeAsyncResult(this, pIMemoryAllocator)
-	
-	AsyncResultCreated(this)
-	
-	Return this
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

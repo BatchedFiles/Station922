@@ -1,5 +1,4 @@
 #include once "HeapMemoryAllocator.bi"
-#include once "CreateInstance.bi"
 #include once "ContainerOf.bi"
 #include once "Logger.bi"
 
@@ -100,9 +99,7 @@ Function GetHeapMemoryAllocatorInstance( _
 	
 	Scope
 		Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-		Dim hrCreateMalloc As HRESULT = CreateInstance( _
-			NULL, _
-			@CLSID_HEAPMEMORYALLOCATOR, _
+		Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
 			@IID_IHeapMemoryAllocator, _
 			@pMalloc _
 		)
@@ -119,9 +116,7 @@ Function GetServerHeapMemoryAllocatorInstance( _
 	)As IHeapMemoryAllocator Ptr
 	
 	Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-	Dim hrCreateMalloc As HRESULT = CreateInstance( _
-		NULL, _
-		@CLSID_SERVERHEAPMEMORYALLOCATOR, _
+	Dim hrCreateMalloc As HRESULT = CreateServerHeapMemoryAllocator( _
 		@IID_IHeapMemoryAllocator, _
 		@pMalloc _
 	)
@@ -162,9 +157,7 @@ Function CreateMemoryPool( _
 		
 		For i As UInteger = 0 To Length - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-			Dim hrCreateMalloc As HRESULT = CreateInstance( _
-				NULL, _
-				@CLSID_HEAPMEMORYALLOCATOR, _
+			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
 				@IID_IHeapMemoryAllocator, _
 				@pMalloc _
 			)
@@ -238,66 +231,94 @@ Sub HeapMemoryAllocatorAllocFailed( _
 End Sub
 
 Function CreateHeapMemoryAllocator( _
-	)As HeapMemoryAllocator Ptr
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
-	
-	If hHeap Then
-		
-		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-			hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			SizeOf(HeapMemoryAllocator) _
-		)
-		
-		If this Then
-			InitializeHeapMemoryAllocator(this, hHeap)
-			
-			HeapMemoryAllocatorCreated(this)
-			
-			Return this
-		End If
-		
-		HeapMemoryAllocatorAllocFailed(this, SizeOf(HeapMemoryAllocator))
-		
-		HeapDestroy(hHeap)
+	If hHeap = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		*ppv = NULL
+		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	Return NULL
+	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+		hHeap, _
+		HEAP_NO_SERIALIZE_FLAG, _
+		SizeOf(HeapMemoryAllocator) _
+	)
+	
+	If this Then
+		InitializeHeapMemoryAllocator(this, hHeap)
+		HeapMemoryAllocatorCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHeapMemoryAllocator(this)
+		End If
+		
+		Return hrQueryInterface
+	End If
+	
+	HeapMemoryAllocatorAllocFailed(this, SizeOf(HeapMemoryAllocator))
+	
+	HeapDestroy(hHeap)
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
 Function CreateServerHeapMemoryAllocator( _
-	)As HeapMemoryAllocator Ptr
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
-	
-	If hHeap Then
-		
-		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-			hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			SizeOf(ServerHeapMemoryAllocator) _
-		)
-		
-		If this Then
-			InitializeServerHeapMemoryAllocator(this, hHeap)
-			
-			Return this
-		End If
-		
-		HeapDestroy(hHeap)
+	If hHeap = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		*ppv = NULL
+		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	Return NULL
+	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+		hHeap, _
+		HEAP_NO_SERIALIZE_FLAG, _
+		SizeOf(ServerHeapMemoryAllocator) _
+	)
+	
+	If this Then
+		InitializeServerHeapMemoryAllocator(this, hHeap)
+		HeapMemoryAllocatorCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHeapMemoryAllocator(this)
+		End If
+		
+		Return hrQueryInterface
+	End If
+	
+	HeapDestroy(hHeap)
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

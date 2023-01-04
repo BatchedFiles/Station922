@@ -11,9 +11,11 @@ Type HttpPutProcessor As _HttpPutProcessor
 
 Type LPHttpPutProcessor As _HttpPutProcessor Ptr
 
-Declare Function CreatePermanentHttpPutProcessor( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpPutProcessor Ptr
+Declare Function CreateHttpPutProcessor( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpPutProcessor( _
 	ByVal this As HttpPutProcessor Ptr _

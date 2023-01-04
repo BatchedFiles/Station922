@@ -12,8 +12,10 @@ Type NetworkStream As _NetworkStream
 Type LPNetworkStream As _NetworkStream Ptr
 
 Declare Function CreateNetworkStream( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As NetworkStream Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyNetworkStream( _
 	ByVal this As NetworkStream Ptr _

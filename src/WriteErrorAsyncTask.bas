@@ -3,7 +3,6 @@
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpWriter.bi"
 #include once "ServerResponse.bi"
@@ -295,13 +294,14 @@ Sub WriteErrorAsyncTaskCreated( _
 End Sub
 
 Function CreateWriteErrorAsyncTask( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As WriteErrorAsyncTask Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim pIHttpWriter As IHttpWriter Ptr = Any
-	Dim hrCreateWriter As HRESULT = CreateInstance( _
+	Dim hrCreateWriter As HRESULT = CreateHttpWriter( _
 		pIMemoryAllocator, _
-		@CLSID_HTTPWRITER, _
 		@IID_IHttpWriter, _
 		@pIHttpWriter _
 	)
@@ -309,9 +309,8 @@ Function CreateWriteErrorAsyncTask( _
 	If SUCCEEDED(hrCreateWriter) Then
 		
 		Dim pIResponse As IServerResponse Ptr = Any
-		Dim hrCreateResponse As HRESULT = CreateInstance( _
+		Dim hrCreateResponse As HRESULT = CreateServerResponse( _
 			pIMemoryAllocator, _
-			@CLSID_SERVERRESPONSE, _
 			@IID_IServerResponse, _
 			@pIResponse _
 		)
@@ -330,10 +329,18 @@ Function CreateWriteErrorAsyncTask( _
 					pIResponse, _
 					pIHttpWriter _
 				)
-				
 				WriteErrorAsyncTaskCreated(this)
 				
-				Return this
+				Dim hrQueryInterface As HRESULT = WriteErrorAsyncTaskQueryInterface( _
+					this, _
+					riid, _
+					ppv _
+				)
+				If FAILED(hrQueryInterface) Then
+					DestroyWriteErrorAsyncTask(this)
+				End If
+				
+				Return hrQueryInterface
 			End If
 			
 			IServerResponse_Release(pIResponse)
@@ -342,7 +349,8 @@ Function CreateWriteErrorAsyncTask( _
 		IHttpWriter_Release(pIHttpWriter)
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -477,9 +485,8 @@ Function WriteErrorAsyncTaskEndExecute( _
 			End If
 			
 			Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-			Dim hrCreateTask As HRESULT = CreateInstance( _
+			Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
 				this->pIMemoryAllocator, _
-				@CLSID_READREQUESTASYNCTASK, _
 				@IID_IReadRequestAsyncIoTask, _
 				@pTask _
 			)

@@ -58,8 +58,10 @@ Sub HttpReaderCreated( _
 End Sub
 
 Function CreateHttpReader( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpReader Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -67,17 +69,23 @@ Function CreateHttpReader( _
 	)
 	
 	If this Then
-		InitializeHttpReader( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeHttpReader(this, pIMemoryAllocator)
 		HttpReaderCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = HttpReaderQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpReader(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

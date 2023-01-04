@@ -11,9 +11,11 @@ Type HttpOptionsProcessor As _HttpOptionsProcessor
 
 Type LPHttpOptionsProcessor As _HttpOptionsProcessor Ptr
 
-Declare Function CreatePermanentHttpOptionsProcessor( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpOptionsProcessor Ptr
+Declare Function CreateHttpOptionsProcessor( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpOptionsProcessor( _
 	ByVal this As HttpOptionsProcessor Ptr _

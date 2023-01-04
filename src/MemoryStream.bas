@@ -1,7 +1,6 @@
 #include once "MemoryStream.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
@@ -70,9 +69,17 @@ Sub UnInitializeMemoryStream( _
 	
 End Sub
 
+Sub MemoryStreamCreated( _
+		ByVal this As MemoryStream Ptr _
+	)
+	
+End Sub
+
 Function CreateMemoryStream( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As MemoryStream Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As MemoryStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -80,16 +87,23 @@ Function CreateMemoryStream( _
 	)
 	
 	If this Then
+		InitializeMemoryStream(this, pIMemoryAllocator)
+		MemoryStreamCreated(this)
 		
-		InitializeMemoryStream( _
+		Dim hrQueryInterface As HRESULT = MemoryStreamQueryInterface( _
 			this, _
-			pIMemoryAllocator _
+			riid, _
+			ppv _
 		)
+		If FAILED(hrQueryInterface) Then
+			DestroyMemoryStream(this)
+		End If
 		
-		Return this
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -177,9 +191,8 @@ Function MemoryStreamBeginGetSlice( _
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Scope
-		Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+		Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 			this->pIMemoryAllocator, _
-			@CLSID_ASYNCRESULT, _
 			@IID_IAsyncResult, _
 			@pINewAsyncResult _
 		)

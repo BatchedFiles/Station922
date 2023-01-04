@@ -2,7 +2,6 @@
 #include once "win\shlwapi.bi"
 #include once "win\wincrypt.bi"
 #include once "CharacterConstants.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
@@ -251,9 +250,8 @@ Function ProcessErrorRequestResponse( _
 	)As HRESULT
 	
 	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreateInstance( _
+	Dim hrCreateTask As HRESULT = CreateWriteErrorAsyncTask( _
 		pIMemoryAllocator, _
-		@CLSID_WRITEERRORASYNCTASK, _
 		@IID_IWriteErrorAsyncIoTask, _
 		@pTask _
 	)

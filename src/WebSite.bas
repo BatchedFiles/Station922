@@ -3,7 +3,6 @@
 #include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "FileStream.bi"
 #include once "HeapBSTR.bi"
 #include once "MemoryStream.bi"
@@ -768,21 +767,34 @@ Sub UnInitializeWebSite( _
 	
 End Sub
 
-Function CreatePermanentWebSite( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As WebSite Ptr
+Function CreateWebSite( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSite) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If this Then
+		InitializeWebSite(this, pIMemoryAllocator)
+		
+		Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyWebSite(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	InitializeWebSite(this, pIMemoryAllocator)
-	
-	Return this
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -910,9 +922,8 @@ Function WebSiteGetBuffer( _
 	
 	Dim pIFile As IFileStream Ptr = Any
 	Scope
-		Dim hrCreateFileBuffer As HRESULT = CreateInstance( _
+		Dim hrCreateFileBuffer As HRESULT = CreateFileStream( _
 			pIMalloc, _
-			@CLSID_FILESTREAM, _
 			@IID_IFileStream, _
 			@pIFile _
 		)
@@ -1148,9 +1159,8 @@ Function WebSiteGetErrorBuffer( _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
-	Dim hrCreateBuffer As HRESULT = CreateInstance( _
+	Dim hrCreateBuffer As HRESULT = CreateMemoryStream( _
 		pIMalloc, _
-		@CLSID_MEMORYSTREAM, _
 		@IID_IMemoryStream, _
 		@pIBuffer _
 	)

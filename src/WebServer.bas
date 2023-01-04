@@ -1,7 +1,6 @@
 #include once "WebServer.bi"
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
@@ -133,9 +132,8 @@ Function CreateAcceptConnectionTask( _
 	)As HRESULT
 	
 	Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreatePermanentInstance( _
+	Dim hrCreateTask As HRESULT = CreateAcceptConnectionAsyncTask( _
 		this->pIMemoryAllocator, _
-		@CLSID_ACCEPTCONNECTIONASYNCTASK, _
 		@IID_IAcceptConnectionAsyncIoTask, _
 		@pTask _
 	)
@@ -166,9 +164,8 @@ Function ReadConfiguration( _
 	)As HRESULT
 	
 	Dim pIConfig As IWebServerConfiguration Ptr = Any
-	Dim hrCreateConfiguration As HRESULT = CreateInstance( _
+	Dim hrCreateConfiguration As HRESULT = CreateWebServerIniConfiguration( _
 		this->pIMemoryAllocator, _
-		@CLSID_INICONFIGURATION, _
 		@IID_IIniConfiguration, _
 		@pIConfig _
 	)
@@ -295,39 +292,46 @@ Sub UnInitializeWebServer( _
 End Sub
 
 Function CreateWebServer( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As WebServer Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim pIPool As IThreadPool Ptr = Any
-	Dim hrCreateThreadPool As HRESULT = CreatePermanentInstance( _
+	Dim hrCreateThreadPool As HRESULT = CreateThreadPool( _
 		pIMemoryAllocator, _
-		@CLSID_THREADPOOL, _
 		@IID_IThreadPool, _
 		@pIPool _
 	)
-	
-	If SUCCEEDED(hrCreateThreadPool) Then
-		
-		Dim this As WebServer Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(WebServer) _
-		)
-		
-		If this Then
-			
-			InitializeWebServer( _
-				this, _
-				pIMemoryAllocator, _
-				pIPool _
-			)
-			
-			Return this
-		End If
-		
-		IThreadPool_Release(pIPool)
+	If FAILED(hrCreateThreadPool) Then
+		*ppv = NULL
+		Return hrCreateThreadPool
 	End If
 	
-	Return NULL
+	Dim this As WebServer Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(WebServer) _
+	)
+	
+	If this Then
+		InitializeWebServer(this, pIMemoryAllocator, pIPool)
+		
+		Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyWebServer(this)
+		End If
+		
+		Return hrQueryInterface
+	End If
+	
+	IThreadPool_Release(pIPool)
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

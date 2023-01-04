@@ -12,8 +12,10 @@ Type WriteResponseAsyncTask As _WriteResponseAsyncTask
 Type LPWriteResponseAsyncTask As _WriteResponseAsyncTask Ptr
 
 Declare Function CreateWriteResponseAsyncTask( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WriteResponseAsyncTask Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWriteResponseAsyncTask( _
 	ByVal this As WriteResponseAsyncTask Ptr _

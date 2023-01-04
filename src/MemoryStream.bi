@@ -13,8 +13,10 @@ Type MemoryStream As _MemoryStream
 Type LPMemoryStream As _MemoryStream Ptr
 
 Declare Function CreateMemoryStream( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As MemoryStream Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyMemoryStream( _
 	ByVal this As MemoryStream Ptr _

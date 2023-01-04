@@ -12,8 +12,10 @@ Type HttpWriter As _HttpWriter
 Type LPHttpWriter As _HttpWriter Ptr
 
 Declare Function CreateHttpWriter( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpWriter Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpWriter( _
 	ByVal this As HttpWriter Ptr _

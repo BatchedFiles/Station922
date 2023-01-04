@@ -2,7 +2,6 @@
 #include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
@@ -50,9 +49,11 @@ Sub HttpPutProcessorCreated( _
 	
 End Sub
 
-Function CreatePermanentHttpPutProcessor( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpPutProcessor Ptr
+Function CreateHttpPutProcessor( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpPutProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -60,18 +61,23 @@ Function CreatePermanentHttpPutProcessor( _
 	)
 	
 	If this Then
-		
-		InitializeHttpPutProcessor( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeHttpPutProcessor(this, pIMemoryAllocator)
 		HttpPutProcessorCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = HttpPutProcessorQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpPutProcessor(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

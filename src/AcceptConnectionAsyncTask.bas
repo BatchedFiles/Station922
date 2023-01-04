@@ -1,6 +1,5 @@
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
@@ -35,9 +34,8 @@ Function CreateReadTask( _
 	If pIClientMemoryAllocator Then
 		
 		Dim pIHttpReader As IHttpReader Ptr = Any
-		Dim hrCreateHttpReader As HRESULT = CreateInstance( _
+		Dim hrCreateHttpReader As HRESULT = CreateHttpReader( _
 			CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-			@CLSID_HTTPREADER, _
 			@IID_IHttpReader, _
 			@pIHttpReader _
 		)
@@ -50,9 +48,8 @@ Function CreateReadTask( _
 			*ppBuffer = pBuffer
 			
 			Dim pINetworkStream As INetworkStream Ptr = Any
-			Dim hrCreateNetworkStream As HRESULT = CreateInstance( _
+			Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
 				CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-				@CLSID_NETWORKSTREAM, _
 				@IID_INetworkStream, _
 				@pINetworkStream _
 			)
@@ -73,9 +70,8 @@ Function CreateReadTask( _
 				)
 				
 				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-				Dim hrCreateTask As HRESULT = CreateInstance( _
+				Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
 					CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-					@CLSID_READREQUESTASYNCTASK, _
 					@IID_IReadRequestAsyncIoTask, _
 					@pTask _
 				)
@@ -144,41 +140,49 @@ Sub AcceptConnectionAsyncTaskCreated( _
 	
 End Sub
 
-Function CreatePermanentAcceptConnectionAsyncTask( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As AcceptConnectionAsyncTask Ptr
+Function CreateAcceptConnectionAsyncTask( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim pListener As ITcpListener Ptr = Any
-	Dim hrCreateListener As HRESULT = CreatePermanentInstance( _
+	Dim hrCreateListener As HRESULT = CreateTcpListener( _
 		pIMemoryAllocator, _
-		@CLSID_TCPLISTENER, _
 		@IID_ITcpListener, _
 		@pListener _
 	)
-	
-	If SUCCEEDED(hrCreateListener) Then
-		
-		Dim this As AcceptConnectionAsyncTask Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(AcceptConnectionAsyncTask) _
-		)
-		
-		If this Then
-			InitializeAcceptConnectionAsyncTask( _
-				this, _
-				pIMemoryAllocator, _
-				pListener _
-			)
-			
-			AcceptConnectionAsyncTaskCreated(this)
-			
-			Return this
-		End If
-		
-		ITcpListener_Release(pListener)
+	If FAILED(hrCreateListener) Then
+		*ppv = NULL
+		Return hrCreateListener
 	End If
 	
-	Return NULL
+	Dim this As AcceptConnectionAsyncTask Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(AcceptConnectionAsyncTask) _
+	)
+	If this Then
+		InitializeAcceptConnectionAsyncTask( _
+			this, _
+			pIMemoryAllocator, _
+			pListener _
+		)
+		AcceptConnectionAsyncTaskCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = AcceptConnectionAsyncTaskQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyAcceptConnectionAsyncTask(this)
+		End If
+		
+		Return hrQueryInterface
+	End If
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

@@ -12,8 +12,10 @@ Type WebServer As _WebServer
 Type LPWebServer As _WebServer Ptr
 
 Declare Function CreateWebServer( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WebServer Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWebServer( _
 	ByVal this As WebServer Ptr _

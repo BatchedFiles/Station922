@@ -2,7 +2,6 @@
 #include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
@@ -89,8 +88,10 @@ Sub UnInitializeServerResponse( _
 End Sub
 
 Function CreateServerResponse( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ServerResponse Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -98,16 +99,22 @@ Function CreateServerResponse( _
 	)
 	
 	If this Then
+		InitializeServerResponse(this, pIMemoryAllocator)
 		
-		InitializeServerResponse( _
+		Dim hrQueryInterface As HRESULT = ServerResponseQueryInterface( _
 			this, _
-			pIMemoryAllocator _
+			riid, _
+			ppv _
 		)
+		If FAILED(hrQueryInterface) Then
+			DestroyServerResponse(this)
+		End If
 		
-		Return this
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

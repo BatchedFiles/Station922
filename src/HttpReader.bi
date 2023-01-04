@@ -12,8 +12,10 @@ Type HttpReader As _HttpReader
 Type LPHttpReader As _HttpReader Ptr
 
 Declare Function CreateHttpReader( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpReader Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpReader( _
 	ByVal this As HttpReader Ptr _

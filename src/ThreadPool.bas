@@ -104,9 +104,11 @@ Sub UnInitializeThreadPool( _
 	
 End Sub
 
-Function CreatePermanentThreadPool( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ThreadPool Ptr
+Function CreateThreadPool( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As ThreadPool Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -114,15 +116,22 @@ Function CreatePermanentThreadPool( _
 	)
 	
 	If this Then
-		InitializeThreadPool( _
-			this, _
-			pIMemoryAllocator _
-		)
+		InitializeThreadPool(this, pIMemoryAllocator)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = ThreadPoolQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyThreadPool(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

@@ -11,9 +11,11 @@ Type ThreadPool As _ThreadPool
 
 Type LPThreadPool As _ThreadPool Ptr
 
-Declare Function CreatePermanentThreadPool( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ThreadPool Ptr
+Declare Function CreateThreadPool( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyThreadPool( _
 	ByVal this As ThreadPool Ptr _

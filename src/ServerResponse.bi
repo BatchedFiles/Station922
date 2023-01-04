@@ -12,8 +12,10 @@ Type ServerResponse As _ServerResponse
 Type LPServerResponse As _ServerResponse Ptr
 
 Declare Function CreateServerResponse( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ServerResponse Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyServerResponse( _
 	ByVal this As ServerResponse Ptr _

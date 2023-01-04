@@ -11,9 +11,11 @@ Type AcceptConnectionAsyncTask As _AcceptConnectionAsyncTask
 
 Type LPAcceptConnectionAsyncTask As _AcceptConnectionAsyncTask Ptr
 
-Declare Function CreatePermanentAcceptConnectionAsyncTask( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As AcceptConnectionAsyncTask Ptr
+Declare Function CreateAcceptConnectionAsyncTask( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyAcceptConnectionAsyncTask( _
 	ByVal this As AcceptConnectionAsyncTask Ptr _

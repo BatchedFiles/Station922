@@ -12,8 +12,10 @@ Type AsyncResult As _AsyncResult
 Type LPAsyncResult As _AsyncResult Ptr
 
 Declare Function CreateAsyncResult( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As AsyncResult Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyAsyncResult( _
 	ByVal this As AsyncResult Ptr _

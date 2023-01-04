@@ -12,8 +12,10 @@ Type WriteErrorAsyncTask As _WriteErrorAsyncTask
 Type LPWriteErrorAsyncTask As _WriteErrorAsyncTask Ptr
 
 Declare Function CreateWriteErrorAsyncTask( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WriteErrorAsyncTask Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWriteErrorAsyncTask( _
 	ByVal this As WriteErrorAsyncTask Ptr _

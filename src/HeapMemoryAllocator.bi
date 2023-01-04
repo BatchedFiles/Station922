@@ -29,10 +29,14 @@ Declare Function CreateMemoryPool( _
 )As HRESULT
 
 Declare Function CreateHeapMemoryAllocator( _
-)As HeapMemoryAllocator Ptr
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Function CreateServerHeapMemoryAllocator( _
-)As HeapMemoryAllocator Ptr
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHeapMemoryAllocator( _
 	ByVal this As HeapMemoryAllocator Ptr _

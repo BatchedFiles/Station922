@@ -12,9 +12,11 @@ Type WebSiteCollection As _WebSiteCollection
 
 Type LPWebSiteCollection As _WebSiteCollection Ptr
 
-Declare Function CreatePermanentWebSiteCollection( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WebSiteCollection Ptr
+Declare Function CreateWebSiteCollection( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWebSiteCollection( _
 	ByVal this As WebSiteCollection Ptr _

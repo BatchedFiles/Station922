@@ -1,6 +1,5 @@
 #include once "HttpOptionsProcessor.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "MemoryStream.bi"
 
@@ -48,9 +47,11 @@ Sub HttpOptionsProcessorCreated( _
 	
 End Sub
 
-Function CreatePermanentHttpOptionsProcessor( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpOptionsProcessor Ptr
+Function CreateHttpOptionsProcessor( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpOptionsProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -58,18 +59,23 @@ Function CreatePermanentHttpOptionsProcessor( _
 	)
 	
 	If this Then
-		
-		InitializeHttpOptionsProcessor( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeHttpOptionsProcessor(this, pIMemoryAllocator)
 		HttpOptionsProcessorCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = HttpOptionsProcessorQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpOptionsProcessor(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -145,9 +151,8 @@ Function HttpOptionsProcessorPrepare( _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
-	Dim hrCreateBuffer As HRESULT = CreateInstance( _
+	Dim hrCreateBuffer As HRESULT = CreateMemoryStream( _
 		this->pIMemoryAllocator, _
-		@CLSID_MEMORYSTREAM, _
 		@IID_IMemoryStream, _
 		@pIBuffer _
 	)

@@ -12,8 +12,10 @@ Type ReadRequestAsyncTask As _ReadRequestAsyncTask
 Type LPReadRequestAsyncTask As _ReadRequestAsyncTask Ptr
 
 Declare Function CreateReadRequestAsyncTask( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ReadRequestAsyncTask Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyReadRequestAsyncTask( _
 	ByVal this As ReadRequestAsyncTask Ptr _

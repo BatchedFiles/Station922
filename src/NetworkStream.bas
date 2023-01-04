@@ -2,7 +2,6 @@
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "Network.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
@@ -62,22 +61,34 @@ Sub NetworkStreamCreated( _
 End Sub
 
 Function CreateNetworkStream( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As NetworkStream Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(NetworkStream) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If this Then
+		InitializeNetworkStream(this, pIMemoryAllocator)
+		NetworkStreamCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = NetworkStreamQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyNetworkStream(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	InitializeNetworkStream(this, pIMemoryAllocator)
-	
-	NetworkStreamCreated(this)
-	
-	Return this
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -166,9 +177,8 @@ Function NetworkStreamBeginRead( _
 	)As HRESULT
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
-	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 		this->pIMemoryAllocator, _
-		@CLSID_ASYNCRESULT, _
 		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)
@@ -265,9 +275,8 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 	)As HRESULT
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
-	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 		this->pIMemoryAllocator, _
-		@CLSID_ASYNCRESULT, _
 		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)

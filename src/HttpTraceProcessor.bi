@@ -11,9 +11,11 @@ Type HttpTraceProcessor As _HttpTraceProcessor
 
 Type LPHttpTraceProcessor As _HttpTraceProcessor Ptr
 
-Declare Function CreatePermanentHttpTraceProcessor( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpTraceProcessor Ptr
+Declare Function CreateHttpTraceProcessor( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpTraceProcessor( _
 	ByVal this As HttpTraceProcessor Ptr _

@@ -1,7 +1,6 @@
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 #include once "WriteErrorAsyncTask.bi"
@@ -73,39 +72,51 @@ Sub ReadRequestAsyncTaskCreated( _
 End Sub
 
 Function CreateReadRequestAsyncTask( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ReadRequestAsyncTask Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim pIRequest As IClientRequest Ptr = Any
-	Dim hrCreateRequest As HRESULT = CreateInstance( _
+	Dim hrCreateRequest As HRESULT = CreateClientRequest( _
 		pIMemoryAllocator, _
-		@CLSID_CLIENTREQUEST, _
 		@IID_IClientRequest, _
 		@pIRequest _
 	)
-
-	If SUCCEEDED(hrCreateRequest) Then
-		Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(ReadRequestAsyncTask) _
-		)
-		
-		If this Then
-			InitializeReadRequestAsyncTask( _
-				this, _
-				pIMemoryAllocator, _
-				pIRequest _
-			)
-			
-			ReadRequestAsyncTaskCreated(this)
-			
-			Return this
-		End If
-		
-		IClientRequest_Release(pIRequest)
+	If FAILED(hrCreateRequest) Then
+		*ppv = NULL
+		Return hrCreateRequest
 	End If
 	
-	Return NULL
+	Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(ReadRequestAsyncTask) _
+	)
+	
+	If this Then
+		InitializeReadRequestAsyncTask( _
+			this, _
+			pIMemoryAllocator, _
+			pIRequest _
+		)
+		ReadRequestAsyncTaskCreated(this)
+		
+		Dim hrQueryInterface As HRESULT = ReadRequestAsyncTaskQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyReadRequestAsyncTask(this)
+		End If
+		
+		Return hrQueryInterface
+	End If
+	
+	IClientRequest_Release(pIRequest)
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -276,9 +287,8 @@ Function ReadRequestAsyncTaskEndExecute( _
 				Dim pTask As IWriteResponseAsyncIoTask Ptr = Any
 				
 				Scope
-					Dim hrCreateTask As HRESULT = CreateInstance( _
+					Dim hrCreateTask As HRESULT = CreateWriteResponseAsyncTask( _
 						this->pIMemoryAllocator, _
-						@CLSID_WRITERESPONSEASYNCTASK, _
 						@IID_IWriteResponseAsyncIoTask, _
 						@pTask _
 					)

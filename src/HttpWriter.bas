@@ -1,7 +1,6 @@
 #include once "AsyncResult.bi"
 #include once "HttpWriter.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
@@ -87,9 +86,17 @@ Sub UnInitializeHttpWriter( _
 	
 End Sub
 
+Sub HttpWriterCreated( _
+		ByVal this As HttpWriter Ptr _
+	)
+	
+End Sub
+
 Function CreateHttpWriter( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpWriter Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpWriter Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -97,16 +104,23 @@ Function CreateHttpWriter( _
 	)
 	
 	If this Then
+		InitializeHttpWriter(this, pIMemoryAllocator)
+		HttpWriterCreated(this)
 		
-		InitializeHttpWriter( _
+		Dim hrQueryInterface As HRESULT = HttpWriterQueryInterface( _
 			this, _
-			pIMemoryAllocator _
+			riid, _
+			ppv _
 		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpWriter(this)
+		End If
 		
-		Return this
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -320,9 +334,8 @@ Function HttpWriterBeginWrite( _
 				End If
 				
 				Dim pINewAsyncResult As IAsyncResult Ptr = Any
-				Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+				Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 					this->pIMemoryAllocator, _
-					@CLSID_ASYNCRESULT, _
 					@IID_IAsyncResult, _
 					@pINewAsyncResult _
 				)

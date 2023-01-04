@@ -11,9 +11,11 @@ Type TcpListener As _TcpListener
 
 Type LPTcpListener As _TcpListener Ptr
 
-Declare Function CreatePermanentTcpListener( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As TcpListener Ptr
+Declare Function CreateTcpListener( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyTcpListener( _
 	ByVal this As TcpListener Ptr _

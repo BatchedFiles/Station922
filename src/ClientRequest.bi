@@ -12,8 +12,10 @@ Type ClientRequest As _ClientRequest
 Type LPClientRequest As _ClientRequest Ptr
 
 Declare Function CreateClientRequest( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ClientRequest Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyClientRequest( _
 	ByVal this As ClientRequest Ptr _

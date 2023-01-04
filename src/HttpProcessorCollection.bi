@@ -11,9 +11,11 @@ Type HttpProcessorCollection As _HttpProcessorCollection
 
 Type LPHttpProcessorCollection As _HttpProcessorCollection Ptr
 
-Declare Function CreatePermanentHttpProcessorCollection( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As HttpProcessorCollection Ptr
+Declare Function CreateHttpProcessorCollection( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyHttpProcessorCollection( _
 	ByVal this As HttpProcessorCollection Ptr _

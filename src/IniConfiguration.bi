@@ -12,8 +12,10 @@ Type WebServerIniConfiguration As _WebServerIniConfiguration
 Type LPWebServerIniConfiguration As _WebServerIniConfiguration Ptr
 
 Declare Function CreateWebServerIniConfiguration( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As WebServerIniConfiguration Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyWebServerIniConfiguration( _
 	ByVal this As WebServerIniConfiguration Ptr _

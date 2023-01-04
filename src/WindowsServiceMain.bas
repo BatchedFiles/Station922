@@ -1,5 +1,4 @@
 #include once "WindowsServiceMain.bi"
-#include once "CreateInstance.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "WebServer.bi"
 
@@ -126,9 +125,8 @@ Sub SvcMain( _
 		Exit Sub
 	End If
 	
-	Dim hrCreateWebServer As HRESULT = CreateInstance( _
+	Dim hrCreateWebServer As HRESULT = CreateWebServer( _
 		pIMemoryAllocator, _
-		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
 		@Context.pIWebServer _
 	)

@@ -63,21 +63,33 @@ Sub UnInitializeHttpProcessorCollection( _
 	
 End Sub
 
-Function CreatePermanentHttpProcessorCollection( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As HttpProcessorCollection Ptr
+Function CreateHttpProcessorCollection( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As HttpProcessorCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpProcessorCollection) _
 	)
-	If this = NULL Then
-		Return NULL
+	If this Then
+		InitializeHttpProcessorCollection(this, pIMemoryAllocator)
+		
+		Dim hrQueryInterface As HRESULT = HttpProcessorCollectionQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyHttpProcessorCollection(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	InitializeHttpProcessorCollection(this, pIMemoryAllocator)
-	
-	Return this
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

@@ -148,21 +148,34 @@ Sub UnInitializeWebSiteCollection( _
 	
 End Sub
 
-Function CreatePermanentWebSiteCollection( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As WebSiteCollection Ptr
+Function CreateWebSiteCollection( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSiteCollection) _
 	)
-	If this = NULL Then
-		Return NULL
+	
+	If this Then
+		InitializeWebSiteCollection(this, pIMemoryAllocator)
+		
+		Dim hrQueryInterface As HRESULT = WebSiteCollectionQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyWebSiteCollection(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	InitializeWebSiteCollection(this, pIMemoryAllocator)
-	
-	Return this
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 

@@ -2,7 +2,6 @@
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
-#include once "CreateInstance.bi"
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
 
@@ -49,9 +48,17 @@ Sub UnInitializeTcpListener( _
 	
 End Sub
 
-Function CreatePermanentTcpListener( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As TcpListener Ptr
+Sub TcpListenerCreated( _
+		ByVal this As TcpListener Ptr _
+	)
+	
+End Sub
+
+Function CreateTcpListener( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As TcpListener Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -59,17 +66,31 @@ Function CreatePermanentTcpListener( _
 	)
 	
 	If this Then
-		InitializeTcpListener( _
-			this, _
-			pIMemoryAllocator _
-		)
+		InitializeTcpListener(this, pIMemoryAllocator)
+		TcpListenerCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = TcpListenerQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyTcpListener(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
+
+Sub TcpListenerDestroyed( _
+		ByVal this As TcpListener Ptr _
+	)
+	
+End Sub
 
 Sub DestroyTcpListener( _
 		ByVal this As TcpListener Ptr _
@@ -80,6 +101,8 @@ Sub DestroyTcpListener( _
 	UnInitializeTcpListener(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	TcpListenerDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
@@ -146,9 +169,8 @@ Function TcpListenerBeginAccept( _
 	End If
 	
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
-	Dim hrCreateAsyncResult As HRESULT = CreateInstance( _
+	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 		this->pIMemoryAllocator, _
-		@CLSID_ASYNCRESULT, _
 		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)

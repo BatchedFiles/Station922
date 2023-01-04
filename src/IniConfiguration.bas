@@ -1,7 +1,6 @@
 #include once "IniConfiguration.bi"
 #include once "win\shlwapi.bi"
 #include once "CharacterConstants.bi"
-#include once "CreateInstance.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpGetProcessor.bi"
@@ -99,8 +98,10 @@ Sub UnInitializeWebServerIniConfiguration( _
 End Sub
 
 Function CreateWebServerIniConfiguration( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As WebServerIniConfiguration Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim pWebServerIniFileName As WString Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -161,8 +162,16 @@ Function CreateWebServerIniConfiguration( _
 						pUsersIniFileName _
 					)
 					
-					Return this
+					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
+						this, _
+						riid, _
+						ppv _
+					)
+					If FAILED(hrQueryInterface) Then
+						DestroyWebServerIniConfiguration(this)
+					End If
 					
+					Return hrQueryInterface
 				End If
 				
 				IMalloc_Free(pIMemoryAllocator, pUsersIniFileName)
@@ -174,7 +183,8 @@ Function CreateWebServerIniConfiguration( _
 		IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -420,9 +430,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	
 	Dim pIWebSiteCollection As IWebSiteCollection Ptr = Any
 	Scope
-		Dim hr As HRESULT = CreatePermanentInstance( _
+		Dim hr As HRESULT = CreateWebSiteCollection( _
 			this->pIMemoryAllocator, _
-			@CLSID_WEBSITECOLLECTION, _
 			@IID_IWebSiteCollection, _
 			@pIWebSiteCollection _
 		)
@@ -460,9 +469,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 		
 		Dim bstrWebSite As HeapBSTR = Any
 		Dim pIWebSite As IWebSite Ptr = Any
-		Dim hr2 As HRESULT = CreatePermanentInstance( _
+		Dim hr2 As HRESULT = CreateWebSite( _
 			this->pIMemoryAllocator, _
-			@CLSID_WEBSITE, _
 			@IID_IWebSite, _
 			@pIWebSite _
 		)
@@ -616,9 +624,8 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 	
 	Scope
 		Dim pIDefaultWebSite As IWebSite Ptr = Any
-		Dim hr2 As HRESULT = CreatePermanentInstance( _
+		Dim hr2 As HRESULT = CreateWebSite( _
 			this->pIMemoryAllocator, _
-			@CLSID_WEBSITE, _
 			@IID_IWebSite, _
 			@pIDefaultWebSite _
 		)
@@ -712,9 +719,8 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
 	Scope
-		Dim hr As HRESULT = CreatePermanentInstance( _
+		Dim hr As HRESULT = CreateHttpProcessorCollection( _
 			this->pIMemoryAllocator, _
-			@CLSID_HTTPPROCESSORCOLLECTION, _
 			@IID_IHttpProcessorCollection, _
 			@pIProcessorCollection _
 		)
@@ -726,9 +732,8 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+		Dim hrCreateProcessor As HRESULT = CreateHttpGetProcessor( _
 			this->pIMemoryAllocator, _
-			@CLSID_HTTPGETASYNCPROCESSOR, _
 			@IID_IHttpGetAsyncProcessor, _
 			@pIHttpGetProcessor _
 		)
@@ -755,9 +760,8 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Dim pIHttpPutProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+		Dim hrCreateProcessor As HRESULT = CreateHttpPutProcessor( _
 			this->pIMemoryAllocator, _
-			@CLSID_HTTPPUTASYNCPROCESSOR, _
 			@IID_IHttpPutAsyncProcessor, _
 			@pIHttpPutProcessor _
 		)
@@ -778,9 +782,8 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Dim pIHttpTraceProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+		Dim hrCreateProcessor As HRESULT = CreateHttpTraceProcessor( _
 			this->pIMemoryAllocator, _
-			@CLSID_HTTPTRACEASYNCPROCESSOR, _
 			@IID_IHttpTraceAsyncProcessor, _
 			@pIHttpTraceProcessor _
 		)
@@ -801,9 +804,8 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	
 	Scope
 		Dim pIHttpOptionsProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreatePermanentInstance( _
+		Dim hrCreateProcessor As HRESULT = CreateHttpOptionsProcessor( _
 			this->pIMemoryAllocator, _
-			@CLSID_HTTPOPTIONSASYNCPROCESSOR, _
 			@IID_IHttpOptionsAsyncProcessor, _
 			@pIHttpOptionsProcessor _
 		)

@@ -1,5 +1,4 @@
 #include once "ConsoleMain.bi"
-#include once "CreateInstance.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "WebServer.bi"
 
@@ -42,9 +41,8 @@ Function ConsoleMain()As Integer
 	End If
 	
 	Dim pIWebServer As IRunnable Ptr = Any
-	Dim hrCreateServer As HRESULT = CreateInstance( _
+	Dim hrCreateServer As HRESULT = CreateWebServer( _
 		pIMemoryAllocator, _
-		@CLSID_WEBSERVER, _
 		@IID_IRunnable, _
 		@pIWebServer _
 	)

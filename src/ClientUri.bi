@@ -12,8 +12,10 @@ Type ClientUri As _ClientUri
 Type LPClientUri As _ClientUri Ptr
 
 Declare Function CreateClientUri( _
-	ByVal pIMemoryAllocator As IMalloc Ptr _
-)As ClientUri Ptr
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
+	ByVal riid As REFIID, _
+	ByVal ppv As Any Ptr Ptr _
+)As HRESULT
 
 Declare Sub DestroyClientUri( _
 	ByVal this As ClientUri Ptr _

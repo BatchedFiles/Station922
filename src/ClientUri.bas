@@ -253,8 +253,10 @@ Sub ClientUriCreated( _
 End Sub
 
 Function CreateClientUri( _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
-	)As ClientUri Ptr
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
 	
 	Dim this As ClientUri Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
@@ -262,18 +264,23 @@ Function CreateClientUri( _
 	)
 	
 	If this Then
-		
-		InitializeClientUri( _
-			this, _
-			pIMemoryAllocator _
-		)
-		
+		InitializeClientUri(this, pIMemoryAllocator)
 		ClientUriCreated(this)
 		
-		Return this
+		Dim hrQueryInterface As HRESULT = ClientUriQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyClientUri(this)
+		End If
+		
+		Return hrQueryInterface
 	End If
 	
-	Return NULL
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
