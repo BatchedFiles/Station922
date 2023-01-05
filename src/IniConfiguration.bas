@@ -97,6 +97,12 @@ Sub UnInitializeWebServerIniConfiguration( _
 	
 End Sub
 
+Sub WebServerIniConfigurationCreated( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)
+	
+End Sub
+
 Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -161,6 +167,7 @@ Function CreateWebServerIniConfiguration( _
 						pWebSitesIniFileName, _
 						pUsersIniFileName _
 					)
+					WebServerIniConfigurationCreated(this)
 					
 					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
 						this, _
@@ -188,6 +195,12 @@ Function CreateWebServerIniConfiguration( _
 	
 End Function
 
+Sub WebServerIniConfigurationDestroyed( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)
+	
+End Sub
+
 Sub DestroyWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
@@ -197,6 +210,8 @@ Sub DestroyWebServerIniConfiguration( _
 	UnInitializeWebServerIniConfiguration(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebServerIniConfigurationDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

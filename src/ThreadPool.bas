@@ -104,6 +104,12 @@ Sub UnInitializeThreadPool( _
 	
 End Sub
 
+Sub ThreadPoolCreated( _
+		ByVal this As ThreadPool Ptr _
+	)
+	
+End Sub
+
 Function CreateThreadPool( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -117,6 +123,7 @@ Function CreateThreadPool( _
 	
 	If this Then
 		InitializeThreadPool(this, pIMemoryAllocator)
+		ThreadPoolCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = ThreadPoolQueryInterface( _
 			this, _
@@ -135,6 +142,12 @@ Function CreateThreadPool( _
 	
 End Function
 
+Sub ThreadPoolDestroyed( _
+		ByVal this As ThreadPool Ptr _
+	)
+	
+End Sub
+
 Sub DestroyThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
@@ -144,6 +157,8 @@ Sub DestroyThreadPool( _
 	UnInitializeThreadPool(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	ThreadPoolDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

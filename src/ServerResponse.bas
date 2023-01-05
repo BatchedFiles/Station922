@@ -87,6 +87,12 @@ Sub UnInitializeServerResponse( _
 	
 End Sub
 
+Sub ServerResponseCreated( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+End Sub
+
 Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -100,6 +106,7 @@ Function CreateServerResponse( _
 	
 	If this Then
 		InitializeServerResponse(this, pIMemoryAllocator)
+		ServerResponseCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = ServerResponseQueryInterface( _
 			this, _
@@ -118,6 +125,12 @@ Function CreateServerResponse( _
 	
 End Function
 
+Sub ServerResponseDestroyed( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+End Sub
+
 Sub DestroyServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
@@ -127,6 +140,8 @@ Sub DestroyServerResponse( _
 	UnInitializeServerResponse(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	ServerResponseDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

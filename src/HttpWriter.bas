@@ -124,6 +124,12 @@ Function CreateHttpWriter( _
 	
 End Function
 
+Sub HttpWriterDestroyed( _
+		ByVal this As HttpWriter Ptr _
+	)
+	
+End Sub
+
 Sub DestroyHttpWriter( _
 		ByVal this As HttpWriter Ptr _
 	)
@@ -133,6 +139,8 @@ Sub DestroyHttpWriter( _
 	UnInitializeHttpWriter(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpWriterDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

@@ -148,6 +148,13 @@ Sub UnInitializeWebSiteCollection( _
 	
 End Sub
 
+Sub WebSiteCollectionCreated( _
+		ByVal this As WebSiteCollection Ptr _
+	)
+	
+End Sub
+
+
 Function CreateWebSiteCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -161,6 +168,7 @@ Function CreateWebSiteCollection( _
 	
 	If this Then
 		InitializeWebSiteCollection(this, pIMemoryAllocator)
+		WebSiteCollectionCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = WebSiteCollectionQueryInterface( _
 			this, _
@@ -179,6 +187,12 @@ Function CreateWebSiteCollection( _
 	
 End Function
 
+Sub WebSiteCollectionDestroyed( _
+		ByVal this As WebSiteCollection Ptr _
+	)
+	
+End Sub
+
 Sub DestroyWebSiteCollection( _
 		ByVal this As WebSiteCollection Ptr _
 	)
@@ -188,6 +202,8 @@ Sub DestroyWebSiteCollection( _
 	UnInitializeWebSiteCollection(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebSiteCollectionDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

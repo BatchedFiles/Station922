@@ -76,6 +76,12 @@ Function CreateHttpTraceProcessor( _
 	
 End Function
 
+Sub HttpTraceProcessorDestroyed( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)
+	
+End Sub
+
 Sub DestroyHttpTraceProcessor( _
 		ByVal this As HttpTraceProcessor Ptr _
 	)
@@ -85,6 +91,8 @@ Sub DestroyHttpTraceProcessor( _
 	UnInitializeHttpTraceProcessor(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpTraceProcessorDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

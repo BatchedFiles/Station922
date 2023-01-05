@@ -107,6 +107,12 @@ Function CreateMemoryStream( _
 	
 End Function
 
+Sub MemoryStreamDestroyed( _
+		ByVal this As MemoryStream Ptr _
+	)
+	
+End Sub
+
 Sub DestroyMemoryStream( _
 		ByVal this As MemoryStream Ptr _
 	)
@@ -116,6 +122,8 @@ Sub DestroyMemoryStream( _
 	UnInitializeMemoryStream(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	MemoryStreamDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

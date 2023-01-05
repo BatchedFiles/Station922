@@ -291,6 +291,12 @@ Sub UnInitializeWebServer( _
 	
 End Sub
 
+Sub WebServerCreated( _
+		ByVal this As WebServer Ptr _
+	)
+	
+End Sub
+
 Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -315,6 +321,7 @@ Function CreateWebServer( _
 	
 	If this Then
 		InitializeWebServer(this, pIMemoryAllocator, pIPool)
+		WebServerCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
 			this, _
@@ -335,6 +342,12 @@ Function CreateWebServer( _
 	
 End Function
 
+Sub WebServerDestroyed( _
+		ByVal this As WebServer Ptr _
+	)
+	
+End Sub
+
 Sub DestroyWebServer( _
 		ByVal this As WebServer Ptr _
 	)
@@ -344,6 +357,8 @@ Sub DestroyWebServer( _
 	UnInitializeWebServer(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebServerDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

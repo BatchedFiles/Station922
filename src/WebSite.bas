@@ -767,6 +767,12 @@ Sub UnInitializeWebSite( _
 	
 End Sub
 
+Sub WebSiteCreated( _
+		ByVal this As WebSite Ptr _
+	)
+	
+End Sub
+
 Function CreateWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -780,6 +786,7 @@ Function CreateWebSite( _
 	
 	If this Then
 		InitializeWebSite(this, pIMemoryAllocator)
+		WebSiteCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
 			this, _
@@ -798,6 +805,12 @@ Function CreateWebSite( _
 	
 End Function
 
+Sub WebSiteDestroyed( _
+		ByVal this As WebSite Ptr _
+	)
+	
+End Sub
+
 Sub DestroyWebSite( _
 		ByVal this As WebSite Ptr _
 	)
@@ -807,6 +820,8 @@ Sub DestroyWebSite( _
 	UnInitializeWebSite(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebSiteDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	

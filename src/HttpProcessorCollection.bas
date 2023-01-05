@@ -63,6 +63,12 @@ Sub UnInitializeHttpProcessorCollection( _
 	
 End Sub
 
+Sub HttpProcessorCollectionCreated( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)
+	
+End Sub
+
 Function CreateHttpProcessorCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -75,6 +81,7 @@ Function CreateHttpProcessorCollection( _
 	)
 	If this Then
 		InitializeHttpProcessorCollection(this, pIMemoryAllocator)
+		HttpProcessorCollectionCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = HttpProcessorCollectionQueryInterface( _
 			this, _
@@ -93,6 +100,12 @@ Function CreateHttpProcessorCollection( _
 	
 End Function
 
+Sub HttpProcessorCollectionDestroyed( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)
+	
+End Sub
+
 Sub DestroyHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
@@ -102,6 +115,8 @@ Sub DestroyHttpProcessorCollection( _
 	UnInitializeHttpProcessorCollection(this)
 	
 	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpProcessorCollectionDestroyed(this)
 	
 	IMalloc_Release(pIMemoryAllocator)
 	
