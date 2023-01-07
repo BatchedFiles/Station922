@@ -167,9 +167,9 @@ Function HttpOptionsProcessorPrepare( _
 	Dim Path As HeapBSTR = Any
 	IClientUri_GetPath(ClientURI, @Path)
 	
-	Const AllServerMethods = WStr("GET, HEAD, OPTIONS, TRACE")
-	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, TRACE")
-	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, TRACE")
+	Const AllServerMethods = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
+	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
+	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 	
 	Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
 	If CompareResult = CompareResultEqual Then
