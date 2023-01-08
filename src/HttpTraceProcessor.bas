@@ -186,7 +186,8 @@ Function HttpTraceProcessorPrepare( _
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
-		CLngInt(RequestedBytesLength) _
+		CLngInt(RequestedBytesLength), _
+		FileAccess.ReadAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
 		IMemoryStream_Release(pIBuffer)

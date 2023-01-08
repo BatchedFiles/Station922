@@ -476,7 +476,8 @@ Function HttpGetProcessorPrepare( _
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
-		ContentLength _
+		ContentLength, _
+		FileAccess.ReadAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
 		IAttributedStream_Release(pIBuffer)

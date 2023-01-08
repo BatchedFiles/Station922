@@ -59,7 +59,8 @@ Type IHttpWriterVirtualTable
 	Prepare As Function( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal ContentLength As LongInt _
+		ByVal ContentLength As LongInt, _
+		ByVal fFileAccess As FileAccess _
 	)As HRESULT
 	
 	BeginWrite As Function( _
@@ -91,7 +92,7 @@ End Type
 #define IHttpWriter_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)
 #define IHttpWriter_GetBuffer(this, ppResult) (this)->lpVtbl->GetBuffer(this, ppResult)
 #define IHttpWriter_SetBuffer(this, pIBuffer) (this)->lpVtbl->SetBuffer(this, pIBuffer)
-#define IHttpWriter_Prepare(this, pIResponse, ContentLength) (this)->lpVtbl->Prepare(this, pIResponse, ContentLength)
+#define IHttpWriter_Prepare(this, pIResponse, ContentLength, fFileAccess) (this)->lpVtbl->Prepare(this, pIResponse, ContentLength, fFileAccess)
 #define IHttpWriter_BeginWrite(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, StateObject, ppIAsyncResult)
 #define IHttpWriter_EndWrite(this, pIAsyncResult) (this)->lpVtbl->EndWrite(this, pIAsyncResult)
 #define IHttpWriter_SetKeepAlive(this, KeepAlive) (this)->lpVtbl->SetKeepAlive(this, KeepAlive)

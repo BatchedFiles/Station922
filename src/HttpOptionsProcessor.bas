@@ -219,7 +219,8 @@ Function HttpOptionsProcessorPrepare( _
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
-		CLngInt(0) _
+		CLngInt(0), _
+		FileAccess.ReadAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
 		IMemoryStream_Release(pIBuffer)

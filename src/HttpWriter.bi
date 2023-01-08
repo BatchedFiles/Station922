@@ -58,7 +58,8 @@ Declare Function HttpWriterSetBuffer( _
 Declare Function HttpWriterPrepare( _
 	ByVal this As HttpWriter Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal ContentLength As LongInt _
+	ByVal ContentLength As LongInt, _
+	ByVal fFileAccess As FileAccess _
 )As HRESULT
 
 Declare Function HttpWriterBeginWrite( _

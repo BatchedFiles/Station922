@@ -195,7 +195,8 @@ Function HttpPutProcessorPrepare( _
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
-		ContentLength _
+		ContentLength, _
+		FileAccess.CreateAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
 		IAttributedStream_Release(pIBuffer)

@@ -263,23 +263,31 @@ Function HttpWriterSetBuffer( _
 	
 End Function
 
+Sub HttpWriterSinkResponse( _
+		ByVal this As HttpWriter Ptr, _
+		ByVal pIResponse As IServerResponse Ptr _
+	)
+	
+	If this->pIResponse Then
+		IServerResponse_Release(this->pIResponse)
+	End If
+	
+	If pIResponse Then
+		IServerResponse_AddRef(pIResponse)
+	End If
+	
+	this->pIResponse = pIResponse
+	
+End Sub
+
 Function HttpWriterPrepare( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal ContentLength As LongInt _
+		ByVal ContentLength As LongInt, _
+		ByVal fFileAccess As FileAccess _
 	)As HRESULT
 	
-	Scope
-		If this->pIResponse Then
-			IServerResponse_Release(this->pIResponse)
-		End If
-		
-		If pIResponse Then
-			IServerResponse_AddRef(pIResponse)
-		End If
-		
-		this->pIResponse = pIResponse
-	End Scope
+	HttpWriterSinkResponse(this, pIResponse)
 	
 	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
 		pIResponse, _
@@ -583,9 +591,10 @@ End Function
 Function IHttpWriterPrepare( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
-		ByVal ContentLength As LongInt _
+		ByVal ContentLength As LongInt, _
+		ByVal fFileAccess As FileAccess _
 	)As HRESULT
-	Return HttpWriterPrepare(ContainerOf(this, HttpWriter, lpVtbl), pIResponse, ContentLength)
+	Return HttpWriterPrepare(ContainerOf(this, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
 End Function
 
 Function IHttpWriterBeginWrite( _

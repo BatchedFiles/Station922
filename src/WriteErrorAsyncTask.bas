@@ -736,7 +736,8 @@ Function WriteErrorAsyncTaskPrepare( _
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		this->pIHttpWriter, _
 		this->pIResponse, _
-		SendBufferLength _
+		SendBufferLength, _
+		FileAccess.ReadAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
 		Return hrPrepareResponse
