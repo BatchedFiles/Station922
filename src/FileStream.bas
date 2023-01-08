@@ -14,10 +14,10 @@ Type _FileStream
 	#endif
 	lpVtbl As Const IFileStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
-	FileSize As LongInt
-	FileOffset As LongInt
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
+	FileSize As LongInt
+	FileOffset As LongInt
 	FileHandle As Handle
 	ZipFileHandle As HANDLE
 	FileBytes As ZString Ptr
@@ -29,8 +29,8 @@ Type _FileStream
 	ZipMode As ZipModes
 	dwRequestedLength As DWORD
 	PreviousAllocatedLength As DWORD
-	PreviousAllocatedSmallLength As DWORD
 	ContentType As MimeType
+	PreviousAllocatedSmallLength As DWORD
 End Type
 
 Sub InitializeFileStream( _
