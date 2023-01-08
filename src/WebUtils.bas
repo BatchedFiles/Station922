@@ -295,6 +295,9 @@ Function ProcessErrorRequestResponse( _
 		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			HttpError = ResponseErrorCode.VersionNotSupported
 			
+		Case CLIENTREQUEST_E_CONTENTTYPEEMPTY
+			HttpError = ResponseErrorCode.ContentTypeEmpty
+			
 		Case WEBSITE_E_SITENOTFOUND
 			HttpError = ResponseErrorCode.SiteNotFound
 			

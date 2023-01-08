@@ -5,7 +5,9 @@
 #include once "IClientRequest.bi"
 #include once "IString.bi"
 
-Const WEBSITE_S_ALREADY_EXISTS As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, ERROR_ALREADY_EXISTS)
+' GetBuffer:
+' S_OK, WEBSITE_S_CREATE_NEW, WEBSITE_S_ALREADY_EXISTS
+' Any Error
 
 Enum ContentNegotiationFlags
 	None = 0

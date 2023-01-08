@@ -176,6 +176,22 @@ Function HttpPutProcessorPrepare( _
 		Return hrGetBuffer
 	End If
 	
+	Select Case hrGetBuffer
+		
+		Case WEBSITE_S_CREATE_NEW
+			IServerResponse_SetStatusCode( _
+				pContext->pIResponse, _
+				HttpStatusCodes.Created _
+			)
+			
+		Case WEBSITE_S_ALREADY_EXISTS
+			IServerResponse_SetStatusCode( _
+				pContext->pIResponse, _
+				HttpStatusCodes.Ok _
+			)
+			
+	End Select
+	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
@@ -189,9 +205,7 @@ Function HttpPutProcessorPrepare( _
 	
 	*ppIBuffer = pIBuffer
 	
-	*ppIBuffer = NULL
-	
-	Return E_FAIL
+	Return S_OK
 	
 End Function
 

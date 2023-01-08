@@ -401,7 +401,7 @@ Function GetFileHandle( _
 				If dwError = ERROR_ALREADY_EXISTS Then
 					hrErrorCode = WEBSITE_S_ALREADY_EXISTS
 				Else
-					hrErrorCode = S_OK
+					hrErrorCode = WEBSITE_S_CREATE_NEW
 				End If
 			End If
 			
@@ -950,9 +950,9 @@ Function WebSiteGetBuffer( _
 	End Scope
 	
 	Dim FileName As WString * (MAX_PATH + 1) = Any
+	Dim hrOpenFile As HRESULT = Any
 	
 	Scope
-		Dim hrOpenFile As HRESULT = Any
 		Scope
 			Dim ClientURI As IClientUri Ptr = Any
 			IClientRequest_GetUri(pRequest, @ClientURI)
@@ -1010,19 +1010,46 @@ Function WebSiteGetBuffer( _
 	Dim Mime As MimeType = Any
 	
 	Scope
-		Dim resGetMimeOfFileExtension As Boolean = GetMimeOfFileExtension( _
-			@Mime, _
-			PathFindExtensionW(FileName) _
-		)
-		If resGetMimeOfFileExtension = False Then
-			IFileStream_Release(pIFile)
-			*pFlags = ContentNegotiationFlags.None
-			*ppResult = NULL
-			Return WEBSITE_E_FORBIDDEN
-		End If
-		
-		' TODO Проверить идентификацию для запароленных ресурсов
-		
+		Select Case fAccess
+			
+			Case FileAccess.CreateAccess, FileAccess.UpdateAccess
+				Dim pContentType As HeapBSTR = Any
+				IClientRequest_GetHttpHeader( _
+					pRequest, _
+					HttpRequestHeaders.HeaderContentType, _
+					@pContentType _
+				)
+				
+				Dim ContentTypeLength As Integer = SysStringLen(pContentType)
+				If ContentTypeLength = 0 Then
+					IFileStream_Release(pIFile)
+					*pFlags = ContentNegotiationFlags.None
+					*ppResult = NULL
+					Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
+				End If
+				
+				' TODO Get Mime from Content-Type
+				' Change File Extension
+
+				*pFlags = ContentNegotiationFlags.None
+				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+				Return hrOpenFile
+				
+			Case Else
+				Dim resGetMimeOfFileExtension As Boolean = GetMimeOfFileExtension( _
+					@Mime, _
+					PathFindExtensionW(FileName) _
+				)
+				If resGetMimeOfFileExtension = False Then
+					IFileStream_Release(pIFile)
+					*pFlags = ContentNegotiationFlags.None
+					*ppResult = NULL
+					Return WEBSITE_E_FORBIDDEN
+				End If
+				
+				' TODO Проверить идентификацию для запароленных ресурсов
+				
+			End Select
 	End Scope
 	
 	Scope
