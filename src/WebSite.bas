@@ -977,7 +977,7 @@ Function WebSiteGetBuffer( _
 			
 			Select Case hrOpenFile
 				
-				Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
+				Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
 					Dim File410 As WString * (MAX_PATH + 1) = Any
 					lstrcpyW(@File410, @FileName)
 					lstrcatW(@File410, @FileGoneExtension)
