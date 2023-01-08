@@ -11,6 +11,8 @@ Type HttpProcessorCollectionKeyValuePair
 	Key As WString * 16
 	KeyLength As Integer
 	Value As IHttpAsyncProcessor Ptr
+	Padding1 As Integer
+	Padding2 As Integer
 End Type
 
 Type _HttpProcessorCollection

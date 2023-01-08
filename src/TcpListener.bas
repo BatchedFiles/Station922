@@ -15,9 +15,11 @@ Type _TcpListener
 	lpVtbl As Const ITcpListenerVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
+	Buffer As ClientRequestBuffer Ptr
 	ListenSocket As SOCKET
 	ClientSocket As SOCKET
-	Buffer As ClientRequestBuffer Ptr
+	Padding1 As Integer
+	Padding2 As Integer
 	ProtInfo As WSAPROTOCOL_INFOW
 	ProtLength As Long
 End Type

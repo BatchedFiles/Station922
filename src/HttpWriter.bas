@@ -23,20 +23,17 @@ Type _HttpWriter
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
+	StreamBuffer As HeadersBodyBuffer
 	pIBuffer As IAttributedStream Ptr
 	pIResponse As IServerResponse Ptr
 	CurrentTask As WriterTasks
-	
 	Headers As ZString Ptr
 	HeadersOffset As LongInt
 	HeadersLength As LongInt
 	HeadersEndIndex As LongInt
-	
-	StreamBuffer As HeadersBodyBuffer
-	StreamBufferLength As Integer
 	BodyOffset As LongInt
 	BodyEndIndex As LongInt
-	
+	StreamBufferLength As Integer
 	HeadersSended As Boolean
 	BodySended As Boolean
 	SendOnlyHeaders As Boolean
@@ -289,15 +286,23 @@ Function HttpWriterPrepare( _
 	
 	HttpWriterSinkResponse(this, pIResponse)
 	
-	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
-		pIResponse, _
-		ContentLength, _
-		@this->Headers, _
-		@this->HeadersLength _
-	)
-	If FAILED(hrHeadersToString) Then
-		Return hrHeadersToString
-	End If
+	Select Case fFileAccess
+		
+		Case FileAccess.ReadAccess
+			Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
+				pIResponse, _
+				ContentLength, _
+				@this->Headers, _
+				@this->HeadersLength _
+			)
+			If FAILED(hrHeadersToString) Then
+				Return hrHeadersToString
+			End If
+			
+		Case FileAccess.CreateAccess
+			' Создать тело ответа
+			
+	End Select
 	
 	this->HeadersOffset = 0
 	

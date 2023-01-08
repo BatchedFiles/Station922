@@ -23,8 +23,8 @@ Type _MemoryStream
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	ZipMode As ZipModes
-	RequestLength As DWORD
 	ContentType As MimeType
+	RequestLength As DWORD
 End Type
 
 Sub InitializeMemoryStream( _

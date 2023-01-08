@@ -21,11 +21,9 @@ Type _ClientRequest
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pClientURI As IClientUri Ptr
-	
 	pHttpMethod As HeapBSTR
 	HttpVersion As HttpVersions
 	ContentLength As LongInt
-	
 	RequestByteRange As ByteRange
 	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean

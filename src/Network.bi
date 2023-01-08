@@ -7,9 +7,11 @@
 
 Type SocketNode
 	ClientSocket As SOCKET
+	Padding1 As Integer
 	AddressFamily As Long
 	SocketType As Long
 	Protocol As Long
+	Padding2 As Long
 End Type
 
 Declare Function NetworkStartUp()As HRESULT

@@ -9,9 +9,9 @@ Type _AsyncResult
 	#endif
 	lpVtbl As Const IAsyncResultVirtualTable Ptr
 	ReferenceCounter As UInteger
-	OverLap As OVERLAPPED
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
+	OverLap As OVERLAPPED
 	callback As AsyncCallback
 	pBuffers As Any Ptr
 	BytesTransferred As DWORD

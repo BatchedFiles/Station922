@@ -20,7 +20,6 @@ Type _ServerResponse
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
 	ResponseHeaderLine As ZString Ptr
 	ResponseHeaderLineLength As Integer
 	HttpVersion As HttpVersions
@@ -30,6 +29,7 @@ Type _ServerResponse
 	ByteRangeLength As LongInt
 	ResponseZipMode As ZipModes
 	Mime As MimeType
+	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
 	ResponseZipEnable As Boolean
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean

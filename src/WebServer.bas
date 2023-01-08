@@ -26,21 +26,16 @@ Type _WebServer
 	lpVtbl As Const IRunnableVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	
 	WorkerThreadsCount As UInteger
-	pIPool As IThreadPool Ptr
-	
-	SocketList(0 To SocketListCapacity - 1) As SocketNode
-	SocketListLength As Integer
 	CachedClientMemoryContextLength As UInteger
 	Context As Any Ptr
+	pIPool As IThreadPool Ptr
 	StatusHandler As RunnableStatusHandler
-	
+	SocketList(0 To SocketListCapacity - 1) As SocketNode
+	SocketListLength As Integer
 	ListenAddress As HeapBSTR
 	ListenPort As UINT
-	
 	CurrentStatus As HRESULT
-	
 End Type
 
 Function FinishExecuteTaskSink( _
