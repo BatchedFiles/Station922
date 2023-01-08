@@ -1022,6 +1022,7 @@ Function WebSiteGetBuffer( _
 				
 				Dim ContentTypeLength As Integer = SysStringLen(pContentType)
 				If ContentTypeLength = 0 Then
+					HeapSysFreeString(pContentType)
 					IFileStream_Release(pIFile)
 					*pFlags = ContentNegotiationFlags.None
 					*ppResult = NULL
@@ -1031,6 +1032,7 @@ Function WebSiteGetBuffer( _
 				' TODO Get Mime from Content-Type
 				' Change File Extension
 
+				HeapSysFreeString(pContentType)
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
 				Return hrOpenFile
