@@ -12,11 +12,12 @@ PATH_SEP ?= /
 MOVE_PATH_SEP ?= \\
 MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
+SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 CFLAGS+=-m64
 ASFLAGS+=--64
-ENTRY_POINT_PARAM=-e ENTRYPOINT
+ENTRY_POINT=ENTRYPOINT
 LDFLAGS+=-m i386pep
 GORCFLAGS+=/machine X64
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x64
@@ -30,7 +31,7 @@ OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x64
 else
 CFLAGS+=-m32
 ASFLAGS+=--32
-ENTRY_POINT_PARAM=-e _ENTRYPOINT@0
+ENTRY_POINT=_ENTRYPOINT@0
 LDFLAGS+=-m i386pe --large-address-aware
 GORCFLAGS+=
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x86
@@ -81,7 +82,7 @@ LDFLAGS+=--disable-reloc-section
 LDFLAGS+=-subsystem console
 LDFLAGS+=--stack 1048576,73728
 LDFLAGS+=--no-seh --nxcompat
-LDFLAGS+=$(ENTRY_POINT_PARAM)
+LDFLAGS+=-e $(ENTRY_POINT)
 LDFLAGS+=-L $(LIB_DIR)
 LDFLAGS+=-T src$(PATH_SEP)fbextra.x
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32
@@ -149,7 +150,7 @@ $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(ASM_EXT): $(OBJ_DEBUG_DIR)$(PATH_SE
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(C_EXT): src$(PATH_SEP)%.bas
 	$(FBC) $(FBCFLAGS) $<
 	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.$(C_EXT) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
-	cscript.exe //nologo replace.vbs $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
+	$(SCRIPT_COMMAND) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(C_EXT): src$(PATH_SEP)%.bas
 	$(FBC) $(FBCFLAGS) $<
