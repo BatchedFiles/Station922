@@ -81,6 +81,149 @@ Type _WebSite
 	IsMoved As Boolean
 End Type
 
+Function GetAuthorizationHeader( _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal ProxyAuthorization As Boolean _
+	)As HeapBSTR
+	
+	Dim pHeaderAuthorization As HeapBSTR = Any
+	
+	If ProxyAuthorization Then
+		IClientRequest_GetHttpHeader( _
+			pIRequest, _
+			HttpRequestHeaders.HeaderProxyAuthorization, _
+			@pHeaderAuthorization _
+		)
+		
+		Dim Length As Integer = SysStringLen(pHeaderAuthorization)
+		If Length = 0 Then
+			HeapSysFreeString(pHeaderAuthorization)
+			IClientRequest_GetHttpHeader( _
+				pIRequest, _
+				HttpRequestHeaders.HeaderAuthorization, _
+				@pHeaderAuthorization _
+			)
+		End If
+	Else
+		IClientRequest_GetHttpHeader( _
+			pIRequest, _
+			HttpRequestHeaders.HeaderAuthorization, _
+			@pHeaderAuthorization _
+		)
+	End If
+	
+	Return pHeaderAuthorization
+	
+End Function
+
+Function WebSiteHttpAuthUtil( _
+		ByVal this As WebSite Ptr, _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal ProxyAuthorization As Boolean _
+	)As HRESULT
+	
+	Dim pHeaderAuthorization As HeapBSTR = GetAuthorizationHeader( _
+		pIRequest, _
+		ProxyAuthorization _
+	)
+	
+	Dim HeaderLength As Integer = SysStringLen(pHeaderAuthorization)
+	If HeaderLength = 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpNeedAuthenticate(pIRequest, pIResponse, pStream, pIWebSite)
+		Return WEBSITE_E_NEEDAUTHENTICATE
+	End If
+	
+	/'
+	Dim pBasicAuthorizationWord As WString Ptr = pHeaderAuthorization
+	Dim pSpace As WString Ptr = StrChrW(pHeaderAuthorization, Characters.WhiteSpace)
+	If pSpace = NULL Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpBadAuthenticateParam(pIRequest, pIResponse, pStream, pIWebSite)
+		Return E_FAIL
+	End If
+	
+	pSpace[0] = 0
+	
+	If lstrcmp(pBasicAuthorizationWord, @BasicAuthorization) <> 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpNeedBasicAuthenticate(pIRequest, pIResponse, pStream, pIWebSite)
+		Return E_FAIL
+	End If
+	
+	Dim UsernamePasswordUtf8 As ZString * (MaxRequestBufferLength + 1) = Any
+	Dim dwUsernamePasswordUtf8Length As DWORD = Cast(DWORD, MaxRequestBufferLength)
+	
+	CryptStringToBinaryW( _
+		@pSpace[1], _
+		0, _
+		CRYPT_STRING_BASE64, _
+		@UsernamePasswordUtf8, _
+		@dwUsernamePasswordUtf8Length, _
+		0, _
+		0 _
+	)
+	
+	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = 0
+	
+	' Из массива байт в строку
+	' Преобразуем utf8 в WString
+	' -1 — значит, длина строки будет проверяться самой функцией по завершающему нулю
+	Dim UsernamePasswordKey As WString * (MaxRequestBufferLength + 1) = Any
+	MultiByteToWideChar(CP_UTF8, 0, @UsernamePasswordUtf8, -1, @UsernamePasswordKey, MaxRequestBufferLength)
+	
+	' Теперь pSpace хранит в себе указатель на разделитель?двоеточие
+	pSpace = StrChr(@UsernamePasswordKey, Characters.Colon)
+	If pSpace = 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpEmptyPassword(pIRequest, pIResponse, pStream, pIWebSite)
+		Return E_FAIL
+	End If
+	
+	pSpace[0] = 0 ' Убрали двоеточие
+	
+	Dim SettingsFileName As WString * (MAX_PATH + 1) = Any
+	
+	IWebSite_MapPath(pIWebSite, @UsersIniFileString, @SettingsFileName)
+	
+	Dim Config As Configuration = Any
+	Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
+	
+	Configuration_NonVirtualSetIniFilename(pIConfig, @SettingsFileName)
+	
+	Dim PasswordBuffer As WString * (255 + 1) = Any
+	
+	Dim ValueLength As Integer = Any
+	
+	Configuration_NonVirtualGetStringValue(pIConfig, _
+		@AdministratorsSectionString, _
+		@UsernamePasswordKey, _
+		@EmptyString, _
+		255, _
+		@PasswordBuffer, _
+		@ValueLength _
+	)
+	
+	If lstrlen(@PasswordBuffer) = 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpBadUserNamePassword(pIRequest, pIResponse, pStream, pIWebSite)
+		Return E_FAIL
+	End If
+	
+	If lstrcmp(@PasswordBuffer, pSpace + 1) <> 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		' WriteHttpBadUserNamePassword(pIRequest, pIResponse, pStream, pIWebSite)
+		Return E_FAIL
+	End If
+	
+	Return S_OK
+	'/
+	HeapSysFreeString(pHeaderAuthorization)
+	
+	Return E_FAIL
+	
+End Function
+
 Sub FormatMessageErrorBody( _
 		ByRef Writer As ArrayStringWriter, _
 		ByVal StatusCode As HttpStatusCodes, _
@@ -935,6 +1078,27 @@ Function WebSiteGetBuffer( _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
+	Scope
+		Select Case fAccess
+			
+			Case FileAccess.CreateAccess, FileAccess.UpdateAccess, FileAccess.DeleteAccess
+				Dim hrAuth As HRESULT = WebSiteHttpAuthUtil( _
+					this, _
+					pRequest, _
+					False _
+				)
+				If FAILED(hrAuth) Then
+					*pFlags = ContentNegotiationFlags.None
+					*ppResult = NULL
+					Return hrAuth
+				End If
+				
+			Case FileAccess.ReadAccess
+				' TODO Проверить идентификацию для запароленных ресурсов
+				
+			End Select
+	End Scope
+	
 	Dim pIFile As IFileStream Ptr = Any
 	Scope
 		Dim hrCreateFileBuffer As HRESULT = CreateFileStream( _
@@ -1048,8 +1212,6 @@ Function WebSiteGetBuffer( _
 					*ppResult = NULL
 					Return WEBSITE_E_FORBIDDEN
 				End If
-				
-				' TODO Проверить идентификацию для запароленных ресурсов
 				
 			End Select
 	End Scope

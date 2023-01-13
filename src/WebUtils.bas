@@ -313,6 +313,21 @@ Function ProcessErrorRequestResponse( _
 		Case WEBSITE_E_FORBIDDEN
 			HttpError = ResponseErrorCode.Forbidden
 			
+		Case WEBSITE_E_NEEDAUTHENTICATE
+			HttpError = ResponseErrorCode.NeedAuthenticate
+			
+		Case WEBSITE_E_BADAUTHENTICATEPARAM
+			HttpError = ResponseErrorCode.BadAuthenticateParam
+			
+		Case WEBSITE_E_NEEDBASICAUTHENTICATE
+			HttpError = ResponseErrorCode.NeedBasicAuthenticate
+			
+		Case WEBSITE_E_EMPTYPASSWORD
+			HttpError = ResponseErrorCode.EmptyPassword
+			
+		Case WEBSITE_E_BADUSERNAMEPASSWORD
+			HttpError = ResponseErrorCode.BadUserNamePassword
+			
 		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
 			HttpError = ResponseErrorCode.NotImplemented
 			
