@@ -36,16 +36,13 @@ Sub ConsoleWriteColorStringW( _
 		)
 		
 		Dim NumberOfBytesWritten As DWORD = Any
-		Dim dwErrorFile As WINBOOL = WriteFile( _
+		WriteFile( _
 			OutHandle, _
 			@Buffer, _
 			BytesCount - 1, _
 			@NumberOfBytesWritten, _
 			0 _
 		)
-		If dwErrorFile = 0 Then
-			' Îøèáêà
-		End If
 		
 	End If
 	
@@ -89,29 +86,22 @@ Sub LogWriteEntry( _
 		
 		SafeArrayUnaccessData(pvtData->parray)
 	Else
-		Dim vtData As VARIANT = Any
-		VariantInit(@vtData)
+		Dim buf As WString * 255 = Any
 		
-		If pvtData->vt = VT_ERROR Then
-			Dim buf As WString * 255 = Any
-			_ultow(pvtData->scode, @buf, 16)
+		Dim vt As VARTYPE = pvtData->vt
+		Select Case vt
 			
-			vtData.vt = VT_BSTR
-			vtData.bstrVal = SysAllocString(buf)
-		Else
-			VariantChangeType( _
-				@vtData, _
-				pvtData, _
-				0, _
-				VT_BSTR _
-			)
-		End If
+			Case VT_ERROR
+				_ultow(pvtData->scode, @buf, 16)
+				
+			Case Else
+				_ltow(pvtData->lVal, @buf, 10)
+				
+		End Select
 		
 		ConsoleWriteColorStringW(pwszText)
-		ConsoleWriteColorStringW(vtData.bstrVal)
+		ConsoleWriteColorStringW(@buf)
 		ConsoleWriteColorStringW(WStr(!"\r\n"))
-		
-		VariantClear(@vtData)
 		
 	End If
 	
