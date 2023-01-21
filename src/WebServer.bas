@@ -5,7 +5,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpReader.bi"
 #include once "IniConfiguration.bi"
-#include once "Logger.bi"
 #include once "Network.bi"
 #include once "ThreadPool.bi"
 #include once "WebUtils.bi"
@@ -37,88 +36,6 @@ Type _WebServer
 	ListenPort As UINT
 	CurrentStatus As HRESULT
 End Type
-
-Function FinishExecuteTaskSink( _
-		ByVal BytesTransferred As DWORD, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	IAsyncResult_SetCompleted( _
-		pIResult, _
-		BytesTransferred, _
-		True _
-	)
-	
-	Dim pTask As IAsyncIoTask Ptr = Any
-	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
-	
-	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
-		pTask, _
-		pIResult, _
-		BytesTransferred, _
-		ppNextTask _
-	)
-	If FAILED(hrEndExecute) Then
-		Dim vtErrorCode As VARIANT = Any
-		vtErrorCode.vt = VT_ERROR
-		vtErrorCode.scode = hrEndExecute
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
-			@vtErrorCode _
-		)
-	End If
-	
-	' Освобождаем ссылки на задачу и футуру
-	' Так как мы не сделали это при запуске задачи
-	
-	IAsyncResult_Release(pIResult)
-	IAsyncIoTask_Release(pTask)
-	
-	Return hrEndExecute
-	
-End Function
-
-Function ThreadPoolCallBack( _
-		ByVal param As Any Ptr, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR, _
-		ByVal pOverlap As OVERLAPPED Ptr _
-	)As Integer
-	
-	Dim hrFinishExecute As HRESULT = Any
-	Dim pNextTask As IAsyncIoTask Ptr = Any
-	Scope
-		Dim pIResult As IAsyncResult Ptr = GetAsyncResultFromOverlappedWeakPtr(pOverlap)
-		
-		hrFinishExecute = FinishExecuteTaskSink( _
-			BytesTransferred, _
-			pIResult, _
-			@pNextTask _
-		)
-	End Scope
-	
-	If SUCCEEDED(hrFinishExecute) Then
-		
-		Select Case hrFinishExecute
-			
-			Case S_OK
-				Dim hrStart As HRESULT = StartExecuteTask(pNextTask)
-				If FAILED(hrStart) Then
-					IAsyncIoTask_Release(pNextTask)
-				End If
-				
-			Case S_FALSE
-				
-			Case ASYNCTASK_S_KEEPALIVE_FALSE
-				
-		End Select
-	End If
-	
-	Return 0
-	
-End Function
 
 Function CreateAcceptConnectionTask( _
 		ByVal this As WebServer Ptr, _
@@ -445,9 +362,7 @@ Function WebServerRun( _
 	IThreadPool_SetMaxThreads(this->pIPool, this->WorkerThreadsCount)
 	
 	Dim hrPool As HRESULT = IThreadPool_Run( _
-		this->pIPool, _
-		@ThreadPoolCallBack, _
-		NULL _
+		this->pIPool _
 	)
 	If FAILED(hrPool) Then
 		SetCurrentStatus(this, RUNNABLE_S_STOPPED)

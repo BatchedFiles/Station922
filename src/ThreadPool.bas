@@ -1,5 +1,7 @@
 #include once "ThreadPool.bi"
 #include once "ContainerOf.bi"
+#include once "Logger.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
@@ -14,9 +16,88 @@ Type _ThreadPool
 	pIMemoryAllocator As IMalloc Ptr
 	WorkerThreadsCount As UInteger
 	hThreads As HANDLE Ptr
-	CallBack As ThreadPoolCallBack
-	param As Any Ptr
 End Type
+
+Function FinishExecuteTaskSink( _
+		ByVal BytesTransferred As DWORD, _
+		ByVal pIResult As IAsyncResult Ptr, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+	)As HRESULT
+	
+	IAsyncResult_SetCompleted( _
+		pIResult, _
+		BytesTransferred, _
+		True _
+	)
+	
+	Dim pTask As IAsyncIoTask Ptr = Any
+	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
+	
+	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
+		pTask, _
+		pIResult, _
+		BytesTransferred, _
+		ppNextTask _
+	)
+	If FAILED(hrEndExecute) Then
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+			@vtErrorCode _
+		)
+	End If
+	
+	' Освобождаем ссылки на задачу и футуру
+	' Так как мы не сделали это при запуске задачи
+	
+	IAsyncResult_Release(pIResult)
+	IAsyncIoTask_Release(pTask)
+	
+	Return hrEndExecute
+	
+End Function
+
+Function ThreadPoolCallBack( _
+		ByVal BytesTransferred As DWORD, _
+		ByVal CompletionKey As ULONG_PTR, _
+		ByVal pOverlap As OVERLAPPED Ptr _
+	)As Integer
+	
+	Dim hrFinishExecute As HRESULT = Any
+	Dim pNextTask As IAsyncIoTask Ptr = Any
+	Scope
+		Dim pIResult As IAsyncResult Ptr = GetAsyncResultFromOverlappedWeakPtr(pOverlap)
+		
+		hrFinishExecute = FinishExecuteTaskSink( _
+			BytesTransferred, _
+			pIResult, _
+			@pNextTask _
+		)
+	End Scope
+	
+	If SUCCEEDED(hrFinishExecute) Then
+		
+		Select Case hrFinishExecute
+			
+			Case S_OK
+				Dim hrStart As HRESULT = StartExecuteTask(pNextTask)
+				If FAILED(hrStart) Then
+					IAsyncIoTask_Release(pNextTask)
+				End If
+				
+			Case S_FALSE
+				
+			Case ASYNCTASK_S_KEEPALIVE_FALSE
+				
+		End Select
+	End If
+	
+	Return 0
+	
+End Function
 
 Function WorkerThread( _
 		ByVal lpParam As LPVOID _
@@ -42,8 +123,7 @@ Function WorkerThread( _
 				Exit Do
 			End If
 			
-			this->CallBack( _
-				this->param, _
+			ThreadPoolCallBack( _
 				BytesTransferred, _
 				CompletionKey, _
 				pOverlap _
@@ -53,8 +133,7 @@ Function WorkerThread( _
 				Exit Do
 			End If
 			
-			this->CallBack( _
-				this->param, _
+			ThreadPoolCallBack( _
 				BytesTransferred, _
 				CompletionKey, _
 				pOverlap _
@@ -226,9 +305,7 @@ Function ThreadPoolSetMaxThreads( _
 End Function
 
 Function ThreadPoolRun( _
-		ByVal this As ThreadPool Ptr, _
-		ByVal CallBack As ThreadPoolCallBack, _
-		ByVal param As Any Ptr _
+		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
 	ThreadPoolCompletionPort = CreateIoCompletionPort( _
@@ -249,9 +326,6 @@ Function ThreadPoolRun( _
 	If this = NULL Then
 		Return E_OUTOFMEMORY
 	End If
-	
-	this->CallBack = CallBack
-	this->param = param
 	
 	Const DefaultStackSize As SIZE_T_ = 0
 	
@@ -346,11 +420,9 @@ Function IThreadPoolSetMaxThreads( _
 End Function
 
 Function IThreadPoolRun( _
-		ByVal this As IThreadPool Ptr, _
-		ByVal CallBack As ThreadPoolCallBack, _
-		ByVal param As Any Ptr _
+		ByVal this As IThreadPool Ptr _
 	)As HRESULT
-	Return ThreadPoolRun(ContainerOf(this, ThreadPool, lpVtbl), CallBack, param)
+	Return ThreadPoolRun(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
 Function IThreadPoolStop( _

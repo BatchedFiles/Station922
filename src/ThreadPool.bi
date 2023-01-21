@@ -46,9 +46,7 @@ Declare Function ThreadPoolSetMaxThreads( _
 )As HRESULT
 
 Declare Function ThreadPoolRun( _
-	ByVal this As ThreadPool Ptr, _
-	ByVal CallBack As ThreadPoolCallBack, _
-	ByVal param As Any Ptr _
+	ByVal this As ThreadPool Ptr _
 )As HRESULT
 
 Declare Function ThreadPoolStop( _
