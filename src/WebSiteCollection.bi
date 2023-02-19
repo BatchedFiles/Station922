@@ -5,6 +5,8 @@
 
 Extern CLSID_WEBSITECOLLECTION Alias "CLSID_WEBSITECOLLECTION" As Const CLSID
 
+Extern pIWebSitesWeakPtr As IWebSiteCollection Ptr
+
 Const RTTI_ID_WEBSITECOLLECTION       = !"\001Coll___WebSite\001"
 Const RTTI_ID_WEBSITENODE             = !"\001Node___WebSite\001"
 

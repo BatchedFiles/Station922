@@ -181,7 +181,7 @@ Enum HttpRequestHeaders
 	HeaderIfModifiedSince
 	HeaderIfNoneMatch
 	HeaderIfRange
-	HeaderIfUnmodifiedSince
+	HeaderIfUnModifiedSince
 	HeaderKeepAlive
 	HeaderMaxForwards
 	HeaderOrigin

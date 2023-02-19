@@ -16,26 +16,31 @@ Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurat
 Const EmptyString = WStr("")
 Const WebServerIniFileString = WStr("WebServer.ini")
 Const WebServerSectionString = WStr("WebServer")
-Const ListenAddressKeyString = WStr("ListenAddress")
-Const PortKeyString = WStr("Port")
-Const ConnectBindAddressKeyString = WStr("ConnectBindAddress")
-Const ConnectBindPortKeyString = WStr("ConnectBindPort")
-Const MaxWorkerThreadsKeyString = WStr("MaxWorkerThreads")
-Const MaxCachedClientMemoryContextKeyString = WStr("MaxCachedClientMemoryContext")
+Const MaxWorkerThreadsKeyString = WStr("WorkerThreads")
+Const MaxCachedClientMemoryContextKeyString = WStr("MemoryPoolCapacity")
 
 Const WebSitesIniFileString = WStr("WebSites.ini")
+Const HostKeyString = WStr("Host")
 Const VirtualPathKeyString = WStr("VirtualPath")
 Const PhisycalDirKeyString = WStr("PhisycalDir")
 Const IsMovedKeyString = WStr("IsMoved")
 Const MovedUrlKeyString = WStr("MovedUrl")
 Const TextFileCharsetKeyString = WStr("TextFileCharset")
+Const RemoveUtf8BomKeyString = WStr("RemoveUtf8Bom")
+Const ListenAddressKeyString = WStr("ListenAddress")
+Const PortKeyString = WStr("ListenPort")
+Const UseSslKeyString = WStr("UseSsl")
+Const ConnectBindAddressKeyString = WStr("ConnectBindAddress")
+Const ConnectBindPortKeyString = WStr("ConnectBindPort")
+Const MethodsKeyString = WStr("Methods")
+Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 
 Const DefaultAddressString = WStr("localhost")
 Const DefaultHttpPort As INT_ = 80
+Const DefaultHttpsPort As INT_ = 443
 Const ConnectBindDefaultPort As INT_ = 0
 Const DefaultCachedClientMemoryContextMaximum As INT_ = 1
 
-Const UsersIniFileString = WStr("users.config")
 Const AdministratorsSectionString = WStr("admins")
 
 Const MaxSectionsLength As Integer = 32000 - 1
@@ -53,15 +58,13 @@ Type _WebServerIniConfiguration
 	pIMemoryAllocator As IMalloc Ptr
 	pWebServerIniFileName As WString Ptr
 	pWebSitesIniFileName As WString Ptr
-	pUsersIniFileName As WString Ptr
 End Type
 
 Sub InitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebServerIniFileName As WString Ptr, _
-		ByVal pWebSitesIniFileName As WString Ptr, _
-		ByVal pUsersIniFileName As WString Ptr _
+		ByVal pWebSitesIniFileName As WString Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -77,7 +80,6 @@ Sub InitializeWebServerIniConfiguration( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pWebServerIniFileName = pWebServerIniFileName
 	this->pWebSitesIniFileName = pWebSitesIniFileName
-	this->pUsersIniFileName = pUsersIniFileName
 	
 End Sub
 
@@ -85,12 +87,10 @@ Sub UnInitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
-	If this->pUsersIniFileName Then
-		IMalloc_Free(this->pIMemoryAllocator, this->pUsersIniFileName)
-	End If
 	If this->pWebSitesIniFileName Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pWebSitesIniFileName)
 	End If
+	
 	If this->pWebServerIniFileName Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pWebServerIniFileName)
 	End If
@@ -123,65 +123,52 @@ Function CreateWebServerIniConfiguration( _
 		
 		If pWebSitesIniFileName Then
 			
-			Dim pUsersIniFileName As WString Ptr = IMalloc_Alloc( _
+			Dim ExeFileName As WString * (MAX_PATH + 1) = Any
+			Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
+				0, _
+				@ExeFileName, _
+				MAX_PATH _
+			)
+			If ExeFileNameLength = 0 Then
+				IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
+				IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
+				Return NULL
+			End If
+			
+			Dim this As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
-				(MAX_PATH + 1) * SizeOf(WString) _
+				SizeOf(WebServerIniConfiguration) _
 			)
 			
-			If pUsersIniFileName Then
+			If this Then
 				
-				Dim ExeFileName As WString * (MAX_PATH + 1) = Any
-				Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
-					0, _
-					@ExeFileName, _
-					MAX_PATH _
-				)
-				If ExeFileNameLength = 0 Then
-					IMalloc_Free(pIMemoryAllocator, pUsersIniFileName)
-					IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
-					IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
-					Return NULL
-				End If
+				Scope
+					Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
+					lstrcpyW(@ExecutableDirectory, @ExeFileName)
+					PathRemoveFileSpecW(@ExecutableDirectory)
+					
+					PathCombineW(pWebServerIniFileName, @ExecutableDirectory, @WebServerIniFileString)
+					PathCombineW(pWebSitesIniFileName, @ExecutableDirectory, @WebSitesIniFileString)
+				End Scope
 				
-				Dim this As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
+				InitializeWebServerIniConfiguration( _
+					this, _
 					pIMemoryAllocator, _
-					SizeOf(WebServerIniConfiguration) _
+					pWebServerIniFileName, _
+					pWebSitesIniFileName _
 				)
+				WebServerIniConfigurationCreated(this)
 				
-				If this Then
-					
-					Scope
-						Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
-						lstrcpyW(@ExecutableDirectory, @ExeFileName)
-						PathRemoveFileSpecW(@ExecutableDirectory)
-						
-						PathCombineW(pWebServerIniFileName, @ExecutableDirectory, @WebServerIniFileString)
-						PathCombineW(pWebSitesIniFileName, @ExecutableDirectory, @WebSitesIniFileString)
-						PathCombineW(pUsersIniFileName, @ExecutableDirectory, @UsersIniFileString)
-					End Scope
-					
-					InitializeWebServerIniConfiguration( _
-						this, _
-						pIMemoryAllocator, _
-						pWebServerIniFileName, _
-						pWebSitesIniFileName, _
-						pUsersIniFileName _
-					)
-					WebServerIniConfigurationCreated(this)
-					
-					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
-						this, _
-						riid, _
-						ppv _
-					)
-					If FAILED(hrQueryInterface) Then
-						DestroyWebServerIniConfiguration(this)
-					End If
-					
-					Return hrQueryInterface
+				Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
+					this, _
+					riid, _
+					ppv _
+				)
+				If FAILED(hrQueryInterface) Then
+					DestroyWebServerIniConfiguration(this)
 				End If
 				
-				IMalloc_Free(pIMemoryAllocator, pUsersIniFileName)
+				Return hrQueryInterface
 			End If
 			
 			IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
@@ -266,98 +253,6 @@ Function WebServerIniConfigurationRelease( _
 	
 End Function
 
-Function WebServerIniConfigurationGetListenAddress( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal bstrListenAddress As HeapBSTR Ptr _
-	)As HRESULT
-	
-	Const BufferLength As DWORD = 255
-	Dim buf As WString * (BufferLength + 1) = Any
-	
-	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-		@WebServerSectionString, _
-		@ListenAddressKeyString, _
-		@DefaultAddressString, _
-		@buf, _
-		Cast(DWORD, BufferLength), _
-		this->pWebServerIniFileName _
-	)
-	
-	*bstrListenAddress = CreateHeapStringLen( _
-		this->pIMemoryAllocator, _
-		CPtr(OLECHAR Ptr, @buf), _
-		Cast(UINT, ValueLength) _
-	)
-	If *bstrListenAddress = NULL Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function WebServerIniConfigurationGetListenPort( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pListenPort As UINT Ptr _
-	)As HRESULT
-	
-	*pListenPort = GetPrivateProfileIntW( _
-		@WebServerSectionString, _
-		@PortKeyString, _
-		DefaultHttpPort, _
-		this->pWebServerIniFileName _
-	)
-	
-	Return S_OK
-	
-End Function
-
-Function WebServerIniConfigurationGetConnectBindAddress( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal bstrConnectBindAddress As BSTR Ptr _
-	)As HRESULT
-	
-	Const BufferLength As DWORD = 255
-	Dim buf As WString * (BufferLength + 1) = Any
-	
-	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-		@WebServerSectionString, _
-		@ConnectBindAddressKeyString, _
-		@DefaultAddressString, _
-		@buf, _
-		Cast(DWORD, BufferLength), _
-		this->pWebServerIniFileName _
-	)
-	
-	*bstrConnectBindAddress = CreateHeapStringLen( _
-		this->pIMemoryAllocator, _
-		CPtr(OLECHAR Ptr, @buf), _
-		Cast(UINT, ValueLength) _
-	)
-	If *bstrConnectBindAddress = NULL Then
-		Return E_OUTOFMEMORY
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function WebServerIniConfigurationGetConnectBindPort( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pConnectBindPort As UINT Ptr _
-	)As HRESULT
-	
-	*pConnectBindPort = GetPrivateProfileIntW( _
-		@WebServerSectionString, _
-		@PortKeyString, _
-		ConnectBindDefaultPort, _
-		this->pWebServerIniFileName _
-	)
-	
-	Return S_OK
-	
-End Function
-
 Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
@@ -399,64 +294,189 @@ Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 	
 End Function
 
-Function WebServerIniConfigurationGetIsPasswordValid( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pUserName As WString Ptr, _
-		ByVal pPassword As WString Ptr, _
-		ByVal pIsPasswordValid As Boolean Ptr _
+Function GetWebSite( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal HostLength As Integer, _
+		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Const PasswordBufferLength As DWORD = 255
-	Dim PasswordBuffer As WString * (PasswordBufferLength + 1) = Any
+	' [localhost]
+	' Host=localhost
+	' VirtualPath=/
+	' PhisycalDir=C:\Programming\WebSites\localhost\
+	' IsMoved=0
+	' MovedUrl=http://localhost
+	' TextFileCharset=utf-8
+	' RemoveUtf8Bom=1
+	' ListenAddress=localhost
+	' ListenPort=80
+	' UseSsl=0
+	' ConnectBindAddress=0.0.0.0
+	' ConnectBindPort=0
+	' Methods=GET,HEAD
+	' ReservedFileBytes=0
 	
-	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-		@AdministratorsSectionString, _
-		pUserName, _
-		@EmptyString, _
-		@PasswordBuffer, _
-		PasswordBufferLength, _
-		this->pUsersIniFileName _
+	Dim bstrWebSite As HeapBSTR = Any
+	Dim pIWebSite As IWebSite Ptr = Any
+	Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+		pIMemoryAllocator, _
+		@IID_IWebSite, _
+		@pIWebSite _
 	)
-	If ValueLength = 0 Then
-		*pIsPasswordValid = False
-		Return S_FALSE
+	If FAILED(hrCreateWebSite) Then
+		*ppIWebSite = NULL
+		Return hrCreateWebSite
 	End If
 	
-	Dim PasswordLength As Long = lstrlenW(@PasswordBuffer)
-	If PasswordLength = 0 Then
-		*pIsPasswordValid = False
-		Return S_FALSE
-	End If
+	Scope
+		Dim WebSiteName As WString * (MAX_PATH + 1) = Any
+		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+			lpwszHost, _
+			@HostKeyString, _
+			@EmptyString, _
+			@WebSiteName, _
+			Cast(DWORD, MAX_PATH), _
+			pWebSitesIniFileName _
+		)
+		If ValueLength = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			IWebSite_Release(pIWebSite)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		bstrWebSite = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			@WebSiteName, _
+			HostLength _
+		)
+		IWebSite_SetHostName(pIWebSite, bstrWebSite)
+	End Scope
 	
-	Dim CompareResult As Long = lstrcmpW(@PasswordBuffer, pPassword)
-	If CompareResult Then
-		*pIsPasswordValid = False
-		Return S_FALSE
-	End If
+	Scope
+		Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
+		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+			lpwszHost, _
+			@PhisycalDirKeyString, _
+			@EmptyString, _
+			@PhisycalDir, _
+			Cast(DWORD, MAX_PATH), _
+			pWebSitesIniFileName _
+		)
+		If ValueLength = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			IWebSite_Release(pIWebSite)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			@PhisycalDir, _
+			ValueLength _
+		)
+		IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
+		HeapSysFreeString(bstrPhisycalDir)
+	End Scope
+	
+	Scope
+		Dim VirtualPath As WString * (MAX_PATH + 1) = Any
+		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+			lpwszHost, _
+			@VirtualPathKeyString, _
+			@EmptyString, _
+			@VirtualPath, _
+			Cast(DWORD, MAX_PATH), _
+			pWebSitesIniFileName _
+		)
+		If ValueLength = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			IWebSite_Release(pIWebSite)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			@VirtualPath, _
+			ValueLength _
+		)
+		IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
+		HeapSysFreeString(bstrVirtualPath)
+	End Scope
+	
+	Scope
+		Dim MovedUrl As WString * (MAX_PATH + 1) = Any
+		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+			lpwszHost, _
+			@MovedUrlKeyString, _
+			@EmptyString, _
+			@MovedUrl, _
+			Cast(DWORD, MAX_PATH), _
+			pWebSitesIniFileName _
+		)
+		If ValueLength = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			IWebSite_Release(pIWebSite)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			@MovedUrl, _
+			ValueLength _
+		)
+		IWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
+		HeapSysFreeString(bstrMovedUrl)
+	End Scope
+	
+	Scope
+		Dim IsMoved As INT_ = GetPrivateProfileIntW( _
+			lpwszHost, _
+			@IsMovedKeyString, _
+			0, _
+			pWebSitesIniFileName _
+		)
+		If IsMoved Then
+			IWebSite_SetIsMoved(pIWebSite, True)
+		Else
+			IWebSite_SetIsMoved(pIWebSite, False)
+		End If
+	End Scope
+	
+	Scope
+		Dim Charset As INT_ = GetPrivateProfileIntW( _
+			lpwszHost, _
+			@TextFileCharsetKeyString, _
+			0, _
+			pWebSitesIniFileName _
+		)
+		IWebSite_SetTextFileEncoding(pIWebSite, Charset)
+	End Scope
+	
+	HeapSysFreeString(bstrWebSite)
+	
+	*ppIWebSite = pIWebSite
 	
 	Return S_OK
 	
 End Function
 
-Function WebServerIniConfigurationGetWebSiteCollection( _
+Function WebServerIniConfigurationGetWebSites( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
+		ByVal pWebSites As Integer Ptr, _
+		ByVal ppIWebSites As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIWebSiteCollection As IWebSiteCollection Ptr = Any
-	Scope
-		Dim hr As HRESULT = CreateWebSiteCollection( _
-			this->pIMemoryAllocator, _
-			@IID_IWebSiteCollection, _
-			@pIWebSiteCollection _
-		)
-		If FAILED(hr) Then
-			*ppIWebSiteCollection = NULL
-			Return hr
-		End If
-	End Scope
+	Dim AllSections As WString Ptr = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		(MaxSectionsLength + 1) * SizeOf(WString) _
+	)
+	If AllSections = NULL Then
+		*pWebSites = 0
+		ZeroMemory(*ppIWebSites, MaxWebSites * SizeOf(IWebSite Ptr))
+		Return E_OUTOFMEMORY
+	End If
 	
-	Dim AllSections As WString * (MaxSectionsLength + 1) = Any
 	Scope
 		Dim DefaultValue As WString * 4 = Any
 		ZeroMemory(@DefaultValue, 4 * SizeOf(WString))
@@ -465,273 +485,62 @@ Function WebServerIniConfigurationGetWebSiteCollection( _
 			NULL, _
 			NULL, _
 			@DefaultValue, _
-			@AllSections, _
+			AllSections, _
 			Cast(DWORD, MaxSectionsLength), _
 			this->pWebSitesIniFileName _
 		)
 		If SectionsLength = 0 Then
 			Dim dwError As DWORD = GetLastError()
-			IWebSiteCollection_Release(pIWebSiteCollection)
-			*ppIWebSiteCollection = NULL
+			*pWebSites = 0
+			ZeroMemory(*ppIWebSites, MaxWebSites * SizeOf(IWebSite Ptr))
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
 	
-	Dim lpwszHost As WString Ptr = @AllSections
+	Dim lpwszHost As WString Ptr = AllSections
 	Dim HostLength As Integer = CInt(lstrlenW(lpwszHost))
+	Dim WebSiteCount As Integer = 0
 	
 	Do While HostLength
 		
-		Dim bstrWebSite As HeapBSTR = Any
 		Dim pIWebSite As IWebSite Ptr = Any
-		Dim hr2 As HRESULT = CreateWebSite( _
+		Dim hrGetWebSite As HRESULT = GetWebSite( _
 			this->pIMemoryAllocator, _
-			@IID_IWebSite, _
+			this->pWebSitesIniFileName, _
+			lpwszHost, _
+			HostLength, _
 			@pIWebSite _
 		)
-		If FAILED(hr2) Then
-			IWebSiteCollection_Release(pIWebSiteCollection)
-			*ppIWebSiteCollection = NULL
-			Return hr2
+		If FAILED(hrGetWebSite) Then
+			Return hrGetWebSite
 		End If
 		
-		Scope
-			Dim WebSiteName As WString * (MAX_PATH + 1) = Any
-			Dim cbBytes As UInteger = (HostLength + 1) * SizeOf(WString)
-			CopyMemory(@WebSiteName, lpwszHost, cbBytes)
-			
-			For i As Integer = 0 To HostLength - 1
-				
-				Dim character As wchar_t = WebSiteName[i]
-				
-				Select Case character
-					
-					Case Characters.LeftCurlyBracket
-						WebSiteName[i] = Characters.LeftSquareBracket
-						
-					Case Characters.RightCurlyBracket
-						WebSiteName[i] = Characters.RightSquareBracket
-						
-				End Select
-			Next
-			
-			bstrWebSite = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@WebSiteName, _
-				HostLength _
-			)
-			IWebSite_SetHostName(pIWebSite, bstrWebSite)
-		End Scope
+		ppIWebSites[WebSiteCount] = pIWebSite
 		
-		Scope
-			Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
-			Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-				lpwszHost, _
-				@PhisycalDirKeyString, _
-				@EmptyString, _
-				@PhisycalDir, _
-				Cast(DWORD, MAX_PATH), _
-				this->pWebSitesIniFileName _
-			)
-			If ValueLength = 0 Then
-				Dim dwError As DWORD = GetLastError()
-				IWebSite_Release(pIWebSite)
-				IWebSiteCollection_Release(pIWebSiteCollection)
-				*ppIWebSiteCollection = NULL
-				Return HRESULT_FROM_WIN32(dwError)
-			End If
-			
-			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@PhisycalDir, _
-				ValueLength _
-			)
-			IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
-			HeapSysFreeString(bstrPhisycalDir)
-		End Scope
-		
-		Scope
-			Dim VirtualPath As WString * (MAX_PATH + 1) = Any
-			Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-				lpwszHost, _
-				@VirtualPathKeyString, _
-				@EmptyString, _
-				@VirtualPath, _
-				Cast(DWORD, MAX_PATH), _
-				this->pWebSitesIniFileName _
-			)
-			If ValueLength = 0 Then
-				Dim dwError As DWORD = GetLastError()
-				IWebSite_Release(pIWebSite)
-				IWebSiteCollection_Release(pIWebSiteCollection)
-				*ppIWebSiteCollection = NULL
-				Return HRESULT_FROM_WIN32(dwError)
-			End If
-			
-			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@VirtualPath, _
-				ValueLength _
-			)
-			IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
-			HeapSysFreeString(bstrVirtualPath)
-		End Scope
-		
-		Scope
-			Dim MovedUrl As WString * (MAX_PATH + 1) = Any
-			Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-				lpwszHost, _
-				@MovedUrlKeyString, _
-				@EmptyString, _
-				@MovedUrl, _
-				Cast(DWORD, MAX_PATH), _
-				this->pWebSitesIniFileName _
-			)
-			If ValueLength = 0 Then
-				Dim dwError As DWORD = GetLastError()
-				IWebSite_Release(pIWebSite)
-				IWebSiteCollection_Release(pIWebSiteCollection)
-				*ppIWebSiteCollection = NULL
-				Return HRESULT_FROM_WIN32(dwError)
-			End If
-			
-			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@MovedUrl, _
-				ValueLength _
-			)
-			IWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
-			HeapSysFreeString(bstrMovedUrl)
-		End Scope
-		
-		Scope
-			Dim IsMoved As INT_ = GetPrivateProfileIntW( _
-				lpwszHost, _
-				@IsMovedKeyString, _
-				0, _
-				this->pWebSitesIniFileName _
-			)
-			If IsMoved Then
-				IWebSite_SetIsMoved(pIWebSite, True)
-			Else
-				IWebSite_SetIsMoved(pIWebSite, False)
-			End If
-		End Scope
-		
-		Scope
-			Dim Charset As INT_ = GetPrivateProfileIntW( _
-				lpwszHost, _
-				@TextFileCharsetKeyString, _
-				0, _
-				this->pWebSitesIniFileName _
-			)
-			IWebSite_SetTextFileEncoding(pIWebSite, Charset)
-		End Scope
-		
-		IWebSiteCollection_Add(pIWebSiteCollection, bstrWebSite, pIWebSite)
-		IWebSite_Release(pIWebSite)
-		HeapSysFreeString(bstrWebSite)
-		
+		WebSiteCount += 1
 		lpwszHost = @lpwszHost[HostLength + 1]
 		HostLength = CInt(lstrlenW(lpwszHost))
 		
 	Loop
 	
-	Scope
-		Dim pIDefaultWebSite As IWebSite Ptr = Any
-		Dim hr2 As HRESULT = CreateWebSite( _
-			this->pIMemoryAllocator, _
-			@IID_IWebSite, _
-			@pIDefaultWebSite _
-		)
-		If FAILED(hr2) Then
-			IWebSiteCollection_Release(pIWebSiteCollection)
-			*ppIWebSiteCollection = NULL
-			Return hr2
-		End If
-		
-		Scope
-			Dim ExeFileName As WString * (MAX_PATH + 1) = Any
-			GetModuleFileNameW( _
-				0, _
-				@ExeFileName, _
-				MAX_PATH _
-			)
-			
-			Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
-			lstrcpyW(@ExecutableDirectory, @ExeFileName)
-			PathRemoveFileSpecW(@ExecutableDirectory)
-			
-			Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapString( _
-				this->pIMemoryAllocator, _
-				@ExecutableDirectory _
-			)
-			IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, bstrPhisycalDir)
-			HeapSysFreeString(bstrPhisycalDir)
-		End Scope
-		
-		Scope
-			Const DefaultVirtualPath = WStr("/")
-			Dim pVirtualPath As WString Ptr = @DefaultVirtualPath
-			
-			Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				pVirtualPath, _
-				Len(DefaultVirtualPath) _
-			)
-			IWebSite_SetVirtualPath(pIDefaultWebSite, bstrVirtualPath)
-			HeapSysFreeString(bstrVirtualPath)
-		End Scope
-		
-		/'
-		Scope
-			Dim MovedUrl As WString * (MAX_PATH + 1) = Any
-			Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-				lpwszHost, _
-				@MovedUrlKeyString, _
-				@EmptyString, _
-				@MovedUrl, _
-				Cast(DWORD, MAX_PATH), _
-				this->pWebSitesIniFileName _
-			)
-			If ValueLength = 0 Then
-				Dim dwError As DWORD = GetLastError()
-				IWebSite_Release(pIWebSite)
-				IWebSiteCollection_Release(pIWebSiteCollection)
-				*ppIWebSiteCollection = NULL
-				Return HRESULT_FROM_WIN32(dwError)
-			End If
-			
-			Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
-				this->pIMemoryAllocator, _
-				@MovedUrl, _
-				ValueLength _
-			)
-			IWebSite_SetMovedUrl(pIDefaultWebSite, bstrMovedUrl)
-			HeapSysFreeString(bstrMovedUrl)
-		End Scope
-		'/
-		
-		Scope
-			IWebSite_SetIsMoved(pIDefaultWebSite, False)
-		End Scope
-		
-		IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
-		IWebSite_Release(pIDefaultWebSite)
-		
-	End Scope
+	IMalloc_Free( _
+		this->pIMemoryAllocator, _
+		AllSections _
+	)
 	
-	*ppIWebSiteCollection = pIWebSiteCollection
+	*pWebSites = WebSiteCount
 	
 	Return S_OK
 	
 End Function
 
-Function WebServerIniConfigurationGetHttpProcessorCollection( _
+Function WebServerIniConfigurationGetHttpProcessors( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+		ByVal pHttpProcessors As Integer Ptr, _
+		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
+	/'
 	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
 	Scope
 		Dim hr As HRESULT = CreateHttpProcessorCollection( _
@@ -856,7 +665,7 @@ Function WebServerIniConfigurationGetHttpProcessorCollection( _
 	End Scope
 
 	*ppIHttpProcessorCollection = pIProcessorCollection
-	
+	'/
 	Return S_OK
 	
 End Function
@@ -882,34 +691,6 @@ Function IWebServerConfigurationRelease( _
 	Return WebServerIniConfigurationRelease(ContainerOf(this, WebServerIniConfiguration, lpVtbl))
 End Function
 
-Function IWebServerConfigurationGetListenAddress( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrListenAddress As HeapBSTR Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetListenAddress(ContainerOf(this, WebServerIniConfiguration, lpVtbl), bstrListenAddress)
-End Function
-
-Function IWebServerConfigurationGetListenPort( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pListenPort As UINT Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetListenPort(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pListenPort)
-End Function
-
-Function IWebServerConfigurationGetConnectBindAddress( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrConnectBindAddress As BSTR Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetConnectBindAddress(ContainerOf(this, WebServerIniConfiguration, lpVtbl), bstrConnectBindAddress)
-End Function
-
-Function IWebServerConfigurationGetConnectBindPort( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pConnectBindPort As UINT Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetConnectBindPort(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pConnectBindPort)
-End Function
-
 Function IWebServerConfigurationGetWorkerThreadsCount( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
@@ -924,40 +705,28 @@ Function IWebServerConfigurationGetCachedClientMemoryContextCount( _
 	Return WebServerIniConfigurationGetCachedClientMemoryContextCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
 End Function
 
-Function IWebServerConfigurationGetIsPasswordValid( _
+Function IWebServerConfigurationGetWebSites( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pUserName As WString Ptr, _
-		ByVal pPassword As WString Ptr, _
-		ByVal pIsPasswordValid As Boolean Ptr _
+		ByVal pWebSites As Integer Ptr, _
+		ByVal ppIWebSites As IWebSite Ptr Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetIsPasswordValid(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pUserName, pPassword, pIsPasswordValid)
+	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWebSites, ppIWebSites)
 End Function
 
-Function IWebServerConfigurationGetWebSiteCollection( _
+Function IWebServerConfigurationGetHttpProcessors( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
+		ByVal pHttpProcessors As Integer Ptr, _
+		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetWebSiteCollection(ContainerOf(this, WebServerIniConfiguration, lpVtbl), ppIWebSiteCollection)
-End Function
-
-Function IWebServerConfigurationGetHttpProcessorCollection( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetHttpProcessorCollection(ContainerOf(this, WebServerIniConfiguration, lpVtbl), ppIHttpProcessorCollection)
+	Return WebServerIniConfigurationGetHttpProcessors(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pHttpProcessors, ppIHttpProcessors)
 End Function
 
 Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable = Type( _
 	@IWebServerConfigurationQueryInterface, _
 	@IWebServerConfigurationAddRef, _
 	@IWebServerConfigurationRelease, _
-	@IWebServerConfigurationGetListenAddress, _
-	@IWebServerConfigurationGetListenPort, _
-	@IWebServerConfigurationGetConnectBindAddress, _
-	@IWebServerConfigurationGetConnectBindPort, _
 	@IWebServerConfigurationGetWorkerThreadsCount, _
 	@IWebServerConfigurationGetCachedClientMemoryContextCount, _
-	@IWebServerConfigurationGetIsPasswordValid, _
-	@IWebServerConfigurationGetWebSiteCollection, _
-	@IWebServerConfigurationGetHttpProcessorCollection _
+	@IWebServerConfigurationGetWebSites, _
+	@IWebServerConfigurationGetHttpProcessors _
 )

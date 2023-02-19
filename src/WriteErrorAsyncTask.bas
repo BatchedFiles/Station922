@@ -4,14 +4,13 @@
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
+#include once "HttpProcessorCollection.bi"
 #include once "HttpWriter.bi"
 #include once "ServerResponse.bi"
+#include once "WebsiteCollection.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtualTable
-
-Extern pIWebSitesWeakPtr As IWebSiteCollection Ptr
-Extern pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
 
 Const CompareResultEqual As Long = 0
 

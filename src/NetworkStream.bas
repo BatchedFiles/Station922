@@ -6,8 +6,6 @@
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 
-Extern lpfnTransmitPackets As LPFN_TRANSMITPACKETS
-
 Type _NetworkStream
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -309,7 +307,7 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
 	
-	Dim resTransmit As BOOL = LpfnTransmitpackets( _
+	Dim resTransmit As BOOL = lpfnTransmitPackets( _
 		this->ClientSocket, _
 		pSendBuffers, _
 		BuffersCount, _

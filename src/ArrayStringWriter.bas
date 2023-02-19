@@ -155,22 +155,22 @@ Function ArrayStringWriter.GetCodePage( _
 End Function
 
 Sub ArrayStringWriter.SetCodePage( _
-		ByVal CodePage As Integer _
+		ByVal cp As Integer _
 	)
 	
-	this.CodePage = CodePage
+	CodePage = cp
 	
 End Sub
 
 Sub ArrayStringWriter.SetBuffer( _
-		ByVal Buffer As WString Ptr, _
-		ByVal Capacity As Integer _
+		ByVal buf As WString Ptr, _
+		ByVal cap As Integer _
 	)
 	
-	this.Capacity = Capacity
-	this.Buffer = Buffer
-	this.BufferLength = 0
-	this.Buffer[0] = 0
+	Capacity = cap
+	Buffer = buf
+	BufferLength = 0
+	Buffer[0] = 0
 	
 End Sub
 

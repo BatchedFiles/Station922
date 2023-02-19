@@ -284,7 +284,7 @@ DEFINE_IID(IID_IReadRequestAsyncIoTask, _
 )
 
 ' {6603A8F5-FB80-4CB9-BF80-CEADE4576F52}
-DEFINE_IID(IID_IRunnable, _
+DEFINE_IID(IID_IWebServer, _
 	&h6603a8f5, &hfb80, &h4cb9, &hbf, &h80, &hce, &had, &he4, &h57, &h6f, &h52 _
 )
 

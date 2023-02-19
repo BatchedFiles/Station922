@@ -1,20 +1,12 @@
 #include once "Network.bi"
 #include once "win\mswsock.bi"
 
-Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
-Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
-Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
-
-Extern lpfnAcceptEx As LPFN_ACCEPTEX
-Extern lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
-Extern lpfnTransmitPackets As LPFN_TRANSMITPACKETS
-
 Function NetworkStartUp()As HRESULT
 	
-	Dim WsaVrsion22 As WORD = MAKEWORD(2, 2)
-	Dim wsa As WSAData = Any
+	Dim WsaVersion22 As WORD = MAKEWORD(2, 2)
+	Dim wsa As WSADATA = Any
 	
-	Dim resWsaStartup As Long = WSAStartup(WsaVrsion22, @wsa)
+	Dim resWsaStartup As Long = WSAStartup(WsaVersion22, @wsa)
 	If resWsaStartup <> NO_ERROR Then
 		Dim dwError As Long = WSAGetLastError()
 		Return HRESULT_FROM_WIN32(dwError)

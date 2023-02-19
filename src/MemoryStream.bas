@@ -2,11 +2,10 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
+#include once "ThreadPool.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
-
-Extern ThreadPoolCompletionPort As HANDLE
 
 Type _MemoryStream
 	#if __FB_DEBUG__
@@ -391,7 +390,7 @@ Function MemoryStreamAllocBuffer( _
 	#endif
 	
 	this->Capacity = BufferLength
-	this->OffSet = Offset
+	this->Offset = Offset
 	
 	*ppBuffer = @this->pBuffer[Offset]
 	
@@ -407,7 +406,7 @@ Function MemoryStreamSetBuffer( _
 	
 	this->pOuterBuffer = pBuffer
 	this->Capacity = Length 
-	this->OffSet = 0
+	this->Offset = 0
 	
 	Return S_OK
 	

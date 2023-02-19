@@ -1,7 +1,7 @@
 #ifndef WEBSERVER_BI
 #define WEBSERVER_BI
 
-#include once "IRunnable.bi"
+#include once "IWebServer.bi"
 
 Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
@@ -41,16 +41,6 @@ Declare Function WebServerRun( _
 
 Declare Function WebServerStop( _
 	ByVal this As WebServer Ptr _
-)As HRESULT
-
-Declare Function WebServerIsRunning( _
-	ByVal this As WebServer Ptr _
-)As HRESULT
-
-Declare Function WebServerRegisterStatusHandler( _
-	ByVal this As WebServer Ptr, _
-	ByVal Context As Any Ptr, _
-	ByVal StatusHandler As RunnableStatusHandler _
 )As HRESULT
 
 #endif

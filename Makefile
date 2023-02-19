@@ -17,7 +17,7 @@ SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 CFLAGS+=-m64
 ASFLAGS+=--64
-ENTRY_POINT=ENTRYPOINT
+ENTRY_POINT=EntryPoint
 LDFLAGS+=-m i386pep
 GORCFLAGS+=/machine X64
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x64
@@ -31,7 +31,7 @@ OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x64
 else
 CFLAGS+=-m32
 ASFLAGS+=--32
-ENTRY_POINT=_ENTRYPOINT@0
+ENTRY_POINT=_EntryPoint@0
 LDFLAGS+=-m i386pe --large-address-aware
 GORCFLAGS+=
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x86
@@ -47,7 +47,8 @@ endif
 FBC ?= fbc.exe
 FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
 FBCFLAGS+=-w error -maxerr 1
-FBCFLAGS+=-i src
+# FBCFLAGS+=-i src
+FBCFLAGS+=-i src -i C:\Programming\FreeBASIC-1.09.0-win64-gcc-9.3.0\inc
 FBCFLAGS+=-r
 FBCFLAGS+=-s console
 FBCFLAGS+=-O 0
@@ -80,13 +81,13 @@ LD ?= ld.exe
 LDFLAGS+=--major-image-version 1 --minor-image-version 0
 LDFLAGS+=--disable-reloc-section
 LDFLAGS+=-subsystem console
-LDFLAGS+=--stack 1048576,73728
+# LDFLAGS+=--stack 1048576,73728
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=-e $(ENTRY_POINT)
 LDFLAGS+=-L $(LIB_DIR)
 LDFLAGS+=-T src$(PATH_SEP)fbextra.x
-LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lole32 -loleaut32
-LDLIBS+=-lshell32 -lshlwapi -luuid -lws2_32
+LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
+LDLIBS+=-lole32 -lshell32 -lshlwapi -luuid -lws2_32
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
 
 

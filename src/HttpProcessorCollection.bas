@@ -49,7 +49,7 @@ Sub InitializeHttpProcessorCollection( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->AllMethods = NULL
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->Collectionlength = 0
+	this->CollectionLength = 0
 	
 End Sub
 
@@ -59,7 +59,7 @@ Sub UnInitializeHttpProcessorCollection( _
 	
 	HeapSysFreeString(this->AllMethods)
 	
-	For i As Integer = 0 To this->Collectionlength - 1
+	For i As Integer = 0 To this->CollectionLength - 1
 		IHttpAsyncProcessor_Release(this->Collection(i).Value)
 	Next
 	
@@ -217,18 +217,18 @@ Function HttpProcessorCollectionAdd( _
 		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
 	)As HRESULT
 	
-	If this->Collectionlength > HttpProcessorCollectionCapacity Then
+	If this->CollectionLength > HttpProcessorCollectionCapacity Then
 		Return E_OUTOFMEMORY
 	End If
 	
 	Dim Length As Integer = lstrlenW(pKey)
 	
-	lstrcpyW(@this->Collection(this->Collectionlength).Key, pKey)
-	this->Collection(this->Collectionlength).KeyLength = Length
+	lstrcpyW(@this->Collection(this->CollectionLength).Key, pKey)
+	this->Collection(this->CollectionLength).KeyLength = Length
 	IHttpAsyncProcessor_AddRef(pIProcessor)
-	this->Collection(this->Collectionlength).Value = pIProcessor
+	this->Collection(this->CollectionLength).Value = pIProcessor
 	
-	this->Collectionlength += 1
+	this->CollectionLength += 1
 	
 	Return S_OK
 	

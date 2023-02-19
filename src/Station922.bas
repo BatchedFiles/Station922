@@ -2,6 +2,7 @@
 #include once "win\shellapi.bi"
 #include once "ConsoleMain.bi"
 #include once "Network.bi"
+#include once "WebUtils.bi"
 #include once "WindowsServiceMain.bi"
 
 Const ServiceParam = WStr("/service")
@@ -35,7 +36,7 @@ Function IsServiceParam()As Boolean
 	
 End Function
 
-Function EntryPoint()As Integer
+Function EntryPoint Alias "EntryPoint"()As Integer
 	
 	Scope
 		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
@@ -47,7 +48,7 @@ Function EntryPoint()As Integer
 	Scope
 		Dim resLoadWsa As Boolean = LoadWsaFunctions()
 		If resLoadWsa = False Then
-			NetworkCleanup()
+			NetworkCleanUp()
 			Return 1
 		End If
 	End Scope

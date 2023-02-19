@@ -4,6 +4,15 @@
 #include once "windows.bi"
 #include once "win\winsock2.bi"
 #include once "win\ws2tcpip.bi"
+#include once "win\mswsock.bi"
+
+Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
+Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
+Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
+
+Extern lpfnAcceptEx Alias "lpfnAcceptEx" As LPFN_ACCEPTEX
+Extern lpfnGetAcceptExSockaddrs Alias "lpfnGetAcceptExSockaddrs" As LPFN_GETACCEPTEXSOCKADDRS
+Extern lpfnTransmitPackets Alias "lpfnTransmitPackets" As LPFN_TRANSMITPACKETS
 
 Type SocketNode
 	ClientSocket As SOCKET
@@ -29,14 +38,14 @@ Declare Function ResolveHostA Alias "ResolveHostA"( _
 Declare Function ResolveHostW Alias "ResolveHostW"( _
 	ByVal Host As PCWSTR, _
 	ByVal Port As PCWSTR, _
-	ByVal ppAddressList As addrinfoW Ptr Ptr _
+	ByVal ppAddressList As ADDRINFOW Ptr Ptr _
 )As HRESULT
 
 #ifdef UNICODE
 	Declare Function ResolveHost Alias "ResolveHostW"( _
 		ByVal Host As PCWSTR, _
 		ByVal Port As PCWSTR, _
-		ByVal ppAddressList As addrinfoW Ptr Ptr _
+		ByVal ppAddressList As ADDRINFOW Ptr Ptr _
 	)As HRESULT
 #else
 	Declare Function ResolveHost Alias "ResolveHostA"( _

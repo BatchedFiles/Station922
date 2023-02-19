@@ -187,7 +187,7 @@ Function HttpPutProcessorPrepare( _
 		Case WEBSITE_S_ALREADY_EXISTS
 			IServerResponse_SetStatusCode( _
 				pContext->pIResponse, _
-				HttpStatusCodes.Ok _
+				HttpStatusCodes.OK _
 			)
 			
 	End Select

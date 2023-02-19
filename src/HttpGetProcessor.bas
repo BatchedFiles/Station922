@@ -7,7 +7,7 @@
 
 Extern GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable
 
-Const GzipString = WStr("gzip")
+Const GZipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 Const BytesStringWithSpace = WStr("bytes ")
 Const CompareResultEqual As Long = 0

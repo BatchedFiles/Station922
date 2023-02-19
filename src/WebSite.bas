@@ -14,6 +14,7 @@ Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
 Const DefaultFileNames As Integer = 8
+Const BasicAuthorizationWithSpace = WStr("Basic ")
 
 Const WebSocketGuidString = WStr("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
 Const UpgradeString = WStr("Upgrade")
@@ -77,7 +78,14 @@ Type _WebSite
 	pPhysicalDirectory As HeapBSTR
 	pVirtualPath As HeapBSTR
 	pMovedUrl As HeapBSTR
+	ListenAddress As HeapBSTR
+	ListenPort As Integer
+	ConnectBindAddress As HeapBSTR
+	ConnectBindPort As Integer
 	CodePage As TextFileCharsets
+	Methods As HeapBSTR
+	RemoveUtf8Bom As Boolean
+	UseSsl As Boolean
 	IsMoved As Boolean
 End Type
 
@@ -116,6 +124,26 @@ Function GetAuthorizationHeader( _
 	
 End Function
 
+Function StartsWith( _
+		ByVal pSource As WString Ptr, _
+		ByVal pPattern As WString Ptr, _
+		ByVal Length As Integer _
+	)As Boolean
+	
+	Dim cbBytes As Integer = Length * SizeOf(WString)
+	Dim CompareResult As Long = memcmp( _
+		pSource, _
+		pPattern, _
+		cbBytes _
+	)
+	If CompareResult <> 0 Then
+		Return False
+	End If
+	
+	Return True
+	
+End Function
+
 Function WebSiteHttpAuthUtil( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -130,57 +158,68 @@ Function WebSiteHttpAuthUtil( _
 	Dim HeaderLength As Integer = SysStringLen(pHeaderAuthorization)
 	If HeaderLength = 0 Then
 		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpNeedAuthenticate(pIRequest, pIResponse, pStream, pIWebSite)
 		Return WEBSITE_E_NEEDAUTHENTICATE
 	End If
 	
-	/'
-	Dim pBasicAuthorizationWord As WString Ptr = pHeaderAuthorization
-	Dim pSpace As WString Ptr = StrChrW(pHeaderAuthorization, Characters.WhiteSpace)
-	If pSpace = NULL Then
+	Dim resStarts As Boolean = StartsWith( _
+		pHeaderAuthorization, _
+		@BasicAuthorizationWithSpace, _
+		Len(BasicAuthorizationWithSpace) _
+	)
+	If resStarts = False Then
 		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpBadAuthenticateParam(pIRequest, pIResponse, pStream, pIWebSite)
-		Return E_FAIL
+		Return WEBSITE_E_NEEDBASICAUTHENTICATE
 	End If
 	
-	pSpace[0] = 0
+	Dim pBase64 As WString Ptr = @pHeaderAuthorization[1]
+	Dim Base64Length As Integer = HeaderLength - Len(BasicAuthorizationWithSpace)
 	
-	If lstrcmp(pBasicAuthorizationWord, @BasicAuthorization) <> 0 Then
-		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpNeedBasicAuthenticate(pIRequest, pIResponse, pStream, pIWebSite)
-		Return E_FAIL
-	End If
+	Const UserNamePasswordCapacity As Integer = 2048 - 1
+	Dim UsernamePasswordUtf8 As ZString * (UserNamePasswordCapacity + 1) = Any
+	Dim dwUsernamePasswordUtf8Length As DWORD = Cast(DWORD, UserNamePasswordCapacity)
 	
-	Dim UsernamePasswordUtf8 As ZString * (MaxRequestBufferLength + 1) = Any
-	Dim dwUsernamePasswordUtf8Length As DWORD = Cast(DWORD, MaxRequestBufferLength)
-	
-	CryptStringToBinaryW( _
-		@pSpace[1], _
-		0, _
+	Dim resCryptString As BOOL = CryptStringToBinaryW( _
+		pBase64, _
+		Cast(DWORD, Base64Length), _
 		CRYPT_STRING_BASE64, _
 		@UsernamePasswordUtf8, _
 		@dwUsernamePasswordUtf8Length, _
 		0, _
 		0 _
 	)
+	If resCryptString = 0 Then
+		HeapSysFreeString(pHeaderAuthorization)
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
-	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = 0
+	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = Characters.NullChar
 	
 	' Из массива байт в строку
 	' Преобразуем utf8 в WString
 	' -1 — значит, длина строки будет проверяться самой функцией по завершающему нулю
-	Dim UsernamePasswordKey As WString * (MaxRequestBufferLength + 1) = Any
-	MultiByteToWideChar(CP_UTF8, 0, @UsernamePasswordUtf8, -1, @UsernamePasswordKey, MaxRequestBufferLength)
+	Dim UsernamePasswordKey As WString * (UserNamePasswordCapacity + 1) = Any
+	Dim DecodedLength As Long = MultiByteToWideChar( _
+		CP_UTF8, _
+		0, _
+		@UsernamePasswordUtf8, _
+		dwUsernamePasswordUtf8Length, _
+		@UsernamePasswordKey, _
+		UserNamePasswordCapacity _
+	)
+	UsernamePasswordKey[DecodedLength] = Characters.NullChar
 	
-	' Теперь pSpace хранит в себе указатель на разделитель?двоеточие
-	pSpace = StrChr(@UsernamePasswordKey, Characters.Colon)
-	If pSpace = 0 Then
+	' Теперь pColonChar хранит в себе указатель на разделитель?двоеточие
+	Dim pColonChar As WString Ptr = StrChrW(@UsernamePasswordKey, Characters.Colon)
+	If pColonChar = NULL Then
 		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpEmptyPassword(pIRequest, pIResponse, pStream, pIWebSite)
-		Return E_FAIL
+		Return WEBSITE_E_EMPTYPASSWORD
 	End If
+	pColonChar[0] = 0 ' Убрали двоеточие
 	
-	pSpace[0] = 0 ' Убрали двоеточие
+	/'
+	Dim pClientUserName As WString Ptr = @UsernamePasswordKey
+	Dim pClientPassword As WString Ptr = @pColonChar[1]
 	
 	Dim SettingsFileName As WString * (MAX_PATH + 1) = Any
 	
@@ -197,23 +236,21 @@ Function WebSiteHttpAuthUtil( _
 	
 	Configuration_NonVirtualGetStringValue(pIConfig, _
 		@AdministratorsSectionString, _
-		@UsernamePasswordKey, _
+		pClientUserName, _
 		@EmptyString, _
 		255, _
 		@PasswordBuffer, _
 		@ValueLength _
 	)
 	
-	If lstrlen(@PasswordBuffer) = 0 Then
+	If lstrlenW(@PasswordBuffer) = 0 Then
 		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpBadUserNamePassword(pIRequest, pIResponse, pStream, pIWebSite)
-		Return E_FAIL
+		Return WEBSITE_E_BADUSERNAMEPASSWORD
 	End If
 	
-	If lstrcmp(@PasswordBuffer, pSpace + 1) <> 0 Then
+	If lstrcmpW(@PasswordBuffer, pClientPassword) <> 0 Then
 		HeapSysFreeString(pHeaderAuthorization)
-		' WriteHttpBadUserNamePassword(pIRequest, pIResponse, pStream, pIWebSite)
-		Return E_FAIL
+		Return WEBSITE_E_BADUSERNAMEPASSWORD
 	End If
 	
 	Return S_OK
@@ -642,12 +679,12 @@ Function GetCompressionHandle( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pZipMode As ZipModes Ptr, _
 		ByVal pEncodingVaryFlag As Boolean Ptr _
-	)As Handle
+	)As HANDLE
 	
 	*pEncodingVaryFlag = False
 	
 	Scope
-		Const GzipExtensionString = WStr(".gz")
+		Const GZipExtensionString = WStr(".gz")
 		
 		Dim GZipFileName As WString * (MAX_PATH + 1) = Any
 		lstrcpyW(@GZipFileName, PathTranslated)
@@ -1443,7 +1480,7 @@ End Function
 
 Function WebSiteNeedDllProcessing( _
 		ByVal this As WebSite Ptr, _
-		ByVal path As HeapBSTR, _
+		ByVal Path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
@@ -1536,7 +1573,7 @@ End Function
 
 Function WebSiteNeedCgiProcessing( _
 		ByVal this As WebSite Ptr, _
-		ByVal path As HeapBSTR, _
+		ByVal Path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	

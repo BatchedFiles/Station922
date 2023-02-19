@@ -266,7 +266,7 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 	Type<RequestHeaderNode>(@HeaderFromString,                    Len(HeaderFromString),                    HttpRequestHeaders.HeaderFrom), _
 	Type<RequestHeaderNode>(@HeaderIfMatchString,                 Len(HeaderIfMatchString),                 HttpRequestHeaders.HeaderIfMatch), _
 	Type<RequestHeaderNode>(@HeaderIfRangeString,                 Len(HeaderIfRangeString),                 HttpRequestHeaders.HeaderIfRange), _
-	Type<RequestHeaderNode>(@HeaderIfUnmodifiedSinceString,       Len(HeaderIfUnmodifiedSinceString),       HttpRequestHeaders.HeaderIfUnmodifiedSince), _
+	Type<RequestHeaderNode>(@HeaderIfUnmodifiedSinceString,       Len(HeaderIfUnmodifiedSinceString),       HttpRequestHeaders.HeaderIfUnModifiedSince), _
 	Type<RequestHeaderNode>(@HeaderMaxForwardsString,             Len(HeaderMaxForwardsString),             HttpRequestHeaders.HeaderMaxForwards), _
 	Type<RequestHeaderNode>(@HeaderOriginString,                  Len(HeaderOriginString),                  HttpRequestHeaders.HeaderOrigin), _
 	Type<RequestHeaderNode>(@HeaderPragmaString,                  Len(HeaderPragmaString),                  HttpRequestHeaders.HeaderPragma), _
@@ -348,7 +348,7 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_MODIFIED_SINCE"),         22, HttpRequestHeaders.HeaderIfModifiedSince), _
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_NONE_MATCH"),             18, HttpRequestHeaders.HeaderIfNoneMatch), _
 	Type<CgiHeaderNode>(@WStr("HTTP_IF_RANGE"),                  13, HttpRequestHeaders.HeaderIfRange), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_UNMODIFIED_SINCE"),       24, HttpRequestHeaders.HeaderIfUnmodifiedSince), _
+	Type<CgiHeaderNode>(@WStr("HTTP_IF_UNMODIFIED_SINCE"),       24, HttpRequestHeaders.HeaderIfUnModifiedSince), _
 	Type<CgiHeaderNode>(@WStr("HTTP_KEEP_ALIVE"),                15, HttpRequestHeaders.HeaderKeepAlive), _
 	Type<CgiHeaderNode>(@WStr("HTTP_MAX_FORWARDS"),              17, HttpRequestHeaders.HeaderMaxForwards), _
 	Type<CgiHeaderNode>(@WStr("HTTP_ORIGIN"),                    11, HttpRequestHeaders.HeaderOrigin), _

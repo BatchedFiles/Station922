@@ -36,7 +36,7 @@ Declare Function SetResponseCompression( _
 	ByVal pIResponse As IServerResponse Ptr, _
 	ByVal PathTranslated As WString Ptr, _
 	ByVal pAcceptEncoding As Boolean Ptr _
-)As Handle
+)As HANDLE
 
 Declare Sub AddResponseCacheHeaders( _
 	ByVal pIRequest As IClientRequest Ptr, _
@@ -65,8 +65,11 @@ Declare Function ProcessErrorRequestResponse( _
 )As HRESULT
 
 Declare Function BindToThreadPool( _
-	ByVal hHandle As Handle, _
+	ByVal hHandle As HANDLE, _
 	ByVal pUserData As Any Ptr _
+)As HRESULT
+
+Declare Function Station922Initialize( _
 )As HRESULT
 
 #endif

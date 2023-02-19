@@ -1,13 +1,12 @@
 #include once "WindowsServiceMain.bi"
 #include once "HeapMemoryAllocator.bi"
-#include once "WebServer.bi"
+#include once "WebUtils.bi"
 
 Const MaxWaitHint As DWORD = 3000
 Const ServiceName = WStr("Station922")
 
 Type ServiceContext
 	hStopEvent As HANDLE
-	pIWebServer As IRunnable Ptr
 	ServiceStatusHandle As SERVICE_STATUS_HANDLE
 	ServiceStatus As SERVICE_STATUS
 	ServiceCheckPoint As DWORD
@@ -17,15 +16,6 @@ Type SERVICE_TABLE_ENTRYW_ZERO
 	Dim Table As SERVICE_TABLE_ENTRYW
 	Dim Zero As SERVICE_TABLE_ENTRYW
 End Type
-
-Function RunnableStatusHandler( _
-		ByVal Context As Any Ptr, _
-		ByVal Status As HRESULT _
-	)As HRESULT
-	
-	Return S_OK
-	
-End Function
 
 Sub ReportSvcStatus( _
 		ByVal lpContext As ServiceContext Ptr, _
@@ -86,7 +76,6 @@ Function SvcCtrlHandlerEx( _
 			)
 			
 			SetEvent(pServiceContext->hStopEvent)
-			IRunnable_Stop(pServiceContext->pIWebServer)
 			
 		Case Else
 			Return ERROR_CALL_NOT_IMPLEMENTED
@@ -119,27 +108,6 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	Dim pIMemoryAllocator As IMalloc Ptr = CPtr(IMalloc Ptr, GetServerHeapMemoryAllocatorInstance())
-	If pIMemoryAllocator = NULL Then
-		ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
-		Exit Sub
-	End If
-	
-	Dim hrCreateWebServer As HRESULT = CreateWebServer( _
-		pIMemoryAllocator, _
-		@IID_IRunnable, _
-		@Context.pIWebServer _
-	)
-	If FAILED(hrCreateWebServer) Then
-		IMalloc_Release(pIMemoryAllocator)
-		ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
-		Exit Sub
-	End If
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
-	
 	Context.hStopEvent = CreateEventW( _
 		NULL, _
 		TRUE, _
@@ -148,30 +116,26 @@ Sub SvcMain( _
 	)
 	If Context.hStopEvent = NULL Then
 		Dim dwError As DWORD = GetLastError()
-		IRunnable_Release(Context.pIWebServer)
 		ReportSvcStatus(@Context, SERVICE_STOPPED, dwError, 0)
 		Exit Sub
 	End If
 	
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
 	
-	IRunnable_RegisterStatusHandler(Context.pIWebServer, @Context, @RunnableStatusHandler)
-	
-	Dim hrRun As HRESULT = IRunnable_Run(Context.pIWebServer)
-	If FAILED(hrRun) Then
-		CloseHandle(Context.hStopEvent)
-		IRunnable_Release(Context.pIWebServer)
-		ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
-		Exit Sub
-	End If
+	Scope
+		Dim hrInitialize As HRESULT = Station922Initialize()
+		If FAILED(hrInitialize) Then
+			CloseHandle(Context.hStopEvent)
+			ReportSvcStatus(@Context, SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0)
+			Exit Sub
+		End If
+	End Scope
 	
 	ReportSvcStatus(@Context, SERVICE_RUNNING, NO_ERROR, 0)
 	
 	WaitForSingleObject(Context.hStopEvent, INFINITE)
 	
 	ReportSvcStatus(@Context, SERVICE_STOP_PENDING, NO_ERROR, 0)
-	
-	IRunnable_Release(Context.pIWebServer)
 	
 	ReportSvcStatus(@Context, SERVICE_STOPPED, NO_ERROR, 0)
 	

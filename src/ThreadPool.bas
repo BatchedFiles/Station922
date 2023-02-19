@@ -5,8 +5,6 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
-Extern ThreadPoolCompletionPort As HANDLE
-
 Type _ThreadPool
 	#if __FB_DEBUG__
 		IdString As ZString * 16

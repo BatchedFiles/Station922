@@ -18,7 +18,7 @@ Type _FileStream
 	pFilePath As HeapBSTR
 	FileSize As LongInt
 	FileOffset As LongInt
-	FileHandle As Handle
+	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
 	FileBytes As ZString Ptr
 	SmallFileBytes As ZString Ptr
@@ -35,7 +35,8 @@ End Type
 
 Sub InitializeFileStream( _
 		ByVal this As FileStream Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal FileBytes As ZString Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -52,7 +53,7 @@ Sub InitializeFileStream( _
 	this->pFilePath = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
-	this->FileBytes = NULL
+	this->FileBytes = FileBytes
 	this->SmallFileBytes = NULL
 	this->ZipMode = ZipModes.None
 	this->Language = NULL
@@ -76,14 +77,11 @@ Sub UnInitializeFileStream( _
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->pFilePath)
 	
-	If this->FileBytes Then
-		Dim hHeap As HANDLE = GetProcessHeap()
-		HeapFree( _
-			hHeap, _
-			0, _
-			this->FileBytes _
-		)
-	End If
+	VirtualFree( _
+		this->FileBytes, _
+		0, _
+		MEM_RELEASE _
+	)
 	
 	If this->SmallFileBytes Then
 		IMalloc_Free(this->pIMemoryAllocator, this->SmallFileBytes)
@@ -111,25 +109,45 @@ Function CreateFileStream( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim this As FileStream Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		SizeOf(FileStream) _
+	Dim FileBytes As ZString Ptr = VirtualAlloc( _
+		NULL, _
+		BUFFERSLICECHUNK_SIZE, _
+		MEM_RESERVE, _
+		PAGE_READWRITE _
 	)
 	
-	If this Then
-		InitializeFileStream(this, pIMemoryAllocator)
-		FileStreamCreated(this)
+	If FileBytes Then
 		
-		Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
-			this, _
-			riid, _
-			ppv _
+		Dim this As FileStream Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(FileStream) _
 		)
-		If FAILED(hrQueryInterface) Then
-			DestroyFileStream(this)
+		
+		If this Then
+			InitializeFileStream( _
+				this, _
+				pIMemoryAllocator, _
+				FileBytes _
+			)
+			FileStreamCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyFileStream(this)
+			End If
+			
+			Return hrQueryInterface
 		End If
 		
-		Return hrQueryInterface
+		VirtualFree( _
+			FileBytes, _
+			0, _
+			MEM_RELEASE _
+		)
 	End If
 	
 	*ppv = NULL
@@ -220,15 +238,11 @@ Function FileStreamAllocateBufferSink( _
 	Dim pMem As Any Ptr = Any
 	
 	If dwLength <= SmallFileBytesSize Then
-		If this->FileBytes Then
-			Dim hHeap As HANDLE = GetProcessHeap()
-			HeapFree( _
-				hHeap, _
-				0, _
-				this->FileBytes _
-			)
-			this->FileBytes = NULL
-		End If
+		VirtualFree( _
+			this->FileBytes, _
+			0, _
+			MEM_DECOMMIT _
+		)
 		
 		If this->PreviousAllocatedSmallLength >= dwLength Then
 			pMem = this->SmallFileBytes
@@ -259,18 +273,11 @@ Function FileStreamAllocateBufferSink( _
 		If this->PreviousAllocatedLength >= dwLength Then
 			pMem = this->FileBytes
 		Else
-			Dim hHeap As HANDLE = GetProcessHeap()
-			If this->FileBytes Then
-				HeapFree( _
-					hHeap, _
-					0, _
-					this->FileBytes _
-				)
-			End If
-			pMem = HeapAlloc( _
-				hHeap, _
-				0, _
-				dwLength _
+			pMem = VirtualAlloc( _
+				this->FileBytes, _
+				dwLength, _
+				MEM_COMMIT, _
+				PAGE_READWRITE _
 			)
 			this->FileBytes = pMem
 			this->PreviousAllocatedLength = dwLength

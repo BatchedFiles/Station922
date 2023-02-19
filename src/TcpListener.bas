@@ -2,11 +2,9 @@
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
+#include once "Network.bi"
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
-
-Extern lpfnAcceptEx As LPFN_ACCEPTEX
-Extern lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
 
 Type _TcpListener
 	#if __FB_DEBUG__

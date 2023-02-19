@@ -20,7 +20,7 @@ Sub ConsoleWriteColorStringW( _
 	)
 	If dwErrorConsole = 0 Then
 		
-		Const MaxConsoleCharsCount As Integer = 32000 - 1
+		Const MaxConsoleCharsCount As Integer = 512 - 1
 		
 		Dim OutputCodePage As Integer = GetConsoleOutputCP()
 		Dim Buffer As ZString * (MaxConsoleCharsCount + 1) = Any

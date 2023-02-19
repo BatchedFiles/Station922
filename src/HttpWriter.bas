@@ -1,10 +1,9 @@
 #include once "AsyncResult.bi"
-#include once "HttpWriter.bi"
 #include once "ContainerOf.bi"
+#include once "HttpWriter.bi"
+#include once "ThreadPool.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
-
-Extern ThreadPoolCompletionPort As HANDLE
 
 Enum WriterTasks
 	ReadStream
@@ -300,7 +299,7 @@ Function HttpWriterPrepare( _
 			End If
 			
 		Case FileAccess.CreateAccess
-			' Создать тело ответа
+			' пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			
 	End Select
 	

@@ -35,26 +35,6 @@ Declare Function WebServerIniConfigurationRelease( _
 	ByVal this As WebServerIniConfiguration Ptr _
 )As ULONG
 
-Declare Function WebServerIniConfigurationGetListenAddress( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal bstrListenAddress As HeapBSTR Ptr _
-)As HRESULT
-
-Declare Function WebServerIniConfigurationGetListenPort( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pListenPort As UINT Ptr _
-)As HRESULT
-
-Declare Function WebServerIniConfigurationGetConnectBindAddress( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal bstrConnectBindAddress As HeapBSTR Ptr _
-)As HRESULT
-
-Declare Function WebServerIniConfigurationGetConnectBindPort( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pConnectBindPort As UINT Ptr _
-)As HRESULT
-
 Declare Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	ByVal this As WebServerIniConfiguration Ptr, _
 	ByVal pWorkerThreadsCount As UInteger Ptr _
@@ -65,21 +45,16 @@ Declare Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 	ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 )As HRESULT
 
-Declare Function WebServerIniConfigurationGetIsPasswordValid( _
+Declare Function WebServerIniConfigurationGetWebSites( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pUserName As WString Ptr, _
-	ByVal pPassword As WString Ptr, _
-	ByVal pIsPasswordValid As Boolean Ptr _
+	ByVal pWebSites As Integer Ptr, _
+	ByVal ppIWebSites As IWebSite Ptr Ptr _
 )As HRESULT
 
-Declare Function WebServerIniConfigurationGetWebSiteCollection( _
+Declare Function WebServerIniConfigurationGetHttpProcessors( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WebServerIniConfigurationGetHttpProcessorCollection( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+	ByVal pHttpProcessors As Integer Ptr, _
+	ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
 )As HRESULT
 
 #endif

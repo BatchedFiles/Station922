@@ -1,9 +1,11 @@
 #ifndef IINICONFIGURATION_BI
 #define IINICONFIGURATION_BI
 
-#include once "IString.bi"
-#include once "IWebSiteCollection.bi"
-#include once "IHttpProcessorCollection.bi"
+#include once "IWebSite.bi"
+#include once "IHttpAsyncProcessor.bi"
+
+Const MaxWebSites As Integer = 64
+Const MaxHttpProcessors As Integer = 64
 
 Type IWebServerConfiguration As IWebServerConfiguration_
 
@@ -27,26 +29,6 @@ Type IWebServerConfigurationVirtualTable
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
 		
-	GetListenAddress As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrListenAddress As HeapBSTR Ptr _
-	)As HRESULT
-	
-	GetListenPort As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pListenPort As UINT Ptr _
-	)As HRESULT
-	
-	GetConnectBindAddress As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal bstrConnectBindAddress As HeapBSTR Ptr _
-	)As HRESULT
-	
-	GetConnectBindPort As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pConnectBindPort As UINT Ptr _
-	)As HRESULT
-	
 	GetWorkerThreadsCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
@@ -57,21 +39,16 @@ Type IWebServerConfigurationVirtualTable
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	
-	GetIsPasswordValid As Function( _
+	GetWebSites As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pUserName As WString Ptr, _
-		ByVal pPassword As WString Ptr, _
-		ByVal pIsPasswordValid As Boolean Ptr _
+		ByVal pWebSites As Integer Ptr, _
+		ByVal ppIWebSites As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	GetWebSiteCollection As Function( _
+	GetHttpProcessors As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal ppIWebSiteCollection As IWebSiteCollection Ptr Ptr _
-	)As HRESULT
-	
-	GetHttpProcessorCollection As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal ppIHttpProcessorCollection As IHttpProcessorCollection Ptr Ptr _
+		ByVal pHttpProcessors As Integer Ptr, _
+		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
 	)As HRESULT
 	
 End Type
@@ -83,15 +60,9 @@ End Type
 #define IWebServerConfiguration_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IWebServerConfiguration_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWebServerConfiguration_Release(this) (this)->lpVtbl->Release(this)
-#define IWebServerConfiguration_GetListenAddress(this, bstrListenAddress) (this)->lpVtbl->GetListenAddress(this, bstrListenAddress)
-#define IWebServerConfiguration_GetListenPort(this, pListenPort) (this)->lpVtbl->GetListenPort(this, pListenPort)
-#define IWebServerConfiguration_GetConnectBindAddress(this, bstrConnectBindAddress) (this)->lpVtbl->GetConnectBindAddress(this, bstrConnectBindAddress)
-#define IWebServerConfiguration_GetConnectBindPort(this, pConnectBindPort) (this)->lpVtbl->GetConnectBindPort(this, pConnectBindPort)
 #define IWebServerConfiguration_GetWorkerThreadsCount(this, pWorkerThreadsCount) (this)->lpVtbl->GetWorkerThreadsCount(this, pWorkerThreadsCount)
 #define IWebServerConfiguration_GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext) (this)->lpVtbl->GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext)
-#define IWebServerConfiguration_GetDefaultWebSite(this, ppIWebSite) (this)->lpVtbl->GetDefaultWebSite(this, ppIWebSite)
-#define IWebServerConfiguration_GetIsPasswordValid(this, pUserName, pPassword, pIsPasswordValid) (this)->lpVtbl->GetIsPasswordValid(this, pUserName, pPassword, pIsPasswordValid)
-#define IWebServerConfiguration_GetWebSiteCollection(this, ppIWebSiteCollection) (this)->lpVtbl->GetWebSiteCollection(this, ppIWebSiteCollection)
-#define IWebServerConfiguration_GetHttpProcessorCollection(this, ppIHttpProcessorCollection) (this)->lpVtbl->GetHttpProcessorCollection(this, ppIHttpProcessorCollection)
+#define IWebServerConfiguration_GetWebSites(this, pWebSites, ppIWebSites) (this)->lpVtbl->GetWebSites(this, pWebSites, ppIWebSites)
+#define IWebServerConfiguration_GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors) (this)->lpVtbl->GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors)
 
 #endif
