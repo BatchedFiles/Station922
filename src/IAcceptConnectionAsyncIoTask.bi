@@ -5,6 +5,8 @@
 #include once "win\winsock2.bi"
 #include once "IHttpAsyncIoTask.bi"
 
+Extern IID_IAcceptConnectionAsyncIoTask Alias "IID_IAcceptConnectionAsyncIoTask" As Const IID
+
 ' BeginExecute:
 ' ASYNCTASK_S_IO_PENDING
 ' Any E_FAIL
@@ -14,10 +16,6 @@
 ' Any E_FAIL
 
 Type IAcceptConnectionAsyncIoTask As IAcceptConnectionAsyncIoTask_
-
-Type LPIACCEPTCONNECTIONASYNCIOTASK As IAcceptConnectionAsyncIoTask Ptr
-
-Extern IID_IAcceptConnectionAsyncIoTask Alias "IID_IAcceptConnectionAsyncIoTask" As Const IID
 
 Type IAcceptConnectionAsyncIoTaskVirtualTable
 	

@@ -5,6 +5,8 @@
 #include once "Http.bi"
 #include once "IHttpReader.bi"
 
+Extern IID_IClientRequest Alias "IID_IClientRequest" As Const IID
+
 ' IClientRequest.Parse:
 ' S_OK, E_FAIL, CLIENTREQUEST_E_...
 
@@ -22,10 +24,6 @@ Type ByteRange
 End Type
 
 Type IClientRequest As IClientRequest_
-
-Type LPICLIENTREQUEST As IClientRequest Ptr
-
-Extern IID_IClientRequest Alias "IID_IClientRequest" As Const IID
 
 Type IClientRequestVirtualTable
 	

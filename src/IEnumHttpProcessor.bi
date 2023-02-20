@@ -3,11 +3,9 @@
 
 #include once "IHttpAsyncProcessor.bi"
 
-Type IEnumHttpProcessor As IEnumHttpProcessor_
-
-Type LPIENUMHTTPPROCESSOR As IEnumHttpProcessor Ptr
-
 Extern IID_IEnumHttpProcessor Alias "IID_IEnumHttpProcessor" As Const IID
+
+Type IEnumHttpProcessor As IEnumHttpProcessor_
 
 Type IEnumHttpProcessorVirtualTable
 	

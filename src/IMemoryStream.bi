@@ -3,11 +3,9 @@
 
 #include once "IAttributedStream.bi"
 
-Type IMemoryStream As IMemoryStream_
-
-Type LPIMEMORYSTREAM As IMemoryStream Ptr
-
 Extern IID_IMemoryStream Alias "IID_IMemoryStream" As Const IID
+
+Type IMemoryStream As IMemoryStream_
 
 Type IMemoryStreamVirtualTable
 	

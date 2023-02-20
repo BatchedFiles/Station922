@@ -4,13 +4,11 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
+Extern IID_IAsyncResult Alias "IID_IAsyncResult" As Const IID
+
 Type IAsyncResult As IAsyncResult_
 
-Type LPIASYNCRESULT As IAsyncResult Ptr
-
 Type AsyncCallback As Sub(ByVal ar As IAsyncResult Ptr, ByVal ReadedBytes As Integer)
-
-Extern IID_IAsyncResult Alias "IID_IAsyncResult" As Const IID
 
 Declare Function GetAsyncResultFromOverlappedWeakPtr( _
 	ByVal pOverLap As OVERLAPPED Ptr _

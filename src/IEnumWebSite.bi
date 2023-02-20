@@ -3,11 +3,9 @@
 
 #include once "IWebSite.bi"
 
-Type IEnumWebSite As IEnumWebSite_
-
-Type LPIENUMWEBSITE As IEnumWebSite Ptr
-
 Extern IID_IEnumWebSite Alias "IID_IEnumWebSite" As Const IID
+
+Type IEnumWebSite As IEnumWebSite_
 
 Type IEnumWebSiteVirtualTable
 	

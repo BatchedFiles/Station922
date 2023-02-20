@@ -5,14 +5,12 @@
 #include once "IString.bi"
 #include once "Mime.bi"
 
+Extern IID_IServerResponse Alias "IID_IServerResponse" As Const IID
+
 ' IServerResponse.Prepare:
 ' S_OK, E_FAIL
 
 Type IServerResponse As IServerResponse_
-
-Type LPISERVERRESPONSE As IServerResponse Ptr
-
-Extern IID_IServerResponse Alias "IID_IServerResponse" As Const IID
 
 Type IServerResponseVirtualTable
 	

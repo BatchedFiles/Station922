@@ -4,11 +4,9 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
-Type IThreadPool As IThreadPool_
-
-Type LPITHREADPOOL As IThreadPool Ptr
-
 Extern IID_IThreadPool Alias "IID_IThreadPool" As Const IID
+
+Type IThreadPool As IThreadPool_
 
 Type IThreadPoolVirtualTable
 	

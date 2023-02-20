@@ -6,6 +6,8 @@
 #include once "IAsyncResult.bi"
 #include once "ClientBuffer.bi"
 
+Extern IID_ITcpListener Alias "IID_ITcpListener" As Const IID
+
 ' BeginAccept:
 ' TCPLISTENER_S_IO_PENDING
 ' Any E_FAIL
@@ -17,10 +19,6 @@
 Const TCPLISTENER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Type ITcpListener As ITcpListener_
-
-Type LPITCPLISTENER As ITcpListener Ptr
-
-Extern IID_ITcpListener Alias "IID_ITcpListener" As Const IID
 
 Type ITcpListenerVirtualTable
 	

@@ -3,6 +3,8 @@
 
 #include once "IAsyncResult.bi"
 
+Extern IID_IBaseStream Alias "IID_IBaseStream" As Const IID
+
 ' IBaseStream.BeginRead:
 ' BASESTREAM_S_IO_PENDING, Any E_FAIL
 
@@ -29,10 +31,6 @@ Type BaseStreamBuffer
 End Type
 
 Type IBaseStream As IBaseStream_
-
-Type LPIBASESTREAM As IBaseStream Ptr
-
-Extern IID_IBaseStream Alias "IID_IBaseStream" As Const IID
 
 Type IBaseStreamVirtualTable
 	

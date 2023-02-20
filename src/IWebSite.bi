@@ -5,6 +5,8 @@
 #include once "IClientRequest.bi"
 #include once "IString.bi"
 
+Extern IID_IWebSite Alias "IID_IWebSite" As Const IID
+
 ' GetBuffer:
 ' S_OK, WEBSITE_S_CREATE_NEW, WEBSITE_S_ALREADY_EXISTS
 ' Any Error
@@ -27,10 +29,6 @@ Enum TextFileCharsets
 End Enum
 
 Type IWebSite As IWebSite_
-
-Type LPIWEBSITE As IWebSite Ptr
-
-Extern IID_IWebSite Alias "IID_IWebSite" As Const IID
 
 Type IWebSiteVirtualTable
 	

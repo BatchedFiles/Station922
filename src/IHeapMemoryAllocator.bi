@@ -3,11 +3,9 @@
 
 #include once "ClientBuffer.bi"
 
-Type IHeapMemoryAllocator As IHeapMemoryAllocator_
-
-Type LPIHeapMemoryAllocator As IHeapMemoryAllocator Ptr
-
 Extern IID_IHeapMemoryAllocator Alias "IID_IHeapMemoryAllocator" As Const IID
+
+Type IHeapMemoryAllocator As IHeapMemoryAllocator_
 
 Type IHeapMemoryAllocatorVirtualTable
 	

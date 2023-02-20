@@ -3,11 +3,9 @@
 
 #include once "IString.bi"
 
-Type IClientUri As IClientUri_
-
-Type LPICLIENTURI As IClientUri Ptr
-
 Extern IID_IClientUri Alias "IID_IClientUri" As Const IID
+
+Type IClientUri As IClientUri_
 
 /'
 URI

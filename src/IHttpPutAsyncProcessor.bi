@@ -3,11 +3,9 @@
 
 #include once "IHttpAsyncProcessor.bi"
 
-Type IHttpPutAsyncProcessor As IHttpPutAsyncProcessor_
-
-Type LPIHTTPPUTASYNCPROCESSOR As IHttpPutAsyncProcessor Ptr
-
 Extern IID_IHttpPutAsyncProcessor Alias "IID_IHttpPutAsyncProcessor" As Const IID
+
+Type IHttpPutAsyncProcessor As IHttpPutAsyncProcessor_
 
 Type IHttpPutAsyncProcessorVirtualTable
 	

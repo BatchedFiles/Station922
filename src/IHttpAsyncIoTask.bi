@@ -7,6 +7,8 @@
 #include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
 
+Extern IID_IHttpAsyncIoTask Alias "IID_IHttpAsyncIoTask" As Const IID
+
 ' BeginExecute:
 ' ASYNCTASK_S_IO_PENDING
 ' Any E_FAIL
@@ -20,10 +22,6 @@
 Const ASYNCTASK_S_KEEPALIVE_FALSE As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0202)
 
 Type IHttpAsyncIoTask As IHttpAsyncIoTask_
-
-Type LPIHTTPASYNCIOTASK As IHttpAsyncIoTask Ptr
-
-Extern IID_IHttpAsyncIoTask Alias "IID_IHttpAsyncIoTask" As Const IID
 
 Type IHttpAsyncIoTaskVirtualTable
 	

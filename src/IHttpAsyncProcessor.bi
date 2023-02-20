@@ -5,6 +5,8 @@
 #include once "IHttpWriter.bi"
 #include once "IWebSite.bi"
 
+Extern IID_IHttpAsyncProcessor Alias "IID_IHttpAsyncProcessor" As Const IID
+
 Const HTTPASYNCPROCESSOR_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Type ProcessorContext
@@ -16,13 +18,7 @@ Type ProcessorContext
 	pIWriter As IHttpWriter Ptr
 End Type
 
-Type LPProcessorContext As _ProcessorContext Ptr
-
 Type IHttpAsyncProcessor As IHttpAsyncProcessor_
-
-Type LPIHTTPASYNCPROCESSOR As IHttpAsyncProcessor Ptr
-
-Extern IID_IHttpAsyncProcessor Alias "IID_IHttpAsyncProcessor" As Const IID
 
 Type IHttpAsyncProcessorVirtualTable
 	

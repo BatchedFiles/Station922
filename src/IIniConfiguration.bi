@@ -4,14 +4,12 @@
 #include once "IWebSite.bi"
 #include once "IHttpAsyncProcessor.bi"
 
+Extern IID_IIniConfiguration Alias "IID_IIniConfiguration" As Const IID
+
 Const MaxWebSites As Integer = 64
 Const MaxHttpProcessors As Integer = 64
 
 Type IWebServerConfiguration As IWebServerConfiguration_
-
-Type LPIWebServerConfiguration As IWebServerConfiguration Ptr
-
-Extern IID_IIniConfiguration Alias "IID_IIniConfiguration" As Const IID
 
 Type IWebServerConfigurationVirtualTable
 	

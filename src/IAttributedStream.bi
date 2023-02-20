@@ -6,6 +6,8 @@
 #include once "IString.bi"
 #include once "Mime.bi"
 
+Extern IID_IAttributedStream Alias "IID_IAttributedStream" As Const IID
+
 Const ATTRIBUTEDSTREAM_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Const BUFFERSLICECHUNK_SIZE As DWORD = 64 * 1024 * 128
@@ -23,10 +25,6 @@ Type BufferSlice
 End Type
 
 Type IAttributedStream As IAttributedStream_
-
-Type LPIATTRIBUTEDSTREAM As IAttributedStream Ptr
-
-Extern IID_IAttributedStream Alias "IID_IAttributedStream" As Const IID
 
 Type IAttributedStreamVirtualTable
 	

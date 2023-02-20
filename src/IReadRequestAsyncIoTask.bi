@@ -3,6 +3,8 @@
 
 #include once "IHttpAsyncIoTask.bi"
 
+Extern IID_IReadRequestAsyncIoTask Alias "IID_IReadRequestAsyncIoTask" As Const IID
+
 ' BeginExecute:
 ' ASYNCTASK_S_IO_PENDING
 ' Any E_FAIL
@@ -13,10 +15,6 @@
 ' Any E_FAIL
 
 Type IReadRequestAsyncIoTask As IReadRequestAsyncIoTask_
-
-Type LPIREADREQUESTASYNCIOTASK As IReadRequestAsyncIoTask Ptr
-
-Extern IID_IReadRequestAsyncIoTask Alias "IID_IReadRequestAsyncIoTask" As Const IID
 
 Type IReadRequestAsyncIoTaskVirtualTable
 	

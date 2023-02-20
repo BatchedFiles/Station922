@@ -4,11 +4,9 @@
 #include once "IString.bi"
 #include once "IEnumWebSite.bi"
 
-Type IWebSiteCollection As IWebSiteCollection_
-
-Type LPIWEBSITECOLLECTION As IWebSiteCollection Ptr
-
 Extern IID_IWebSiteCollection Alias "IID_IWebSiteCollection" As Const IID
+
+Type IWebSiteCollection As IWebSiteCollection_
 
 Type IWebSiteCollectionVirtualTable
 	

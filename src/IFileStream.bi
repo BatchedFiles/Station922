@@ -3,11 +3,9 @@
 
 #include once "IAttributedStream.bi"
 
-Type IFileStream As IFileStream_
-
-Type LPIFILESTREAM As IFileStream Ptr
-
 Extern IID_IFileStream Alias "IID_IFileStream" As Const IID
+
+Type IFileStream As IFileStream_
 
 Type IFileStreamVirtualTable
 	

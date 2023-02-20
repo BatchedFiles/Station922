@@ -4,17 +4,13 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
+Extern IID_IString Alias "IID_IString" As Const IID
+
 Type _HeapBSTR As OLECHAR Ptr
 
 Type HeapBSTR As _HeapBSTR
 
-Type LPHEAPBSTR As _HeapBSTR Ptr
-
 Type IString As IString_
-
-Type LPISTRING As IString Ptr
-
-Extern IID_IString Alias "IID_IString" As Const IID
 
 Type IStringVirtualTable
 	

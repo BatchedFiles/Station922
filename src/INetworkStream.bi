@@ -4,11 +4,9 @@
 #include once "IBaseStream.bi"
 #include once "win\winsock2.bi"
 
-Type INetworkStream As INetworkStream_
-
-Type LPINETWORKSTREAM As INetworkStream Ptr
-
 Extern IID_INetworkStream Alias "IID_INetworkStream" As Const IID
+
+Type INetworkStream As INetworkStream_
 
 Type INetworkStreamVirtualTable
 	

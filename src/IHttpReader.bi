@@ -5,6 +5,8 @@
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
 
+Extern IID_IHttpReader Alias "IID_IHttpReader" As Const IID
+
 ' ITextReader.ReadLine:
 ' S_OK, S_FALSE
 
@@ -17,10 +19,6 @@
 Const HTTPREADER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Type IHttpReader As IHttpReader_
-
-Type LPIHTTPREADER As IHttpReader Ptr
-
-Extern IID_IHttpReader Alias "IID_IHttpReader" As Const IID
 
 Type IHttpReaderVirtualTable
 	

@@ -4,11 +4,9 @@
 #include once "windows.bi"
 #include once "win\ole2.bi"
 
-Type IWebServer As IWebServer_
-
-Type LPIWEBSERVER As IWebServer Ptr
-
 Extern IID_IWebServer Alias "IID_IWebServer" As Const IID
+
+Type IWebServer As IWebServer_
 
 Type IWebServerVirtualTable
 	

@@ -4,11 +4,9 @@
 #include once "IEnumHttpProcessor.bi"
 #include once "IString.bi"
 
-Type IHttpProcessorCollection As IHttpProcessorCollection_
-
-Type LPIHTTPPROCESSORCOLLECTION As IHttpProcessorCollection Ptr
-
 Extern IID_IHttpProcessorCollection Alias "IID_IHttpProcessorCollection" As Const IID
+
+Type IHttpProcessorCollection As IHttpProcessorCollection_
 
 Type IHttpProcessorCollectionVirtualTable
 	

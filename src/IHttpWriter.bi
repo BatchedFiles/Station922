@@ -6,6 +6,8 @@
 #include once "IAttributedStream.bi"
 #include once "IServerResponse.bi"
 
+Extern IID_IHttpWriter Alias "IID_IHttpWriter" As Const IID
+
 ' ITextWriter.BeginWrite:
 ' HTTPWRITER_S_IO_PENDING, Any E_FAIL
 
@@ -15,10 +17,6 @@
 Const HTTPWRITER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Type IHttpWriter As IHttpWriter_
-
-Type LPIHTTPWRITER As IHttpWriter Ptr
-
-Extern IID_IHttpWriter Alias "IID_IHttpWriter" As Const IID
 
 Type IHttpWriterVirtualTable
 	

@@ -3,11 +3,9 @@
 
 #include once "IHttpAsyncProcessor.bi"
 
-Type IHttpTraceAsyncProcessor As IHttpTraceAsyncProcessor_
-
-Type LPIHTTPTRACEASYNCPROCESSOR As IHttpTraceAsyncProcessor Ptr
-
 Extern IID_IHttpTraceAsyncProcessor Alias "IID_IHttpTraceAsyncProcessor" As Const IID
+
+Type IHttpTraceAsyncProcessor As IHttpTraceAsyncProcessor_
 
 Type IHttpTraceAsyncProcessorVirtualTable
 	
