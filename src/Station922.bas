@@ -36,6 +36,21 @@ Function IsServiceParam()As Boolean
 	
 End Function
 
+Function StartMainFunction()As Integer
+	
+	Dim RetCode As Integer = Any
+	
+	Dim IsService As Boolean = IsServiceParam()
+	If IsService Then
+		RetCode = WindowsServiceMain()
+	Else
+		RetCode = ConsoleMain()
+	End If
+	
+	Return RetCode
+	
+End Function
+
 Function EntryPoint Alias "EntryPoint"()As Integer
 	
 	Scope
@@ -53,19 +68,15 @@ Function EntryPoint Alias "EntryPoint"()As Integer
 		End If
 	End Scope
 	
-	Dim RetCode As Integer = Any
 	Scope
-		Dim IsService As Boolean = IsServiceParam()
-		If IsService Then
-			RetCode = WindowsServiceMain()
-		Else
-			RetCode = ConsoleMain()
-		End If
+		
+		Dim RetCode As Integer = StartMainFunction()
+		
+		NetworkCleanUp()
+		
+		Return RetCode
+		
 	End Scope
-	
-	NetworkCleanUp()
-	
-	Return RetCode
 	
 End Function
 
