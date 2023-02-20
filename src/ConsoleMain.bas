@@ -1,5 +1,4 @@
 #include once "ConsoleMain.bi"
-#include once "HeapMemoryAllocator.bi"
 #include once "WebUtils.bi"
 
 Function ConsoleMain()As Integer

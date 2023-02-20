@@ -1,5 +1,4 @@
 #include once "WindowsServiceMain.bi"
-#include once "HeapMemoryAllocator.bi"
 #include once "WebUtils.bi"
 
 Const MaxWaitHint As DWORD = 3000
@@ -88,7 +87,7 @@ End Function
 
 Sub SvcMain( _
 		ByVal dwNumServicesArgs As DWORD, _
-		ByVal lpServiceArgVectors As LPWSTR ptr _
+		ByVal lpServiceArgVectors As LPWSTR Ptr _
 	)
 	
 	Dim Context As ServiceContext = Any
