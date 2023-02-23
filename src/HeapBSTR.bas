@@ -82,14 +82,26 @@ Function FindStringIW( _
 		ByVal SubstringLength As Integer _
 	)As WString Ptr
 	
-	Dim pSourceUpper As WString Ptr = alloca(SourceLength)
+	Const MemoryPageSize As Integer = 4096
+	
+	Dim cbSourceLength As Integer = (SourceLength + 1) * SizeOf(WString)
+	If cbSourceLength >= MemoryPageSize Then
+		Return NULL
+	End If
+	
+	Dim cbSubstringLength As Integer = (SubstringLength + 1) * SizeOf(WString)
+	If cbSubstringLength >= MemoryPageSize Then
+		Return NULL
+	End If
+	
+	Dim pSourceUpper As WString Ptr = alloca(cbSourceLength)
+	Dim pSubstringUpper As WString Ptr = alloca(cbSubstringLength)
+	
 	StringToUpper( _
 		pSourceUpper, _
 		pSource, _
 		SourceLength _
 	)
-	
-	Dim pSubstringUpper As WString Ptr = alloca(SubstringLength)
 	StringToUpper( _
 		pSubstringUpper, _
 		pSubstring, _
