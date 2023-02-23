@@ -111,7 +111,9 @@ Function ResolveHostW Alias "ResolveHostW"( _
 		ByVal ppAddressList As ADDRINFOW Ptr Ptr _
 	)As HRESULT
 	
-	Dim hints As ADDRINFOW
+	Dim hints As ADDRINFOW = Any
+	ZeroMemory(@hints, SizeOf(ADDRINFOW))
+	
 	With hints
 		.ai_family = AF_UNSPEC ' AF_INET, AF_INET6
 		.ai_socktype = SOCK_STREAM
