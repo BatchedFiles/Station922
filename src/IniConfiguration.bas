@@ -24,7 +24,7 @@ Const HostKeyString = WStr("Host")
 Const VirtualPathKeyString = WStr("VirtualPath")
 Const PhisycalDirKeyString = WStr("PhisycalDir")
 Const IsMovedKeyString = WStr("IsMoved")
-Const MovedUrlKeyString = WStr("MovedUrl")
+Const CanonicalUrlKeyString = WStr("CanonicalUrl")
 Const TextFileCharsetKeyString = WStr("TextFileCharset")
 Const RemoveUtf8BomKeyString = WStr("RemoveUtf8Bom")
 Const ListenAddressKeyString = WStr("ListenAddress")
@@ -35,6 +35,8 @@ Const ConnectBindPortKeyString = WStr("ConnectBindPort")
 Const MethodsKeyString = WStr("Methods")
 Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 
+Const DefaultTextFileCharset = WStr("utf-8")
+Const DefaultVirtualPath = WStr("/")
 Const DefaultAddressString = WStr("localhost")
 Const DefaultHttpPort As INT_ = 80
 Const DefaultHttpsPort As INT_ = 443
@@ -294,6 +296,216 @@ Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 	
 End Function
 
+Function GetWebSiteHost( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrWebSite As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim WebSiteName As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@HostKeyString, _
+		NULL, _
+		@WebSiteName, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrWebSite = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrWebSite As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@WebSiteName, _
+		ValueLength _
+	)
+	If bstrWebSite = NULL Then
+		*pbstrWebSite = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrWebSite = bstrWebSite
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteVirtualPath( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrVirtualPath As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim VirtualPath As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@VirtualPathKeyString, _
+		@DefaultVirtualPath, _
+		@VirtualPath, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrVirtualPath = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@VirtualPath, _
+		ValueLength _
+	)
+	If bstrVirtualPath = NULL Then
+		*pbstrVirtualPath = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrVirtualPath = bstrVirtualPath
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSitePhisycalDir( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrPhisycalDir As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@PhisycalDirKeyString, _
+		NULL, _
+		@PhisycalDir, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrPhisycalDir = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@PhisycalDir, _
+		ValueLength _
+	)
+	If bstrPhisycalDir = NULL Then
+		*pbstrPhisycalDir = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrPhisycalDir = bstrPhisycalDir
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteCanonicalUrl( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrCanonicalUrl As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim CanonicalUrl As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@CanonicalUrlKeyString, _
+		NULL, _
+		@CanonicalUrl, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrCanonicalUrl = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrCanonicalUrl As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@CanonicalUrl, _
+		ValueLength _
+	)
+	If bstrCanonicalUrl = NULL Then
+		*pbstrCanonicalUrl = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrCanonicalUrl = bstrCanonicalUrl
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteTextFileCharset( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrTextFileCharset As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim TextFileCharset As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@TextFileCharsetKeyString, _
+		@DefaultTextFileCharset, _
+		@TextFileCharset, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrTextFileCharset = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrTextFileCharset As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@TextFileCharset, _
+		ValueLength _
+	)
+	If bstrTextFileCharset = NULL Then
+		*pbstrTextFileCharset = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrTextFileCharset = bstrTextFileCharset
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteIsMoved( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Boolean
+	
+	Dim IsMoved As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@IsMovedKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	If IsMoved Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
 Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
@@ -302,145 +514,86 @@ Function GetWebSite( _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	
-	' [localhost]
-	' Host=localhost
-	' VirtualPath=/
-	' PhisycalDir=C:\Programming\WebSites\localhost\
-	' IsMoved=0
-	' MovedUrl=http://localhost
-	' TextFileCharset=utf-8
-	' RemoveUtf8Bom=1
-	' ListenAddress=localhost
-	' ListenPort=80
-	' UseSsl=0
-	' ConnectBindAddress=0.0.0.0
-	' ConnectBindPort=0
-	' Methods=GET,HEAD
-	' ReservedFileBytes=0
-	
-	Dim bstrWebSite As HeapBSTR = Any
 	Dim pIWebSite As IWebSite Ptr = Any
-	Dim hrCreateWebSite As HRESULT = CreateWebSite( _
-		pIMemoryAllocator, _
-		@IID_IWebSite, _
-		@pIWebSite _
-	)
-	If FAILED(hrCreateWebSite) Then
-		*ppIWebSite = NULL
-		Return hrCreateWebSite
-	End If
 	
 	Scope
-		Dim WebSiteName As WString * (MAX_PATH + 1) = Any
-		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-			lpwszHost, _
-			@HostKeyString, _
-			@EmptyString, _
-			@WebSiteName, _
-			Cast(DWORD, MAX_PATH), _
-			pWebSitesIniFileName _
+		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+			pIMemoryAllocator, _
+			@IID_IWebSite, _
+			@pIWebSite _
 		)
-		If ValueLength = 0 Then
-			Dim dwError As DWORD = GetLastError()
+		If FAILED(hrCreateWebSite) Then
+			*ppIWebSite = NULL
+			Return hrCreateWebSite
+		End If
+	End Scope
+	
+	Scope
+		Dim bstrWebSite As HeapBSTR = Any
+		Dim hrHost As HRESULT = GetWebSiteHost( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrWebSite _
+		)
+		If FAILED(hrHost) Then
 			IWebSite_Release(pIWebSite)
-			Return HRESULT_FROM_WIN32(dwError)
+			Return hrHost
 		End If
 		
-		bstrWebSite = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			@WebSiteName, _
-			HostLength _
-		)
 		IWebSite_SetHostName(pIWebSite, bstrWebSite)
+		HeapSysFreeString(bstrWebSite)
 	End Scope
 	
 	Scope
-		Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
-		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		Dim bstrVirtualPath As HeapBSTR = Any
+		Dim hrVirtualPath As HRESULT = GetWebSiteVirtualPath( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
 			lpwszHost, _
-			@PhisycalDirKeyString, _
-			@EmptyString, _
-			@PhisycalDir, _
-			Cast(DWORD, MAX_PATH), _
-			pWebSitesIniFileName _
+			@bstrVirtualPath _
 		)
-		If ValueLength = 0 Then
-			Dim dwError As DWORD = GetLastError()
+		If FAILED(hrVirtualPath) Then
 			IWebSite_Release(pIWebSite)
-			Return HRESULT_FROM_WIN32(dwError)
+			Return hrVirtualPath
 		End If
 		
-		Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			@PhisycalDir, _
-			ValueLength _
-		)
-		IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
-		HeapSysFreeString(bstrPhisycalDir)
-	End Scope
-	
-	Scope
-		Dim VirtualPath As WString * (MAX_PATH + 1) = Any
-		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-			lpwszHost, _
-			@VirtualPathKeyString, _
-			@EmptyString, _
-			@VirtualPath, _
-			Cast(DWORD, MAX_PATH), _
-			pWebSitesIniFileName _
-		)
-		If ValueLength = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			IWebSite_Release(pIWebSite)
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-		Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			@VirtualPath, _
-			ValueLength _
-		)
 		IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
 		HeapSysFreeString(bstrVirtualPath)
 	End Scope
 	
 	Scope
-		Dim MovedUrl As WString * (MAX_PATH + 1) = Any
-		Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		Dim bstrPhisycalDir As HeapBSTR = Any
+		Dim hrPhisycalDir As HRESULT = GetWebSitePhisycalDir( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
 			lpwszHost, _
-			@MovedUrlKeyString, _
-			@EmptyString, _
-			@MovedUrl, _
-			Cast(DWORD, MAX_PATH), _
-			pWebSitesIniFileName _
+			@bstrPhisycalDir _
 		)
-		If ValueLength = 0 Then
-			Dim dwError As DWORD = GetLastError()
+		If FAILED(hrPhisycalDir) Then
 			IWebSite_Release(pIWebSite)
-			Return HRESULT_FROM_WIN32(dwError)
+			Return hrPhisycalDir
 		End If
 		
-		Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			@MovedUrl, _
-			ValueLength _
-		)
-		IWebSite_SetMovedUrl(pIWebSite, bstrMovedUrl)
-		HeapSysFreeString(bstrMovedUrl)
+		IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
+		HeapSysFreeString(bstrPhisycalDir)
 	End Scope
 	
 	Scope
-		Dim IsMoved As INT_ = GetPrivateProfileIntW( _
+		Dim bstrCanonicalUrl As HeapBSTR = Any
+		Dim hrCanonicalUrl As HRESULT = GetWebSiteCanonicalUrl( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
 			lpwszHost, _
-			@IsMovedKeyString, _
-			0, _
-			pWebSitesIniFileName _
+			@bstrCanonicalUrl _
 		)
-		If IsMoved Then
-			IWebSite_SetIsMoved(pIWebSite, True)
-		Else
-			IWebSite_SetIsMoved(pIWebSite, False)
+		If FAILED(hrCanonicalUrl) Then
+			IWebSite_Release(pIWebSite)
+			Return hrCanonicalUrl
 		End If
+		
+		IWebSite_SetMovedUrl(pIWebSite, bstrCanonicalUrl)
+		HeapSysFreeString(bstrCanonicalUrl)
 	End Scope
 	
 	Scope
@@ -453,7 +606,17 @@ Function GetWebSite( _
 		IWebSite_SetTextFileEncoding(pIWebSite, Charset)
 	End Scope
 	
-	HeapSysFreeString(bstrWebSite)
+	Scope
+		Dim IsMoved As INT_ = GetWebSiteIsMoved( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		If IsMoved Then
+			IWebSite_SetIsMoved(pIWebSite, True)
+		Else
+			IWebSite_SetIsMoved(pIWebSite, False)
+		End If
+	End Scope
 	
 	*ppIWebSite = pIWebSite
 	
