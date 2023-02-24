@@ -597,13 +597,20 @@ Function GetWebSite( _
 	End Scope
 	
 	Scope
-		Dim Charset As INT_ = GetPrivateProfileIntW( _
+		Dim bstrCharset As HeapBSTR = Any
+		Dim hrCharset As HRESULT = GetWebSiteTextFileCharset( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
 			lpwszHost, _
-			@TextFileCharsetKeyString, _
-			0, _
-			pWebSitesIniFileName _
+			@bstrCharset _
 		)
-		IWebSite_SetTextFileEncoding(pIWebSite, Charset)
+		If FAILED(hrCharset) Then
+			IWebSite_Release(pIWebSite)
+			Return hrCharset
+		End If
+		
+		IWebSite_SetTextFileEncoding(pIWebSite, bstrCharset)
+		HeapSysFreeString(bstrCharset)
 	End Scope
 	
 	Scope
