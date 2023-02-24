@@ -77,12 +77,12 @@ Type _WebSite
 	pHostName As HeapBSTR
 	pPhysicalDirectory As HeapBSTR
 	pVirtualPath As HeapBSTR
-	pMovedUrl As HeapBSTR
+	pCanonicalUrl As HeapBSTR
 	ListenAddress As HeapBSTR
 	ListenPort As Integer
 	ConnectBindAddress As HeapBSTR
 	ConnectBindPort As Integer
-	CodePage As TextFileCharsets
+	CodePage As HeapBSTR
 	Methods As HeapBSTR
 	RemoveUtf8Bom As Boolean
 	UseSsl As Boolean
@@ -762,40 +762,14 @@ Function GetCompressionHandle( _
 End Function
 
 Function GetFileBytesOffset( _
-		ByVal CodePage As TextFileCharsets, _
-		ByVal hZipFile As HANDLE, _
+		ByVal CodePage As HeapBSTR, _
+		ByVal hZipFileHandle As HANDLE, _
 		ByVal pMime As MimeType Ptr _
 	)As LongInt
 	
-	Dim offset As LongInt = Any
+	pMime->Charset = DocumentCharsets.Utf8
 	
-	Select Case CodePage
-		
-		Case TextFileCharsets.Utf8
-			pMime->Charset = DocumentCharsets.Utf8
-			offset = 0
-			
-		Case TextFileCharsets.Utf8WithBOM
-			pMime->Charset = DocumentCharsets.Utf8
-			offset = 3
-			
-		Case TextFileCharsets.Utf16LE
-			pMime->Charset = DocumentCharsets.Utf16LE
-			offset = 0
-			
-		Case TextFileCharsets.Utf16BE
-			pMime->Charset = DocumentCharsets.Utf16BE
-			offset = 2
-			
-		Case Else ' TextFileCharsets.ASCII
-			pMime->Charset = DocumentCharsets.ASCII
-			offset = 0
-			
-	End Select
-	
-	If hZipFile <> INVALID_HANDLE_VALUE Then
-		offset = 0
-	End If
+	Dim offset As LongInt = 0
 	
 	Return offset
 	
@@ -930,8 +904,8 @@ Sub InitializeWebSite( _
 	this->pHostName = NULL
 	this->pPhysicalDirectory = NULL
 	this->pVirtualPath = NULL
-	this->pMovedUrl = NULL
-	this->CodePage = TextFileCharsets.Utf8
+	this->pCanonicalUrl = NULL
+	this->CodePage = NULL
 	this->IsMoved = False
 	
 End Sub
@@ -943,7 +917,8 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->pHostName)
 	HeapSysFreeString(this->pPhysicalDirectory)
 	HeapSysFreeString(this->pVirtualPath)
-	HeapSysFreeString(this->pMovedUrl)
+	HeapSysFreeString(this->pCanonicalUrl)
+	HeapSysFreeString(this->CodePage)
 	
 End Sub
 
@@ -1098,8 +1073,8 @@ Function WebSiteGetMovedUrl( _
 		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
-	HeapSysAddRefString(this->pMovedUrl)
-	*ppMovedUrl = this->pMovedUrl
+	HeapSysAddRefString(this->pCanonicalUrl)
+	*ppMovedUrl = this->pCanonicalUrl
 	
 	Return S_OK
 	
@@ -1554,7 +1529,7 @@ Function MutableWebSiteSetMovedUrl( _
 		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	
-	LET_HEAPSYSSTRING(this->pMovedUrl, pMovedUrl)
+	LET_HEAPSYSSTRING(this->pCanonicalUrl, pMovedUrl)
 	
 	Return S_OK
 	
@@ -1562,10 +1537,10 @@ End Function
 
 Function WebSiteSetTextFileEncoding( _
 		ByVal this As WebSite Ptr, _
-		ByVal CodePage As TextFileCharsets _
+		ByVal CodePage As HeapBSTR _
 	)As HRESULT
 	
-	this->CodePage = CodePage
+	LET_HEAPSYSSTRING(this->CodePage, CodePage)
 	
 	Return S_OK
 	
@@ -1714,7 +1689,7 @@ End Function
 
 Function IMutableWebSiteSetTextFileEncoding( _
 		ByVal this As IWebSite Ptr, _
-		ByVal CodePage As TextFileCharsets _
+		ByVal CodePage As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetTextFileEncoding(ContainerOf(this, WebSite, lpVtbl), CodePage)
 End Function

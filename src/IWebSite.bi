@@ -20,14 +20,6 @@ Enum ContentNegotiationFlags
 	UserAgent = 16
 End Enum
 
-Enum TextFileCharsets
-	Utf8
-	Utf8WithBOM
-	Utf16LE
-	Utf16BE
-	ASCII
-End Enum
-
 Type IWebSite As IWebSite_
 
 Type IWebSiteVirtualTable
@@ -117,7 +109,7 @@ Type IWebSiteVirtualTable
 	
 	SetTextFileEncoding As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal CodePage As TextFileCharsets _
+		ByVal CodePage As HeapBSTR _
 	)As HRESULT
 	
 	NeedCgiProcessing As Function( _

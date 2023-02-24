@@ -106,7 +106,7 @@ Declare Function WebSiteSetMovedUrl( _
 
 Declare Function WebSiteSetTextFileEncoding( _
 	ByVal this As WebSite Ptr, _
-	ByVal CodePage As TextFileCharsets _
+	ByVal CodePage As HeapBSTR _
 )As HRESULT
 
 Declare Function WebSiteNeedCgiProcessing( _
