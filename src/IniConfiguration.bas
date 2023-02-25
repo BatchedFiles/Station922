@@ -630,15 +630,11 @@ Function GetWebSite( _
 	End Scope
 	
 	Scope
-		Dim IsMoved As INT_ = GetWebSiteIsMoved( _
+		Dim IsMoved As Boolean = GetWebSiteIsMoved( _
 			pWebSitesIniFileName, _
 			lpwszHost _
 		)
-		If IsMoved Then
-			IWebSite_SetIsMoved(pIWebSite, True)
-		Else
-			IWebSite_SetIsMoved(pIWebSite, False)
-		End If
+		IWebSite_SetIsMoved(pIWebSite, IsMoved)
 	End Scope
 	
 	Scope
@@ -646,7 +642,6 @@ Function GetWebSite( _
 			pWebSitesIniFileName, _
 			lpwszHost _
 		)
-		
 		IWebSite_SetUtfBomFileOffset(pIWebSite, Offset)
 	End Scope
 	
