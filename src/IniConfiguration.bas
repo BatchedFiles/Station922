@@ -26,7 +26,7 @@ Const PhisycalDirKeyString = WStr("PhisycalDir")
 Const IsMovedKeyString = WStr("IsMoved")
 Const CanonicalUrlKeyString = WStr("CanonicalUrl")
 Const TextFileCharsetKeyString = WStr("TextFileCharset")
-Const RemoveUtf8BomKeyString = WStr("RemoveUtf8Bom")
+Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
 Const ListenAddressKeyString = WStr("ListenAddress")
 Const PortKeyString = WStr("ListenPort")
 Const UseSslKeyString = WStr("UseSsl")
@@ -506,6 +506,22 @@ Function GetWebSiteIsMoved( _
 	
 End Function
 
+Function GetWebSiteUtfBomFileOffset( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Integer
+	
+	Dim UtfBomFileOffset As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@UtfBomFileOffsetKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	Return CInt(UtfBomFileOffset)
+	
+End Function
+
 Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
@@ -623,6 +639,15 @@ Function GetWebSite( _
 		Else
 			IWebSite_SetIsMoved(pIWebSite, False)
 		End If
+	End Scope
+	
+	Scope
+		Dim Offset As Integer = GetWebSiteUtfBomFileOffset( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		
+		IWebSite_SetUtfBomFileOffset(pIWebSite, Offset)
 	End Scope
 	
 	*ppIWebSite = pIWebSite

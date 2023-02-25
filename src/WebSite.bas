@@ -84,7 +84,7 @@ Type _WebSite
 	ConnectBindPort As Integer
 	CodePage As HeapBSTR
 	Methods As HeapBSTR
-	RemoveUtf8Bom As Boolean
+	UtfBomFileOffset As Integer
 	UseSsl As Boolean
 	IsMoved As Boolean
 End Type
@@ -906,6 +906,7 @@ Sub InitializeWebSite( _
 	this->pVirtualPath = NULL
 	this->pCanonicalUrl = NULL
 	this->CodePage = NULL
+	this->UtfBomFileOffset = 0
 	this->IsMoved = False
 	
 End Sub
@@ -1546,6 +1547,17 @@ Function WebSiteSetTextFileEncoding( _
 	
 End Function
 
+Function WebSiteSetUtfBomFileOffset( _
+		ByVal this As WebSite Ptr, _
+		ByVal Offset As Integer _
+	)As HRESULT
+	
+	this->UtfBomFileOffset = Offset
+	
+	Return S_OK
+	
+End Function
+
 Function WebSiteNeedCgiProcessing( _
 		ByVal this As WebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1694,6 +1706,13 @@ Function IMutableWebSiteSetTextFileEncoding( _
 	Return WebSiteSetTextFileEncoding(ContainerOf(this, WebSite, lpVtbl), CodePage)
 End Function
 
+Function IWebSiteSetUtfBomFileOffset( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Offset As Integer _
+	)As HRESULT
+	Return WebSiteSetUtfBomFileOffset(ContainerOf(this, WebSite, lpVtbl), Offset)
+End Function
+
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1719,5 +1738,6 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetIsMoved, _
 	@IMutableWebSiteSetMovedUrl, _
 	@IMutableWebSiteSetTextFileEncoding, _
+	@IWebSiteSetUtfBomFileOffset, _
 	@IMutableWebSiteNeedCgiProcessing _
 )

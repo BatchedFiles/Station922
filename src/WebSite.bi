@@ -109,6 +109,11 @@ Declare Function WebSiteSetTextFileEncoding( _
 	ByVal CodePage As HeapBSTR _
 )As HRESULT
 
+Declare Function WebSiteSetUtfBomFileOffset( _
+	ByVal this As WebSite Ptr, _
+	ByVal Offset As Integer _
+)As HRESULT
+
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
 	ByVal Path As HeapBSTR, _
