@@ -706,6 +706,40 @@ Function GetWebSite( _
 	End Scope
 	
 	Scope
+		Dim bstrListenAddress As HeapBSTR = Any
+		Dim hrListenAddress As HRESULT = GetWebSiteListenAddress( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrListenAddress _
+		)
+		If FAILED(hrListenAddress) Then
+			IWebSite_Release(pIWebSite)
+			Return hrListenAddress
+		End If
+		
+		IWebSite_SetListenAddress(pIWebSite, bstrListenAddress)
+		HeapSysFreeString(bstrListenAddress)
+	End Scope
+	
+	Scope
+		Dim bstrListenPort As HeapBSTR = Any
+		Dim hrListenPort As HRESULT = GetWebSiteListenPort( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrListenPort _
+		)
+		If FAILED(hrListenPort) Then
+			IWebSite_Release(pIWebSite)
+			Return hrListenPort
+		End If
+		
+		IWebSite_SetListenPort(pIWebSite, bstrListenPort)
+		HeapSysFreeString(bstrListenPort)
+	End Scope
+	
+	Scope
 		Dim IsMoved As Boolean = GetWebSiteIsMoved( _
 			pWebSitesIniFileName, _
 			lpwszHost _

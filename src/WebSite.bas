@@ -79,7 +79,7 @@ Type _WebSite
 	pVirtualPath As HeapBSTR
 	pCanonicalUrl As HeapBSTR
 	ListenAddress As HeapBSTR
-	ListenPort As Integer
+	ListenPort As HeapBSTR
 	ConnectBindAddress As HeapBSTR
 	ConnectBindPort As Integer
 	CodePage As HeapBSTR
@@ -906,6 +906,8 @@ Sub InitializeWebSite( _
 	this->pVirtualPath = NULL
 	this->pCanonicalUrl = NULL
 	this->CodePage = NULL
+	this->ListenAddress = NULL
+	this->ListenPort = NULL
 	this->UtfBomFileOffset = 0
 	this->IsMoved = False
 	
@@ -920,6 +922,8 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->pVirtualPath)
 	HeapSysFreeString(this->pCanonicalUrl)
 	HeapSysFreeString(this->CodePage)
+	HeapSysFreeString(this->ListenAddress)
+	HeapSysFreeString(this->ListenPort)
 	
 End Sub
 
@@ -1547,6 +1551,28 @@ Function WebSiteSetTextFileEncoding( _
 	
 End Function
 
+Function WebSiteSetListenAddress( _
+		ByVal this As WebSite Ptr, _
+		ByVal ListenAddress As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ListenAddress, ListenAddress)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetListenPort( _
+		ByVal this As WebSite Ptr, _
+		ByVal ListenPort As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ListenPort, ListenPort)
+	
+	Return S_OK
+	
+End Function
+
 Function WebSiteSetUtfBomFileOffset( _
 		ByVal this As WebSite Ptr, _
 		ByVal Offset As Integer _
@@ -1713,6 +1739,20 @@ Function IWebSiteSetUtfBomFileOffset( _
 	Return WebSiteSetUtfBomFileOffset(ContainerOf(this, WebSite, lpVtbl), Offset)
 End Function
 
+Function IMutableWebSiteSetListenAddress( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ListenAddress As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetListenAddress(ContainerOf(this, WebSite, lpVtbl), ListenAddress)
+End Function
+
+Function IMutableWebSiteSetListenPort( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ListenPort As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetListenPort(ContainerOf(this, WebSite, lpVtbl), ListenPort)
+End Function
+
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1739,5 +1779,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetMovedUrl, _
 	@IMutableWebSiteSetTextFileEncoding, _
 	@IWebSiteSetUtfBomFileOffset, _
+	@IMutableWebSiteSetListenAddress, _
+	@IMutableWebSiteSetListenPort, _
 	@IMutableWebSiteNeedCgiProcessing _
 )

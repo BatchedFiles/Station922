@@ -117,6 +117,16 @@ Type IWebSiteVirtualTable
 		ByVal Offset As Integer _
 	)As HRESULT
 	
+	SetListenAddress As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ListenAddress As HeapBSTR _
+	)As HRESULT
+	
+	SetListenPort As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ListenPort As HeapBSTR _
+	)As HRESULT
+	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -146,6 +156,8 @@ End Type
 #define IWebSite_SetMovedUrl(this, pMovedUrl) (this)->lpVtbl->SetMovedUrl(this, pMovedUrl)
 #define IWebSite_SetTextFileEncoding(this, CodePage) (this)->lpVtbl->SetTextFileEncoding(this, CodePage)
 #define IWebSite_SetUtfBomFileOffset(this, Offset) (this)->lpVtbl->SetUtfBomFileOffset(this, Offset)
+#define IWebSite_SetListenAddress(this, ListenAddress) (this)->lpVtbl->SetListenAddress(this, ListenAddress)
+#define IWebSite_SetListenPort(this, ListenPort) (this)->lpVtbl->SetListenPort(this, ListenPort)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif

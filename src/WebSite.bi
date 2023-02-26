@@ -114,6 +114,16 @@ Declare Function WebSiteSetUtfBomFileOffset( _
 	ByVal Offset As Integer _
 )As HRESULT
 
+Declare Function WebSiteSetListenAddress( _
+	ByVal this As WebSite Ptr, _
+	ByVal ListenAddress As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetListenPort( _
+	ByVal this As WebSite Ptr, _
+	ByVal ListenPort As HeapBSTR _
+)As HRESULT
+
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
 	ByVal Path As HeapBSTR, _
