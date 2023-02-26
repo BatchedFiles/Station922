@@ -13,35 +13,10 @@
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
 
-Const EmptyString = WStr("")
 Const WebServerIniFileString = WStr("WebServer.ini")
 Const WebServerSectionString = WStr("WebServer")
-Const MaxWorkerThreadsKeyString = WStr("WorkerThreads")
-Const MaxCachedClientMemoryContextKeyString = WStr("MemoryPoolCapacity")
 
 Const WebSitesIniFileString = WStr("WebSites.ini")
-Const HostKeyString = WStr("Host")
-Const VirtualPathKeyString = WStr("VirtualPath")
-Const PhisycalDirKeyString = WStr("PhisycalDir")
-Const IsMovedKeyString = WStr("IsMoved")
-Const CanonicalUrlKeyString = WStr("CanonicalUrl")
-Const TextFileCharsetKeyString = WStr("TextFileCharset")
-Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
-Const ListenAddressKeyString = WStr("ListenAddress")
-Const ListenPortKeyString = WStr("ListenPort")
-Const UseSslKeyString = WStr("UseSsl")
-Const ConnectBindAddressKeyString = WStr("ConnectBindAddress")
-Const ConnectBindPortKeyString = WStr("ConnectBindPort")
-Const MethodsKeyString = WStr("Methods")
-Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
-
-Const DefaultTextFileCharset = WStr("utf-8")
-Const DefaultVirtualPath = WStr("/")
-Const DefaultListenAddress = WStr("localhost")
-Const DefaultHttpPort = WStr("80")
-Const DefaultHttpsPort = WStr("443")
-Const ConnectBindDefaultPort = WStr("0")
-Const DefaultCachedClientMemoryContextMaximum As INT_ = 1
 
 Const AdministratorsSectionString = WStr("admins")
 
@@ -260,6 +235,8 @@ Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	
+	Const MaxWorkerThreadsKeyString = WStr("WorkerThreads")
+	
 	Dim si As SYSTEM_INFO = Any
 	GetSystemInfo(@si)
 	
@@ -283,10 +260,13 @@ Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	
+	Const MemoryPoolCapacityKeyString = WStr("MemoryPoolCapacity")
+	Const DefaultMemoryPoolCapacity As INT_ = 1
+	
 	Dim MemoryContextCount As UINT = GetPrivateProfileIntW( _
 		@WebServerSectionString, _
-		@MaxCachedClientMemoryContextKeyString, _
-		DefaultCachedClientMemoryContextMaximum, _
+		@MemoryPoolCapacityKeyString, _
+		DefaultMemoryPoolCapacity, _
 		this->pWebServerIniFileName _
 	)
 	
@@ -302,6 +282,8 @@ Function GetWebSiteHost( _
 		ByVal lpwszHost As WString Ptr, _
 		ByVal pbstrWebSite As HeapBSTR Ptr _
 	)As HRESULT
+	
+	Const HostKeyString = WStr("Host")
 	
 	Dim WebSiteName As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
@@ -341,6 +323,9 @@ Function GetWebSiteVirtualPath( _
 		ByVal pbstrVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
 	
+	Const VirtualPathKeyString = WStr("VirtualPath")
+	Const DefaultVirtualPath = WStr("/")
+	
 	Dim VirtualPath As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
@@ -378,6 +363,8 @@ Function GetWebSitePhisycalDir( _
 		ByVal lpwszHost As WString Ptr, _
 		ByVal pbstrPhisycalDir As HeapBSTR Ptr _
 	)As HRESULT
+	
+	Const PhisycalDirKeyString = WStr("PhisycalDir")
 	
 	Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
@@ -417,6 +404,8 @@ Function GetWebSiteCanonicalUrl( _
 		ByVal pbstrCanonicalUrl As HeapBSTR Ptr _
 	)As HRESULT
 	
+	Const CanonicalUrlKeyString = WStr("CanonicalUrl")
+	
 	Dim CanonicalUrl As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
@@ -455,19 +444,27 @@ Function GetWebSiteTextFileCharset( _
 		ByVal pbstrTextFileCharset As HeapBSTR Ptr _
 	)As HRESULT
 	
+	Const TextFileCharsetKeyString = WStr("TextFileCharset")
+	Const EmptyString = WStr("")
+	' Const DefaultTextFileCharset = WStr("utf-8")
+	
 	Dim TextFileCharset As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@TextFileCharsetKeyString, _
-		@DefaultTextFileCharset, _
+		@EmptyString, _
 		@TextFileCharset, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
 	)
+	' If ValueLength = 0 Then
+	' 	Dim dwError As DWORD = GetLastError()
+	' 	*pbstrTextFileCharset = NULL
+	' 	Return HRESULT_FROM_WIN32(dwError)
+	' End If
+	
 	If ValueLength = 0 Then
-		Dim dwError As DWORD = GetLastError()
-		*pbstrTextFileCharset = NULL
-		Return HRESULT_FROM_WIN32(dwError)
+		TextFileCharset[0] = Characters.NullChar
 	End If
 	
 	Dim bstrTextFileCharset As HeapBSTR = CreatePermanentHeapStringLen( _
@@ -492,6 +489,9 @@ Function GetWebSiteListenAddress( _
 		ByVal lpwszHost As WString Ptr, _
 		ByVal pbstrListenAddress As HeapBSTR Ptr _
 	)As HRESULT
+	
+	Const ListenAddressKeyString = WStr("ListenAddress")
+	Const DefaultListenAddress = WStr("localhost")
 	
 	Dim ListenAddress As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
@@ -524,12 +524,57 @@ Function GetWebSiteListenAddress( _
 	
 End Function
 
+Function GetWebSiteConnectBindAddress( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrConnectBindAddress As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const ConnectBindAddressKeyString = WStr("ConnectBindAddress")
+	Const DefaultConnectBindAddress = WStr("localhost")
+	
+	Dim ConnectBindAddress As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@ConnectBindAddressKeyString, _
+		@DefaultConnectBindAddress, _
+		@ConnectBindAddress, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrConnectBindAddress = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrConnectBindAddress As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@ConnectBindAddress, _
+		ValueLength _
+	)
+	If bstrConnectBindAddress = NULL Then
+		*pbstrConnectBindAddress = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrConnectBindAddress = bstrConnectBindAddress
+	
+	Return S_OK
+	
+End Function
+
 Function GetWebSiteListenPort( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
 		ByVal pbstrListenPort As HeapBSTR Ptr _
 	)As HRESULT
+	
+	Const ListenPortKeyString = WStr("ListenPort")
+	Const DefaultHttpPort = WStr("80")
+	Const DefaultHttpsPort = WStr("443")
 	
 	Dim ListenPort As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
@@ -562,10 +607,135 @@ Function GetWebSiteListenPort( _
 	
 End Function
 
+Function GetWebSiteConnectBindPort( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrConnectBindPort As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const ConnectBindPortKeyString = WStr("ConnectBindPort")
+	Const DefaultConnectBindPort = WStr("0")
+	
+	Dim ConnectBindPort As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@ConnectBindPortKeyString, _
+		@DefaultConnectBindPort, _
+		@ConnectBindPort, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrConnectBindPort = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrConnectBindPort As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@ConnectBindPort, _
+		ValueLength _
+	)
+	If bstrConnectBindPort = NULL Then
+		*pbstrConnectBindPort = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrConnectBindPort = bstrConnectBindPort
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteMethods( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrMethods As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const MethodsKeyString = WStr("Methods")
+	Const DefaultMethods = WStr("GET,HEAD")
+	
+	Dim Methods As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@MethodsKeyString, _
+		@DefaultMethods, _
+		@Methods, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrMethods = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrMethods As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@Methods, _
+		ValueLength _
+	)
+	If bstrMethods = NULL Then
+		*pbstrMethods = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrMethods = bstrMethods
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteDefaultFileName( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrDefaultFileName As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const DefaultFileNameKeyString = WStr("DefaultFileName")
+	Const DefaultFileName = WStr("default.htm")
+	
+	Dim FileName As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@DefaultFileNameKeyString, _
+		@DefaultFileName, _
+		@FileName, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrDefaultFileName = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrFileName As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@FileName, _
+		ValueLength _
+	)
+	If bstrFileName = NULL Then
+		*pbstrDefaultFileName = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrDefaultFileName = bstrFileName
+	
+	Return S_OK
+	
+End Function
+
 Function GetWebSiteIsMoved( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Boolean
+	
+	Const IsMovedKeyString = WStr("IsMoved")
 	
 	Dim IsMoved As INT_ = GetPrivateProfileIntW( _
 		lpwszHost, _
@@ -582,10 +752,34 @@ Function GetWebSiteIsMoved( _
 	
 End Function
 
+Function GetWebSiteUseSsl( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Boolean
+	
+	Const UseSslKeyString = WStr("UseSsl")
+	
+	Dim UseSsl As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@UseSslKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	If UseSsl Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
 Function GetWebSiteUtfBomFileOffset( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Integer
+	
+	Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
 	
 	Dim UtfBomFileOffset As INT_ = GetPrivateProfileIntW( _
 		lpwszHost, _
@@ -598,27 +792,31 @@ Function GetWebSiteUtfBomFileOffset( _
 	
 End Function
 
+Function GetWebSiteReservedFileBytes( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Integer
+	
+	Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
+	
+	Dim ReservedFileBytes As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@ReservedFileBytesKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	Return CInt(ReservedFileBytes)
+	
+End Function
+
 Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
 		ByVal HostLength As Integer, _
-		ByVal ppIWebSite As IWebSite Ptr Ptr _
+		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
-	
-	Dim pIWebSite As IWebSite Ptr = Any
-	
-	Scope
-		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
-			pIMemoryAllocator, _
-			@IID_IWebSite, _
-			@pIWebSite _
-		)
-		If FAILED(hrCreateWebSite) Then
-			*ppIWebSite = NULL
-			Return hrCreateWebSite
-		End If
-	End Scope
 	
 	Scope
 		Dim bstrWebSite As HeapBSTR = Any
@@ -629,12 +827,10 @@ Function GetWebSite( _
 			@bstrWebSite _
 		)
 		If FAILED(hrHost) Then
-			IWebSite_Release(pIWebSite)
 			Return hrHost
 		End If
 		
-		IWebSite_SetHostName(pIWebSite, bstrWebSite)
-		HeapSysFreeString(bstrWebSite)
+		pWebSite->HostName = bstrWebSite
 	End Scope
 	
 	Scope
@@ -646,12 +842,10 @@ Function GetWebSite( _
 			@bstrVirtualPath _
 		)
 		If FAILED(hrVirtualPath) Then
-			IWebSite_Release(pIWebSite)
 			Return hrVirtualPath
 		End If
 		
-		IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
-		HeapSysFreeString(bstrVirtualPath)
+		pWebSite->VirtualPath = bstrVirtualPath
 	End Scope
 	
 	Scope
@@ -663,12 +857,10 @@ Function GetWebSite( _
 			@bstrPhisycalDir _
 		)
 		If FAILED(hrPhisycalDir) Then
-			IWebSite_Release(pIWebSite)
 			Return hrPhisycalDir
 		End If
 		
-		IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
-		HeapSysFreeString(bstrPhisycalDir)
+		pWebSite->PhysicalDirectory = bstrPhisycalDir
 	End Scope
 	
 	Scope
@@ -680,29 +872,10 @@ Function GetWebSite( _
 			@bstrCanonicalUrl _
 		)
 		If FAILED(hrCanonicalUrl) Then
-			IWebSite_Release(pIWebSite)
 			Return hrCanonicalUrl
 		End If
 		
-		IWebSite_SetMovedUrl(pIWebSite, bstrCanonicalUrl)
-		HeapSysFreeString(bstrCanonicalUrl)
-	End Scope
-	
-	Scope
-		Dim bstrCharset As HeapBSTR = Any
-		Dim hrCharset As HRESULT = GetWebSiteTextFileCharset( _
-			pIMemoryAllocator, _
-			pWebSitesIniFileName, _
-			lpwszHost, _
-			@bstrCharset _
-		)
-		If FAILED(hrCharset) Then
-			IWebSite_Release(pIWebSite)
-			Return hrCharset
-		End If
-		
-		IWebSite_SetTextFileEncoding(pIWebSite, bstrCharset)
-		HeapSysFreeString(bstrCharset)
+		pWebSite->CanonicalUrl = bstrCanonicalUrl
 	End Scope
 	
 	Scope
@@ -714,12 +887,10 @@ Function GetWebSite( _
 			@bstrListenAddress _
 		)
 		If FAILED(hrListenAddress) Then
-			IWebSite_Release(pIWebSite)
 			Return hrListenAddress
 		End If
 		
-		IWebSite_SetListenAddress(pIWebSite, bstrListenAddress)
-		HeapSysFreeString(bstrListenAddress)
+		pWebSite->ListenAddress = bstrListenAddress
 	End Scope
 	
 	Scope
@@ -731,20 +902,85 @@ Function GetWebSite( _
 			@bstrListenPort _
 		)
 		If FAILED(hrListenPort) Then
-			IWebSite_Release(pIWebSite)
 			Return hrListenPort
 		End If
 		
-		IWebSite_SetListenPort(pIWebSite, bstrListenPort)
-		HeapSysFreeString(bstrListenPort)
+		pWebSite->ListenPort = bstrListenPort
 	End Scope
 	
 	Scope
-		Dim IsMoved As Boolean = GetWebSiteIsMoved( _
+		Dim bstrConnectBindAddress As HeapBSTR = Any
+		Dim hrConnectBindAddress As HRESULT = GetWebSiteConnectBindAddress( _
+			pIMemoryAllocator, _
 			pWebSitesIniFileName, _
-			lpwszHost _
+			lpwszHost, _
+			@bstrConnectBindAddress _
 		)
-		IWebSite_SetIsMoved(pIWebSite, IsMoved)
+		If FAILED(hrConnectBindAddress) Then
+			Return hrConnectBindAddress
+		End If
+		
+		pWebSite->ConnectBindAddress = bstrConnectBindAddress
+	End Scope
+	
+	Scope
+		Dim bstrConnectBindPort As HeapBSTR = Any
+		Dim hrConnectBindPort As HRESULT = GetWebSiteConnectBindPort( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrConnectBindPort _
+		)
+		If FAILED(hrConnectBindPort) Then
+			Return hrConnectBindPort
+		End If
+		
+		pWebSite->ConnectBindPort = bstrConnectBindPort
+	End Scope
+	
+	Scope
+		Dim bstrCharset As HeapBSTR = Any
+		Dim hrCharset As HRESULT = GetWebSiteTextFileCharset( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrCharset _
+		)
+		If FAILED(hrCharset) Then
+			Return hrCharset
+		End If
+		
+		pWebSite->CodePage = bstrCharset
+	End Scope
+	
+	Scope
+		Dim bstrMethods As HeapBSTR = Any
+		Dim hrMethods As HRESULT = GetWebSiteMethods( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrMethods _
+		)
+		If FAILED(hrMethods) Then
+			Return hrMethods
+		End If
+		
+		pWebSite->Methods = bstrMethods
+	End Scope
+	
+	Scope
+		Dim bstrFileName As HeapBSTR = Any
+		Dim hrFileName As HRESULT = GetWebSiteDefaultFileName( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrFileName _
+		)
+		If FAILED(hrFileName) Then
+			Return hrFileName
+		End If
+		
+		pWebSite->DefaultFileName = bstrFileName
 	End Scope
 	
 	Scope
@@ -752,10 +988,32 @@ Function GetWebSite( _
 			pWebSitesIniFileName, _
 			lpwszHost _
 		)
-		IWebSite_SetUtfBomFileOffset(pIWebSite, Offset)
+		pWebSite->UtfBomFileOffset = Offset
 	End Scope
 	
-	*ppIWebSite = pIWebSite
+	Scope
+		Dim ReservedFileBytes As Integer = GetWebSiteReservedFileBytes( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		pWebSite->ReservedFileBytes = ReservedFileBytes
+	End Scope
+	
+	Scope
+		Dim IsMoved As Boolean = GetWebSiteIsMoved( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		pWebSite->IsMoved = IsMoved
+	End Scope
+	
+	Scope
+		Dim UseSsl As Boolean = GetWebSiteUseSsl( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		pWebSite->UseSsl = UseSsl
+	End Scope
 	
 	Return S_OK
 	
@@ -763,8 +1021,8 @@ End Function
 
 Function WebServerIniConfigurationGetWebSites( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pWebSites As Integer Ptr, _
-		ByVal ppIWebSites As IWebSite Ptr Ptr _
+		ByVal pCount As Integer Ptr, _
+		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
 	
 	Dim AllSections As WString Ptr = IMalloc_Alloc( _
@@ -772,8 +1030,7 @@ Function WebServerIniConfigurationGetWebSites( _
 		(MaxSectionsLength + 1) * SizeOf(WString) _
 	)
 	If AllSections = NULL Then
-		*pWebSites = 0
-		ZeroMemory(*ppIWebSites, MaxWebSites * SizeOf(IWebSite Ptr))
+		*pCount = 0
 		Return E_OUTOFMEMORY
 	End If
 	
@@ -791,8 +1048,7 @@ Function WebServerIniConfigurationGetWebSites( _
 		)
 		If SectionsLength = 0 Then
 			Dim dwError As DWORD = GetLastError()
-			*pWebSites = 0
-			ZeroMemory(*ppIWebSites, MaxWebSites * SizeOf(IWebSite Ptr))
+			*pCount = 0
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
@@ -803,19 +1059,17 @@ Function WebServerIniConfigurationGetWebSites( _
 	
 	Do While HostLength
 		
-		Dim pIWebSite As IWebSite Ptr = Any
 		Dim hrGetWebSite As HRESULT = GetWebSite( _
 			this->pIMemoryAllocator, _
 			this->pWebSitesIniFileName, _
 			lpwszHost, _
 			HostLength, _
-			@pIWebSite _
+			@pWebSites[WebSiteCount] _
 		)
 		If FAILED(hrGetWebSite) Then
+			*pCount = 0
 			Return hrGetWebSite
 		End If
-		
-		ppIWebSites[WebSiteCount] = pIWebSite
 		
 		WebSiteCount += 1
 		lpwszHost = @lpwszHost[HostLength + 1]
@@ -828,7 +1082,7 @@ Function WebServerIniConfigurationGetWebSites( _
 		AllSections _
 	)
 	
-	*pWebSites = WebSiteCount
+	*pCount = WebSiteCount
 	
 	Return S_OK
 	
@@ -1007,10 +1261,10 @@ End Function
 
 Function IWebServerConfigurationGetWebSites( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWebSites As Integer Ptr, _
-		ByVal ppIWebSites As IWebSite Ptr Ptr _
+		ByVal pCount As Integer Ptr, _
+		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWebSites, ppIWebSites)
+	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
 End Function
 
 Function IWebServerConfigurationGetHttpProcessors( _

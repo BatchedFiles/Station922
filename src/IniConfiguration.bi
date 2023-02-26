@@ -47,8 +47,8 @@ Declare Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 
 Declare Function WebServerIniConfigurationGetWebSites( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pWebSites As Integer Ptr, _
-	ByVal ppIWebSites As IWebSite Ptr Ptr _
+	ByVal pCount As Integer Ptr, _
+	ByVal pWebSites As WebSiteConfiguration Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetHttpProcessors( _

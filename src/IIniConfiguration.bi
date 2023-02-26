@@ -1,13 +1,31 @@
 #ifndef IINICONFIGURATION_BI
 #define IINICONFIGURATION_BI
 
-#include once "IWebSite.bi"
+#include once "IString.bi"
 #include once "IHttpAsyncProcessor.bi"
 
 Extern IID_IIniConfiguration Alias "IID_IIniConfiguration" As Const IID
 
 Const MaxWebSites As Integer = 64
 Const MaxHttpProcessors As Integer = 64
+
+Type WebSiteConfiguration
+	HostName As HeapBSTR
+	VirtualPath As HeapBSTR
+	PhysicalDirectory As HeapBSTR
+	CanonicalUrl As HeapBSTR
+	ListenAddress As HeapBSTR
+	ListenPort As HeapBSTR
+	ConnectBindAddress As HeapBSTR
+	ConnectBindPort As HeapBSTR
+	CodePage As HeapBSTR
+	Methods As HeapBSTR
+	DefaultFileName As HeapBSTR
+	UtfBomFileOffset As Integer
+	ReservedFileBytes As Integer
+	IsMoved As Boolean
+	UseSsl As Boolean
+End Type
 
 Type IWebServerConfiguration As IWebServerConfiguration_
 
@@ -39,8 +57,8 @@ Type IWebServerConfigurationVirtualTable
 	
 	GetWebSites As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWebSites As Integer Ptr, _
-		ByVal ppIWebSites As IWebSite Ptr Ptr _
+		ByVal pCount As Integer Ptr, _
+		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
 	
 	GetHttpProcessors As Function( _
@@ -60,7 +78,7 @@ End Type
 #define IWebServerConfiguration_Release(this) (this)->lpVtbl->Release(this)
 #define IWebServerConfiguration_GetWorkerThreadsCount(this, pWorkerThreadsCount) (this)->lpVtbl->GetWorkerThreadsCount(this, pWorkerThreadsCount)
 #define IWebServerConfiguration_GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext) (this)->lpVtbl->GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext)
-#define IWebServerConfiguration_GetWebSites(this, pWebSites, ppIWebSites) (this)->lpVtbl->GetWebSites(this, pWebSites, ppIWebSites)
+#define IWebServerConfiguration_GetWebSites(this, pCount, pWebSites) (this)->lpVtbl->GetWebSites(this, pCount, pWebSites)
 #define IWebServerConfiguration_GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors) (this)->lpVtbl->GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors)
 
 #endif

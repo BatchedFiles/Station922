@@ -19,13 +19,6 @@ Const BasicAuthorization = WStr("Basic")
 
 Const CompareResultEqual As Long = 0
 
-Type WebServerConfig
-	WorkerThreads As Integer
-	MemoryPoolCapacity As UInteger
-	WebSites(MaxWebSites - 1) As IWebSite Ptr
-	' ProcessorCollection As IHttpProcessorCollection Ptr
-End Type
-
 ' Declare Function GetBase64Sha1( _
 ' 	ByVal pDestination As WString Ptr, _
 ' 	ByVal pSource As WString Ptr _
@@ -393,8 +386,12 @@ End Function
 Function Station922Initialize( _
 	)As HRESULT
 	
-	Dim Config As WebServerConfig = Any
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
+	Dim pIConfig As IWebServerConfiguration Ptr = Any
+	Dim WorkerThreads As Integer = Any
+	Dim MemoryPoolCapacity As UInteger = Any
+	Dim WebSitesLength As Integer = Any
+	Dim pWebSites As WebSiteConfiguration Ptr = Any
 	
 	Scope
 		Const dwReserved As DWORD = 1
@@ -408,7 +405,17 @@ Function Station922Initialize( _
 	End Scope
 	
 	Scope
-		Dim pIConfig As IWebServerConfiguration Ptr = Any
+		Dim cbBytes As SIZE_T_ = MaxWebSites * SizeOf(WebSiteConfiguration)
+		pWebSites = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			cbBytes _
+		)
+		If pWebSites = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+	End Scope
+	
+	Scope
 		Dim hrCreateConfiguration As HRESULT = CreateWebServerIniConfiguration( _
 			pIMemoryAllocator, _
 			@IID_IIniConfiguration, _
@@ -417,22 +424,25 @@ Function Station922Initialize( _
 		If FAILED(hrCreateConfiguration) Then
 			Return hrCreateConfiguration
 		End If
-		
+	End Scope
+	
+	Scope
 		IWebServerConfiguration_GetWorkerThreadsCount( _
 			pIConfig, _
-			@Config.WorkerThreads _
+			@WorkerThreads _
 		)
 		
 		IWebServerConfiguration_GetCachedClientMemoryContextCount( _
 			pIConfig, _
-			@Config.MemoryPoolCapacity _
+			@MemoryPoolCapacity _
 		)
-		
-		Dim WebSites As Integer = Any
+	End Scope
+	
+	Scope
 		Dim hrWebSites As HRESULT = IWebServerConfiguration_GetWebSites( _
 			pIConfig, _
-			@WebSites, _
-			@Config.WebSites(0) _
+			@WebSitesLength, _
+			pWebSites _
 		)
 		If FAILED(hrWebSites) Then
 			Return hrWebSites
@@ -532,8 +542,25 @@ Function Station922Initialize( _
 			Return hrProcessors
 		End If
 		'/
-		IWebServerConfiguration_Release(pIConfig)
 	End Scope
+	
+	Scope
+		For i As Integer = 0 To WebSitesLength - 1
+			HeapSysFreeString(pWebSites[i].HostName)
+			HeapSysFreeString(pWebSites[i].VirtualPath)
+			HeapSysFreeString(pWebSites[i].PhysicalDirectory)
+			HeapSysFreeString(pWebSites[i].CanonicalUrl)
+			HeapSysFreeString(pWebSites[i].ListenAddress)
+			HeapSysFreeString(pWebSites[i].ListenPort)
+			HeapSysFreeString(pWebSites[i].ConnectBindAddress)
+			HeapSysFreeString(pWebSites[i].ConnectBindPort)
+			HeapSysFreeString(pWebSites[i].CodePage)
+			HeapSysFreeString(pWebSites[i].Methods)
+			HeapSysFreeString(pWebSites[i].DefaultFileName)
+		Next
+		IMalloc_Free(pIMemoryAllocator, pWebSites)
+	End Scope
+	IWebServerConfiguration_Release(pIConfig)
 	
 	Scope
 		Dim pIPool As IThreadPool Ptr = Any
@@ -546,7 +573,7 @@ Function Station922Initialize( _
 			Return hrCreateThreadPool
 		End If
 		
-		IThreadPool_SetMaxThreads(pIPool, Config.WorkerThreads)
+		IThreadPool_SetMaxThreads(pIPool, WorkerThreads)
 		
 		Dim hrPool As HRESULT = IThreadPool_Run(pIPool)
 		If FAILED(hrPool) Then
@@ -555,7 +582,7 @@ Function Station922Initialize( _
 	End Scope
 	
 	Scope
-		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool(Config.MemoryPoolCapacity)
+		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool(MemoryPoolCapacity)
 		If FAILED(hrCreateMemoryPool) Then
 			Return hrCreateMemoryPool
 		End If
@@ -564,6 +591,50 @@ Function Station922Initialize( _
 	Scope
 		' создать массив серверов и запустить
 	End Scope
+	
+	' Dim pIWebSite As IWebSite Ptr = Any
+	
+	' Scope
+	' 	Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+	' 		pIMemoryAllocator, _
+	' 		@IID_IWebSite, _
+	' 		@pIWebSite _
+	' 	)
+	' 	If FAILED(hrCreateWebSite) Then
+	' 		*ppIWebSite = NULL
+	' 		Return hrCreateWebSite
+	' 	End If
+	'
+		' IWebSite_SetHostName(pIWebSite, bstrWebSite)
+		' HeapSysFreeString(bstrWebSite)
+		
+		' IWebSite_SetVirtualPath(pIWebSite, bstrVirtualPath)
+		' HeapSysFreeString(bstrVirtualPath)
+		
+		' IWebSite_SetSitePhysicalDirectory(pIWebSite, bstrPhisycalDir)
+		' HeapSysFreeString(bstrPhisycalDir)
+		
+		' IWebSite_SetMovedUrl(pIWebSite, bstrCanonicalUrl)
+		' HeapSysFreeString(bstrCanonicalUrl)
+		
+		' IWebSite_SetListenAddress(pIWebSite, bstrListenAddress)
+		' HeapSysFreeString(bstrListenAddress)
+		
+		' IWebSite_SetListenPort(pIWebSite, bstrListenPort)
+		' HeapSysFreeString(bstrListenPort)
+		
+		' IWebSite_SetConnectBindAddress(pIWebSite, bstrConnectBindAddress)
+		' HeapSysFreeString(bstrConnectBindAddress)
+		
+		' IWebSite_SetConnectBindPort(pIWebSite, bstrConnectBindPort)
+		' HeapSysFreeString(bstrConnectBindPort)
+		
+		' IWebSite_SetTextFileEncoding(pIWebSite, bstrCharset)
+		' HeapSysFreeString(bstrCharset)
+		
+		' IWebSite_SetIsMoved(pIWebSite, IsMoved)
+		' IWebSite_SetUtfBomFileOffset(pIWebSite, Offset)
+	' End Scope
 	
 	pIWebSitesWeakPtr = NULL
 	pIProcessorsWeakPtr = NULL
