@@ -28,7 +28,7 @@ Const CanonicalUrlKeyString = WStr("CanonicalUrl")
 Const TextFileCharsetKeyString = WStr("TextFileCharset")
 Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
 Const ListenAddressKeyString = WStr("ListenAddress")
-Const PortKeyString = WStr("ListenPort")
+Const ListenPortKeyString = WStr("ListenPort")
 Const UseSslKeyString = WStr("UseSsl")
 Const ConnectBindAddressKeyString = WStr("ConnectBindAddress")
 Const ConnectBindPortKeyString = WStr("ConnectBindPort")
@@ -38,9 +38,9 @@ Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 Const DefaultTextFileCharset = WStr("utf-8")
 Const DefaultVirtualPath = WStr("/")
 Const DefaultListenAddress = WStr("localhost")
-Const DefaultHttpPort As INT_ = 80
-Const DefaultHttpsPort As INT_ = 443
-Const ConnectBindDefaultPort As INT_ = 0
+Const DefaultHttpPort = WStr("80")
+Const DefaultHttpsPort = WStr("443")
+Const ConnectBindDefaultPort = WStr("0")
 Const DefaultCachedClientMemoryContextMaximum As INT_ = 1
 
 Const AdministratorsSectionString = WStr("admins")
@@ -519,6 +519,44 @@ Function GetWebSiteListenAddress( _
 	End If
 	
 	*pbstrListenAddress = bstrListenAddress
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteListenPort( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrListenPort As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim ListenPort As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@ListenPortKeyString, _
+		@DefaultHttpPort, _
+		@ListenPort, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrListenPort = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrListenPort As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@ListenPort, _
+		ValueLength _
+	)
+	If bstrListenPort = NULL Then
+		*pbstrListenPort = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrListenPort = bstrListenPort
 	
 	Return S_OK
 	
