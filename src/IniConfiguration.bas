@@ -37,7 +37,7 @@ Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 
 Const DefaultTextFileCharset = WStr("utf-8")
 Const DefaultVirtualPath = WStr("/")
-Const DefaultAddressString = WStr("localhost")
+Const DefaultListenAddress = WStr("localhost")
 Const DefaultHttpPort As INT_ = 80
 Const DefaultHttpsPort As INT_ = 443
 Const ConnectBindDefaultPort As INT_ = 0
@@ -481,6 +481,44 @@ Function GetWebSiteTextFileCharset( _
 	End If
 	
 	*pbstrTextFileCharset = bstrTextFileCharset
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSiteListenAddress( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrListenAddress As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Dim ListenAddress As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@ListenAddressKeyString, _
+		@DefaultListenAddress, _
+		@ListenAddress, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	If ValueLength = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrListenAddress = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim bstrListenAddress As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@ListenAddress, _
+		ValueLength _
+	)
+	If bstrListenAddress = NULL Then
+		*pbstrListenAddress = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrListenAddress = bstrListenAddress
 	
 	Return S_OK
 	
