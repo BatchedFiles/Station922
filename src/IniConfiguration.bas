@@ -8,8 +8,6 @@
 #include once "HttpPutProcessor.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpTraceProcessor.bi"
-#include once "WebSite.bi"
-#include once "WebSiteCollection.bi"
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
 
