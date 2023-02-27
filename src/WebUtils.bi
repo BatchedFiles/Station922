@@ -22,22 +22,6 @@ Declare Sub GetHttpDate( _
 	ByVal dt As SYSTEMTIME Ptr _
 )
 
-' Проверка аутентификации
-Declare Function HttpAuthUtil( _
-	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal pStream As IBaseStream Ptr, _
-	ByVal pIWebSite As IWebSite Ptr, _
-	ByVal ProxyAuthorization As Boolean _
-)As Boolean
-
-Declare Function SetResponseCompression( _
-	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal PathTranslated As WString Ptr, _
-	ByVal pAcceptEncoding As Boolean Ptr _
-)As HANDLE
-
 Declare Sub AddResponseCacheHeaders( _
 	ByVal pIRequest As IClientRequest Ptr, _
 	ByVal pIResponse As IServerResponse Ptr, _
