@@ -154,7 +154,6 @@ Type StatusCodeNode
 	pDescription As WString Ptr
 	DescriptionLength As Integer
 	StatusCodeIndex As HttpStatusCodes
-	Padding As Integer
 End Type
 
 Type RequestHeaderNode
