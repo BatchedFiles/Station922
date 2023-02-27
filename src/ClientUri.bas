@@ -65,7 +65,8 @@ Function DecodeUri( _
 			' E = 45 = 69 = 14
 			' F = 46 = 70 = 15
 			
-			iHex += 1 ' раскодировать
+			' раскодировать
+			iHex += 1
 			iAcc *= 16
 			
 			Select Case c
@@ -73,10 +74,12 @@ Function DecodeUri( _
 				Case Characters.DigitZero, Characters.DigitOne, Characters.DigitTwo, Characters.DigitThree, Characters.DigitFour, Characters.DigitFive, Characters.DigitSix, Characters.DigitSeven, Characters.DigitEight, Characters.DigitNine
 					iAcc += c - Characters.DigitZero
 					
-				Case &h41, &h42, &h43, &h44, &h45, &h46 ' Коды ABCDEF
+				Case &h41, &h42, &h43, &h44, &h45, &h46
+					' Коды ABCDEF
 					iAcc += c - &h37 ' 55
 					
-				Case &h61, &h62, &h63, &h64, &h65, &h66 ' Коды abcdef
+				Case &h61, &h62, &h63, &h64, &h65, &h66
+					' Коды abcdef
 					iAcc += c - &h57 ' 87
 					
 			End Select
@@ -88,7 +91,8 @@ Function DecodeUri( _
 			End if
 		End if
 		
-		If c = Characters.PercentSign Then ' hex code coming?
+		' hex code coming?
+		If c = Characters.PercentSign Then
 			iHex = 1
 			iAcc = 0
 		End if

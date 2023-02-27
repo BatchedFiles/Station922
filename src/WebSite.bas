@@ -215,7 +215,9 @@ Function WebSiteHttpAuthUtil( _
 		HeapSysFreeString(pHeaderAuthorization)
 		Return WEBSITE_E_EMPTYPASSWORD
 	End If
-	pColonChar[0] = 0 ' Убрали двоеточие
+	
+	' Убрали двоеточие
+	pColonChar[0] = 0
 	
 	/'
 	Dim pClientUserName As WString Ptr = @UsernamePasswordKey
@@ -255,6 +257,7 @@ Function WebSiteHttpAuthUtil( _
 	
 	Return S_OK
 	'/
+	
 	HeapSysFreeString(pHeaderAuthorization)
 	
 	Return E_FAIL

@@ -158,7 +158,8 @@ Function ClientRequestParseRequestedLine( _
 			End If
 			
 			If this->HttpVersion = HttpVersions.Http11 Then
-				this->KeepAlive = True ' Для версии 1.1 это по умолчанию
+				' Для версии 1.1 это по умолчанию
+				this->KeepAlive = True
 			End If
 			
 		End If
