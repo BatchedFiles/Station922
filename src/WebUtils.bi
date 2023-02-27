@@ -22,13 +22,6 @@ Declare Sub GetHttpDate( _
 	ByVal dt As SYSTEMTIME Ptr _
 )
 
-Declare Sub AddResponseCacheHeaders( _
-	ByVal pIRequest As IClientRequest Ptr, _
-	ByVal pIResponse As IServerResponse Ptr, _
-	ByVal pDateLastFileModified As FILETIME Ptr, _
-	ByVal ETag As HeapBSTR _
-)
-
 Declare Function FindWebSiteWeakPtr( _
 	ByVal pIWebSites As IWebSiteCollection Ptr, _
 	ByVal pIRequest As IClientRequest Ptr, _
