@@ -141,10 +141,8 @@ C_EXT ?= c
 EXTRA_CFLAGS+=-S
 MARCH ?= native
 CFLAGS+=-march=$(MARCH)
-CFLAGS+=-nostdlib -nostdinc -pipe
-CFLAGS+=-Wall -Werror -Wextra -pedantic
-CFLAGS+=-Wno-main -Wno-unused-label -Wno-unused-function
-CFLAGS+=-Wno-unused-variable -Wno-unused-parameter
+CFLAGS+=-pipe
+CFLAGS+=-Wall -Werror -Wextra -pedantic -Wno-unused
 CFLAGS_DEBUG+=-g -O0
 
 AS ?= as.exe
@@ -183,7 +181,7 @@ release: CFLAGS+=-fstrict-aliasing -frounding-math
 release: CFLAGS+=-fno-math-errno -fno-exceptions
 release: CFLAGS+=-mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
-release: CFLAGS+=-Ofast -fno-ident -fdata-sections -ffunction-sections
+release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
 release: ASFLAGS+=--strip-local-absolute
 release: LDFLAGS+=-s --gc-sections
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME)
