@@ -142,7 +142,9 @@ EXTRA_CFLAGS+=-S
 MARCH ?= native
 CFLAGS+=-march=$(MARCH)
 CFLAGS+=-pipe
-CFLAGS+=-Wall -Werror -Wextra -pedantic -Wno-unused
+CFLAGS+=-Wall -Werror -Wextra -pedantic
+CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
+CFLAGS+=-Wno-dollar-in-identifier-extension
 CFLAGS_DEBUG+=-g -O0
 
 AS ?= as.exe
