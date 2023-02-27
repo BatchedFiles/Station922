@@ -141,9 +141,10 @@ C_EXT ?= c
 EXTRA_CFLAGS+=-S
 MARCH ?= native
 CFLAGS+=-march=$(MARCH)
-CFLAGS+=-nostdlib -nostdinc
-CFLAGS+=-Wall -Werror -Werror-implicit-function-declaration
-CFLAGS+=-Wno-main -Wno-unused-label -Wno-unused-function -Wno-unused-variable
+CFLAGS+=-nostdlib -nostdinc -pipe
+CFLAGS+=-Wall -Werror -Wextra -pedantic
+CFLAGS+=-Wno-main -Wno-unused-label -Wno-unused-function
+CFLAGS+=-Wno-unused-variable -Wno-unused-parameter
 CFLAGS_DEBUG+=-g -O0
 
 AS ?= as.exe
@@ -232,11 +233,12 @@ $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(ASM_EXT): $(OBJ_DEBUG_DIR)$(PATH_SE
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(C_EXT): src$(PATH_SEP)%.bas
 	$(FBC) $(FBCFLAGS) $<
+	$(SCRIPT_COMMAND) /release src$(MOVE_PATH_SEP)$*.$(C_EXT)
 	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.$(C_EXT) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
-	$(SCRIPT_COMMAND) $(OBJ_RELEASE_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(C_EXT): src$(PATH_SEP)%.bas
 	$(FBC) $(FBCFLAGS) $<
+	$(SCRIPT_COMMAND) /debug src$(MOVE_PATH_SEP)$*.$(C_EXT)
 	$(MOVE_COMMAND) src$(MOVE_PATH_SEP)$*.$(C_EXT) $(OBJ_DEBUG_DIR_MOVE)$(MOVE_PATH_SEP)$*$(FILE_SUFFIX).$(C_EXT)
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).$(OBJ_EXT): src$(PATH_SEP)%.RC
