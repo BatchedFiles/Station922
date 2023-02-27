@@ -75,15 +75,15 @@ Function TreeFindNode( _
 			
 			Return TreeFindNode(pNode->RightNode, HostName)
 			
-		Case 0
-			Return pNode
-			
 		Case Is < 0
 			If pNode->LeftNode = NULL Then
 				Return NULL
 			End If
 			
 			Return TreeFindNode(pNode->LeftNode, HostName)
+			
+		Case Else
+			Return pNode
 			
 	End Select
 	
