@@ -51,10 +51,4 @@ Declare Function WebServerIniConfigurationGetWebSites( _
 	ByVal pWebSites As WebSiteConfiguration Ptr _
 )As HRESULT
 
-Declare Function WebServerIniConfigurationGetHttpProcessors( _
-	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pHttpProcessors As Integer Ptr, _
-	ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
-)As HRESULT
-
 #endif

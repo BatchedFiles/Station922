@@ -2,7 +2,6 @@
 #define IINICONFIGURATION_BI
 
 #include once "IString.bi"
-#include once "IHttpAsyncProcessor.bi"
 
 Extern IID_IIniConfiguration Alias "IID_IIniConfiguration" As Const IID
 
@@ -61,12 +60,6 @@ Type IWebServerConfigurationVirtualTable
 		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
 	
-	GetHttpProcessors As Function( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pHttpProcessors As Integer Ptr, _
-		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IWebServerConfiguration_
@@ -79,6 +72,5 @@ End Type
 #define IWebServerConfiguration_GetWorkerThreadsCount(this, pWorkerThreadsCount) (this)->lpVtbl->GetWorkerThreadsCount(this, pWorkerThreadsCount)
 #define IWebServerConfiguration_GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext) (this)->lpVtbl->GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext)
 #define IWebServerConfiguration_GetWebSites(this, pCount, pWebSites) (this)->lpVtbl->GetWebSites(this, pCount, pWebSites)
-#define IWebServerConfiguration_GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors) (this)->lpVtbl->GetHttpProcessors(this, pHttpProcessors, ppIHttpProcessors)
 
 #endif

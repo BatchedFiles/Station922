@@ -3,11 +3,6 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "HttpGetProcessor.bi"
-#include once "HttpOptionsProcessor.bi"
-#include once "HttpPutProcessor.bi"
-#include once "HttpProcessorCollection.bi"
-#include once "HttpTraceProcessor.bi"
 
 Extern GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable
 
@@ -1086,142 +1081,6 @@ Function WebServerIniConfigurationGetWebSites( _
 	
 End Function
 
-Function WebServerIniConfigurationGetHttpProcessors( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pHttpProcessors As Integer Ptr, _
-		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
-	)As HRESULT
-	
-	/'
-	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
-	Scope
-		Dim hr As HRESULT = CreateHttpProcessorCollection( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpProcessorCollection, _
-			@pIProcessorCollection _
-		)
-		If FAILED(hr) Then
-			*ppIHttpProcessorCollection = NULL
-			Return hr
-		End If
-	End Scope
-	
-	Scope
-		Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreateHttpGetProcessor( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpGetAsyncProcessor, _
-			@pIHttpGetProcessor _
-		)
-		If FAILED(hrCreateProcessor) Then
-			IHttpProcessorCollection_Release(pIProcessorCollection)
-			*ppIHttpProcessorCollection = NULL
-			Return hrCreateProcessor
-		End If
-		
-		IHttpProcessorCollection_Add( _
-			pIProcessorCollection, _
-			WStr("GET"), _
-			pIHttpGetProcessor _
-		)
-		
-		IHttpProcessorCollection_Add( _
-			pIProcessorCollection, _
-			WStr("HEAD"), _
-			pIHttpGetProcessor _
-		)
-		
-		IHttpAsyncProcessor_Release(pIHttpGetProcessor)
-	End Scope
-	
-	Scope
-		Dim pIHttpPutProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreateHttpPutProcessor( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpPutAsyncProcessor, _
-			@pIHttpPutProcessor _
-		)
-		If FAILED(hrCreateProcessor) Then
-			IHttpProcessorCollection_Release(pIProcessorCollection)
-			*ppIHttpProcessorCollection = NULL
-			Return hrCreateProcessor
-		End If
-		
-		IHttpProcessorCollection_Add( _
-			pIProcessorCollection, _
-			WStr("PUT"), _
-			pIHttpPutProcessor _
-		)
-		
-		IHttpAsyncProcessor_Release(pIHttpPutProcessor)
-	End Scope
-	
-	Scope
-		Dim pIHttpTraceProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreateHttpTraceProcessor( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpTraceAsyncProcessor, _
-			@pIHttpTraceProcessor _
-		)
-		If FAILED(hrCreateProcessor) Then
-			IHttpProcessorCollection_Release(pIProcessorCollection)
-			*ppIHttpProcessorCollection = NULL
-			Return hrCreateProcessor
-		End If
-		
-		IHttpProcessorCollection_Add( _
-			pIProcessorCollection, _
-			WStr("TRACE"), _
-			pIHttpTraceProcessor _
-		)
-		
-		IHttpAsyncProcessor_Release(pIHttpTraceProcessor)
-	End Scope
-	
-	Scope
-		Dim pIHttpOptionsProcessor As IHttpAsyncProcessor Ptr = Any
-		Dim hrCreateProcessor As HRESULT = CreateHttpOptionsProcessor( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpOptionsAsyncProcessor, _
-			@pIHttpOptionsProcessor _
-		)
-		If FAILED(hrCreateProcessor) Then
-			IHttpProcessorCollection_Release(pIProcessorCollection)
-			*ppIHttpProcessorCollection = NULL
-			Return hrCreateProcessor
-		End If
-		
-		IHttpProcessorCollection_Add( _
-			pIProcessorCollection, _
-			WStr("OPTIONS"), _
-			pIHttpOptionsProcessor _
-		)
-		
-		IHttpAsyncProcessor_Release(pIHttpOptionsProcessor)
-	End Scope
-	
-	Scope
-		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
-		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
-			this->pIMemoryAllocator, _
-			WStr(AllMethodsString), _
-			Len(AllMethodsString) _
-		)
-		
-		IHttpProcessorCollection_SetAllMethods( _
-			pIProcessorCollection, _
-			AllMethods _
-		)
-		
-		HeapSysFreeString(AllMethods)
-	End Scope
-
-	*ppIHttpProcessorCollection = pIProcessorCollection
-	'/
-	Return S_OK
-	
-End Function
-
 
 Function IWebServerConfigurationQueryInterface( _
 		ByVal this As IWebServerConfiguration Ptr, _
@@ -1265,20 +1124,11 @@ Function IWebServerConfigurationGetWebSites( _
 	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
 End Function
 
-Function IWebServerConfigurationGetHttpProcessors( _
-		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pHttpProcessors As Integer Ptr, _
-		ByVal ppIHttpProcessors As IHttpAsyncProcessor Ptr Ptr _
-	)As HRESULT
-	Return WebServerIniConfigurationGetHttpProcessors(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pHttpProcessors, ppIHttpProcessors)
-End Function
-
 Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable = Type( _
 	@IWebServerConfigurationQueryInterface, _
 	@IWebServerConfigurationAddRef, _
 	@IWebServerConfigurationRelease, _
 	@IWebServerConfigurationGetWorkerThreadsCount, _
 	@IWebServerConfigurationGetCachedClientMemoryContextCount, _
-	@IWebServerConfigurationGetWebSites, _
-	@IWebServerConfigurationGetHttpProcessors _
+	@IWebServerConfigurationGetWebSites _
 )
