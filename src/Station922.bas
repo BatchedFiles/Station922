@@ -1,7 +1,6 @@
 #include once "windows.bi"
 #include once "win\shellapi.bi"
 #include once "ConsoleMain.bi"
-#include once "Network.bi"
 #include once "WebUtils.bi"
 #include once "WindowsServiceMain.bi"
 
@@ -36,11 +35,12 @@ Function IsServiceParam()As Boolean
 	
 End Function
 
-Function StartMainFunction()As Integer
+Function EntryPoint Alias "EntryPoint"()As Integer
 	
 	Dim RetCode As Integer = Any
 	
 	Dim IsService As Boolean = IsServiceParam()
+	
 	If IsService Then
 		RetCode = WindowsServiceMain()
 	Else
@@ -48,36 +48,7 @@ Function StartMainFunction()As Integer
 	End If
 	
 	Return RetCode
-	
-End Function
-
-Function EntryPoint Alias "EntryPoint"()As Integer
-	
-	Scope
-		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
-		If FAILED(hrNetworkStartup) Then
-			Return 1
-		End If
-	End Scope
-	
-	Scope
-		Dim resLoadWsa As Boolean = LoadWsaFunctions()
-		If resLoadWsa = False Then
-			NetworkCleanUp()
-			Return 1
-		End If
-	End Scope
-	
-	Scope
 		
-		Dim RetCode As Integer = StartMainFunction()
-		
-		NetworkCleanUp()
-		
-		Return RetCode
-		
-	End Scope
-	
 End Function
 
 #ifndef WITHOUT_RUNTIME

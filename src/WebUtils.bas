@@ -8,6 +8,7 @@
 #include once "IniConfiguration.bi"
 #include once "Logger.bi"
 #include once "Mime.bi"
+#include once "Network.bi"
 #include once "ThreadPool.bi"
 #include once "WebSiteCollection.bi"
 #include once "WriteErrorAsyncTask.bi"
@@ -37,6 +38,10 @@ End Type
 
 Type HttpProcessorVector
 	Vector(HttpProcessorsLength - 1) As HttpProcessorItem
+End Type
+
+Type WebSiteVector
+	Vector(HttpProcessorsLength - 1) As IWebSite Ptr
 End Type
 
 Sub GetHttpDate( _
@@ -278,6 +283,19 @@ Function Station922Initialize( _
 	Dim HttpProcessors As HttpProcessorVector = Any
 	
 	Scope
+		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
+		If FAILED(hrNetworkStartup) Then
+			Return hrNetworkStartup
+		End If
+		
+		Dim hrLoadWsa As HRESULT = LoadWsaFunctions()
+		If FAILED(hrLoadWsa) Then
+			NetworkCleanUp()
+			Return hrLoadWsa
+		End If
+	End Scope
+	
+	Scope
 		Const dwReserved As DWORD = 1
 		Dim hrGetMalloc As HRESULT = CoGetMalloc( _
 			dwReserved, _
@@ -465,32 +483,17 @@ Function Station922Initialize( _
 	
 	Scope
 		' создать массив сайтов
-	End Scope
-	
-	Scope
-		' Ќазначить каждому сайту своего обработчика
-	End Scope
-	
-	Scope
-		' создать массив серверов
-	End Scope
-	
-	Scope
-		' назначить каждому серверу свою коллекцию сайтов
-	End Scope
-	
-	' Scope
-	'	Dim pIWebSite As IWebSite Ptr = Any
-	' 	Dim hrCreateWebSite As HRESULT = CreateWebSite( _
-	' 		pIMemoryAllocator, _
-	' 		@IID_IWebSite, _
-	' 		@pIWebSite _
-	' 	)
-	' 	If FAILED(hrCreateWebSite) Then
-	' 		*ppIWebSite = NULL
-	' 		Return hrCreateWebSite
-	' 	End If
-	'
+		' Dim pIWebSite As IWebSite Ptr = Any
+		' Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+		' 	pIMemoryAllocator, _
+		' 	@IID_IWebSite, _
+		' 	@pIWebSite _
+		' )
+		' If FAILED(hrCreateWebSite) Then
+		' 	*ppIWebSite = NULL
+		' 	Return hrCreateWebSite
+		' End If
+		
 		' IWebSite_SetHostName(pIWebSite, bstrWebSite)
 		' HeapSysFreeString(bstrWebSite)
 		
@@ -520,7 +523,19 @@ Function Station922Initialize( _
 		
 		' IWebSite_SetIsMoved(pIWebSite, IsMoved)
 		' IWebSite_SetUtfBomFileOffset(pIWebSite, Offset)
-	' End Scope
+	End Scope
+	
+	Scope
+		' Ќазначить каждому сайту своего обработчика
+	End Scope
+	
+	Scope
+		' создать массив серверов
+	End Scope
+	
+	Scope
+		' назначить каждому серверу свою коллекцию сайтов
+	End Scope
 	
 	/'
 	Scope
