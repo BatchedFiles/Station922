@@ -28,7 +28,7 @@ Function NetworkCleanUp()As HRESULT
 	
 End Function
 
-Function LoadWsaFunctions()As Boolean
+Function LoadWsaFunctions()As HRESULT
 	
 	Dim ListenSocket As SOCKET = WSASocketW( _
 		AF_INET6, _
@@ -39,7 +39,8 @@ Function LoadWsaFunctions()As Boolean
 		WSA_FLAG_OVERLAPPED _
 	)
 	If ListenSocket = INVALID_SOCKET Then
-		Return False
+		Dim dwError As Long = WSAGetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
 	Scope
@@ -56,8 +57,9 @@ Function LoadWsaFunctions()As Boolean
 			NULL _
 		)
 		If resLoadAcceptEx = SOCKET_ERROR Then
+			Dim dwError As Long = WSAGetLastError()
 			closesocket(ListenSocket)
-			return False
+			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
 	
@@ -75,8 +77,9 @@ Function LoadWsaFunctions()As Boolean
 			NULL _
 		)
 		If resGetAcceptExSockaddrs = SOCKET_ERROR Then
+			Dim dwError As Long = WSAGetLastError()
 			closesocket(ListenSocket)
-			return False
+			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
 	
@@ -94,14 +97,15 @@ Function LoadWsaFunctions()As Boolean
 			NULL _
 		)
 		If resGetTransmitPackets = SOCKET_ERROR Then
+			Dim dwError As Long = WSAGetLastError()
 			closesocket(ListenSocket)
-			return False
+			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
 	
 	closesocket(ListenSocket)
 	
-	Return True
+	Return S_OK
 	
 End Function
 

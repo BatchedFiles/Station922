@@ -27,7 +27,7 @@ Declare Function NetworkStartUp()As HRESULT
 
 Declare Function NetworkCleanUp()As HRESULT
 
-Declare Function LoadWsaFunctions()As Boolean
+Declare Function LoadWsaFunctions()As HRESULT
 
 Declare Function ResolveHostA Alias "ResolveHostA"( _
 	ByVal Host As PCSTR, _
