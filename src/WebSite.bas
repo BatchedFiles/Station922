@@ -81,13 +81,43 @@ Type _WebSite
 	ListenAddress As HeapBSTR
 	ListenPort As HeapBSTR
 	ConnectBindAddress As HeapBSTR
-	ConnectBindPort As Integer
+	ConnectBindPort As HeapBSTR
 	CodePage As HeapBSTR
 	Methods As HeapBSTR
+	DefaultFileName As HeapBSTR
 	UtfBomFileOffset As Integer
+	ReservedFileBytes As Integer
 	UseSsl As Boolean
 	IsMoved As Boolean
 End Type
+	/'
+	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
+	Scope
+		Dim hr As HRESULT = CreateHttpProcessorCollection( _
+			this->pIMemoryAllocator, _
+			@IID_IHttpProcessorCollection, _
+			@pIProcessorCollection _
+		)
+		If FAILED(hr) Then
+			*ppIHttpProcessorCollection = NULL
+			Return hr
+		End If
+		
+		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
+		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
+			this->pIMemoryAllocator, _
+			WStr(AllMethodsString), _
+			Len(AllMethodsString) _
+		)
+		
+		IHttpProcessorCollection_SetAllMethods( _
+			pIProcessorCollection, _
+			AllMethods _
+		)
+		
+		HeapSysFreeString(AllMethods)
+	End Scope
+	'/
 
 Function GetAuthorizationHeader( _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -911,8 +941,14 @@ Sub InitializeWebSite( _
 	this->CodePage = NULL
 	this->ListenAddress = NULL
 	this->ListenPort = NULL
+	this->ConnectBindAddress = NULL
+	this->ConnectBindPort = NULL
+	this->Methods = NULL
+	this->DefaultFileName = NULL
 	this->UtfBomFileOffset = 0
+	this->ReservedFileBytes = 0
 	this->IsMoved = False
+	this->UseSsl = False
 	
 End Sub
 
@@ -927,6 +963,10 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->CodePage)
 	HeapSysFreeString(this->ListenAddress)
 	HeapSysFreeString(this->ListenPort)
+	HeapSysFreeString(this->ConnectBindAddress)
+	HeapSysFreeString(this->ConnectBindPort)
+	HeapSysFreeString(this->Methods)
+	HeapSysFreeString(this->DefaultFileName)
 	
 End Sub
 
@@ -1576,6 +1616,72 @@ Function WebSiteSetListenPort( _
 	
 End Function
 
+Function WebSiteSetConnectBindAddress( _
+		ByVal this As WebSite Ptr, _
+		ByVal ConnectBindAddress As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ConnectBindAddress, ConnectBindAddress)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetConnectBindPort( _
+		ByVal this As WebSite Ptr, _
+		ByVal ConnectBindPort As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ConnectBindPort, ConnectBindPort)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetSupportedMethods( _
+		ByVal this As WebSite Ptr, _
+		ByVal Methods As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->Methods, Methods)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetDefaultFileName( _
+		ByVal this As WebSite Ptr, _
+		ByVal DefaultFileName As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->DefaultFileName, DefaultFileName)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetUseSsl( _
+		ByVal this As WebSite Ptr, _
+		ByVal UseSsl As Boolean _
+	)As HRESULT
+	
+	this->UseSsl = UseSsl
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetReservedFileBytes( _
+		ByVal this As WebSite Ptr, _
+		ByVal ReservedFileBytes As Integer _
+	)As HRESULT
+	
+	this->ReservedFileBytes = ReservedFileBytes
+	
+	Return S_OK
+	
+End Function
+
 Function WebSiteSetUtfBomFileOffset( _
 		ByVal this As WebSite Ptr, _
 		ByVal Offset As Integer _
@@ -1756,6 +1862,48 @@ Function IMutableWebSiteSetListenPort( _
 	Return WebSiteSetListenPort(ContainerOf(this, WebSite, lpVtbl), ListenPort)
 End Function
 
+Function IMutableWebSiteSetConnectBindAddress( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ConnectBindAddress As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetConnectBindAddress(ContainerOf(this, WebSite, lpVtbl), ConnectBindAddress)
+End Function
+
+Function IMutableWebSiteSetConnectBindPort( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ConnectBindPort As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetConnectBindPort(ContainerOf(this, WebSite, lpVtbl), ConnectBindPort)
+End Function
+
+Function IMutableWebSiteSetSupportedMethods( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Methods As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetSupportedMethods(ContainerOf(this, WebSite, lpVtbl), Methods)
+End Function
+
+Function IMutableWebSiteSetDefaultFileName( _
+		ByVal this As IWebSite Ptr, _
+		ByVal DefaultFileName As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetDefaultFileName(ContainerOf(this, WebSite, lpVtbl), DefaultFileName)
+End Function
+
+Function IMutableWebSiteSetUseSsl( _
+		ByVal this As IWebSite Ptr, _
+		ByVal UseSsl As Boolean _
+	)As HRESULT
+	Return WebSiteSetUseSsl(ContainerOf(this, WebSite, lpVtbl), UseSsl)
+End Function
+
+Function IMutableWebSetReservedFileBytes( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ReservedFileBytes As Integer _
+	)As HRESULT
+	Return WebSiteSetReservedFileBytes(ContainerOf(this, WebSite, lpVtbl), ReservedFileBytes)
+End Function
+
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1784,5 +1932,11 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IWebSiteSetUtfBomFileOffset, _
 	@IMutableWebSiteSetListenAddress, _
 	@IMutableWebSiteSetListenPort, _
+	@IMutableWebSiteSetConnectBindAddress, _
+	@IMutableWebSiteSetConnectBindPort, _
+	@IMutableWebSiteSetSupportedMethods, _
+	@IMutableWebSiteSetUseSsl, _
+	@IMutableWebSiteSetDefaultFileName, _
+	@IMutableWebSetReservedFileBytes, _
 	@IMutableWebSiteNeedCgiProcessing _
 )

@@ -127,6 +127,36 @@ Type IWebSiteVirtualTable
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
 	
+	SetConnectBindAddress As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ConnectBindAddress As HeapBSTR _
+	)As HRESULT
+	
+	SetConnectBindPort As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ConnectBindPort As HeapBSTR _
+	)As HRESULT
+	
+	SetSupportedMethods As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Methods As HeapBSTR _
+	)As HRESULT
+	
+	SetUseSsl As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal UseSsl As Boolean _
+	)As HRESULT
+	
+	SetDefaultFileName As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal DefaultFileName As HeapBSTR _
+	)As HRESULT
+	
+	SetReservedFileBytes As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ReservedFileBytes As Integer _
+	)As HRESULT
+	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -158,6 +188,12 @@ End Type
 #define IWebSite_SetUtfBomFileOffset(this, Offset) (this)->lpVtbl->SetUtfBomFileOffset(this, Offset)
 #define IWebSite_SetListenAddress(this, ListenAddress) (this)->lpVtbl->SetListenAddress(this, ListenAddress)
 #define IWebSite_SetListenPort(this, ListenPort) (this)->lpVtbl->SetListenPort(this, ListenPort)
+#define IWebSite_SetConnectBindAddress(this, ConnectBindAddress) (this)->lpVtbl->SetConnectBindAddress(this, ConnectBindAddress)
+#define IWebSite_SetConnectBindPort(this, ConnectBindPort) (this)->lpVtbl->SetConnectBindPort(this, ConnectBindPort)
+#define IWebSite_SetSupportedMethods(this, Methods) (this)->lpVtbl->SetSupportedMethods(this, Methods)
+#define IWebSite_SetUseSsl(this, UseSsl) (this)->lpVtbl->SetUseSsl(this, UseSsl)
+#define IWebSite_SetDefaultFileName(this, DefaultFileName) (this)->lpVtbl->SetDefaultFileName(this, DefaultFileName)
+#define IWebSite_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif

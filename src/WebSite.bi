@@ -124,6 +124,36 @@ Declare Function WebSiteSetListenPort( _
 	ByVal ListenPort As HeapBSTR _
 )As HRESULT
 
+Declare Function WebSiteSetConnectBindAddress( _
+	ByVal this As WebSite Ptr, _
+	ByVal ConnectBindAddress As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetConnectBindPort( _
+	ByVal this As WebSite Ptr, _
+	ByVal ConnectBindPort As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetSupportedMethods( _
+	ByVal this As WebSite Ptr, _
+	ByVal Methods As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetUseSsl( _
+	ByVal this As WebSite Ptr, _
+	ByVal UseSsl As Boolean _
+)As HRESULT
+
+Declare Function WebSiteSetDefaultFileName( _
+	ByVal this As WebSite Ptr, _
+	ByVal DefaultFileName As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetReservedFileBytes( _
+	ByVal this As WebSite Ptr, _
+	ByVal ReservedFileBytes As Integer _
+)As HRESULT
+
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
 	ByVal Path As HeapBSTR, _
