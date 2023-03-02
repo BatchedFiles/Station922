@@ -1,6 +1,8 @@
 #ifndef IWEBSITE_BI
 #define IWEBSITE_BI
 
+Type IWebSite As IWebSite_
+
 #include once "IAttributedStream.bi"
 #include once "IClientRequest.bi"
 #include once "IString.bi"

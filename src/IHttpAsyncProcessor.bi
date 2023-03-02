@@ -1,6 +1,8 @@
 #ifndef IHTTPASYNCPROCESSOR_BI
 #define IHTTPASYNCPROCESSOR_BI
 
+Type IHttpAsyncProcessor As IHttpAsyncProcessor_
+
 #include once "IClientRequest.bi"
 #include once "IHttpWriter.bi"
 #include once "IWebSite.bi"
@@ -17,8 +19,6 @@ Type ProcessorContext
 	pIReader As IHttpReader Ptr
 	pIWriter As IHttpWriter Ptr
 End Type
-
-Type IHttpAsyncProcessor As IHttpAsyncProcessor_
 
 Type IHttpAsyncProcessorVirtualTable
 	
