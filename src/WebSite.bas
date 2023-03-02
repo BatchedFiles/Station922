@@ -8,6 +8,7 @@
 #include once "MemoryStream.bi"
 #include once "Mime.bi"
 #include once "WebUtils.bi"
+#include once "HttpProcessorCollection.bi"
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
@@ -85,39 +86,12 @@ Type _WebSite
 	CodePage As HeapBSTR
 	Methods As HeapBSTR
 	DefaultFileName As HeapBSTR
+	pIProcessorCollection As IHttpProcessorCollection Ptr
 	UtfBomFileOffset As Integer
 	ReservedFileBytes As Integer
 	UseSsl As Boolean
 	IsMoved As Boolean
 End Type
-	/'
-	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
-	Scope
-		Dim hr As HRESULT = CreateHttpProcessorCollection( _
-			this->pIMemoryAllocator, _
-			@IID_IHttpProcessorCollection, _
-			@pIProcessorCollection _
-		)
-		If FAILED(hr) Then
-			*ppIHttpProcessorCollection = NULL
-			Return hr
-		End If
-		
-		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
-		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
-			this->pIMemoryAllocator, _
-			WStr(AllMethodsString), _
-			Len(AllMethodsString) _
-		)
-		
-		IHttpProcessorCollection_SetAllMethods( _
-			pIProcessorCollection, _
-			AllMethods _
-		)
-		
-		HeapSysFreeString(AllMethods)
-	End Scope
-	'/
 
 Function GetAuthorizationHeader( _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -920,7 +894,8 @@ End Function
 
 Sub InitializeWebSite( _
 		ByVal this As WebSite Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pIProcessorCollection As IHttpProcessorCollection Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -945,6 +920,7 @@ Sub InitializeWebSite( _
 	this->ConnectBindPort = NULL
 	this->Methods = NULL
 	this->DefaultFileName = NULL
+	this->pIProcessorCollection = pIProcessorCollection
 	this->UtfBomFileOffset = 0
 	this->ReservedFileBytes = 0
 	this->IsMoved = False
@@ -967,6 +943,9 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->ConnectBindPort)
 	HeapSysFreeString(this->Methods)
 	HeapSysFreeString(this->DefaultFileName)
+	If this->pIProcessorCollection Then
+		IHttpProcessorCollection_Release(this->pIProcessorCollection)
+	End If
 	
 End Sub
 
@@ -982,13 +961,48 @@ Function CreateWebSite( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
+	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
+	Scope
+		Dim hrCreate As HRESULT = CreateHttpProcessorCollection( _
+			pIMemoryAllocator, _
+			@IID_IHttpProcessorCollection, _
+			@pIProcessorCollection _
+		)
+		If FAILED(hrCreate) Then
+			*ppv = NULL
+			Return E_OUTOFMEMORY
+		End If
+		
+		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
+		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			WStr(AllMethodsString), _
+			Len(AllMethodsString) _
+		)
+		If AllMethods = NULL Then
+			*ppv = NULL
+			Return E_OUTOFMEMORY
+		End If
+		
+		IHttpProcessorCollection_SetAllMethods( _
+			pIProcessorCollection, _
+			AllMethods _
+		)
+		
+		HeapSysFreeString(AllMethods)
+	End Scope
+
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSite) _
 	)
 	
 	If this Then
-		InitializeWebSite(this, pIMemoryAllocator)
+		InitializeWebSite( _
+			this, _
+			pIMemoryAllocator, _
+			pIProcessorCollection _
+		)
 		WebSiteCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
