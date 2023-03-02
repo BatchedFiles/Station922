@@ -17,13 +17,6 @@
 #include once "HttpPutProcessor.bi"
 #include once "HttpTraceProcessor.bi"
 #include once "HttpProcessorCollection.bi"
-#include once "WebSite.bi"
-
-Const DateFormatString = WStr("ddd, dd MMM yyyy ")
-Const TimeFormatString = WStr("HH:mm:ss GMT")
-Const BasicAuthorization = WStr("Basic")
-
-Const CompareResultEqual As Long = 0
 
 ' Declare Function GetBase64Sha1( _
 ' 	ByVal pDestination As WString Ptr, _
@@ -49,6 +42,9 @@ Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
 	)
+	
+	Const DateFormatString = WStr("ddd, dd MMM yyyy ")
+	Const TimeFormatString = WStr("HH:mm:ss GMT")
 	
 	' Tue, 15 Nov 1994 12:45:26 GMT
 	Dim dtBufferLength As Integer = GetDateFormatW( _
@@ -527,7 +523,7 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' Назначить каждому сайту своего обработчика
+		' РќР°Р·РЅР°С‡РёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃР°Р№С‚Сѓ СЃРІРѕРµРіРѕ РѕР±СЂР°Р±РѕС‚С‡РёРєР°
 		For j As Integer = 0 To WebSitesLength - 1
 			Dim MethodsLength As Integer = SysStringLen(pWebSiteConfig[j].Methods)
 			
@@ -552,7 +548,7 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' создать массив серверов
+		' СЃРѕР·РґР°С‚СЊ РјР°СЃСЃРёРІ СЃРµСЂРІРµСЂРѕРІ
 		For i As Integer = 0 To WebSitesLength - 1
 			' pWebSiteConfig[i].ListenAddress
 			' pWebSiteConfig[i].ListenPort
@@ -560,11 +556,11 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' Добавить каждому серверу свой сайт
+		' Р”РѕР±Р°РІРёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃРµСЂРІРµСЂСѓ СЃРІРѕР№ СЃР°Р№С‚
 	End Scope
 	
 	Scope
-		' Добавить каждому серверу сайт по умолчанию
+		' Р”РѕР±Р°РІРёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃРµСЂРІРµСЂСѓ СЃР°Р№С‚ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 		
 		' Dim pIDefaultWebSite As IWebSite Ptr = Any
 		' Dim hrCreateWebSite As HRESULT = CreateWebSite( _
@@ -645,7 +641,7 @@ Function Station922Initialize()As HRESULT
 		
 	End Scope
 	
-	' Очистка
+	' РћС‡РёСЃС‚РєР°
 	Scope
 		For i As Integer = 0 To WebSitesLength - 1
 			HeapSysFreeString(pWebSiteConfig[i].HostName)
