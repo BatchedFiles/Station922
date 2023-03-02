@@ -1734,6 +1734,25 @@ Function WebSiteNeedCgiProcessing( _
 	
 End Function
 
+Function WebSiteSetAddHttpProcessor( _
+		ByVal this As WebSite Ptr, _
+		ByVal Key As HeapBSTR, _
+		ByVal Value As IHttpAsyncProcessor Ptr _
+	)As HRESULT
+	
+	Dim hrAdd As HRESULT = IHttpProcessorCollection_Add( _
+		this->pIProcessorCollection, _
+		Key, _
+		Value _
+	)
+	If FAILED(hrAdd) Then
+		Return hrAdd
+	End If
+	
+	Return S_OK
+	
+End Function
+
 
 Function IMutableWebSiteQueryInterface( _
 		ByVal this As IWebSite Ptr, _
@@ -1918,6 +1937,14 @@ Function IMutableWebSetReservedFileBytes( _
 	Return WebSiteSetReservedFileBytes(ContainerOf(this, WebSite, lpVtbl), ReservedFileBytes)
 End Function
 
+Function IMutableWebSetAddHttpProcessor( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Key As HeapBSTR, _
+		ByVal Value As IHttpAsyncProcessor Ptr _
+	)As HRESULT
+	Return WebSiteSetAddHttpProcessor(ContainerOf(this, WebSite, lpVtbl), Key, Value)
+End Function
+
 Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -1952,5 +1979,6 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetUseSsl, _
 	@IMutableWebSiteSetDefaultFileName, _
 	@IMutableWebSetReservedFileBytes, _
+	@IMutableWebSetAddHttpProcessor, _
 	@IMutableWebSiteNeedCgiProcessing _
 )

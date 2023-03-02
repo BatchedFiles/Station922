@@ -5,6 +5,7 @@ Type IWebSite As IWebSite_
 
 #include once "IAttributedStream.bi"
 #include once "IClientRequest.bi"
+#include once "IHttpAsyncProcessor.bi"
 #include once "IString.bi"
 
 Extern IID_IWebSite Alias "IID_IWebSite" As Const IID
@@ -21,8 +22,6 @@ Enum ContentNegotiationFlags
 	AcceptLanguage = 8
 	UserAgent = 16
 End Enum
-
-Type IWebSite As IWebSite_
 
 Type IWebSiteVirtualTable
 	
@@ -159,6 +158,12 @@ Type IWebSiteVirtualTable
 		ByVal ReservedFileBytes As Integer _
 	)As HRESULT
 	
+	AddHttpProcessor As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal Key As HeapBSTR, _
+		ByVal Value As IHttpAsyncProcessor Ptr _
+	)As HRESULT
+	
 	NeedCgiProcessing As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
@@ -196,6 +201,7 @@ End Type
 #define IWebSite_SetUseSsl(this, UseSsl) (this)->lpVtbl->SetUseSsl(this, UseSsl)
 #define IWebSite_SetDefaultFileName(this, DefaultFileName) (this)->lpVtbl->SetDefaultFileName(this, DefaultFileName)
 #define IWebSite_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
+#define IWebSite_AddHttpProcessor(this, Key, Value) (this, Key, Value) (this)->lpVtbl->AddHttpProcessor(this, Key, Value)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif

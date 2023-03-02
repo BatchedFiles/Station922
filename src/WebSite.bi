@@ -154,6 +154,12 @@ Declare Function WebSiteSetReservedFileBytes( _
 	ByVal ReservedFileBytes As Integer _
 )As HRESULT
 
+Declare Function WebSiteSetAddHttpProcessor( _
+	ByVal this As WebSite Ptr, _
+	ByVal Key As HeapBSTR, _
+	ByVal Value As IHttpAsyncProcessor Ptr _
+)As HRESULT
+
 Declare Function WebSiteNeedCgiProcessing( _
 	ByVal this As WebSite Ptr, _
 	ByVal Path As HeapBSTR, _
