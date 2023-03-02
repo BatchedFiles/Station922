@@ -32,7 +32,7 @@ Const CompareResultEqual As Long = 0
 Const HttpProcessorsLength As Integer = 5
 
 Type HttpProcessorItem
-	Key As WString Ptr
+	Key As HeapBSTR
 	Value As IHttpAsyncProcessor Ptr
 End Type
 
@@ -418,7 +418,14 @@ Function Station922Initialize( _
 			End If
 			
 			Const GetKeyString = WStr("GET")
-			Const HeadKeyString = WStr("HEAD")
+			Dim bstrGetString As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@GetKeyString, _
+				Len(GetKeyString) _
+			)
+			If bstrGetString = NULL Then
+				Return E_OUTOFMEMORY
+			End If
 			
 			HttpProcessors.Vector(0).Key = @GetKeyString
 			HttpProcessors.Vector(0).Value = pIHttpGetProcessor
@@ -441,6 +448,14 @@ Function Station922Initialize( _
 			End If
 			
 			Const PutKeyString = WStr("PUT")
+			Dim bstrPutString As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@PutKeyString, _
+				Len(PutKeyString) _
+			)
+			If bstrPutString = NULL Then
+				Return E_OUTOFMEMORY
+			End If
 			
 			HttpProcessors.Vector(2).Key = @PutKeyString
 			HttpProcessors.Vector(2).Value = pIHttpPutProcessor
@@ -458,6 +473,14 @@ Function Station922Initialize( _
 			End If
 			
 			Const TraceKeyString = WStr("TRACE")
+			Dim bstrTraceString As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@TraceKeyString, _
+				Len(TraceKeyString) _
+			)
+			If bstrTraceString = NULL Then
+				Return E_OUTOFMEMORY
+			End If
 			
 			HttpProcessors.Vector(3).Key = @TraceKeyString
 			HttpProcessors.Vector(3).Value = pIHttpTraceProcessor
@@ -475,6 +498,14 @@ Function Station922Initialize( _
 			End If
 			
 			Const OptionsKeyString = WStr("OPTIONS")
+			Dim bstrOptionsString As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@OptionsKeyString, _
+				Len(OptionsKeyString) _
+			)
+			If bstrOptionsString = NULL Then
+				Return E_OUTOFMEMORY
+			End If
 			
 			HttpProcessors.Vector(4).Key = @OptionsKeyString
 			HttpProcessors.Vector(4).Value = pIHttpOptionsProcessor
@@ -482,7 +513,7 @@ Function Station922Initialize( _
 	End Scope
 	
 	Scope
-		' создать массив сайтов
+		' пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		' Dim pIWebSite As IWebSite Ptr = Any
 		' Dim hrCreateWebSite As HRESULT = CreateWebSite( _
 		' 	pIMemoryAllocator, _
@@ -526,15 +557,15 @@ Function Station922Initialize( _
 	End Scope
 	
 	Scope
-		' Назначить каждому сайту своего обработчика
+		' пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	End Scope
 	
 	Scope
-		' создать массив серверов
+		' пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	End Scope
 	
 	Scope
-		' назначить каждому серверу свою коллекцию сайтов
+		' пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	End Scope
 	
 	/'
