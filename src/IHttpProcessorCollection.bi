@@ -78,11 +78,11 @@ End Type
 #define IHttpProcessorCollection_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpProcessorCollection_Release(this) (this)->lpVtbl->Release(this)
 #define IHttpProcessorCollection__NewEnum(this, ppIEnum) (this)->lpVtbl->_NewEnum(this, ppIEnum)
-' #define IHttpProcessorCollection_Item(this, pKey, ppIWebSite) (this)->lpVtbl->Item(this, pKey, ppIWebSite)
+' #define IHttpProcessorCollection_Item(this, pKey, ppIProcessor) (this)->lpVtbl->Item(this, pKey, ppIProcessor)
 #define IHttpProcessorCollection_Count(this, pCount) (this)->lpVtbl->Count(this, pCount)
 #define IHttpProcessorCollection_GetAllMethods(this, ppMethods) (this)->lpVtbl->GetAllMethods(this, ppMethods)
-#define IHttpProcessorCollection_Add(this, pKey, pIWebSite) (this)->lpVtbl->Add(this, pKey, pIWebSite)
-#define IHttpProcessorCollection_ItemWeakPtr(this, pKey, ppIWebSite) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIWebSite)
+#define IHttpProcessorCollection_Add(this, pKey, pIProcessor) (this)->lpVtbl->Add(this, pKey, pIProcessor)
+#define IHttpProcessorCollection_ItemWeakPtr(this, pKey, ppIProcessor) (this)->lpVtbl->ItemWeakPtr(this, pKey, ppIProcessor)
 #define IHttpProcessorCollection_SetAllMethods(this, pMethods) (this)->lpVtbl->SetAllMethods(this, pMethods)
 
 #endif
