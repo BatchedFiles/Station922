@@ -16,9 +16,6 @@ Const AdministratorsSectionString = WStr("admins")
 Const MaxSectionsLength As Integer = 32000 - 1
 Const CompareResultEqual As Long = 0
 
-' Const ListenAddressLengthMaximum As Integer = 255
-' Const ListenPortLengthMaximum As Integer = 15
-
 Type _WebServerIniConfiguration
 	#if __FB_DEBUG__
 		IdString As ZString * 16
