@@ -10,12 +10,14 @@
 #include once "Mime.bi"
 #include once "Network.bi"
 #include once "ThreadPool.bi"
-#include once "WebSiteCollection.bi"
+#include once "WebSite.bi"
 #include once "WriteErrorAsyncTask.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpOptionsProcessor.bi"
 #include once "HttpPutProcessor.bi"
 #include once "HttpTraceProcessor.bi"
+#include once "HttpProcessorCollection.bi"
+#include once "WebSiteCollection.bi"
 #include once "HttpProcessorCollection.bi"
 
 ' Declare Function GetBase64Sha1( _
@@ -523,12 +525,12 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' РќР°Р·РЅР°С‡РёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃР°Р№С‚Сѓ СЃРІРѕРµРіРѕ РѕР±СЂР°Р±РѕС‚С‡РёРєР°
 		For j As Integer = 0 To WebSitesLength - 1
 			Dim MethodsLength As Integer = SysStringLen(pWebSiteConfig[j].Methods)
 			
 			For i As Integer = 0 To HttpProcessorsLength - 1
 				Dim KeyLength As Integer = SysStringLen(HttpProcessors.Vector(i).Key)
+				
 				Dim pFind As WString Ptr = FindStringW( _
 					pWebSiteConfig[j].Methods, _
 					MethodsLength, _
@@ -548,7 +550,7 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' СЃРѕР·РґР°С‚СЊ РјР°СЃСЃРёРІ СЃРµСЂРІРµСЂРѕРІ
+		' создать массив серверов
 		For i As Integer = 0 To WebSitesLength - 1
 			' pWebSiteConfig[i].ListenAddress
 			' pWebSiteConfig[i].ListenPort
@@ -556,11 +558,11 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' Р”РѕР±Р°РІРёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃРµСЂРІРµСЂСѓ СЃРІРѕР№ СЃР°Р№С‚
+		' Добавить каждому серверу свой сайт
 	End Scope
 	
 	Scope
-		' Р”РѕР±Р°РІРёС‚СЊ РєР°Р¶РґРѕРјСѓ СЃРµСЂРІРµСЂСѓ СЃР°Р№С‚ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+		' Добавить каждому серверу сайт по умолчанию
 		
 		' Dim pIDefaultWebSite As IWebSite Ptr = Any
 		' Dim hrCreateWebSite As HRESULT = CreateWebSite( _
@@ -641,7 +643,6 @@ Function Station922Initialize()As HRESULT
 		
 	End Scope
 	
-	' РћС‡РёСЃС‚РєР°
 	Scope
 		For i As Integer = 0 To WebSitesLength - 1
 			HeapSysFreeString(pWebSiteConfig[i].HostName)
