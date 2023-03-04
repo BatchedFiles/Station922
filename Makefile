@@ -41,7 +41,6 @@ OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)WebUtils$(FILE_SUFFIX).$(O_EXT
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)WindowsServiceMain$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)WriteErrorAsyncTask$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)WriteResponseAsyncTask$(FILE_SUFFIX).$(O_EXT)
-OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Uuid$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).$(OBJ_EXT)
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX).$(O_EXT)
@@ -81,7 +80,6 @@ OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)WebUtils$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)WindowsServiceMain$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)WriteErrorAsyncTask$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)WriteResponseAsyncTask$(FILE_SUFFIX).$(O_EXT)
-OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Uuid$(FILE_SUFFIX).$(O_EXT)
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).$(OBJ_EXT)
 
 FILE_SUFFIX=_$(GCC_VER)_$(FBC_VER)_-Rt
@@ -142,6 +140,7 @@ CC ?= gcc.exe
 C_EXT ?= c
 EXTRA_CFLAGS+=-S
 MARCH ?= native
+# CFLAGS+=-march=$(MARCH) --target=x86_64-w64-pc-windows-msvc
 CFLAGS+=-march=$(MARCH)
 CFLAGS+=-pipe
 CFLAGS+=-Wall -Werror -Wextra -pedantic
@@ -173,7 +172,7 @@ LDFLAGS+=-L $(LIB_DIR)
 # LDFLAGS+=-T src$(PATH_SEP)fbextra.x
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
 LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32
-LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
+LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh -lucrt -lucrtbase
 
 
 all: release debug
@@ -185,7 +184,7 @@ release: CFLAGS+=-fstrict-aliasing -frounding-math
 release: CFLAGS+=-fno-math-errno -fno-exceptions
 release: CFLAGS+=-mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
-release: CFLAGS+=-O3 -flto -fno-ident -fdata-sections -ffunction-sections
+release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
 release: ASFLAGS+=--strip-local-absolute
 release: LDFLAGS+=-s --gc-sections
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME)

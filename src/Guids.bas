@@ -20,6 +20,20 @@
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
+#ifdef WITHOUT_RUNTIME
+
+' {00000000-0000-0000-C000-000000000046}
+DEFINE_IID(IID_IUnknown, _
+	&h00000000, &h0000, &h0000, &hC0, &h00, &h00, &h00, &h00, &h00, &h00, &h46 _
+)
+
+' {00000002-0000-0000-C000-000000000046}
+DEFINE_IID(IID_IMalloc, _
+	&h00000002, &h0000, &h0000, &hC0, &h00, &h00, &h00, &h00, &h00, &h00, &h46 _
+)
+
+#endif
+
 DEFINE_GUID(GUID_WSAID_ACCEPTEX, _
 	&hb5367df1, &hcbac, &h11cf, &h95, &hca, &h00, &h80, &h5f, &h48, &ha1, &h92 _
 )
