@@ -1078,6 +1078,28 @@ Function WebServerIniConfigurationGetWebSites( _
 	
 End Function
 
+Function WebServerIniConfigurationGetDefaultWebSite( _
+		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal pWebSite As WebSiteConfiguration Ptr _
+	)As HRESULT
+	
+	Const DefaultWebSiteKeyString = WStr("DefaultWebSite")
+	
+	Dim hrGetWebSite As HRESULT = GetWebSite( _
+		this->pIMemoryAllocator, _
+		this->pWebServerIniFileName, _
+		@DefaultWebSiteKeyString, _
+		Len(DefaultWebSiteKeyString), _
+		pWebSite _
+	)
+	If FAILED(hrGetWebSite) Then
+		Return hrGetWebSite
+	End If
+	
+	Return S_OK
+	
+End Function
+
 
 Function IWebServerConfigurationQueryInterface( _
 		ByVal this As IWebServerConfiguration Ptr, _
@@ -1121,11 +1143,19 @@ Function IWebServerConfigurationGetWebSites( _
 	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
 End Function
 
+Function IWebServerConfigurationGetDefaultWebSite( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal pWebSite As WebSiteConfiguration Ptr _
+	)As HRESULT
+	Return WebServerIniConfigurationGetDefaultWebSite(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWebSite)
+End Function
+
 Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable = Type( _
 	@IWebServerConfigurationQueryInterface, _
 	@IWebServerConfigurationAddRef, _
 	@IWebServerConfigurationRelease, _
 	@IWebServerConfigurationGetWorkerThreadsCount, _
 	@IWebServerConfigurationGetCachedClientMemoryContextCount, _
-	@IWebServerConfigurationGetWebSites _
+	@IWebServerConfigurationGetWebSites, _
+	@IWebServerConfigurationGetDefaultWebSite _
 )

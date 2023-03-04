@@ -60,6 +60,11 @@ Type IWebServerConfigurationVirtualTable
 		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
 	
+	GetDefaultWebSite As Function( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal pWebSite As WebSiteConfiguration Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IWebServerConfiguration_
@@ -72,5 +77,6 @@ End Type
 #define IWebServerConfiguration_GetWorkerThreadsCount(this, pWorkerThreadsCount) (this)->lpVtbl->GetWorkerThreadsCount(this, pWorkerThreadsCount)
 #define IWebServerConfiguration_GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext) (this)->lpVtbl->GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext)
 #define IWebServerConfiguration_GetWebSites(this, pCount, pWebSites) (this)->lpVtbl->GetWebSites(this, pCount, pWebSites)
+#define IWebServerConfiguration_GetDefaultWebSite(this, pWebSite) (this)->lpVtbl->GetDefaultWebSite(this, pWebSite)
 
 #endif

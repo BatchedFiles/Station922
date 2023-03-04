@@ -51,4 +51,9 @@ Declare Function WebServerIniConfigurationGetWebSites( _
 	ByVal pWebSites As WebSiteConfiguration Ptr _
 )As HRESULT
 
+Declare Function WebServerIniConfigurationGetDefaultWebSite( _
+	ByVal this As WebServerIniConfiguration Ptr, _
+	ByVal pWebSite As WebSiteConfiguration Ptr _
+)As HRESULT
+
 #endif
