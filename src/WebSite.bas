@@ -28,7 +28,7 @@ Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 
 ' Размер буфера в символах для записи в него кода html страницы с ошибкой
-Const MaxHttpErrorBuffer As Integer = 16 * 1024 - 1
+Const MaxHttpErrorBuffer As Integer = 1024 - 1
 
 Const DefaultContentLanguage = WStr("en")
 Const DefaultCacheControlNoCache = WStr("no-cache")
@@ -178,7 +178,7 @@ Function WebSiteHttpAuthUtil( _
 	Dim pBase64 As WString Ptr = @pHeaderAuthorization[1]
 	Dim Base64Length As Integer = HeaderLength - Len(BasicAuthorizationWithSpace)
 	
-	Const UserNamePasswordCapacity As Integer = 2048 - 1
+	Const UserNamePasswordCapacity As Integer = 1000 - 1
 	Dim UsernamePasswordUtf8 As ZString * (UserNamePasswordCapacity + 1) = Any
 	Dim dwUsernamePasswordUtf8Length As DWORD = Cast(DWORD, UserNamePasswordCapacity)
 	

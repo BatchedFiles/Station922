@@ -1,6 +1,5 @@
 #include once "ClientUri.bi"
 #include once "win\shlwapi.bi"
-#include once "win\wininet.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
@@ -9,6 +8,7 @@
 Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
 
 Const CompareResultEqual As Long = 0
+Const MAX_URL_LENGTH As Integer = 1500
 
 Type _ClientUri
 	#if __FB_DEBUG__
@@ -35,11 +35,11 @@ Function DecodeUri( _
 		ByVal UriLength As Integer _
 	)As Integer
 	
-	' TODO Èñïðàâèòü ðàñêîäèðîâàíèå íåïðàâèëüíîãî çàïðîñà
+	' TODO Ð˜ÑÐ¿Ñ€Ð°Ð²Ð¸Ñ‚ÑŒ Ñ€Ð°ÑÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ Ð½ÐµÐ¿Ñ€Ð°Ð²Ð¸Ð»ÑŒÐ½Ð¾Ð³Ð¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ°
 	
 	Dim DecodedBytesUtf8Length As Integer = 0
 	
-	Dim DecodedBytesUtf8 As ZString * (INTERNET_MAX_URL_LENGTH + 1) = Any
+	Dim DecodedBytesUtf8 As ZString * (MAX_URL_LENGTH + 1) = Any
 	
 	Dim iAcc As UInteger = 0
 	Dim iHex As UInteger = 0
@@ -65,7 +65,7 @@ Function DecodeUri( _
 			' E = 45 = 69 = 14
 			' F = 46 = 70 = 15
 			
-			' ðàñêîäèðîâàòü
+			' Ñ€Ð°ÑÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
 			iHex += 1
 			iAcc *= 16
 			
@@ -75,11 +75,11 @@ Function DecodeUri( _
 					iAcc += c - Characters.DigitZero
 					
 				Case &h41, &h42, &h43, &h44, &h45, &h46
-					' Êîäû ABCDEF
+					' ÐšÐ¾Ð´Ñ‹ ABCDEF
 					iAcc += c - &h37 ' 55
 					
 				Case &h61, &h62, &h63, &h64, &h65, &h66
-					' Êîäû abcdef
+					' ÐšÐ¾Ð´Ñ‹ abcdef
 					iAcc += c - &h57 ' 87
 					
 			End Select
@@ -145,28 +145,28 @@ Function ContainsBadCharSequence( _
 				Return E_FAIL
 				
 			Case Characters.QuotationMark
-				' Êàâû÷êè íåëüçÿ
+				' ÐšÐ°Ð²Ñ‹Ñ‡ÐºÐ¸ Ð½ÐµÐ»ÑŒÐ·Ñ
 				Return E_FAIL
 				
 			'Case Characters.DollarSign
-				' Íåëüçÿ äîëëàð, ïîòîìó ÷òî ìîãóò îòêðûòü $MFT
+				' ÐÐµÐ»ÑŒÐ·Ñ Ð´Ð¾Ð»Ð»Ð°Ñ€, Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ Ð¼Ð¾Ð³ÑƒÑ‚ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ÑŒ $MFT
 				'Return E_FAIL
 				
 			'Case Characters.PercentSign
-				' TODO Óòî÷íèòü, ïî÷åìó íåëüçÿ èñïîëüçîâàòü çíàê ïðîöåíòà
+				' TODO Ð£Ñ‚Ð¾Ñ‡Ð½Ð¸Ñ‚ÑŒ, Ð¿Ð¾Ñ‡ÐµÐ¼Ñƒ Ð½ÐµÐ»ÑŒÐ·Ñ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ Ð·Ð½Ð°Ðº Ð¿Ñ€Ð¾Ñ†ÐµÐ½Ñ‚Ð°
 				'Return E_FAIL
 				
 			'Case Characters.Ampersand
-				' Îáúåäèíåíèå êîìàíä â îäíó
+				' ÐžÐ±ÑŠÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð¼Ð°Ð½Ð´ Ð² Ð¾Ð´Ð½Ñƒ
 				'Return E_FAIL
 				
 			' Case Characters.Asterisk
-				' Íåëüçÿ çâ¸çäî÷êó
+				' ÐÐµÐ»ÑŒÐ·Ñ Ð·Ð²Ñ‘Ð·Ð´Ð¾Ñ‡ÐºÑƒ
 				' Return E_FAIL
 				
 			Case Characters.FullStop
-				' Ðàçðåøåíû .. ïîòîìó ÷òî ìîãóò âñòðåòèòüñÿ â èìåíè ôàéëà
-				' Çàïðåùåíû /.. ïîòîìó ÷òî ìîãóò ïðèâåñòè ê ñìåíå êàòàëîãà
+				' Ð Ð°Ð·Ñ€ÐµÑˆÐµÐ½Ñ‹ .. Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ Ð¼Ð¾Ð³ÑƒÑ‚ Ð²ÑÑ‚Ñ€ÐµÑ‚Ð¸Ñ‚ÑŒÑÑ Ð² Ð¸Ð¼ÐµÐ½Ð¸ Ñ„Ð°Ð¹Ð»Ð°
+				' Ð—Ð°Ð¿Ñ€ÐµÑ‰ÐµÐ½Ñ‹ /.. Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ Ð¼Ð¾Ð³ÑƒÑ‚ Ð¿Ñ€Ð¸Ð²ÐµÑÑ‚Ð¸ Ðº ÑÐ¼ÐµÐ½Ðµ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð°
 				Dim NextChar As wchar_t = Buffer[i + 1]
 				
 				If NextChar = Characters.FullStop Then
@@ -183,19 +183,19 @@ Function ContainsBadCharSequence( _
 				End If
 				
 			'Case Characters.Semicolon
-				' Ðàçäåëèòåëü ïóòåé
+				' Ð Ð°Ð·Ð´ÐµÐ»Ð¸Ñ‚ÐµÐ»ÑŒ Ð¿ÑƒÑ‚ÐµÐ¹
 				'Return E_FAIL
 				
 			Case Characters.LessThanSign, Characters.GreaterThanSign
-				' Çàùèòà îò ïåðåíàïðàâëåíèé ââîäà-âûâîäà
+				' Ð—Ð°Ñ‰Ð¸Ñ‚Ð° Ð¾Ñ‚ Ð¿ÐµÑ€ÐµÐ½Ð°Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ð¹ Ð²Ð²Ð¾Ð´Ð°-Ð²Ñ‹Ð²Ð¾Ð´Ð°
 				Return E_FAIL
 				
 			Case Characters.QuestionMark
-				' Ïîäñòàíîâî÷íûé çíàê
+				' ÐŸÐ¾Ð´ÑÑ‚Ð°Ð½Ð¾Ð²Ð¾Ñ‡Ð½Ñ‹Ð¹ Ð·Ð½Ð°Ðº
 				Return E_FAIL
 				
 			Case Characters.VerticalLine
-				' Ñèìâîë êîíâåéåðà
+				' Ð¡Ð¸Ð¼Ð²Ð¾Ð» ÐºÐ¾Ð½Ð²ÐµÐ¹ÐµÑ€Ð°
 				Return E_FAIL
 				
 		End Select
@@ -366,14 +366,14 @@ Function ClientUriUriFromString( _
 	
 	Dim UriLength As Integer = SysStringLen(bstrUri)
 	
-	If UriLength > INTERNET_MAX_URL_LENGTH Then
+	If UriLength > MAX_URL_LENGTH Then
 		Return CLIENTURI_E_URITOOLARGE
 	End If
 	
-	Dim wszDecodedUri As WString * (INTERNET_MAX_URL_LENGTH + 1) = Any
+	Dim wszDecodedUri As WString * (MAX_URL_LENGTH + 1) = Any
 	Dim DecodedUriLength As Integer = DecodeUri( _
 		@wszDecodedUri, _
-		INTERNET_MAX_URL_LENGTH, _
+		MAX_URL_LENGTH, _
 		bstrUri, _
 		UriLength _
 	)

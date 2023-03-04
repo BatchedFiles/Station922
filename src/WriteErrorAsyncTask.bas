@@ -1,5 +1,4 @@
 #include once "WriteErrorAsyncTask.bi"
-#include once "win\wininet.bi"
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
 #include once "ContainerOf.bi"
@@ -61,7 +60,7 @@ Function WriteErrorAsyncTaskGetStatusCode( _
 				Dim Path As HeapBSTR = Any
 				IClientUri_GetPath(ClientURI, @Path)
 				
-				Dim buf As WString * (INTERNET_MAX_URL_LENGTH * 2 + 1) = Any
+				Dim buf As WString * (1500 + 1) = Any
 				lstrcpyW(@buf, MovedUrl)
 				lstrcatW(@buf, Path)
 				

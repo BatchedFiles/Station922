@@ -6,11 +6,6 @@ Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
 Const ReservedCharactersLength As Integer = 16
 
-Declare Function __builtin_alloca cdecl Alias "__builtin_alloca"(ByVal size As UInteger)As Any Ptr
-Declare Function __builtin_alloca_with_align cdecl Alias "__builtin_alloca_with_align"(ByVal size As UInteger, ByVal alignment As UInteger)As Any Ptr
-
-#define alloca(size) __builtin_alloca (size)
-
 Type _InternalHeapBSTR
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -82,41 +77,43 @@ Function FindStringIW( _
 		ByVal SubstringLength As Integer _
 	)As WString Ptr
 	
-	Const MemoryPageSize As Integer = 4096
+	Const BufferCapacity As Integer = 400
 	
-	Dim cbSourceLength As Integer = (SourceLength + 1) * SizeOf(WString)
-	If cbSourceLength >= MemoryPageSize Then
+	If SourceLength >= BufferCapacity Then
 		Return NULL
 	End If
 	
-	Dim cbSubstringLength As Integer = (SubstringLength + 1) * SizeOf(WString)
-	If cbSubstringLength >= MemoryPageSize Then
+	If SubstringLength >= BufferCapacity Then
 		Return NULL
 	End If
 	
-	Dim pSourceUpper As WString Ptr = alloca(cbSourceLength)
-	Dim pSubstringUpper As WString Ptr = alloca(cbSubstringLength)
-	
+	Dim SourceUpper As WString * ((BufferCapacity + 1) * SizeOf(WString)) = Any
 	StringToUpper( _
-		pSourceUpper, _
+		@SourceUpper, _
 		pSource, _
 		SourceLength _
 	)
-	StringToUpper( _
-		pSubstringUpper, _
-		pSubstring, _
-		SubstringLength _
-	)
 	
-	Dim pFindUpper As WString Ptr = FindStringW( _
-		pSourceUpper, _
-		SourceLength, _
-		pSubstringUpper, _
-		SubstringLength _
-	)
+	Dim pFindUpper As WString Ptr = Any
+	
+	Scope
+		Dim SubstringUpper As WString * ((BufferCapacity + 1) * SizeOf(WString)) = Any
+		StringToUpper( _
+			@SubstringUpper, _
+			pSubstring, _
+			SubstringLength _
+		)
+		
+		pFindUpper = FindStringW( _
+			@SourceUpper, _
+			SourceLength, _
+			@SubstringUpper, _
+			SubstringLength _
+		)
+	End Scope
 	
 	If pFindUpper Then
-		Dim Index As Integer = pFindUpper - pSourceUpper
+		Dim Index As Integer = pFindUpper - @SourceUpper
 		Dim pFind As WString Ptr = @pSource[Index]
 		Return pFind
 	End If

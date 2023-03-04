@@ -579,14 +579,22 @@ Function ServerResponseAllHeadersToZString( _
 		)
 	End Scope
 	
-	Dim HeadersBuffer As WString * (MaxResponseBufferLength + 1) = Any
+	Dim pHeadersBuffer As WString Ptr = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		SizeOf(WString) * (MaxResponseBufferLength + 1) _
+	)
+	If pHeadersBuffer = NULL Then
+		*ppHeaders = NULL
+		*pHeadersLength = 0
+		Return E_OUTOFMEMORY
+	End If
 	
 	Scope
 		Dim Writer As ArrayStringWriter = Any
 		InitializeArrayStringWriter(@Writer)
 		
 		Writer.SetBuffer( _
-			@HeadersBuffer, _
+			pHeadersBuffer, _
 			MaxResponseBufferLength _
 		)
 		
@@ -659,6 +667,7 @@ Function ServerResponseAllHeadersToZString( _
 		this->ResponseHeaderLineLength _
 	)
 	If this->ResponseHeaderLine = NULL Then
+		IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
 		*ppHeaders = NULL
 		*pHeadersLength = 0
 		Return E_OUTOFMEMORY
@@ -667,7 +676,7 @@ Function ServerResponseAllHeadersToZString( _
 	WideCharToMultiByte( _
 		CP_ACP, _
 		0, _
-		@HeadersBuffer, _
+		pHeadersBuffer, _
 		this->ResponseHeaderLineLength, _
 		this->ResponseHeaderLine, _
 		this->ResponseHeaderLineLength, _
@@ -679,6 +688,8 @@ Function ServerResponseAllHeadersToZString( _
 	
 	*ppHeaders = this->ResponseHeaderLine
 	*pHeadersLength = this->ResponseHeaderLineLength
+	
+	IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
 	
 	Return S_OK
 	
