@@ -35,7 +35,7 @@ Function DecodeUri( _
 		ByVal UriLength As Integer _
 	)As Integer
 	
-	' TODO РСЃРїСЂР°РІРёС‚СЊ СЂР°СЃРєРѕРґРёСЂРѕРІР°РЅРёРµ РЅРµРїСЂР°РІРёР»СЊРЅРѕРіРѕ Р·Р°РїСЂРѕСЃР°
+	' TODO Исправить раскодирование неправильного запроса
 	
 	Dim DecodedBytesUtf8Length As Integer = 0
 	
@@ -65,7 +65,7 @@ Function DecodeUri( _
 			' E = 45 = 69 = 14
 			' F = 46 = 70 = 15
 			
-			' СЂР°СЃРєРѕРґРёСЂРѕРІР°С‚СЊ
+			' раскодировать
 			iHex += 1
 			iAcc *= 16
 			
@@ -75,11 +75,11 @@ Function DecodeUri( _
 					iAcc += c - Characters.DigitZero
 					
 				Case &h41, &h42, &h43, &h44, &h45, &h46
-					' РљРѕРґС‹ ABCDEF
+					' Коды ABCDEF
 					iAcc += c - &h37 ' 55
 					
 				Case &h61, &h62, &h63, &h64, &h65, &h66
-					' РљРѕРґС‹ abcdef
+					' Коды abcdef
 					iAcc += c - &h57 ' 87
 					
 			End Select
@@ -145,28 +145,28 @@ Function ContainsBadCharSequence( _
 				Return E_FAIL
 				
 			Case Characters.QuotationMark
-				' РљР°РІС‹С‡РєРё РЅРµР»СЊР·СЏ
+				' Кавычки нельзя
 				Return E_FAIL
 				
 			'Case Characters.DollarSign
-				' РќРµР»СЊР·СЏ РґРѕР»Р»Р°СЂ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РјРѕРіСѓС‚ РѕС‚РєСЂС‹С‚СЊ $MFT
+				' Нельзя доллар, потому что могут открыть $MFT
 				'Return E_FAIL
 				
 			'Case Characters.PercentSign
-				' TODO РЈС‚РѕС‡РЅРёС‚СЊ, РїРѕС‡РµРјСѓ РЅРµР»СЊР·СЏ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р·РЅР°Рє РїСЂРѕС†РµРЅС‚Р°
+				' TODO Уточнить, почему нельзя использовать знак процента
 				'Return E_FAIL
 				
 			'Case Characters.Ampersand
-				' РћР±СЉРµРґРёРЅРµРЅРёРµ РєРѕРјР°РЅРґ РІ РѕРґРЅСѓ
+				' Объединение команд в одну
 				'Return E_FAIL
 				
 			' Case Characters.Asterisk
-				' РќРµР»СЊР·СЏ Р·РІС‘Р·РґРѕС‡РєСѓ
+				' Нельзя звёздочку
 				' Return E_FAIL
 				
 			Case Characters.FullStop
-				' Р Р°Р·СЂРµС€РµРЅС‹ .. РїРѕС‚РѕРјСѓ С‡С‚Рѕ РјРѕРіСѓС‚ РІСЃС‚СЂРµС‚РёС‚СЊСЃСЏ РІ РёРјРµРЅРё С„Р°Р№Р»Р°
-				' Р—Р°РїСЂРµС‰РµРЅС‹ /.. РїРѕС‚РѕРјСѓ С‡С‚Рѕ РјРѕРіСѓС‚ РїСЂРёРІРµСЃС‚Рё Рє СЃРјРµРЅРµ РєР°С‚Р°Р»РѕРіР°
+				' Разрешены .. потому что могут встретиться в имени файла
+				' Запрещены /.. потому что могут привести к смене каталога
 				Dim NextChar As wchar_t = Buffer[i + 1]
 				
 				If NextChar = Characters.FullStop Then
@@ -183,19 +183,19 @@ Function ContainsBadCharSequence( _
 				End If
 				
 			'Case Characters.Semicolon
-				' Р Р°Р·РґРµР»РёС‚РµР»СЊ РїСѓС‚РµР№
+				' Разделитель путей
 				'Return E_FAIL
 				
 			Case Characters.LessThanSign, Characters.GreaterThanSign
-				' Р—Р°С‰РёС‚Р° РѕС‚ РїРµСЂРµРЅР°РїСЂР°РІР»РµРЅРёР№ РІРІРѕРґР°-РІС‹РІРѕРґР°
+				' Защита от перенаправлений ввода-вывода
 				Return E_FAIL
 				
 			Case Characters.QuestionMark
-				' РџРѕРґСЃС‚Р°РЅРѕРІРѕС‡РЅС‹Р№ Р·РЅР°Рє
+				' Подстановочный знак
 				Return E_FAIL
 				
 			Case Characters.VerticalLine
-				' РЎРёРјРІРѕР» РєРѕРЅРІРµР№РµСЂР°
+				' Символ конвейера
 				Return E_FAIL
 				
 		End Select
