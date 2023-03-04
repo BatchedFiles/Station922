@@ -282,15 +282,15 @@ Vary
 
 ### Компиляция «одной строкой»
 
+Заходим в каталог `src` и создаём пакетный файл следующего содержания:
+
 ```
 set OPTIMIZATIONS=-O 3 -gen gcc -Wc -ffunction-sections,-fdata-sections -Wl --gc-sections
-
-fbc64.exe -m Station922 -x Station922_64.exe %OPTIMIZATIONS% *.bas *.rc
-fbc32.exe -m Station922 -x Station922_86.exe %OPTIMIZATIONS% *.bas *.rc
+fbc64.exe -m Station922 -l crypt32 -x Station922_64.exe %OPTIMIZATIONS% *.bas *.RC
+fbc32.exe -m Station922 -l crypt32 -x Station922_86.exe %OPTIMIZATIONS% *.bas *.RC
 ```
 
-### Компиляция утилитой make
-
+Выполняем.
 
 ### Установка службы
 
