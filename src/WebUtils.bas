@@ -16,9 +16,7 @@
 #include once "HttpOptionsProcessor.bi"
 #include once "HttpPutProcessor.bi"
 #include once "HttpTraceProcessor.bi"
-#include once "HttpProcessorCollection.bi"
 #include once "WebSiteCollection.bi"
-#include once "HttpProcessorCollection.bi"
 
 ' Declare Function GetBase64Sha1( _
 ' 	ByVal pDestination As WString Ptr, _
