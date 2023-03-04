@@ -7,7 +7,7 @@ Const RTTI_ID_HTTPPROCESSORCOLLECTION = !"\001Coll_Processor\001"
 
 Extern CLSID_HTTPPROCESSORCOLLECTION Alias "CLSID_HTTPPROCESSORCOLLECTION" As Const CLSID
 
-Extern pIProcessorsWeakPtr As IHttpProcessorCollection Ptr
+Extern pIProcessorsWeakPtr Alias "pIProcessorsWeakPtr" As IHttpProcessorCollection Ptr
 
 Type HttpProcessorCollection As _HttpProcessorCollection
 
