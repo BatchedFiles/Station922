@@ -201,7 +201,7 @@ End Type
 #define IWebSite_SetUseSsl(this, UseSsl) (this)->lpVtbl->SetUseSsl(this, UseSsl)
 #define IWebSite_SetDefaultFileName(this, DefaultFileName) (this)->lpVtbl->SetDefaultFileName(this, DefaultFileName)
 #define IWebSite_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
-#define IWebSite_AddHttpProcessor(this, Key, Value) (this, Key, Value) (this)->lpVtbl->AddHttpProcessor(this, Key, Value)
+#define IWebSite_AddHttpProcessor(this, Key, Value) (this)->lpVtbl->AddHttpProcessor(this, Key, Value)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 
 #endif
