@@ -312,16 +312,40 @@ Function IpEndPointExists( _
 	
 End Function
 
+Function IpEndPointCompare( _
+		ByVal pWebSiteConfig As WebSiteConfiguration Ptr, _
+		ByVal ListenAddress As HeapBSTR, _
+		ByVal ListenPort As HeapBSTR _
+	)As Boolean
+	
+	Dim resCompareAddress As Long = lstrcmpW( _
+		pWebSiteConfig->ListenAddress, _
+		ListenAddress _
+	)
+	If resCompareAddress = CompareResultEqual Then
+		Dim resComparePort As Long = lstrcmpW( _
+			pWebSiteConfig->ListenPort, _
+			ListenPort _
+		)
+		If resComparePort = CompareResultEqual Then
+			Return True
+		End If
+	End If
+	
+	Return False
+	
+End Function
+
 Function Station922Initialize()As HRESULT
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim WorkerThreads As Integer = Any
 	Dim MemoryPoolCapacity As UInteger = Any
+	Dim WebSites As WebSiteVector = Any
 	Dim WebSitesLength As Integer = Any
 	Dim pWebSiteConfig As WebSiteConfiguration Ptr = Any
 	Dim DefaultWebSiteConfig As WebSiteConfiguration = Any
 	Dim HttpProcessors As HttpProcessorVector = Any
-	Dim WebSites As WebSiteVector = Any
 	Dim pIDefaultWebSite As IWebSite Ptr = Any
 	Dim IpEndPoints As IpEndPointVector = Any
 	Dim IpEndPointsLength As Integer = 0
@@ -579,6 +603,38 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
+		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+			pIMemoryAllocator, _
+			@IID_IWebSite, _
+			@pIDefaultWebSite _
+		)
+		If FAILED(hrCreateWebSite) Then
+			Return hrCreateWebSite
+		End If
+		
+		IWebSite_SetHostName(pIDefaultWebSite, DefaultWebSiteConfig.HostName)
+		IWebSite_SetVirtualPath(pIDefaultWebSite, DefaultWebSiteConfig.VirtualPath)
+		IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, DefaultWebSiteConfig.PhysicalDirectory)
+		IWebSite_SetMovedUrl(pIDefaultWebSite, DefaultWebSiteConfig.CanonicalUrl)
+		IWebSite_SetListenAddress(pIDefaultWebSite, DefaultWebSiteConfig.ListenAddress)
+		IWebSite_SetListenPort(pIDefaultWebSite, DefaultWebSiteConfig.ListenPort)
+		IWebSite_SetConnectBindAddress(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindAddress)
+		IWebSite_SetConnectBindPort(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindPort)
+		IWebSite_SetTextFileEncoding(pIDefaultWebSite, DefaultWebSiteConfig.CodePage)
+		IWebSite_SetSupportedMethods(pIDefaultWebSite, DefaultWebSiteConfig.Methods)
+		IWebSite_SetDefaultFileName(pIDefaultWebSite, DefaultWebSiteConfig.DefaultFileName)
+		IWebSite_SetUtfBomFileOffset(pIDefaultWebSite, DefaultWebSiteConfig.UtfBomFileOffset)
+		IWebSite_SetReservedFileBytes(pIDefaultWebSite, DefaultWebSiteConfig.ReservedFileBytes)
+		IWebSite_SetIsMoved(pIDefaultWebSite, DefaultWebSiteConfig.IsMoved)
+		IWebSite_SetUseSsl(pIDefaultWebSite, DefaultWebSiteConfig.UseSsl)
+		
+		
+		' IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
+		' IWebSite_Release(pIDefaultWebSite)
+		
+	End Scope
+	
+	Scope
 		For j As Integer = 0 To WebSitesLength - 1
 			Dim MethodsLength As Integer = SysStringLen(pWebSiteConfig[j].Methods)
 			
@@ -635,41 +691,44 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' ƒобавить каждому серверу свой сайт
-	End Scope
-	
-	Scope
-		' ƒобавить каждому серверу сайт по умолчанию
-		
-		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
-			pIMemoryAllocator, _
-			@IID_IWebSite, _
-			@pIDefaultWebSite _
-		)
-		If FAILED(hrCreateWebSite) Then
-			Return hrCreateWebSite
-		End If
-		
-		IWebSite_SetHostName(pIDefaultWebSite, DefaultWebSiteConfig.HostName)
-		IWebSite_SetVirtualPath(pIDefaultWebSite, DefaultWebSiteConfig.VirtualPath)
-		IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, DefaultWebSiteConfig.PhysicalDirectory)
-		IWebSite_SetMovedUrl(pIDefaultWebSite, DefaultWebSiteConfig.CanonicalUrl)
-		IWebSite_SetListenAddress(pIDefaultWebSite, DefaultWebSiteConfig.ListenAddress)
-		IWebSite_SetListenPort(pIDefaultWebSite, DefaultWebSiteConfig.ListenPort)
-		IWebSite_SetConnectBindAddress(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindAddress)
-		IWebSite_SetConnectBindPort(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindPort)
-		IWebSite_SetTextFileEncoding(pIDefaultWebSite, DefaultWebSiteConfig.CodePage)
-		IWebSite_SetSupportedMethods(pIDefaultWebSite, DefaultWebSiteConfig.Methods)
-		IWebSite_SetDefaultFileName(pIDefaultWebSite, DefaultWebSiteConfig.DefaultFileName)
-		IWebSite_SetUtfBomFileOffset(pIDefaultWebSite, DefaultWebSiteConfig.UtfBomFileOffset)
-		IWebSite_SetReservedFileBytes(pIDefaultWebSite, DefaultWebSiteConfig.ReservedFileBytes)
-		IWebSite_SetIsMoved(pIDefaultWebSite, DefaultWebSiteConfig.IsMoved)
-		IWebSite_SetUseSsl(pIDefaultWebSite, DefaultWebSiteConfig.UseSsl)
-		
-		
-		' IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
-		' IWebSite_Release(pIDefaultWebSite)
-		
+		For j As Integer = 0 To IpEndPointsLength - 1
+			
+			For i As Integer = 0 To WebSitesLength - 1
+				Dim resCompare As Boolean = IpEndPointCompare( _
+					@pWebSiteConfig[i], _
+					IpEndPoints.Vector(j).ListenAddress, _
+					IpEndPoints.Vector(j).ListenPort _
+				)
+				
+				If resCompare Then
+					Dim hrAddWebSite As HRESULT = IWebServer_AddWebSite( _
+						WebServers.Vector(j), _
+						pWebSiteConfig[i].HostName, _
+						WebSites.Vector(i) _
+					)
+					If FAILED(hrAddWebSite) Then
+						Return hrAddWebSite
+					End If
+				End If
+				
+			Next
+			Dim hrAddDefaultWebSite As HRESULT = IWebServer_AddDefaultWebSite( _
+				WebServers.Vector(j), _
+				pIDefaultWebSite _
+			)
+			If FAILED(hrAddDefaultWebSite) Then
+				Return hrAddDefaultWebSite
+			End If
+			
+			Dim hrSetEndPoint As HRESULT = IWebServer_SetEndPoint( _
+				WebServers.Vector(j), _
+				IpEndPoints.Vector(j).ListenAddress, _
+				IpEndPoints.Vector(j).ListenPort _
+			)
+			If FAILED(hrSetEndPoint) Then
+				Return hrSetEndPoint
+			End If
+		Next
 	End Scope
 	
 	Scope

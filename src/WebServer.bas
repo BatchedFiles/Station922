@@ -224,6 +224,35 @@ Function WebServerRelease( _
 	
 End Function
 
+Function WebServerAddWebSite( _
+		ByVal this As WebServer Ptr, _
+		ByVal pKey As HeapBSTR, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
+
+Function WebServerAddDefaultWebSite( _
+		ByVal this As WebServer Ptr, _
+		ByVal pIDefaultWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
+
+Function WebServerSetEndPoint( _
+		ByVal this As WebServer Ptr, _
+		ByVal ListenAddress As HeapBSTR, _
+		ByVal ListenPort As HeapBSTR _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
+
 Function WebServerRun( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
@@ -294,6 +323,29 @@ Function IWebServerRelease( _
 	Return WebServerRelease(ContainerOf(this, WebServer, lpVtbl))
 End Function
 
+Function IWebServerAddWebSite( _
+		ByVal this As IWebServer Ptr, _
+		ByVal pKey As HeapBSTR, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	Return WebServerAddWebSite(ContainerOf(this, WebServer, lpVtbl), pKey, pIWebSite)
+End Function
+
+Function IWebServerAddDefaultWebSite( _
+		ByVal this As IWebServer Ptr, _
+		ByVal pIDefaultWebSite As IWebSite Ptr _
+	)As HRESULT
+	Return WebServerAddDefaultWebSite(ContainerOf(this, WebServer, lpVtbl), pIDefaultWebSite)
+End Function
+
+Function IWebServerSetEndPoint( _
+		ByVal this As IWebServer Ptr, _
+		ByVal ListenAddress As HeapBSTR, _
+		ByVal ListenPort As HeapBSTR _
+	)As HRESULT
+	Return WebServerSetEndPoint(ContainerOf(this, WebServer, lpVtbl), ListenAddress, ListenPort)
+End Function
+
 Function IWebServerRun( _
 		ByVal this As IWebServer Ptr _
 	)As HRESULT
@@ -310,6 +362,9 @@ Dim GlobalWebServerVirtualTable As Const IWebServerVirtualTable = Type( _
 	@IWebServerQueryInterface, _
 	@IWebServerAddRef, _
 	@IWebServerRelease, _
+	@IWebServerAddWebSite, _
+	@IWebServerAddDefaultWebSite, _
+	@IWebServerSetEndPoint, _
 	@IWebServerRun, _
 	@IWebServerStop _
 )
