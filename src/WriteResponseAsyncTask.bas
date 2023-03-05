@@ -318,6 +318,7 @@ Function WriteResponseAsyncTaskEndExecute( _
 			
 			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
 			
 			' Сейчас мы не уменьшаем счётчик ссылок на задачу
 			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
