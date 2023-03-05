@@ -163,7 +163,6 @@ GORCFLAGS_DEBUG=/d DEBUG
 
 LD ?= ld.exe
 LDFLAGS+=--major-image-version 1 --minor-image-version 0
-LDFLAGS+=--disable-reloc-section
 LDFLAGS+=-subsystem console
 # LDFLAGS+=--stack 1048576,73728
 LDFLAGS+=--no-seh --nxcompat
