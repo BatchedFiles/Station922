@@ -274,12 +274,13 @@ Function GetWebSiteHost( _
 	)As HRESULT
 	
 	Const HostKeyString = WStr("Host")
+	Const LocalHostString = WStr("localhost")
 	
 	Dim WebSiteName As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@HostKeyString, _
-		NULL, _
+		@LocalHostString, _
 		@WebSiteName, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
@@ -356,11 +357,22 @@ Function GetWebSitePhisycalDir( _
 	
 	Const PhisycalDirKeyString = WStr("PhisycalDir")
 	
+	Dim DefaultDir As WString * (MAX_PATH + 1) = Any
+	Dim resGetDir As DWORD = GetCurrentDirectoryW( _
+		MAX_PATH, _
+		@DefaultDir _
+	)
+	If resGetDir = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		*pbstrPhisycalDir = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
 	Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@PhisycalDirKeyString, _
-		NULL, _
+		@DefaultDir, _
 		@PhisycalDir, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
@@ -395,12 +407,13 @@ Function GetWebSiteCanonicalUrl( _
 	)As HRESULT
 	
 	Const CanonicalUrlKeyString = WStr("CanonicalUrl")
+	Const DefaultCanonicalUrl = WStr("http://localhost")
 	
 	Dim CanonicalUrl As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@CanonicalUrlKeyString, _
-		NULL, _
+		@DefaultCanonicalUrl, _
 		@CanonicalUrl, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
@@ -442,16 +455,11 @@ Function GetWebSiteTextFileCharset( _
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@TextFileCharsetKeyString, _
-		@EmptyString, _
+		NULL, _
 		@TextFileCharset, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
 	)
-	' If ValueLength = 0 Then
-	' 	Dim dwError As DWORD = GetLastError()
-	' 	*pbstrTextFileCharset = NULL
-	' 	Return HRESULT_FROM_WIN32(dwError)
-	' End If
 	
 	If ValueLength = 0 Then
 		TextFileCharset[0] = Characters.NullChar
@@ -646,7 +654,7 @@ Function GetWebSiteMethods( _
 	)As HRESULT
 	
 	Const MethodsKeyString = WStr("Methods")
-	Const DefaultMethods = WStr("GET,HEAD")
+	Const DefaultMethods = WStr("GET, HEAD, OPTIONS")
 	
 	Dim Methods As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
@@ -693,15 +701,14 @@ Function GetWebSiteDefaultFileName( _
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@DefaultFileNameKeyString, _
-		@DefaultFileName, _
+		NULL, _
 		@FileName, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
 	)
+	
 	If ValueLength = 0 Then
-		Dim dwError As DWORD = GetLastError()
-		*pbstrDefaultFileName = NULL
-		Return HRESULT_FROM_WIN32(dwError)
+		FileName[0] = Characters.NullChar
 	End If
 	
 	Dim bstrFileName As HeapBSTR = CreatePermanentHeapStringLen( _
@@ -804,7 +811,6 @@ Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
-		ByVal HostLength As Integer, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
 	
@@ -1053,7 +1059,6 @@ Function WebServerIniConfigurationGetWebSites( _
 			this->pIMemoryAllocator, _
 			this->pWebSitesIniFileName, _
 			lpwszHost, _
-			HostLength, _
 			@pWebSites[WebSiteCount] _
 		)
 		If FAILED(hrGetWebSite) Then
@@ -1089,7 +1094,6 @@ Function WebServerIniConfigurationGetDefaultWebSite( _
 		this->pIMemoryAllocator, _
 		this->pWebServerIniFileName, _
 		@DefaultWebSiteKeyString, _
-		Len(DefaultWebSiteKeyString), _
 		pWebSite _
 	)
 	If FAILED(hrGetWebSite) Then
