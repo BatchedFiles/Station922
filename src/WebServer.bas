@@ -22,7 +22,7 @@ Type _WebServer
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
 	SocketListLength As Integer
 	ListenAddress As HeapBSTR
-	ListenPort As UINT
+	ListenPort As HeapBSTR
 End Type
 
 Function CreateAcceptConnectionTask( _
@@ -63,12 +63,9 @@ Function CreateServerSocketSink( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
-	Dim wszListenPort As WString * (255 + 1) = Any
-	_itow(this->ListenPort, @wszListenPort, 10)
-	
 	Dim hrCreateSocket As HRESULT = CreateSocketAndListenW( _
 		this->ListenAddress, _
-		wszListenPort, _
+		this->ListenPort, _
 		@this->SocketList(0), _
 		SocketListCapacity, _
 		@this->SocketListLength _
@@ -76,6 +73,9 @@ Function CreateServerSocketSink( _
 	
 	HeapSysFreeString(this->ListenAddress)
 	this->ListenAddress = NULL
+	
+	HeapSysFreeString(this->ListenPort)
+	this->ListenPort = NULL
 	
 	If FAILED(hrCreateSocket) Then
 		Return hrCreateSocket
@@ -102,6 +102,7 @@ Sub InitializeWebServer( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->ListenAddress = NULL
+	this->ListenPort = NULL
 	
 End Sub
 
@@ -109,9 +110,8 @@ Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
-	If this->ListenAddress Then
-		HeapSysFreeString(this->ListenAddress)
-	End If
+	HeapSysFreeString(this->ListenAddress)
+	HeapSysFreeString(this->ListenPort)
 	
 End Sub
 
@@ -248,6 +248,9 @@ Function WebServerSetEndPoint( _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ListenAddress, ListenAddress)
+	LET_HEAPSYSSTRING(this->ListenPort, ListenPort)
 	
 	Return S_OK
 	
