@@ -179,9 +179,7 @@ all: release debug
 include dependencies.mk
 
 release: CFLAGS+=$(CFLAGS_RELEASE)
-release: CFLAGS+=-fstrict-aliasing -frounding-math
 release: CFLAGS+=-fno-math-errno -fno-exceptions
-release: CFLAGS+=-mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fomit-frame-pointer
 release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
 release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
 release: ASFLAGS+=--strip-local-absolute
