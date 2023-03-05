@@ -1043,9 +1043,24 @@ Function WebServerIniConfigurationGetWebSites( _
 			this->pWebSitesIniFileName _
 		)
 		If SectionsLength = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			*pCount = 0
-			Return HRESULT_FROM_WIN32(dwError)
+			Const DefaultWebSiteKeyString = WStr("DefaultWebSite")
+			Dim hrGetWebSite As HRESULT = GetWebSite( _
+				this->pIMemoryAllocator, _
+				this->pWebServerIniFileName, _
+				@DefaultWebSiteKeyString, _
+				@pWebSites[0] _
+			)
+			If FAILED(hrGetWebSite) Then
+				Return hrGetWebSite
+			End If
+			
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				AllSections _
+			)
+			*pCount = 1
+			
+			Return S_OK
 		End If
 	End Scope
 	
