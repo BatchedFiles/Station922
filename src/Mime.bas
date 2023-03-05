@@ -522,7 +522,8 @@ Sub GetContentTypeOfMimeType( _
 			
 	End Select
 	
-	If mt->CharsetWeakPtr Then
+	Dim CharsetLength As Integer = SysStringLen(mt->CharsetWeakPtr)
+	If CharsetLength Then
 		lstrcatW(ContentType, @ParamSeparator)
 		lstrcatW(ContentType, mt->CharsetWeakPtr)
 	End If
