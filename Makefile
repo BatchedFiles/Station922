@@ -1,4 +1,4 @@
-.PHONY: all debug release clean
+.PHONY: all debug release clean createdirs
 
 all: release debug
 
@@ -20,6 +20,7 @@ PATH_SEP ?= /
 MOVE_PATH_SEP ?= \\
 MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
+MKDIR_COMMAND ?= cmd.exe /c mkdir
 SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
 
 # Object files
@@ -237,3 +238,9 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).obj: src$(PATH_SEP)%.RC
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).obj: src$(PATH_SEP)%.RC
 	$(GORC) $(GORCFLAGS) /fo $@ $<
+
+createdirs:
+	$(MKDIR_COMMAND) $(BIN_DEBUG_DIR_MOVE)
+	$(MKDIR_COMMAND) $(BIN_RELEASE_DIR_MOVE)
+	$(MKDIR_COMMAND) $(OBJ_DEBUG_DIR_MOVE)
+	$(MKDIR_COMMAND) $(OBJ_RELEASE_DIR_MOVE)
