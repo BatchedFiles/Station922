@@ -50,7 +50,7 @@ Sub InitializeMemoryStream( _
 	this->Language = NULL
 	this->ETag = NULL
 	this->ContentType.ContentType = ContentTypes.AnyAny
-	this->ContentType.Charset = DocumentCharsets.ASCII
+	this->ContentType.CharsetWeakPtr = NULL
 	this->ContentType.IsTextFormat = False
 	
 End Sub

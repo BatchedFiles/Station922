@@ -1,12 +1,12 @@
 #ifndef IHTTPPROCESSORCOLLECTION_BI
 #define IHTTPPROCESSORCOLLECTION_BI
 
+Type IHttpProcessorCollection As IHttpProcessorCollection_
+
 #include once "IEnumHttpProcessor.bi"
 #include once "IString.bi"
 
 Extern IID_IHttpProcessorCollection Alias "IID_IHttpProcessorCollection" As Const IID
-
-Type IHttpProcessorCollection As IHttpProcessorCollection_
 
 Type IHttpProcessorCollectionVirtualTable
 	

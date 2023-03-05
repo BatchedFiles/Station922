@@ -65,6 +65,11 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	SetWebSiteCollectionWeakPtr As Function( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
 	GetListenSocket As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
@@ -90,6 +95,7 @@ End Type
 #define IAcceptConnectionAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IAcceptConnectionAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IAcceptConnectionAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
+#define IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
 #define IAcceptConnectionAsyncIoTask_GetListenSocket(this, pListenSocket) (this)->lpVtbl->GetListenSocket(this, pListenSocket)
 #define IAcceptConnectionAsyncIoTask_SetListenSocket(this, ListenSocket) (this)->lpVtbl->SetListenSocket(this, ListenSocket)
 

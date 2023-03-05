@@ -37,6 +37,7 @@ Declare Function ProcessErrorRequestResponse( _
 	ByVal pIStream As IBaseStream Ptr, _
 	ByVal pIHttpReader As IHttpReader Ptr, _
 	ByVal pIRequest As IClientRequest Ptr, _
+	ByVal pIWebSitesWeakPtr As IWebSiteCollection Ptr, _
 	ByVal hrReadError As HRESULT, _
 	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 )As HRESULT

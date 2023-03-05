@@ -1,6 +1,8 @@
 #ifndef MIME_BI
 #define MIME_BI
 
+#include once "IString.bi"
+
 Const MaxContentTypeLength As Integer = 256 - 1
 
 Enum ContentTypes
@@ -119,16 +121,9 @@ Enum ContentTypes
 	
 End Enum
 
-Enum DocumentCharsets
-	ASCII
-	Utf8
-	Utf16LE
-	Utf16BE
-End Enum
-
 Type MimeType
 	ContentType As ContentTypes
-	Charset As DocumentCharsets
+	CharsetWeakPtr As HeapBSTR
 	IsTextFormat As Boolean
 End Type
 

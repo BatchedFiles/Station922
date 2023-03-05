@@ -176,7 +176,7 @@ Function HttpTraceProcessorPrepare( _
 		Dim Mime As MimeType = Any
 		With Mime
 			.ContentType = ContentTypes.MessageHttp
-			.Charset = DocumentCharsets.ASCII
+			.CharsetWeakPtr = NULL
 			.IsTextFormat = True
 		End With
 		

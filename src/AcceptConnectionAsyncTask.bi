@@ -67,6 +67,11 @@ Declare Function AcceptConnectionAsyncTaskSetHttpReader( _
 	byVal pReader As IHttpReader Ptr _
 )As HRESULT
 
+Declare Function AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
+	ByVal this As AcceptConnectionAsyncTask Ptr, _
+	byVal pCollection As IWebSiteCollection Ptr _
+)As HRESULT
+
 Declare Function AcceptConnectionAsyncTaskGetListenSocket( _
 	ByVal this As AcceptConnectionAsyncTask Ptr, _
 	ByVal pListenSocket As SOCKET Ptr _

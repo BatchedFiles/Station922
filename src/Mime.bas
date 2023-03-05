@@ -522,21 +522,10 @@ Sub GetContentTypeOfMimeType( _
 			
 	End Select
 	
-	Select Case mt->Charset
-		
-		Case DocumentCharsets.Utf8
-			lstrcatW(ContentType, @ParamSeparator)
-			lstrcatW(ContentType, @ContentCharsetUtf8)
-			
-		Case DocumentCharsets.Utf16LE
-			lstrcatW(ContentType, @ParamSeparator)
-			lstrcatW(ContentType, @ContentCharsetUtf16LE)
-			
-		Case DocumentCharsets.Utf16BE
-			lstrcatW(ContentType, @ParamSeparator)
-			lstrcatW(ContentType, @ContentCharsetUtf16BE)
-			
-	End Select
+	If mt->CharsetWeakPtr Then
+		lstrcatW(ContentType, @ParamSeparator)
+		lstrcatW(ContentType, mt->CharsetWeakPtr)
+	End If
 	
 End Sub
 
@@ -546,7 +535,7 @@ Function GetMimeOfFileExtension( _
 	)As Boolean
 	
 	mt->IsTextFormat = False
-	mt->Charset = DocumentCharsets.ASCII
+	mt->CharsetWeakPtr = NULL
 	
 	Scope
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtm)

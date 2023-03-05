@@ -65,6 +65,11 @@ Type IWriteErrorAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	SetWebSiteCollectionWeakPtr As Function( _
+		ByVal this As IWriteErrorAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
 	GetClientRequest As Function( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
@@ -100,6 +105,7 @@ End Type
 #define IWriteErrorAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteErrorAsyncIoTask_GetHttpReader(this, ppIHttpReader) (this)->lpVtbl->GetHttpReader(this, ppIHttpReader)
 #define IWriteErrorAsyncIoTask_SetHttpReader(this, pIHttpReader) (this)->lpVtbl->SetHttpReader(this, pIHttpReader)
+#define IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
 #define IWriteErrorAsyncIoTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteErrorAsyncIoTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IWriteErrorAsyncIoTask_SetErrorCode(this, HttpError, hrCode) (this)->lpVtbl->SetErrorCode(this, HttpError, hrCode)

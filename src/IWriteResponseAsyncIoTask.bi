@@ -65,6 +65,11 @@ Type IWriteResponseAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	SetWebSiteCollectionWeakPtr As Function( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
 	GetClientRequest As Function( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
@@ -94,6 +99,7 @@ End Type
 #define IWriteResponseAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IWriteResponseAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IWriteResponseAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
+#define IWriteResponseAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
 #define IWriteResponseAsyncIoTask_GetClientRequest(this, ppIRequest) (this)->lpVtbl->GetClientRequest(this, ppIRequest)
 #define IWriteResponseAsyncIoTask_SetClientRequest(this, pIRequest) (this)->lpVtbl->SetClientRequest(this, pIRequest)
 #define IWriteResponseAsyncIoTask_Prepare(this) (this)->lpVtbl->Prepare(this)

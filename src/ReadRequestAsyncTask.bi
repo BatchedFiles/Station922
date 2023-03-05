@@ -67,4 +67,9 @@ Declare Function ReadRequestAsyncTaskSetHttpReader( _
 	byVal pReader As IHttpReader Ptr _
 )As HRESULT
 
+Declare Function ReadRequestAsyncTaskSetWebSiteCollectionWeakPtr( _
+	ByVal this As ReadRequestAsyncTask Ptr, _
+	byVal pCollection As IWebSiteCollection Ptr _
+)As HRESULT
+
 #endif

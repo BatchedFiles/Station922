@@ -45,6 +45,7 @@ Function CreateAcceptConnectionTask( _
 	End If
 	
 	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
+	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
 	
 	Dim hrBind As HRESULT = BindToThreadPool( _
 		Cast(HANDLE, ServerSocket), _
@@ -104,7 +105,7 @@ Sub InitializeWebServer( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSites = NULL
+	this->pIWebSites = pIWebSites
 	this->ListenAddress = NULL
 	this->ListenPort = NULL
 	

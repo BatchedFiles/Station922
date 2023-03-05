@@ -3,7 +3,6 @@
 
 #include once "IAsyncIoTask.bi"
 #include once "IBaseStream.bi"
-#include once "IHttpProcessorCollection.bi"
 #include once "IHttpReader.bi"
 #include once "IWebSiteCollection.bi"
 
@@ -71,6 +70,11 @@ Type IHttpAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	SetWebSiteCollectionWeakPtr As Function( _
+		ByVal this As IHttpAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IHttpAsyncIoTask_
@@ -86,5 +90,6 @@ End Type
 #define IHttpAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IHttpAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IHttpAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
+#define IHttpAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
 
 #endif

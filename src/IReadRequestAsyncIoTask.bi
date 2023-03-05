@@ -64,6 +64,11 @@ Type IReadRequestAsyncIoTaskVirtualTable
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
 	
+	SetWebSiteCollectionWeakPtr As Function( _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IReadRequestAsyncIoTask_
@@ -79,5 +84,6 @@ End Type
 #define IReadRequestAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IReadRequestAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
 #define IReadRequestAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
+#define IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
 
 #endif

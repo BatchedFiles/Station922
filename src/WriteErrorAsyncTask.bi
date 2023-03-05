@@ -47,26 +47,6 @@ Declare Function WriteErrorAsyncTaskEndExecute( _
 	ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 )As HRESULT
 
-Declare Function WriteErrorAsyncTaskGetWebSiteCollectionWeakPtr( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal ppIWebSites As IWebSiteCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pIWebSites As IWebSiteCollection Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskGetHttpProcessorCollectionWeakPtr( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal ppIProcessors As IHttpProcessorCollection Ptr Ptr _
-)As HRESULT
-
-Declare Function WriteErrorAsyncTaskSetHttpProcessorCollectionWeakPtr( _
-	ByVal this As WriteErrorAsyncTask Ptr, _
-	ByVal pIProcessors As IHttpProcessorCollection Ptr _
-)As HRESULT
-
 Declare Function WriteErrorAsyncTaskGetBaseStream( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal ppStream As IBaseStream Ptr Ptr _
@@ -85,6 +65,11 @@ Declare Function WriteErrorAsyncTaskGetHttpReader( _
 Declare Function WriteErrorAsyncTaskSetHttpReader( _
 	ByVal this As WriteErrorAsyncTask Ptr, _
 	ByVal pIHttpReader As IHttpReader Ptr _
+)As HRESULT
+
+Declare Function WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
+	ByVal this As WriteErrorAsyncTask Ptr, _
+	ByVal pIWebSites As IWebSiteCollection Ptr _
 )As HRESULT
 
 Declare Function WriteErrorAsyncTaskGetClientRequest( _

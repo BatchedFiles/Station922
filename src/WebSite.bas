@@ -771,14 +771,17 @@ End Function
 Function GetFileBytesOffset( _
 		ByVal CodePage As HeapBSTR, _
 		ByVal hZipFileHandle As HANDLE, _
-		ByVal pMime As MimeType Ptr _
+		ByVal pMime As MimeType Ptr, _
+		ByVal UtfBomFileOffset As Integer _
 	)As LongInt
 	
-	pMime->Charset = DocumentCharsets.Utf8
+	pMime->CharsetWeakPtr = CodePage
 	
-	Dim offset As LongInt = 0
+	If hZipFileHandle <> INVALID_HANDLE_VALUE Then
+		Return 0
+	End If
 	
-	Return offset
+	Return UtfBomFileOffset
 	
 End Function
 
@@ -1406,7 +1409,8 @@ Function WebSiteGetBuffer( _
 				Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
 					this->CodePage, _
 					ZipFileHandle, _
-					@Mime _
+					@Mime, _
+					this->UtfBomFileOffset _
 				)
 				
 				IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
@@ -1504,12 +1508,23 @@ Function WebSiteGetErrorBuffer( _
 	Dim Mime As MimeType = Any
 	With Mime
 		.ContentType = ContentTypes.TextHtml
-		.Charset = DocumentCharsets.Utf8
+		.CharsetWeakPtr = this->CodePage
 		.IsTextFormat = True
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
 	
 	*ppResult = CPtr(IAttributedStream Ptr, pIBuffer)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteGetProcessorCollectionWeakPtr( _
+		ByVal this As WebSite Ptr, _
+		ByVal ppResult As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	
+	*ppResult = this->pIProcessorCollection
 	
 	Return S_OK
 	
@@ -1832,6 +1847,13 @@ Function IMutableWebSiteGetErrorBuffer( _
 	Return WebSiteGetErrorBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
 End Function
 
+Function IMutableWebSiteGetProcessorCollectionWeakPtr( _
+		ByVal this As IWebSite Ptr, _
+		ByVal ppResult As IHttpProcessorCollection Ptr Ptr _
+	)As HRESULT
+	Return WebSiteGetProcessorCollectionWeakPtr(ContainerOf(this, WebSite, lpVtbl), ppResult)
+End Function
+
 Function IMutableWebSiteSetHostName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pHost As HeapBSTR _
@@ -1964,6 +1986,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteGetMovedUrl, _
 	@IMutableWebSiteGetBuffer, _
 	@IMutableWebSiteGetErrorBuffer, _
+	@IMutableWebSiteGetProcessorCollectionWeakPtr, _
 	@IMutableWebSiteSetHostName, _
 	@IMutableWebSiteSetSitePhysicalDirectory, _
 	@IMutableWebSiteSetVirtualPath, _

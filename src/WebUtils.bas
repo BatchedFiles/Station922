@@ -150,6 +150,7 @@ Function ProcessErrorRequestResponse( _
 		ByVal pIStream As IBaseStream Ptr, _
 		ByVal pIHttpReader As IHttpReader Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal pIWebSitesWeakPtr As IWebSiteCollection Ptr, _
 		ByVal hrErrorCode As HRESULT, _
 		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 	)As HRESULT
@@ -167,10 +168,12 @@ Function ProcessErrorRequestResponse( _
 	
 	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
 	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
+	IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, pIWebSitesWeakPtr)
 	
 	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
 	
 	Dim HttpError As ResponseErrorCode = Any
+	
 	Select Case hrErrorCode
 		
 		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER
@@ -764,12 +767,6 @@ Function Station922Initialize()As HRESULT
 		IMalloc_Free(pIMemoryAllocator, pWebSiteConfig)
 	End Scope
 	
-	pIWebSitesWeakPtr = NULL
-	pIProcessorsWeakPtr = NULL
-	
 	Return S_OK
 	
 End Function
-
-Dim pIWebSitesWeakPtr As IWebSiteCollection Ptr
-Dim pIProcessorsWeakPtr As IHttpProcessorCollection Ptr

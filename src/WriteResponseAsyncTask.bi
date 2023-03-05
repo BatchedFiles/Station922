@@ -67,6 +67,11 @@ Declare Function WriteResponseAsyncTaskSetHttpReader( _
 	byVal pReader As IHttpReader Ptr _
 )As HRESULT
 
+Declare Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
+	ByVal this As WriteResponseAsyncTask Ptr, _
+	byVal pCollection As IWebSiteCollection Ptr _
+)As HRESULT
+
 Declare Function WriteResponseAsyncTaskPrepare( _
 	ByVal this As WriteResponseAsyncTask Ptr _
 )As HRESULT

@@ -79,6 +79,11 @@ Declare Function WebSiteGetErrorBuffer( _
 	ByVal ppResult As IAttributedStream Ptr Ptr _
 )As HRESULT
 
+Declare Function WebSiteGetProcessorCollectionWeakPtr( _
+	ByVal this As WebSite Ptr, _
+	ByVal ppResult As IHttpProcessorCollection Ptr Ptr _
+)As HRESULT
+
 Declare Function WebSiteSetHostName( _
 	ByVal this As WebSite Ptr, _
 	ByVal pHost As HeapBSTR _

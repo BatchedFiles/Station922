@@ -64,7 +64,7 @@ Sub InitializeFileStream( _
 	this->PreviousAllocatedSmallLength = 0
 	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
-	this->ContentType.Charset = DocumentCharsets.ASCII
+	this->ContentType.CharsetWeakPtr = NULL
 	this->ContentType.IsTextFormat = False
 	
 End Sub

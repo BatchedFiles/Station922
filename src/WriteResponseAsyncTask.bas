@@ -26,6 +26,7 @@ Type _WriteResponseAsyncTask
 	pIResponse As IServerResponse Ptr
 	pIBuffer As IAttributedStream Ptr
 	pIHttpWriter As IHttpWriter Ptr
+	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	pIProcessorWeakPtr As IHttpAsyncProcessor Ptr
 	pIWebSiteWeakPtr As IWebSite Ptr
 End Type
@@ -55,6 +56,7 @@ Sub InitializeWriteResponseAsyncTask( _
 	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
 	this->pIProcessorWeakPtr = NULL
+	this->pIWebSitesWeakPtr = NULL
 	this->pIWebSiteWeakPtr = NULL
 	
 End Sub
@@ -409,6 +411,17 @@ Function WriteResponseAsyncTaskSetHttpReader( _
 	
 End Function
 
+Function WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	
+	this->pIWebSitesWeakPtr = pCollection
+	
+	Return S_OK
+	
+End Function
+
 Function WriteResponseAsyncTaskGetClientRequest( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
@@ -462,7 +475,7 @@ Function WriteResponseAsyncTaskPrepare( _
 	
 	Scope
 		Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
-			pIWebSitesWeakPtr, _
+			this->pIWebSitesWeakPtr, _
 			this->pIRequest, _
 			@this->pIWebSiteWeakPtr _
 		)
@@ -502,6 +515,12 @@ Function WriteResponseAsyncTaskPrepare( _
 	Scope
 		Dim HttpMethod As HeapBSTR = Any
 		IClientRequest_GetHttpMethod(this->pIRequest, @HttpMethod)
+		
+		Dim pIProcessorsWeakPtr As IHttpProcessorCollection Ptr = Any
+		IWebSite_GetProcessorCollectionWeakPtr( _
+			this->pIWebSiteWeakPtr, _
+			@pIProcessorsWeakPtr _
+		)
 		
 		Dim hrProcessorItem As HRESULT = IHttpProcessorCollection_ItemWeakPtr( _
 			pIProcessorsWeakPtr, _
@@ -602,6 +621,13 @@ Function IWriteResponseAsyncTaskGetHttpReader( _
 	Return WriteResponseAsyncTaskGetHttpReader(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppReader)
 End Function
 
+Function IWriteResponseAsyncTaskSetWebSiteCollectionWeakPtr( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	Return WriteResponseAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pCollection)
+End Function
+
 Function IWriteResponseAsyncTaskSetHttpReader( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
@@ -639,6 +665,7 @@ Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTas
 	@IWriteResponseAsyncTaskSetBaseStream, _
 	@IWriteResponseAsyncTaskGetHttpReader, _
 	@IWriteResponseAsyncTaskSetHttpReader, _
+	@IWriteResponseAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IWriteResponseAsyncTaskGetClientRequest, _
 	@IWriteResponseAsyncTaskSetClientRequest, _
 	@IWriteResponseAsyncTaskPrepare _

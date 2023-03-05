@@ -64,7 +64,7 @@ Sub InitializeServerResponse( _
 	this->ResponseZipEnable = False
 	this->Mime.ContentType = ContentTypes.AnyAny
 	this->Mime.IsTextFormat = False
-	this->Mime.Charset = DocumentCharsets.ASCII
+	this->Mime.CharsetWeakPtr = NULL
 	
 End Sub
 

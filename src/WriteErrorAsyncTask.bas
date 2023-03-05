@@ -31,6 +31,7 @@ Type _WriteErrorAsyncTask
 	pIResponse As IServerResponse Ptr
 	pIBuffer As IAttributedStream Ptr
 	pIHttpWriter As IHttpWriter Ptr
+	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	ComplectionPort As HANDLE
 	HttpError As ResponseErrorCode
 	hrErrorCode As HRESULT
@@ -45,7 +46,7 @@ Function WriteErrorAsyncTaskGetStatusCode( _
 		Case ResponseErrorCode.MovedPermanently
 			Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
 			Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
-				pIWebSitesWeakPtr, _
+				this->pIWebSitesWeakPtr, _
 				this->pIRequest, _
 				@pIWebSiteWeakPtr _
 			)
@@ -174,17 +175,35 @@ Function WriteErrorAsyncTaskGetStatusCode( _
 			Return HttpStatusCodes.InternalServerError
 			
 		Case ResponseErrorCode.NotImplemented
-			Dim AllMethods As HeapBSTR = Any
-			IHttpProcessorCollection_GetAllMethods( _
-				pIProcessorsWeakPtr, _
-				@AllMethods _
+			
+			Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
+			Dim hrFindSite As HRESULT = FindWebSiteWeakPtr( _
+				this->pIWebSitesWeakPtr, _
+				this->pIRequest, _
+				@pIWebSiteWeakPtr _
 			)
-			IServerResponse_AddKnownResponseHeader( _
-				this->pIResponse, _
-				HttpResponseHeaders.HeaderAllow, _
-				AllMethods _
-			)
-			HeapSysFreeString(AllMethods)
+			
+			If SUCCEEDED(hrFindSite) Then
+				
+				Dim pIProcessorsWeakPtr As IHttpProcessorCollection Ptr = Any
+				IWebSite_GetProcessorCollectionWeakPtr( _
+					pIWebSiteWeakPtr, _
+					@pIProcessorsWeakPtr _
+				)
+				
+				Dim AllMethods As HeapBSTR = Any
+				IHttpProcessorCollection_GetAllMethods( _
+					pIProcessorsWeakPtr, _
+					@AllMethods _
+				)
+				IServerResponse_AddKnownResponseHeader( _
+					this->pIResponse, _
+					HttpResponseHeaders.HeaderAllow, _
+					AllMethods _
+				)
+				HeapSysFreeString(AllMethods)
+			End If
+			
 			Return HttpStatusCodes.NotImplemented
 			
 		Case ResponseErrorCode.ContentTypeEmpty
@@ -252,6 +271,7 @@ Sub InitializeWriteErrorAsyncTask( _
 	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
 	this->ComplectionPort = NULL
+	this->pIWebSitesWeakPtr = NULL
 	
 End Sub
 
@@ -499,6 +519,7 @@ Function WriteErrorAsyncTaskEndExecute( _
 			
 			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
+			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
 			
 			' Сейчас мы не уменьшаем счётчик ссылок на задачу
 			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
@@ -592,6 +613,17 @@ Function WriteErrorAsyncTaskSetHttpReader( _
 	
 End Function
 
+Function WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
+	)As HRESULT
+	
+	this->pIWebSitesWeakPtr = pIWebSites
+	
+	Return S_OK
+	
+End Function
+
 Function WriteErrorAsyncTaskGetClientRequest( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
@@ -637,6 +669,7 @@ Function WriteErrorAsyncTaskPrepare( _
 	)
 	
 	Dim pIWebSiteWeakPtr As IWebSite Ptr = Any
+	
 	Scope
 		Dim HeaderHost As HeapBSTR = Any
 		IClientRequest_GetHttpHeader( _
@@ -648,19 +681,19 @@ Function WriteErrorAsyncTaskPrepare( _
 		Dim HeaderHostLength As Integer = SysStringLen(HeaderHost)
 		If HeaderHostLength Then
 			Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
-				pIWebSitesWeakPtr, _
+				this->pIWebSitesWeakPtr, _
 				HeaderHost, _
 				@pIWebSiteWeakPtr _
 			)
 			If FAILED(hrFindSite) Then
 				IWebSiteCollection_GetDefaultWebSite( _
-					pIWebSitesWeakPtr, _
+					this->pIWebSitesWeakPtr, _
 					@pIWebSiteWeakPtr _
 				)
 			End If
 		Else
 			IWebSiteCollection_GetDefaultWebSite( _
-				pIWebSitesWeakPtr, _
+				this->pIWebSitesWeakPtr, _
 				@pIWebSiteWeakPtr _
 			)
 		End If
@@ -713,23 +746,6 @@ Function WriteErrorAsyncTaskPrepare( _
 		
 		HeapSysFreeString(HttpMethod)
 	End Scope
-	
-	/'
-	Scope
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
-			this->pIResponse, _
-			HttpResponseHeaders.HeaderContentLanguage, _
-			@DefaultContentLanguage, _
-			Len(DefaultContentLanguage) _
-		)
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
-			this->pIResponse, _
-			HttpResponseHeaders.HeaderCacheControl, _
-			@DefaultCacheControlNoCache, _
-			Len(DefaultCacheControlNoCache) _
-		)
-	End Scope
-	'/
 	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		this->pIHttpWriter, _
@@ -823,6 +839,13 @@ Function IWriteErrorAsyncTaskSetHttpReader( _
 	Return WriteErrorAsyncTaskSetHttpReader(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pReader)
 End Function
 
+Function IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
+		ByVal this As IWriteErrorAsyncIoTask Ptr, _
+		byVal pCollection As IWebSiteCollection Ptr _
+	)As HRESULT
+	Return WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pCollection)
+End Function
+
 Function IWriteErrorAsyncTaskGetClientRequest( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
@@ -861,6 +884,7 @@ Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtu
 	@IWriteErrorAsyncTaskSetBaseStream, _
 	@IWriteErrorAsyncTaskGetHttpReader, _
 	@IWriteErrorAsyncTaskSetHttpReader, _
+	@IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IWriteErrorAsyncTaskGetClientRequest, _
 	@IWriteErrorAsyncTaskSetClientRequest, _
 	@IWriteErrorAsyncTaskSetErrorCode, _
