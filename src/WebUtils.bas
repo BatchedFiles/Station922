@@ -712,22 +712,25 @@ Function Station922Initialize()As HRESULT
 				End If
 				
 			Next
-			Dim hrAddDefaultWebSite As HRESULT = IWebServer_AddDefaultWebSite( _
-				WebServers.Vector(j), _
-				pIDefaultWebSite _
-			)
-			If FAILED(hrAddDefaultWebSite) Then
-				Return hrAddDefaultWebSite
-			End If
 			
-			Dim hrSetEndPoint As HRESULT = IWebServer_SetEndPoint( _
-				WebServers.Vector(j), _
-				IpEndPoints.Vector(j).ListenAddress, _
-				IpEndPoints.Vector(j).ListenPort _
-			)
-			If FAILED(hrSetEndPoint) Then
-				Return hrSetEndPoint
-			End If
+			Scope
+				Dim hrAddDefaultWebSite As HRESULT = IWebServer_AddDefaultWebSite( _
+					WebServers.Vector(j), _
+					pIDefaultWebSite _
+				)
+				If FAILED(hrAddDefaultWebSite) Then
+					Return hrAddDefaultWebSite
+				End If
+				
+				Dim hrSetEndPoint As HRESULT = IWebServer_SetEndPoint( _
+					WebServers.Vector(j), _
+					IpEndPoints.Vector(j).ListenAddress, _
+					IpEndPoints.Vector(j).ListenPort _
+				)
+				If FAILED(hrSetEndPoint) Then
+					Return hrSetEndPoint
+				End If
+			End Scope
 		Next
 	End Scope
 	
