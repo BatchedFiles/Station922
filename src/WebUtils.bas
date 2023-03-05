@@ -17,11 +17,14 @@
 #include once "HttpPutProcessor.bi"
 #include once "HttpTraceProcessor.bi"
 #include once "WebSiteCollection.bi"
+#include once "WebServer.bi"
 
 ' Declare Function GetBase64Sha1( _
 ' 	ByVal pDestination As WString Ptr, _
 ' 	ByVal pSource As WString Ptr _
 ' )As Boolean
+
+Const CompareResultEqual As Long = 0
 
 Const HttpProcessorsLength As Integer = 5
 
@@ -36,6 +39,19 @@ End Type
 
 Type WebSiteVector
 	Vector(MaxWebSites - 1) As IWebSite Ptr
+End Type
+
+Type IpEndPoint
+	ListenAddress As HeapBSTR
+	ListenPort As HeapBSTR
+End Type
+
+Type IpEndPointVector
+	Vector(MaxWebSites - 1) As IpEndPoint
+End Type
+
+Type WebServerVector
+	Vector(MaxWebSites - 1) As IWebServer Ptr
 End Type
 
 Sub GetHttpDate( _
@@ -269,6 +285,33 @@ Function BindToThreadPool( _
 	
 End Function
 
+Function IpEndPointExists( _
+		ByVal pIpEndPoints As IpEndPointVector Ptr, _
+		ByVal IpEndPointsLength As Integer, _
+		ByVal ListenAddress As HeapBSTR, _
+		ByVal ListenPort As HeapBSTR _
+	)As Boolean
+	
+	For i As Integer = 0 To IpEndPointsLength - 1
+		Dim resCompareAddress As Long = lstrcmpW( _
+			pIpEndPoints->Vector(i).ListenAddress, _
+			ListenAddress _
+		)
+		If resCompareAddress = CompareResultEqual Then
+			Dim resComparePort As Long = lstrcmpW( _
+				pIpEndPoints->Vector(i).ListenPort, _
+				ListenPort _
+			)
+			If resComparePort = CompareResultEqual Then
+				Return True
+			End If
+		End If
+	Next
+	
+	Return False
+	
+End Function
+
 Function Station922Initialize()As HRESULT
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
@@ -276,8 +319,13 @@ Function Station922Initialize()As HRESULT
 	Dim MemoryPoolCapacity As UInteger = Any
 	Dim WebSitesLength As Integer = Any
 	Dim pWebSiteConfig As WebSiteConfiguration Ptr = Any
+	Dim DefaultWebSiteConfig As WebSiteConfiguration = Any
 	Dim HttpProcessors As HttpProcessorVector = Any
 	Dim WebSites As WebSiteVector = Any
+	Dim pIDefaultWebSite As IWebSite Ptr = Any
+	Dim IpEndPoints As IpEndPointVector = Any
+	Dim IpEndPointsLength As Integer = 0
+	Dim WebServers As WebServerVector = Any
 	
 	Scope
 		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
@@ -342,6 +390,14 @@ Function Station922Initialize()As HRESULT
 		)
 		If FAILED(hrWebSites) Then
 			Return hrWebSites
+		End If
+		
+		Dim hrDefaultWebSite As HRESULT = IWebServerConfiguration_GetDefaultWebSite( _
+			pIConfig, _
+			@DefaultWebSiteConfig _
+		)
+		If FAILED(hrDefaultWebSite) Then
+			Return hrDefaultWebSite
 		End If
 		
 		IWebServerConfiguration_Release(pIConfig)
@@ -548,10 +604,33 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		' создать массив серверов
 		For i As Integer = 0 To WebSitesLength - 1
-			' pWebSiteConfig[i].ListenAddress
-			' pWebSiteConfig[i].ListenPort
+			Dim resExists As Boolean = IpEndPointExists( _
+				@IpEndPoints, _
+				IpEndPointsLength, _
+				pWebSiteConfig[i].ListenAddress, _
+				pWebSiteConfig[i].ListenPort _
+			)
+			
+			If resExists = False Then
+				IpEndPoints.Vector(IpEndPointsLength).ListenAddress = pWebSiteConfig[i].ListenAddress
+				IpEndPoints.Vector(IpEndPointsLength).ListenPort = pWebSiteConfig[i].ListenPort
+				IpEndPointsLength += 1
+			End If
+		Next
+		
+		For i As Integer = 0 To IpEndPointsLength - 1
+			Dim pIWebServer As IWebServer Ptr = Any
+			Dim hrCreate As HRESULT = CreateWebServer( _
+				pIMemoryAllocator, _
+				@IID_IWebServer, _
+				@pIWebServer _
+			)
+			If FAILED(hrCreate) Then
+				Return hrCreate
+			End If
+			
+			WebServers.Vector(i) = pIWebServer
 		Next
 	End Scope
 	
@@ -562,79 +641,31 @@ Function Station922Initialize()As HRESULT
 	Scope
 		' Добавить каждому серверу сайт по умолчанию
 		
-		' Dim pIDefaultWebSite As IWebSite Ptr = Any
-		' Dim hrCreateWebSite As HRESULT = CreateWebSite( _
-		' 	pIMemoryAllocator, _
-		' 	@IID_IWebSite, _
-		' 	@pIDefaultWebSite _
-		' )
-		' If FAILED(hrCreateWebSite) Then
-		' 	Return hrCreateWebSite
-		' End If
+		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
+			pIMemoryAllocator, _
+			@IID_IWebSite, _
+			@pIDefaultWebSite _
+		)
+		If FAILED(hrCreateWebSite) Then
+			Return hrCreateWebSite
+		End If
 		
-		' Scope
-		' 	Dim ExeFileName As WString * (MAX_PATH + 1) = Any
-		' 	GetModuleFileNameW( _
-		' 		0, _
-		' 		@ExeFileName, _
-		' 		MAX_PATH _
-		' 	)
-			
-		' 	Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
-		' 	lstrcpyW(@ExecutableDirectory, @ExeFileName)
-		' 	PathRemoveFileSpecW(@ExecutableDirectory)
-			
-		' 	Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapString( _
-		' 		this->pIMemoryAllocator, _
-		' 		@ExecutableDirectory _
-		' 	)
-		' 	IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, bstrPhisycalDir)
-		' 	HeapSysFreeString(bstrPhisycalDir)
-		' End Scope
+		IWebSite_SetHostName(pIDefaultWebSite, DefaultWebSiteConfig.HostName)
+		IWebSite_SetVirtualPath(pIDefaultWebSite, DefaultWebSiteConfig.VirtualPath)
+		IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, DefaultWebSiteConfig.PhysicalDirectory)
+		IWebSite_SetMovedUrl(pIDefaultWebSite, DefaultWebSiteConfig.CanonicalUrl)
+		IWebSite_SetListenAddress(pIDefaultWebSite, DefaultWebSiteConfig.ListenAddress)
+		IWebSite_SetListenPort(pIDefaultWebSite, DefaultWebSiteConfig.ListenPort)
+		IWebSite_SetConnectBindAddress(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindAddress)
+		IWebSite_SetConnectBindPort(pIDefaultWebSite, DefaultWebSiteConfig.ConnectBindPort)
+		IWebSite_SetTextFileEncoding(pIDefaultWebSite, DefaultWebSiteConfig.CodePage)
+		IWebSite_SetSupportedMethods(pIDefaultWebSite, DefaultWebSiteConfig.Methods)
+		IWebSite_SetDefaultFileName(pIDefaultWebSite, DefaultWebSiteConfig.DefaultFileName)
+		IWebSite_SetUtfBomFileOffset(pIDefaultWebSite, DefaultWebSiteConfig.UtfBomFileOffset)
+		IWebSite_SetReservedFileBytes(pIDefaultWebSite, DefaultWebSiteConfig.ReservedFileBytes)
+		IWebSite_SetIsMoved(pIDefaultWebSite, DefaultWebSiteConfig.IsMoved)
+		IWebSite_SetUseSsl(pIDefaultWebSite, DefaultWebSiteConfig.UseSsl)
 		
-		' Scope
-		' 	Const DefaultVirtualPath = WStr("/")
-		' 	Dim pVirtualPath As WString Ptr = @DefaultVirtualPath
-			
-		' 	Dim bstrVirtualPath As HeapBSTR = CreatePermanentHeapStringLen( _
-		' 		this->pIMemoryAllocator, _
-		' 		pVirtualPath, _
-		' 		Len(DefaultVirtualPath) _
-		' 	)
-		' 	IWebSite_SetVirtualPath(pIDefaultWebSite, bstrVirtualPath)
-		' 	HeapSysFreeString(bstrVirtualPath)
-		' End Scope
-		
-		' Scope
-		' 	Dim MovedUrl As WString * (MAX_PATH + 1) = Any
-		' 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
-		' 		lpwszHost, _
-		' 		@MovedUrlKeyString, _
-		' 		@EmptyString, _
-		' 		@MovedUrl, _
-		' 		Cast(DWORD, MAX_PATH), _
-		' 		this->pWebSitesIniFileName _
-		' 	)
-		' 	If ValueLength = 0 Then
-		' 		Dim dwError As DWORD = GetLastError()
-		' 		IWebSite_Release(pIWebSite)
-		' 		IWebSiteCollection_Release(pIWebSiteCollection)
-		' 		*ppIWebSiteCollection = NULL
-		' 		Return HRESULT_FROM_WIN32(dwError)
-		' 	End If
-			
-		' 	Dim bstrMovedUrl As HeapBSTR = CreatePermanentHeapStringLen( _
-		' 		this->pIMemoryAllocator, _
-		' 		@MovedUrl, _
-		' 		ValueLength _
-		' 	)
-		' 	IWebSite_SetMovedUrl(pIDefaultWebSite, bstrMovedUrl)
-		' 	HeapSysFreeString(bstrMovedUrl)
-		' End Scope
-		
-		' Scope
-		' 	IWebSite_SetIsMoved(pIDefaultWebSite, False)
-		' End Scope
 		
 		' IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
 		' IWebSite_Release(pIDefaultWebSite)
@@ -642,6 +673,7 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
+		' Cleanup
 		For i As Integer = 0 To WebSitesLength - 1
 			HeapSysFreeString(pWebSiteConfig[i].HostName)
 			HeapSysFreeString(pWebSiteConfig[i].VirtualPath)
