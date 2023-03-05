@@ -254,6 +254,15 @@ Function WebServerAddWebSite( _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
+	Dim hrAdd As HRESULT = IWebSiteCollection_Add( _
+		this->pIWebSites, _
+		pKey, _
+		pIWebSite _
+	)
+	If FAILED(hrAdd) Then
+		Return hrAdd
+	End If
+	
 	Return S_OK
 	
 End Function
@@ -262,6 +271,14 @@ Function WebServerAddDefaultWebSite( _
 		ByVal this As WebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
+	
+	Dim hrAdd As HRESULT = IWebSiteCollection_SetDefaultWebSite( _
+		this->pIWebSites, _
+		pIDefaultWebSite _
+	)
+	If FAILED(hrAdd) Then
+		Return hrAdd
+	End If
 	
 	Return S_OK
 	
