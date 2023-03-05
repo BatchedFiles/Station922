@@ -370,9 +370,16 @@ Function ClientUriUriFromString( _
 		Return CLIENTURI_E_URITOOLARGE
 	End If
 	
-	Dim wszDecodedUri As WString * (MAX_URL_LENGTH + 1) = Any
+	Dim pwszDecodedUri As WString Ptr = IMalloc_Alloc( _
+		this->pIMemoryAllocator, _
+		(MAX_URL_LENGTH + 1) * SizeOf(WString) _
+	)
+	If pwszDecodedUri = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
 	Dim DecodedUriLength As Integer = DecodeUri( _
-		@wszDecodedUri, _
+		pwszDecodedUri, _
 		MAX_URL_LENGTH, _
 		bstrUri, _
 		UriLength _
@@ -402,7 +409,7 @@ Function ClientUriUriFromString( _
 	Dim pFragment As WString Ptr = Any
 	Dim FragmentLength As Integer = Any
 	
-	Dim pFirstChar As WString Ptr = @wszDecodedUri
+	Dim pFirstChar As WString Ptr = pwszDecodedUri
 	
 	Dim FirstChar As Integer = pFirstChar[0]
 	If FirstChar = Characters.Solidus Then
@@ -494,6 +501,10 @@ Function ClientUriUriFromString( _
 			pFragment = NULL
 			FragmentLength = 0
 		Else
+			IMalloc_Free( _
+				this->pIMemoryAllocator, _
+				pwszDecodedUri _
+			)
 			Return CLIENTURI_E_PATHNOTFOUND
 		End If
 	End If
@@ -503,6 +514,10 @@ Function ClientUriUriFromString( _
 		PathLength _
 	)
 	If FAILED(hrContainsBadChar) Then
+		IMalloc_Free( _
+			this->pIMemoryAllocator, _
+			pwszDecodedUri _
+		)
 		Return CLIENTURI_E_CONTAINSBADCHAR
 	End If
 	
@@ -517,6 +532,10 @@ Function ClientUriUriFromString( _
 				SchemeLength _
 			)
 			If this->Scheme = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -528,6 +547,10 @@ Function ClientUriUriFromString( _
 				UserNameLength _
 			)
 			If this->UserName = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -539,6 +562,10 @@ Function ClientUriUriFromString( _
 				PasswordLength _
 			)
 			If this->Password = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -550,6 +577,10 @@ Function ClientUriUriFromString( _
 				HostLength _
 			)
 			If this->Host = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -561,6 +592,10 @@ Function ClientUriUriFromString( _
 				PortLength _
 			)
 			If this->Port = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -574,6 +609,10 @@ Function ClientUriUriFromString( _
 				PathLength _
 			)
 			If this->Path = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -585,6 +624,10 @@ Function ClientUriUriFromString( _
 				QueryLength _
 			)
 			If this->Query = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
@@ -596,10 +639,19 @@ Function ClientUriUriFromString( _
 				FragmentLength _
 			)
 			If this->Fragment = NULL Then
+				IMalloc_Free( _
+					this->pIMemoryAllocator, _
+					pwszDecodedUri _
+				)
 				Return E_OUTOFMEMORY
 			End If
 		End If
 	End Scope
+	
+	IMalloc_Free( _
+		this->pIMemoryAllocator, _
+		pwszDecodedUri _
+	)
 	
 	Return S_OK
 	
