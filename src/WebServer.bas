@@ -5,6 +5,7 @@
 #include once "HttpReader.bi"
 #include once "Network.bi"
 #include once "WebUtils.bi"
+#include once "WebSiteCollection.bi"
 
 Extern GlobalWebServerVirtualTable As Const IWebServerVirtualTable
 
@@ -19,6 +20,7 @@ Type _WebServer
 	lpVtbl As Const IWebServerVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
+	pIWebSites As IWebSiteCollection Ptr
 	SocketList(0 To SocketListCapacity - 1) As SocketNode
 	SocketListLength As Integer
 	ListenAddress As HeapBSTR
@@ -87,7 +89,8 @@ End Function
 
 Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -101,6 +104,7 @@ Sub InitializeWebServer( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->pIWebSites = NULL
 	this->ListenAddress = NULL
 	this->ListenPort = NULL
 	
@@ -112,6 +116,10 @@ Sub UnInitializeWebServer( _
 	
 	HeapSysFreeString(this->ListenAddress)
 	HeapSysFreeString(this->ListenPort)
+	
+	If this->pIWebSites Then
+		IWebSiteCollection_Release(this->pIWebSites)
+	End If
 	
 End Sub
 
@@ -127,13 +135,29 @@ Function CreateWebServer( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
+	Dim pIWebSites As IWebSiteCollection Ptr = Any
+	Dim hrCreateCollection As HRESULT = CreateWebSiteCollection( _
+		pIMemoryAllocator, _
+		@IID_IWebSiteCollection, _
+		@pIWebSites _
+	)
+	If FAILED(hrCreateCollection) Then
+		*ppv = NULL
+		Return hrCreateCollection
+	End If
+	
 	Dim this As WebServer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebServer) _
 	)
 	
 	If this Then
-		InitializeWebServer(this, pIMemoryAllocator)
+		InitializeWebServer( _
+			this, _
+			pIMemoryAllocator, _
+			pIWebSites _
+		)
+		
 		WebServerCreated(this)
 		
 		Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
