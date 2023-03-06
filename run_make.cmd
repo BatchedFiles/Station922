@@ -11,6 +11,7 @@ set AR="%FBC_DIR%\bin\win64\ar.exe"
 set GORC="%FBC_DIR%\bin\win64\GoRC.exe"
 set DLL_TOOL="%FBC_DIR%\bin\win64\dlltool.exe"
 set LIB_DIR=%FBC_DIR%\lib\win64
+set LD_SCRIPT="%FBC_DIR%\\lib\\win64\\fbextra.x"
 set GCC_DEBUGGER="%MINGW_W64_DIR%\bin\gdb.exe"
 set PROCESSOR_ARCHITECTURE=AMD64
 set FBC_VER=FBC-1.09.0
