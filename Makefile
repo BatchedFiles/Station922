@@ -8,6 +8,9 @@ AS ?= as.exe
 AR ?= ar.exe
 GORC ?= GoRC.exe
 LD ?= ld.exe
+DLL_TOOL ?= dlltool.exe
+LIB_DIR ?=
+INC_DIR ?=
 FBC_VER ?= FBC-1.09.0
 GCC_VER ?= GCC-09.3.0
 MARCH ?= native
@@ -141,8 +144,10 @@ endif
 
 FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
 FBCFLAGS+=-w error -maxerr 1
-# FBCFLAGS+=-i src
-FBCFLAGS+=-i src -i C:\Programming\FreeBASIC-1.09.0-win64-gcc-9.3.0\inc
+FBCFLAGS+=-i src
+ifneq ($(INC_DIR),)
+FBCFLAGS+=-i $(INC_DIR)
+endif
 FBCFLAGS+=-r
 FBCFLAGS+=-s console
 FBCFLAGS+=-O 0
