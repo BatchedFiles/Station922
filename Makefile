@@ -14,6 +14,11 @@ INC_DIR ?=
 FBC_VER ?= FBC-1.09.0
 GCC_VER ?= GCC-09.3.0
 MARCH ?= native
+# for clang:
+TARGET_TRIPLET ?=
+FLTO ?=
+# for GCC
+LD_SCRIPT ?=
 
 FILE_SUFFIX=_$(GCC_VER)_$(FBC_VER)
 
@@ -154,6 +159,9 @@ FBCFLAGS+=-O 0
 FBCFLAGS_DEBUG+=-g
 
 CFLAGS+=-march=$(MARCH)
+ifneq ($(TARGET_TRIPLET),)
+CFLAGS+=--target=$(TARGET_TRIPLET)
+endif
 CFLAGS+=-pipe
 CFLAGS+=-Wall -Werror -Wextra -pedantic
 CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
@@ -171,6 +179,9 @@ LDFLAGS+=-subsystem console
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=-e $(ENTRY_POINT)
 LDFLAGS+=-L $(LIB_DIR)
+ifneq ($(LD_SCRIPT),)
+LDFLAGS+=-T $(LD_SCRIPT)
+endif
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
 LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh -lucrt -lucrtbase
@@ -181,6 +192,9 @@ release: CFLAGS+=$(CFLAGS_RELEASE)
 release: CFLAGS+=-fno-math-errno -fno-exceptions
 release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
 release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
+ifneq ($(FLTO),)
+release: CFLAGS+=$(FLTO)
+endif
 release: ASFLAGS+=--strip-local-absolute
 release: LDFLAGS+=-s --gc-sections
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME)
