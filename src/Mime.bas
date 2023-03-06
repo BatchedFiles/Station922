@@ -2,11 +2,6 @@
 #include once "windows.bi"
 #include once "win\shlwapi.bi"
 
-Const ParamSeparator = WStr(";")
-Const ContentCharsetUtf8 = WStr("charset=utf-8")
-Const ContentCharsetUtf16LE = WStr("charset=utf-16")
-Const ContentCharsetUtf16BE = WStr("charset=utf-16")
-
 Const ExtensionZip = WStr(".zip")
 Const Extension7z = WStr(".7z")
 Const ExtensionRar = WStr(".rar")
@@ -524,7 +519,8 @@ Sub GetContentTypeOfMimeType( _
 	
 	Dim CharsetLength As Integer = SysStringLen(mt->CharsetWeakPtr)
 	If CharsetLength Then
-		lstrcatW(ContentType, @ParamSeparator)
+		Const CharsetWithSeparatorString = WStr(";charset=")
+		lstrcatW(ContentType, @CharsetWithSeparatorString)
 		lstrcatW(ContentType, mt->CharsetWeakPtr)
 	End If
 	
