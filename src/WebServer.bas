@@ -3,6 +3,7 @@
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpReader.bi"
+#include once "Logger.bi"
 #include once "Network.bi"
 #include once "WebUtils.bi"
 #include once "WebSiteCollection.bi"
@@ -81,6 +82,14 @@ Function CreateServerSocketSink( _
 	this->ListenPort = NULL
 	
 	If FAILED(hrCreateSocket) Then
+		Dim vtErrorMessage As VARIANT = Any
+		vtErrorMessage.vt = VT_ERROR
+		vtErrorMessage.scode = hrCreateSocket
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"Can not open and listend socket, error code\t"), _
+			@vtErrorMessage _
+		)
 		Return hrCreateSocket
 	End If
 	
