@@ -165,7 +165,7 @@ endif
 CFLAGS+=-pipe
 CFLAGS+=-Wall -Werror -Wextra -pedantic
 CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
-CFLAGS+=-Wno-dollar-in-identifier-extension
+CFLAGS+=-Wno-dollar-in-identifier-extension -Wno-language-extension-token
 CFLAGS_DEBUG+=-g -O0
 
 ASFLAGS+=
