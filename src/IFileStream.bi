@@ -127,6 +127,11 @@ Type IFileStreamVirtualTable
 		ByVal ETag As HeapBSTR _
 	)As HRESULT
 	
+	SetReservedFileBytes As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal ReservedFileBytes As UInteger _
+	)As HRESULT
+	
 End Type
 
 Type IFileStream_
@@ -162,5 +167,6 @@ End Type
 #define IFileStream_SetEncoding(this, ZipMode) (this)->lpVtbl->SetEncoding(this, ZipMode)
 #define IFileStream_SetFileTime(this, pTime) (this)->lpVtbl->SetFileTime(this, pTime)
 #define IFileStream_SetETag(this, ETag) (this)->lpVtbl->SetETag(this, ETag)
+#define IFileStream_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
 
 #endif

@@ -35,8 +35,7 @@ End Type
 
 Sub InitializeFileStream( _
 		ByVal this As FileStream Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal FileBytes As ZString Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -53,7 +52,7 @@ Sub InitializeFileStream( _
 	this->pFilePath = NULL
 	this->FileHandle = INVALID_HANDLE_VALUE
 	this->ZipFileHandle = INVALID_HANDLE_VALUE
-	this->FileBytes = FileBytes
+	this->FileBytes = NULL
 	this->SmallFileBytes = NULL
 	this->ZipMode = ZipModes.None
 	this->Language = NULL
@@ -109,45 +108,28 @@ Function CreateFileStream( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim FileBytes As ZString Ptr = VirtualAlloc( _
-		NULL, _
-		BUFFERSLICECHUNK_SIZE, _
-		MEM_RESERVE, _
-		PAGE_READWRITE _
+	Dim this As FileStream Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(FileStream) _
 	)
 	
-	If FileBytes Then
-		
-		Dim this As FileStream Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(FileStream) _
+	If this Then
+		InitializeFileStream( _
+			this, _
+			pIMemoryAllocator _
 		)
+		FileStreamCreated(this)
 		
-		If this Then
-			InitializeFileStream( _
-				this, _
-				pIMemoryAllocator, _
-				FileBytes _
-			)
-			FileStreamCreated(this)
-			
-			Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
-				this, _
-				riid, _
-				ppv _
-			)
-			If FAILED(hrQueryInterface) Then
-				DestroyFileStream(this)
-			End If
-			
-			Return hrQueryInterface
+		Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
+			this, _
+			riid, _
+			ppv _
+		)
+		If FAILED(hrQueryInterface) Then
+			DestroyFileStream(this)
 		End If
 		
-		VirtualFree( _
-			FileBytes, _
-			0, _
-			MEM_RELEASE _
-		)
+		Return hrQueryInterface
 	End If
 	
 	*ppv = NULL
@@ -620,6 +602,27 @@ Function FileStreamSetETag( _
 	
 End Function
 
+Function FileStreamSetReservedFileBytes( _
+		ByVal this As FileStream Ptr, _
+		ByVal ReservedFileBytes As UInteger _
+	)As HRESULT
+	
+	Dim FileBytes As ZString Ptr = VirtualAlloc( _
+		NULL, _
+		ReservedFileBytes, _
+		MEM_RESERVE, _
+		PAGE_READWRITE _
+	)
+	If FileBytes = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	this->FileBytes = FileBytes
+	
+	Return S_OK
+	
+End Function
+
 
 Function IFileStreamQueryInterface( _
 		ByVal this As IFileStream Ptr, _
@@ -785,6 +788,13 @@ Function IFileStreamSetETag( _
 	Return FileStreamSetETag(ContainerOf(this, FileStream, lpVtbl), ETag)
 End Function
 
+Function IFileStreamSetReservedFileBytes( _
+		ByVal this As IFileStream Ptr, _
+		ByVal ReservedFileBytes As UInteger _
+	)As HRESULT
+	Return FileStreamSetReservedFileBytes(ContainerOf(this, FileStream, lpVtbl), ReservedFileBytes)
+End Function
+
 Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamQueryInterface, _
 	@IFileStreamAddRef, _
@@ -808,5 +818,6 @@ Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamSetFileSize, _
 	@IFileStreamSetEncoding, _
 	@IFileStreamSetFileTime, _
-	@IFileStreamSetETag _
+	@IFileStreamSetETag, _
+	@IFileStreamSetReservedFileBytes _
 )

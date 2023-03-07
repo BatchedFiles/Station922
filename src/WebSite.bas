@@ -88,7 +88,7 @@ Type _WebSite
 	DefaultFileName As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
 	UtfBomFileOffset As Integer
-	ReservedFileBytes As Integer
+	ReservedFileBytes As UInteger
 	UseSsl As Boolean
 	IsMoved As Boolean
 End Type
@@ -1188,6 +1188,21 @@ Function WebSiteGetBuffer( _
 			*ppResult = NULL
 			Return hrCreateFileBuffer
 		End If
+		
+		Dim tmpLowFFFFBytes As UInteger = this->ReservedFileBytes Or &hFFFF
+		Dim ReservedFileBytes As UInteger = tmpLowFFFFBytes + 1
+		
+		Dim hrReservedFileBytes As HRESULT = IFileStream_SetReservedFileBytes( _
+			pIFile, _
+			ReservedFileBytes _
+		)
+		If FAILED(hrReservedFileBytes) Then
+			IFileStream_Release(pIFile)
+			*pFlags = ContentNegotiationFlags.None
+			*ppResult = NULL
+			Return hrCreateFileBuffer
+		End If
+		
 	End Scope
 	
 	Dim FileName As WString * (MAX_PATH + 1) = Any

@@ -140,4 +140,9 @@ Declare Function FileStreamSetETag( _
 	ByVal ETag As HeapBSTR _
 )As HRESULT
 
+Declare Function FileStreamSetReservedFileBytes( _
+	ByVal this As FileStream Ptr, _
+	ByVal ReservedFileBytes As UInteger _
+)As HRESULT
+
 #endif
