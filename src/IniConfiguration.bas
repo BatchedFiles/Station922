@@ -356,37 +356,54 @@ Function GetWebSitePhisycalDir( _
 	)As HRESULT
 	
 	Const PhisycalDirKeyString = WStr("PhisycalDir")
+
+	Dim pPhisycalDir As WString Ptr = Any
+	Dim StringLength As Integer = Any
 	
-	Dim DefaultDir As WString * (MAX_PATH + 1) = Any
+	Dim CurrentDir As WString * (MAX_PATH + 1) = Any
 	Dim resGetDir As DWORD = GetCurrentDirectoryW( _
 		MAX_PATH, _
-		@DefaultDir _
+		@CurrentDir _
 	)
 	If resGetDir = 0 Then
 		Dim dwError As DWORD = GetLastError()
 		*pbstrPhisycalDir = NULL
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
+	CurrentDir[resGetDir] = Characters.NullChar
 	
 	Dim PhisycalDir As WString * (MAX_PATH + 1) = Any
 	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
 		lpwszHost, _
 		@PhisycalDirKeyString, _
-		@DefaultDir, _
+		@CurrentDir, _
 		@PhisycalDir, _
 		Cast(DWORD, MAX_PATH), _
 		pWebSitesIniFileName _
 	)
-	If ValueLength = 0 Then
-		Dim dwError As DWORD = GetLastError()
-		*pbstrPhisycalDir = NULL
-		Return HRESULT_FROM_WIN32(dwError)
+	
+	If ValueLength Then
+		pPhisycalDir = @PhisycalDir
+		StringLength = ValueLength
+	Else
+		pPhisycalDir = @CurrentDir
+		StringLength = resGetDir
+	End If
+	
+	Dim LastChar As Integer = pPhisycalDir[StringLength - 1]
+	Dim NewStringLength As Integer = Any
+	If LastChar = Characters.ReverseSolidus Then
+		NewStringLength = StringLength
+	Else
+		pPhisycalDir[StringLength] = Characters.ReverseSolidus
+		pPhisycalDir[StringLength + 1] = Characters.NullChar
+		NewStringLength = StringLength + 1
 	End If
 	
 	Dim bstrPhisycalDir As HeapBSTR = CreatePermanentHeapStringLen( _
 		pIMemoryAllocator, _
-		@PhisycalDir, _
-		ValueLength _
+		pPhisycalDir, _
+		NewStringLength _
 	)
 	If bstrPhisycalDir = NULL Then
 		*pbstrPhisycalDir = NULL
