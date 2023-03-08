@@ -12,7 +12,6 @@
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
-Const WEBSITE_MAXDEFAULTFILENAMELENGTH As Integer = 16 - 1
 Const MaxHostNameLength As Integer = 1024 - 1
 Const DefaultFileNames As Integer = 8
 Const BasicAuthorizationWithSpace = WStr("Basic ")
@@ -870,7 +869,7 @@ Function WebSiteOpenRequestedFile( _
 	End If
 	
 	For i As Integer = 0 To FileListLength - 1
-		Dim defFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
+		Dim defFilename As WString * (MAX_PATH + 1) = Any
 		GetDefaultFileName(@defFilename, i, DefaultFileName)
 		
 		Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
