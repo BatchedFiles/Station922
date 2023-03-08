@@ -510,7 +510,8 @@ End Sub
 
 Function GetDefaultFileName( _
 		ByVal Buffer As WString Ptr, _
-		ByVal Index As Integer _
+		ByVal Index As Integer, _
+		ByVal DefaultFileName As HeapBSTR _
 	)As Boolean
 	
 	Const DefaultFileNameDefaultXml = WStr("default.xml")
@@ -521,6 +522,13 @@ Function GetDefaultFileName( _
 	Const DefaultFileNameIndexXhtml = WStr("index.xhtml")
 	Const DefaultFileNameIndexHtm = WStr("index.htm")
 	Const DefaultFileNameIndexHtml = WStr("index.html")
+	
+	Dim Length As Integer = SysStringLen(DefaultFileName)
+	
+	If Length Then
+		lstrcpyW(Buffer, DefaultFileName)
+		Return True
+	End If
 	
 	Select Case Index
 		
@@ -821,6 +829,7 @@ Function WebSiteOpenRequestedFile( _
 		ByVal pFileBuffer As IFileStream Ptr, _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
+		ByVal DefaultFileName As HeapBSTR, _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
@@ -852,13 +861,21 @@ Function WebSiteOpenRequestedFile( _
 	
 	Dim hrGetFile As HRESULT = Any
 	
-	For i As Integer = 0 To DefaultFileNames
-		Dim DefaultFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
-		GetDefaultFileName(@DefaultFilename, i)
+	Dim FileListLength As Integer = Any
+	Dim DefaultFileNameLength As Integer = SysStringLen(DefaultFileName)
+	If DefaultFileNameLength Then
+		FileListLength = 1
+	Else
+		FileListLength = DefaultFileNames + 1
+	End If
+	
+	For i As Integer = 0 To FileListLength - 1
+		Dim defFilename As WString * (WEBSITE_MAXDEFAULTFILENAMELENGTH + 1) = Any
+		GetDefaultFileName(@defFilename, i, DefaultFileName)
 		
 		Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
 		lstrcpyW(@FullDefaultFilename, Path)
-		lstrcatW(@FullDefaultFilename, DefaultFilename)
+		lstrcatW(@FullDefaultFilename, @defFilename)
 		
 		WebSiteMapPath( _
 			pPhysicalDirectory, _
@@ -1222,6 +1239,7 @@ Function WebSiteGetBuffer( _
 				pIFile, _
 				Path, _
 				fAccess, _
+				this->DefaultFileName, _
 				@FileName _
 			)
 			HeapSysFreeString(Path)
