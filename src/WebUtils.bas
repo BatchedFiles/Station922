@@ -600,6 +600,8 @@ Function Station922Initialize()As HRESULT
 			IWebSite_SetReservedFileBytes(pIWebSite, pWebSiteConfig[i].ReservedFileBytes)
 			IWebSite_SetIsMoved(pIWebSite, pWebSiteConfig[i].IsMoved)
 			IWebSite_SetUseSsl(pIWebSite, pWebSiteConfig[i].UseSsl)
+			IWebSite_SetDirectoryListing(pIWebSite, pWebSiteConfig[i].EnableDirectoryListing)
+			IWebSite_SetGetAllFiles(pIWebSite, pWebSiteConfig[i].EnableGetAllFiles)
 			
 			WebSites.Vector(i) = pIWebSite
 		Next
@@ -630,11 +632,8 @@ Function Station922Initialize()As HRESULT
 		IWebSite_SetReservedFileBytes(pIDefaultWebSite, DefaultWebSiteConfig.ReservedFileBytes)
 		IWebSite_SetIsMoved(pIDefaultWebSite, DefaultWebSiteConfig.IsMoved)
 		IWebSite_SetUseSsl(pIDefaultWebSite, DefaultWebSiteConfig.UseSsl)
-		
-		
-		' IWebSiteCollection_SetDefaultWebSite(pIWebSiteCollection, pIDefaultWebSite)
-		' IWebSite_Release(pIDefaultWebSite)
-		
+		IWebSite_SetDirectoryListing(pIDefaultWebSite, DefaultWebSiteConfig.EnableDirectoryListing)
+		IWebSite_SetGetAllFiles(pIDefaultWebSite, DefaultWebSiteConfig.EnableGetAllFiles)
 	End Scope
 	
 	Scope
