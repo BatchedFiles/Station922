@@ -175,6 +175,16 @@ Type IWebSiteVirtualTable
 		ByVal pResult As Boolean Ptr _
 	)As HRESULT
 	
+	SetDirectoryListing As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal DirectoryListing As Boolean _
+	)As HRESULT
+	
+	SetGetAllFiles As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal bGetAllFiles As Boolean _
+	)As HRESULT
+	
 End Type
 
 Type IWebSite_
@@ -209,5 +219,7 @@ End Type
 #define IWebSite_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
 #define IWebSite_AddHttpProcessor(this, Key, Value) (this)->lpVtbl->AddHttpProcessor(this, Key, Value)
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
+#define IWebSite_SetDirectoryListing(this, DirectoryListing) (this)->lpVtbl->SetDirectoryListing(this, DirectoryListing)
+#define IWebSite_SetGetAllFiles(this, bGetAllFiles) (this)->lpVtbl->SetGetAllFiles(this, bGetAllFiles)
 
 #endif

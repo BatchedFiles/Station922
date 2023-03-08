@@ -171,4 +171,14 @@ Declare Function WebSiteNeedCgiProcessing( _
 	ByVal pResult As Boolean Ptr _
 )As HRESULT
 
+Declare Function WebSiteSetDirectoryListing( _
+	ByVal this As WebSite Ptr, _
+	ByVal DirectoryListing As Boolean _
+)As HRESULT
+
+Declare Function WebSiteSetGetAllFiles( _
+	ByVal this As WebSite Ptr, _
+	ByVal bGetAllFiles As Boolean _
+)As HRESULT
+
 #endif

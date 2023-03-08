@@ -90,6 +90,8 @@ Type _WebSite
 	ReservedFileBytes As UInteger
 	UseSsl As Boolean
 	IsMoved As Boolean
+	EnableDirectoryListing As Boolean
+	EnableGetAllFiles As Boolean
 End Type
 
 Function GetAuthorizationHeader( _
@@ -822,6 +824,12 @@ Function WebSiteMapPath( _
 	
 End Function
 
+Function GetDirectoryListing()As HRESULT
+	
+	Return S_OK
+	
+End Function
+
 Function WebSiteOpenRequestedFile( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -906,6 +914,10 @@ Function WebSiteOpenRequestedFile( _
 		End If
 		
 	Next
+	
+	If FAILED(hrGetFile) Then
+		GetDirectoryListing()
+	End If
 	
 	Return hrGetFile
 	
@@ -1800,6 +1812,28 @@ Function WebSiteSetAddHttpProcessor( _
 	
 End Function
 
+Function WebSiteSetDirectoryListing( _
+		ByVal this As WebSite Ptr, _
+		ByVal DirectoryListing As Boolean _
+	)As HRESULT
+	
+	this->EnableDirectoryListing = DirectoryListing
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetGetAllFiles( _
+		ByVal this As WebSite Ptr, _
+		ByVal bGetAllFiles As Boolean _
+	)As HRESULT
+	
+	this->EnableGetAllFiles = bGetAllFiles
+	
+	Return S_OK
+	
+End Function
+
 
 Function IMutableWebSiteQueryInterface( _
 		ByVal this As IWebSite Ptr, _
@@ -2007,6 +2041,20 @@ Function IMutableWebSiteNeedCgiProcessing( _
 	Return WebSiteNeedCgiProcessing(ContainerOf(this, WebSite, lpVtbl), Path, pResult)
 End Function
 
+Function IMutableWebSiteSetDirectoryListing( _
+		ByVal this As IWebSite Ptr, _
+		ByVal DirectoryListing As Boolean _
+	)As HRESULT
+	Return WebSiteSetDirectoryListing(ContainerOf(this, WebSite, lpVtbl), DirectoryListing)
+End Function
+
+Function IMutableWebSiteSetGetAllFiles( _
+		ByVal this As IWebSite Ptr, _
+		ByVal bGetAllFiles As Boolean _
+	)As HRESULT
+	Return WebSiteSetGetAllFiles(ContainerOf(this, WebSite, lpVtbl), bGetAllFiles)
+End Function
+
 Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteQueryInterface, _
 	@IMutableWebSiteAddRef, _
@@ -2035,5 +2083,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetDefaultFileName, _
 	@IMutableWebSetReservedFileBytes, _
 	@IMutableWebSetAddHttpProcessor, _
-	@IMutableWebSiteNeedCgiProcessing _
+	@IMutableWebSiteNeedCgiProcessing, _
+	@IMutableWebSiteSetDirectoryListing, _
+	@IMutableWebSiteSetGetAllFiles _
 )
