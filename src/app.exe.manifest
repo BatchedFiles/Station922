@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-	<assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="BatchedFiles.WebServer.Station922" type="win32" />
+	<assemblyIdentity version="1.2.0.0" processorArchitecture="*" name="BatchedFiles.WebServer.Station922" type="win32" />
 	<description>WebServer Station922</description>
 	<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
 		<application>
