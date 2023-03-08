@@ -1523,7 +1523,7 @@ Function WebSiteGetErrorBuffer( _
 	Dim Mime As MimeType = Any
 	With Mime
 		.ContentType = ContentTypes.TextHtml
-		.CharsetWeakPtr = this->CodePage
+		.CharsetWeakPtr = NULL
 		.IsTextFormat = True
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
