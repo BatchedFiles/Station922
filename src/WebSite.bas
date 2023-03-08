@@ -1323,9 +1323,17 @@ Function WebSiteGetBuffer( _
 				Return hrOpenFile
 				
 			Case Else
+				Dim DefaultMime As DefaultMimeIfNotFound = Any
+				If this->EnableGetAllFiles Then
+					DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream
+				Else
+					DefaultMime = DefaultMimeIfNotFound.UseNone
+				End If
+				
 				Dim resGetMimeOfFileExtension As Boolean = GetMimeOfFileExtension( _
 					@Mime, _
-					PathFindExtensionW(FileName) _
+					PathFindExtensionW(FileName), _
+					DefaultMime _
 				)
 				If resGetMimeOfFileExtension = False Then
 					IFileStream_Release(pIFile)

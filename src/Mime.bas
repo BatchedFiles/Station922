@@ -528,7 +528,8 @@ End Sub
 
 Function GetMimeOfFileExtension( _
 		ByVal mt As MimeType Ptr, _
-		ByVal ext As WString Ptr _
+		ByVal ext As WString Ptr, _
+		ByVal DefaultMime As DefaultMimeIfNotFound _
 	)As Boolean
 	
 	mt->IsTextFormat = False
@@ -1087,6 +1088,13 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWasm)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationWasm
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		If DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream Then
+			mt->ContentType = ContentTypes.ApplicationOctetStream
 			Return True
 		End If
 	End Scope

@@ -121,6 +121,11 @@ Enum ContentTypes
 	
 End Enum
 
+Enum DefaultMimeIfNotFound
+	UseNone
+	UseApplicationOctetStream
+End Enum
+
 Type MimeType
 	ContentType As ContentTypes
 	CharsetWeakPtr As HeapBSTR
@@ -134,12 +139,8 @@ Declare Sub GetContentTypeOfMimeType( _
 
 Declare Function GetMimeOfFileExtension( _
 	ByVal mt As MimeType Ptr, _
-	ByVal FileExtension As WString Ptr _
-)As Boolean
-
-Declare Function GetMimeOfStringContentType( _
-	ByVal mt As MimeType Ptr, _
-	ByVal ContentType As WString Ptr _
+	ByVal FileExtension As WString Ptr, _
+	ByVal DefaultMime As DefaultMimeIfNotFound _
 )As Boolean
 
 #endif
