@@ -824,6 +824,50 @@ Function GetWebSiteReservedFileBytes( _
 	
 End Function
 
+Function GetWebSiteEnableDirectoryListing( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Boolean
+	
+	Const EnableDirectoryListingKeyString = WStr("EnableDirectoryListing")
+	
+	Dim bEnable As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@EnableDirectoryListingKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	If bEnable Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
+Function GetWebSiteEnableGetAllFiles( _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr _
+	)As Boolean
+	
+	Const EnableGetAllFilesKeyString = WStr("EnableGetAllFiles")
+	
+	Dim bEnable As INT_ = GetPrivateProfileIntW( _
+		lpwszHost, _
+		@EnableGetAllFilesKeyString, _
+		0, _
+		pWebSitesIniFileName _
+	)
+	
+	If bEnable Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
 Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
@@ -1026,6 +1070,22 @@ Function GetWebSite( _
 			lpwszHost _
 		)
 		pWebSite->UseSsl = UseSsl
+	End Scope
+	
+	Scope
+		Dim EnableDirectoryListing As Boolean = GetWebSiteEnableDirectoryListing( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		pWebSite->EnableDirectoryListing = EnableDirectoryListing
+	End Scope
+	
+	Scope
+		Dim EnableGetAllFiles As Boolean = GetWebSiteEnableGetAllFiles( _
+			pWebSitesIniFileName, _
+			lpwszHost _
+		)
+		pWebSite->EnableGetAllFiles = EnableGetAllFiles
 	End Scope
 	
 	Return S_OK

@@ -24,6 +24,8 @@ Type WebSiteConfiguration
 	ReservedFileBytes As Integer
 	IsMoved As Boolean
 	UseSsl As Boolean
+	EnableDirectoryListing As Boolean
+	EnableGetAllFiles As Boolean
 End Type
 
 Type IWebServerConfiguration As IWebServerConfiguration_
