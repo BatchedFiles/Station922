@@ -174,7 +174,7 @@ ASFLAGS_DEBUG+=
 GORCFLAGS+=/ni /o /d FROM_MAKEFILE
 GORCFLAGS_DEBUG=/d DEBUG
 
-LDFLAGS+=--major-image-version 1 --minor-image-version 0
+LDFLAGS+=--major-image-version 1 --minor-image-version 2
 LDFLAGS+=-subsystem console
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=-e $(ENTRY_POINT)

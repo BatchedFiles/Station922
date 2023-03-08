@@ -1,11 +1,11 @@
 #ifndef RESOURCES_RH
 #define RESOURCES_RH
 
-#define VER_FILEVERSION              1,0,0,0
-#define VER_FILEVERSION_STR          "1.0.0.0"
+#define VER_FILEVERSION              1,2,0,0
+#define VER_FILEVERSION_STR          "1.2.0.0"
 
-#define VER_PRODUCTVERSION           1,0,0,0
-#define VER_PRODUCTVERSION_STR       "1.0.0.0"
+#define VER_PRODUCTVERSION           1,2,0,0
+#define VER_PRODUCTVERSION_STR       "1.2.0.0"
 
 #ifndef DEBUG
 #define VER_DEBUG                    0
@@ -32,9 +32,5 @@
 #endif
 
 #define IDR_RT_MANIFEST1             00001
-
-#define IDS_REDIRECTION        20001
-#define IDS_CLIENTERROR        20002
-#define IDS_SERVERERROR        20003
 
 #endif
