@@ -85,6 +85,7 @@ Type _WebSite
 	CodePage As HeapBSTR
 	Methods As HeapBSTR
 	DefaultFileName As HeapBSTR
+	DirectoryListingEncoding As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
 	UtfBomFileOffset As Integer
 	ReservedFileBytes As UInteger
@@ -644,11 +645,11 @@ Function GetFileHandle( _
 		Case Else ' FileAccess.DeleteAccess
 			FileHandle = CreateFileW( _
 				PathTranslated, _
-				0, _
+				GENERIC_READ, _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE, _
+				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			If FileHandle = INVALID_HANDLE_VALUE Then
@@ -824,9 +825,286 @@ Function WebSiteMapPath( _
 	
 End Function
 
-Function GetDirectoryListing()As HRESULT
+Function WriteToFileW( _
+		ByVal hFile As HANDLE, _
+		ByVal pData As WString Ptr, _
+		ByVal LengthW As Integer _
+	)As HRESULT
+	
+	Dim NumberOfBytesWritten As DWORD = Any
+	Dim resWrite As BOOL = WriteFile( _
+		hFile, _
+		pData, _
+		LengthW * SizeOf(WString), _
+		@NumberOfBytesWritten, _
+		NULL _
+	)
+	If resWrite = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	Return S_OK
+	
+End Function
+
+Function GetDirectoryListing( _
+		ByVal pListingDir As WString Ptr, _
+		ByVal pIMalloc As IMalloc Ptr, _
+		ByVal pFileBuffer As IFileStream Ptr, _
+		ByVal pFileName As WString Ptr _
+	)As HRESULT
+	
+	Const TempPathPrefix = WStr("WebServer")
+	
+	Scope
+		Dim TempDir As WString * (MAX_PATH + 1) = Any
+		Dim resGetTempPath As DWORD = GetTempPathW( _
+			MAX_PATH, _
+			@TempDir _
+		)
+		If resGetTempPath = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		Dim resGetTempFileName As UINT = GetTempFileNameW( _
+			@TempDir, _
+			@TempPathPrefix, _
+			0, _
+			pFileName _
+		)
+		If resGetTempFileName = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+	End Scope
+	
+	Scope
+		Dim hFile As HANDLE = CreateFileW( _
+			pFileName, _
+			GENERIC_WRITE, _
+			0, _
+			NULL, _
+			CREATE_ALWAYS, _
+			FILE_ATTRIBUTE_NORMAL, _
+			NULL _
+		)
+		If hFile = INVALID_HANDLE_VALUE Then
+			Dim dwError As DWORD = GetLastError()
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+		
+		Scope
+			Dim Utf16LeBomBytes As ZString * 2 = Any
+			Utf16LeBomBytes[0] = &hFF
+			Utf16LeBomBytes[1] = &hFE
+			
+			Dim hrWriteBom As HRESULT = WriteToFileW( _
+				hFile, _
+				Cast(WString Ptr, @Utf16LeBomBytes), _
+				1 _
+			)
+			If FAILED(hrWriteBom) Then
+				Return hrWriteBom
+			End If
+		End Scope
+		
+		Scope
+			Const FileDataBytes = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""ru"">")
+			
+			Dim hrWriteHeader As HRESULT = WriteToFileW( _
+				hFile, _
+				@FileDataBytes, _
+				Len(FileDataBytes) _
+			)
+			If FAILED(hrWriteHeader) Then
+				Return hrWriteHeader
+			End If
+		End Scope
+		
+		Scope
+			Const FileDataBytes = WStr("<head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>Directory Listing</title></head>")
+			
+			Dim hrWriteHeader As HRESULT = WriteToFileW( _
+				hFile, _
+				@FileDataBytes, _
+				Len(FileDataBytes) _
+			)
+			If FAILED(hrWriteHeader) Then
+				Return hrWriteHeader
+			End If
+		End Scope
+		
+		Scope
+			Const FileDataBytes = WStr("<body><h1>Directory Listing</h1>")
+			
+			Dim hrWriteHeader As HRESULT = WriteToFileW( _
+				hFile, _
+				@FileDataBytes, _
+				Len(FileDataBytes) _
+			)
+			If FAILED(hrWriteHeader) Then
+				Return hrWriteHeader
+			End If
+		End Scope
+		
+		Scope
+			Dim ffd As WIN32_FIND_DATAW = Any
+			Dim hFind As HANDLE = FindFirstFileW( _
+				pListingDir, _
+				@ffd _
+			)
+			If hFind = INVALID_HANDLE_VALUE Then
+				Dim dwError As DWORD = GetLastError()
+				Return HRESULT_FROM_WIN32(dwError)
+			End If
+			
+			Scope
+				' <a href="/..">/..</a>
+				Const FileDataBytes = WStr("<a href=""/.."">/..</a>")
+				WriteToFileW( _
+					hFile, _
+					FileDataBytes, _
+					Len(FileDataBytes) _
+				)
+			End Scope
+			
+			Dim resFindNext As BOOL = Any
+			Do
+				Scope
+					Const FileDataBytes = WStr("<p>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				' Scope
+				' 	Dim Length As Integer = lstrlenW(ffd.cFileName)
+				' 	WriteToFileW( _
+				' 		hFile, _
+				' 		ffd.cFileName, _
+				' 		Length _
+				' 	)
+				' End Scope
+				
+				Dim LinkFileName As WString * (MAX_PATH + 1) = Any
+				lstrcpyW(@LinkFileName, ffd.cFileName)
+				
+				Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+				If IsDirectory Then
+					' <a href="ссылка/">ссылка/</a>
+					lstrcatW(@LinkFileName, WStr("/"))
+				Else
+					' <a href="ссылка">ссылка</a>
+					
+					' Dim filesize As LARGE_INTEGER = Any
+					' filesize.LowPart = ffd.nFileSizeLow
+					' filesize.HighPart = ffd.nFileSizeHigh
+					' _tprintf(TEXT("  %s   %ld bytes\n"), ffd.cFileName, filesize.QuadPart);
+				End If
+				
+				Scope
+					Const FileDataBytes = WStr("<a href=""")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Dim FindFileNameLength As Integer = lstrlenW(@LinkFileName)
+				Scope
+					WriteToFileW( _
+						hFile, _
+						LinkFileName, _
+						FindFileNameLength _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr(""">")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Scope
+					WriteToFileW( _
+						hFile, _
+						LinkFileName, _
+						FindFileNameLength _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr("</a>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr("</p>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				resFindNext = FindNextFileW(hFind, @ffd)
+			Loop While resFindNext
+			
+			FindClose(hFind)
+			
+		End Scope
+		
+		Scope
+			Const FileDataBytes = WStr("</body></html>")
+			
+			Dim hrWriteHeader As HRESULT = WriteToFileW( _
+				hFile, _
+				@FileDataBytes, _
+				Len(FileDataBytes) _
+			)
+			If FAILED(hrWriteHeader) Then
+				Return hrWriteHeader
+			End If
+		End Scope
+		
+		CloseHandle(hFile)
+	End Scope
+	
+	Scope
+		Dim hDeleteFile As HANDLE = Any
+		Dim hrOpen As HRESULT = GetFileHandle( _
+			pFileName, _
+			FileAccess.DeleteAccess, _
+			@hDeleteFile _
+		)
+		If FAILED(hrOpen) Then
+			Return hrOpen
+		End If
+		
+		IFileStream_SetFileHandle(pFileBuffer, hDeleteFile)
+		Dim fp As HeapBSTR = CreateHeapString( _
+			pIMalloc, _
+			pFileName _
+		)
+		
+		IFileStream_SetFilePath(pFileBuffer, fp)
+		HeapSysFreeString(fp)
+	End Scope
+	
+	Return WEBSITE_S_DIRECTORY_LISTING
 	
 End Function
 
@@ -837,6 +1115,7 @@ Function WebSiteOpenRequestedFile( _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal DefaultFileName As HeapBSTR, _
+		ByVal EnableDirectoryListing As Boolean, _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
@@ -916,7 +1195,30 @@ Function WebSiteOpenRequestedFile( _
 	Next
 	
 	If FAILED(hrGetFile) Then
-		GetDirectoryListing()
+		If EnableDirectoryListing Then
+			Const AsteriskString = WStr("*")
+			Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@FullDefaultFilename, Path)
+			lstrcatW(@FullDefaultFilename, @AsteriskString)
+			
+			Dim ListingDir As WString * (MAX_PATH + 1) = Any
+			WebSiteMapPath( _
+				pPhysicalDirectory, _
+				FullDefaultFilename, _
+				@ListingDir _
+			)
+			
+			Dim hrListing As HRESULT = GetDirectoryListing( _
+				@ListingDir, _
+				pIMalloc, _
+				pFileBuffer, _
+				pFileName _
+			)
+			
+			If SUCCEEDED(hrListing) Then
+				Return hrListing
+			End If
+		End If
 	End If
 	
 	Return hrGetFile
@@ -951,6 +1253,7 @@ Sub InitializeWebSite( _
 	this->ConnectBindPort = NULL
 	this->Methods = NULL
 	this->DefaultFileName = NULL
+	this->DirectoryListingEncoding = NULL
 	this->pIProcessorCollection = pIProcessorCollection
 	this->UtfBomFileOffset = 0
 	this->ReservedFileBytes = 0
@@ -1251,6 +1554,7 @@ Function WebSiteGetBuffer( _
 				Path, _
 				fAccess, _
 				this->DefaultFileName, _
+				this->EnableDirectoryListing, _
 				@FileName _
 			)
 			HeapSysFreeString(Path)
@@ -1323,18 +1627,28 @@ Function WebSiteGetBuffer( _
 				Return hrOpenFile
 				
 			Case Else
-				Dim DefaultMime As DefaultMimeIfNotFound = Any
-				If this->EnableGetAllFiles Then
-					DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream
+				Dim resGetMimeOfFileExtension As Boolean = Any
+				
+				If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
+					Mime.ContentType = ContentTypes.TextHtml
+					Mime.CharsetWeakPtr = this->DirectoryListingEncoding
+					Mime.IsTextFormat = True
+					resGetMimeOfFileExtension = True
 				Else
-					DefaultMime = DefaultMimeIfNotFound.UseNone
+					Dim DefaultMime As DefaultMimeIfNotFound = Any
+					If this->EnableGetAllFiles Then
+						DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream
+					Else
+						DefaultMime = DefaultMimeIfNotFound.UseNone
+					End If
+					
+					resGetMimeOfFileExtension = GetMimeOfFileExtension( _
+						@Mime, _
+						PathFindExtensionW(FileName), _
+						DefaultMime _
+					)
 				End If
 				
-				Dim resGetMimeOfFileExtension As Boolean = GetMimeOfFileExtension( _
-					@Mime, _
-					PathFindExtensionW(FileName), _
-					DefaultMime _
-				)
 				If resGetMimeOfFileExtension = False Then
 					IFileStream_Release(pIFile)
 					*pFlags = ContentNegotiationFlags.None
@@ -1350,26 +1664,32 @@ Function WebSiteGetBuffer( _
 		Dim ZipMode As ZipModes = Any
 		Dim IsAcceptEncoding As Boolean = Any
 		
-		If Mime.IsTextFormat Then
-			ZipFileHandle = GetCompressionHandle( _
-				FileName, _
-				pRequest, _
-				@ZipMode, _
-				@IsAcceptEncoding _
-			)
-			
-			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
-				Dim hrBind As HRESULT = BindToThreadPool( _
-					ZipFileHandle, _
-					ZipFileHandle _
+		If hrOpenFile <> WEBSITE_S_DIRECTORY_LISTING Then
+			If Mime.IsTextFormat Then
+				ZipFileHandle = GetCompressionHandle( _
+					FileName, _
+					pRequest, _
+					@ZipMode, _
+					@IsAcceptEncoding _
 				)
-				If FAILED(hrBind) Then
-					CloseHandle(ZipFileHandle)
-					IFileStream_Release(pIFile)
-					*pFlags = ContentNegotiationFlags.None
-					*ppResult = NULL
-					Return hrBind
+				
+				If ZipFileHandle <> INVALID_HANDLE_VALUE Then
+					Dim hrBind As HRESULT = BindToThreadPool( _
+						ZipFileHandle, _
+						ZipFileHandle _
+					)
+					If FAILED(hrBind) Then
+						CloseHandle(ZipFileHandle)
+						IFileStream_Release(pIFile)
+						*pFlags = ContentNegotiationFlags.None
+						*ppResult = NULL
+						Return hrBind
+					End If
 				End If
+			Else
+				ZipFileHandle = INVALID_HANDLE_VALUE
+				ZipMode = ZipModes.None
+				IsAcceptEncoding = False
 			End If
 		Else
 			ZipFileHandle = INVALID_HANDLE_VALUE
@@ -1458,14 +1778,16 @@ Function WebSiteGetBuffer( _
 		
 		If Mime.IsTextFormat Then
 			If fAccess = FileAccess.ReadAccess Then
-				Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
-					this->CodePage, _
-					ZipFileHandle, _
-					@Mime, _
-					this->UtfBomFileOffset _
-				)
-				
-				IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
+				If hrOpenFile <> WEBSITE_S_DIRECTORY_LISTING Then
+					Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
+						this->CodePage, _
+						ZipFileHandle, _
+						@Mime, _
+						this->UtfBomFileOffset _
+					)
+					
+					IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
+				End If
 			End If
 		End If
 		
@@ -1826,6 +2148,15 @@ Function WebSiteSetDirectoryListing( _
 	)As HRESULT
 	
 	this->EnableDirectoryListing = DirectoryListing
+	
+	If DirectoryListing Then
+		Const Utf16EncodingString = WStr("utf-16")
+		this->DirectoryListingEncoding = CreatePermanentHeapStringLen( _
+			this->pIMemoryAllocator, _
+			@Utf16EncodingString, _
+			Len(Utf16EncodingString) _
+		)
+	End If
 	
 	Return S_OK
 	
