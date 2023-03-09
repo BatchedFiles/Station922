@@ -951,6 +951,16 @@ Function GetDirectoryListing( _
 		End Scope
 		
 		Scope
+			Scope
+				' <a href="/..">/..</a>
+				Const FileDataBytes = WStr("<a href="".."">..</a>")
+				WriteToFileW( _
+					hFile, _
+					FileDataBytes, _
+					Len(FileDataBytes) _
+				)
+			End Scope
+			
 			Dim ffd As WIN32_FIND_DATAW = Any
 			Dim hFind As HANDLE = FindFirstFileW( _
 				pListingDir, _
@@ -961,104 +971,89 @@ Function GetDirectoryListing( _
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			Scope
-				' <a href="/..">/..</a>
-				Const FileDataBytes = WStr("<a href=""/.."">/..</a>")
-				WriteToFileW( _
-					hFile, _
-					FileDataBytes, _
-					Len(FileDataBytes) _
-				)
-			End Scope
-			
 			Dim resFindNext As BOOL = Any
 			Do
-				Scope
-					Const FileDataBytes = WStr("<p>")
-					WriteToFileW( _
-						hFile, _
-						@FileDataBytes, _
-						Len(FileDataBytes) _
-					)
-				End Scope
-				
-				' Scope
-				' 	Dim Length As Integer = lstrlenW(ffd.cFileName)
-				' 	WriteToFileW( _
-				' 		hFile, _
-				' 		ffd.cFileName, _
-				' 		Length _
-				' 	)
-				' End Scope
-				
-				Dim LinkFileName As WString * (MAX_PATH + 1) = Any
-				lstrcpyW(@LinkFileName, ffd.cFileName)
-				
-				Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
-				If IsDirectory Then
-					' <a href="ссылка/">ссылка/</a>
-					lstrcatW(@LinkFileName, WStr("/"))
-				Else
-					' <a href="ссылка">ссылка</a>
-					
-					' Dim filesize As LARGE_INTEGER = Any
-					' filesize.LowPart = ffd.nFileSizeLow
-					' filesize.HighPart = ffd.nFileSizeHigh
-					' _tprintf(TEXT("  %s   %ld bytes\n"), ffd.cFileName, filesize.QuadPart);
+				If lstrcmpW(ffd.cFileName, WStr(".")) Then
+					If lstrcmpW(ffd.cFileName, WStr("..")) Then
+						Scope
+							Const FileDataBytes = WStr("<p>")
+							WriteToFileW( _
+								hFile, _
+								@FileDataBytes, _
+								Len(FileDataBytes) _
+							)
+						End Scope
+						
+						Dim LinkFileName As WString * (MAX_PATH + 1) = Any
+						lstrcpyW(@LinkFileName, ffd.cFileName)
+						
+						Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+						If IsDirectory Then
+							' <a href="ссылка/">ссылка/</a>
+							lstrcatW(@LinkFileName, WStr("/"))
+						Else
+							' <a href="ссылка">ссылка</a>
+							
+							' Dim filesize As LARGE_INTEGER = Any
+							' filesize.LowPart = ffd.nFileSizeLow
+							' filesize.HighPart = ffd.nFileSizeHigh
+							' _tprintf(TEXT("  %s   %ld bytes\n"), ffd.cFileName, filesize.QuadPart);
+						End If
+						
+						Scope
+							Const FileDataBytes = WStr("<a href=""")
+							WriteToFileW( _
+								hFile, _
+								@FileDataBytes, _
+								Len(FileDataBytes) _
+							)
+						End Scope
+						
+						Dim FindFileNameLength As Integer = lstrlenW(@LinkFileName)
+						Scope
+							WriteToFileW( _
+								hFile, _
+								LinkFileName, _
+								FindFileNameLength _
+							)
+						End Scope
+						
+						Scope
+							Const FileDataBytes = WStr(""">")
+							WriteToFileW( _
+								hFile, _
+								@FileDataBytes, _
+								Len(FileDataBytes) _
+							)
+						End Scope
+						
+						Scope
+							WriteToFileW( _
+								hFile, _
+								LinkFileName, _
+								FindFileNameLength _
+							)
+						End Scope
+						
+						Scope
+							Const FileDataBytes = WStr("</a>")
+							WriteToFileW( _
+								hFile, _
+								@FileDataBytes, _
+								Len(FileDataBytes) _
+							)
+						End Scope
+						
+						Scope
+							Const FileDataBytes = WStr("</p>")
+							WriteToFileW( _
+								hFile, _
+								@FileDataBytes, _
+								Len(FileDataBytes) _
+							)
+						End Scope
+					End If
 				End If
-				
-				Scope
-					Const FileDataBytes = WStr("<a href=""")
-					WriteToFileW( _
-						hFile, _
-						@FileDataBytes, _
-						Len(FileDataBytes) _
-					)
-				End Scope
-				
-				Dim FindFileNameLength As Integer = lstrlenW(@LinkFileName)
-				Scope
-					WriteToFileW( _
-						hFile, _
-						LinkFileName, _
-						FindFileNameLength _
-					)
-				End Scope
-				
-				Scope
-					Const FileDataBytes = WStr(""">")
-					WriteToFileW( _
-						hFile, _
-						@FileDataBytes, _
-						Len(FileDataBytes) _
-					)
-				End Scope
-				
-				Scope
-					WriteToFileW( _
-						hFile, _
-						LinkFileName, _
-						FindFileNameLength _
-					)
-				End Scope
-				
-				Scope
-					Const FileDataBytes = WStr("</a>")
-					WriteToFileW( _
-						hFile, _
-						@FileDataBytes, _
-						Len(FileDataBytes) _
-					)
-				End Scope
-				
-				Scope
-					Const FileDataBytes = WStr("</p>")
-					WriteToFileW( _
-						hFile, _
-						@FileDataBytes, _
-						Len(FileDataBytes) _
-					)
-				End Scope
 				
 				resFindNext = FindNextFileW(hFind, @ffd)
 			Loop While resFindNext
