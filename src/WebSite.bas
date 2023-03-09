@@ -65,7 +65,11 @@ Const NeedUsernamePasswordString1 = WStr("Authorization wrong")
 Const NeedUsernamePasswordString2 = WStr("Need Basic Authorization")
 Const NeedUsernamePasswordString3 = WStr("Password must not be empty")
 
-Const DefaultVirtualPath = WStr("/")
+Type ListingFileItem
+	FileName As WString * (MAX_PATH + 1)
+	FileSize As LARGE_INTEGER
+	IsDirectory As Boolean
+End Type
 
 Type _WebSite
 	#if __FB_DEBUG__
@@ -848,6 +852,109 @@ Function WriteToFileW( _
 	
 End Function
 
+Function GetFileList( _
+		ByVal pListingDir As WString Ptr, _
+		ByVal pCount As Integer Ptr _
+	)As ListingFileItem Ptr
+	
+	Dim ffd As WIN32_FIND_DATAW = Any
+	Dim hFind As HANDLE = FindFirstFileW( _
+		pListingDir, _
+		@ffd _
+	)
+	If hFind = INVALID_HANDLE_VALUE Then
+		Return NULL
+	End If
+	
+	Dim FilesCount As Integer = 1024
+	Dim FileIndex As Integer = 0
+	Dim pFiles As ListingFileItem Ptr = malloc( _
+		SizeOf(ListingFileItem) * FilesCount _
+	)
+	If pFiles = NULL Then
+		*pCount = 0
+		FindClose(hFind)
+		Return NULL
+	End If
+	
+	Dim resFindNext As BOOL = Any
+	Do
+		If lstrcmpW(ffd.cFileName, WStr(".")) Then
+			If lstrcmpW(ffd.cFileName, WStr("..")) Then
+				
+				If FileIndex >= FilesCount Then
+					FilesCount = FilesCount * 2
+					Dim pFilesNew As ListingFileItem Ptr = realloc( _
+						pFiles, _
+						SizeOf(ListingFileItem) * FilesCount _
+					)
+					If pFilesNew = NULL Then
+						*pCount = 0
+						FindClose(hFind)
+						free(pFiles)
+						Return NULL
+					End If
+					
+					pFiles = pFilesNew
+				End If
+				
+				Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+				
+				lstrcpyW(@pFiles[FileIndex].FileName, ffd.cFileName)
+				pFiles[FileIndex].FileSize.LowPart = ffd.nFileSizeLow
+				pFiles[FileIndex].FileSize.HighPart = ffd.nFileSizeHigh
+				pFiles[FileIndex].IsDirectory = IsDirectory
+				
+				FileIndex += 1
+			End If
+		End If
+		
+		resFindNext = FindNextFileW(hFind, @ffd)
+	Loop While resFindNext
+	
+	FindClose(hFind)
+	
+	*pCount = FileIndex
+	Return pFiles
+	
+End Function
+
+Function CompareListingFileItems cdecl( _
+		ByVal p As Const Any Ptr, _
+		ByVal q As Const Any Ptr _
+	)As Long
+	
+	Dim x As ListingFileItem Ptr = CPtr(ListingFileItem Ptr, p)
+	Dim y As ListingFileItem Ptr = CPtr(ListingFileItem Ptr, q)
+	
+	' FileName As WString * (MAX_PATH + 1)
+	' FileSize As LARGE_INTEGER
+	' IsDirectory As Boolean
+	
+	If x->IsDirectory Then
+		If y->IsDirectory Then
+			Dim resCompare As Long = lstrcmpW( _
+				@x->FileName, _
+				@y->FileName _
+			)
+			Return resCompare
+		Else
+			Return -1
+		End If
+	Else
+		If y->IsDirectory Then
+			Return 1
+		Else
+			Dim resCompare As Long = lstrcmpW( _
+				@x->FileName, _
+				@y->FileName _
+			)
+			Return resCompare
+		End If
+	End If
+	
+End Function
+
 Function GetDirectoryListing( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -961,105 +1068,88 @@ Function GetDirectoryListing( _
 				)
 			End Scope
 			
-			Dim ffd As WIN32_FIND_DATAW = Any
-			Dim hFind As HANDLE = FindFirstFileW( _
+			Dim FilesInDirCount As Integer = Any
+			Dim pFilesInDir As ListingFileItem Ptr = GetFileList( _
 				pListingDir, _
-				@ffd _
+				@FilesInDirCount _
 			)
-			If hFind = INVALID_HANDLE_VALUE Then
-				Dim dwError As DWORD = GetLastError()
-				Return HRESULT_FROM_WIN32(dwError)
+			If pFilesInDir = NULL Then
+				Return E_OUTOFMEMORY
 			End If
 			
-			Dim resFindNext As BOOL = Any
-			Do
-				If lstrcmpW(ffd.cFileName, WStr(".")) Then
-					If lstrcmpW(ffd.cFileName, WStr("..")) Then
-						Scope
-							Const FileDataBytes = WStr("<p>")
-							WriteToFileW( _
-								hFile, _
-								@FileDataBytes, _
-								Len(FileDataBytes) _
-							)
-						End Scope
-						
-						Dim LinkFileName As WString * (MAX_PATH + 1) = Any
-						lstrcpyW(@LinkFileName, ffd.cFileName)
-						
-						Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
-						If IsDirectory Then
-							' <a href="ссылка/">ссылка/</a>
-							lstrcatW(@LinkFileName, WStr("/"))
-						Else
-							' <a href="ссылка">ссылка</a>
-							
-							' Dim filesize As LARGE_INTEGER = Any
-							' filesize.LowPart = ffd.nFileSizeLow
-							' filesize.HighPart = ffd.nFileSizeHigh
-							' _tprintf(TEXT("  %s   %ld bytes\n"), ffd.cFileName, filesize.QuadPart);
-						End If
-						
-						Scope
-							Const FileDataBytes = WStr("<a href=""")
-							WriteToFileW( _
-								hFile, _
-								@FileDataBytes, _
-								Len(FileDataBytes) _
-							)
-						End Scope
-						
-						Dim FindFileNameLength As Integer = lstrlenW(@LinkFileName)
-						Scope
-							WriteToFileW( _
-								hFile, _
-								LinkFileName, _
-								FindFileNameLength _
-							)
-						End Scope
-						
-						Scope
-							Const FileDataBytes = WStr(""">")
-							WriteToFileW( _
-								hFile, _
-								@FileDataBytes, _
-								Len(FileDataBytes) _
-							)
-						End Scope
-						
-						Scope
-							WriteToFileW( _
-								hFile, _
-								LinkFileName, _
-								FindFileNameLength _
-							)
-						End Scope
-						
-						Scope
-							Const FileDataBytes = WStr("</a>")
-							WriteToFileW( _
-								hFile, _
-								@FileDataBytes, _
-								Len(FileDataBytes) _
-							)
-						End Scope
-						
-						Scope
-							Const FileDataBytes = WStr("</p>")
-							WriteToFileW( _
-								hFile, _
-								@FileDataBytes, _
-								Len(FileDataBytes) _
-							)
-						End Scope
-					End If
+			qsort(pFilesInDir, FilesInDirCount, SizeOf(ListingFileItem), @CompareListingFileItems)
+			
+			For i As Integer = 0 To FilesInDirCount - 1
+				Scope
+					Const FileDataBytes = WStr("<p>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				If pFilesInDir[i].IsDirectory Then
+					' <a href="ссылка/">ссылка/</a>
+					lstrcatW(@pFilesInDir[i].FileName, WStr("/"))
 				End If
 				
-				resFindNext = FindNextFileW(hFind, @ffd)
-			Loop While resFindNext
+				Scope
+					Const FileDataBytes = WStr("<a href=""")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Dim FindFileNameLength As Integer = lstrlenW(@pFilesInDir[i].FileName)
+				Scope
+					WriteToFileW( _
+						hFile, _
+						@pFilesInDir[i].FileName, _
+						FindFileNameLength _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr(""">")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Scope
+					WriteToFileW( _
+						hFile, _
+						@pFilesInDir[i].FileName, _
+						FindFileNameLength _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr("</a>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+				Scope
+					Const FileDataBytes = WStr("</p>")
+					WriteToFileW( _
+						hFile, _
+						@FileDataBytes, _
+						Len(FileDataBytes) _
+					)
+				End Scope
+				
+			Next
 			
-			FindClose(hFind)
-			
+			free(pFilesInDir)
 		End Scope
 		
 		Scope
