@@ -56,6 +56,8 @@ ConnectBindPort=0
 Methods=GET,HEAD
 ReservedFileBytes=0
 DefaultFileName=default.htm
+EnableDirectoryListing=0
+EnableGetAllFiles=0
 ```
 
 
@@ -134,6 +136,16 @@ DefaultFileName=default.htm
 <dl>
 <dt>DefaultFileName</dt>
 <dd>Имя файла по умолчанию. Если клиент запросил ресурс без имени файла `http://www.example.org`, то сервер будет просматривать каталог на наличие файлов по умолчанию. Если параметр указан, то сервер не будет искать файлы, и сразу выдаст содержимое конкретного файла, как если бы клиент запросил файл `http://www.example.org/default.htm`.</dd>
+</dl>
+
+<dl>
+<dt>EnableDirectoryListing</dt>
+<dd>Листинг директорий сайта. По умолчанию 0 (выключен). Для включения установите в 1.</dd>
+</dl>
+
+<dl>
+<dt>EnableGetAllFiles</dt>
+<dd>Выдача всех файлов, даже если не найден тип содержимого MIME. По умолчанию 0 (выключено). Для включения установите в 1.</dd>
 </dl>
 
 
