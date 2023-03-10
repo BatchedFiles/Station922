@@ -55,6 +55,7 @@ Declare Function WebSiteCollectionCount( _
 Declare Function WebSiteCollectionAdd( _
 	ByVal this As WebSiteCollection Ptr, _
 	ByVal pKey As HeapBSTR, _
+	ByVal Port As HeapBSTR, _
 	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 

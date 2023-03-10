@@ -11,6 +11,7 @@ Type WebSiteNode
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
 	HostName As HeapBSTR
+	Port As HeapBSTR
 	pIWebSite As IWebSite Ptr
 End Type
 
@@ -56,6 +57,30 @@ Sub TreeAddNode( _
 	
 End Sub
 
+Function CompareHostWithPort( _
+		ByVal Host As WString Ptr, _
+		ByVal Port As WString Ptr, _
+		ByVal HostToCompare As WString Ptr _
+	)As Boolean
+	
+	Dim HostNameWithPort As WString * (MAX_PATH + 1) = Any
+	lstrcpyW(@HostNameWithPort, Host)
+	lstrcatW(@HostNameWithPort, WStr(":"))
+	lstrcatW(@HostNameWithPort, Port)
+	
+	Dim CompareResultWithPort As Long = lstrcmpiW( _
+		@HostNameWithPort, _
+		HostToCompare _
+	)
+	
+	If CompareResultWithPort = 0 Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
 Function TreeFindNode( _
 		ByVal pNode As WebSiteNode Ptr, _
 		ByVal HostName As HeapBSTR _
@@ -69,6 +94,16 @@ Function TreeFindNode( _
 	Select Case CompareResult
 		
 		Case Is > 0
+			Dim resCompareWithPort As Boolean = CompareHostWithPort( _
+				pNode->HostName, _
+				pNode->Port, _
+				HostName _
+			)
+			
+			If resCompareWithPort Then
+				Return pNode
+			End If
+			
 			If pNode->RightNode = NULL Then
 				Return NULL
 			End If
@@ -76,6 +111,16 @@ Function TreeFindNode( _
 			Return TreeFindNode(pNode->RightNode, HostName)
 			
 		Case Is < 0
+			Dim resCompareWithPort As Boolean = CompareHostWithPort( _
+				pNode->HostName, _
+				pNode->Port, _
+				HostName _
+			)
+			
+			If resCompareWithPort Then
+				Return pNode
+			End If
+			
 			If pNode->LeftNode = NULL Then
 				Return NULL
 			End If
@@ -92,6 +137,7 @@ End Function
 Function CreateWebSiteNode( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal bstrHostName As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pValue As IWebSite Ptr _
 	)As WebSiteNode Ptr
 	
@@ -112,6 +158,8 @@ Function CreateWebSiteNode( _
 	#endif
 	HeapSysAddRefString(bstrHostName)
 	pNode->HostName = bstrHostName
+	HeapSysAddRefString(Port)
+	pNode->Port = Port
 	IWebSite_AddRef(pValue)
 	pNode->pIWebSite = pValue
 	pNode->LeftNode = NULL
@@ -287,12 +335,14 @@ End Function
 Function WebSiteCollectionAdd( _
 		ByVal this As WebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	Dim pNode As WebSiteNode Ptr = CreateWebSiteNode( _
 		this->pIMemoryAllocator, _
 		pKey, _
+		Port, _
 		pIWebSite _
 	)
 	If pNode = NULL Then
@@ -395,9 +445,10 @@ End Function
 Function IWebSiteCollectionAdd( _
 		ByVal this As IWebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebSiteCollectionAdd(ContainerOf(this, WebSiteCollection, lpVtbl), pKey, pIWebSite)
+	Return WebSiteCollectionAdd(ContainerOf(this, WebSiteCollection, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
 Function IWebSiteCollectionItemWeakPtr( _

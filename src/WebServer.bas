@@ -261,12 +261,14 @@ End Function
 Function WebServerAddWebSite( _
 		ByVal this As WebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
 	Dim hrAdd As HRESULT = IWebSiteCollection_Add( _
 		this->pIWebSites, _
 		pKey, _
+		Port, _
 		pIWebSite _
 	)
 	If FAILED(hrAdd) Then
@@ -380,9 +382,10 @@ End Function
 Function IWebServerAddWebSite( _
 		ByVal this As IWebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebServerAddWebSite(ContainerOf(this, WebServer, lpVtbl), pKey, pIWebSite)
+	Return WebServerAddWebSite(ContainerOf(this, WebServer, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
 Function IWebServerAddDefaultWebSite( _

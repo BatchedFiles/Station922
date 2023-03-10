@@ -706,6 +706,7 @@ Function Station922Initialize()As HRESULT
 					Dim hrAddWebSite As HRESULT = IWebServer_AddWebSite( _
 						WebServers.Vector(j), _
 						pWebSiteConfig[i].HostName, _
+						pWebSiteConfig[i].ListenPort, _
 						WebSites.Vector(i) _
 					)
 					If FAILED(hrAddWebSite) Then

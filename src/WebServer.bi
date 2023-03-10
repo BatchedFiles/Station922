@@ -38,6 +38,7 @@ Declare Function WebServerRelease( _
 Declare Function WebServerAddWebSite( _
 	ByVal this As WebServer Ptr, _
 	ByVal pKey As HeapBSTR, _
+	ByVal Port As HeapBSTR, _
 	ByVal pIWebSite As IWebSite Ptr _
 )As HRESULT
 

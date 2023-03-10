@@ -26,6 +26,7 @@ Type IWebServerVirtualTable
 	AddWebSite As Function( _
 		ByVal this As IWebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
+		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	
@@ -57,7 +58,7 @@ End Type
 #define IWebServer_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IWebServer_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWebServer_Release(this) (this)->lpVtbl->Release(this)
-#define IWebServer_AddWebSite(this, pKey, pIWebSite) (this)->lpVtbl->AddWebSite(this, pKey, pIWebSite)
+#define IWebServer_AddWebSite(this, pKey, Port, pIWebSite) (this)->lpVtbl->AddWebSite(this, pKey, Port, pIWebSite)
 #define IWebServer_AddDefaultWebSite(this, pIDefaultWebSite) (this)->lpVtbl->AddDefaultWebSite(this, pIDefaultWebSite)
 #define IWebServer_SetEndPoint(this, ListenAddress, ListenPort) (this)->lpVtbl->SetEndPoint(this, ListenAddress, ListenPort)
 #define IWebServer_Run(this) (this)->lpVtbl->Run(this)
