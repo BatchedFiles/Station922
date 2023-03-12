@@ -26,7 +26,7 @@ Const QuoteString = WStr("""")
 Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 
-' Размер буфера в символах для записи в него кода html страницы с ошибкой
+' Р Р°Р·РјРµСЂ Р±СѓС„РµСЂР° РІ СЃРёРјРІРѕР»Р°С… РґР»СЏ Р·Р°РїРёСЃРё РІ РЅРµРіРѕ РєРѕРґР° html СЃС‚СЂР°РЅРёС†С‹ СЃ РѕС€РёР±РєРѕР№
 Const MaxHttpErrorBuffer As Integer = 1024 - 1
 
 Const DefaultContentLanguage = WStr("en")
@@ -204,9 +204,9 @@ Function WebSiteHttpAuthUtil( _
 	
 	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = Characters.NullChar
 	
-	' Из массива байт в строку
-	' Преобразуем utf8 в WString
-	' -1 — значит, длина строки будет проверяться самой функцией по завершающему нулю
+	' РР· РјР°СЃСЃРёРІР° Р±Р°Р№С‚ РІ СЃС‚СЂРѕРєСѓ
+	' РџСЂРµРѕР±СЂР°Р·СѓРµРј utf8 РІ WString
+	' -1 вЂ” Р·РЅР°С‡РёС‚, РґР»РёРЅР° СЃС‚СЂРѕРєРё Р±СѓРґРµС‚ РїСЂРѕРІРµСЂСЏС‚СЊСЃСЏ СЃР°РјРѕР№ С„СѓРЅРєС†РёРµР№ РїРѕ Р·Р°РІРµСЂС€Р°СЋС‰РµРјСѓ РЅСѓР»СЋ
 	Dim UsernamePasswordKey As WString * (UserNamePasswordCapacity + 1) = Any
 	Dim DecodedLength As Long = MultiByteToWideChar( _
 		CP_UTF8, _
@@ -218,14 +218,14 @@ Function WebSiteHttpAuthUtil( _
 	)
 	UsernamePasswordKey[DecodedLength] = Characters.NullChar
 	
-	' Теперь pColonChar хранит в себе указатель на разделитель?двоеточие
+	' РўРµРїРµСЂСЊ pColonChar С…СЂР°РЅРёС‚ РІ СЃРµР±Рµ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЂР°Р·РґРµР»РёС‚РµР»СЊ?РґРІРѕРµС‚РѕС‡РёРµ
 	Dim pColonChar As WString Ptr = StrChrW(@UsernamePasswordKey, Characters.Colon)
 	If pColonChar = NULL Then
 		HeapSysFreeString(pHeaderAuthorization)
 		Return WEBSITE_E_EMPTYPASSWORD
 	End If
 	
-	' Убрали двоеточие
+	' РЈР±СЂР°Р»Рё РґРІРѕРµС‚РѕС‡РёРµ
 	pColonChar[0] = 0
 	
 	/'
@@ -926,10 +926,6 @@ Function CompareListingFileItems cdecl( _
 	Dim x As ListingFileItem Ptr = CPtr(ListingFileItem Ptr, p)
 	Dim y As ListingFileItem Ptr = CPtr(ListingFileItem Ptr, q)
 	
-	' FileName As WString * (MAX_PATH + 1)
-	' FileSize As LARGE_INTEGER
-	' IsDirectory As Boolean
-	
 	If x->IsDirectory Then
 		If y->IsDirectory Then
 			Dim resCompare As Long = lstrcmpW( _
@@ -1089,7 +1085,7 @@ Function GetDirectoryListing( _
 				End Scope
 				
 				If pFilesInDir[i].IsDirectory Then
-					' <a href="ссылка/">ссылка/</a>
+					' <a href="СЃСЃС‹Р»РєР°/">СЃСЃС‹Р»РєР°/</a>
 					lstrcatW(@pFilesInDir[i].FileName, WStr("/"))
 				End If
 				
@@ -1622,7 +1618,7 @@ Function WebSiteGetBuffer( _
 				End If
 				
 			Case FileAccess.ReadAccess
-				' TODO Проверить идентификацию для запароленных ресурсов
+				' TODO РџСЂРѕРІРµСЂРёС‚СЊ РёРґРµРЅС‚РёС„РёРєР°С†РёСЋ РґР»СЏ Р·Р°РїР°СЂРѕР»РµРЅРЅС‹С… СЂРµСЃСѓСЂСЃРѕРІ
 				
 			End Select
 	End Scope
