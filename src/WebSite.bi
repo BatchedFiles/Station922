@@ -139,11 +139,6 @@ Declare Function WebSiteSetConnectBindPort( _
 	ByVal ConnectBindPort As HeapBSTR _
 )As HRESULT
 
-Declare Function WebSiteSetSupportedMethods( _
-	ByVal this As WebSite Ptr, _
-	ByVal Methods As HeapBSTR _
-)As HRESULT
-
 Declare Function WebSiteSetUseSsl( _
 	ByVal this As WebSite Ptr, _
 	ByVal UseSsl As Boolean _
@@ -179,6 +174,11 @@ Declare Function WebSiteSetDirectoryListing( _
 Declare Function WebSiteSetGetAllFiles( _
 	ByVal this As WebSite Ptr, _
 	ByVal bGetAllFiles As Boolean _
+)As HRESULT
+
+Declare Function WebSiteSetAllMethods( _
+	ByVal this As WebSite Ptr, _
+	ByVal pMethods As HeapBSTR _
 )As HRESULT
 
 #endif

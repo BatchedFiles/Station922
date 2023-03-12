@@ -143,11 +143,6 @@ Type IWebSiteVirtualTable
 		ByVal ConnectBindPort As HeapBSTR _
 	)As HRESULT
 	
-	SetSupportedMethods As Function( _
-		ByVal this As IWebSite Ptr, _
-		ByVal Methods As HeapBSTR _
-	)As HRESULT
-	
 	SetUseSsl As Function( _
 		ByVal this As IWebSite Ptr, _
 		ByVal UseSsl As Boolean _
@@ -185,6 +180,11 @@ Type IWebSiteVirtualTable
 		ByVal bGetAllFiles As Boolean _
 	)As HRESULT
 	
+	SetAllMethods As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	
 End Type
 
 Type IWebSite_
@@ -213,7 +213,6 @@ End Type
 #define IWebSite_SetListenPort(this, ListenPort) (this)->lpVtbl->SetListenPort(this, ListenPort)
 #define IWebSite_SetConnectBindAddress(this, ConnectBindAddress) (this)->lpVtbl->SetConnectBindAddress(this, ConnectBindAddress)
 #define IWebSite_SetConnectBindPort(this, ConnectBindPort) (this)->lpVtbl->SetConnectBindPort(this, ConnectBindPort)
-#define IWebSite_SetSupportedMethods(this, Methods) (this)->lpVtbl->SetSupportedMethods(this, Methods)
 #define IWebSite_SetUseSsl(this, UseSsl) (this)->lpVtbl->SetUseSsl(this, UseSsl)
 #define IWebSite_SetDefaultFileName(this, DefaultFileName) (this)->lpVtbl->SetDefaultFileName(this, DefaultFileName)
 #define IWebSite_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
@@ -221,5 +220,6 @@ End Type
 #define IWebSite_NeedCgiProcessing(this, Path, pResult) (this)->lpVtbl->NeedCgiProcessing(this, Path, pResult)
 #define IWebSite_SetDirectoryListing(this, DirectoryListing) (this)->lpVtbl->SetDirectoryListing(this, DirectoryListing)
 #define IWebSite_SetGetAllFiles(this, bGetAllFiles) (this)->lpVtbl->SetGetAllFiles(this, bGetAllFiles)
+#define IWebSite_SetAllMethods(this, pMethods) (this)->lpVtbl->SetAllMethods(this, pMethods)
 
 #endif

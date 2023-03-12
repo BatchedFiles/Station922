@@ -87,7 +87,6 @@ Type _WebSite
 	ConnectBindAddress As HeapBSTR
 	ConnectBindPort As HeapBSTR
 	CodePage As HeapBSTR
-	Methods As HeapBSTR
 	DefaultFileName As HeapBSTR
 	DirectoryListingEncoding As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
@@ -1336,7 +1335,6 @@ Sub InitializeWebSite( _
 	this->ListenPort = NULL
 	this->ConnectBindAddress = NULL
 	this->ConnectBindPort = NULL
-	this->Methods = NULL
 	this->DefaultFileName = NULL
 	this->DirectoryListingEncoding = NULL
 	this->pIProcessorCollection = pIProcessorCollection
@@ -1360,7 +1358,6 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->ListenPort)
 	HeapSysFreeString(this->ConnectBindAddress)
 	HeapSysFreeString(this->ConnectBindPort)
-	HeapSysFreeString(this->Methods)
 	HeapSysFreeString(this->DefaultFileName)
 	If this->pIProcessorCollection Then
 		IHttpProcessorCollection_Release(this->pIProcessorCollection)
@@ -1391,24 +1388,6 @@ Function CreateWebSite( _
 			*ppv = NULL
 			Return E_OUTOFMEMORY
 		End If
-		
-		Const AllMethodsString = "GET, HEAD, OPTIONS, PUT, TRACE"
-		Dim AllMethods As HeapBSTR = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			WStr(AllMethodsString), _
-			Len(AllMethodsString) _
-		)
-		If AllMethods = NULL Then
-			*ppv = NULL
-			Return E_OUTOFMEMORY
-		End If
-		
-		IHttpProcessorCollection_SetAllMethods( _
-			pIProcessorCollection, _
-			AllMethods _
-		)
-		
-		HeapSysFreeString(AllMethods)
 	End Scope
 
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
@@ -2162,17 +2141,6 @@ Function WebSiteSetConnectBindPort( _
 	
 End Function
 
-Function WebSiteSetSupportedMethods( _
-		ByVal this As WebSite Ptr, _
-		ByVal Methods As HeapBSTR _
-	)As HRESULT
-	
-	LET_HEAPSYSSTRING(this->Methods, Methods)
-	
-	Return S_OK
-	
-End Function
-
 Function WebSiteSetDefaultFileName( _
 		ByVal this As WebSite Ptr, _
 		ByVal DefaultFileName As HeapBSTR _
@@ -2289,6 +2257,20 @@ Function WebSiteSetGetAllFiles( _
 	)As HRESULT
 	
 	this->EnableGetAllFiles = bGetAllFiles
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetAllMethods( _
+		ByVal this As WebSite Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	
+	IHttpProcessorCollection_SetAllMethods( _
+		this->pIProcessorCollection, _
+		pMethods _
+	)
 	
 	Return S_OK
 	
@@ -2457,13 +2439,6 @@ Function IMutableWebSiteSetConnectBindPort( _
 	Return WebSiteSetConnectBindPort(ContainerOf(this, WebSite, lpVtbl), ConnectBindPort)
 End Function
 
-Function IMutableWebSiteSetSupportedMethods( _
-		ByVal this As IWebSite Ptr, _
-		ByVal Methods As HeapBSTR _
-	)As HRESULT
-	Return WebSiteSetSupportedMethods(ContainerOf(this, WebSite, lpVtbl), Methods)
-End Function
-
 Function IMutableWebSiteSetDefaultFileName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal DefaultFileName As HeapBSTR _
@@ -2515,6 +2490,13 @@ Function IMutableWebSiteSetGetAllFiles( _
 	Return WebSiteSetGetAllFiles(ContainerOf(this, WebSite, lpVtbl), bGetAllFiles)
 End Function
 
+Function IMutableWebSiteSetAllMethods( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pMethods As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetAllMethods(ContainerOf(this, WebSite, lpVtbl), pMethods)
+End Function
+
 Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteQueryInterface, _
 	@IMutableWebSiteAddRef, _
@@ -2538,12 +2520,12 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteSetListenPort, _
 	@IMutableWebSiteSetConnectBindAddress, _
 	@IMutableWebSiteSetConnectBindPort, _
-	@IMutableWebSiteSetSupportedMethods, _
 	@IMutableWebSiteSetUseSsl, _
 	@IMutableWebSiteSetDefaultFileName, _
 	@IMutableWebSetReservedFileBytes, _
 	@IMutableWebSetAddHttpProcessor, _
 	@IMutableWebSiteNeedCgiProcessing, _
 	@IMutableWebSiteSetDirectoryListing, _
-	@IMutableWebSiteSetGetAllFiles _
+	@IMutableWebSiteSetGetAllFiles, _
+	@IMutableWebSiteSetAllMethods _
 )
