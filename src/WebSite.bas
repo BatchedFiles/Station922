@@ -1582,6 +1582,41 @@ Function GetReservedFileBytesWithAlign( _
 	
 End Function
 
+Function GetFindFileErrorCode( _
+		ByVal FileName As WString Ptr, _
+		ByVal hrOpenFile As HRESULT _
+	)As HRESULT
+	
+	Dim hrOpenFileTranslate As HRESULT = Any
+	
+	Select Case hrOpenFile
+		
+		Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
+			Dim File410 As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@File410, FileName)
+			lstrcatW(@File410, @FileGoneExtension)
+			
+			Dim Attributes As DWORD = GetFileAttributesW( _
+				@File410 _
+			)
+			If Attributes = INVALID_FILE_ATTRIBUTES Then
+				hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
+			Else
+				hrOpenFileTranslate = WEBSITE_E_FILEGONE
+			End If
+			
+		Case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED)
+			hrOpenFileTranslate = WEBSITE_E_FORBIDDEN
+			
+		Case Else
+			hrOpenFileTranslate = hrOpenFile
+			
+	End Select
+	
+	Return hrOpenFileTranslate
+	
+End Function
+
 Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -1669,31 +1704,10 @@ Function WebSiteGetBuffer( _
 		End Scope
 		
 		If FAILED(hrOpenFile) Then
-			Dim hrOpenFileTranslate As HRESULT = Any
-			
-			Select Case hrOpenFile
-				
-				Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
-					Dim File410 As WString * (MAX_PATH + 1) = Any
-					lstrcpyW(@File410, @FileName)
-					lstrcatW(@File410, @FileGoneExtension)
-					
-					Dim Attributes As DWORD = GetFileAttributesW( _
-						@File410 _
-					)
-					If Attributes = INVALID_FILE_ATTRIBUTES Then
-						hrOpenFileTranslate = WEBSITE_E_FILENOTFOUND
-					Else
-						hrOpenFileTranslate = WEBSITE_E_FILEGONE
-					End If
-					
-				Case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED)
-					hrOpenFileTranslate = WEBSITE_E_FORBIDDEN
-					
-				Case Else
-					hrOpenFileTranslate = hrOpenFile
-					
-			End Select
+			Dim hrOpenFileTranslate As HRESULT = GetFindFileErrorCode( _
+				@FileName, _
+				hrOpenFile _
+			)
 			
 			IFileStream_Release(pIFile)
 			*pFlags = ContentNegotiationFlags.None
