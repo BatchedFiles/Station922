@@ -744,6 +744,84 @@ Function GetWebSiteDefaultFileName( _
 	
 End Function
 
+Function GetWebSiteUserName( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrUserName As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const UserNameKeyString = WStr("UserName")
+	
+	Dim UserName As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@UserNameKeyString, _
+		NULL, _
+		@UserName, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	
+	If ValueLength = 0 Then
+		UserName[0] = Characters.NullChar
+	End If
+	
+	Dim bstrUserName As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@UserName, _
+		ValueLength _
+	)
+	If bstrUserName = NULL Then
+		*pbstrUserName = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrUserName = bstrUserName
+	
+	Return S_OK
+	
+End Function
+
+Function GetWebSitePassword( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		ByVal pWebSitesIniFileName As WString Ptr, _
+		ByVal lpwszHost As WString Ptr, _
+		ByVal pbstrPassword As HeapBSTR Ptr _
+	)As HRESULT
+	
+	Const PasswordKeyString = WStr("Password")
+	
+	Dim Password As WString * (MAX_PATH + 1) = Any
+	Dim ValueLength As DWORD = GetPrivateProfileStringW( _
+		lpwszHost, _
+		@PasswordKeyString, _
+		NULL, _
+		@Password, _
+		Cast(DWORD, MAX_PATH), _
+		pWebSitesIniFileName _
+	)
+	
+	If ValueLength = 0 Then
+		Password[0] = Characters.NullChar
+	End If
+	
+	Dim bstrPassword As HeapBSTR = CreatePermanentHeapStringLen( _
+		pIMemoryAllocator, _
+		@Password, _
+		ValueLength _
+	)
+	If bstrPassword = NULL Then
+		*pbstrPassword = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	*pbstrPassword = bstrPassword
+	
+	Return S_OK
+	
+End Function
+
 Function GetWebSiteIsMoved( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
@@ -1038,6 +1116,36 @@ Function GetWebSite( _
 		End If
 		
 		pWebSite->DefaultFileName = bstrFileName
+	End Scope
+	
+	Scope
+		Dim bstrUserName As HeapBSTR = Any
+		Dim hrUserName As HRESULT = GetWebSiteUserName( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrUserName _
+		)
+		If FAILED(hrUserName) Then
+			Return hrUserName
+		End If
+		
+		pWebSite->UserName = bstrUserName
+	End Scope
+	
+	Scope
+		Dim bstrPassword As HeapBSTR = Any
+		Dim hrPassword As HRESULT = GetWebSitePassword( _
+			pIMemoryAllocator, _
+			pWebSitesIniFileName, _
+			lpwszHost, _
+			@bstrPassword _
+		)
+		If FAILED(hrPassword) Then
+			Return hrPassword
+		End If
+		
+		pWebSite->Password = bstrPassword
 	End Scope
 	
 	Scope

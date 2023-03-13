@@ -20,6 +20,8 @@ Type WebSiteConfiguration
 	CodePage As HeapBSTR
 	Methods As HeapBSTR
 	DefaultFileName As HeapBSTR
+	UserName As HeapBSTR
+	Password As HeapBSTR
 	UtfBomFileOffset As Integer
 	ReservedFileBytes As Integer
 	IsMoved As Boolean
