@@ -181,4 +181,14 @@ Declare Function WebSiteSetAllMethods( _
 	ByVal pMethods As HeapBSTR _
 )As HRESULT
 
+Declare Function WebSiteSetUserName( _
+	ByVal this As WebSite Ptr, _
+	ByVal pUserName As HeapBSTR _
+)As HRESULT
+
+Declare Function WebSiteSetPassword( _
+	ByVal this As WebSite Ptr, _
+	ByVal pPassword As HeapBSTR _
+)As HRESULT
+
 #endif

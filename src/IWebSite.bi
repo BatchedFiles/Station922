@@ -185,6 +185,16 @@ Type IWebSiteVirtualTable
 		ByVal pMethods As HeapBSTR _
 	)As HRESULT
 	
+	SetUserName As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pUserName As HeapBSTR _
+	)As HRESULT
+	
+	SetPassword As Function( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pPassword As HeapBSTR _
+	)As HRESULT
+	
 End Type
 
 Type IWebSite_
@@ -221,5 +231,7 @@ End Type
 #define IWebSite_SetDirectoryListing(this, DirectoryListing) (this)->lpVtbl->SetDirectoryListing(this, DirectoryListing)
 #define IWebSite_SetGetAllFiles(this, bGetAllFiles) (this)->lpVtbl->SetGetAllFiles(this, bGetAllFiles)
 #define IWebSite_SetAllMethods(this, pMethods) (this)->lpVtbl->SetAllMethods(this, pMethods)
+#define IWebSite_SetUserName(this, pUserName) (this)->lpVtbl->SetUserName(this, pUserName)
+#define IWebSite_SetPassword(this, pPassword) (this)->lpVtbl->SetPassword(this, pPassword)
 
 #endif

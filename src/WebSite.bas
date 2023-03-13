@@ -2268,6 +2268,28 @@ Function WebSiteSetAllMethods( _
 	
 End Function
 
+Function WebSiteSetUserName( _
+		ByVal this As WebSite Ptr, _
+		ByVal pUserName As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->UserName, pUserName)
+	
+	Return S_OK
+	
+End Function
+
+Function WebSiteSetPassword( _
+		ByVal this As WebSite Ptr, _
+		ByVal pPassword As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->Password, pPassword)
+	
+	Return S_OK
+	
+End Function
+
 
 Function IMutableWebSiteQueryInterface( _
 		ByVal this As IWebSite Ptr, _
@@ -2489,6 +2511,20 @@ Function IMutableWebSiteSetAllMethods( _
 	Return WebSiteSetAllMethods(ContainerOf(this, WebSite, lpVtbl), pMethods)
 End Function
 
+Function IMutableWebSiteSetUserName( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pUserName As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetUserName(ContainerOf(this, WebSite, lpVtbl), pUserName)
+End Function
+
+Function IMutableWebSiteSetPassword( _
+		ByVal this As IWebSite Ptr, _
+		ByVal pPassword As HeapBSTR _
+	)As HRESULT
+	Return WebSiteSetPassword(ContainerOf(this, WebSite, lpVtbl), pPassword)
+End Function
+
 Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteQueryInterface, _
 	@IMutableWebSiteAddRef, _
@@ -2519,5 +2555,7 @@ Dim GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable = Type( _
 	@IMutableWebSiteNeedCgiProcessing, _
 	@IMutableWebSiteSetDirectoryListing, _
 	@IMutableWebSiteSetGetAllFiles, _
-	@IMutableWebSiteSetAllMethods _
+	@IMutableWebSiteSetAllMethods, _
+	@IMutableWebSiteSetUserName, _
+	@IMutableWebSiteSetPassword _
 )
