@@ -89,6 +89,8 @@ Type _WebSite
 	CodePage As HeapBSTR
 	DefaultFileName As HeapBSTR
 	DirectoryListingEncoding As HeapBSTR
+	UserName As HeapBSTR
+	Password As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
 	UtfBomFileOffset As Integer
 	ReservedFileBytes As UInteger
@@ -164,8 +166,8 @@ Function WebSiteHttpAuthUtil( _
 		ProxyAuthorization _
 	)
 	
-	Dim HeaderLength As Integer = SysStringLen(pHeaderAuthorization)
-	If HeaderLength = 0 Then
+	Dim AuthorizationHeaderLength As Integer = SysStringLen(pHeaderAuthorization)
+	If AuthorizationHeaderLength = 0 Then
 		HeapSysFreeString(pHeaderAuthorization)
 		Return WEBSITE_E_NEEDAUTHENTICATE
 	End If
@@ -180,8 +182,8 @@ Function WebSiteHttpAuthUtil( _
 		Return WEBSITE_E_NEEDBASICAUTHENTICATE
 	End If
 	
-	Dim pBase64 As WString Ptr = @pHeaderAuthorization[1]
-	Dim Base64Length As Integer = HeaderLength - Len(BasicAuthorizationWithSpace)
+	Dim pBase64 As WString Ptr = @pHeaderAuthorization[Len(BasicAuthorizationWithSpace)]
+	Dim Base64Length As Integer = AuthorizationHeaderLength - Len(BasicAuthorizationWithSpace)
 	
 	Const UserNamePasswordCapacity As Integer = 1000 - 1
 	Dim UsernamePasswordUtf8 As ZString * (UserNamePasswordCapacity + 1) = Any
@@ -197,8 +199,8 @@ Function WebSiteHttpAuthUtil( _
 		0 _
 	)
 	If resCryptString = 0 Then
-		HeapSysFreeString(pHeaderAuthorization)
 		Dim dwError As DWORD = GetLastError()
+		HeapSysFreeString(pHeaderAuthorization)
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
@@ -218,58 +220,44 @@ Function WebSiteHttpAuthUtil( _
 	)
 	UsernamePasswordKey[DecodedLength] = Characters.NullChar
 	
-	' “еперь pColonChar хранит в себе указатель на разделитель?двоеточие
+	' “еперь pColonChar хранит в себе указатель на разделитель-двоеточие
 	Dim pColonChar As WString Ptr = StrChrW(@UsernamePasswordKey, Characters.Colon)
 	If pColonChar = NULL Then
 		HeapSysFreeString(pHeaderAuthorization)
 		Return WEBSITE_E_EMPTYPASSWORD
 	End If
 	
-	' ”брали двоеточие
+	' Remove Colon Character
 	pColonChar[0] = 0
 	
-	/'
 	Dim pClientUserName As WString Ptr = @UsernamePasswordKey
 	Dim pClientPassword As WString Ptr = @pColonChar[1]
 	
-	Dim SettingsFileName As WString * (MAX_PATH + 1) = Any
+	Dim ServerUserNameLength As Integer = SysStringLen(this->UserName)
 	
-	IWebSite_MapPath(pIWebSite, @UsersIniFileString, @SettingsFileName)
-	
-	Dim Config As Configuration = Any
-	Dim pIConfig As IConfiguration Ptr = InitializeConfigurationOfIConfiguration(@Config)
-	
-	Configuration_NonVirtualSetIniFilename(pIConfig, @SettingsFileName)
-	
-	Dim PasswordBuffer As WString * (255 + 1) = Any
-	
-	Dim ValueLength As Integer = Any
-	
-	Configuration_NonVirtualGetStringValue(pIConfig, _
-		@AdministratorsSectionString, _
-		pClientUserName, _
-		@EmptyString, _
-		255, _
-		@PasswordBuffer, _
-		@ValueLength _
-	)
-	
-	If lstrlenW(@PasswordBuffer) = 0 Then
-		HeapSysFreeString(pHeaderAuthorization)
-		Return WEBSITE_E_BADUSERNAMEPASSWORD
+	If ServerUserNameLength Then
+		
+		Dim ServerPasswordLength As Integer = SysStringLen(this->Password)
+		
+		If ServerPasswordLength Then
+			Dim UserNameCompareResult As Long = lstrcmpW(this->UserName, pClientUserName)
+			
+			If UserNameCompareResult = 0 Then
+				Dim PasswordCompareResult As Long = lstrcmpW(this->Password, pClientPassword)
+				
+				If PasswordCompareResult = 0 Then
+					
+					HeapSysFreeString(pHeaderAuthorization)
+					
+					Return S_OK
+				End If
+			End If
+		End If
 	End If
-	
-	If lstrcmpW(@PasswordBuffer, pClientPassword) <> 0 Then
-		HeapSysFreeString(pHeaderAuthorization)
-		Return WEBSITE_E_BADUSERNAMEPASSWORD
-	End If
-	
-	Return S_OK
-	'/
 	
 	HeapSysFreeString(pHeaderAuthorization)
 	
-	Return E_FAIL
+	Return WEBSITE_E_BADUSERNAMEPASSWORD
 	
 End Function
 
@@ -1337,6 +1325,8 @@ Sub InitializeWebSite( _
 	this->ConnectBindPort = NULL
 	this->DefaultFileName = NULL
 	this->DirectoryListingEncoding = NULL
+	this->UserName = NULL
+	this->Password = NULL
 	this->pIProcessorCollection = pIProcessorCollection
 	this->UtfBomFileOffset = 0
 	this->ReservedFileBytes = 0
@@ -1359,6 +1349,8 @@ Sub UnInitializeWebSite( _
 	HeapSysFreeString(this->ConnectBindAddress)
 	HeapSysFreeString(this->ConnectBindPort)
 	HeapSysFreeString(this->DefaultFileName)
+	HeapSysFreeString(this->UserName)
+	HeapSysFreeString(this->Password)
 	If this->pIProcessorCollection Then
 		IHttpProcessorCollection_Release(this->pIProcessorCollection)
 	End If
