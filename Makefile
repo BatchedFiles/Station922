@@ -11,8 +11,8 @@ LD ?= ld.exe
 DLL_TOOL ?= dlltool.exe
 LIB_DIR ?=
 INC_DIR ?=
-FBC_VER ?= FBC-1.09.0
-GCC_VER ?= GCC-09.3.0
+FBC_VER ?= FBC1090
+GCC_VER ?= GCC0930
 MARCH ?= native
 # for clang:
 TARGET_TRIPLET ?=
