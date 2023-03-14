@@ -1,7 +1,6 @@
 #include once "windows.bi"
 #include once "win\shellapi.bi"
 #include once "ConsoleMain.bi"
-#include once "WebUtils.bi"
 #include once "WindowsServiceMain.bi"
 
 Const ServiceParam = WStr("/service")
@@ -48,7 +47,7 @@ Function EntryPoint Alias "EntryPoint"()As Integer
 	End If
 	
 	Return RetCode
-		
+	
 End Function
 
 #ifndef WITHOUT_RUNTIME
