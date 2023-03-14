@@ -75,6 +75,26 @@ Function CreateServerSocketSink( _
 		@this->SocketListLength _
 	)
 	
+	Scope
+		Dim vtAddressMessage As VARIANT = Any
+		vtAddressMessage.vt = VT_BSTR
+		vtAddressMessage.bstrVal = this->ListenAddress
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"Listen address\t"), _
+			@vtAddressMessage _
+		)
+		
+		Dim vtPortMessage As VARIANT = Any
+		vtPortMessage.vt = VT_BSTR
+		vtPortMessage.bstrVal = this->ListenPort
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			WStr(!"Listen port\t"), _
+			@vtPortMessage _
+		)
+	End Scope
+	
 	HeapSysFreeString(this->ListenAddress)
 	this->ListenAddress = NULL
 	
