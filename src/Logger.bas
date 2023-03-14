@@ -86,21 +86,27 @@ Sub LogWriteEntry( _
 			SafeArrayUnaccessData(pvtData->parray)
 		End Scope
 	Else
-		Dim buf As WString * 255 = Any
+		ConsoleWriteColorStringW(pwszText)
 		
 		Dim vt As VARTYPE = pvtData->vt
-		Select Case vt
+		If vt = VT_BSTR Then
+			ConsoleWriteColorStringW(pvtData->bstrVal)
+		Else
+			Dim buf As WString * 255 = Any
 			
-			Case VT_ERROR
-				_ultow(pvtData->scode, @buf, 16)
+			Select Case vt
 				
-			Case Else
-				_ltow(pvtData->lVal, @buf, 10)
-				
-		End Select
+				Case VT_ERROR
+					_ultow(pvtData->scode, @buf, 16)
+					
+				Case Else
+					_ltow(pvtData->lVal, @buf, 10)
+					
+			End Select
+			
+			ConsoleWriteColorStringW(@buf)
+		End If
 		
-		ConsoleWriteColorStringW(pwszText)
-		ConsoleWriteColorStringW(@buf)
 		ConsoleWriteColorStringW(WStr(!"\r\n"))
 		
 	End If
