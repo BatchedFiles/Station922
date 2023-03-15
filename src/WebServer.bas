@@ -80,7 +80,7 @@ Function CreateServerSocketSink( _
 		vtAddressMessage.vt = VT_BSTR
 		vtAddressMessage.bstrVal = this->ListenAddress
 		LogWriteEntry( _
-			LogEntryType.Error, _
+			LogEntryType.Information, _
 			WStr(!"Listen address\t"), _
 			@vtAddressMessage _
 		)
@@ -89,7 +89,7 @@ Function CreateServerSocketSink( _
 		vtPortMessage.vt = VT_BSTR
 		vtPortMessage.bstrVal = this->ListenPort
 		LogWriteEntry( _
-			LogEntryType.Error, _
+			LogEntryType.Information, _
 			WStr(!"Listen port\t"), _
 			@vtPortMessage _
 		)
@@ -361,6 +361,15 @@ Function WebServerRun( _
 		' —чЄтчик ссылок уменьшим в пуле потоков после функции EndExecute
 		
 	Next
+	
+	Dim vtErrorMessage As VARIANT = Any
+	vtErrorMessage.vt = VT_ERROR
+	vtErrorMessage.scode = S_OK
+	LogWriteEntry( _
+		LogEntryType.Information, _
+		WStr(!"WebServer create succeeded\t"), _
+		@vtErrorMessage _
+	)
 	
 	Return S_OK
 	
