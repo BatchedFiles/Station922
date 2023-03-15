@@ -316,6 +316,7 @@ Function HttpGetProcessorPrepare( _
 		pContext->pIMemoryAllocator, _
 		FileAccess.ReadAccess, _
 		pContext->pIRequest, _
+		pContext->pIReader, _
 		0, _
 		@Flags, _
 		@pIBuffer _

@@ -24,6 +24,8 @@ Type _FileStream
 	SmallFileBytes As ZString Ptr
 	Language As HeapBSTR
 	ETag As HeapBSTR
+	PreloadedBytesLength As UInteger
+	pPreloadedBytes As UByte Ptr
 	LastFileModifiedDate As FILETIME
 	ZipMode As ZipModes
 	ContentType As MimeType
@@ -60,6 +62,8 @@ Sub InitializeFileStream( _
 	this->FileOffset = 0
 	this->PreviousAllocatedLength = 0
 	this->PreviousAllocatedSmallLength = 0
+	this->PreloadedBytesLength = 0
+	this->pPreloadedBytes = NULL
 	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.CharsetWeakPtr = NULL
@@ -622,6 +626,19 @@ Function FileStreamSetReservedFileBytes( _
 	
 End Function
 
+Function FileStreamSetPreloadedBytes( _
+		ByVal this As FileStream Ptr, _
+		ByVal PreloadedBytesLength As UInteger, _
+		ByVal pPreloadedBytes As UByte Ptr _
+	)As HRESULT
+	
+	this->PreloadedBytesLength = PreloadedBytesLength
+	this->pPreloadedBytes = pPreloadedBytes
+	
+	Return S_OK
+	
+End Function
+
 
 Function IFileStreamQueryInterface( _
 		ByVal this As IFileStream Ptr, _
@@ -794,6 +811,14 @@ Function IFileStreamSetReservedFileBytes( _
 	Return FileStreamSetReservedFileBytes(ContainerOf(this, FileStream, lpVtbl), ReservedFileBytes)
 End Function
 
+Function IFileStreamSetPreloadedBytes( _
+		ByVal this As IFileStream Ptr, _
+		ByVal PreloadedBytesLength As UInteger, _
+		ByVal pPreloadedBytes As UByte Ptr _
+	)As HRESULT
+	Return FileStreamSetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), PreloadedBytesLength, pPreloadedBytes)
+End Function
+
 Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamQueryInterface, _
 	@IFileStreamAddRef, _
@@ -818,5 +843,6 @@ Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamSetEncoding, _
 	@IFileStreamSetFileTime, _
 	@IFileStreamSetETag, _
-	@IFileStreamSetReservedFileBytes _
+	@IFileStreamSetReservedFileBytes, _
+	@IFileStreamSetPreloadedBytes _
 )

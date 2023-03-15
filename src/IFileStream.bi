@@ -132,6 +132,12 @@ Type IFileStreamVirtualTable
 		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	
+	SetPreloadedBytes As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal PreloadedBytesLength As UInteger, _
+		ByVal pPreloadedBytes As UByte Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IFileStream_
@@ -168,5 +174,6 @@ End Type
 #define IFileStream_SetFileTime(this, pTime) (this)->lpVtbl->SetFileTime(this, pTime)
 #define IFileStream_SetETag(this, ETag) (this)->lpVtbl->SetETag(this, ETag)
 #define IFileStream_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
+#define IFileStream_SetPreloadedBytes(this, PreloadedBytesLength, pPreloadedBytes) (this)->lpVtbl->SetPreloadedBytes(this, PreloadedBytesLength, pPreloadedBytes)
 
 #endif

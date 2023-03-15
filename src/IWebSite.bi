@@ -69,6 +69,7 @@ Type IWebSiteVirtualTable
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
@@ -209,7 +210,7 @@ End Type
 #define IWebSite_GetVirtualPath(this, ppVirtualPath) (this)->lpVtbl->GetVirtualPath(this, ppVirtualPath)
 #define IWebSite_GetIsMoved(this, pIsMoved) (this)->lpVtbl->GetIsMoved(this, pIsMoved)
 #define IWebSite_GetMovedUrl(this, ppMovedUrl) (this)->lpVtbl->GetMovedUrl(this, ppMovedUrl)
-#define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
+#define IWebSite_GetBuffer(this, pIMalloc, fAccess, pRequest, pIReader, BufferLength, pFlags, ppResult) (this)->lpVtbl->GetBuffer(this, pIMalloc, fAccess, pRequest, pIReader, BufferLength, pFlags, ppResult)
 #define IWebSite_GetErrorBuffer(this, pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult) (this)->lpVtbl->GetErrorBuffer(this, pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
 #define IWebSite_GetProcessorCollectionWeakPtr(this, ppResult) (this)->lpVtbl->GetProcessorCollectionWeakPtr(this, ppResult)
 #define IWebSite_SetHostName(this, pHost) (this)->lpVtbl->SetHostName(this, pHost)

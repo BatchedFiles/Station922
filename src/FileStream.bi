@@ -145,4 +145,10 @@ Declare Function FileStreamSetReservedFileBytes( _
 	ByVal ReservedFileBytes As UInteger _
 )As HRESULT
 
+Declare Function FileStreamSetPreloadedBytes( _
+	ByVal this As FileStream Ptr, _
+	ByVal PreloadedBytesLength As UInteger, _
+	ByVal pPreloadedBytes As UByte Ptr _
+)As HRESULT
+
 #endif

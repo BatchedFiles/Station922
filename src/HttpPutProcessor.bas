@@ -167,6 +167,7 @@ Function HttpPutProcessorPrepare( _
 		pContext->pIMemoryAllocator, _
 		FileAccess.CreateAccess, _
 		pContext->pIRequest, _
+		pContext->pIReader, _
 		ContentLength, _
 		@Flags, _
 		@pIBuffer _

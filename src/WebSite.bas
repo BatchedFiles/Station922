@@ -1619,6 +1619,7 @@ Function WebSiteGetBuffer( _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
@@ -1676,6 +1677,20 @@ Function WebSiteGetBuffer( _
 			*ppResult = NULL
 			Return hrCreateFileBuffer
 		End If
+		
+		Dim PreloadedBytesLength As Integer = Any
+		Dim pPreloadedBytes As UByte Ptr = Any
+		IHttpReader_GetPreloadedBytes( _
+			pIReader, _
+			@PreloadedBytesLength, _
+			@pPreloadedBytes _
+		)
+		
+		IFileStream_SetPreloadedBytes( _
+			pIFile, _
+			PreloadedBytesLength, _
+			pPreloadedBytes _
+		)
 		
 	End Scope
 	
@@ -2374,11 +2389,12 @@ Function IMutableWebSiteGetBuffer( _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
+		ByVal pIReader As IHttpReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
-	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, BufferLength, pFlags, ppResult)
+	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, pIReader, BufferLength, pFlags, ppResult)
 End Function
 
 Function IMutableWebSiteGetErrorBuffer( _
