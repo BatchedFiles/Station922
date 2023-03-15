@@ -1725,7 +1725,7 @@ Function WebSiteGetBuffer( _
 				If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
 					Mime.ContentType = ContentTypes.TextHtml
 					Mime.CharsetWeakPtr = this->DirectoryListingEncoding
-					Mime.IsTextFormat = True
+					Mime.Format = MimeFormats.Text
 					resGetMimeOfFileExtension = True
 				Else
 					Dim DefaultMime As DefaultMimeIfNotFound = Any
@@ -1758,7 +1758,7 @@ Function WebSiteGetBuffer( _
 		Dim IsAcceptEncoding As Boolean = Any
 		
 		If hrOpenFile <> WEBSITE_S_DIRECTORY_LISTING Then
-			If Mime.IsTextFormat Then
+			If Mime.Format = MimeFormats.Text Then
 				ZipFileHandle = GetCompressionHandle( _
 					FileName, _
 					pRequest, _
@@ -1869,7 +1869,7 @@ Function WebSiteGetBuffer( _
 			IFileStream_SetFileSize(pIFile, FileLength)
 		End Scope
 		
-		If Mime.IsTextFormat Then
+		If Mime.Format = MimeFormats.Text Then
 			If fAccess = FileAccess.ReadAccess Then
 				If hrOpenFile <> WEBSITE_S_DIRECTORY_LISTING Then
 					Dim EncodingFileOffset As LongInt = GetFileBytesOffset( _
@@ -1976,7 +1976,7 @@ Function WebSiteGetErrorBuffer( _
 	With Mime
 		.ContentType = ContentTypes.TextHtml
 		.CharsetWeakPtr = NULL
-		.IsTextFormat = True
+		.Format = MimeFormats.Text
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
 	

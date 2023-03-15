@@ -51,7 +51,7 @@ Sub InitializeMemoryStream( _
 	this->ETag = NULL
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.CharsetWeakPtr = NULL
-	this->ContentType.IsTextFormat = False
+	this->ContentType.Format = MimeFormats.Binary
 	
 End Sub
 

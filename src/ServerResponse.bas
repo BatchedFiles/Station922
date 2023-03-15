@@ -63,7 +63,7 @@ Sub InitializeServerResponse( _
 	this->KeepAlive = True
 	this->ResponseZipEnable = False
 	this->Mime.ContentType = ContentTypes.AnyAny
-	this->Mime.IsTextFormat = False
+	this->Mime.Format = MimeFormats.Binary
 	this->Mime.CharsetWeakPtr = NULL
 	
 End Sub

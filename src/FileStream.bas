@@ -25,11 +25,10 @@ Type _FileStream
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	LastFileModifiedDate As FILETIME
-	fAccess As FileAccess
 	ZipMode As ZipModes
+	ContentType As MimeType
 	dwRequestedLength As DWORD
 	PreviousAllocatedLength As DWORD
-	ContentType As MimeType
 	PreviousAllocatedSmallLength As DWORD
 End Type
 
@@ -64,7 +63,7 @@ Sub InitializeFileStream( _
 	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.CharsetWeakPtr = NULL
-	this->ContentType.IsTextFormat = False
+	this->ContentType.Format = MimeFormats.Binary
 	
 End Sub
 

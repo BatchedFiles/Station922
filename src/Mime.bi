@@ -126,10 +126,15 @@ Enum DefaultMimeIfNotFound
 	UseApplicationOctetStream
 End Enum
 
+Enum MimeFormats
+	Binary
+	Text
+End Enum
+
 Type MimeType
 	ContentType As ContentTypes
 	CharsetWeakPtr As HeapBSTR
-	IsTextFormat As Boolean
+	Format As MimeFormats
 End Type
 
 Declare Sub GetContentTypeOfMimeType( _

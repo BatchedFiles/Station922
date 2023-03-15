@@ -177,7 +177,7 @@ Function HttpTraceProcessorPrepare( _
 		With Mime
 			.ContentType = ContentTypes.MessageHttp
 			.CharsetWeakPtr = NULL
-			.IsTextFormat = True
+			.Format = MimeFormats.Text
 		End With
 		
 		IServerResponse_SetMimeType(pContext->pIResponse, @Mime)

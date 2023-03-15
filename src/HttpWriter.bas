@@ -6,8 +6,10 @@
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
 Enum WriterTasks
-	ReadStream
-	WriteData
+	ReadFileStream
+	WriteNetworkData
+	ReadNetworkStream
+	WriteFileData
 End Enum
 
 Type HeadersBodyBuffer
@@ -59,7 +61,6 @@ Sub InitializeHttpWriter( _
 	this->pIBuffer = NULL
 	this->pIResponse = NULL
 	this->BodyOffset = 0
-	this->CurrentTask = WriterTasks.ReadStream
 	this->KeepAlive = True
 	
 End Sub
@@ -285,6 +286,9 @@ Function HttpWriterPrepare( _
 	
 	HttpWriterSinkResponse(this, pIResponse)
 	
+	this->HeadersOffset = 0
+	this->HeadersSended = False
+	
 	Select Case fFileAccess
 		
 		Case FileAccess.ReadAccess
@@ -298,39 +302,39 @@ Function HttpWriterPrepare( _
 				Return hrHeadersToString
 			End If
 			
-		Case FileAccess.CreateAccess
-			' ������� ���� ������
+			IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
+			
+			If this->SendOnlyHeaders Then
+				this->BodySended = True
+			Else
+				this->BodySended = False
+			End If
+			
+			Dim ByteRangeLength As LongInt = Any
+			IServerResponse_GetByteRange( _
+				pIResponse, _
+				@this->BodyOffset, _
+				@ByteRangeLength _
+			)
+			
+			Dim BodyContentLength As LongInt = Any
+			If ByteRangeLength Then
+				BodyContentLength = ByteRangeLength
+			Else
+				BodyContentLength = ContentLength
+			End If
+			
+			this->HeadersEndIndex = this->HeadersLength
+			this->BodyEndIndex = this->BodyOffset + BodyContentLength
+			
+			this->CurrentTask = WriterTasks.ReadFileStream
+			
+		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
+			
+			this->CurrentTask = WriterTasks.ReadNetworkStream
+			
 			
 	End Select
-	
-	this->HeadersOffset = 0
-	
-	IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
-	
-	If this->SendOnlyHeaders Then
-		this->BodySended = True
-	Else
-		this->BodySended = False
-	End If
-	
-	this->HeadersSended = False
-	
-	Dim ByteRangeLength As LongInt = Any
-	IServerResponse_GetByteRange( _
-		pIResponse, _
-		@this->BodyOffset, _
-		@ByteRangeLength _
-	)
-	
-	Dim BodyContentLength As LongInt = Any
-	If ByteRangeLength Then
-		BodyContentLength = ByteRangeLength
-	Else
-		BodyContentLength = ContentLength
-	End If
-	
-	this->HeadersEndIndex = this->HeadersOffset + this->HeadersLength
-	this->BodyEndIndex = this->BodyOffset + BodyContentLength
 	
 	Return S_OK
 	
@@ -346,7 +350,7 @@ Function HttpWriterBeginWrite( _
 	
 	Select Case cTask
 		
-		Case WriterTasks.ReadStream
+		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
 					*ppIAsyncResult = NULL
@@ -403,7 +407,7 @@ Function HttpWriterBeginWrite( _
 				
 			End If
 			
-		Case WriterTasks.WriteData
+		Case WriterTasks.WriteNetworkData
 			Dim hrBeginWrite As HRESULT = Any
 			
 			If this->KeepAlive Then
@@ -445,7 +449,7 @@ Function HttpWriterEndWrite( _
 	
 	Select Case cTask
 		
-		Case WriterTasks.ReadStream
+		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
 					Return S_FALSE
@@ -482,9 +486,9 @@ Function HttpWriterEndWrite( _
 				
 			End If
 			
-			this->CurrentTask = WriterTasks.WriteData
+			this->CurrentTask = WriterTasks.WriteNetworkData
 			
-		Case WriterTasks.WriteData
+		Case WriterTasks.WriteNetworkData
 			Dim dwWritedBytes As DWORD = Any
 			Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
 				this->pIStream, _
@@ -524,7 +528,7 @@ Function HttpWriterEndWrite( _
 				Return S_OK
 			End If
 			
-			this->CurrentTask = WriterTasks.ReadStream
+			this->CurrentTask = WriterTasks.ReadFileStream
 			
 	End Select
 	

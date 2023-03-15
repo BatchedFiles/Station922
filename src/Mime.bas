@@ -532,14 +532,14 @@ Function GetMimeOfFileExtension( _
 		ByVal DefaultMime As DefaultMimeIfNotFound _
 	)As Boolean
 	
-	mt->IsTextFormat = False
+	mt->Format = MimeFormats.Binary
 	mt->CharsetWeakPtr = NULL
 	
 	Scope
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtm)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.TextHtml
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -548,7 +548,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXhtml)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationXhtml
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -557,7 +557,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCss)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.TextCss
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -598,7 +598,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXml)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationXml
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -607,7 +607,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXsl)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationXmlXslt
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -616,7 +616,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXslt)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationXmlXslt
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -625,7 +625,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTxt)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.TextPlain
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -634,7 +634,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRss)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationRssXml
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -643,7 +643,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJs)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationJavascript
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -660,7 +660,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtml)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.TextHtml
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -669,7 +669,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionSvg)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ImageSvg
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -710,7 +710,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionAtom)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationAtom
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
@@ -751,7 +751,7 @@ Function GetMimeOfFileExtension( _
 		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRtf)
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ApplicationRtf
-			mt->IsTextFormat = True
+			mt->Format = MimeFormats.Text
 			Return True
 		End If
 	End Scope
