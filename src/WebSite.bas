@@ -1624,6 +1624,11 @@ Function WebSiteGetBuffer( _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
+	Dim pIFile As IFileStream Ptr = Any
+	Dim FileName As WString * (MAX_PATH + 1) = Any
+	Dim hrOpenFile As HRESULT = Any
+	Dim Mime As MimeType = Any
+	
 	Scope
 		Select Case fAccess
 			
@@ -1645,7 +1650,6 @@ Function WebSiteGetBuffer( _
 			End Select
 	End Scope
 	
-	Dim pIFile As IFileStream Ptr = Any
 	Scope
 		Dim hrCreateFileBuffer As HRESULT = CreateFileStream( _
 			pIMalloc, _
@@ -1674,9 +1678,6 @@ Function WebSiteGetBuffer( _
 		End If
 		
 	End Scope
-	
-	Dim FileName As WString * (MAX_PATH + 1) = Any
-	Dim hrOpenFile As HRESULT = Any
 	
 	Scope
 		Scope
@@ -1713,8 +1714,6 @@ Function WebSiteGetBuffer( _
 		End If
 		
 	End Scope
-	
-	Dim Mime As MimeType = Any
 	
 	Scope
 		Select Case fAccess
@@ -1910,14 +1909,12 @@ Function WebSiteGetBuffer( _
 		End If
 		
 		If IsAcceptEncoding Then
-			*pFlags = ContentNegotiationFlags.None Or ContentNegotiationFlags.AcceptEncoding
+			*pFlags = ContentNegotiationFlags.AcceptEncoding
 		End If
 		
 	End Scope
 	
 	IFileStream_SetContentType(pIFile, @Mime)
-	
-	' AddExtendedHeaders(pc->pIResponse, pc->pIRequestedFile)
 	
 	*ppResult = CPtr(IAttributedStream Ptr, pIFile)
 	
