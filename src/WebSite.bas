@@ -1532,24 +1532,25 @@ Function WebSiteGetMovedUrl( _
 	
 End Function
 
-Function GetReservedFileBytesWithAlign( _
+Function GetRoundedReservedFileBytes( _
 		ByVal ReservedFileBytes As UInteger _
 	)As UInteger
 	
-	Dim dwReserved As UInteger = Any
+	Dim dwZeroLowBytes As UInteger = ReservedFileBytes And &hffffffffffff0000
 	
-	If ReservedFileBytes Then
-		If ReservedFileBytes Mod &h10000 Then
-			Dim tmpLowFFFFBytes As UInteger = ReservedFileBytes Or &hFFFF
-			dwReserved = tmpLowFFFFBytes + 1
-		Else
-			dwReserved = ReservedFileBytes
-		End If
-	Else
-		dwReserved = BUFFERSLICECHUNK_SIZE
+	If ReservedFileBytes And &hffff Then
+		
+		Return dwZeroLowBytes + &h10000
+		
 	End If
 	
-	Return dwReserved
+	If dwZeroLowBytes = 0 Then
+		
+		Return dwZeroLowBytes + &h10000
+		
+	End If
+	
+	Return dwZeroLowBytes
 	
 End Function
 
@@ -1632,7 +1633,7 @@ Function WebSiteGetBuffer( _
 			Return hrCreateFileBuffer
 		End If
 		
-		Dim ReservedFileBytes As UInteger = GetReservedFileBytesWithAlign( _
+		Dim ReservedFileBytes As UInteger = GetRoundedReservedFileBytes( _
 			this->ReservedFileBytes _
 		)
 		
