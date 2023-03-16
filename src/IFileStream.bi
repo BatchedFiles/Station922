@@ -67,6 +67,12 @@ Type IFileStreamVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
+	GetPreloadedBytes As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
 	GetFilePath As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
@@ -160,6 +166,7 @@ End Type
 #define IFileStream_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IFileStream_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IFileStream_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
+#define IFileStream_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IFileStream_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IFileStream_GetFilePath(this, ppFilePath) (this)->lpVtbl->GetFilePath(this, ppFilePath)
 #define IFileStream_SetFilePath(this, FilePath) (this)->lpVtbl->SetFilePath(this, FilePath)

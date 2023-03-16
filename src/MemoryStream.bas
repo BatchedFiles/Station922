@@ -347,6 +347,19 @@ Function MemoryStreamGetLength( _
 	
 End Function
 
+Function MemoryStreamGetPreloadedBytes( _
+		ByVal this As MemoryStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
+	*ppPreloadedBytes = this->pOuterBuffer
+	*pPreloadedBytesLength = this->Capacity
+	
+	Return S_OK
+	
+End Function
+
 Function MemoryStreamSetContentType( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal pType As MimeType Ptr _
@@ -475,6 +488,14 @@ Function IMemoryStreamGetLength( _
 	Return MemoryStreamGetLength(ContainerOf(this, MemoryStream, lpVtbl), pLength)
 End Function
 
+Function IMemoryStreamGetPreloadedBytes( _
+		ByVal this As IMemoryStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As ULONG
+	Return MemoryStreamGetPreloadedBytes(ContainerOf(this, MemoryStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
+End Function
+
 Function IMemoryStreamBeginGetSlice( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -528,6 +549,7 @@ Dim GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable = Type( _
 	@IMemoryStreamGetETag, _
 	@IMemoryStreamGetLastFileModifiedDate, _
 	@IMemoryStreamGetLength, _
+	@IMemoryStreamGetPreloadedBytes, _
 	@IMemoryStreamSetContentType, _
 	@IMemoryStreamAllocBuffer, _
 	@IMemoryStreamSetBuffer _

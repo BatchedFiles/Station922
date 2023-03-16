@@ -80,6 +80,12 @@ Declare Function MemoryStreamGetLength( _
 	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
+Declare Function MemoryStreamGetPreloadedBytes( _
+	ByVal this As MemoryStream Ptr, _
+	ByVal pPreloadedBytesLength As Integer Ptr, _
+	ByVal ppPreloadedBytes As UByte Ptr Ptr _
+)As HRESULT
+
 Declare Function MemoryStreamSetContentType( _
 	ByVal this As MemoryStream Ptr, _
 	ByVal pType As MimeType Ptr _

@@ -80,6 +80,12 @@ Declare Function FileStreamGetLength( _
 	ByVal pLength As LongInt Ptr _
 )As HRESULT
 
+Declare Function FileStreamGetPreloadedBytes( _
+	ByVal this As FileStream Ptr, _
+	ByVal pPreloadedBytesLength As Integer Ptr, _
+	ByVal ppPreloadedBytes As UByte Ptr Ptr _
+)As HRESULT
+
 Declare Function FileStreamGetFilePath( _
 	ByVal this As FileStream Ptr, _
 	ByVal ppFilePath As HeapBSTR Ptr _

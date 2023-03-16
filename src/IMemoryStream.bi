@@ -67,6 +67,12 @@ Type IMemoryStreamVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
+	GetPreloadedBytes As Function( _
+		ByVal this As IMemoryStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
 	SetContentType As Function( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal pType As MimeType Ptr _
@@ -99,6 +105,7 @@ End Type
 #define IMemoryStream_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IMemoryStream_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IMemoryStream_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
+#define IMemoryStream_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IMemoryStream_SetContentType(this, pType) (this)->lpVtbl->SetContentType(this, pType)
 #define IMemoryStream_AllocBuffer(this, Length, ppBuffer) (this)->lpVtbl->AllocBuffer(this, Length, ppBuffer)
 #define IMemoryStream_SetBuffer(this, pBuffer, Length) (this)->lpVtbl->SetBuffer(this, pBuffer, Length)

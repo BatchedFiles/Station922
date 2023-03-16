@@ -86,6 +86,12 @@ Type IAttributedStreamVirtualTable
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	
+	GetPreloadedBytes As Function( _
+		ByVal this As IAttributedStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IAttributedStream_
@@ -103,5 +109,6 @@ End Type
 #define IAttributedStream_GetETag(this, ppETag) (this)->lpVtbl->GetETag(this, ppETag)
 #define IAttributedStream_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IAttributedStream_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
+#define IAttributedStream_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 
 #endif

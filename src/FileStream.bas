@@ -472,6 +472,19 @@ Function FileStreamGetLength( _
 	
 End Function
 
+Function FileStreamGetPreloadedBytes( _
+		ByVal this As FileStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
+	*pPreloadedBytesLength = this->PreloadedBytesLength
+	*ppPreloadedBytes = this->pPreloadedBytes
+	
+	Return S_OK
+	
+End Function
+
 Function FileStreamGetFilePath( _
 		ByVal this As FileStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
@@ -702,6 +715,14 @@ Function IFileStreamGetLength( _
 	Return FileStreamGetLength(ContainerOf(this, FileStream, lpVtbl), pLength)
 End Function
 
+Function IFileStreamGetPreloadedBytes( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal ppPreloadedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	Return FileStreamGetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
+End Function
+
 Function IFileStreamBeginGetSlice( _
 		ByVal this As IFileStream Ptr, _
 		ByVal StartIndex As LongInt, _
@@ -831,6 +852,7 @@ Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamGetETag, _
 	@IFileStreamGetLastFileModifiedDate, _
 	@IFileStreamGetLength, _
+	@IFileStreamGetPreloadedBytes, _
 	@IFileStreamGetFilePath, _
 	@IFileStreamSetFilePath, _
 	@IFileStreamGetFileHandle, _

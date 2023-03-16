@@ -6,8 +6,10 @@
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
 Enum WriterTasks
+	WritePreloadedBytesToNetwork
 	ReadFileStream
 	WriteNetworkData
+	WritePreloadedBytesToFile
 	ReadNetworkStream
 	WriteFileData
 End Enum
@@ -289,50 +291,48 @@ Function HttpWriterPrepare( _
 	this->HeadersOffset = 0
 	this->HeadersSended = False
 	
+	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
+		pIResponse, _
+		ContentLength, _
+		@this->Headers, _
+		@this->HeadersLength _
+	)
+	If FAILED(hrHeadersToString) Then
+		Return hrHeadersToString
+	End If
+	
+	IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
+	
+	If this->SendOnlyHeaders Then
+		this->BodySended = True
+	Else
+		this->BodySended = False
+	End If
+	
+	Dim ByteRangeLength As LongInt = Any
+	IServerResponse_GetByteRange( _
+		pIResponse, _
+		@this->BodyOffset, _
+		@ByteRangeLength _
+	)
+	
+	Dim BodyContentLength As LongInt = Any
+	If ByteRangeLength Then
+		BodyContentLength = ByteRangeLength
+	Else
+		BodyContentLength = ContentLength
+	End If
+	
+	this->HeadersEndIndex = this->HeadersLength
+	this->BodyEndIndex = this->BodyOffset + BodyContentLength
+	
 	Select Case fFileAccess
 		
 		Case FileAccess.ReadAccess
-			Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
-				pIResponse, _
-				ContentLength, _
-				@this->Headers, _
-				@this->HeadersLength _
-			)
-			If FAILED(hrHeadersToString) Then
-				Return hrHeadersToString
-			End If
-			
-			IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
-			
-			If this->SendOnlyHeaders Then
-				this->BodySended = True
-			Else
-				this->BodySended = False
-			End If
-			
-			Dim ByteRangeLength As LongInt = Any
-			IServerResponse_GetByteRange( _
-				pIResponse, _
-				@this->BodyOffset, _
-				@ByteRangeLength _
-			)
-			
-			Dim BodyContentLength As LongInt = Any
-			If ByteRangeLength Then
-				BodyContentLength = ByteRangeLength
-			Else
-				BodyContentLength = ContentLength
-			End If
-			
-			this->HeadersEndIndex = this->HeadersLength
-			this->BodyEndIndex = this->BodyOffset + BodyContentLength
-			
 			this->CurrentTask = WriterTasks.ReadFileStream
 			
 		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-			
-			this->CurrentTask = WriterTasks.ReadNetworkStream
-			
+			this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
 			
 	End Select
 	
@@ -434,6 +434,20 @@ Function HttpWriterBeginWrite( _
 				Return hrBeginWrite
 			End If
 			
+		Case WriterTasks.WritePreloadedBytesToFile
+			Dim PreloadedBytesLength As Integer = Any
+			Dim pPreloadedBytes As UByte Ptr = Any
+			IAttributedStream_GetPreloadedBytes( _
+				this->pIBuffer, _
+				@PreloadedBytesLength, _
+				@pPreloadedBytes _
+			)
+			
+			
+		Case WriterTasks.ReadNetworkStream
+			
+		Case WriterTasks.WriteFileData
+			
 	End Select
 	
 	Return HTTPWRITER_S_IO_PENDING
@@ -529,6 +543,15 @@ Function HttpWriterEndWrite( _
 			End If
 			
 			this->CurrentTask = WriterTasks.ReadFileStream
+			
+		Case WriterTasks.WritePreloadedBytesToFile
+			
+			
+		Case WriterTasks.ReadNetworkStream
+			this->CurrentTask = WriterTasks.WriteFileData
+			
+		Case WriterTasks.WriteFileData
+			this->CurrentTask = WriterTasks.ReadNetworkStream
 			
 	End Select
 	
