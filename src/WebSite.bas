@@ -1754,8 +1754,12 @@ Function WebSiteGetBuffer( _
 				' Change File Extension
 
 				HeapSysFreeString(pContentType)
+				
+				IFileStream_SetFileSize(pIFile, BufferLength)
+				
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+				
 				Return hrOpenFile
 				
 			Case Else
