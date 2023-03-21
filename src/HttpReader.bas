@@ -196,6 +196,11 @@ Function HttpReaderBeginReadLine( _
 		Dim cbFreeSpace As Integer = ClientRequestBufferGetFreeSpaceLength( _
 			this->pClientBuffer _
 		)
+		If cbFreeSpace = 0 Then
+			*ppIAsyncResult = NULL
+			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
+		End If
+		
 		Dim FreeSpaceIndex As Integer = this->pClientBuffer->cbLength
 		Dim lpFreeSpace As Any Ptr = @this->pClientBuffer->Bytes(FreeSpaceIndex)
 		Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
