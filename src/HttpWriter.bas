@@ -618,11 +618,18 @@ Function HttpWriterEndWrite( _
 			
 			this->BodyOffset += CLngInt(WritedBytes)
 			
+			Dim BodySended As Boolean = Any
+			If this->BodyOffset >= this->BodyEndIndex Then
+				BodySended = True
+			Else
+				BodySended = False
+			End If
+			
 			If hrEndGetSlice = S_FALSE Then
 				Return S_FALSE
 			End If
 			
-			If this->BodySended Then
+			If BodySended Then
 				this->StreamBufferLength = 1
 				this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
 				this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
