@@ -250,7 +250,7 @@ Function HttpReaderEndReadLine( _
 	
 	Dim cbNewLength As Integer = this->pClientBuffer->cbLength + cbReceived
 	
-	If cbNewLength >= RAWBUFFER_CAPACITY Then
+	If cbNewLength > RAWBUFFER_CAPACITY Then
 		*ppLine = NULL
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 	End If
