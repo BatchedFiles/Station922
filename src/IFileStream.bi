@@ -23,7 +23,7 @@ Type IFileStreamVirtualTable
 		ByVal this As IFileStream Ptr _
 	)As ULONG
 	
-	BeginGetSlice As Function( _
+	BeginReadSlice As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
@@ -31,7 +31,7 @@ Type IFileStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	EndGetSlice As Function( _
+	EndReadSlice As Function( _
 		ByVal this As IFileStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
@@ -144,6 +144,26 @@ Type IFileStreamVirtualTable
 		ByVal pPreloadedBytes As UByte Ptr _
 	)As HRESULT
 	
+	GetReservedBytes As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pReservedBytesLength As Integer Ptr, _
+		ByVal ppReservedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
+	BeginWriteSlice As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	EndWriteSlice As Function( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pWritedBytes As DWORD Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IFileStream_
@@ -153,13 +173,8 @@ End Type
 #define IFileStream_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IFileStream_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IFileStream_Release(this) (this)->lpVtbl->Release(this)
-#define IFileStream_BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
-#define IFileStream_BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
-#define IFileStream_EndRead(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndRead(this, pIAsyncResult, pReadedBytes)
-#define IFileStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
-#define IFileStream_BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
-#define IFileStream_BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
-#define IFileStream_BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define IFileStream_BeginReadSlice(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadSlice(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
+#define IFileStream_EndReadSlice(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndReadSlice(this, pIAsyncResult, pReadedBytes)
 #define IFileStream_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
 #define IFileStream_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
 #define IFileStream_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)
@@ -167,7 +182,6 @@ End Type
 #define IFileStream_GetLastFileModifiedDate(this, ppDate) (this)->lpVtbl->GetLastFileModifiedDate(this, ppDate)
 #define IFileStream_GetLength(this, pLength) (this)->lpVtbl->GetLength(this, pLength)
 #define IFileStream_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
-#define IFileStream_GetSlice(this, StartIndex, Length, pSlice) (this)->lpVtbl->GetSlice(this, StartIndex, Length, pSlice)
 #define IFileStream_GetFilePath(this, ppFilePath) (this)->lpVtbl->GetFilePath(this, ppFilePath)
 #define IFileStream_SetFilePath(this, FilePath) (this)->lpVtbl->SetFilePath(this, FilePath)
 #define IFileStream_GetFileHandle(this, pResult) (this)->lpVtbl->GetFileHandle(this, pResult)
@@ -182,5 +196,8 @@ End Type
 #define IFileStream_SetETag(this, ETag) (this)->lpVtbl->SetETag(this, ETag)
 #define IFileStream_SetReservedFileBytes(this, ReservedFileBytes) (this)->lpVtbl->SetReservedFileBytes(this, ReservedFileBytes)
 #define IFileStream_SetPreloadedBytes(this, PreloadedBytesLength, pPreloadedBytes) (this)->lpVtbl->SetPreloadedBytes(this, PreloadedBytesLength, pPreloadedBytes)
+#define IFileStream_GetReservedBytes(this, pReservedBytesLength, ppReservedBytes) (this)->lpVtbl->GetReservedBytes(this, pReservedBytesLength, ppReservedBytes)
+#define IFileStream_BeginWriteSlice(this, pBufferSlice, Offset, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteSlice(this, pBufferSlice, Offset, StateObject, ppIAsyncResult)
+#define IFileStream_EndWriteSlice(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWriteSlice(this, pIAsyncResult, pWritedBytes)
 
 #endif

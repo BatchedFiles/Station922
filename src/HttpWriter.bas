@@ -1,6 +1,7 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "HttpWriter.bi"
+#include once "IFileStream.bi"
 #include once "ThreadPool.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
@@ -291,9 +292,16 @@ Function HttpWriterPrepare( _
 	this->HeadersOffset = 0
 	this->HeadersSended = False
 	
+	Dim ResponseContentLength As LongInt = Any
+	If fFileAccess = FileAccess.ReadAccess Then
+		ResponseContentLength = ContentLength
+	Else
+		ResponseContentLength = 0
+	End If
+	
 	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
 		pIResponse, _
-		ContentLength, _
+		ResponseContentLength, _
 		@this->Headers, _
 		@this->HeadersLength _
 	)
@@ -350,6 +358,8 @@ Function HttpWriterBeginWrite( _
 	
 	Select Case cTask
 		
+		Case WriterTasks.WritePreloadedBytesToNetwork
+			
 		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
@@ -394,7 +404,7 @@ Function HttpWriterBeginWrite( _
 					this->BodyEndIndex - this->BodyOffset _
 				)
 				
-				Dim hrBeginGetSlice As HRESULT = IAttributedStream_BeginGetSlice( _
+				Dim hrBeginGetSlice As HRESULT = IAttributedStream_BeginReadSlice( _
 					this->pIBuffer, _
 					this->BodyOffset, _
 					DesiredSliceLength, _
@@ -435,6 +445,7 @@ Function HttpWriterBeginWrite( _
 			End If
 			
 		Case WriterTasks.WritePreloadedBytesToFile
+			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
 			Dim PreloadedBytesLength As Integer = Any
 			Dim pPreloadedBytes As UByte Ptr = Any
 			IAttributedStream_GetPreloadedBytes( _
@@ -443,6 +454,53 @@ Function HttpWriterBeginWrite( _
 				@pPreloadedBytes _
 			)
 			
+			If PreloadedBytesLength Then
+				Dim Slice As BufferSlice = Any
+				With Slice
+					.pSlice = pPreloadedBytes
+					.Length = PreloadedBytesLength
+				End With
+				
+				Dim hrBeginWrite As HRESULT = IFileStream_BeginWriteSlice( _
+					pIFileStream, _
+					@Slice, _
+					this->BodyOffset, _
+					StateObject, _
+					ppIAsyncResult _
+				)
+				
+				If FAILED(hrBeginWrite) Then
+					Return hrBeginWrite
+				End If
+				
+			Else
+				this->CurrentTask = WriterTasks.ReadNetworkStream
+				
+				Dim ReservedBytesLength As Integer = Any
+				Dim pReservedBytes As UByte Ptr = Any
+				Dim hrGetReservedBytes As HRESULT = IFileStream_GetReservedBytes( _
+					pIFileStream, _
+					@ReservedBytesLength, _
+					@pReservedBytes _
+				)
+				If FAILED(hrGetReservedBytes) Then
+					Return hrGetReservedBytes
+				End If
+				
+				Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
+					this->pIStream, _
+					pReservedBytes, _
+					ReservedBytesLength, _
+					NULL, _
+					StateObject, _
+					ppIAsyncResult _
+				)
+				
+				If FAILED(hrBeginRead) Then
+					Return hrBeginRead
+				End If
+				
+			End If
 			
 		Case WriterTasks.ReadNetworkStream
 			
@@ -463,6 +521,8 @@ Function HttpWriterEndWrite( _
 	
 	Select Case cTask
 		
+		Case WriterTasks.WritePreloadedBytesToNetwork
+			
 		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
@@ -475,7 +535,7 @@ Function HttpWriterEndWrite( _
 			Else
 				
 				Dim Slice As BufferSlice = Any
-				Dim hrEndGetSlice As HRESULT = IAttributedStream_EndGetSlice( _
+				Dim hrEndGetSlice As HRESULT = IAttributedStream_EndReadSlice( _
 					this->pIBuffer, _
 					pIAsyncResult, _
 					@Slice _
@@ -545,7 +605,42 @@ Function HttpWriterEndWrite( _
 			this->CurrentTask = WriterTasks.ReadFileStream
 			
 		Case WriterTasks.WritePreloadedBytesToFile
+			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
+			Dim WritedBytes As DWORD = Any
+			Dim hrEndGetSlice As HRESULT = IFileStream_EndWriteSlice( _
+				pIFileStream, _
+				pIAsyncResult, _
+				@WritedBytes _
+			)
+			If FAILED(hrEndGetSlice) Then
+				Return hrEndGetSlice
+			End If
 			
+			this->BodyOffset += CLngInt(WritedBytes)
+			
+			If hrEndGetSlice = S_FALSE Then
+				Return S_FALSE
+			End If
+			
+			If this->BodySended Then
+				this->StreamBufferLength = 1
+				this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+				this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+				
+				this->CurrentTask = WriterTasks.WriteNetworkData
+			Else
+				Dim PreloadedBytesLength As Integer = Any
+				Dim pPreloadedBytes As UByte Ptr = Any
+				IAttributedStream_GetPreloadedBytes( _
+					this->pIBuffer, _
+					@PreloadedBytesLength, _
+					@pPreloadedBytes _
+				)
+				
+				If PreloadedBytesLength >= this->BodyOffset Then
+					this->CurrentTask = WriterTasks.ReadNetworkStream
+				End If
+			End If
 			
 		Case WriterTasks.ReadNetworkStream
 			this->CurrentTask = WriterTasks.WriteFileData

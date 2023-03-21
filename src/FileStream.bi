@@ -36,7 +36,7 @@ Declare Function FileStreamRelease( _
 	ByVal this As FileStream Ptr _
 )As ULONG
 
-Declare Function FileStreamBeginGetSlice( _
+Declare Function FileStreamBeginReadSlice( _
 	ByVal this As FileStream Ptr, _
 	ByVal StartIndex As LongInt, _
 	ByVal Length As DWORD, _
@@ -44,10 +44,24 @@ Declare Function FileStreamBeginGetSlice( _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
 
-Declare Function FileStreamEndGetSlice( _
+Declare Function FileStreamEndReadSlice( _
 	ByVal this As FileStream Ptr, _
 	ByVal pIAsyncResult As IAsyncResult Ptr, _
 	ByVal pBufferSlice As BufferSlice Ptr _
+)As HRESULT
+
+Declare Function FileStreamBeginWriteSlice( _
+	ByVal this As FileStream Ptr, _
+	ByVal pBufferSlice As BufferSlice Ptr, _
+	ByVal Offset As LongInt, _
+	ByVal StateObject As IUnknown Ptr, _
+	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+)As HRESULT
+
+Declare Function FileStreamEndWriteSlice( _
+	ByVal this As FileStream Ptr, _
+	ByVal pIAsyncResult As IAsyncResult Ptr, _
+	ByVal pWritedBytes As DWORD Ptr _
 )As HRESULT
 
 Declare Function FileStreamGetContentType( _
@@ -84,6 +98,12 @@ Declare Function FileStreamGetPreloadedBytes( _
 	ByVal this As FileStream Ptr, _
 	ByVal pPreloadedBytesLength As Integer Ptr, _
 	ByVal ppPreloadedBytes As UByte Ptr Ptr _
+)As HRESULT
+
+Declare Function FileStreamGetReservedBytes( _
+	ByVal this As FileStream Ptr, _
+	ByVal pReservedBytesLength As Integer Ptr, _
+	ByVal ppReservedBytes As UByte Ptr Ptr _
 )As HRESULT
 
 Declare Function FileStreamGetFilePath( _

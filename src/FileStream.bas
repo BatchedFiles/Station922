@@ -25,6 +25,7 @@ Type _FileStream
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	PreloadedBytesLength As UInteger
+	ReservedFileBytesLength As UInteger
 	pPreloadedBytes As UByte Ptr
 	LastFileModifiedDate As FILETIME
 	ZipMode As ZipModes
@@ -63,6 +64,7 @@ Sub InitializeFileStream( _
 	this->PreviousAllocatedLength = 0
 	this->PreviousAllocatedSmallLength = 0
 	this->PreloadedBytesLength = 0
+	this->ReservedFileBytesLength = 0
 	this->pPreloadedBytes = NULL
 	ZeroMemory(@this->LastFileModifiedDate, SizeOf(FILETIME))
 	this->ContentType.ContentType = ContentTypes.AnyAny
@@ -273,7 +275,7 @@ Function FileStreamAllocateBufferSink( _
 	
 End Function
 
-Function FileStreamBeginGetSlice( _
+Function FileStreamBeginReadSlice( _
 		ByVal this As FileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal dwLength As DWORD, _
@@ -301,11 +303,7 @@ Function FileStreamBeginGetSlice( _
 		End If
 	End Scope
 	
-	Dim NumberOfBytesToRead As LongInt = min( _
-		CLngInt(dwLength), _
-		BUFFERSLICECHUNK_SIZE _
-	)
-	Dim dwNumberOfBytesToRead As DWORD = Cast(DWORD, NumberOfBytesToRead)
+	Dim dwNumberOfBytesToRead As DWORD = Cast(DWORD, dwLength)
 	this->dwRequestedLength = dwNumberOfBytesToRead
 	
 	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _
@@ -360,7 +358,7 @@ Function FileStreamBeginGetSlice( _
 	
 End Function
 
-Function FileStreamEndGetSlice( _
+Function FileStreamEndReadSlice( _
 		ByVal this As FileStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
@@ -396,6 +394,105 @@ Function FileStreamEndGetSlice( _
 		
 		Return S_FALSE
 		
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function FileStreamBeginWriteSlice( _
+		ByVal this As FileStream Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Dim VirtualStartIndex As LongInt = Offset + this->FileOffset
+	
+	If VirtualStartIndex >= this->FileSize Then
+		*ppIAsyncResult = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim pINewAsyncResult As IAsyncResult Ptr = Any
+	Scope
+		Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
+			this->pIMemoryAllocator, _
+			@IID_IAsyncResult, _
+			@pINewAsyncResult _
+		)
+		If FAILED(hrCreateAsyncResult) Then
+			*ppIAsyncResult = NULL
+			Return hrCreateAsyncResult
+		End If
+	End Scope
+	
+	Dim dwNumberOfBytesToWrite As DWORD = Cast(DWORD, pBufferSlice->Length)
+	this->dwRequestedLength = dwNumberOfBytesToWrite
+	
+	Dim pMem As Any Ptr = pBufferSlice->pSlice
+	
+	Scope
+		Dim pOverlap As OVERLAPPED Ptr = Any
+		IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
+		
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+		
+		Dim liStartIndex As LARGE_INTEGER = Any
+		liStartIndex.QuadPart = VirtualStartIndex
+		
+		pOverlap->Offset = liStartIndex.LowPart
+		pOverlap->OffsetHigh = liStartIndex.HighPart
+		
+		Dim hMapFile As HANDLE = Any
+		If this->ZipFileHandle <> INVALID_HANDLE_VALUE Then
+			hMapFile = this->ZipFileHandle
+		Else
+			hMapFile = this->FileHandle
+		End If
+		
+		Dim resReadFile As BOOL = WriteFile( _
+			hMapFile, _
+			pMem, _
+			dwNumberOfBytesToWrite, _
+			NULL, _
+			pOverlap _
+		)
+		If resReadFile = 0 Then
+			Dim dwError As DWORD = GetLastError()
+			If dwError <> ERROR_IO_PENDING Then
+				IAsyncResult_Release(pINewAsyncResult)
+				*ppIAsyncResult = NULL
+				Return HRESULT_FROM_WIN32(dwError)
+			End If
+		End If
+	End Scope
+	
+	*ppIAsyncResult = pINewAsyncResult
+	
+	Return ATTRIBUTEDSTREAM_S_IO_PENDING
+	
+End Function
+
+Function FileStreamEndWriteSlice( _
+		ByVal this As FileStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pWritedBytes As DWORD Ptr _
+	)As HRESULT
+	
+	Dim dwBytesTransferred As DWORD = Any
+	Dim Completed As Boolean = Any
+	IAsyncResult_GetCompleted( _
+		pIAsyncResult, _
+		@dwBytesTransferred, _
+		@Completed _
+	)
+	
+	*pWritedBytes = dwBytesTransferred
+	
+	If dwBytesTransferred = 0 Then
+		Return S_FALSE
 	End If
 	
 	Return S_OK
@@ -620,12 +717,12 @@ End Function
 
 Function FileStreamSetReservedFileBytes( _
 		ByVal this As FileStream Ptr, _
-		ByVal ReservedFileBytes As UInteger _
+		ByVal ReservedFileBytesLength As UInteger _
 	)As HRESULT
 	
 	Dim FileBytes As ZString Ptr = VirtualAlloc( _
 		NULL, _
-		ReservedFileBytes, _
+		ReservedFileBytesLength, _
 		MEM_RESERVE, _
 		PAGE_READWRITE _
 	)
@@ -634,6 +731,7 @@ Function FileStreamSetReservedFileBytes( _
 	End If
 	
 	this->FileBytes = FileBytes
+	this->ReservedFileBytesLength = ReservedFileBytesLength
 	
 	Return S_OK
 	
@@ -647,6 +745,29 @@ Function FileStreamSetPreloadedBytes( _
 	
 	this->PreloadedBytesLength = PreloadedBytesLength
 	this->pPreloadedBytes = pPreloadedBytes
+	
+	Return S_OK
+	
+End Function
+
+Function FileStreamGetReservedBytes( _
+		ByVal this As FileStream Ptr, _
+		ByVal pReservedBytesLength As Integer Ptr, _
+		ByVal ppReservedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	
+	Dim pMem As Any Ptr = VirtualAlloc( _
+		this->FileBytes, _
+		this->ReservedFileBytesLength, _
+		MEM_COMMIT, _
+		PAGE_READWRITE _
+	)
+	*ppReservedBytes = pMem
+	*pReservedBytesLength = this->ReservedFileBytesLength
+	
+	If pMem = NULL Then
+		Return E_OUTOFMEMORY
+	End If
 	
 	Return S_OK
 	
@@ -723,22 +844,22 @@ Function IFileStreamGetPreloadedBytes( _
 	Return FileStreamGetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
-Function IFileStreamBeginGetSlice( _
+Function IFileStreamBeginReadSlice( _
 		ByVal this As IFileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return FileStreamBeginGetSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, StateObject, ppIAsyncResult)
+	Return FileStreamBeginReadSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, StateObject, ppIAsyncResult)
 End Function
 
-Function IFileStreamEndGetSlice( _
+Function IFileStreamEndReadSlice( _
 		ByVal this As IFileStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
-	Return FileStreamEndGetSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pBufferSlice)
+	Return FileStreamEndReadSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pBufferSlice)
 End Function
 
 Function IFileStreamGetFilePath( _
@@ -840,12 +961,38 @@ Function IFileStreamSetPreloadedBytes( _
 	Return FileStreamSetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), PreloadedBytesLength, pPreloadedBytes)
 End Function
 
+Function IFileStreamGetReservedBytes( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pReservedBytesLength As Integer Ptr, _
+		ByVal ppReservedBytes As UByte Ptr Ptr _
+	)As HRESULT
+	Return FileStreamGetReservedBytes(ContainerOf(this, FileStream, lpVtbl), pReservedBytesLength, ppReservedBytes)
+End Function
+
+Function IFileStreamBeginWriteSlice( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pBufferSlice As BufferSlice Ptr, _
+		ByVal Offset As LongInt, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	Return FileStreamBeginWriteSlice(ContainerOf(this, FileStream, lpVtbl), pBufferSlice, Offset, StateObject, ppIAsyncResult)
+End Function
+
+Function IFileStreamEndWriteSlice( _
+		ByVal this As IFileStream Ptr, _
+		ByVal pIAsyncResult As IAsyncResult Ptr, _
+		ByVal pWritedBytes As DWORD Ptr _
+	)As HRESULT
+	Return FileStreamEndWriteSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pWritedBytes)
+End Function
+
 Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamQueryInterface, _
 	@IFileStreamAddRef, _
 	@IFileStreamRelease, _
-	@IFileStreamBeginGetSlice, _
-	@IFileStreamEndGetSlice, _
+	@IFileStreamBeginReadSlice, _
+	@IFileStreamEndReadSlice, _
 	@IFileStreamGetContentType, _
 	@IFileStreamGetEncoding, _
 	@IFileStreamGetLanguage, _
@@ -866,5 +1013,8 @@ Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
 	@IFileStreamSetFileTime, _
 	@IFileStreamSetETag, _
 	@IFileStreamSetReservedFileBytes, _
-	@IFileStreamSetPreloadedBytes _
+	@IFileStreamSetPreloadedBytes, _
+	@IFileStreamGetReservedBytes, _
+	@IFileStreamBeginWriteSlice, _
+	@IFileStreamEndWriteSlice _
 )

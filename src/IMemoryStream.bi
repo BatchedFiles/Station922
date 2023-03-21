@@ -23,7 +23,7 @@ Type IMemoryStreamVirtualTable
 		ByVal this As IMemoryStream Ptr _
 	)As ULONG
 	
-	BeginGetSlice As Function( _
+	BeginReadSlice As Function( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
@@ -31,7 +31,7 @@ Type IMemoryStreamVirtualTable
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	EndGetSlice As Function( _
+	EndReadSlice As Function( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
