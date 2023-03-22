@@ -569,14 +569,16 @@ Function ServerResponseAllHeadersToZString( _
 	End If
 	
 	Scope
-		Dim wContentType As WString * (MaxContentTypeLength + 1) = Any
-		GetContentTypeOfMimeType(@wContentType, @this->Mime)
-		
-		ServerResponseAddKnownResponseHeaderWstr( _
-			this, _
-			HttpResponseHeaders.HeaderContentType, _
-			@wContentType _
-		)
+		If this->Mime.ContentType <> ContentTypes.AnyAny Then
+			Dim wContentType As WString * (MaxContentTypeLength + 1) = Any
+			GetContentTypeOfMimeType(@wContentType, @this->Mime)
+			
+			ServerResponseAddKnownResponseHeaderWstr( _
+				this, _
+				HttpResponseHeaders.HeaderContentType, _
+				@wContentType _
+			)
+		End If
 	End Scope
 	
 	Dim pHeadersBuffer As WString Ptr = IMalloc_Alloc( _
