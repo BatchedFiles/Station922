@@ -1713,6 +1713,9 @@ Function WebSiteGetBuffer( _
 		Select Case fAccess
 			
 			Case FileAccess.CreateAccess, FileAccess.UpdateAccess
+				/'
+				' TODO Get Mime from Content-Type
+				' Change File Extension
 				Dim pContentType As HeapBSTR = Any
 				IClientRequest_GetHttpHeader( _
 					pRequest, _
@@ -1729,10 +1732,8 @@ Function WebSiteGetBuffer( _
 					Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
 				End If
 				
-				' TODO Get Mime from Content-Type
-				' Change File Extension
-
 				HeapSysFreeString(pContentType)
+				'/
 				
 				IFileStream_SetFileSize(pIFile, BufferLength)
 				
