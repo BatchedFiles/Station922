@@ -359,7 +359,7 @@ Function HttpWriterBeginWrite( _
 	Select Case cTask
 		
 		Case WriterTasks.WritePreloadedBytesToNetwork
-			
+			'
 		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
@@ -503,8 +503,56 @@ Function HttpWriterBeginWrite( _
 			End If
 			
 		Case WriterTasks.ReadNetworkStream
+			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
+			Dim ReservedBytesLength As Integer = Any
+			Dim pReservedBytes As UByte Ptr = Any
+			Dim hrGetReservedBytes As HRESULT = IFileStream_GetReservedBytes( _
+				pIFileStream, _
+				@ReservedBytesLength, _
+				@pReservedBytes _
+			)
+			If FAILED(hrGetReservedBytes) Then
+				*ppIAsyncResult = NULL
+				Return hrGetReservedBytes
+			End If
+			
+			' No need to specify the buffer length
+			' as it will return to the EndRead function
+			this->StreamBufferLength = 1
+			this->StreamBuffer.Buf(0).Buffer = pReservedBytes
+			
+			Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
+				this->pIStream, _
+				pReservedBytes, _
+				ReservedBytesLength, _
+				NULL, _
+				StateObject, _
+				ppIAsyncResult _
+			)
+			If FAILED(hrBeginRead) Then
+				Return hrBeginRead
+			End If
 			
 		Case WriterTasks.WriteFileData
+			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
+			
+			Dim Slice As BufferSlice = Any
+			With Slice
+				.pSlice = this->StreamBuffer.Buf(0).Buffer
+				.Length = this->StreamBuffer.Buf(0).Length
+			End With
+			
+			Dim hrBeginWrite As HRESULT = IFileStream_BeginWriteSlice( _
+				pIFileStream, _
+				@Slice, _
+				this->BodyOffset, _
+				StateObject, _
+				ppIAsyncResult _
+			)
+			
+			If FAILED(hrBeginWrite) Then
+				Return hrBeginWrite
+			End If
 			
 	End Select
 	
@@ -522,7 +570,7 @@ Function HttpWriterEndWrite( _
 	Select Case cTask
 		
 		Case WriterTasks.WritePreloadedBytesToNetwork
-			
+			'
 		Case WriterTasks.ReadFileStream
 			If this->BodySended Then
 				If this->HeadersSended Then
@@ -644,16 +692,72 @@ Function HttpWriterEndWrite( _
 					@pPreloadedBytes _
 				)
 				
-				If PreloadedBytesLength >= this->BodyOffset Then
+				Dim AllPreloadBytesWrited As Boolean = this->BodyOffset >= PreloadedBytesLength
+				If AllPreloadBytesWrited Then
 					this->CurrentTask = WriterTasks.ReadNetworkStream
 				End If
 			End If
 			
 		Case WriterTasks.ReadNetworkStream
+			Dim WritedBytes As DWORD = Any
+			Dim hrEndRead As HRESULT = IBaseStream_EndWrite( _
+				this->pIStream, _
+				pIAsyncResult, _
+				@WritedBytes _
+			)
+			If FAILED(hrEndRead) Then
+				Return hrEndRead
+			End If
+			
+			If hrEndRead = S_FALSE Then
+				Return S_FALSE
+			End If
+			
+			' The buffer pointer and length is already specified
+			this->StreamBuffer.Buf(0).Length = WritedBytes
+			
 			this->CurrentTask = WriterTasks.WriteFileData
 			
 		Case WriterTasks.WriteFileData
-			this->CurrentTask = WriterTasks.ReadNetworkStream
+			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
+			Dim WritedBytes As DWORD = Any
+			Dim hrEndGetSlice As HRESULT = IFileStream_EndWriteSlice( _
+				pIFileStream, _
+				pIAsyncResult, _
+				@WritedBytes _
+			)
+			If FAILED(hrEndGetSlice) Then
+				Return hrEndGetSlice
+			End If
+			
+			this->BodyOffset += CLngInt(WritedBytes)
+			
+			' Dim Diff As Integer = this->StreamBuffer.Buf(0).Length - WritedBytes
+			' If Diff Then
+			' 	' Write the remaining bytes
+			' 	this->StreamBuffer.Buf(0).Length = Diff
+			' Else
+				Dim BodySended As Boolean = Any
+				If this->BodyOffset >= this->BodyEndIndex Then
+					BodySended = True
+				Else
+					BodySended = False
+				End If
+				
+				If hrEndGetSlice = S_FALSE Then
+					Return S_FALSE
+				End If
+				
+				If BodySended Then
+					this->StreamBufferLength = 1
+					this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
+					this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+					
+					this->CurrentTask = WriterTasks.WriteNetworkData
+				Else
+					this->CurrentTask = WriterTasks.ReadNetworkStream
+				End If
+			' End If
 			
 	End Select
 	
