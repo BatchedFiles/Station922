@@ -487,6 +487,11 @@ Function HttpWriterBeginWrite( _
 					Return hrGetReservedBytes
 				End If
 				
+				' No need to specify the buffer length
+				' as it will return to the EndRead function
+				this->StreamBufferLength = 1
+				this->StreamBuffer.Buf(0).Buffer = pReservedBytes
+				
 				Dim hrBeginRead As HRESULT = IBaseStream_BeginRead( _
 					this->pIStream, _
 					pReservedBytes, _
@@ -699,11 +704,11 @@ Function HttpWriterEndWrite( _
 			End If
 			
 		Case WriterTasks.ReadNetworkStream
-			Dim WritedBytes As DWORD = Any
-			Dim hrEndRead As HRESULT = IBaseStream_EndWrite( _
+			Dim ReadedBytes As DWORD = Any
+			Dim hrEndRead As HRESULT = IBaseStream_EndRead( _
 				this->pIStream, _
 				pIAsyncResult, _
-				@WritedBytes _
+				@ReadedBytes _
 			)
 			If FAILED(hrEndRead) Then
 				Return hrEndRead
@@ -713,8 +718,8 @@ Function HttpWriterEndWrite( _
 				Return S_FALSE
 			End If
 			
-			' The buffer pointer and length is already specified
-			this->StreamBuffer.Buf(0).Length = WritedBytes
+			' The buffer pointer is already specified
+			this->StreamBuffer.Buf(0).Length = ReadedBytes
 			
 			this->CurrentTask = WriterTasks.WriteFileData
 			
@@ -737,15 +742,15 @@ Function HttpWriterEndWrite( _
 			' 	' Write the remaining bytes
 			' 	this->StreamBuffer.Buf(0).Length = Diff
 			' Else
+				If hrEndGetSlice = S_FALSE Then
+					Return S_FALSE
+				End If
+				
 				Dim BodySended As Boolean = Any
 				If this->BodyOffset >= this->BodyEndIndex Then
 					BodySended = True
 				Else
 					BodySended = False
-				End If
-				
-				If hrEndGetSlice = S_FALSE Then
-					Return S_FALSE
 				End If
 				
 				If BodySended Then
