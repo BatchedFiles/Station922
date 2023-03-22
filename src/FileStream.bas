@@ -303,7 +303,10 @@ Function FileStreamBeginReadSlice( _
 		End If
 	End Scope
 	
-	Dim dwNumberOfBytesToRead As DWORD = Cast(DWORD, dwLength)
+	Dim dwNumberOfBytesToRead As DWORD = min( _
+		Cast(DWORD, this->ReservedFileBytesLength), _
+		dwLength _
+	)
 	this->dwRequestedLength = dwNumberOfBytesToRead
 	
 	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _

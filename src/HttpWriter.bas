@@ -387,7 +387,7 @@ Function HttpWriterBeginWrite( _
 				
 				Dim resStatus As BOOL = PostQueuedCompletionStatus( _
 					ThreadPoolCompletionPort, _
-					BUFFERSLICECHUNK_SIZE, _
+					SizeOf(HttpWriter), _
 					Cast(ULONG_PTR, StateObject), _
 					pOverlap _
 				)
@@ -399,15 +399,13 @@ Function HttpWriterBeginWrite( _
 				End If
 				
 			Else
-				Dim DesiredSliceLength As LongInt = min( _
-					BUFFERSLICECHUNK_SIZE, _
-					this->BodyEndIndex - this->BodyOffset _
-				)
+				Dim DesiredSliceLength As LongInt = this->BodyEndIndex - this->BodyOffset
+				Dim dwDesiredSliceLength As DWORD = Cast(DWORD, DesiredSliceLength)
 				
 				Dim hrBeginGetSlice As HRESULT = IAttributedStream_BeginReadSlice( _
 					this->pIBuffer, _
 					this->BodyOffset, _
-					DesiredSliceLength, _
+					dwDesiredSliceLength, _
 					StateObject, _
 					ppIAsyncResult _
 				)
