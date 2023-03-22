@@ -27,6 +27,28 @@ Type _WebServerIniConfiguration
 	pWebSitesIniFileName As WString Ptr
 End Type
 
+Function GetRoundedReservedFileBytes( _
+		ByVal ReservedFileBytes As UInteger _
+	)As UInteger
+	
+	Dim dwZeroLowBytes As UInteger = ReservedFileBytes And &hffffffffffff0000
+	
+	If ReservedFileBytes And &hffff Then
+		
+		Return dwZeroLowBytes + &h10000
+		
+	End If
+	
+	If dwZeroLowBytes = 0 Then
+		
+		Return dwZeroLowBytes + &h10000
+		
+	End If
+	
+	Return dwZeroLowBytes
+	
+End Function
+
 Sub InitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -869,7 +891,7 @@ End Function
 Function GetWebSiteUtfBomFileOffset( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
-	)As Integer
+	)As UInteger
 	
 	Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
 	
@@ -880,14 +902,14 @@ Function GetWebSiteUtfBomFileOffset( _
 		pWebSitesIniFileName _
 	)
 	
-	Return CInt(UtfBomFileOffset)
+	Return CUInt(UtfBomFileOffset)
 	
 End Function
 
 Function GetWebSiteReservedFileBytes( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
-	)As Integer
+	)As UInteger
 	
 	Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 	
@@ -898,7 +920,11 @@ Function GetWebSiteReservedFileBytes( _
 		pWebSitesIniFileName _
 	)
 	
-	Return CInt(ReservedFileBytes)
+	Dim RoundedFileBytes As UInteger = GetRoundedReservedFileBytes( _
+		CUInt(ReservedFileBytes) _
+	)
+	
+	Return RoundedFileBytes
 	
 End Function
 
@@ -1149,7 +1175,7 @@ Function GetWebSite( _
 	End Scope
 	
 	Scope
-		Dim Offset As Integer = GetWebSiteUtfBomFileOffset( _
+		Dim Offset As UInteger = GetWebSiteUtfBomFileOffset( _
 			pWebSitesIniFileName, _
 			lpwszHost _
 		)
@@ -1157,7 +1183,7 @@ Function GetWebSite( _
 	End Scope
 	
 	Scope
-		Dim ReservedFileBytes As Integer = GetWebSiteReservedFileBytes( _
+		Dim ReservedFileBytes As UInteger = GetWebSiteReservedFileBytes( _
 			pWebSitesIniFileName, _
 			lpwszHost _
 		)

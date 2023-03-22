@@ -117,7 +117,7 @@ Declare Function WebSiteSetTextFileEncoding( _
 
 Declare Function WebSiteSetUtfBomFileOffset( _
 	ByVal this As WebSite Ptr, _
-	ByVal Offset As Integer _
+	ByVal Offset As UInteger _
 )As HRESULT
 
 Declare Function WebSiteSetListenAddress( _
@@ -152,7 +152,7 @@ Declare Function WebSiteSetDefaultFileName( _
 
 Declare Function WebSiteSetReservedFileBytes( _
 	ByVal this As WebSite Ptr, _
-	ByVal ReservedFileBytes As Integer _
+	ByVal ReservedFileBytes As UInteger _
 )As HRESULT
 
 Declare Function WebSiteSetAddHttpProcessor( _

@@ -92,7 +92,7 @@ Type _WebSite
 	UserName As HeapBSTR
 	Password As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
-	UtfBomFileOffset As Integer
+	UtfBomFileOffset As UInteger
 	ReservedFileBytes As UInteger
 	UseSsl As Boolean
 	IsMoved As Boolean
@@ -690,6 +690,7 @@ Function GetFileHandle( _
 	End If
 	
 	*pFileHandle = FileHandle
+	
 	Return hrErrorCode
 	
 End Function
@@ -1212,113 +1213,117 @@ Function WebSiteOpenRequestedFile( _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
-	Dim PathLength As Integer = SysStringLen(Path)
-	Dim LastChar As Integer = Path[PathLength - 1]
-	
-	Dim IsLastCharNotSolidus As Boolean = LastChar <> Characters.Solidus
-	If IsLastCharNotSolidus Then
+	Scope
+		Dim PathLength As Integer = SysStringLen(Path)
+		Dim LastChar As Integer = Path[PathLength - 1]
 		
-		WebSiteMapPath( _
-			pPhysicalDirectory, _
-			Path, _
-			pFileName _
-		)
-		
-		Dim hFile As HANDLE = Any
-		Dim hrGetFileHandle As HRESULT = GetFileHandle( _
-			pFileName, _
-			fAccess, _
-			@hFile _
-		)
-		
-		IFileStream_SetFilePath(pFileBuffer, Path)
-		IFileStream_SetFileHandle(pFileBuffer, hFile)
-		
-		Return hrGetFileHandle
-		
-	End If
-	
-	Dim hrGetFile As HRESULT = Any
-	
-	Dim FileListLength As Integer = Any
-	Dim DefaultFileNameLength As Integer = SysStringLen(DefaultFileName)
-	If DefaultFileNameLength Then
-		FileListLength = 1
-	Else
-		FileListLength = DefaultFileNames + 1
-	End If
-	
-	For i As Integer = 0 To FileListLength - 1
-		Dim defFilename As WString * (MAX_PATH + 1) = Any
-		GetDefaultFileName(@defFilename, i, DefaultFileName)
-		
-		Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
-		lstrcpyW(@FullDefaultFilename, Path)
-		lstrcatW(@FullDefaultFilename, @defFilename)
-		
-		WebSiteMapPath( _
-			pPhysicalDirectory, _
-			@FullDefaultFilename, _
-			pFileName _
-		)
-		
-		Dim hFile As HANDLE = Any
-		hrGetFile = GetFileHandle( _
-			pFileName, _
-			fAccess, _
-			@hFile _
-		)
-		
-		If SUCCEEDED(hrGetFile) Then
+		Dim IsLastCharNotSolidus As Boolean = LastChar <> Characters.Solidus
+		If IsLastCharNotSolidus Then
 			
-			Dim fp As HeapBSTR = CreateHeapString( _
-				pIMalloc, _
-				@FullDefaultFilename _
-			)
-			
-			IFileStream_SetFilePath(pFileBuffer, fp)
-			IFileStream_SetFileHandle(pFileBuffer, hFile)
-			
-			HeapSysFreeString(fp)
-			
-			Return S_OK
-			
-		End If
-		
-	Next
-	
-	If FAILED(hrGetFile) Then
-		If EnableDirectoryListing Then
-			Dim ListingDir As WString * (MAX_PATH + 1) = Any
-			
-			Scope
-				Const AsteriskString = WStr("*")
-				
-				Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
-				lstrcpyW(@FullDefaultFilename, Path)
-				lstrcatW(@FullDefaultFilename, @AsteriskString)
-				
-				WebSiteMapPath( _
-					pPhysicalDirectory, _
-					FullDefaultFilename, _
-					@ListingDir _
-				)
-			End Scope
-			
-			Dim hrListing As HRESULT = GetDirectoryListing( _
-				@ListingDir, _
-				pIMalloc, _
-				pFileBuffer, _
+			WebSiteMapPath( _
+				pPhysicalDirectory, _
+				Path, _
 				pFileName _
 			)
 			
-			If SUCCEEDED(hrListing) Then
-				Return hrListing
+			Dim hFile As HANDLE = Any
+			Dim hrGetFileHandle As HRESULT = GetFileHandle( _
+				pFileName, _
+				fAccess, _
+				@hFile _
+			)
+			
+			IFileStream_SetFilePath(pFileBuffer, Path)
+			IFileStream_SetFileHandle(pFileBuffer, hFile)
+			
+			Return hrGetFileHandle
+			
+		End If
+	End Scope
+	
+	Scope
+		Dim FileListLength As Integer = Any
+		Dim DefaultFileNameLength As Integer = SysStringLen(DefaultFileName)
+		If DefaultFileNameLength Then
+			FileListLength = 1
+		Else
+			FileListLength = DefaultFileNames + 1
+		End If
+		
+		Dim hrGetFile As HRESULT = E_FAIL
+		
+		For i As Integer = 0 To FileListLength - 1
+			Dim defFilename As WString * (MAX_PATH + 1) = Any
+			GetDefaultFileName(@defFilename, i, DefaultFileName)
+			
+			Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@FullDefaultFilename, Path)
+			lstrcatW(@FullDefaultFilename, @defFilename)
+			
+			WebSiteMapPath( _
+				pPhysicalDirectory, _
+				@FullDefaultFilename, _
+				pFileName _
+			)
+			
+			Dim hFile As HANDLE = Any
+			hrGetFile = GetFileHandle( _
+				pFileName, _
+				fAccess, _
+				@hFile _
+			)
+			
+			If SUCCEEDED(hrGetFile) Then
+				
+				Dim fp As HeapBSTR = CreateHeapString( _
+					pIMalloc, _
+					@FullDefaultFilename _
+				)
+				
+				IFileStream_SetFilePath(pFileBuffer, fp)
+				IFileStream_SetFileHandle(pFileBuffer, hFile)
+				
+				HeapSysFreeString(fp)
+				
+				Return S_OK
+				
+			End If
+			
+		Next
+		
+		If FAILED(hrGetFile) Then
+			If EnableDirectoryListing Then
+				Dim ListingDir As WString * (MAX_PATH + 1) = Any
+				
+				Scope
+					Const AsteriskString = WStr("*")
+					
+					Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
+					lstrcpyW(@FullDefaultFilename, Path)
+					lstrcatW(@FullDefaultFilename, @AsteriskString)
+					
+					WebSiteMapPath( _
+						pPhysicalDirectory, _
+						FullDefaultFilename, _
+						@ListingDir _
+					)
+				End Scope
+				
+				Dim hrListing As HRESULT = GetDirectoryListing( _
+					@ListingDir, _
+					pIMalloc, _
+					pFileBuffer, _
+					pFileName _
+				)
+				
+				If SUCCEEDED(hrListing) Then
+					Return hrListing
+				End If
 			End If
 		End If
-	End If
-	
-	Return hrGetFile
+		
+		Return hrGetFile
+	End Scope
 	
 End Function
 
@@ -1557,28 +1562,6 @@ Function WebSiteGetMovedUrl( _
 	
 End Function
 
-Function GetRoundedReservedFileBytes( _
-		ByVal ReservedFileBytes As UInteger _
-	)As UInteger
-	
-	Dim dwZeroLowBytes As UInteger = ReservedFileBytes And &hffffffffffff0000
-	
-	If ReservedFileBytes And &hffff Then
-		
-		Return dwZeroLowBytes + &h10000
-		
-	End If
-	
-	If dwZeroLowBytes = 0 Then
-		
-		Return dwZeroLowBytes + &h10000
-		
-	End If
-	
-	Return dwZeroLowBytes
-	
-End Function
-
 Function GetFindFileErrorCode( _
 		ByVal FileName As WString Ptr, _
 		ByVal hrOpenFile As HRESULT _
@@ -1663,13 +1646,9 @@ Function WebSiteGetBuffer( _
 			Return hrCreateFileBuffer
 		End If
 		
-		Dim ReservedFileBytes As UInteger = GetRoundedReservedFileBytes( _
-			this->ReservedFileBytes _
-		)
-		
 		Dim hrReservedFileBytes As HRESULT = IFileStream_SetReservedFileBytes( _
 			pIFile, _
-			ReservedFileBytes _
+			this->ReservedFileBytes _
 		)
 		If FAILED(hrReservedFileBytes) Then
 			IFileStream_Release(pIFile)
@@ -2199,7 +2178,7 @@ End Function
 
 Function WebSiteSetReservedFileBytes( _
 		ByVal this As WebSite Ptr, _
-		ByVal ReservedFileBytes As Integer _
+		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	
 	this->ReservedFileBytes = ReservedFileBytes
@@ -2210,7 +2189,7 @@ End Function
 
 Function WebSiteSetUtfBomFileOffset( _
 		ByVal this As WebSite Ptr, _
-		ByVal Offset As Integer _
+		ByVal Offset As UInteger _
 	)As HRESULT
 	
 	this->UtfBomFileOffset = Offset
@@ -2463,7 +2442,7 @@ End Function
 
 Function IWebSiteSetUtfBomFileOffset( _
 		ByVal this As IWebSite Ptr, _
-		ByVal Offset As Integer _
+		ByVal Offset As UInteger _
 	)As HRESULT
 	Return WebSiteSetUtfBomFileOffset(ContainerOf(this, WebSite, lpVtbl), Offset)
 End Function
@@ -2512,7 +2491,7 @@ End Function
 
 Function IMutableWebSetReservedFileBytes( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ReservedFileBytes As Integer _
+		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	Return WebSiteSetReservedFileBytes(ContainerOf(this, WebSite, lpVtbl), ReservedFileBytes)
 End Function

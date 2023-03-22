@@ -121,7 +121,7 @@ Type IWebSiteVirtualTable
 	
 	SetUtfBomFileOffset As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal Offset As Integer _
+		ByVal Offset As UInteger _
 	)As HRESULT
 	
 	SetListenAddress As Function( _
@@ -156,7 +156,7 @@ Type IWebSiteVirtualTable
 	
 	SetReservedFileBytes As Function( _
 		ByVal this As IWebSite Ptr, _
-		ByVal ReservedFileBytes As Integer _
+		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	
 	AddHttpProcessor As Function( _

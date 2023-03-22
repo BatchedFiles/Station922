@@ -22,8 +22,8 @@ Type WebSiteConfiguration
 	DefaultFileName As HeapBSTR
 	UserName As HeapBSTR
 	Password As HeapBSTR
-	UtfBomFileOffset As Integer
-	ReservedFileBytes As Integer
+	UtfBomFileOffset As UInteger
+	ReservedFileBytes As UInteger
 	IsMoved As Boolean
 	UseSsl As Boolean
 	EnableDirectoryListing As Boolean
