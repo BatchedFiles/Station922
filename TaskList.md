@@ -69,7 +69,7 @@
 * [x] OPTIONS
 * [ ] POST
 * [ ] PATCH
-* [ ] PUT
+* [x] PUT
 * [x] TRACE
 
 WebDAV:
