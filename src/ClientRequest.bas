@@ -94,6 +94,7 @@ Function ClientRequestParseRequestedLine( _
 			pSpace, _
 			Characters.WhiteSpace _
 		)
+		
 		If pSpace = NULL Then
 			bstrUri = CreateHeapString( _
 				this->pIMemoryAllocator, _
@@ -106,6 +107,10 @@ Function ClientRequestParseRequestedLine( _
 				pUri, _
 				UriLength _
 			)
+		End If
+		
+		If bstrUri = NULL Then
+			Return E_OUTOFMEMORY
 		End If
 		
 		Dim hrUriFromString As HRESULT = IClientUri_UriFromString( _
