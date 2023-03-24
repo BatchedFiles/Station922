@@ -12,6 +12,13 @@ Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
 Const MaxResponseBufferLength As Integer = 1 * 4096 - 1
 Const ColonWithSpaceString = WStr(": ")
+Const CompareResultEqual As Long = 0
+
+Type ResponseHeaderNode
+	pHeader As WString Ptr
+	HeaderLength As Integer
+	HeaderIndex As HttpResponseHeaders
+End Type
 
 Type _ServerResponse
 	#if __FB_DEBUG__
@@ -34,6 +41,120 @@ Type _ServerResponse
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean
 End Type
+
+Dim Shared ResponseHeaderNodesVector(1 To HttpResponseHeadersSize) As ResponseHeaderNode = { _
+	Type<ResponseHeaderNode>(@HeaderAcceptRangesString,         Len(HeaderAcceptRangesString),         HttpResponseHeaders.HeaderAcceptRanges), _
+	Type<ResponseHeaderNode>(@HeaderAgeString,                  Len(HeaderAgeString),                  HttpResponseHeaders.HeaderAge), _
+	Type<ResponseHeaderNode>(@HeaderAllowString,                Len(HeaderAllowString),                HttpResponseHeaders.HeaderAllow), _
+	Type<ResponseHeaderNode>(@HeaderCacheControlString,         Len(HeaderCacheControlString),         HttpResponseHeaders.HeaderCacheControl), _
+	Type<ResponseHeaderNode>(@HeaderConnectionString,           Len(HeaderConnectionString),           HttpResponseHeaders.HeaderConnection), _
+	Type<ResponseHeaderNode>(@HeaderContentEncodingString,      Len(HeaderContentEncodingString),      HttpResponseHeaders.HeaderContentEncoding), _
+	Type<ResponseHeaderNode>(@HeaderContentLanguageString,      Len(HeaderContentLanguageString),      HttpResponseHeaders.HeaderContentLanguage), _
+	Type<ResponseHeaderNode>(@HeaderContentLengthString,        Len(HeaderContentLengthString),        HttpResponseHeaders.HeaderContentLength), _
+	Type<ResponseHeaderNode>(@HeaderContentLocationString,      Len(HeaderContentLocationString),      HttpResponseHeaders.HeaderContentLocation), _
+	Type<ResponseHeaderNode>(@HeaderContentMd5String,           Len(HeaderContentMd5String),           HttpResponseHeaders.HeaderContentMd5), _
+	Type<ResponseHeaderNode>(@HeaderContentRangeString,         Len(HeaderContentRangeString),         HttpResponseHeaders.HeaderContentRange), _
+	Type<ResponseHeaderNode>(@HeaderContentTypeString,          Len(HeaderContentTypeString),          HttpResponseHeaders.HeaderContentType), _
+	Type<ResponseHeaderNode>(@HeaderDateString,                 Len(HeaderDateString),                 HttpResponseHeaders.HeaderDate), _
+	Type<ResponseHeaderNode>(@HeaderETagString,                 Len(HeaderETagString),                 HttpResponseHeaders.HeaderETag), _
+	Type<ResponseHeaderNode>(@HeaderExpiresString,              Len(HeaderExpiresString),              HttpResponseHeaders.HeaderExpires), _
+	Type<ResponseHeaderNode>(@HeaderKeepAliveString,            Len(HeaderKeepAliveString),            HttpResponseHeaders.HeaderKeepAlive), _
+	Type<ResponseHeaderNode>(@HeaderLastModifiedString,         Len(HeaderLastModifiedString),         HttpResponseHeaders.HeaderLastModified), _
+	Type<ResponseHeaderNode>(@HeaderLocationString,             Len(HeaderLocationString),             HttpResponseHeaders.HeaderLocation), _
+	Type<ResponseHeaderNode>(@HeaderPragmaString,               Len(HeaderPragmaString),               HttpResponseHeaders.HeaderPragma), _
+	Type<ResponseHeaderNode>(@HeaderProxyAuthenticateString,    Len(HeaderProxyAuthenticateString),    HttpResponseHeaders.HeaderProxyAuthenticate), _
+	Type<ResponseHeaderNode>(@HeaderRetryAfterString,           Len(HeaderRetryAfterString),           HttpResponseHeaders.HeaderRetryAfter), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketAcceptString,   Len(HeaderSecWebSocketAcceptString),   HttpResponseHeaders.HeaderSecWebSocketAccept), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketLocationString, Len(HeaderSecWebSocketLocationString), HttpResponseHeaders.HeaderSecWebSocketLocation), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketOriginString,   Len(HeaderSecWebSocketOriginString),   HttpResponseHeaders.HeaderSecWebSocketOrigin), _
+	Type<ResponseHeaderNode>(@HeaderSecWebSocketProtocolString, Len(HeaderSecWebSocketProtocolString), HttpResponseHeaders.HeaderSecWebSocketProtocol), _
+	Type<ResponseHeaderNode>(@HeaderServerString,               Len(HeaderServerString),               HttpResponseHeaders.HeaderServer), _
+	Type<ResponseHeaderNode>(@HeaderSetCookieString,            Len(HeaderSetCookieString),            HttpResponseHeaders.HeaderSetCookie), _
+	Type<ResponseHeaderNode>(@HeaderTrailerString,              Len(HeaderTrailerString),              HttpResponseHeaders.HeaderTrailer), _
+	Type<ResponseHeaderNode>(@HeaderTransferEncodingString,     Len(HeaderTransferEncodingString),     HttpResponseHeaders.HeaderTransferEncoding), _
+	Type<ResponseHeaderNode>(@HeaderUpgradeString,              Len(HeaderUpgradeString),              HttpResponseHeaders.HeaderUpgrade), _
+	Type<ResponseHeaderNode>(@HeaderVaryString,                 Len(HeaderVaryString),                 HttpResponseHeaders.HeaderVary), _
+	Type<ResponseHeaderNode>(@HeaderViaString,                  Len(HeaderViaString),                  HttpResponseHeaders.HeaderVia), _
+	Type<ResponseHeaderNode>(@HeaderWarningString,              Len(HeaderWarningString),              HttpResponseHeaders.HeaderWarning), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketLocationString,    Len(HeaderWebSocketLocationString),    HttpResponseHeaders.HeaderWebSocketLocation), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketOriginString,      Len(HeaderWebSocketOriginString),      HttpResponseHeaders.HeaderWebSocketOrigin), _
+	Type<ResponseHeaderNode>(@HeaderWebSocketProtocolString,    Len(HeaderWebSocketProtocolString),    HttpResponseHeaders.HeaderWebSocketProtocol), _
+	Type<ResponseHeaderNode>(@HeaderWWWAuthenticateString,      Len(HeaderWWWAuthenticateString),      HttpResponseHeaders.HeaderWwwAuthenticate) _
+}
+
+Function KnownResponseHeaderToString( _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal pHeaderLength As Integer Ptr _
+	)As WString Ptr
+	
+	Dim pHeader As WString Ptr = NULL
+	Dim HeaderLength As Integer = 0
+	
+	For i As Integer = 1 To HttpResponseHeadersSize
+		If ResponseHeaderNodesVector(i).HeaderIndex = HeaderIndex Then
+			HeaderLength = ResponseHeaderNodesVector(i).HeaderLength
+			pHeader = ResponseHeaderNodesVector(i).pHeader
+			Exit For
+		End If
+	Next
+	
+	If pHeaderLength Then
+		*pHeaderLength = HeaderLength
+	End If
+	
+	Return pHeader
+	
+End Function
+
+Function HttpVersionToString( _
+		ByVal v As HttpVersions, _
+		ByVal pBufferLength As Integer Ptr _
+	)As WString Ptr
+	
+	Dim intBufferLength As Integer = 0
+	
+	Select Case v
+		
+		Case HttpVersions.Http11
+			intBufferLength = Len(HttpVersion11String)
+			HttpVersionToString = @HttpVersion11String
+			
+		Case HttpVersions.Http10
+			intBufferLength = Len(HttpVersion10String)
+			HttpVersionToString = @HttpVersion10String
+			
+		Case Else
+			intBufferLength = Len(HttpVersion11String)
+			HttpVersionToString = @HttpVersion11String
+			
+	End Select
+	
+	If pBufferLength Then
+		*pBufferLength = intBufferLength
+	End If
+	
+End Function
+
+Function GetKnownResponseHeaderIndex( _
+		ByVal pHeader As WString Ptr, _
+		ByVal pIndex As HttpResponseHeaders Ptr _
+	)As Boolean
+	
+	For i As Integer = 1 To HttpResponseHeadersSize
+		Dim CompareResult As Long = lstrcmpW( _
+			ResponseHeaderNodesVector(i).pHeader, _
+			pHeader _
+		)
+		If CompareResult = CompareResultEqual Then
+			*pIndex = ResponseHeaderNodesVector(i).HeaderIndex
+			Return True
+		End If
+	Next
+	
+	*pIndex = 0
+	Return False
+	
+End Function
 
 Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _

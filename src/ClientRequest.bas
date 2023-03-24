@@ -12,6 +12,13 @@ Const DeflateString = WStr("deflate")
 Const BytesString = WStr("bytes")
 Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
+Const CompareResultEqual As Long = 0
+
+Type RequestHeaderNode
+	pHeader As WString Ptr
+	HeaderLength As Integer
+	HeaderIndex As HttpRequestHeaders
+End Type
 
 Type _ClientRequest
 	#if __FB_DEBUG__
@@ -29,6 +36,104 @@ Type _ClientRequest
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
 End Type
+
+Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeaderNode = { _
+	Type<RequestHeaderNode>(@HeaderHostString,                    Len(HeaderHostString),                    HttpRequestHeaders.HeaderHost), _
+	Type<RequestHeaderNode>(@HeaderAcceptLanguageString,          Len(HeaderAcceptLanguageString),          HttpRequestHeaders.HeaderAcceptLanguage), _
+	Type<RequestHeaderNode>(@HeaderUserAgentString,               Len(HeaderUserAgentString),               HttpRequestHeaders.HeaderUserAgent), _
+	Type<RequestHeaderNode>(@HeaderAcceptEncodingString,          Len(HeaderAcceptEncodingString),          HttpRequestHeaders.HeaderAcceptEncoding), _
+	Type<RequestHeaderNode>(@HeaderAcceptString,                  Len(HeaderAcceptString),                  HttpRequestHeaders.HeaderAccept), _
+	Type<RequestHeaderNode>(@HeaderConnectionString,              Len(HeaderConnectionString),              HttpRequestHeaders.HeaderConnection), _
+	Type<RequestHeaderNode>(@HeaderCacheControlString,            Len(HeaderCacheControlString),            HttpRequestHeaders.HeaderCacheControl), _
+	Type<RequestHeaderNode>(@HeaderIfModifiedSinceString,         Len(HeaderIfModifiedSinceString),         HttpRequestHeaders.HeaderIfModifiedSince), _
+	Type<RequestHeaderNode>(@HeaderRefererString,                 Len(HeaderRefererString),                 HttpRequestHeaders.HeaderReferer), _
+	Type<RequestHeaderNode>(@HeaderIfNoneMatchString,             Len(HeaderIfNoneMatchString),             HttpRequestHeaders.HeaderIfNoneMatch), _
+	Type<RequestHeaderNode>(@HeaderDNTString,                     Len(HeaderDNTString),                     HttpRequestHeaders.HeaderDNT), _
+	Type<RequestHeaderNode>(@HeaderUpgradeInsecureRequestsString, Len(HeaderUpgradeInsecureRequestsString), HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
+	Type<RequestHeaderNode>(@HeaderRangeString,                   Len(HeaderRangeString),                   HttpRequestHeaders.HeaderRange), _
+	Type<RequestHeaderNode>(@HeaderAuthorizationString,           Len(HeaderAuthorizationString),           HttpRequestHeaders.HeaderAuthorization), _
+	Type<RequestHeaderNode>(@HeaderContentLengthString,           Len(HeaderContentLengthString),           HttpRequestHeaders.HeaderContentLength), _
+	Type<RequestHeaderNode>(@HeaderContentTypeString,             Len(HeaderContentTypeString),             HttpRequestHeaders.HeaderContentType), _
+	Type<RequestHeaderNode>(@HeaderCookieString,                  Len(HeaderCookieString),                  HttpRequestHeaders.HeaderCookie), _
+	Type<RequestHeaderNode>(@HeaderContentLanguageString,         Len(HeaderContentLanguageString),         HttpRequestHeaders.HeaderContentLanguage), _
+	Type<RequestHeaderNode>(@HeaderAcceptCharsetString,           Len(HeaderAcceptCharsetString),           HttpRequestHeaders.HeaderAcceptCharset), _
+	Type<RequestHeaderNode>(@HeaderContentEncodingString,         Len(HeaderContentEncodingString),         HttpRequestHeaders.HeaderContentEncoding), _
+	Type<RequestHeaderNode>(@HeaderKeepAliveString,               Len(HeaderKeepAliveString),               HttpRequestHeaders.HeaderKeepAlive), _
+	Type<RequestHeaderNode>(@HeaderExpectString,                  Len(HeaderExpectString),                  HttpRequestHeaders.HeaderExpect), _
+	Type<RequestHeaderNode>(@HeaderContentMd5String,              Len(HeaderContentMd5String),              HttpRequestHeaders.HeaderContentMd5), _
+	Type<RequestHeaderNode>(@HeaderContentRangeString,            Len(HeaderContentRangeString),            HttpRequestHeaders.HeaderContentRange), _
+	Type<RequestHeaderNode>(@HeaderFromString,                    Len(HeaderFromString),                    HttpRequestHeaders.HeaderFrom), _
+	Type<RequestHeaderNode>(@HeaderIfMatchString,                 Len(HeaderIfMatchString),                 HttpRequestHeaders.HeaderIfMatch), _
+	Type<RequestHeaderNode>(@HeaderIfRangeString,                 Len(HeaderIfRangeString),                 HttpRequestHeaders.HeaderIfRange), _
+	Type<RequestHeaderNode>(@HeaderIfUnmodifiedSinceString,       Len(HeaderIfUnmodifiedSinceString),       HttpRequestHeaders.HeaderIfUnModifiedSince), _
+	Type<RequestHeaderNode>(@HeaderMaxForwardsString,             Len(HeaderMaxForwardsString),             HttpRequestHeaders.HeaderMaxForwards), _
+	Type<RequestHeaderNode>(@HeaderOriginString,                  Len(HeaderOriginString),                  HttpRequestHeaders.HeaderOrigin), _
+	Type<RequestHeaderNode>(@HeaderPragmaString,                  Len(HeaderPragmaString),                  HttpRequestHeaders.HeaderPragma), _
+	Type<RequestHeaderNode>(@HeaderProxyAuthorizationString,      Len(HeaderProxyAuthorizationString),      HttpRequestHeaders.HeaderProxyAuthorization), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKeyString,         Len(HeaderSecWebSocketKeyString),         HttpRequestHeaders.HeaderSecWebSocketKey), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKey1String,        Len(HeaderSecWebSocketKey1String),        HttpRequestHeaders.HeaderSecWebSocketKey1), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketKey2String,        Len(HeaderSecWebSocketKey2String),        HttpRequestHeaders.HeaderSecWebSocketKey2), _
+	Type<RequestHeaderNode>(@HeaderUpgradeString,                 Len(HeaderUpgradeString),                 HttpRequestHeaders.HeaderUpgrade), _
+	Type<RequestHeaderNode>(@HeaderSecWebSocketVersionString,     Len(HeaderSecWebSocketVersionString),     HttpRequestHeaders.HeaderSecWebSocketVersion), _
+	Type<RequestHeaderNode>(@HeaderTeString,                      Len(HeaderTeString),                      HttpRequestHeaders.HeaderTe), _
+	Type<RequestHeaderNode>(@HeaderTrailerString,                 Len(HeaderTrailerString),                 HttpRequestHeaders.HeaderTrailer), _
+	Type<RequestHeaderNode>(@HeaderTransferEncodingString,        Len(HeaderTransferEncodingString),        HttpRequestHeaders.HeaderTransferEncoding), _
+	Type<RequestHeaderNode>(@HeaderViaString,                     Len(HeaderViaString),                     HttpRequestHeaders.HeaderVia), _
+	Type<RequestHeaderNode>(@HeaderWarningString,                 Len(HeaderWarningString),                 HttpRequestHeaders.HeaderWarning), _
+	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString,       Len(HeaderWebSocketProtocolString),       HttpRequestHeaders.HeaderWebSocketProtocol), _
+	Type<RequestHeaderNode>(@HeaderPurposeString,                 Len(HeaderPurposeString),                 HttpRequestHeaders.HeaderPurpose) _
+}
+
+Function GetHttpVersionIndex( _
+		ByVal s As WString Ptr, _
+		ByVal pVersion As HttpVersions Ptr _
+	)As Boolean
+	
+	If lstrlenW(s) = 0 Then
+		*pVersion = HttpVersions.Http09
+		Return True
+	End If
+	
+	Scope
+		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion11String)
+		If CompareResult = CompareResultEqual Then
+			*pVersion = HttpVersions.Http11
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion10String)
+		If CompareResult = CompareResultEqual Then
+			*pVersion = HttpVersions.Http10
+			Return True
+		End If
+	End Scope
+	
+	Return False
+	
+End Function
+
+Function GetKnownRequestHeaderIndex( _
+		ByVal pHeader As WString Ptr, _
+		ByVal pIndex As HttpRequestHeaders Ptr _
+	)As Boolean
+	
+	For i As Integer = 1 To HttpRequestHeadersSize
+		Dim CompareResult As Long = lstrcmpiW( _
+			RequestHeaderNodesVector(i).pHeader, _
+			pHeader _
+		)
+		If CompareResult = CompareResultEqual Then
+			*pIndex = RequestHeaderNodesVector(i).HeaderIndex
+			Return True
+		End If
+	Next
+	
+	*pIndex = 0
+	Return False
+	
+End Function
 
 Function ClientRequestParseRequestedLine( _
 		ByVal this As ClientRequest Ptr, _
@@ -174,7 +279,7 @@ Function ClientRequestParseRequestedLine( _
 	
 End Function
 
-Function ClientRequestAddRequestHeader( _
+Function ClientRequestAddRequestHeaderSink( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
@@ -186,7 +291,7 @@ Function ClientRequestAddRequestHeader( _
 		@HeaderIndex _
 	)
 	If Finded = False Then
-		' TODO ƒобавить в нераспознанные заголовки запроса
+		' TODO Add item to collection of unrecognized request headers
 		HeapSysFreeString(Value)
 		Return False
 	End If
@@ -236,7 +341,7 @@ Function ClientRequestAddRequestHeaders( _
 				pwszValue, _
 				ValueLength _
 			)
-			ClientRequestAddRequestHeader(this, pLine, Value)
+			ClientRequestAddRequestHeaderSink(this, pLine, Value)
 			
 		End If
 		

@@ -3,6 +3,153 @@
 
 #include once "windows.bi"
 
+Const HttpVersion10String = WStr("HTTP/1.0")
+Const HttpVersion11String = WStr("HTTP/1.1")
+
+Const HttpMethodCopy =     WStr("COPY")
+Const HttpMethodConnect =  WStr("CONNECT")
+Const HttpMethodDelete =   WStr("DELETE")
+Const HttpMethodGet =      WStr("GET")
+Const HttpMethodHead =     WStr("HEAD")
+Const HttpMethodMove =     WStr("MOVE")
+Const HttpMethodOptions =  WStr("OPTIONS")
+Const HttpMethodPatch =    WStr("PATCH")
+Const HttpMethodPost =     WStr("POST")
+Const HttpMethodPropfind = WStr("PROPFIND")
+Const HttpMethodPut =      WStr("PUT")
+Const HttpMethodTrace =    WStr("TRACE")
+
+Const HeaderAcceptString =             WStr("Accept")
+Const HeaderAcceptCharsetString =      WStr("Accept-Charset")
+Const HeaderAcceptEncodingString =     WStr("Accept-Encoding")
+Const HeaderAcceptLanguageString =     WStr("Accept-Language")
+Const HeaderAcceptRangesString =       WStr("Accept-Ranges")
+Const HeaderAgeString =                WStr("Age")
+Const HeaderAllowString =              WStr("Allow")
+Const HeaderAuthorizationString =      WStr("Authorization")
+Const HeaderCacheControlString =       WStr("Cache-Control")
+Const HeaderConnectionString =         WStr("Connection")
+Const HeaderContentEncodingString =    WStr("Content-Encoding")
+Const HeaderContentLanguageString =    WStr("Content-Language")
+Const HeaderContentLengthString =      WStr("Content-Length")
+Const HeaderContentLocationString =    WStr("Content-Location")
+Const HeaderContentMd5String =         WStr("Content-MD5")
+Const HeaderContentTypeString =        WStr("Content-Type")
+Const HeaderContentRangeString =       WStr("Content-Range")
+Const HeaderCookieString =             WStr("Cookie")
+Const HeaderDateString =               WStr("Date")
+Const HeaderDNTString =                WStr("DNT")
+Const HeaderETagString =               WStr("ETag")
+Const HeaderExpectString =             WStr("Expect")
+Const HeaderExpiresString =            WStr("Expires")
+Const HeaderFromString =               WStr("From")
+Const HeaderHostString =               WStr("Host")
+Const HeaderIfMatchString =            WStr("If-Match")
+Const HeaderIfModifiedSinceString =    WStr("If-Modified-Since")
+Const HeaderIfNoneMatchString =        WStr("If-None-Match")
+Const HeaderIfRangeString =            WStr("If-Range")
+Const HeaderIfUnmodifiedSinceString =  WStr("If-Unmodified-Since")
+Const HeaderKeepAliveString =          WStr("Keep-Alive")
+Const HeaderLastModifiedString =       WStr("Last-Modified")
+Const HeaderLocationString =           WStr("Location")
+Const HeaderMaxForwardsString =        WStr("Max-Forwards")
+Const HeaderOriginString =             WStr("Origin")
+Const HeaderPragmaString =             WStr("Pragma")
+Const HeaderProxyAuthenticateString =  WStr("Proxy-Authenticate")
+Const HeaderProxyAuthorizationString = WStr("Proxy-Authorization")
+Const HeaderPurposeString            = WStr("Purpose")
+Const HeaderRangeString =              WStr("Range")
+Const HeaderRefererString =            WStr("Referer")
+Const HeaderRetryAfterString =         WStr("Retry-After")
+Const HeaderSecWebSocketAcceptString = WStr("Sec-WebSocket-Accept")
+Const HeaderSecWebSocketKeyString =    WStr("Sec-WebSocket-Key")
+Const HeaderSecWebSocketKey1String =   WStr("Sec-WebSocket-Key1")
+Const HeaderSecWebSocketKey2String =   WStr("Sec-WebSocket-Key2")
+Const HeaderSecWebSocketLocationString = WStr("Sec-WebSocket-Location")
+Const HeaderSecWebSocketOriginString =   WStr("Sec-WebSocket-Origin")
+Const HeaderSecWebSocketProtocolString = WStr("Sec-WebSocket-Protocol")
+Const HeaderSecWebSocketVersionString = WStr("Sec-WebSocket-Version")
+Const HeaderServerString =             WStr("Server")
+Const HeaderSetCookieString =          WStr("Set-Cookie")
+Const HeaderTeString =                 WStr("TE")
+Const HeaderTrailerString =            WStr("Trailer")
+Const HeaderTransferEncodingString =   WStr("Transfer-Encoding")
+Const HeaderUpgradeString =            WStr("Upgrade")
+Const HeaderUpgradeInsecureRequestsString = WStr("Upgrade-Insecure-Requests")
+Const HeaderUserAgentString =          WStr("User-Agent")
+Const HeaderVaryString =               WStr("Vary")
+Const HeaderViaString =                WStr("Via")
+Const HeaderWarningString =            WStr("Warning")
+Const HeaderWebSocketLocationString =  WStr("WebSocket-Location")
+Const HeaderWebSocketOriginString =    WStr("WebSocket-Origin")
+Const HeaderWebSocketProtocolString =  WStr("WebSocket-Protocol")
+Const HeaderWWWAuthenticateString =    WStr("WWW-Authenticate")
+
+Const HttpStatusCodeString100 = WStr("Continue")
+Const HttpStatusCodeString101 = WStr("Switching Protocols")
+Const HttpStatusCodeString102 = WStr("Processing")
+
+Const HttpStatusCodeString200 = WStr("OK")
+Const HttpStatusCodeString201 = WStr("Created")
+Const HttpStatusCodeString202 = WStr("Accepted")
+Const HttpStatusCodeString203 = WStr("Non-Authoritative Information")
+Const HttpStatusCodeString204 = WStr("No Content")
+Const HttpStatusCodeString205 = WStr("Reset Content")
+Const HttpStatusCodeString206 = WStr("Partial Content")
+Const HttpStatusCodeString207 = WStr("Multi-Status")
+Const HttpStatusCodeString226 = WStr("IM Used")
+
+Const HttpStatusCodeString300 = WStr("Multiple Choices")
+Const HttpStatusCodeString301 = WStr("Moved Permanently")
+Const HttpStatusCodeString302 = WStr("Found")
+Const HttpStatusCodeString303 = WStr("See Other")
+Const HttpStatusCodeString304 = WStr("Not Modified")
+Const HttpStatusCodeString305 = WStr("Use Proxy")
+Const HttpStatusCodeString307 = WStr("Temporary Redirect")
+
+Const HttpStatusCodeString400 = WStr("Bad Request")
+Const HttpStatusCodeString401 = WStr("Unauthorized")
+Const HttpStatusCodeString402 = WStr("Payment Required")
+Const HttpStatusCodeString403 = WStr("Forbidden")
+Const HttpStatusCodeString404 = WStr("Not Found")
+Const HttpStatusCodeString405 = WStr("Method Not Allowed")
+Const HttpStatusCodeString406 = WStr("Not Acceptable")
+Const HttpStatusCodeString407 = WStr("Proxy Authentication Required")
+Const HttpStatusCodeString408 = WStr("Request Timeout")
+Const HttpStatusCodeString409 = WStr("Conflict")
+Const HttpStatusCodeString410 = WStr("Gone")
+Const HttpStatusCodeString411 = WStr("Length Required")
+Const HttpStatusCodeString412 = WStr("Precondition Failed")
+Const HttpStatusCodeString413 = WStr("Request Entity Too Large")
+Const HttpStatusCodeString414 = WStr("Request-URI Too Large")
+Const HttpStatusCodeString415 = WStr("Unsupported Media Type")
+Const HttpStatusCodeString416 = WStr("Requested Range Not Satisfiable")
+Const HttpStatusCodeString417 = WStr("Expectation Failed")
+Const HttpStatusCodeString418 = WStr("I am a teapot")
+Const HttpStatusCodeString422 = WStr("Unprocessable Entity")
+Const HttpStatusCodeString423 = WStr("Locked")
+Const HttpStatusCodeString424 = WStr("Failed Dependency")
+Const HttpStatusCodeString425 = WStr("Unordered Collection")
+Const HttpStatusCodeString426 = WStr("Upgrade Required")
+Const HttpStatusCodeString428 = WStr("Precondition Required")
+Const HttpStatusCodeString429 = WStr("Too Many Requests")
+Const HttpStatusCodeString431 = WStr("Request Header Fields Too Large")
+Const HttpStatusCodeString449 = WStr("Retry With")
+Const HttpStatusCodeString451 = WStr("Unavailable For Legal Reasons")
+
+Const HttpStatusCodeString500 = WStr("Internal Server Error")
+Const HttpStatusCodeString501 = WStr("Not Implemented")
+Const HttpStatusCodeString502 = WStr("Bad Gateway")
+Const HttpStatusCodeString503 = WStr("Service Unavailable")
+Const HttpStatusCodeString504 = WStr("Gateway Timeout")
+Const HttpStatusCodeString505 = WStr("HTTP Version Not Supported")
+Const HttpStatusCodeString506 = WStr("Variant Also Negotiates")
+Const HttpStatusCodeString507 = WStr("Insufficient Storage")
+Const HttpStatusCodeString508 = WStr("Loop Detected")
+Const HttpStatusCodeString509 = WStr("Bandwidth Limit Exceeded")
+Const HttpStatusCodeString510 = WStr("Not Extended")
+Const HttpStatusCodeString511 = WStr("Network Authentication Required")
+
 Const WEBSITE_S_CREATE_NEW As HRESULT =                     MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0401)
 Const WEBSITE_S_ALREADY_EXISTS As HRESULT =                 MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0402)
 Const WEBSITE_S_DIRECTORY_LISTING As HRESULT =              MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0403)
@@ -263,40 +410,6 @@ Const ZipModesSize As Integer = 2
 ' ќчищать пам€ть дл€ строки не нужно
 Declare Function GetStatusDescription( _
 	ByVal StatusCode As HttpStatusCodes, _
-	ByVal pBufferLength As Integer Ptr _
-)As WString Ptr
-
-Declare Function GetHttpVersionIndex( _
-	ByVal s As WString Ptr, _
-	ByVal pVersion As HttpVersions Ptr _
-)As Boolean
-
-Declare Function HttpVersionToString( _
-	ByVal v As HttpVersions, _
-	ByVal pBufferLength As Integer Ptr _
-)As WString Ptr
-
-Declare Function GetKnownRequestHeaderIndex( _
-	ByVal wHeader As WString Ptr, _
-	ByVal pHeader As HttpRequestHeaders Ptr _
-)As Boolean
-
-' ¬озвращает указатель на строку с заголовком запроса
-' ќчищать пам€ть дл€ строки не нужно
-Declare Function KnownRequestHeaderToString( _
-	ByVal Header As HttpRequestHeaders, _
-	ByVal pBufferLength As Integer Ptr _
-)As WString Ptr
-
-Declare Function GetKnownResponseHeaderIndex( _
-	ByVal wHeader As WString Ptr, _
-	ByVal pHeader As HttpResponseHeaders Ptr _
-)As Boolean
-
-' ¬озвращает указатель на строку с заголовком ответа по индексу
-' ќчищать пам€ть дл€ строки не нужно
-Declare Function KnownResponseHeaderToString( _
-	ByVal HeaderIndex As HttpResponseHeaders, _
 	ByVal pBufferLength As Integer Ptr _
 )As WString Ptr
 
