@@ -89,6 +89,11 @@ Type IClientRequestVirtualTable
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
 	
+	GetExpect100Continue As Function( _
+		ByVal this As IClientRequest Ptr, _
+		ByVal pExpect As Boolean Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IClientRequest_
@@ -107,5 +112,6 @@ End Type
 #define IClientRequest_GetContentLength(this, pContentLength) (this)->lpVtbl->GetContentLength(this, pContentLength)
 #define IClientRequest_GetByteRange(this, pRange) (this)->lpVtbl->GetByteRange(this, pRange)
 #define IClientRequest_GetZipMode(this, ZipIndex, pSupported) (this)->lpVtbl->GetZipMode(this, ZipIndex, pSupported)
+#define IClientRequest_GetExpect100Continue(this, pExpect) (this)->lpVtbl->GetExpect100Continue(this, pExpect)
 
 #endif

@@ -83,4 +83,9 @@ Declare Function ClientRequestGetZipMode( _
 	ByVal pSupported As Boolean Ptr _
 )As HRESULT
 
+Declare Function ClientRequestGetExpect100Continue( _
+	ByVal this As ClientRequest Ptr, _
+	ByVal pExpect As Boolean Ptr _
+)As HRESULT
+
 #endif

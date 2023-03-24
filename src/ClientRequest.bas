@@ -35,6 +35,7 @@ Type _ClientRequest
 	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
 	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
 	KeepAlive As Boolean
+	Expect100Continue As Boolean
 End Type
 
 Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeaderNode = { _
@@ -568,6 +569,29 @@ Sub ParseContentLengthHeaderSink( _
 	
 End Sub
 
+Sub ParseExpectHeaderSink( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Dim pHeaderExpect As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderExpect)
+	If pHeaderExpect Then
+		Const Expect100 = WStr("100-continue")
+		Dim resCompare As Long = lstrcmpiW( _
+			pHeaderExpect, _
+			@Expect100 _
+		)
+		If resCompare = CompareResultEqual Then
+			this->Expect100Continue = True
+		Else
+			this->Expect100Continue = False
+		End If
+	End If
+	
+	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderExpect))
+	this->RequestHeaders(HttpRequestHeaders.HeaderExpect) = NULL
+	
+End Sub
+
 Function ParseHostHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
@@ -623,6 +647,8 @@ Function ClientRequestParseRequestHeaders( _
 	ParseRangeHeaderSink(this)
 	
 	ParseContentLengthHeaderSink(this)
+	
+	ParseExpectHeaderSink(this)
 	
 	Dim hrParseHost As HRESULT = ParseHostHeaderSink(this)
 	If FAILED(hrParseHost) Then
@@ -923,6 +949,17 @@ Function ClientRequestGetZipMode( _
 	
 End Function
 
+Function ClientRequestGetExpect100Continue( _
+		ByVal this As ClientRequest Ptr, _
+		ByVal pExpect As Boolean Ptr _
+	)As HRESULT
+	
+	*pExpect = this->Expect100Continue
+	
+	Return S_OK
+	
+End Function
+
 
 Function IClientRequestQueryInterface( _
 		ByVal this As IClientRequest Ptr, _
@@ -1010,6 +1047,13 @@ Function IClientRequestGetZipMode( _
 	Return ClientRequestGetZipMode(ContainerOf(this, ClientRequest, lpVtbl), ZipIndex, pSupported)
 End Function
 
+Function IClientRequestGetExpect100Continue( _
+		ByVal this As IClientRequest Ptr, _
+		ByVal pExpect As Boolean Ptr _
+	)As HRESULT
+	Return ClientRequestGetExpect100Continue(ContainerOf(this, ClientRequest, lpVtbl), pExpect)
+End Function
+
 Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( _
 	@IClientRequestQueryInterface, _
 	@IClientRequestAddRef, _
@@ -1022,5 +1066,6 @@ Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( 
 	@IClientRequestGetKeepAlive, _
 	@IClientRequestGetContentLength, _
 	@IClientRequestGetByteRange, _
-	@IClientRequestGetZipMode _
+	@IClientRequestGetZipMode, _
+	@IClientRequestGetExpect100Continue _
 )
