@@ -703,8 +703,8 @@ Function HttpWriterEndWrite( _
 				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
 			Else
 				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = @String100Continue + CInt(dwWritedBytes)
-				this->StreamBuffer.Buf(0).Length = Len(String100Continue) - CInt(dwWritedBytes)
+				this->StreamBuffer.Buf(0).Buffer = @String100Continue + this->Write100ContinueOffset
+				this->StreamBuffer.Buf(0).Length = Len(String100Continue) - this->Write100ContinueOffset
 			End If
 			
 		Case WriterTasks.WritePreloadedBytesToFile
