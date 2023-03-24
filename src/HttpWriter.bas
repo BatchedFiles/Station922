@@ -697,7 +697,7 @@ Function HttpWriterEndWrite( _
 				Return S_FALSE
 			End If
 			
-			this->Write100ContinueOffset = CInt(dwWritedBytes)
+			this->Write100ContinueOffset += CInt(dwWritedBytes)
 			
 			If this->Write100ContinueOffset >= Len(String100Continue) Then
 				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
