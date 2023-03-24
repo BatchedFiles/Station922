@@ -136,6 +136,10 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_STOP_PENDING, NO_ERROR, 0)
 	
+	Scope
+		Station922CleanUp()
+	End Scope
+	
 	ReportSvcStatus(@Context, SERVICE_STOPPED, NO_ERROR, 0)
 	
 End Sub

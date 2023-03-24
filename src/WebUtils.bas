@@ -54,6 +54,8 @@ Type WebServerVector
 	Vector(MaxWebSites - 1) As IWebServer Ptr
 End Type
 
+Dim Shared GlobalThreadPool As IThreadPool Ptr
+
 Sub GetHttpDate( _
 		ByVal Buffer As WString Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
@@ -431,19 +433,18 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		Dim pIPool As IThreadPool Ptr = Any
 		Dim hrCreateThreadPool As HRESULT = CreateThreadPool( _
 			pIMemoryAllocator, _
 			@IID_IThreadPool, _
-			@pIPool _
+			@GlobalThreadPool _
 		)
 		If FAILED(hrCreateThreadPool) Then
 			Return hrCreateThreadPool
 		End If
 		
-		IThreadPool_SetMaxThreads(pIPool, WorkerThreads)
+		IThreadPool_SetMaxThreads(GlobalThreadPool, WorkerThreads)
 		
-		Dim hrRunPool As HRESULT = IThreadPool_Run(pIPool)
+		Dim hrRunPool As HRESULT = IThreadPool_Run(GlobalThreadPool)
 		If FAILED(hrRunPool) Then
 			Return hrRunPool
 		End If
@@ -774,3 +775,11 @@ Function Station922Initialize()As HRESULT
 	Return S_OK
 	
 End Function
+
+Sub Station922CleanUp()
+	
+	IThreadPool_Stop(GlobalThreadPool)
+	
+	IThreadPool_Release(GlobalThreadPool)
+	
+End Sub

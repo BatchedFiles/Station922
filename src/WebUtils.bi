@@ -50,4 +50,6 @@ Declare Function BindToThreadPool( _
 Declare Function Station922Initialize( _
 )As HRESULT
 
+Declare Sub Station922CleanUp()
+
 #endif
