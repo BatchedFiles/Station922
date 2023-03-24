@@ -58,6 +58,8 @@ ReservedFileBytes=0
 DefaultFileName=default.htm
 EnableDirectoryListing=0
 EnableGetAllFiles=0
+UserName=
+Password=
 ```
 
 
@@ -226,7 +228,6 @@ MIME меняются довольно редко, нет нужны кажды�
 
 Вебсервер можно скомпилировать как обычное консольное приложение и как службу Windows.
 
-
 ### Компиляция «одной строкой»
 
 Для сборки используем пакетный файл следующего содержания:
@@ -238,4 +239,25 @@ set OPTIONS=-O 3 -gen gcc -Wc -ffunction-sections,-fdata-sections -Wl --gc-secti
 
 %FBC_32% -m Station922 -l crypt32 -x Station922_x86.exe %OPTIONS% src\*.bas src\*.RC
 %FBC_64% -m Station922 -l crypt32 -x Station922_x64.exe %OPTIONS% src\*.bas src\*.RC
+```
+
+## Установка службы Windows
+
+### Создание службы
+
+Используем следующий пакетный файл (запуск от администратора):
+
+```
+set current_dir=%~dp0
+sc create Station922 binPath= "%current_dir%Station922.exe /service" start= "auto" DisplayName= "WebServer written in FreeBASIC"
+sc start Station922
+```
+
+### Удаление службы
+
+Используем следующий пакетный файл (запуск от администратора):
+
+```
+sc stop Station922
+sc delete Station922
 ```
