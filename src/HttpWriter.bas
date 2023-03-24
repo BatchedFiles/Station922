@@ -6,10 +6,13 @@
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
+Const String100Continue = Str(!"HTTP/1.1 100 Continue\r\n\r\n")
+
 Enum WriterTasks
 	WritePreloadedBytesToNetwork
 	ReadFileStream
 	WriteNetworkData
+	Write100Continue
 	WritePreloadedBytesToFile
 	ReadNetworkStream
 	WriteFileData
@@ -38,6 +41,7 @@ Type _HttpWriter
 	BodyOffset As LongInt
 	BodyEndIndex As LongInt
 	StreamBufferLength As Integer
+	Write100ContinueOffset As Integer
 	HeadersSended As Boolean
 	BodySended As Boolean
 	SendOnlyHeaders As Boolean
@@ -342,7 +346,15 @@ Function HttpWriterPrepare( _
 			this->CurrentTask = WriterTasks.ReadFileStream
 			
 		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-			this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
+			If this->NeedWrite100Continue Then
+				this->Write100ContinueOffset = 0
+				this->StreamBufferLength = 1
+				this->StreamBuffer.Buf(0).Buffer = @String100Continue
+				this->StreamBuffer.Buf(0).Length = Len(String100Continue)
+				this->CurrentTask = WriterTasks.Write100Continue
+			Else
+				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
+			End If
 			
 	End Select
 	
@@ -440,6 +452,19 @@ Function HttpWriterBeginWrite( _
 				)
 			End If
 			
+			If FAILED(hrBeginWrite) Then
+				Return hrBeginWrite
+			End If
+			
+		Case WriterTasks.Write100Continue
+			Dim hrBeginWrite As HRESULT = IBaseStream_BeginWriteGather( _
+				this->pIStream, _
+				@this->StreamBuffer.Buf(0), _
+				this->StreamBufferLength, _
+				NULL, _
+				StateObject, _
+				ppIAsyncResult _
+			)
 			If FAILED(hrBeginWrite) Then
 				Return hrBeginWrite
 			End If
@@ -656,6 +681,31 @@ Function HttpWriterEndWrite( _
 			End If
 			
 			this->CurrentTask = WriterTasks.ReadFileStream
+			
+		Case WriterTasks.Write100Continue
+			Dim dwWritedBytes As DWORD = Any
+			Dim hrEndWrite As HRESULT = IBaseStream_EndWrite( _
+				this->pIStream, _
+				pIAsyncResult, _
+				@dwWritedBytes _
+			)
+			If FAILED(hrEndWrite) Then
+				Return hrEndWrite
+			End If
+			
+			If hrEndWrite = S_FALSE Then
+				Return S_FALSE
+			End If
+			
+			this->Write100ContinueOffset = CInt(dwWritedBytes)
+			
+			If this->Write100ContinueOffset >= Len(String100Continue) Then
+				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
+			Else
+				this->StreamBufferLength = 1
+				this->StreamBuffer.Buf(0).Buffer = @String100Continue + CInt(dwWritedBytes)
+				this->StreamBuffer.Buf(0).Length = Len(String100Continue) - CInt(dwWritedBytes)
+			End If
 			
 		Case WriterTasks.WritePreloadedBytesToFile
 			Dim pIFileStream As IFileStream Ptr = CPtr(IFileStream Ptr, this->pIBuffer)
