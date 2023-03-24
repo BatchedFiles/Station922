@@ -193,6 +193,18 @@ Function HttpPutProcessorPrepare( _
 			
 	End Select
 	
+	Scope
+		Dim NeedWrite100Continue As Boolean = Any
+		IClientRequest_GetExpect100Continue( _
+			pContext->pIRequest, _
+			@NeedWrite100Continue _
+		)
+		IHttpWriter_SetNeedWrite100Continue( _
+			pContext->pIWriter, _
+			NeedWrite100Continue _
+		)
+	End Scope
+	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _

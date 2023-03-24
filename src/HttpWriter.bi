@@ -78,4 +78,9 @@ Declare Function HttpWriterSetKeepAlive( _
 	ByVal KeepAlive As Boolean _
 )As HRESULT
 
+Declare Function HttpWriterSetNeedWrite100Continue( _
+	ByVal this As HttpWriter Ptr, _
+	ByVal NeedWrite100Continue As Boolean _
+)As HRESULT
+
 #endif

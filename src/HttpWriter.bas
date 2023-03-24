@@ -42,6 +42,7 @@ Type _HttpWriter
 	BodySended As Boolean
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean
+	NeedWrite100Continue As Boolean
 End Type
 
 Sub InitializeHttpWriter( _
@@ -65,6 +66,7 @@ Sub InitializeHttpWriter( _
 	this->pIResponse = NULL
 	this->BodyOffset = 0
 	this->KeepAlive = True
+	this->NeedWrite100Continue = False
 	
 End Sub
 
@@ -779,6 +781,17 @@ Function HttpWriterSetKeepAlive( _
 	
 End Function
 
+Function HttpWriterSetNeedWrite100Continue( _
+		ByVal this As HttpWriter Ptr, _
+		ByVal NeedWrite100Continue As Boolean _
+	)As HRESULT
+	
+	this->NeedWrite100Continue = NeedWrite100Continue
+	
+	Return S_OK
+	
+End Function
+
 
 Function IHttpWriterQueryInterface( _
 		ByVal this As IHttpWriter Ptr, _
@@ -859,6 +872,13 @@ Function IHttpWriterSetKeepAlive( _
 	Return HttpWriterSetKeepAlive(ContainerOf(this, HttpWriter, lpVtbl), KeepAlive)
 End Function
 
+Function IHttpWriterSetNeedWrite100Continue( _
+		ByVal this As IHttpWriter Ptr, _
+		ByVal NeedWrite100Continue As Boolean _
+	)As HRESULT
+	Return HttpWriterSetNeedWrite100Continue(ContainerOf(this, HttpWriter, lpVtbl), NeedWrite100Continue)
+End Function
+
 Dim GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable = Type( _
 	@IHttpWriterQueryInterface, _
 	@IHttpWriterAddRef, _
@@ -870,5 +890,6 @@ Dim GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable = Type( _
 	@IHttpWriterPrepare, _
 	@IHttpWriterBeginWrite, _
 	@IHttpWriterEndWrite, _
-	@IHttpWriterSetKeepAlive _
+	@IHttpWriterSetKeepAlive, _
+	@IHttpWriterSetNeedWrite100Continue _
 )
