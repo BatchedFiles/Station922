@@ -89,6 +89,7 @@ Type _WebSite
 	CodePage As HeapBSTR
 	DefaultFileName As HeapBSTR
 	DirectoryListingEncoding As HeapBSTR
+	ErrorPageEncoding As HeapBSTR
 	UserName As HeapBSTR
 	Password As HeapBSTR
 	pIProcessorCollection As IHttpProcessorCollection Ptr
@@ -1330,7 +1331,8 @@ End Function
 Sub InitializeWebSite( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIProcessorCollection As IHttpProcessorCollection Ptr _
+		ByVal pIProcessorCollection As IHttpProcessorCollection Ptr, _
+		ByVal ErrorPageEncoding As HeapBSTR _
 	)
 	
 	#if __FB_DEBUG__
@@ -1355,6 +1357,7 @@ Sub InitializeWebSite( _
 	this->ConnectBindPort = NULL
 	this->DefaultFileName = NULL
 	this->DirectoryListingEncoding = NULL
+	this->ErrorPageEncoding = ErrorPageEncoding
 	this->UserName = NULL
 	this->Password = NULL
 	this->pIProcessorCollection = pIProcessorCollection
@@ -1411,7 +1414,21 @@ Function CreateWebSite( _
 			Return E_OUTOFMEMORY
 		End If
 	End Scope
-
+	
+	Dim ErrorPageEncoding As HeapBSTR = Any
+	Scope
+		Const Utf8EncodingString = WStr("utf-8")
+		ErrorPageEncoding = CreatePermanentHeapStringLen( _
+			pIMemoryAllocator, _
+			@Utf8EncodingString, _
+			Len(Utf8EncodingString) _
+		)
+		If ErrorPageEncoding = NULL Then
+			*ppv = NULL
+			Return E_OUTOFMEMORY
+		End If
+	End Scope
+	
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSite) _
@@ -1421,7 +1438,8 @@ Function CreateWebSite( _
 		InitializeWebSite( _
 			this, _
 			pIMemoryAllocator, _
-			pIProcessorCollection _
+			pIProcessorCollection, _
+			ErrorPageEncoding _
 		)
 		WebSiteCreated(this)
 		
@@ -1996,7 +2014,7 @@ Function WebSiteGetErrorBuffer( _
 	Dim Mime As MimeType = Any
 	With Mime
 		.ContentType = ContentTypes.TextHtml
-		.CharsetWeakPtr = NULL
+		.CharsetWeakPtr = this->ErrorPageEncoding
 		.Format = MimeFormats.Text
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
