@@ -42,7 +42,6 @@ Declare Function HttpReaderReadLine( _
 
 Declare Function HttpReaderBeginReadLine( _
 	ByVal this As HttpReader Ptr, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT

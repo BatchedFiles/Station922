@@ -184,7 +184,6 @@ Function TcpListenerBeginAccept( _
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	IAsyncResult_SetAsyncCallback(pINewAsyncResult, NULL)
 	
 	this->Buffer = Buffer
 	' Dim dwBytes As DWORD = Any

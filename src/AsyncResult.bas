@@ -12,7 +12,6 @@ Type _AsyncResult
 	pIMemoryAllocator As IMalloc Ptr
 	pState As Any Ptr
 	OverLap As OVERLAPPED
-	callback As AsyncCallback
 	pBuffers As Any Ptr
 	BytesTransferred As DWORD
 	Completed As Boolean
@@ -47,7 +46,6 @@ Sub InitializeAsyncResult( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pState = NULL
-	this->callback = NULL
 	this->pBuffers = NULL
 	ZeroMemory(@this->OverLap, SizeOf(OVERLAPPED))
 	this->BytesTransferred = 0
@@ -223,28 +221,6 @@ Function AsyncResultSetAsyncStateWeakPtr( _
 	
 End Function
 
-Function AsyncResultGetAsyncCallback( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal pcallback As AsyncCallback Ptr _
-	)As HRESULT
-	
-	*pcallback = this->callback
-	
-	Return S_OK
-	
-End Function
-
-Function AsyncResultSetAsyncCallback( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal callback As AsyncCallback _
-	)As HRESULT
-	
-	this->callback = callback
-	
-	Return S_OK
-	
-End Function
-
 Function AsyncResultGetWsaOverlapped( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
@@ -328,20 +304,6 @@ Function IAsyncResultSetAsyncStateWeakPtr( _
 	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
 End Function
 
-Function IAsyncResultGetAsyncCallback( _
-		ByVal this As IAsyncResult Ptr, _
-		ByVal pcallback As AsyncCallback Ptr _
-	)As HRESULT
-	Return AsyncResultGetAsyncCallback(ContainerOf(this, AsyncResult, lpVtbl), pcallback)
-End Function
-
-Function IAsyncResultSetAsyncCallback( _
-		ByVal this As IAsyncResult Ptr, _
-		ByVal callback As AsyncCallback _
-	)As HRESULT
-	Return AsyncResultSetAsyncCallback(ContainerOf(this, AsyncResult, lpVtbl), callback)
-End Function
-
 Function IAsyncResultGetWsaOverlapped( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
@@ -365,8 +327,6 @@ Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultGetCompleted, _
 	@IAsyncResultSetCompleted, _
 	@IAsyncResultSetAsyncStateWeakPtr, _
-	@IAsyncResultGetAsyncCallback, _
-	@IAsyncResultSetAsyncCallback, _
 	@IAsyncResultGetWsaOverlapped, _
 	@IAsyncResultAllocBuffers _
 )

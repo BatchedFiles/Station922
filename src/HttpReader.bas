@@ -186,7 +186,6 @@ End Function
 
 Function HttpReaderBeginReadLine( _
 		ByVal this As HttpReader Ptr, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -207,7 +206,6 @@ Function HttpReaderBeginReadLine( _
 			this->pIStream, _
 			lpFreeSpace, _
 			cbFreeSpace, _
-			callback, _
 			StateObject, _
 			ppIAsyncResult _
 		)
@@ -398,11 +396,10 @@ End Function
 
 Function IHttpReaderBeginReadLine( _
 		ByVal this As IHttpReader Ptr, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpReaderBeginReadLine(ContainerOf(this, HttpReader, lpVtbl), callback, StateObject, ppIAsyncResult)
+	Return HttpReaderBeginReadLine(ContainerOf(this, HttpReader, lpVtbl), StateObject, ppIAsyncResult)
 End Function
 
 Function IHttpReaderEndReadLine( _

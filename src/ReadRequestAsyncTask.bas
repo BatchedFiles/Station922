@@ -206,12 +206,9 @@ Function ReadRequestAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Const NullCallback As AsyncCallback = NULL
-	
 	' TODO Запросить интерфейс вместо конвертирования указателя
 	Dim hrBeginReadLine As HRESULT = IHttpReader_BeginReadLine( _
 		this->pIHttpReader, _
-		NullCallback, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)

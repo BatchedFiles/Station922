@@ -39,7 +39,6 @@ Declare Function NetworkStreamBeginRead( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal Buffer As LPVOID, _
 	ByVal Count As DWORD, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
@@ -48,7 +47,6 @@ Declare Function NetworkStreamBeginWrite( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal Buffer As LPVOID, _
 	ByVal Count As DWORD, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
@@ -69,7 +67,6 @@ Declare Function NetworkStreamBeginReadScatter( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal pBuffer As BaseStreamBuffer Ptr, _
 	ByVal Count As DWORD, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
@@ -78,7 +75,6 @@ Declare Function NetworkStreamBeginWriteGather( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal pBuffer As BaseStreamBuffer Ptr, _
 	ByVal Count As DWORD, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT
@@ -87,7 +83,6 @@ Declare Function NetworkStreamBeginWriteGatherAndShutdown( _
 	ByVal this As NetworkStream Ptr, _
 	ByVal pBuffer As BaseStreamBuffer Ptr, _
 	ByVal Count As DWORD, _
-	ByVal callback As AsyncCallback, _
 	ByVal StateObject As IUnknown Ptr, _
 	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 )As HRESULT

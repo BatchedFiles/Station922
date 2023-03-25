@@ -52,7 +52,6 @@ Type IBaseStreamVirtualTable
 		ByVal this As IBaseStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -61,7 +60,6 @@ Type IBaseStreamVirtualTable
 		ByVal this As IBaseStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -82,7 +80,6 @@ Type IBaseStreamVirtualTable
 		ByVal this As IBaseStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -91,7 +88,6 @@ Type IBaseStreamVirtualTable
 		ByVal this As IBaseStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -100,7 +96,6 @@ Type IBaseStreamVirtualTable
 		ByVal this As IBaseStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -114,12 +109,12 @@ End Type
 #define IBaseStream_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IBaseStream_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IBaseStream_Release(this) (this)->lpVtbl->Release(this)
-#define IBaseStream_BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginRead(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
-#define IBaseStream_BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, callback, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginRead(this, Buffer, Count, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginRead(this, Buffer, Count, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginWrite(this, Buffer, Count, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWrite(this, Buffer, Count, StateObject, ppIAsyncResult)
 #define IBaseStream_EndRead(this, pIAsyncResult, pReadedBytes) (this)->lpVtbl->EndRead(this, pIAsyncResult, pReadedBytes)
 #define IBaseStream_EndWrite(this, pIAsyncResult, pWritedBytes) (this)->lpVtbl->EndWrite(this, pIAsyncResult, pWritedBytes)
-#define IBaseStream_BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
-#define IBaseStream_BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
-#define IBaseStream_BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGatherAndShutdown(this, pBuffer, Count, callback, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginReadScatter(this, pBuffer, Count, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadScatter(this, pBuffer, Count, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginWriteGather(this, pBuffer, Count, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGather(this, pBuffer, Count, StateObject, ppIAsyncResult)
+#define IBaseStream_BeginWriteGatherAndShutdown(this, pBuffer, Count, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginWriteGatherAndShutdown(this, pBuffer, Count, StateObject, ppIAsyncResult)
 
 #endif

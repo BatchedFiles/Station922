@@ -57,16 +57,6 @@ Declare Function AsyncResultSetAsyncStateWeakPtr( _
 	ByVal pState As Any Ptr _
 )As HRESULT
 
-Declare Function AsyncResultGetAsyncCallback( _
-	ByVal this As AsyncResult Ptr, _
-	ByVal pcallback As AsyncCallback Ptr _
-)As HRESULT
-
-Declare Function AsyncResultSetAsyncCallback( _
-	ByVal this As AsyncResult Ptr, _
-	ByVal callback As AsyncCallback _
-)As HRESULT
-
 Declare Function AsyncResultGetWsaOverlapped( _
 	ByVal this As AsyncResult Ptr, _
 	ByVal ppOverlapped As OVERLAPPED Ptr Ptr _

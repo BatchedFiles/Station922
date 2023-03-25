@@ -43,7 +43,6 @@ Type IHttpReaderVirtualTable
 	
 	BeginReadLine As Function( _
 		ByVal this As IHttpReader Ptr, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -90,7 +89,7 @@ End Type
 #define IHttpReader_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IHttpReader_Release(this) (this)->lpVtbl->Release(this)
 #define IHttpReader_ReadLine(this, pLine) (this)->lpVtbl->ReadLine(this, pLine)
-#define IHttpReader_BeginReadLine(this, callback, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, callback, StateObject, ppIAsyncResult)
+#define IHttpReader_BeginReadLine(this, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadLine(this, StateObject, ppIAsyncResult)
 #define IHttpReader_EndReadLine(this, pIAsyncResult, pLine) (this)->lpVtbl->EndReadLine(this, pIAsyncResult, pLine)
 #define IHttpReader_Clear(this) (this)->lpVtbl->Clear(this)
 #define IHttpReader_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)

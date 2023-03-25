@@ -437,7 +437,6 @@ Function HttpWriterBeginWrite( _
 					this->pIStream, _
 					@this->StreamBuffer.Buf(0), _
 					this->StreamBufferLength, _
-					NULL, _
 					StateObject, _
 					ppIAsyncResult _
 				)
@@ -446,7 +445,6 @@ Function HttpWriterBeginWrite( _
 					this->pIStream, _
 					@this->StreamBuffer.Buf(0), _
 					this->StreamBufferLength, _
-					NULL, _
 					StateObject, _
 					ppIAsyncResult _
 				)
@@ -461,7 +459,6 @@ Function HttpWriterBeginWrite( _
 				this->pIStream, _
 				@this->StreamBuffer.Buf(0), _
 				this->StreamBufferLength, _
-				NULL, _
 				StateObject, _
 				ppIAsyncResult _
 			)
@@ -521,7 +518,6 @@ Function HttpWriterBeginWrite( _
 					this->pIStream, _
 					pReservedBytes, _
 					ReservedBytesLength, _
-					NULL, _
 					StateObject, _
 					ppIAsyncResult _
 				)
@@ -555,7 +551,6 @@ Function HttpWriterBeginWrite( _
 				this->pIStream, _
 				pReservedBytes, _
 				ReservedBytesLength, _
-				NULL, _
 				StateObject, _
 				ppIAsyncResult _
 			)

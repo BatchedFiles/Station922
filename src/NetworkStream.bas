@@ -169,7 +169,6 @@ Function NetworkStreamBeginRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal BufferLength As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -205,7 +204,6 @@ Function NetworkStreamBeginRead( _
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	Dim lpCompletionRoutine As LPWSAOVERLAPPED_COMPLETION_ROUTINE = Any
 	
@@ -242,7 +240,6 @@ Function NetworkStreamBeginWrite( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -255,7 +252,6 @@ Function NetworkStreamBeginWrite( _
 		this, _
 		@buf, _
 		1, _
-		callback, _
 		StateObject, _
 		ppIAsyncResult _
 	)
@@ -266,7 +262,6 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal Flags As DWORD, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -299,7 +294,6 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	IAsyncResult_SetAsyncCallback(pINewAsyncResult, callback)
 	
 	For i As DWORD = 0 To BuffersCount - 1
 		pSendBuffers[i].dwElFlags = TP_ELEMENT_MEMORY
@@ -337,7 +331,6 @@ Function NetworkStreamBeginWriteGather( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -346,7 +339,6 @@ Function NetworkStreamBeginWriteGather( _
 		this, _
 		pBuffer, _
 		BuffersCount, _
-		callback, _
 		StateObject, _
 		0, _
 		ppIAsyncResult _
@@ -358,7 +350,6 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -367,7 +358,6 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 		this, _
 		pBuffer, _
 		BuffersCount, _
-		callback, _
 		StateObject, _
 		TF_DISCONNECT, _
 		ppIAsyncResult _
@@ -515,22 +505,20 @@ Function INetworkStreamBeginRead( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, callback, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, StateObject, ppIAsyncResult)
 End Function
 
 Function INetworkStreamBeginWrite( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, callback, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, StateObject, ppIAsyncResult)
 End Function
 
 Function INetworkStreamEndRead( _
@@ -553,22 +541,20 @@ Function INetworkStreamBeginWriteGather( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, callback, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, StateObject, ppIAsyncResult)
 End Function
 
 Function INetworkStreamBeginWriteGatherAndShutdown( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
-		ByVal callback As AsyncCallback, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGatherAndShutdown(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, callback, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGatherAndShutdown(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, StateObject, ppIAsyncResult)
 End Function
 
 Function INetworkStreamGetSocket( _
