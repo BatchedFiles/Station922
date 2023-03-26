@@ -238,16 +238,17 @@ Function AsyncResultAllocBuffers( _
 		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
 	
-	this->pBuffers = IMalloc_Alloc( _
+	Dim pMemory As Any Ptr = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
 		Length _
 	)
-	If this->pBuffers = NULL Then
+	If pMemory = NULL Then
 		*ppBuffers = NULL
 		Return E_OUTOFMEMORY
 	End If
 	
-	*ppBuffers = this->pBuffers
+	this->pBuffers = pMemory
+	*ppBuffers = pMemory
 	
 	Return S_OK
 	

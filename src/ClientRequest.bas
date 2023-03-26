@@ -173,6 +173,9 @@ Function ClientRequestParseRequestedLine( _
 			pVerb, _
 			VerbLength _
 		)
+		If this->pHttpMethod = NULL Then
+			Return E_OUTOFMEMORY
+		End If
 	End Scope
 	
 	' Uri
@@ -257,6 +260,9 @@ Function ClientRequestParseRequestedLine( _
 				this->pIMemoryAllocator, _
 				pVersion _
 			)
+			If bstrVersion = NULL Then
+				Return E_OUTOFMEMORY
+			End If
 			
 			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
 				bstrVersion, _
@@ -342,6 +348,11 @@ Function ClientRequestAddRequestHeaders( _
 				pwszValue, _
 				ValueLength _
 			)
+			If Value = NULL Then
+				HeapSysFreeString(pLine)
+				Return E_OUTOFMEMORY
+			End If
+			
 			ClientRequestAddRequestHeaderSink(this, pLine, Value)
 			
 		End If

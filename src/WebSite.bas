@@ -1194,6 +1194,9 @@ Function GetDirectoryListing( _
 			pIMalloc, _
 			pFileName _
 		)
+		If fp = NULL Then
+			Return E_OUTOFMEMORY
+		End If
 		
 		IFileStream_SetFilePath(pFileBuffer, fp)
 		HeapSysFreeString(fp)
@@ -1280,6 +1283,9 @@ Function WebSiteOpenRequestedFile( _
 					pIMalloc, _
 					@FullDefaultFilename _
 				)
+				If fp = NULL Then
+					Return E_OUTOFMEMORY
+				End If
 				
 				IFileStream_SetFilePath(pFileBuffer, fp)
 				IFileStream_SetFileHandle(pFileBuffer, hFile)
@@ -1866,6 +1872,13 @@ Function WebSiteGetBuffer( _
 				pIMalloc, _
 				ETagBuffer _
 			)
+			If ETag = NULL Then
+				IFileStream_Release(pIFile)
+				*pFlags = ContentNegotiationFlags.None
+				*ppResult = NULL
+				Return E_OUTOFMEMORY
+			End If
+			
 			IFileStream_SetETag(pIFile, ETag)
 			
 			HeapSysFreeString(ETag)

@@ -581,6 +581,9 @@ Function ServerResponseAddKnownResponseHeaderWstrLen( _
 		Value, _
 		Length _
 	)
+	If hBstr = NULL Then
+		Return E_OUTOFMEMORY
+	End If
 	
 	Dim hr As HRESULT = ServerResponseAddKnownResponseHeader( _
 		this, _
