@@ -50,7 +50,9 @@ Sub LogWriteEntry( _
 		ByVal pvtData As VARIANT Ptr _
 	)
 	
-	If pvtData->vt And VT_ARRAY Then
+	Dim IsSafeArray As Boolean = pvtData->vt And VT_ARRAY
+	
+	If IsSafeArray Then
 		
 		Dim Length As Integer = Any
 		Scope
@@ -86,29 +88,40 @@ Sub LogWriteEntry( _
 			SafeArrayUnaccessData(pvtData->parray)
 		End Scope
 	Else
-		ConsoleWriteColorStringW(pwszText)
+		Dim wszStringBuffer As WString * 1024 = Any
 		
-		Dim vt As VARTYPE = pvtData->vt
-		If vt = VT_BSTR Then
-			ConsoleWriteColorStringW(pvtData->bstrVal)
-		Else
-			Dim buf As WString * 255 = Any
+		Select Case pvtData->vt
 			
-			Select Case vt
+			Case VT_BSTR
+				Const StringFormat = WStr(!"%s\t%s\r\n")
+				wsprintfW( _
+					@wszStringBuffer, _
+					@StringFormat, _
+					pwszText, _
+					pvtData->bstrVal _
+				)
 				
-				Case VT_ERROR
-					_ultow(pvtData->scode, @buf, 16)
-					
-				Case Else
-					_ltow(pvtData->lVal, @buf, 10)
-					
-			End Select
-			
-			ConsoleWriteColorStringW(@buf)
-		End If
+			Case VT_ERROR
+				Const StringFormat = WStr(!"%s\t%X\r\n")
+				wsprintfW( _
+					@wszStringBuffer, _
+					@StringFormat, _
+					pwszText, _
+					pvtData->scode _
+				)
+				
+			Case Else
+				Const StringFormat = WStr(!"%s\t%i\r\n")
+				wsprintfW( _
+					@wszStringBuffer, _
+					@StringFormat, _
+					pwszText, _
+					pvtData->lVal _
+				)
+				
+		End Select
 		
-		ConsoleWriteColorStringW(WStr(!"\r\n"))
-		
+		ConsoleWriteColorStringW(@wszStringBuffer)
 	End If
 	
 End Sub

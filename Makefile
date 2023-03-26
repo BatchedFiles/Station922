@@ -182,7 +182,7 @@ ifneq ($(LD_SCRIPT),)
 LDFLAGS+=-T $(LD_SCRIPT)
 endif
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
-LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32
+LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32 -luser32
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh -lucrt -lucrtbase
 
 include dependencies.mk

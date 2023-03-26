@@ -81,7 +81,7 @@ Function CreateServerSocketSink( _
 		vtAddressMessage.bstrVal = this->ListenAddress
 		LogWriteEntry( _
 			LogEntryType.Information, _
-			WStr(!"Listen address\t"), _
+			WStr(!"Listen address"), _
 			@vtAddressMessage _
 		)
 		
@@ -90,7 +90,7 @@ Function CreateServerSocketSink( _
 		vtPortMessage.bstrVal = this->ListenPort
 		LogWriteEntry( _
 			LogEntryType.Information, _
-			WStr(!"Listen port\t"), _
+			WStr(!"Listen port"), _
 			@vtPortMessage _
 		)
 	End Scope
@@ -107,7 +107,7 @@ Function CreateServerSocketSink( _
 		vtErrorMessage.scode = hrCreateSocket
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"Can not open and listend socket, error code\t"), _
+			WStr(!"Can not open and listend socket, error code"), _
 			@vtErrorMessage _
 		)
 		Return hrCreateSocket
@@ -367,7 +367,7 @@ Function WebServerRun( _
 	vtErrorMessage.scode = S_OK
 	LogWriteEntry( _
 		LogEntryType.Information, _
-		WStr(!"WebServer create succeeded\t"), _
+		WStr(!"WebServer create succeeded"), _
 		@vtErrorMessage _
 	)
 	

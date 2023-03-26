@@ -136,7 +136,7 @@ Function StartExecuteTask( _
 		vtSCode.scode = hrBeginExecute
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IAsyncTask_BeginExecute Error\t"), _
+			WStr(!"IAsyncTask_BeginExecute Error"), _
 			@vtSCode _
 		)
 		

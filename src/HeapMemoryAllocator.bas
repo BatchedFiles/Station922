@@ -190,7 +190,7 @@ Sub HeapMemoryAllocatorAllocFailed( _
 	vtAllocatedBytes.lVal = CLng(BytesCount)
 	LogWriteEntry( _
 		LogEntryType.Error, _
-		WStr(!"\t\t\t\tAllocMemory Failed\t"), _
+		WStr(!"AllocMemory Failed"), _
 		@vtAllocatedBytes _
 	)
 	

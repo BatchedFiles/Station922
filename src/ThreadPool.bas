@@ -43,7 +43,7 @@ Function FinishExecuteTaskSink( _
 		vtErrorCode.scode = hrEndExecute
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IAsyncIoTask_EndExecute Error\t"), _
+			WStr(!"IAsyncIoTask_EndExecute Error"), _
 			@vtErrorCode _
 		)
 	End If
