@@ -28,6 +28,7 @@ Type _HeapMemoryAllocator
 End Type
 
 Dim Shared MemoryPoolCapacity As UInteger
+Dim Shared MemoryPoolLength As UInteger
 Dim Shared pMemoryPoolCollection As MemoryPoolItem Ptr
 Dim Shared MemoryPoolSection As CRITICAL_SECTION
 
@@ -104,12 +105,13 @@ Function GetHeapMemoryAllocatorInstance( _
 End Function
 
 Function CreateMemoryPool( _
-		ByVal Length As UInteger _
+		ByVal Capacity As UInteger _
 	)As HRESULT
 	
-	MemoryPoolCapacity = Length
+	MemoryPoolCapacity = Capacity
+	MemoryPoolLength = Capacity
 	
-	If Length Then
+	If Capacity Then
 		Const dwSpinCount As DWORD = 4000
 		Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
 			@MemoryPoolSection, _
@@ -124,13 +126,13 @@ Function CreateMemoryPool( _
 		pMemoryPoolCollection = HeapAlloc( _
 			hHeap, _
 			0, _
-			SizeOf(MemoryPoolItem) * Length _
+			SizeOf(MemoryPoolItem) * Capacity _
 		)
 		If pMemoryPoolCollection = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
-		For i As UInteger = 0 To Length - 1
+		For i As UInteger = 0 To Capacity - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
 			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
 				@IID_IHeapMemoryAllocator, _
@@ -148,6 +150,21 @@ Function CreateMemoryPool( _
 	Return S_OK
 	
 End Function
+
+Sub AllocationFailed( _
+		ByVal BytesCount As SIZE_T_ _
+	)
+	
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = CLng(BytesCount)
+	LogWriteEntry( _
+		LogEntryType.Error, _
+		WStr(!"AllocMemory Failed"), _
+		@vtAllocatedBytes _
+	)
+	
+End Sub
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
@@ -176,22 +193,6 @@ End Sub
 
 Sub HeapMemoryAllocatorCreated( _
 		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-End Sub
-
-Sub HeapMemoryAllocatorAllocFailed( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal BytesCount As SIZE_T_ _
-	)
-	
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = CLng(BytesCount)
-	LogWriteEntry( _
-		LogEntryType.Error, _
-		WStr(!"AllocMemory Failed"), _
-		@vtAllocatedBytes _
 	)
 	
 End Sub
@@ -234,7 +235,7 @@ Function CreateHeapMemoryAllocator( _
 		Return hrQueryInterface
 	End If
 	
-	HeapMemoryAllocatorAllocFailed(this, SizeOf(HeapMemoryAllocator))
+	AllocationFailed(SizeOf(HeapMemoryAllocator))
 	
 	HeapDestroy(hHeap)
 	
@@ -338,7 +339,7 @@ Function HeapMemoryAllocatorAlloc( _
 		BytesCount _
 	)
 	If pMemory = NULL Then
-		HeapMemoryAllocatorAllocFailed(this, BytesCount)
+		AllocationFailed(BytesCount)
 	End If
 	
 	Return pMemory
