@@ -173,6 +173,11 @@ Function HttpDeleteProcessorPrepare( _
 		HttpStatusCodes.NoContent _
 	)
 	
+	IServerResponse_SetSendOnlyHeaders( _
+		pContext->pIResponse, _
+		True _
+	)
+	
 	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _

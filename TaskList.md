@@ -65,7 +65,7 @@
 Стандартные запросы:
 
 * [ ] CONNECT
-* [ ] DELETE
+* [x] DELETE
 * [x] GET
 * [x] HEAD
 * [x] OPTIONS

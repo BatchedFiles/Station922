@@ -1670,31 +1670,32 @@ Function WebSiteGetBuffer( _
 			Return hrCreateFileBuffer
 		End If
 		
-		Dim hrReservedFileBytes As HRESULT = IFileStream_SetReservedFileBytes( _
-			pIFile, _
-			this->ReservedFileBytes _
-		)
-		If FAILED(hrReservedFileBytes) Then
-			IFileStream_Release(pIFile)
-			*pFlags = ContentNegotiationFlags.None
-			*ppResult = NULL
-			Return hrCreateFileBuffer
+		If fAccess <> FileAccess.DeleteAccess Then
+			Dim hrReservedFileBytes As HRESULT = IFileStream_SetReservedFileBytes( _
+				pIFile, _
+				this->ReservedFileBytes _
+			)
+			If FAILED(hrReservedFileBytes) Then
+				IFileStream_Release(pIFile)
+				*pFlags = ContentNegotiationFlags.None
+				*ppResult = NULL
+				Return hrCreateFileBuffer
+			End If
+			
+			Dim PreloadedBytesLength As Integer = Any
+			Dim pPreloadedBytes As UByte Ptr = Any
+			IHttpReader_GetPreloadedBytes( _
+				pIReader, _
+				@PreloadedBytesLength, _
+				@pPreloadedBytes _
+			)
+			
+			IFileStream_SetPreloadedBytes( _
+				pIFile, _
+				PreloadedBytesLength, _
+				pPreloadedBytes _
+			)
 		End If
-		
-		Dim PreloadedBytesLength As Integer = Any
-		Dim pPreloadedBytes As UByte Ptr = Any
-		IHttpReader_GetPreloadedBytes( _
-			pIReader, _
-			@PreloadedBytesLength, _
-			@pPreloadedBytes _
-		)
-		
-		IFileStream_SetPreloadedBytes( _
-			pIFile, _
-			PreloadedBytesLength, _
-			pPreloadedBytes _
-		)
-		
 	End Scope
 	
 	Scope
@@ -1736,37 +1737,7 @@ Function WebSiteGetBuffer( _
 	Scope
 		Select Case fAccess
 			
-			Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-				/'
-				' TODO Get Mime from Content-Type
-				' Change File Extension
-				Dim pContentType As HeapBSTR = Any
-				IClientRequest_GetHttpHeader( _
-					pRequest, _
-					HttpRequestHeaders.HeaderContentType, _
-					@pContentType _
-				)
-				
-				Dim ContentTypeLength As Integer = SysStringLen(pContentType)
-				If ContentTypeLength = 0 Then
-					HeapSysFreeString(pContentType)
-					IFileStream_Release(pIFile)
-					*pFlags = ContentNegotiationFlags.None
-					*ppResult = NULL
-					Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
-				End If
-				
-				HeapSysFreeString(pContentType)
-				'/
-				
-				IFileStream_SetFileSize(pIFile, BufferLength)
-				
-				*pFlags = ContentNegotiationFlags.None
-				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
-				
-				Return hrOpenFile
-				
-			Case Else
+			Case FileAccess.ReadAccess
 				Dim resGetMimeOfFileExtension As Boolean = Any
 				
 				If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
@@ -1796,7 +1767,37 @@ Function WebSiteGetBuffer( _
 					Return WEBSITE_E_FORBIDDEN
 				End If
 				
-			End Select
+			Case Else
+				/'
+				' TODO Get Mime from Content-Type
+				' Change File Extension
+				Dim pContentType As HeapBSTR = Any
+				IClientRequest_GetHttpHeader( _
+					pRequest, _
+					HttpRequestHeaders.HeaderContentType, _
+					@pContentType _
+				)
+				
+				Dim ContentTypeLength As Integer = SysStringLen(pContentType)
+				If ContentTypeLength = 0 Then
+					HeapSysFreeString(pContentType)
+					IFileStream_Release(pIFile)
+					*pFlags = ContentNegotiationFlags.None
+					*ppResult = NULL
+					Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
+				End If
+				
+				HeapSysFreeString(pContentType)
+				'/
+				
+				IFileStream_SetFileSize(pIFile, BufferLength)
+				
+				*pFlags = ContentNegotiationFlags.None
+				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+				
+				Return hrOpenFile
+				
+		End Select
 	End Scope
 	
 	Scope
@@ -1885,42 +1886,27 @@ Function WebSiteGetBuffer( _
 		End Scope
 		
 		Scope
+			Dim hRequestedFile As HANDLE = Any
+			If ZipFileHandle <> INVALID_HANDLE_VALUE Then
+				hRequestedFile = ZipFileHandle
+			Else
+				hRequestedFile = FileHandle
+			End If
 			
-			Dim FileLength As LongInt = Any
+			Dim FileSize As LARGE_INTEGER = Any
+			Dim resGetFileSize As BOOL = GetFileSizeEx( _
+				hRequestedFile, _
+				@FileSize _
+			)
+			If resGetFileSize = 0 Then
+				Dim dwError As DWORD = GetLastError()
+				IFileStream_Release(pIFile)
+				*pFlags = ContentNegotiationFlags.None
+				*ppResult = NULL
+				Return HRESULT_FROM_WIN32(dwError)
+			End If
 			
-			Select Case fAccess
-				Case FileAccess.CreateAccess
-					FileLength = BufferLength
-					
-				Case FileAccess.ReadAccess, FileAccess.UpdateAccess
-					Dim hRequestedFile As HANDLE = Any
-					If ZipFileHandle <> INVALID_HANDLE_VALUE Then
-						hRequestedFile = ZipFileHandle
-					Else
-						hRequestedFile = FileHandle
-					End If
-					
-					Dim FileSize As LARGE_INTEGER = Any
-					Dim resGetFileSize As BOOL = GetFileSizeEx( _
-						hRequestedFile, _
-						@FileSize _
-					)
-					If resGetFileSize = 0 Then
-						Dim dwError As DWORD = GetLastError()
-						IFileStream_Release(pIFile)
-						*pFlags = ContentNegotiationFlags.None
-						*ppResult = NULL
-						Return HRESULT_FROM_WIN32(dwError)
-					End If
-					
-					FileLength = FileSize.QuadPart
-					
-				Case Else ' FileAccess.DeleteAccess
-					FileLength = 0
-					
-			End Select
-			
-			IFileStream_SetFileSize(pIFile, FileLength)
+			IFileStream_SetFileSize(pIFile, FileSize.QuadPart)
 		End Scope
 		
 		If Mime.Format = MimeFormats.Text Then

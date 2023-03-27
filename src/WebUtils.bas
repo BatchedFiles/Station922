@@ -12,6 +12,7 @@
 #include once "ThreadPool.bi"
 #include once "WebSite.bi"
 #include once "WriteErrorAsyncTask.bi"
+#include once "HttpDeleteProcessor.bi"
 #include once "HttpGetProcessor.bi"
 #include once "HttpOptionsProcessor.bi"
 #include once "HttpPutProcessor.bi"
@@ -26,7 +27,7 @@
 
 Const CompareResultEqual As Long = 0
 
-Const HttpProcessorsLength As Integer = 5
+Const HttpProcessorsLength As Integer = 6
 
 Type HttpProcessorItem
 	Key As HeapBSTR
@@ -571,6 +572,31 @@ Function Station922Initialize()As HRESULT
 			
 			HttpProcessors.Vector(4).Key = bstrOptionsString
 			HttpProcessors.Vector(4).Value = pIHttpOptionsProcessor
+		End Scope
+	
+		Scope
+			Dim pIHttpDeleteProcessor As IHttpAsyncProcessor Ptr = Any
+			Dim hrCreateProcessor As HRESULT = CreateHttpDeleteProcessor( _
+				pIMemoryAllocator, _
+				@IID_IHttpDeleteAsyncProcessor, _
+				@pIHttpDeleteProcessor _
+			)
+			If FAILED(hrCreateProcessor) Then
+				Return hrCreateProcessor
+			End If
+			
+			Const DeleteKeyString = WStr("DELETE")
+			Dim bstrDeleteString As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@DeleteKeyString, _
+				Len(DeleteKeyString) _
+			)
+			If bstrDeleteString = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+			
+			HttpProcessors.Vector(5).Key = bstrDeleteString
+			HttpProcessors.Vector(5).Value = pIHttpDeleteProcessor
 		End Scope
 	End Scope
 	

@@ -315,7 +315,10 @@ Function HttpWriterPrepare( _
 		Return hrHeadersToString
 	End If
 	
-	IServerResponse_GetSendOnlyHeaders(pIResponse, @this->SendOnlyHeaders)
+	IServerResponse_GetSendOnlyHeaders( _
+		pIResponse, _
+		@this->SendOnlyHeaders _
+	)
 	
 	If this->SendOnlyHeaders Then
 		this->BodySended = True
@@ -359,6 +362,9 @@ Function HttpWriterPrepare( _
 			Else
 				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
 			End If
+			
+		Case FileAccess.DeleteAccess
+			this->CurrentTask = WriterTasks.ReadFileStream
 			
 	End Select
 	
