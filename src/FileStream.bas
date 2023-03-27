@@ -566,7 +566,11 @@ Function FileStreamGetLength( _
 	
 	Dim VirtualFileSize As LongInt = this->FileSize - this->FileOffset
 	
-	*pLength = VirtualFileSize
+	If VirtualFileSize < 0 Then
+		*pLength = 0
+	Else
+		*pLength = VirtualFileSize
+	End If
 	
 	Return S_OK
 	

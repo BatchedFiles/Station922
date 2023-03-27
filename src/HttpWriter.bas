@@ -340,6 +340,10 @@ Function HttpWriterPrepare( _
 	this->HeadersEndIndex = this->HeadersLength
 	this->BodyEndIndex = this->BodyOffset + BodyContentLength
 	
+	If BodyContentLength = 0 Then
+		this->BodySended = True
+	End If
+	
 	Select Case fFileAccess
 		
 		Case FileAccess.ReadAccess
