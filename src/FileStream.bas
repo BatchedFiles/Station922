@@ -81,11 +81,13 @@ Sub UnInitializeFileStream( _
 	HeapSysFreeString(this->Language)
 	HeapSysFreeString(this->pFilePath)
 	
-	VirtualFree( _
-		this->FileBytes, _
-		0, _
-		MEM_RELEASE _
-	)
+	If this->FileBytes Then
+		VirtualFree( _
+			this->FileBytes, _
+			0, _
+			MEM_RELEASE _
+		)
+	End If
 	
 	If this->SmallFileBytes Then
 		IMalloc_Free(this->pIMemoryAllocator, this->SmallFileBytes)
