@@ -236,28 +236,6 @@ Function NetworkStreamBeginRead( _
 	
 End Function
 
-Function NetworkStreamBeginWrite( _
-		ByVal this As NetworkStream Ptr, _
-		ByVal Buffer As LPVOID, _
-		ByVal Count As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
-		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-	)As HRESULT
-	
-	Dim buf As BaseStreamBuffer = Any
-	buf.Buffer = Buffer
-	buf.Length = Count
-	
-	Return NetworkStreamBeginWriteGather( _
-		this, _
-		@buf, _
-		1, _
-		StateObject, _
-		ppIAsyncResult _
-	)
-	
-End Function
-
 Function NetworkStreamBeginWriteGatherWithFlags( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
@@ -307,7 +285,7 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 		BuffersCount, _
 		0, _
 		pOverlap, _
-		Flags _ /' TF_DISCONNECT Or TF_REUSE_SOCKET '/
+		Flags _
 	)	
 	If resTransmit = 0 Then
 	
@@ -327,6 +305,31 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 	
 End Function
 
+Function NetworkStreamBeginWrite( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal Buffer As LPVOID, _
+		ByVal Count As DWORD, _
+		ByVal StateObject As IUnknown Ptr, _
+		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
+	)As HRESULT
+	
+	Const dwFlagsNone As DWORD = 0
+	
+	Dim buf As BaseStreamBuffer = Any
+	buf.Buffer = Buffer
+	buf.Length = Count
+	
+	Return NetworkStreamBeginWriteGatherWithFlags( _
+		this, _
+		@buf, _, _
+		1, _
+		StateObject, _
+		dwFlagsNone, _
+		ppIAsyncResult _
+	)
+	
+End Function
+
 Function NetworkStreamBeginWriteGather( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
@@ -335,12 +338,14 @@ Function NetworkStreamBeginWriteGather( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	Const dwFlagsNone As DWORD = 0
+	
 	Return NetworkStreamBeginWriteGatherWithFlags( _
 		this, _
 		pBuffer, _
 		BuffersCount, _
 		StateObject, _
-		0, _
+		dwFlagsNone, _
 		ppIAsyncResult _
 	)
 	
@@ -359,7 +364,7 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 		pBuffer, _
 		BuffersCount, _
 		StateObject, _
-		TF_DISCONNECT, _
+		TF_DISCONNECT Or TF_REUSE_SOCKET, _
 		ppIAsyncResult _
 	)
 	
