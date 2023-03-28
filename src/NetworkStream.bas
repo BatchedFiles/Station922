@@ -359,12 +359,15 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
+	' Const dwFlags As DWORD = TF_DISCONNECT Or TF_REUSE_SOCKET
+	Const dwFlags As DWORD = TF_DISCONNECT
+	
 	Return NetworkStreamBeginWriteGatherWithFlags( _
 		this, _
 		pBuffer, _
 		BuffersCount, _
 		StateObject, _
-		TF_DISCONNECT Or TF_REUSE_SOCKET, _
+		dwFlags, _
 		ppIAsyncResult _
 	)
 	
