@@ -467,19 +467,6 @@ Function NetworkStreamSetRemoteAddress( _
 	
 End Function
 
-Function NetworkStreamClose( _
-		ByVal this As NetworkStream Ptr _
-	)As HRESULT
-	
-	If this->ClientSocket <> INVALID_SOCKET Then
-		closesocket(this->ClientSocket)
-		this->ClientSocket = INVALID_SOCKET
-	End If
-	
-	Return S_OK
-	
-End Function
-
 
 Function INetworkStreamQueryInterface( _
 		ByVal this As INetworkStream Ptr, _
@@ -587,12 +574,6 @@ Function INetworkStreamSetRemoteAddress( _
 	Return NetworkStreamSetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
 End Function
 
-Function INetworkStreamClose( _
-		ByVal this As INetworkStream Ptr _
-	)As HRESULT
-	Return NetworkStreamClose(ContainerOf(this, NetworkStream, lpVtbl))
-End Function
-
 Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( _
 	@INetworkStreamQueryInterface, _
 	@INetworkStreamAddRef, _
@@ -607,6 +588,5 @@ Dim GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable = Type( 
 	@INetworkStreamGetSocket, _
 	@INetworkStreamSetSocket, _
 	@INetworkStreamGetRemoteAddress, _
-	@INetworkStreamSetRemoteAddress, _
-	@INetworkStreamClose _
+	@INetworkStreamSetRemoteAddress _
 )

@@ -98,10 +98,6 @@ Type INetworkStreamVirtualTable
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 	
-	Close As Function( _
-		ByVal this As INetworkStream Ptr _
-	)As HRESULT
-	
 End Type
 
 Type INetworkStream_
@@ -122,6 +118,5 @@ End Type
 #define INetworkStream_SetSocket(this, sock) (this)->lpVtbl->SetSocket(this, sock)
 #define INetworkStream_GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength) (this)->lpVtbl->GetRemoteAddress(this, pRemoteAddress, pRemoteAddressLength)
 #define INetworkStream_SetRemoteAddress(this, RemoteAddress, RemoteAddressLength) (this)->lpVtbl->SetRemoteAddress(this, RemoteAddress, RemoteAddressLength)
-#define INetworkStream_Close(this) (this)->lpVtbl->Close(this)
 
 #endif

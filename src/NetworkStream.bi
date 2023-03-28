@@ -109,8 +109,4 @@ Declare Function NetworkStreamSetRemoteAddress( _
 	ByVal RemoteAddressLength As Integer _
 )As HRESULT
 
-Declare Function NetworkStreamClose( _
-	ByVal this As NetworkStream Ptr _
-)As HRESULT
-
 #endif
