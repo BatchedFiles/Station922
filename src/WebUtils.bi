@@ -7,17 +7,7 @@
 #include once "IServerResponse.bi"
 #include once "IWriteErrorAsyncIoTask.bi"
 
-' Заполняет буфер экранированной строкой, безопасной для html
-' Принимающий буфер должен быть в 6 раз длиннее строки
-' Declare Function GetHtmlSafeString( _
-	' ByVal Buffer As WString Ptr, _
-	' ByVal BufferLength As Integer, _
-	' ByVal HtmlSafe As WString Ptr, _
-	' ByVal pHtmlSafeLength As Integer Ptr _
-' )As Boolean
-
-' Заполняет буфер датой и временем в http формате
-Declare Sub GetHttpDate( _
+Declare Sub ConvertSystemDateToHttpDate( _
 	ByVal Buffer As WString Ptr, _
 	ByVal dt As SYSTEMTIME Ptr _
 )

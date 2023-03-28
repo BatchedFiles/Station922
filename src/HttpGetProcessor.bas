@@ -32,12 +32,11 @@ Sub AddResponseCacheHeaders( _
 	Dim IsFileModified As Boolean = True
 	
 	Scope
-		' TODO ����� ������������ ��� ��� HTTP-������� ����
 		Dim dFileLastModified As SYSTEMTIME = Any
 		FileTimeToSystemTime(pDateLastFileModified, @dFileLastModified)
 		
 		Dim strFileLastModifiedHttpDate As WString * 256 = Any
-		GetHttpDate(@strFileLastModifiedHttpDate, @dFileLastModified)
+		ConvertSystemDateToHttpDate(@strFileLastModifiedHttpDate, @dFileLastModified)
 		
 		IServerResponse_AddKnownResponseHeaderWstr( _
 			pIResponse, _

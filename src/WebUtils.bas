@@ -57,7 +57,7 @@ End Type
 
 Dim Shared GlobalThreadPool As IThreadPool Ptr
 
-Sub GetHttpDate( _
+Sub ConvertSystemDateToHttpDate( _
 		ByVal Buffer As WString Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
 	)

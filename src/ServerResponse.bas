@@ -754,7 +754,7 @@ Function ServerResponseAllHeadersToZString( _
 			FileTimeToSystemTime(@datNowF, @datNowS)
 			
 			Dim dtBuffer As WString * (32) = Any
-			GetHttpDate(@dtBuffer, @datNowS)
+			ConvertSystemDateToHttpDate(@dtBuffer, @datNowS)
 			
 			ServerResponseAddKnownResponseHeaderWstr( _
 				this, _
