@@ -79,6 +79,11 @@ Type IHttpReaderVirtualTable
 		ByVal pBuffer As ClientRequestBuffer Ptr _
 	)As HRESULT
 	
+	SkipBytes As Function( _
+		ByVal this As IHttpReader Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
 End Type
 
 Type IHttpReader_
@@ -96,5 +101,6 @@ End Type
 #define IHttpReader_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IHttpReader_GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes) (this)->lpVtbl->GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes)
 #define IHttpReader_SetClientBuffer(this, pBuffer) (this)->lpVtbl->SetClientBuffer(this, pBuffer)
+#define IHttpReader_SkipBytes(this, Length) (this)->lpVtbl->SkipBytes(this, Length)
 
 #endif

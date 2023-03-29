@@ -173,6 +173,7 @@ Function HttpPutProcessorPrepare( _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then
+		IHttpReader_SkipBytes(pContext->pIReader, ContentLength)
 		*ppIBuffer = NULL
 		Return hrGetBuffer
 	End If

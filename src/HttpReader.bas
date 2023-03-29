@@ -16,8 +16,19 @@ Type _HttpReader
 	pIMemoryAllocator As IMalloc Ptr
 	pIStream As IBaseStream Ptr
 	pClientBuffer As ClientRequestBuffer Ptr
+	SkippedBytes As LongInt
 	IsAllBytesReaded As Boolean
 End Type
+
+Function GetPreloadedBytesLength( _
+		ByVal pClientBuffer As ClientRequestBuffer Ptr _
+	)As Integer
+	
+	Dim cbPreloadedBytes As Integer = pClientBuffer->cbLength - pClientBuffer->EndOfHeaders
+	
+	Return cbPreloadedBytes
+	
+End Function
 
 Sub InitializeHttpReader( _
 		ByVal this As HttpReader Ptr, _
@@ -37,6 +48,7 @@ Sub InitializeHttpReader( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIStream = NULL
 	this->pClientBuffer = NULL
+	this->SkippedBytes = 0
 	this->IsAllBytesReaded = False
 	
 End Sub
@@ -251,7 +263,24 @@ Function HttpReaderEndReadLine( _
 		
 	End Scope
 	
-	Dim cbNewLength As Integer = this->pClientBuffer->cbLength + cbReceived
+	Dim SkippedBytes As LongInt = min(this->SkippedBytes, CLngInt(cbReceived))
+	
+	If this->SkippedBytes Then
+		memmove( _
+			@this->pClientBuffer->Bytes(0), _
+			@this->pClientBuffer->Bytes(SkippedBytes), _
+			RAWBUFFER_CAPACITY - SkippedBytes _
+		)
+		
+		this->SkippedBytes -= SkippedBytes
+		
+		If this->SkippedBytes Then
+			*ppLine = NULL
+			Return HTTPREADER_S_IO_PENDING
+		End If
+	End If
+	
+	Dim cbNewLength As Integer = this->pClientBuffer->cbLength + cbReceived - SkippedBytes
 	
 	If cbNewLength > RAWBUFFER_CAPACITY Then
 		*ppLine = NULL
@@ -328,7 +357,7 @@ Function HttpReaderGetPreloadedBytes( _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	Dim cbPreloadedBytes As Integer = this->pClientBuffer->cbLength - this->pClientBuffer->EndOfHeaders
+	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(this->pClientBuffer)
 	Dim PreloadedIndex As Integer = this->pClientBuffer->EndOfHeaders
 	Dim pBytes As UByte Ptr = @this->pClientBuffer->Bytes(PreloadedIndex)
 	
@@ -361,6 +390,18 @@ Function HttpReaderSetClientBuffer( _
 	)As HRESULT
 	
 	this->pClientBuffer = pBuffer
+	
+	Return S_OK
+	
+End Function
+
+Function HttpReaderSkipBytes( _
+		ByVal this As HttpReader Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	
+	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(this->pClientBuffer)
+	this->SkippedBytes = Length - CLngInt(cbPreloadedBytes)
 	
 	Return S_OK
 	
@@ -446,6 +487,13 @@ Function IHttpReaderSetClientBuffer( _
 	Return HttpReaderSetClientBuffer(ContainerOf(this, HttpReader, lpVtbl), pBuffer)
 End Function
 
+Function IHttpReaderSkipBytes( _
+		ByVal this As IHttpReader Ptr, _
+		ByVal Length As LongInt _
+	)As HRESULT
+	Return HttpReaderSkipBytes(ContainerOf(this, HttpReader, lpVtbl), Length)
+End Function
+
 Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	@IHttpReaderQueryInterface, _
 	@IHttpReaderAddRef, _
@@ -457,5 +505,6 @@ Dim GlobalHttpReaderVirtualTable As Const IHttpReaderVirtualTable = Type( _
 	@IHttpReaderSetBaseStream, _
 	@IHttpReaderGetPreloadedBytes, _
 	@IHttpReaderGetRequestedBytes, _
-	@IHttpReaderSetClientBuffer _
+	@IHttpReaderSetClientBuffer, _
+	@IHttpReaderSkipBytes _
 )

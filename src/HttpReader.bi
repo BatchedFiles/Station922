@@ -88,4 +88,9 @@ Declare Function HttpReaderSetClientBuffer( _
 	ByVal pBuffer As ClientRequestBuffer Ptr _
 )As HRESULT
 
+Declare Function HttpReaderSkipBytes( _
+	ByVal this As HttpReader Ptr, _
+	ByVal Length As LongInt _
+)As HRESULT
+
 #endif
