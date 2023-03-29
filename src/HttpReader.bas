@@ -266,11 +266,14 @@ Function HttpReaderEndReadLine( _
 	Dim SkippedBytes As LongInt = min(this->SkippedBytes, CLngInt(cbReceived))
 	
 	If this->SkippedBytes Then
-		memmove( _
-			@this->pClientBuffer->Bytes(0), _
-			@this->pClientBuffer->Bytes(SkippedBytes), _
-			RAWBUFFER_CAPACITY - SkippedBytes _
-		)
+		Dim cbMovedBytes As Integer = RAWBUFFER_CAPACITY - CInt(SkippedBytes)
+		If cbMovedBytes Then
+			memmove( _
+				@this->pClientBuffer->Bytes(0), _
+				@this->pClientBuffer->Bytes(SkippedBytes), _
+				cbMovedBytes _
+			)
+		End If
 		
 		this->SkippedBytes -= SkippedBytes
 		
