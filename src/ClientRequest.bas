@@ -85,6 +85,21 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 	Type<RequestHeaderNode>(@HeaderPurposeString,                 Len(HeaderPurposeString),                 HttpRequestHeaders.HeaderPurpose) _
 }
 
+Function FindNotSpaceCharacter( _
+		ByVal pwStr As WString Ptr _
+	)As WString Ptr
+	
+	Dim Character As Integer = pwStr[0]
+	
+	If Character = Characters.WhiteSpace Then
+		Dim pNext As WString Ptr = @pwStr[1]
+		Return FindNotSpaceCharacter(pNext)
+	End If
+	
+	Return pwStr
+	
+End Function
+
 Function GetHttpVersionIndex( _
 		ByVal s As WString Ptr, _
 		ByVal pVersion As HttpVersions Ptr _
@@ -190,9 +205,7 @@ Function ClientRequestParseRequestedLine( _
 		End If
 		
 		' Найти начало непробела
-		Do
-			pSpace += 1
-		Loop While pSpace[0] = Characters.WhiteSpace
+		pSpace = FindNotSpaceCharacter(pSpace)
 		
 		' Здесь начинается Url
 		Dim pUri As WString Ptr = pSpace
@@ -240,9 +253,7 @@ Function ClientRequestParseRequestedLine( _
 			this->HttpVersion = HttpVersions.Http09
 		Else
 			' Найти начало непробела
-			Do
-				pSpace += 1
-			Loop While pSpace[0] = Characters.WhiteSpace
+			pSpace = FindNotSpaceCharacter(pSpace)
 			
 			Dim pVersion As WString Ptr = pSpace
 			
