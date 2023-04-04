@@ -205,7 +205,7 @@ Function ClientRequestParseRequestedLine( _
 		End If
 		
 		' Найти начало непробела
-		pSpace = FindNotSpaceCharacter(pSpace)
+		pSpace = FindNotSpaceCharacter(@pSpace[1])
 		
 		' Здесь начинается Url
 		Dim pUri As WString Ptr = pSpace
@@ -253,7 +253,7 @@ Function ClientRequestParseRequestedLine( _
 			this->HttpVersion = HttpVersions.Http09
 		Else
 			' Найти начало непробела
-			pSpace = FindNotSpaceCharacter(pSpace)
+			pSpace = FindNotSpaceCharacter(@pSpace[1])
 			
 			Dim pVersion As WString Ptr = pSpace
 			
@@ -346,11 +346,7 @@ Function ClientRequestAddRequestHeaders( _
 		If pColon Then
 			pColon[0] = 0
 			
-			Dim pwszValue As WString Ptr = @pColon[0]
-			
-			Do
-				pwszValue += 1
-			Loop While pwszValue[0] = Characters.WhiteSpace
+			Dim pwszValue As WString Ptr = FindNotSpaceCharacter(@pColon[1])
 			
 			Dim pNullChar As WString Ptr = @pLine[LineLength]
 			Dim ValueLength As Integer = pNullChar - pwszValue
