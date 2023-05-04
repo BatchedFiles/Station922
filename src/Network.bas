@@ -163,10 +163,10 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	Dim BindResult As Long = 0
 	Dim SocketCount As Integer = 0
 	
-	Dim e As Long = 0
+	Dim dwError As Long = 0
 	Do
 		If SocketCount > Count Then
-			e = ERROR_INSUFFICIENT_BUFFER
+			dwError = ERROR_INSUFFICIENT_BUFFER
 			Exit Do
 		End If
 		
@@ -179,7 +179,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			WSA_FLAG_OVERLAPPED _
 		)
 		If ClientSocket = INVALID_SOCKET Then
-			e = WSAGetLastError()
+			dwError = WSAGetLastError()
 			pAddressNode = pAddressNode->ai_next
 			Continue Do
 		End If
@@ -190,7 +190,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			pAddressNode->ai_addrlen _
 		)
 		If BindResult Then
-			e = WSAGetLastError()
+			dwError = WSAGetLastError()
 			closesocket(ClientSocket)
 			pAddressNode = pAddressNode->ai_next
 			Continue Do
@@ -211,7 +211,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	If BindResult Then
 		
 		*pSockets = 0
-		Return HRESULT_FROM_WIN32(e)
+		Return HRESULT_FROM_WIN32(dwError)
 		
 	End If
 	
