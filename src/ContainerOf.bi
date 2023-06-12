@@ -2,7 +2,7 @@
 #define CONTAINEROF_BI
 
 #ifndef ContainerOf
-#define ContainerOf(pObject, ObjectName, FieldName) CPtr(ObjectName Ptr, (CInt(pObject) - OFFSETOF(ObjectName, FieldName)))
+#define ContainerOf(pInterface, ClassName, FieldName) CPtr(ClassName Ptr, (CInt(pInterface) - OFFSETOF(ClassName, FieldName)))
 #endif
 
 #endif
