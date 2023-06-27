@@ -1,5 +1,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
+#include once "ITimeCounter.bi"
 #include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
