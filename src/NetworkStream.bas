@@ -82,7 +82,6 @@ Sub UnInitializeNetworkStream( _
 	)
 	
 	If this->ClientSocket <> INVALID_SOCKET Then
-		' closesocket(this->ClientSocket)
 		Dim pISocket As IClientSocket Ptr = Any
 		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
 			this->pIMemoryAllocator, _

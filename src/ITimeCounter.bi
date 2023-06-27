@@ -26,11 +26,11 @@ Type ITimeCounterVirtualTable
 	
 	StartWatch As Function( _
 		ByVal this As ITimeCounter Ptr _
-	)As ULONG
+	)As HRESULT
 	
 	StopWatch As Function( _
 		ByVal this As ITimeCounter Ptr _
-	)As ULONG
+	)As HRESULT
 	
 End Type
 

@@ -50,9 +50,9 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).c: src$(PATH_SEP)HeapBSTR.bi
 $(OBJ_DEBUG_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).c:   src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi
 
 
-$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c:   src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c:   src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
 
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).c: src$(PATH_SEP)Http.bi

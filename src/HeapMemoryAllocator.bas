@@ -1,9 +1,12 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "ContainerOf.bi"
+#include once "IClientSocket.bi"
 #include once "ITimeCounter.bi"
 #include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
+Extern GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable
+Extern GlobalClientSocketVirtualTable As Const IClientSocketVirtualTable
 
 Const MEMORY_ALLOCATION_GRANULARITY As DWORD = 64 * 1024
 
@@ -22,9 +25,11 @@ Type _HeapMemoryAllocator
 		IdString As ZString * 16
 	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
+	lpVtblTimeCounter As Const ITimeCounterVirtualTable Ptr
+	lpVtblClientSocket As Const IClientSocketVirtualTable Ptr
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
-	Padding As Integer
+	ClientSocket As SOCKET
 	ReadedData As ClientRequestBuffer
 End Type
 
@@ -183,8 +188,11 @@ Sub InitializeHeapMemoryAllocator( _
 		)
 	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
+	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
+	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
+	this->ClientSocket = INVALID_SOCKET
 	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
@@ -374,6 +382,54 @@ Function HeapMemoryAllocatorGetClientBuffer( _
 	
 End Function
 
+Function HeapMemoryAllocatorStartWatch( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
+	
+Function HeapMemoryAllocatorStopWatch( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+	
+	Return S_OK
+	
+End Function
+
+Function HeapMemoryAllocatorGetSocket( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal pResult As SOCKET Ptr _
+	)As HRESULT
+	
+	*pResult = this->ClientSocket
+	
+	Return S_OK
+	
+End Function
+	
+Function HeapMemoryAllocatorSetSocket( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal sock As SOCKET _
+	)As HRESULT
+	
+	this->ClientSocket = sock
+	
+	Return S_OK
+	
+End Function
+	
+Function HeapMemoryAllocatorCloseSocket( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+	
+	' closesocket(this->ClientSocket)
+	
+	Return S_OK
+	
+End Function
+
 
 Function IHeapMemoryAllocatorQueryInterface( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
@@ -416,6 +472,78 @@ Function IHeapMemoryAllocatorGetClientBuffer( _
 	Return HeapMemoryAllocatorGetClientBuffer(ContainerOf(this, HeapMemoryAllocator, lpVtbl), ppBuffer)
 End Function
 
+Function ITimeCounterQueryInterface( _
+		ByVal this As ITimeCounter Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter), riid, ppvObject)
+End Function
+
+Function ITimeCounterAddRef( _
+		ByVal this As ITimeCounter Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+End Function
+
+Function ITimeCounterRelease( _
+		ByVal this As ITimeCounter Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+End Function
+
+Function ITimeCounterStartWatch( _
+		ByVal this As ITimeCounter Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorStartWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+End Function
+
+Function ITimeCounterStopWatch( _
+		ByVal this As ITimeCounter Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorStopWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+End Function
+
+Function IClientSocketQueryInterface( _
+		ByVal this As IClientSocket Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), riid, ppvObject)
+End Function
+
+Function IClientSocketAddRef( _
+		ByVal this As IClientSocket Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+End Function
+
+Function IClientSocketRelease( _
+		ByVal this As IClientSocket Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+End Function
+
+Function IClientSocketGetSocket( _
+		ByVal this As IClientSocket Ptr, _
+		ByVal pResult As SOCKET Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorGetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), pResult)
+End Function
+
+Function IClientSocketSetSocket( _
+		ByVal this As IClientSocket Ptr, _
+		ByVal sock As SOCKET _
+	)As HRESULT
+	Return HeapMemoryAllocatorSetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), sock)
+End Function
+
+Function IClientSocketCloseSocket( _
+		ByVal this As IClientSocket Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorCloseSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+End Function
+
 Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _
 	@IHeapMemoryAllocatorQueryInterface, _
 	@IHeapMemoryAllocatorAddRef, _
@@ -429,4 +557,21 @@ Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTa
 	NULL, _ /' RegisterMallocSpy '/
 	NULL, _ /' RevokeMallocSpy '/
 	@IHeapMemoryAllocatorGetClientBuffer _
+)
+
+Dim GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable = Type( _
+	@ITimeCounterQueryInterface, _
+	@ITimeCounterAddRef, _
+	@ITimeCounterRelease, _
+	@ITimeCounterStartWatch, _
+	@ITimeCounterStopWatch _
+)
+
+Dim GlobalClientSocketVirtualTable As Const IClientSocketVirtualTable = Type( _
+	@IClientSocketQueryInterface, _
+	@IClientSocketAddRef, _
+	@IClientSocketRelease, _
+	@IClientSocketGetSocket, _
+	@IClientSocketSetSocket, _
+	@IClientSocketCloseSocket _
 )

@@ -1,7 +1,7 @@
 #ifndef ICLIENTSOCKET_BI
 #define ICLIENTSOCKET_BI
 
-#include once "IBaseStream.bi"
+#include once "windows.bi"
 #include once "win\winsock2.bi"
 
 Extern IID_IClientSocket Alias "IID_IClientSocket" As Const IID
