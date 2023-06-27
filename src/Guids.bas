@@ -307,6 +307,11 @@ DEFINE_IID(IID_IReadRequestAsyncIoTask, _
 	&h82b525c1, &he266, &h4317, &h9f, &ha5, &hf8, &hb1, &h9d, &hf8, &hc7, &h3c _
 )
 
+' {0013C420-C5FF-4C3A-986A-E510B66F3AAA}
+DEFINE_IID(IID_ITimeCounter, _
+	&h13c420, &hc5ff, &h4c3a, &h98, &h6a, &he5, &h10, &hb6, &h6f, &h3a, &haa _
+)
+
 ' {6603A8F5-FB80-4CB9-BF80-CEADE4576F52}
 DEFINE_IID(IID_IWebServer, _
 	&h6603a8f5, &hfb80, &h4cb9, &hbf, &h80, &hce, &had, &he4, &h57, &h6f, &h52 _
