@@ -217,6 +217,11 @@ DEFINE_IID(IID_IClientRequest, _
 	&he998cab4, &h5559, &h409c, &h93, &hbc, &h97, &haf, &hdf, &h6a, &h39, &h21 _
 )
 
+' {38CBD760-F5C4-408A-B58D-A9AC9948A7C1}
+DEFINE_IID(IID_IClientSocket, _
+	&h38cbd760, &hf5c4, &h408a, &hb5, &h8d, &ha9, &hac, &h99, &h48, &ha7, &hc1 _
+)
+
 ' {FA6493DA-9102-4FF6-822E-163399BF9E81}
 DEFINE_IID(IID_IClientUri, _
 	&hfa6493da, &h9102, &h4ff6, &h82, &h2e, &h16, &h33, &h99, &hbf, &h9e, &h81 _
@@ -312,11 +317,6 @@ DEFINE_IID(IID_ITimeCounter, _
 	&h13c420, &hc5ff, &h4c3a, &h98, &h6a, &he5, &h10, &hb6, &h6f, &h3a, &haa _
 )
 
-' {6603A8F5-FB80-4CB9-BF80-CEADE4576F52}
-DEFINE_IID(IID_IWebServer, _
-	&h6603a8f5, &hfb80, &h4cb9, &hbf, &h80, &hce, &had, &he4, &h57, &h6f, &h52 _
-)
-
 ' {C1BFB23D-79B3-4AE9-BEF9-5BF9D3073B84}
 DEFINE_IID(IID_IServerResponse, _
 	&hc1bfb23d, &h79b3, &h4ae9, &hbe, &hf9, &h5b, &hf9, &hd3, &h7, &h3b, &h84 _
@@ -335,6 +335,11 @@ DEFINE_IID(IID_ITcpListener, _
 ' {667DFC1A-466E-40BF-BEE3-7A34882BE2F9}
 DEFINE_IID(IID_IThreadPool, _
 	&h667dfc1a, &h466e, &h40bf, &hbe, &he3, &h7a, &h34, &h88, &h2b, &he2, &hf9 _
+)
+
+' {6603A8F5-FB80-4CB9-BF80-CEADE4576F52}
+DEFINE_IID(IID_IWebServer, _
+	&h6603a8f5, &hfb80, &h4cb9, &hbf, &h80, &hce, &had, &he4, &h57, &h6f, &h52 _
 )
 
 ' {DE416BE2-F7C8-40C6-81DF-44742D47F0F7}
