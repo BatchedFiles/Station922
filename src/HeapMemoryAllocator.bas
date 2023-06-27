@@ -295,14 +295,22 @@ Function HeapMemoryAllocatorQueryInterface( _
 	If IsEqualIID(@IID_IHeapMemoryAllocator, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IMalloc, riid) Then
-			*ppv = @this->lpVtbl
+		If IsEqualIID(@IID_ITimeCounter, riid) Then
+			*ppv = @this->lpVtblTimeCounter
 		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+			If IsEqualIID(@IID_IClientSocket, riid) Then
+				*ppv = @this->lpVtblClientSocket
 			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
+				If IsEqualIID(@IID_IMalloc, riid) Then
+					*ppv = @this->lpVtbl
+				Else
+					If IsEqualIID(@IID_IUnknown, riid) Then
+						*ppv = @this->lpVtbl
+					Else
+						*ppv = NULL
+						Return E_NOINTERFACE
+					End If
+				End If
 			End If
 		End If
 	End If
