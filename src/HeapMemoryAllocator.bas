@@ -432,7 +432,7 @@ Function HeapMemoryAllocatorCloseSocket( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
 	
-	' closesocket(this->ClientSocket)
+	closesocket(this->ClientSocket)
 	
 	Return S_OK
 	
