@@ -51,7 +51,6 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 				If pMemoryPoolCollection[i].pMalloc = pMalloc Then
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-					this->ReferenceCounter = 1
 					InitializeClientRequestBuffer(@this->ReadedData)
 					
 					pMemoryPoolCollection[i].IsUsed = False
@@ -94,6 +93,7 @@ Function GetHeapMemoryAllocatorInstance( _
 		LeaveCriticalSection(@MemoryPoolSection)
 		
 		If pMalloc Then
+			IHeapMemoryAllocator_AddRef(pMalloc)
 			Return pMalloc
 		End If
 	End If
