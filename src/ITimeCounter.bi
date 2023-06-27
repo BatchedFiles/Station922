@@ -24,6 +24,14 @@ Type ITimeCounterVirtualTable
 		ByVal this As ITimeCounter Ptr _
 	)As ULONG
 	
+	StartWatch As Function( _
+		ByVal this As ITimeCounter Ptr _
+	)As ULONG
+	
+	StopWatch As Function( _
+		ByVal this As ITimeCounter Ptr _
+	)As ULONG
+	
 End Type
 
 Type ITimeCounter_
@@ -33,5 +41,7 @@ End Type
 #define ITimeCounter_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define ITimeCounter_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define ITimeCounter_Release(this) (this)->lpVtbl->Release(this)
+#define ITimeCounter_StartWatch(this) (this)->lpVtbl->StartWatch(this)
+#define ITimeCounter_StopWatch(this) (this)->lpVtbl->StopWatch(this)
 
 #endif

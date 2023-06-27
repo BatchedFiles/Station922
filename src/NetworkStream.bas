@@ -2,6 +2,7 @@
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
+#include once "ITimeCounter.bi"
 #include once "Network.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
@@ -17,6 +18,42 @@ Type _NetworkStream
 	pRemoteAddress As SOCKADDR Ptr
 	RemoteAddressLength As Integer
 End Type
+
+Sub SetStartTime( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+	Dim pITime As ITimeCounter Ptr = Any
+	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+		this->pIMemoryAllocator, _
+		@IID_ITimeCounter, _
+		@pITime _
+	)
+	
+	If SUCCEEDED(hrQueryInterface) Then
+		ITimeCounter_StartWatch(pITime)
+		ITimeCounter_Release(pITime)
+	End If
+	
+End Sub
+
+Sub SetEndTime( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+	Dim pITime As ITimeCounter Ptr = Any
+	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+		this->pIMemoryAllocator, _
+		@IID_ITimeCounter, _
+		@pITime _
+	)
+	
+	If SUCCEEDED(hrQueryInterface) Then
+		ITimeCounter_StopWatch(pITime)
+		ITimeCounter_Release(pITime)
+	End If
+	
+End Sub
 
 Sub InitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr, _
@@ -210,6 +247,8 @@ Function NetworkStreamBeginRead( _
 	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 	
+	SetStartTime(this)
+	
 	Dim resWSARecv As Long = WSARecv( _
 		this->ClientSocket, _
 		pRecvBuffers, _
@@ -279,6 +318,8 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
 	
+	SetStartTime(this)
+	
 	Dim resTransmit As BOOL = lpfnTransmitPackets( _
 		this->ClientSocket, _
 		pSendBuffers, _
@@ -288,7 +329,6 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 		Flags _
 	)	
 	If resTransmit = 0 Then
-	
 		
 		Dim intError As Long = WSAGetLastError()
 		If intError <> WSA_IO_PENDING OrElse intError <> ERROR_IO_PENDING Then
@@ -379,6 +419,8 @@ Function NetworkStreamEndRead( _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
+	SetEndTime(this)
+	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
 	IAsyncResult_GetCompleted( _
@@ -405,6 +447,8 @@ Function NetworkStreamEndWrite( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
+	
+	SetEndTime(this)
 	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
