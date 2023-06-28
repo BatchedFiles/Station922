@@ -39,6 +39,18 @@ Dim Shared MemoryPoolSection As CRITICAL_SECTION
 Dim Shared MemoryPoolLength As UInteger
 Dim Shared pMemoryPoolVector As MemoryPoolItem Ptr
 
+Sub HeapMemoryAllocatorResetState( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
+	
+	' Restore the original state of the reference counter
+	' Beecause number of reference is equal to one
+	this->ReferenceCounter = 1
+	
+	InitializeClientRequestBuffer(@this->ReadedData)
+	
+End Sub
+
 Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
@@ -52,10 +64,7 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 				If pMemoryPoolVector[i].pMalloc = pMalloc Then
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-					' Restore the original state of the reference counter
-					' Beecause number of reference is equal to one
-					this->ReferenceCounter = 1
-					InitializeClientRequestBuffer(@this->ReadedData)
+					HeapMemoryAllocatorResetState(this)
 					
 					pMemoryPoolVector[i].IsUsed = False
 					MemoryPoolLength -= 1
