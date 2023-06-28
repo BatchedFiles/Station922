@@ -34,9 +34,10 @@ Type _HeapMemoryAllocator
 End Type
 
 Dim Shared MemoryPoolCapacity As UInteger
-Dim Shared MemoryPoolLength As UInteger
-Dim Shared pMemoryPoolCollection As MemoryPoolItem Ptr
+
 Dim Shared MemoryPoolSection As CRITICAL_SECTION
+Dim Shared MemoryPoolLength As UInteger
+Dim Shared pMemoryPoolVector As MemoryPoolItem Ptr
 
 Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
@@ -44,18 +45,22 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 	
 	Dim Finded As Boolean = False
 	
-	If MemoryPoolCapacity Then
+	If MemoryPoolLength Then
 		EnterCriticalSection(@MemoryPoolSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolCapacity - 1
-				If pMemoryPoolCollection[i].pMalloc = pMalloc Then
+				If pMemoryPoolVector[i].pMalloc = pMalloc Then
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+					' Restore the original state of the reference counter
+					' Beecause number of reference is equal to one
+					this->ReferenceCounter = 1
 					InitializeClientRequestBuffer(@this->ReadedData)
 					
-					pMemoryPoolCollection[i].IsUsed = False
+					pMemoryPoolVector[i].IsUsed = False
+					MemoryPoolLength -= 1
+					
 					Finded = True
-					MemoryPoolLength += 1
 					
 					Exit For
 				End If
@@ -74,17 +79,17 @@ End Sub
 Function GetHeapMemoryAllocatorInstance( _
 	)As IHeapMemoryAllocator Ptr
 	
-	If MemoryPoolLength Then
+	If MemoryPoolLength < MemoryPoolCapacity Then
 		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
 		
 		EnterCriticalSection(@MemoryPoolSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolCapacity - 1
-				If pMemoryPoolCollection[i].IsUsed = False Then
+				If pMemoryPoolVector[i].IsUsed = False Then
 					
-					pMemoryPoolCollection[i].IsUsed = True
-					pMalloc = pMemoryPoolCollection[i].pMalloc
-					MemoryPoolLength -= 1
+					pMemoryPoolVector[i].IsUsed = True
+					pMalloc = pMemoryPoolVector[i].pMalloc
+					MemoryPoolLength += 1
 					
 					Exit For
 				End If
@@ -93,7 +98,8 @@ Function GetHeapMemoryAllocatorInstance( _
 		LeaveCriticalSection(@MemoryPoolSection)
 		
 		If pMalloc Then
-			IHeapMemoryAllocator_AddRef(pMalloc)
+			' Do not increase the reference counter
+			' Beecause number of reference is equal to one
 			Return pMalloc
 		End If
 	End If
@@ -118,7 +124,7 @@ Function CreateMemoryPool( _
 	)As HRESULT
 	
 	MemoryPoolCapacity = Capacity
-	MemoryPoolLength = Capacity
+	MemoryPoolLength = 0
 	
 	If Capacity Then
 		Const dwSpinCount As DWORD = 4000
@@ -132,12 +138,12 @@ Function CreateMemoryPool( _
 		End If
 		
 		Dim hHeap As HANDLE = GetProcessHeap()
-		pMemoryPoolCollection = HeapAlloc( _
+		pMemoryPoolVector = HeapAlloc( _
 			hHeap, _
 			0, _
 			SizeOf(MemoryPoolItem) * Capacity _
 		)
-		If pMemoryPoolCollection = NULL Then
+		If pMemoryPoolVector = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
@@ -151,8 +157,8 @@ Function CreateMemoryPool( _
 				Return E_OUTOFMEMORY
 			End If
 			
-			pMemoryPoolCollection[i].pMalloc = pMalloc
-			pMemoryPoolCollection[i].IsUsed = False
+			pMemoryPoolVector[i].pMalloc = pMalloc
+			pMemoryPoolVector[i].IsUsed = False
 		Next
 	End If
 	
