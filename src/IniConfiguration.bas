@@ -267,7 +267,7 @@ Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	
 End Function
 
-Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
+Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
@@ -283,6 +283,27 @@ Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
 	)
 	
 	*pCachedClientMemoryContextCount = CUInt(MemoryContextCount)
+	
+	Return S_OK
+	
+End Function
+
+Function WebServerIniConfigurationGetKeepAliveInterval( _
+		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal pKeepAliveInterval As Integer Ptr _
+	)As HRESULT
+	
+	Const KeepAliveIntervalKeyString = WStr("KeepAliveInterval")
+	Const DefaultKeepAliveInterval As INT_ = 120
+	
+	Dim KeepAliveInterval As UINT = GetPrivateProfileIntW( _
+		@WebServerSectionString, _
+		@KeepAliveIntervalKeyString, _
+		DefaultKeepAliveInterval, _
+		this->pWebServerIniFileName _
+	)
+	
+	*pKeepAliveInterval = CInt(KeepAliveInterval)
 	
 	Return S_OK
 	
@@ -1358,11 +1379,18 @@ Function IWebServerConfigurationGetWorkerThreadsCount( _
 	Return WebServerIniConfigurationGetWorkerThreadsCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
 End Function
 
-Function IWebServerConfigurationGetCachedClientMemoryContextCount( _
+Function IWebServerConfigurationGetMemoryPoolCapacity( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetCachedClientMemoryContextCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
+	Return WebServerIniConfigurationGetMemoryPoolCapacity(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
+End Function
+
+Function IWebServerConfigurationGetKeepAliveInterval( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal pKeepAliveInterval As UInteger Ptr _
+	)As HRESULT
+	Return WebServerIniConfigurationGetKeepAliveInterval(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
 End Function
 
 Function IWebServerConfigurationGetWebSites( _
@@ -1385,7 +1413,8 @@ Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfiguration
 	@IWebServerConfigurationAddRef, _
 	@IWebServerConfigurationRelease, _
 	@IWebServerConfigurationGetWorkerThreadsCount, _
-	@IWebServerConfigurationGetCachedClientMemoryContextCount, _
+	@IWebServerConfigurationGetMemoryPoolCapacity, _
+	@IWebServerConfigurationGetKeepAliveInterval, _
 	@IWebServerConfigurationGetWebSites, _
 	@IWebServerConfigurationGetDefaultWebSite _
 )

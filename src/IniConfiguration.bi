@@ -40,9 +40,14 @@ Declare Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	ByVal pWorkerThreadsCount As UInteger Ptr _
 )As HRESULT
 
-Declare Function WebServerIniConfigurationGetCachedClientMemoryContextCount( _
+Declare Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 	ByVal this As WebServerIniConfiguration Ptr, _
 	ByVal pCachedClientMemoryContextCount As UInteger Ptr _
+)As HRESULT
+
+Declare Function WebServerIniConfigurationGetKeepAliveInterval( _
+	ByVal this As WebServerIniConfiguration Ptr, _
+	ByVal pKeepAliveInterval As Integer Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetWebSites( _

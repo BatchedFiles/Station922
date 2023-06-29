@@ -53,9 +53,14 @@ Type IWebServerConfigurationVirtualTable
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	
-	GetCachedClientMemoryContextCount As Function( _
+	GetMemoryPoolCapacity As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
+	)As HRESULT
+	
+	GetKeepAliveInterval As Function( _
+		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal pKeepAliveInterval As Integer Ptr _
 	)As HRESULT
 	
 	GetWebSites As Function( _
@@ -79,7 +84,8 @@ End Type
 #define IWebServerConfiguration_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWebServerConfiguration_Release(this) (this)->lpVtbl->Release(this)
 #define IWebServerConfiguration_GetWorkerThreadsCount(this, pWorkerThreadsCount) (this)->lpVtbl->GetWorkerThreadsCount(this, pWorkerThreadsCount)
-#define IWebServerConfiguration_GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext) (this)->lpVtbl->GetCachedClientMemoryContextCount(this, pCachedClientMemoryContext)
+#define IWebServerConfiguration_GetMemoryPoolCapacity(this, pCachedClientMemoryContext) (this)->lpVtbl->GetMemoryPoolCapacity(this, pCachedClientMemoryContext)
+#define IWebServerConfiguration_GetKeepAliveInterval(this, pKeepAliveInterval) (this)->lpVtbl->GetKeepAliveInterval(this, pKeepAliveInterval)
 #define IWebServerConfiguration_GetWebSites(this, pCount, pWebSites) (this)->lpVtbl->GetWebSites(this, pCount, pWebSites)
 #define IWebServerConfiguration_GetDefaultWebSite(this, pWebSite) (this)->lpVtbl->GetDefaultWebSite(this, pWebSite)
 
