@@ -15,11 +15,6 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = MEMORY_ALLOCATION_GRANULARITY
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
-Type MemoryPoolItem
-	pMalloc As IHeapMemoryAllocator Ptr
-	IsUsed As Boolean
-End Type
-
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
 		IdString As ZString * 16
@@ -33,11 +28,19 @@ Type _HeapMemoryAllocator
 	ReadedData As ClientRequestBuffer
 End Type
 
-Dim Shared MemoryPoolCapacity As UInteger
+Type MemoryPoolItem
+	pMalloc As IHeapMemoryAllocator Ptr
+	IsUsed As Boolean
+End Type
 
-Dim Shared MemoryPoolSection As CRITICAL_SECTION
-Dim Shared MemoryPoolLength As UInteger
-Dim Shared pMemoryPoolVector As MemoryPoolItem Ptr
+Type MemoryPool
+	crSection As CRITICAL_SECTION
+	Items As MemoryPoolItem Ptr
+	Capacity As UInteger
+	Length As UInteger
+End Type
+
+Dim Shared MemoryPoolObject As MemoryPool
 
 Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
@@ -57,17 +60,17 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 	
 	Dim Finded As Boolean = False
 	
-	If MemoryPoolLength Then
-		EnterCriticalSection(@MemoryPoolSection)
+	If MemoryPoolObject.Length Then
+		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
-			For i As UInteger = 0 To MemoryPoolCapacity - 1
-				If pMemoryPoolVector[i].pMalloc = pMalloc Then
+			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+				If MemoryPoolObject.Items[i].pMalloc = pMalloc Then
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
 					HeapMemoryAllocatorResetState(this)
 					
-					pMemoryPoolVector[i].IsUsed = False
-					MemoryPoolLength -= 1
+					MemoryPoolObject.Items[i].IsUsed = False
+					MemoryPoolObject.Length -= 1
 					
 					Finded = True
 					
@@ -75,7 +78,7 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 				End If
 			Next
 		End Scope
-		LeaveCriticalSection(@MemoryPoolSection)
+		LeaveCriticalSection(@MemoryPoolObject.crSection)
 	End If
 	
 	If Finded = False Then
@@ -88,27 +91,29 @@ End Sub
 Function GetHeapMemoryAllocatorInstance( _
 	)As IHeapMemoryAllocator Ptr
 	
-	If MemoryPoolLength < MemoryPoolCapacity Then
+	If MemoryPoolObject.Length < MemoryPoolObject.Capacity Then
 		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
 		
-		EnterCriticalSection(@MemoryPoolSection)
+		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
-			For i As UInteger = 0 To MemoryPoolCapacity - 1
-				If pMemoryPoolVector[i].IsUsed = False Then
+			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+				If MemoryPoolObject.Items[i].IsUsed = False Then
 					
-					pMemoryPoolVector[i].IsUsed = True
-					pMalloc = pMemoryPoolVector[i].pMalloc
-					MemoryPoolLength += 1
+					MemoryPoolObject.Items[i].IsUsed = True
+					pMalloc = MemoryPoolObject.Items[i].pMalloc
+					MemoryPoolObject.Length += 1
 					
 					Exit For
 				End If
 			Next
 		End Scope
-		LeaveCriticalSection(@MemoryPoolSection)
+		LeaveCriticalSection(@MemoryPoolObject.crSection)
 		
 		If pMalloc Then
-			' Do not increase the reference counter
-			' Beecause number of reference is equal to one
+			' We do not increase the reference counter to the object
+			' to track the lifetime
+			' When the object reference count reaches zero
+			' the Release function returns the object to the object pool
 			Return pMalloc
 		End If
 	End If
@@ -132,13 +137,13 @@ Function CreateMemoryPool( _
 		ByVal Capacity As UInteger _
 	)As HRESULT
 	
-	MemoryPoolCapacity = Capacity
-	MemoryPoolLength = 0
+	MemoryPoolObject.Capacity = Capacity
+	MemoryPoolObject.Length = 0
 	
 	If Capacity Then
 		Const dwSpinCount As DWORD = 4000
 		Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
-			@MemoryPoolSection, _
+			@MemoryPoolObject.crSection, _
 			dwSpinCount _
 		)
 		If resInitialize = 0 Then
@@ -147,12 +152,12 @@ Function CreateMemoryPool( _
 		End If
 		
 		Dim hHeap As HANDLE = GetProcessHeap()
-		pMemoryPoolVector = HeapAlloc( _
+		MemoryPoolObject.Items = HeapAlloc( _
 			hHeap, _
 			0, _
 			SizeOf(MemoryPoolItem) * Capacity _
 		)
-		If pMemoryPoolVector = NULL Then
+		If MemoryPoolObject.Items = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 		
@@ -166,8 +171,8 @@ Function CreateMemoryPool( _
 				Return E_OUTOFMEMORY
 			End If
 			
-			pMemoryPoolVector[i].pMalloc = pMalloc
-			pMemoryPoolVector[i].IsUsed = False
+			MemoryPoolObject.Items[i].pMalloc = pMalloc
+			MemoryPoolObject.Items[i].IsUsed = False
 		Next
 	End If
 	
@@ -207,7 +212,9 @@ Sub InitializeHeapMemoryAllocator( _
 	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
-	this->ClientSocket = INVALID_SOCKET
+	' No need to initialize client socket
+	' because it will be overwritten in the function SetSocket
+	' this->ClientSocket = INVALID_SOCKET
 	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
