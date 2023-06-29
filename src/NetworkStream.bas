@@ -443,6 +443,15 @@ Function NetworkStreamEndRead( _
 		@dwError _
 	)
 	If dwError Then
+		
+		Select Case dwError
+			
+			Case ERROR_CONNECTION_ABORTED
+				*pReadedBytes = 0
+				Return S_FALSE
+				
+		End Select
+		
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
@@ -478,6 +487,15 @@ Function NetworkStreamEndWrite( _
 		@dwError _
 	)
 	If dwError Then
+		
+		Select Case dwError
+			
+			Case ERROR_CONNECTION_ABORTED
+				*pWritedBytes = 0
+				Return S_FALSE
+				
+		End Select
+		
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
