@@ -19,13 +19,15 @@ End Type
 Function FinishExecuteTaskSink( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr, _
+		ByVal dwError As DWORD _
 	)As HRESULT
 	
 	IAsyncResult_SetCompleted( _
 		pIResult, _
 		BytesTransferred, _
-		True _
+		True, _
+		dwError _
 	)
 	
 	Dim pTask As IAsyncIoTask Ptr = Any
@@ -48,9 +50,8 @@ Function FinishExecuteTaskSink( _
 		)
 	End If
 	
-	' Освобождаем ссылки на задачу и футуру
-	' Так как мы не сделали это при запуске задачи
-	
+	' Releasing the references to the task and futura
+	' beecause we haven't done this before
 	IAsyncResult_Release(pIResult)
 	IAsyncIoTask_Release(pTask)
 	
@@ -61,7 +62,8 @@ End Function
 Function ThreadPoolCallBack( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR, _
-		ByVal pOverlap As OVERLAPPED Ptr _
+		ByVal pOverlap As OVERLAPPED Ptr, _
+		ByVal dwError As DWORD _
 	)As Integer
 	
 	Dim hrFinishExecute As HRESULT = Any
@@ -72,7 +74,8 @@ Function ThreadPoolCallBack( _
 		hrFinishExecute = FinishExecuteTaskSink( _
 			BytesTransferred, _
 			pIResult, _
-			@pNextTask _
+			@pNextTask, _
+			dwError _
 		)
 	End Scope
 	
@@ -124,17 +127,21 @@ Function WorkerThread( _
 			ThreadPoolCallBack( _
 				BytesTransferred, _
 				CompletionKey, _
-				pOverlap _
+				pOverlap, _
+				ERROR_SUCCESS _
 			)
 		Else
 			If pOverlap = NULL Then
 				Exit Do
 			End If
 			
+			Dim dwError As DWORD = GetLastError()
+			
 			ThreadPoolCallBack( _
 				BytesTransferred, _
 				CompletionKey, _
-				pOverlap _
+				pOverlap, _
+				dwError _
 			)
 		End If
 		

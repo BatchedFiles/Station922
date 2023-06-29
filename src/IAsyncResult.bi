@@ -36,13 +36,15 @@ Type IAsyncResultVirtualTable
 	GetCompleted As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
-		ByVal pCompleted As Boolean Ptr _
+		ByVal pCompleted As Boolean Ptr, _
+		ByVal pdwError As DWORD Ptr _
 	)As HRESULT
 	
 	SetCompleted As Function( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
-		ByVal Completed As Boolean _
+		ByVal Completed As Boolean, _
+		ByVal dwError As DWORD _
 	)As HRESULT
 	
 	SetAsyncStateWeakPtr As Function( _
@@ -71,8 +73,8 @@ End Type
 #define IAsyncResult_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncResult_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncResult_GetAsyncStateWeakPtr(this, ppState) (this)->lpVtbl->GetAsyncStateWeakPtr(this, ppState)
-#define IAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted)
-#define IAsyncResult_SetCompleted(this, BytesTransferred, Completed) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed)
+#define IAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted, pdwError) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted, pdwError)
+#define IAsyncResult_SetCompleted(this, BytesTransferred, Completed, dwError) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed, dwError)
 #define IAsyncResult_SetAsyncStateWeakPtr(this, pState) (this)->lpVtbl->SetAsyncStateWeakPtr(this, pState)
 #define IAsyncResult_GetWsaOverlapped(this, ppRecvOverlapped) (this)->lpVtbl->GetWsaOverlapped(this, ppRecvOverlapped)
 #define IAsyncResult_AllocBuffers(this, Count, ppBuffers) (this)->lpVtbl->AllocBuffers(this, Count, ppBuffers)

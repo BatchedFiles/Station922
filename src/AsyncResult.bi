@@ -43,13 +43,15 @@ Declare Function AsyncResultGetAsyncStateWeakPtr( _
 Declare Function AsyncResultGetCompleted( _
 	ByVal this As AsyncResult Ptr, _
 	ByVal pBytesTransferred As DWORD Ptr, _
-	ByVal pCompleted As Boolean Ptr _
+	ByVal pCompleted As Boolean Ptr, _
+	ByVal pdwError As DWORD Ptr _
 )As HRESULT
 
 Declare Function AsyncResultSetCompleted( _
 	ByVal this As AsyncResult Ptr, _
 	ByVal BytesTransferred As DWORD, _
-	ByVal Completed As Boolean _
+	ByVal Completed As Boolean, _
+	ByVal dwError As DWORD _
 )As HRESULT
 
 Declare Function AsyncResultSetAsyncStateWeakPtr( _

@@ -435,11 +435,17 @@ Function NetworkStreamEndRead( _
 	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
+	Dim dwError As DWORD = Any
 	IAsyncResult_GetCompleted( _
 		pIAsyncResult, _
 		@BytesTransferred, _
-		@Completed _
+		@Completed, _
+		@dwError _
 	)
+	If dwError Then
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
 	If Completed Then
 		*pReadedBytes = BytesTransferred
 		
@@ -464,11 +470,17 @@ Function NetworkStreamEndWrite( _
 	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
+	Dim dwError As DWORD = Any
 	IAsyncResult_GetCompleted( _
 		pIAsyncResult, _
 		@BytesTransferred, _
-		@Completed _
+		@Completed, _
+		@dwError _
 	)
+	If dwError Then
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
 	If Completed Then
 		*pWritedBytes = BytesTransferred
 		

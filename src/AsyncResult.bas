@@ -14,6 +14,7 @@ Type _AsyncResult
 	OverLap As OVERLAPPED
 	pBuffers As Any Ptr
 	BytesTransferred As DWORD
+	dwError As DWORD
 	Completed As Boolean
 End Type
 
@@ -186,11 +187,13 @@ End Function
 Function AsyncResultGetCompleted( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
-		ByVal pCompleted As Boolean Ptr _
+		ByVal pCompleted As Boolean Ptr, _
+		ByVal pdwError As DWORD Ptr _
 	)As HRESULT
 	
 	*pBytesTransferred = this->BytesTransferred
 	*pCompleted = this->Completed
+	*pdwError = this->dwError
 	
 	Return S_OK
 	
@@ -199,11 +202,13 @@ End Function
 Function AsyncResultSetCompleted( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
-		ByVal Completed As Boolean _
+		ByVal Completed As Boolean, _
+		ByVal dwError As DWORD _
 	)As HRESULT
 	
 	this->BytesTransferred = BytesTransferred
 	this->Completed = Completed
+	this->dwError = dwError
 	
 	Return S_OK
 	
@@ -285,17 +290,19 @@ End Function
 Function IAsyncResultGetCompleted( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
-		ByVal pCompleted As Boolean Ptr _
+		ByVal pCompleted As Boolean Ptr, _
+		ByVal pdwError As DWORD Ptr _
 	)As HRESULT
-	Return AsyncResultGetCompleted(ContainerOf(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted)
+	Return AsyncResultGetCompleted(ContainerOf(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted, pdwError)
 End Function
 
 Function IAsyncResultSetCompleted( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
-		ByVal Completed As Boolean _
+		ByVal Completed As Boolean, _
+		ByVal dwError As DWORD _
 	)As HRESULT
-	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed)
+	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed, dwError)
 End Function
 
 Function IAsyncResultSetAsyncStateWeakPtr( _

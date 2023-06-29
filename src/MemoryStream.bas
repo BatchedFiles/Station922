@@ -244,11 +244,17 @@ Function MemoryStreamEndGetSlice( _
 	
 	Dim dwBytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
+	Dim dwError As DWORD = Any
 	IAsyncResult_GetCompleted( _
 		pIAsyncResult, _
 		@dwBytesTransferred, _
-		@Completed _
+		@Completed, _
+		@dwError _
 	)
+	If dwError Then
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
 	If Completed Then
 		Scope
 			Dim pMem As Byte Ptr = Any
