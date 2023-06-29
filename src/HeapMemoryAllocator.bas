@@ -25,6 +25,8 @@ Type _HeapMemoryAllocator
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
 	ClientSocket As SOCKET
+	datStartOperation As FILETIME
+	datFinishOperation As FILETIME
 	ReadedData As ClientRequestBuffer
 End Type
 
@@ -41,6 +43,7 @@ Type MemoryPool
 End Type
 
 Dim Shared MemoryPoolObject As MemoryPool
+Dim Shared HungsConnectionsEvent As HANDLE
 
 Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
@@ -53,6 +56,40 @@ Sub HeapMemoryAllocatorResetState( _
 	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
+
+Function HeapMemoryAllocatorCloseHungsConnections( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal KeepAliveInterval As Integer _
+	)As Boolean
+	
+	If this->ClientSocket = INVALID_SOCKET Then
+		Return False
+	End If
+	
+	Dim ulStart As ULARGE_INTEGER = Any
+	ulStart.LowPart = this->datStartOperation.dwLowDateTime
+	ulStart.HighPart = this->datStartOperation.dwHighDateTime
+	
+	Dim datCurrent As FILETIME
+	GetSystemTimeAsFileTime(@datCurrent)
+	
+	Dim ulCurrent As ULARGE_INTEGER = Any
+	ulCurrent.LowPart = datCurrent.dwLowDateTime
+	ulCurrent.HighPart = datCurrent.dwHighDateTime
+	
+	If ulCurrent.QuadPart > ulStart.QuadPart Then
+		Dim ulDiff As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
+		
+		Dim nsInterval As Integer = 100 * 1000 * 1000 * KeepAliveInterval
+		If ulDiff > nsInterval Then
+			HeapMemoryAllocatorCloseSocket(this)
+			Return False
+		End If
+	End If
+	
+	Return True
+	
+End Function
 
 Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
@@ -133,8 +170,71 @@ Function GetHeapMemoryAllocatorInstance( _
 	
 End Function
 
+Sub CheckHungsConnections( _
+		ByVal KeepAliveInterval As Integer _
+	)
+	
+	Do
+		Const msTimeToHungsConnection As DWORD = 1000 * 60
+		Sleep_(msTimeToHungsConnection)
+		
+		Dim AnyClientsConnected As Boolean = False
+		
+		EnterCriticalSection(@MemoryPoolObject.crSection)
+		Scope
+			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+				If MemoryPoolObject.Items[i].IsUsed Then
+					Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+					Dim resClose As Boolean = HeapMemoryAllocatorCloseHungsConnections( _
+						this, _
+						KeepAliveInterval _
+					)
+					If resClose Then
+						AnyClientsConnected = True
+					End If
+				End If
+			Next
+		End Scope
+		LeaveCriticalSection(@MemoryPoolObject.crSection)
+		
+		If AnyClientsConnected = False Then
+			Exit Do
+		End If
+		
+	Loop
+	
+End Sub
+
+Function ClearingThread( _
+		ByVal lpParam As LPVOID _
+	)As DWORD
+	
+	Dim KeepAliveInterval As Integer = CInt(lpParam)
+	
+	Do
+		Dim dwError As DWORD = WaitForSingleObject( _
+			HungsConnectionsEvent, _
+			INFINITE _
+		)
+		If dwError <> WAIT_OBJECT_0 Then
+			Return 0
+		End If
+		
+		CheckHungsConnections(KeepAliveInterval)
+		
+		Dim resReset As BOOL = ResetEvent(HungsConnectionsEvent)
+		If resReset = 0 Then
+			Return 0
+		End If
+	Loop
+	
+	Return 0
+	
+End Function
+
 Function CreateMemoryPool( _
-		ByVal Capacity As UInteger _
+		ByVal Capacity As UInteger, _
+		ByVal KeepAliveInterval As Integer _
 	)As HRESULT
 	
 	MemoryPoolObject.Capacity = Capacity
@@ -160,6 +260,31 @@ Function CreateMemoryPool( _
 		If MemoryPoolObject.Items = NULL Then
 			Return E_OUTOFMEMORY
 		End If
+		
+		HungsConnectionsEvent = CreateEventW( _
+			NULL, _
+			TRUE, _
+			FALSE, _
+			NULL _
+		)
+		If HungsConnectionsEvent = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		Const DefaultStackSize As SIZE_T_ = 0
+		Dim hThread As HANDLE = CreateThread( _
+			NULL, _
+			DefaultStackSize, _
+			@ClearingThread, _
+			CPtr(Integer Ptr, KeepAliveInterval), _
+			0, _
+			NULL _
+		)
+		If hThread = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+		
+		CloseHandle(hThread)
 		
 		For i As UInteger = 0 To Capacity - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
@@ -212,9 +337,7 @@ Sub InitializeHeapMemoryAllocator( _
 	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
-	' No need to initialize client socket
-	' because it will be overwritten in the function SetSocket
-	' this->ClientSocket = INVALID_SOCKET
+	this->ClientSocket = INVALID_SOCKET
 	InitializeClientRequestBuffer(@this->ReadedData)
 	
 End Sub
@@ -416,6 +539,10 @@ Function HeapMemoryAllocatorStartWatch( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
 	
+	GetSystemTimeAsFileTime(@this->datStartOperation)
+	
+	SetEvent(HungsConnectionsEvent)
+	
 	Return S_OK
 	
 End Function
@@ -423,6 +550,8 @@ End Function
 Function HeapMemoryAllocatorStopWatch( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
+	
+	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	
 	Return S_OK
 	
@@ -454,7 +583,11 @@ Function HeapMemoryAllocatorCloseSocket( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
 	
-	closesocket(this->ClientSocket)
+	If this->ClientSocket <> INVALID_SOCKET Then
+		shutdown(this->ClientSocket, SD_BOTH)
+		closesocket(this->ClientSocket)
+		this->ClientSocket = INVALID_SOCKET
+	End If
 	
 	Return S_OK
 	

@@ -347,6 +347,7 @@ Function Station922Initialize()As HRESULT
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim WorkerThreads As Integer = Any
 	Dim MemoryPoolCapacity As UInteger = Any
+	Dim KeepAliveInterval As Integer = Any
 	Dim WebSites As WebSiteVector = Any
 	Dim WebSitesLength As Integer = Any
 	Dim pWebSiteConfig As WebSiteConfiguration Ptr = Any
@@ -408,9 +409,14 @@ Function Station922Initialize()As HRESULT
 			@WorkerThreads _
 		)
 		
-		IWebServerConfiguration_GetCachedClientMemoryContextCount( _
+		IWebServerConfiguration_GetMemoryPoolCapacity( _
 			pIConfig, _
 			@MemoryPoolCapacity _
+		)
+		
+		IWebServerConfiguration_GetKeepAliveInterval( _
+			pIConfig, _
+			@KeepAliveInterval _
 		)
 		
 		Dim hrWebSites As HRESULT = IWebServerConfiguration_GetWebSites( _
@@ -452,7 +458,10 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
-		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool(MemoryPoolCapacity)
+		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool( _
+			MemoryPoolCapacity, _
+			KeepAliveInterval _
+		)
 		If FAILED(hrCreateMemoryPool) Then
 			Return hrCreateMemoryPool
 		End If

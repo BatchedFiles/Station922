@@ -15,7 +15,8 @@ Type ServerHeapMemoryAllocator As _ServerHeapMemoryAllocator
 Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
 
 Declare Function CreateMemoryPool( _
-	ByVal Length As UInteger _
+	ByVal Length As UInteger, _
+	ByVal KeepAliveInterval As Integer _
 )As HRESULT
 
 Declare Function GetHeapMemoryAllocatorInstance( _
@@ -95,6 +96,10 @@ Declare Function HeapMemoryAllocatorRevokeMallocSpy( _
 Declare Function HeapMemoryAllocatorGetClientBuffer( _
 	ByVal this As HeapMemoryAllocator Ptr, _
 	ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
+)As HRESULT
+
+Declare Function HeapMemoryAllocatorCloseSocket( _
+	ByVal this As HeapMemoryAllocator Ptr _
 )As HRESULT
 
 #endif
