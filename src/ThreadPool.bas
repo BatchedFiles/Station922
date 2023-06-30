@@ -59,12 +59,12 @@ Function FinishExecuteTaskSink( _
 	
 End Function
 
-Function ThreadPoolCallBack( _
+Sub ThreadPoolCallBack( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR, _
 		ByVal pOverlap As OVERLAPPED Ptr, _
 		ByVal dwError As DWORD _
-	)As Integer
+	)
 	
 	Dim hrFinishExecute As HRESULT = Any
 	Dim pNextTask As IAsyncIoTask Ptr = Any
@@ -96,9 +96,7 @@ Function ThreadPoolCallBack( _
 		End Select
 	End If
 	
-	Return 0
-	
-End Function
+End Sub
 
 Function WorkerThread( _
 		ByVal lpParam As LPVOID _
