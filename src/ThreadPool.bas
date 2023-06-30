@@ -145,8 +145,6 @@ Function WorkerThread( _
 		
 	Loop
 	
-	ThreadPoolRelease(this)
-	
 	Return 0
 	
 End Function
@@ -333,8 +331,6 @@ Function ThreadPoolRun( _
 	Const DefaultStackSize As SIZE_T_ = 0
 	
 	For i As UInteger = 0 To this->WorkerThreadsCount - 1
-		
-		ThreadPoolAddRef(this)
 		
 		Dim ThreadId As DWORD = Any
 		this->hThreads[i] = CreateThread( _
