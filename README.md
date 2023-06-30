@@ -18,6 +18,7 @@
 [WebServer]
 WorkerThreads=4
 MemoryPoolCapacity=0
+KeepAliveInterval=120
 ```
 
 #### Описание
@@ -30,6 +31,11 @@ MemoryPoolCapacity=0
 <dl>
 <dt>MemoryPoolCapacity</dt>
 <dd>Размер предварительно созданных куч памяти для клиентских контекстов.</dd>
+</dl>
+
+<dl>
+<dt>KeepAliveInterval</dt>
+<dd>Интервал времени (в секундах), после которого клиент будет принудительно отключён из‐за неактивности. По умолчанию 120.</dd>
 </dl>
 
 
