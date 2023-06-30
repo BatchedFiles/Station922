@@ -102,8 +102,6 @@ Function WorkerThread( _
 		ByVal lpParam As LPVOID _
 	)As DWORD
 	
-	Dim this As ThreadPool Ptr = lpParam
-	
 	Do
 		
 		Dim BytesTransferred As DWORD = Any
