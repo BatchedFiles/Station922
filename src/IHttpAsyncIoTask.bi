@@ -18,8 +18,6 @@ Extern IID_IHttpAsyncIoTask Alias "IID_IHttpAsyncIoTask" As Const IID
 ' S_KEEPALIVE_FALSE
 ' Any E_FAIL
 
-Const ASYNCTASK_S_KEEPALIVE_FALSE As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0202)
-
 Type IHttpAsyncIoTask As IHttpAsyncIoTask_
 
 Type IHttpAsyncIoTaskVirtualTable

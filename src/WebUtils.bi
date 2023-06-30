@@ -18,10 +18,6 @@ Declare Function FindWebSiteWeakPtr( _
 	ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 )As HRESULT
 
-Declare Function StartExecuteTask( _
-	ByVal pTask As IAsyncIoTask Ptr _
-)As HRESULT
-
 Declare Function ProcessErrorRequestResponse( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal pIStream As IBaseStream Ptr, _

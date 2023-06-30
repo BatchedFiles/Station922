@@ -5,6 +5,7 @@
 #include once "HttpReader.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
+#include once "TaskExecutor.bi"
 #include once "WebUtils.bi"
 #include once "WebSiteCollection.bi"
 

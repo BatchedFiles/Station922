@@ -4,6 +4,7 @@
 #include once "HttpReader.bi"
 #include once "NetworkStream.bi"
 #include once "ReadRequestAsyncTask.bi"
+#include once "TaskExecutor.bi"
 #include once "TcpListener.bi"
 #include once "WebUtils.bi"
 
