@@ -47,7 +47,7 @@ Declare Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 
 Declare Function WebServerIniConfigurationGetKeepAliveInterval( _
 	ByVal this As WebServerIniConfiguration Ptr, _
-	ByVal pKeepAliveInterval As Integer Ptr _
+	ByVal pKeepAliveInterval As ULongInt Ptr _
 )As HRESULT
 
 Declare Function WebServerIniConfigurationGetWebSites( _

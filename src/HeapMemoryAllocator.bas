@@ -59,7 +59,7 @@ End Sub
 
 Function HeapMemoryAllocatorCloseHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal KeepAliveInterval As Integer _
+		ByVal KeepAliveInterval As ULongInt _
 	)As Boolean
 	
 	If this->ClientSocket = INVALID_SOCKET Then
@@ -78,10 +78,10 @@ Function HeapMemoryAllocatorCloseHungsConnections( _
 	ulCurrent.HighPart = datCurrent.dwHighDateTime
 	
 	If ulCurrent.QuadPart > ulStart.QuadPart Then
-		Dim ulDiff As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
+		Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
+		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
 		
-		Dim nsInterval As Integer = 100 * 1000 * 1000 * KeepAliveInterval
-		If ulDiff > nsInterval Then
+		If nsElapsedTime > nsKeepAliveInterval Then
 			HeapMemoryAllocatorCloseSocket(this)
 			Return False
 		End If

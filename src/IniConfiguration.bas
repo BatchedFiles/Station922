@@ -290,7 +290,7 @@ End Function
 
 Function WebServerIniConfigurationGetKeepAliveInterval( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pKeepAliveInterval As Integer Ptr _
+		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
 	
 	Const KeepAliveIntervalKeyString = WStr("KeepAliveInterval")
@@ -303,7 +303,7 @@ Function WebServerIniConfigurationGetKeepAliveInterval( _
 		this->pWebServerIniFileName _
 	)
 	
-	*pKeepAliveInterval = CInt(KeepAliveInterval)
+	*pKeepAliveInterval = CULngInt(KeepAliveInterval)
 	
 	Return S_OK
 	
@@ -1388,7 +1388,7 @@ End Function
 
 Function IWebServerConfigurationGetKeepAliveInterval( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pKeepAliveInterval As UInteger Ptr _
+		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetKeepAliveInterval(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
 End Function

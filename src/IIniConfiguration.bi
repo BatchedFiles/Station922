@@ -60,7 +60,7 @@ Type IWebServerConfigurationVirtualTable
 	
 	GetKeepAliveInterval As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pKeepAliveInterval As Integer Ptr _
+		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
 	
 	GetWebSites As Function( _
