@@ -584,7 +584,6 @@ Function HeapMemoryAllocatorCloseSocket( _
 	)As HRESULT
 	
 	If this->ClientSocket <> INVALID_SOCKET Then
-		shutdown(this->ClientSocket, SD_BOTH)
 		closesocket(this->ClientSocket)
 		this->ClientSocket = INVALID_SOCKET
 	End If
