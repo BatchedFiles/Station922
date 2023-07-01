@@ -19,6 +19,9 @@ Declare Function CreateMemoryPool( _
 	ByVal KeepAliveInterval As Integer _
 )As HRESULT
 
+Declare Sub DeleteMemoryPool( _
+)
+
 Declare Function GetHeapMemoryAllocatorInstance( _
 )As IHeapMemoryAllocator Ptr
 

@@ -787,6 +787,8 @@ End Function
 
 Sub Station922CleanUp()
 	
+	DeleteMemoryPool()
+	
 	IThreadPool_Stop(GlobalThreadPool)
 	
 	IThreadPool_Release(GlobalThreadPool)

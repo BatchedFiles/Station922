@@ -44,6 +44,7 @@ End Type
 
 Dim Shared MemoryPoolObject As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
+Dim Shared HungsConnectionsThread As HANDLE
 
 Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
@@ -170,13 +171,16 @@ Function GetHeapMemoryAllocatorInstance( _
 	
 End Function
 
-Sub CheckHungsConnections( _
+Function CheckHungsConnections( _
 		ByVal KeepAliveInterval As Integer _
-	)
+	)As Boolean
 	
 	Do
 		Const msTimeToHungsConnection As DWORD = 1000 * 60
-		Sleep_(msTimeToHungsConnection)
+		Dim resWait As DWORD = SleepEx(msTimeToHungsConnection, TRUE)
+		If resWait <> 0 Then
+			Return True
+		End If
 		
 		Dim AnyClientsConnected As Boolean = False
 		
@@ -203,6 +207,14 @@ Sub CheckHungsConnections( _
 		
 	Loop
 	
+	Return False
+	
+End Function
+
+Sub WakeupClearingThread( _
+		ByVal Parameter As ULONG_PTR _
+	)
+	
 End Sub
 
 Function ClearingThread( _
@@ -212,15 +224,19 @@ Function ClearingThread( _
 	Dim KeepAliveInterval As Integer = CInt(lpParam)
 	
 	Do
-		Dim dwError As DWORD = WaitForSingleObject( _
+		Dim resWait As DWORD = WaitForSingleObjectEx( _
 			HungsConnectionsEvent, _
-			INFINITE _
+			INFINITE, _
+			TRUE _
 		)
-		If dwError <> WAIT_OBJECT_0 Then
+		If resWait <> WAIT_OBJECT_0 Then
 			Return 0
 		End If
 		
-		CheckHungsConnections(KeepAliveInterval)
+		Dim resCheck As Boolean = CheckHungsConnections(KeepAliveInterval)
+		If resCheck Then
+			Return 0
+		End If
 		
 		Dim resReset As BOOL = ResetEvent(HungsConnectionsEvent)
 		If resReset = 0 Then
@@ -272,7 +288,7 @@ Function CreateMemoryPool( _
 		End If
 		
 		Const DefaultStackSize As SIZE_T_ = 0
-		Dim hThread As HANDLE = CreateThread( _
+		HungsConnectionsThread = CreateThread( _
 			NULL, _
 			DefaultStackSize, _
 			@ClearingThread, _
@@ -280,11 +296,9 @@ Function CreateMemoryPool( _
 			0, _
 			NULL _
 		)
-		If hThread = NULL Then
+		If HungsConnectionsThread = NULL Then
 			Return E_OUTOFMEMORY
 		End If
-		
-		CloseHandle(hThread)
 		
 		For i As UInteger = 0 To Capacity - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
@@ -304,6 +318,16 @@ Function CreateMemoryPool( _
 	Return S_OK
 	
 End Function
+
+Sub DeleteMemoryPool()
+	
+	QueueUserAPC( _
+		@WakeupClearingThread, _
+		HungsConnectionsThread, _
+		0 _
+	)
+	
+End Sub
 
 Sub AllocationFailed( _
 		ByVal BytesCount As SIZE_T_ _
