@@ -182,6 +182,10 @@ Function CheckHungsConnections( _
 			Return True
 		End If
 		
+		If MemoryPoolObject.Length = 0 Then
+			Return False
+		End If
+		
 		Dim AnyClientsConnected As Boolean = False
 		
 		EnterCriticalSection(@MemoryPoolObject.crSection)
@@ -202,7 +206,7 @@ Function CheckHungsConnections( _
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
 		
 		If AnyClientsConnected = False Then
-			Exit Do
+			Return False
 		End If
 		
 	Loop
