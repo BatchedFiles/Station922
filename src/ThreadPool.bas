@@ -16,6 +16,21 @@ Type _ThreadPool
 	hThreads As HANDLE Ptr
 End Type
 
+Function CreateNewCompletionPort( _
+		ByVal dwNumberOfConcurrentThreads As DWORD _
+	)As HANDLE
+	
+	Dim hPort As HANDLE = CreateIoCompletionPort( _
+		INVALID_HANDLE_VALUE, _
+		NULL, _
+		0, _
+		dwNumberOfConcurrentThreads _
+	)
+	
+	Return hPort
+	
+End Function
+
 Function FinishExecuteTaskSink( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal pIResult As IAsyncResult Ptr, _
@@ -307,10 +322,7 @@ Function ThreadPoolRun( _
 		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
-	ThreadPoolCompletionPort = CreateIoCompletionPort( _
-		INVALID_HANDLE_VALUE, _
-		NULL, _
-		Cast(ULONG_PTR, 0), _
+	ThreadPoolCompletionPort = CreateNewCompletionPort( _
 		this->WorkerThreadsCount _
 	)
 	If ThreadPoolCompletionPort = NULL Then
