@@ -56,6 +56,9 @@ Type WebServerVector
 End Type
 
 Dim Shared GlobalThreadPool As IThreadPool Ptr
+Dim Shared WebServers As WebServerVector
+Dim Shared IpEndPointsLength As Integer
+
 
 Sub ConvertSystemDateToHttpDate( _
 		ByVal Buffer As WString Ptr, _
@@ -309,8 +312,6 @@ Function Station922Initialize()As HRESULT
 	Dim HttpProcessors As HttpProcessorVector = Any
 	Dim pIDefaultWebSite As IWebSite Ptr = Any
 	Dim IpEndPoints As IpEndPointVector = Any
-	Dim IpEndPointsLength As Integer = 0
-	Dim WebServers As WebServerVector = Any
 	
 	Scope
 		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
@@ -766,6 +767,10 @@ Function Station922Initialize()As HRESULT
 End Function
 
 Sub Station922CleanUp()
+	
+	For i As Integer = 0 To IpEndPointsLength - 1
+		IWebServer_Release(WebServers.Vector(i))
+	Next
 	
 	DeleteMemoryPool()
 	

@@ -230,11 +230,15 @@ Function ClearingThread( _
 			TRUE _
 		)
 		If resWait <> WAIT_OBJECT_0 Then
+			CloseHandle(HungsConnectionsThread)
+			CloseHandle(HungsConnectionsEvent)
 			Return 0
 		End If
 		
 		Dim resCheck As Boolean = CheckHungsConnections(KeepAliveInterval)
 		If resCheck Then
+			CloseHandle(HungsConnectionsThread)
+			CloseHandle(HungsConnectionsEvent)
 			Return 0
 		End If
 		

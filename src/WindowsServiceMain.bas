@@ -138,6 +138,7 @@ Sub SvcMain( _
 	
 	Scope
 		Station922CleanUp()
+		CloseHandle(Context.hStopEvent)
 	End Scope
 	
 	ReportSvcStatus(@Context, SERVICE_STOPPED, NO_ERROR, 0)

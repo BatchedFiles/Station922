@@ -221,7 +221,7 @@ Sub InitializeThreadPool( _
 		)
 	#endif
 	this->lpVtbl = @GlobalThreadPoolVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->WorkerThreadsCount = 0
@@ -330,6 +330,8 @@ Function ThreadPoolAddRef( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
 	
+	this->ReferenceCounter += 1
+	
 	Return 1
 	
 End Function
@@ -337,6 +339,14 @@ End Function
 Function ThreadPoolRelease( _
 		ByVal this As ThreadPool Ptr _
 	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyThreadPool(this)
 	
 	Return 0
 	
