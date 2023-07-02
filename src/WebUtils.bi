@@ -28,11 +28,6 @@ Declare Function ProcessErrorRequestResponse( _
 	ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
 )As HRESULT
 
-Declare Function BindToThreadPool( _
-	ByVal hHandle As HANDLE, _
-	ByVal pUserData As Any Ptr _
-)As HRESULT
-
 Declare Function Station922Initialize( _
 )As HRESULT
 

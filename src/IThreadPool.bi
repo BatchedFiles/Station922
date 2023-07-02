@@ -1,8 +1,7 @@
 #ifndef ITHREADPOOL_BI
 #define ITHREADPOOL_BI
 
-#include once "windows.bi"
-#include once "win\ole2.bi"
+#include once "IAsyncResult.bi"
 
 Extern IID_IThreadPool Alias "IID_IThreadPool" As Const IID
 

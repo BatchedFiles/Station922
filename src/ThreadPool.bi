@@ -5,8 +5,6 @@
 
 Extern CLSID_THREADPOOL Alias "CLSID_THREADPOOL" As Const CLSID
 
-Extern ThreadPoolCompletionPort As HANDLE
-
 Const RTTI_ID_THREADPOOL              = !"\001Thread____Pool\001"
 
 Type ThreadPool As _ThreadPool
@@ -53,6 +51,17 @@ Declare Function ThreadPoolRun( _
 
 Declare Function ThreadPoolStop( _
 	ByVal this As ThreadPool Ptr _
+)As HRESULT
+
+Declare Function AssociateDeviceWithThreadPool( _
+	ByVal hHandle As HANDLE, _
+	ByVal pUserData As Any Ptr _
+)As HRESULT
+
+Declare Function PostPacketToThreadPool( _
+	ByVal PacketSize As DWORD, _
+	ByVal CompletionKey As ULONG_PTR, _
+	ByVal pIResult As IAsyncResult Ptr _
 )As HRESULT
 
 #endif

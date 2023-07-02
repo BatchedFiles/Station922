@@ -245,26 +245,6 @@ Function ProcessErrorRequestResponse( _
 	
 End Function
 
-Function BindToThreadPool( _
-		ByVal hHandle As HANDLE, _
-		ByVal pUserData As Any Ptr _
-	)As HRESULT
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		hHandle, _
-		ThreadPoolCompletionPort, _
-		Cast(ULONG_PTR, pUserData), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-
 Function IpEndPointExists( _
 		ByVal pIpEndPoints As IpEndPointVector Ptr, _
 		ByVal IpEndPointsLength As Integer, _

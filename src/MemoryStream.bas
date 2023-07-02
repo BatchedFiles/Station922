@@ -212,24 +212,18 @@ Function MemoryStreamBeginGetSlice( _
 	this->RequestStartIndex = StartIndex
 	this->RequestLength = Length
 	
-	Dim pOverlap As OVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
-	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
-	
 	*ppIAsyncResult = pINewAsyncResult
 	
-	Dim resStatus As BOOL = PostQueuedCompletionStatus( _
-		ThreadPoolCompletionPort, _
+	Dim hrStatus As HRESULT = PostPacketToThreadPool( _
 		Length, _
 		Cast(ULONG_PTR, StateObject), _
-		pOverlap _
+		pINewAsyncResult _
 	)
-	If resStatus = 0 Then
-		Dim dwError As DWORD = GetLastError()
+	If FAILED(hrStatus) Then
 		IAsyncResult_Release(pINewAsyncResult)
 		*ppIAsyncResult = NULL
-		Return HRESULT_FROM_WIN32(dwError)
+		Return hrStatus
 	End If
 	
 	Return ATTRIBUTEDSTREAM_S_IO_PENDING
