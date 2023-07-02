@@ -264,31 +264,30 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Do
-		this->pReadTask = CreateReadTask( _
-			this, _
-			@this->pBuffer, _
-			@this->pStream _
-		)
-		
-		If this->pReadTask Then
-			
-			Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
-				this->pListener, _
-				this->pBuffer, _
-				CPtr(IUnknown Ptr, @this->lpVtbl), _
-				ppIResult _
-			)
-			
-			If SUCCEEDED(hrBeginAccept) Then
-				Return ASYNCTASK_S_IO_PENDING
-			End If
-			
-			IReadRequestAsyncIoTask_Release(this->pReadTask)
-			this->pReadTask = NULL
-			*ppIResult = NULL
-		End If
-	Loop
+	this->pReadTask = CreateReadTask( _
+		this, _
+		@this->pBuffer, _
+		@this->pStream _
+	)
+	If this->pReadTask = NULL Then
+		*ppIResult = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
+	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
+		this->pListener, _
+		this->pBuffer, _
+		CPtr(IUnknown Ptr, @this->lpVtbl), _
+		ppIResult _
+	)
+	If FAILED(hrBeginAccept) Then
+		IReadRequestAsyncIoTask_Release(this->pReadTask)
+		this->pReadTask = NULL
+		*ppIResult = NULL
+		Return hrBeginAccept
+	End If
+	
+	Return ASYNCTASK_S_IO_PENDING
 	
 End Function
 
@@ -306,36 +305,37 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 		BytesTransferred, _
 		@ClientSocket _
 	)
+	If FAILED(hrEndAccept) Then
+		*ppNextTask = NULL
+		IReadRequestAsyncIoTask_Release(this->pReadTask)
+		this->pReadTask = NULL
+		Return hrEndAccept
+	End If
 	
-	If SUCCEEDED(hrEndAccept) Then
-		INetworkStream_SetSocket( _
-			this->pStream, _
-			ClientSocket _
-		)
-		
-		Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
-			Cast(HANDLE, ClientSocket), _
-			this->pReadTask _
-		)
-		
-		If SUCCEEDED(hrBind) Then
-			
-			Dim hrBeginExecute As HRESULT = StartExecuteTask( _
-				CPtr(IAsyncIoTask Ptr, this->pReadTask) _
-			)
-			If FAILED(hrBeginExecute) Then
-				IReadRequestAsyncIoTask_Release(this->pReadTask)
-			End If
-			
-		Else
-			IReadRequestAsyncIoTask_Release(this->pReadTask)
-		End If
-	Else
+	INetworkStream_SetSocket( _
+		this->pStream, _
+		ClientSocket _
+	)
+	
+	Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
+		Cast(HANDLE, ClientSocket), _
+		this->pReadTask _
+	)
+	If FAILED(hrBind) Then
+		*ppNextTask = NULL
+		IReadRequestAsyncIoTask_Release(this->pReadTask)
+		this->pReadTask = NULL
+		Return hrBind
+	End If
+	
+	Dim hrBeginExecute As HRESULT = StartExecuteTask( _
+		CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+	)
+	If FAILED(hrBeginExecute) Then
 		IReadRequestAsyncIoTask_Release(this->pReadTask)
 	End If
 	
 	this->pReadTask = NULL
-	
 	AcceptConnectionAsyncTaskAddRef(this)
 	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
 	

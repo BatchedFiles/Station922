@@ -1,7 +1,7 @@
 #include once "WindowsServiceMain.bi"
 #include once "WebUtils.bi"
 
-Const MaxWaitHint As DWORD = 3000
+Const MaxWaitHint As DWORD = 10
 Const ServiceName = WStr("Station922")
 
 Type ServiceContext

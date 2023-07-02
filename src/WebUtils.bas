@@ -769,6 +769,7 @@ End Function
 Sub Station922CleanUp()
 	
 	For i As Integer = 0 To IpEndPointsLength - 1
+		IWebServer_Stop(WebServers.Vector(i))
 		IWebServer_Release(WebServers.Vector(i))
 	Next
 	
