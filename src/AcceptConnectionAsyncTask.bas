@@ -118,7 +118,7 @@ Sub InitializeAcceptConnectionAsyncTask( _
 		)
 	#endif
 	this->lpVtbl = @GlobalAcceptConnectionAsyncIoTaskVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSitesWeakPtr = NULL
@@ -247,6 +247,8 @@ Function AcceptConnectionAsyncTaskAddRef( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)As ULONG
 	
+	this->ReferenceCounter += 1
+	
 	Return 1
 	
 End Function
@@ -254,6 +256,14 @@ End Function
 Function AcceptConnectionAsyncTaskRelease( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyAcceptConnectionAsyncTask(this)
 	
 	Return 0
 	
