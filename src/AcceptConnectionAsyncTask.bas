@@ -406,7 +406,6 @@ Function AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
 	
 End Function
 
-
 Function AcceptConnectionAsyncTaskGetListenSocket( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
