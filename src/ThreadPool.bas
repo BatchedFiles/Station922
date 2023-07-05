@@ -12,11 +12,10 @@ Type _ThreadPool
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
+	CompletionPort As HANDLE
 	WorkerThreadsCount As UInteger
 	hThreads As HANDLE Ptr
 End Type
-
-Dim Shared ThreadPoolCompletionPort As HANDLE
 
 Function CreateNewCompletionPort( _
 		ByVal dwNumberOfConcurrentThreads As DWORD _
@@ -30,50 +29,6 @@ Function CreateNewCompletionPort( _
 	)
 	
 	Return hPort
-	
-End Function
-
-Function AssociateDeviceWithThreadPool( _
-		ByVal hHandle As HANDLE, _
-		ByVal pUserData As Any Ptr _
-	)As HRESULT
-	
-	Dim NewPort As HANDLE = CreateIoCompletionPort( _
-		hHandle, _
-		ThreadPoolCompletionPort, _
-		Cast(ULONG_PTR, pUserData), _
-		0 _
-	)
-	If NewPort = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Function PostPacketToThreadPool( _
-		ByVal PacketSize As DWORD, _
-		ByVal CompletionKey As ULONG_PTR, _
-		ByVal pIResult As IAsyncResult Ptr _
-	)As HRESULT
-	
-	Dim pOverlap As OVERLAPPED Ptr = Any
-	IAsyncResult_GetWsaOverlapped(pIResult, @pOverlap)
-	
-	Dim resStatus As BOOL = PostQueuedCompletionStatus( _
-		ThreadPoolCompletionPort, _
-		PacketSize, _
-		CompletionKey, _
-		pOverlap _
-	)
-	If resStatus = 0 Then
-		Dim dwError As DWORD = GetLastError()
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Return S_OK
 	
 End Function
 
@@ -163,6 +118,8 @@ Function WorkerThread( _
 		ByVal lpParam As LPVOID _
 	)As DWORD
 	
+	Dim this As ThreadPool Ptr = lpParam
+	
 	Do
 		
 		Dim BytesTransferred As DWORD = Any
@@ -170,7 +127,7 @@ Function WorkerThread( _
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		
 		Dim resCompletionStatus As BOOL = GetQueuedCompletionStatus( _
-			ThreadPoolCompletionPort, _
+			this->CompletionPort, _
 			@BytesTransferred, _
 			@CompletionKey, _
 			@pOverlap, _
@@ -224,6 +181,7 @@ Sub InitializeThreadPool( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	this->CompletionPort = NULL
 	this->WorkerThreadsCount = 0
 	this->hThreads = NULL
 	
@@ -233,8 +191,8 @@ Sub UnInitializeThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
-	If ThreadPoolCompletionPort Then
-		CloseHandle(ThreadPoolCompletionPort)
+	If this->CompletionPort Then
+		CloseHandle(this->CompletionPort)
 	End If
 	
 	If this->hThreads Then
@@ -378,10 +336,10 @@ Function ThreadPoolRun( _
 		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
-	ThreadPoolCompletionPort = CreateNewCompletionPort( _
+	this->CompletionPort = CreateNewCompletionPort( _
 		this->WorkerThreadsCount _
 	)
-	If ThreadPoolCompletionPort = NULL Then
+	If this->CompletionPort = NULL Then
 		Dim dwError As DWORD = GetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
@@ -424,7 +382,7 @@ Function ThreadPoolStop( _
 	
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
 		PostQueuedCompletionStatus( _
-			ThreadPoolCompletionPort, _
+			this->CompletionPort, _
 			0, _
 			0, _
 			NULL _
@@ -444,6 +402,52 @@ Function ThreadPoolStop( _
 	For i As Integer = 0 To this->WorkerThreadsCount - 1
 		CloseHandle(this->hThreads[i])
 	Next
+	
+	Return S_OK
+	
+End Function
+
+Function ThreadPoolAssociateDevice( _
+		ByVal this As ThreadPool Ptr, _
+		ByVal hHandle As HANDLE, _
+		ByVal pUserData As Any Ptr _
+	)As HRESULT
+	
+	Dim NewPort As HANDLE = CreateIoCompletionPort( _
+		hHandle, _
+		this->CompletionPort, _
+		Cast(ULONG_PTR, pUserData), _
+		0 _
+	)
+	If NewPort = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Function ThreadPoolPostPacket( _
+		ByVal this As ThreadPool Ptr, _
+		ByVal PacketSize As DWORD, _
+		ByVal CompletionKey As ULONG_PTR, _
+		ByVal pIResult As IAsyncResult Ptr _
+	)As HRESULT
+	
+	Dim pOverlap As OVERLAPPED Ptr = Any
+	IAsyncResult_GetWsaOverlapped(pIResult, @pOverlap)
+	
+	Dim resStatus As BOOL = PostQueuedCompletionStatus( _
+		this->CompletionPort, _
+		PacketSize, _
+		CompletionKey, _
+		pOverlap _
+	)
+	If resStatus = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
 	
 	Return S_OK
 	
@@ -496,6 +500,23 @@ Function IThreadPoolStop( _
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
+Function IThreadPoolAssociateDevice( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal hHandle As HANDLE, _
+		ByVal pUserData As Any Ptr _
+	)As HRESULT
+	Return ThreadPoolAssociateDevice(ContainerOf(this, ThreadPool, lpVtbl), hHandle, pUserData)
+End Function
+
+Function IThreadPoolPostPacket( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal PacketSize As DWORD, _
+		ByVal CompletionKey As ULONG_PTR, _
+		ByVal pIResult As IAsyncResult Ptr _
+	)As HRESULT
+	Return ThreadPoolPostPacket(ContainerOf(this, ThreadPool, lpVtbl), PacketSize, CompletionKey, pIResult)
+End Function
+
 Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolQueryInterface, _
 	@IThreadPoolAddRef, _
@@ -503,5 +524,7 @@ Dim GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable = Type( _
 	@IThreadPoolGetMaxThreads, _
 	@IThreadPoolSetMaxThreads, _
 	@IThreadPoolRun, _
-	@IThreadPoolStop _
+	@IThreadPoolStop, _
+	@IThreadPoolAssociateDevice, _
+	@IThreadPoolPostPacket _
 )

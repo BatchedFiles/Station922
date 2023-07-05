@@ -8,7 +8,6 @@
 #include once "HttpProcessorCollection.bi"
 #include once "MemoryStream.bi"
 #include once "Mime.bi"
-#include once "ThreadPool.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
@@ -680,7 +679,9 @@ Function GetFileHandle( _
 	End Select
 	
 	If SUCCEEDED(hrErrorCode) Then
-		Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
+		Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+		Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
+			pIPool, _
 			FileHandle, _
 			FileHandle _
 		)
@@ -1816,7 +1817,9 @@ Function WebSiteGetBuffer( _
 				)
 				
 				If ZipFileHandle <> INVALID_HANDLE_VALUE Then
-					Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
+					Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+					Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
+						pIPool, _
 						ZipFileHandle, _
 						ZipFileHandle _
 					)

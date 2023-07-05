@@ -41,6 +41,19 @@ Type IThreadPoolVirtualTable
 		ByVal this As IThreadPool Ptr _
 	)As HRESULT
 	
+	AssociateDevice As Function( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal hHandle As HANDLE, _
+		ByVal pUserData As Any Ptr _
+	)As HRESULT
+	
+	PostPacket As Function( _
+		ByVal this As IThreadPool Ptr, _
+		ByVal PacketSize As DWORD, _
+		ByVal CompletionKey As ULONG_PTR, _
+		ByVal pIResult As IAsyncResult Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IThreadPool_
@@ -54,5 +67,7 @@ End Type
 #define IThreadPool_SetMaxThreads(this, MaxThreads) (this)->lpVtbl->SetMaxThreads(this, MaxThreads)
 #define IThreadPool_Run(this) (this)->lpVtbl->Run(this)
 #define IThreadPool_Stop(this) (this)->lpVtbl->Stop(this)
+#define IThreadPool_AssociateDevice(this, hHandle, pUserData) (this)->lpVtbl->AssociateDevice(this, hHandle, pUserData)
+#define IThreadPool_PostPacket(this, PacketSize, CompletionKey, pIResult) (this)->lpVtbl->PostPacket(this, PacketSize, CompletionKey, pIResult)
 
 #endif

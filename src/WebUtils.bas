@@ -780,3 +780,9 @@ Sub Station922CleanUp()
 	IThreadPool_Release(GlobalThreadPool)
 	
 End Sub
+
+Function GetThreadPoolWeakPtr()As IThreadPool Ptr
+	
+	Return GlobalThreadPool
+	
+End Function

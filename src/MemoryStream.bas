@@ -2,7 +2,6 @@
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "ThreadPool.bi"
 #include once "WebUtils.bi"
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
@@ -215,7 +214,9 @@ Function MemoryStreamBeginGetSlice( _
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	*ppIAsyncResult = pINewAsyncResult
 	
-	Dim hrStatus As HRESULT = PostPacketToThreadPool( _
+	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+	Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
+		pIPool, _
 		Length, _
 		Cast(ULONG_PTR, StateObject), _
 		pINewAsyncResult _

@@ -6,8 +6,8 @@
 #include once "Logger.bi"
 #include once "Network.bi"
 #include once "TaskExecutor.bi"
-#include once "ThreadPool.bi"
 #include once "WebSiteCollection.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalWebServerVirtualTable As Const IWebServerVirtualTable
 
@@ -49,7 +49,9 @@ Function CreateAcceptConnectionTask( _
 	IAcceptConnectionAsyncIoTask_SetListenSocket(pTask, ServerSocket)
 	IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
 	
-	Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
+	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+	Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
+		pIPool, _
 		Cast(HANDLE, ServerSocket), _
 		pTask _
 	)

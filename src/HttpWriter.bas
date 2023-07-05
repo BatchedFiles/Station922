@@ -2,7 +2,7 @@
 #include once "ContainerOf.bi"
 #include once "HttpWriter.bi"
 #include once "IFileStream.bi"
-#include once "ThreadPool.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalHttpWriterVirtualTable As Const IHttpWriterVirtualTable
 
@@ -405,7 +405,9 @@ Function HttpWriterBeginWrite( _
 				IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 				*ppIAsyncResult = pINewAsyncResult
 				
-				Dim hrStatus As HRESULT = PostPacketToThreadPool( _
+				Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+				Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
+					pIPool, _
 					SizeOf(HttpWriter), _
 					Cast(ULONG_PTR, StateObject), _
 					pINewAsyncResult _

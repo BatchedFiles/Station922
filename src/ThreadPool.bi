@@ -53,12 +53,14 @@ Declare Function ThreadPoolStop( _
 	ByVal this As ThreadPool Ptr _
 )As HRESULT
 
-Declare Function AssociateDeviceWithThreadPool( _
+Declare Function ThreadPoolAssociateDevice( _
+	ByVal this As ThreadPool Ptr, _
 	ByVal hHandle As HANDLE, _
 	ByVal pUserData As Any Ptr _
 )As HRESULT
 
-Declare Function PostPacketToThreadPool( _
+Declare Function ThreadPoolPostPacket( _
+	ByVal this As ThreadPool Ptr, _
 	ByVal PacketSize As DWORD, _
 	ByVal CompletionKey As ULONG_PTR, _
 	ByVal pIResult As IAsyncResult Ptr _

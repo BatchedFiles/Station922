@@ -5,6 +5,7 @@
 #include once "IClientRequest.bi"
 #include once "IBaseStream.bi"
 #include once "IServerResponse.bi"
+#include once "IThreadPool.bi"
 #include once "IWriteErrorAsyncIoTask.bi"
 
 Declare Sub ConvertSystemDateToHttpDate( _
@@ -32,5 +33,7 @@ Declare Function Station922Initialize( _
 )As HRESULT
 
 Declare Sub Station922CleanUp()
+
+Declare Function GetThreadPoolWeakPtr()As IThreadPool Ptr
 
 #endif

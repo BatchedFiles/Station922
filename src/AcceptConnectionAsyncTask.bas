@@ -6,7 +6,7 @@
 #include once "ReadRequestAsyncTask.bi"
 #include once "TaskExecutor.bi"
 #include once "TcpListener.bi"
-#include once "ThreadPool.bi"
+#include once "WebUtils.bi"
 
 Extern GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable
 
@@ -327,7 +327,9 @@ Function AcceptConnectionAsyncTaskEndExecute( _
 		ClientSocket _
 	)
 	
-	Dim hrBind As HRESULT = AssociateDeviceWithThreadPool( _
+	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+	Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
+		pIPool, _
 		Cast(HANDLE, ClientSocket), _
 		this->pReadTask _
 	)
