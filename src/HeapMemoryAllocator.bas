@@ -150,29 +150,14 @@ Function GetHeapMemoryAllocatorInstance( _
 		End Scope
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
 		
-		If pMalloc Then
-			' We do not increase the reference counter to the object
-			' to track the lifetime
-			' When the object reference count reaches zero
-			' the Release function returns the object to the object pool
-			Return pMalloc
-		End If
+		' We do not increase the reference counter to the object
+		' to track the lifetime
+		' When the object reference count reaches zero
+		' the Release function returns the object to the object pool
+		Return pMalloc
 	End If
 	
-	Scope
-		' TODO Expand the memory pool or return an error
-		
-		Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-		Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
-			@IID_IHeapMemoryAllocator, _
-			@pMalloc _
-		)
-		If FAILED(hrCreateMalloc) Then
-			Return NULL
-		End If
-		
-		Return pMalloc
-	End Scope
+	Return NULL
 	
 End Function
 
