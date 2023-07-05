@@ -269,20 +269,24 @@ End Function
 
 Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
+		ByVal pCapacity As UInteger Ptr _
 	)As HRESULT
 	
 	Const MemoryPoolCapacityKeyString = WStr("MemoryPoolCapacity")
-	Const DefaultMemoryPoolCapacity As INT_ = 1
+	Const DefaultMemoryPoolCapacity As INT_ = 10
 	
-	Dim MemoryContextCount As UINT = GetPrivateProfileIntW( _
+	Dim Capacity As UINT = GetPrivateProfileIntW( _
 		@WebServerSectionString, _
 		@MemoryPoolCapacityKeyString, _
 		DefaultMemoryPoolCapacity, _
 		this->pWebServerIniFileName _
 	)
 	
-	*pCachedClientMemoryContextCount = CUInt(MemoryContextCount)
+	Dim MemoryPoolCapacity As UInteger = max( _
+		DefaultMemoryPoolCapacity, _
+		CUInt(Capacity) _
+	)
+	*pCapacity = MemoryPoolCapacity
 	
 	Return S_OK
 	
