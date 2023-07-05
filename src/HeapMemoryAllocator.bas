@@ -96,9 +96,9 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
 	
-	Dim Finded As Boolean = False
-	
 	If MemoryPoolObject.Length Then
+		Dim Finded As Boolean = False
+		
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
@@ -117,11 +117,14 @@ Sub ReleaseHeapMemoryAllocatorInstance( _
 			Next
 		End Scope
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
-	End If
-	
-	If Finded = False Then
-		Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-		DestroyHeapMemoryAllocator(this)
+		
+		If Finded = False Then
+			' TODO Element not found, return an error
+			Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+			DestroyHeapMemoryAllocator(this)
+		End If
+	Else
+		' TODO The length of the memory pool is zero, return an error
 	End If
 	
 End Sub
@@ -157,6 +160,8 @@ Function GetHeapMemoryAllocatorInstance( _
 	End If
 	
 	Scope
+		' TODO Expand the memory pool or return an error
+		
 		Dim pMalloc As IHeapMemoryAllocator Ptr = Any
 		Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
 			@IID_IHeapMemoryAllocator, _
