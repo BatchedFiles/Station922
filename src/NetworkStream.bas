@@ -283,7 +283,7 @@ Function NetworkStreamBeginRead( _
 	
 	*ppIAsyncResult = pINewAsyncResult
 	
-	Return BASESTREAM_S_IO_PENDING
+	Return S_OK
 	
 End Function
 
@@ -353,7 +353,7 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 	
 	*ppIAsyncResult = pINewAsyncResult
 	
-	Return BASESTREAM_S_IO_PENDING
+	Return S_OK
 	
 End Function
 

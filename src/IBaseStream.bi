@@ -6,18 +6,16 @@
 Extern IID_IBaseStream Alias "IID_IBaseStream" As Const IID
 
 ' IBaseStream.BeginRead:
-' BASESTREAM_S_IO_PENDING, Any E_FAIL
+' S_OK, Any E_FAIL
 
 ' IBaseStream.EndRead:
 ' S_OK, S_FALSE, E_FAIL
 
 ' IBaseStream.BeginWrite:
-' BASESTREAM_S_IO_PENDING, Any E_FAIL
+' S_OK, Any E_FAIL
 
 ' IBaseStream.EndWrite:
 ' S_OK, S_FALSE, E_FAIL
-
-Const BASESTREAM_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 
 Enum SeekOrigin
 	SeekBegin

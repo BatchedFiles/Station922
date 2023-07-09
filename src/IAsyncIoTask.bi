@@ -6,7 +6,7 @@
 Extern IID_IAsyncIoTask Alias "IID_IAsyncIoTask" As Const IID
 
 ' BeginExecute:
-' ASYNCTASK_S_IO_PENDING
+' S_OK
 ' Any E_FAIL
 
 ' EndExecute:
@@ -14,7 +14,6 @@ Extern IID_IAsyncIoTask Alias "IID_IAsyncIoTask" As Const IID
 ' S_FALSE
 ' Any E_FAIL
 
-Const ASYNCTASK_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0201)
 Const ASYNCTASK_S_KEEPALIVE_FALSE As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0202)
 
 Type IAsyncIoTask As IAsyncIoTask_

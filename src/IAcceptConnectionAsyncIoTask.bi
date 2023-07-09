@@ -8,7 +8,7 @@
 Extern IID_IAcceptConnectionAsyncIoTask Alias "IID_IAcceptConnectionAsyncIoTask" As Const IID
 
 ' BeginExecute:
-' ASYNCTASK_S_IO_PENDING
+' S_OK
 ' Any E_FAIL
 
 ' EndExecute:

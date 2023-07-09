@@ -220,7 +220,7 @@ Function ReadRequestAsyncTaskBeginExecute( _
 	' —сылка на pIAsyncResult сохранена в унаследованной от OVERLAPPED структуре
 	' —сылку на OVERLAPPED возвратит функци€ GetQueuedCompletionStatus бассейну потоков
 	
-	Return ASYNCTASK_S_IO_PENDING
+	Return S_OK
 	
 End Function
 

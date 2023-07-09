@@ -297,7 +297,7 @@ Function AcceptConnectionAsyncTaskBeginExecute( _
 		Return hrBeginAccept
 	End If
 	
-	Return ASYNCTASK_S_IO_PENDING
+	Return S_OK
 	
 End Function
 
