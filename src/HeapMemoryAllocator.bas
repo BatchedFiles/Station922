@@ -1,4 +1,5 @@
 #include once "HeapMemoryAllocator.bi"
+#include once "crt.bi"
 #include once "ContainerOf.bi"
 #include once "IClientSocket.bi"
 #include once "ITimeCounter.bi"
@@ -46,6 +47,68 @@ Dim Shared MemoryPoolObject As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
 Dim Shared HungsConnectionsThread As HANDLE
 
+Sub PrintWalkingHeap( _
+		ByVal hHeap As HANDLE _
+	)
+	
+	' Scope
+	' 	Dim buf As ZString * 1024 = Any
+	' 	wsprintfA(__TEXT(!"Walking heap %#p...\r\n"), hHeap)
+	' 	fwrite(@buf, lstrlenA(@buf), SizeOf(ZString), stdout)
+	' End Scope
+	
+	Dim Entry As PROCESS_HEAP_ENTRY = Any
+	Entry.lpData = NULL
+	
+	Dim resWalk As BOOL = HeapWalk(hHeap, @Entry)
+	
+	Do While resWalk <> 0
+		Dim BusyFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_BUSY
+		If BusyFlag Then
+			
+			' _tprintf(__TEXT("Allocated block"))
+			
+			Dim MovableFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_MOVEABLE
+			If MovableFlag Then
+				' _tprintf(TEXT(", movable with HANDLE %#p"), Entry.Block.hMem);
+			End If
+			
+			Dim DdeShareFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_DDESHARE
+			If DdeShareFlag Then
+				' _tprintf(TEXT(", DDESHARE"));
+			End If
+		Else
+			Dim RegionFlag As Integer = Entry.wFlags And PROCESS_HEAP_REGION
+			If RegionFlag Then
+				' _tprintf(TEXT("Region\n  %d bytes committed\n") \
+				' 			TEXT("  %d bytes uncommitted\n  First block address: %#p\n") \
+				' 			TEXT("  Last block address: %#p\n"),
+				' 			Entry.Region.dwCommittedSize,
+				' 			Entry.Region.dwUnCommittedSize,
+				' 			Entry.Region.lpFirstBlock,
+				' 			Entry.Region.lpLastBlock);
+			Else
+				Dim UncommittedFlag As Integer = Entry.wFlags And PROCESS_HEAP_UNCOMMITTED_RANGE
+				If UncommittedFlag Then
+					' _tprintf(TEXT("Uncommitted range\n"));
+				Else
+					' _tprintf(TEXT("Block\n"));
+				End If
+			End If
+		End If
+		
+		' _tprintf(TEXT("  Data portion begins at: %#p\n  Size: %d bytes\n") \
+		' 			TEXT("  Overhead: %d bytes\n  Region index: %d\n\n"),
+		' 			Entry.lpData,
+		' 			Entry.cbData,
+		' 			Entry.cbOverhead,
+		' 			Entry.iRegionIndex);
+		
+		resWalk = HeapWalk(hHeap, @Entry)
+	Loop
+	
+End Sub
+
 Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
@@ -55,6 +118,10 @@ Sub HeapMemoryAllocatorResetState( _
 	this->ReferenceCounter = 1
 	
 	InitializeClientRequestBuffer(@this->ReadedData)
+	
+	#if __FB_DEBUG__
+		PrintWalkingHeap(this->hHeap)
+	#endif
 	
 End Sub
 
