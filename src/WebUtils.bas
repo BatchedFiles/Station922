@@ -786,3 +786,34 @@ Function GetThreadPoolWeakPtr()As IThreadPool Ptr
 	Return GlobalThreadPool
 	
 End Function
+
+Function WaitAlertableLoop( _
+		ByVal hEvent As HANDLE _
+	)As HRESULT
+	
+	Do
+		Dim resWait As DWORD = WaitForSingleObjectEx( _
+			hEvent, _
+			INFINITE, _
+			TRUE _
+		)
+		
+		Select Case resWait
+			
+			Case WAIT_OBJECT_0
+				' The event became a signal
+				' exit from loop
+				Return S_OK
+				
+			Case WAIT_IO_COMPLETION
+				' The asynchronous procedure has ended
+				' we continue to wait
+				Continue Do
+				
+			Case Else ' WAIT_ABANDONED, WAIT_TIMEOUT, WAIT_FAILED
+				Return E_FAIL
+				
+		End Select
+	Loop
+	
+End Function

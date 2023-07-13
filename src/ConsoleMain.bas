@@ -20,7 +20,9 @@ Function ConsoleMain()As Integer
 		End If
 	End Scope
 	
-	WaitForSingleObject(hStopEvent, INFINITE)
+	WaitAlertableLoop(hStopEvent)
+	
+	Station922CleanUp()
 	
 	CloseHandle(hStopEvent)
 	

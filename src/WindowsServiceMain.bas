@@ -132,7 +132,7 @@ Sub SvcMain( _
 	
 	ReportSvcStatus(@Context, SERVICE_RUNNING, NO_ERROR, 0)
 	
-	WaitForSingleObject(Context.hStopEvent, INFINITE)
+	WaitAlertableLoop(Context.hStopEvent)
 	
 	ReportSvcStatus(@Context, SERVICE_STOP_PENDING, NO_ERROR, 0)
 	
