@@ -51,11 +51,23 @@ Sub PrintWalkingHeap( _
 		ByVal hHeap As HANDLE _
 	)
 	
-	' Scope
-	' 	Dim buf As ZString * 1024 = Any
-	' 	wsprintfA(__TEXT(!"Walking heap %#p...\r\n"), hHeap)
-	' 	fwrite(@buf, lstrlenA(@buf), SizeOf(ZString), stdout)
-	' End Scope
+	Scope
+		Const FormatString = WStr(!"Walking heap %#p...\r\n")
+		Dim buf As WString * 512 = Any
+		wsprintfW( _
+			@buf, _
+			@FormatString, _
+			hHeap _
+		)
+		
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_EMPTY
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			@buf, _
+			@vtAllocatedBytes _
+		)
+	End Scope
 	
 	Dim Entry As PROCESS_HEAP_ENTRY = Any
 	Entry.lpData = NULL
@@ -66,43 +78,118 @@ Sub PrintWalkingHeap( _
 		Dim BusyFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_BUSY
 		If BusyFlag Then
 			
-			' _tprintf(__TEXT("Allocated block"))
+			Scope
+				Dim vtAllocatedBytes As VARIANT = Any
+				vtAllocatedBytes.vt = VT_EMPTY
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					WStr("Allocated block"), _
+					@vtAllocatedBytes _
+				)
+			End Scope
 			
 			Dim MovableFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_MOVEABLE
 			If MovableFlag Then
-				' _tprintf(TEXT(", movable with HANDLE %#p"), Entry.Block.hMem);
+				Scope
+					Const FormatString = WStr(", movable with HANDLE %#p")
+					Dim buf As WString * 512 = Any
+					wsprintfW( _
+						@buf, _
+						@FormatString, _
+						Entry.Block.hMem _
+					)
+					
+					Dim vtAllocatedBytes As VARIANT = Any
+					vtAllocatedBytes.vt = VT_EMPTY
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						@buf, _
+						@vtAllocatedBytes _
+					)
+				End Scope
 			End If
 			
 			Dim DdeShareFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_DDESHARE
 			If DdeShareFlag Then
-				' _tprintf(TEXT(", DDESHARE"));
+				Scope
+					Dim vtAllocatedBytes As VARIANT = Any
+					vtAllocatedBytes.vt = VT_EMPTY
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						WStr(", DDESHARE"), _
+						@vtAllocatedBytes _
+					)
+				End Scope
 			End If
 		Else
 			Dim RegionFlag As Integer = Entry.wFlags And PROCESS_HEAP_REGION
 			If RegionFlag Then
-				' _tprintf(TEXT("Region\n  %d bytes committed\n") \
-				' 			TEXT("  %d bytes uncommitted\n  First block address: %#p\n") \
-				' 			TEXT("  Last block address: %#p\n"),
-				' 			Entry.Region.dwCommittedSize,
-				' 			Entry.Region.dwUnCommittedSize,
-				' 			Entry.Region.lpFirstBlock,
-				' 			Entry.Region.lpLastBlock);
+				Scope
+					Const FormatString = WStr(!"Region\r\n\t%d bytes committed\r\n\t%d bytes uncommitted\r\n\tFirst block address:\t%#p\r\n\tLast block address:\t%#p\r\n")
+					Dim buf As WString * 512 = Any
+					wsprintfW( _
+						@buf, _
+						@FormatString, _
+						Entry.Region.dwCommittedSize, _
+						Entry.Region.dwUnCommittedSize, _
+						Entry.Region.lpFirstBlock, _
+						Entry.Region.lpLastBlock _
+					)
+					
+					Dim vtAllocatedBytes As VARIANT = Any
+					vtAllocatedBytes.vt = VT_EMPTY
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						@buf, _
+						@vtAllocatedBytes _
+					)
+				End Scope
 			Else
 				Dim UncommittedFlag As Integer = Entry.wFlags And PROCESS_HEAP_UNCOMMITTED_RANGE
 				If UncommittedFlag Then
-					' _tprintf(TEXT("Uncommitted range\n"));
+					Scope
+						Dim vtAllocatedBytes As VARIANT = Any
+						vtAllocatedBytes.vt = VT_EMPTY
+						LogWriteEntry( _
+							LogEntryType.Debug, _
+							WStr(!"Uncommitted range"), _
+							@vtAllocatedBytes _
+						)
+					End Scope
 				Else
-					' _tprintf(TEXT("Block\n"));
+					Scope
+						Dim vtAllocatedBytes As VARIANT = Any
+						vtAllocatedBytes.vt = VT_EMPTY
+						LogWriteEntry( _
+							LogEntryType.Debug, _
+							WStr(!"Block"), _
+							@vtAllocatedBytes _
+						)
+					End Scope
 				End If
 			End If
 		End If
 		
-		' _tprintf(TEXT("  Data portion begins at: %#p\n  Size: %d bytes\n") \
-		' 			TEXT("  Overhead: %d bytes\n  Region index: %d\n\n"),
-		' 			Entry.lpData,
-		' 			Entry.cbData,
-		' 			Entry.cbOverhead,
-		' 			Entry.iRegionIndex);
+		Scope
+			Const FormatString = WStr(!"Data portion begins at: %#p\r\n\tSize:\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
+			Dim buf As WString * 512 = Any
+			wsprintfW( _
+				@buf, _
+				@FormatString, _
+				Entry.lpData, _
+				Entry.cbData, _
+				Entry.cbOverhead, _
+				Entry.iRegionIndex _
+			)
+			
+			Dim vtAllocatedBytes As VARIANT = Any
+			vtAllocatedBytes.vt = VT_EMPTY
+			LogWriteEntry( _
+				LogEntryType.Debug, _
+				@buf, _
+				@vtAllocatedBytes _
+			)
+		End Scope
 		
 		resWalk = HeapWalk(hHeap, @Entry)
 	Loop
