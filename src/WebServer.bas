@@ -366,8 +366,7 @@ Function WebServerRun( _
 	Next
 	
 	Dim vtErrorMessage As VARIANT = Any
-	vtErrorMessage.vt = VT_ERROR
-	vtErrorMessage.scode = S_OK
+	vtErrorMessage.vt = VT_EMPTY
 	LogWriteEntry( _
 		LogEntryType.Information, _
 		WStr(!"WebServer create succeeded"), _
