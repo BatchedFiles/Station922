@@ -73,7 +73,7 @@ End Type
 
 Type _WebSite
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IWebSiteVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -1345,9 +1345,9 @@ Sub InitializeWebSite( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSITE), _
-			Len(WebSite.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteVirtualTable

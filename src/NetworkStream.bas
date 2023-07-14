@@ -10,7 +10,7 @@ Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 
 Type _NetworkStream
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const INetworkStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -63,9 +63,9 @@ Sub InitializeNetworkStream( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_NETWORKSTREAM), _
-			Len(NetworkStream.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable

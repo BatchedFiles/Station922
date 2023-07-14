@@ -9,7 +9,7 @@ Const DoubleNewLineStringA = Str(!"\r\n\r\n")
 
 Type _HttpReader
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IHttpReaderVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -37,9 +37,9 @@ Sub InitializeHttpReader( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPREADER), _
-			Len(HttpReader.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpReaderVirtualTable

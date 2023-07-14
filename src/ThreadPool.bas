@@ -7,7 +7,7 @@ Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
 Type _ThreadPool
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IThreadPoolVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -172,9 +172,9 @@ Sub InitializeThreadPool( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_THREADPOOL), _
-			Len(ThreadPool.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalThreadPoolVirtualTable

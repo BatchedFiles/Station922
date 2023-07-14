@@ -12,7 +12,7 @@ Const MAX_URL_LENGTH As Integer = 1500
 
 Type _ClientUri
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IClientUriVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -213,9 +213,9 @@ Sub InitializeClientUri( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_CLIENTURI), _
-			Len(ClientUri.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalClientUriVirtualTable

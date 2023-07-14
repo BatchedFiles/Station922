@@ -22,7 +22,7 @@ End Type
 
 Type _ClientRequest
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IClientRequestVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -684,9 +684,9 @@ Sub InitializeClientRequest( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_CLIENTREQUEST), _
-			Len(ClientRequest.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalClientRequestVirtualTable

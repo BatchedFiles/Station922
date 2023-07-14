@@ -12,7 +12,7 @@ Extern GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionA
 
 Type _AcceptConnectionAsyncTask
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IAcceptConnectionAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -112,9 +112,9 @@ Sub InitializeAcceptConnectionAsyncTask( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_ACCEPTCONNECTIONASYNCTASK), _
-			Len(AcceptConnectionAsyncTask.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalAcceptConnectionAsyncIoTaskVirtualTable

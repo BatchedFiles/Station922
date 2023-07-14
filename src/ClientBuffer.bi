@@ -22,7 +22,7 @@ Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_S
 
 Type ClientRequestBuffer
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	cbLength As Integer
 	EndOfHeaders As Integer

@@ -8,7 +8,7 @@ Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
 
 Type _MemoryStream
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IMemoryStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -32,9 +32,9 @@ Sub InitializeMemoryStream( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_MEMORYSTREAM), _
-			Len(MemoryStream.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalMemoryStreamVirtualTable

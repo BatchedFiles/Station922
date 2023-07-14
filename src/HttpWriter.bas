@@ -24,7 +24,7 @@ End Type
 
 Type _HttpWriter
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IHttpWriterVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -56,9 +56,9 @@ Sub InitializeHttpWriter( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPWRITER), _
-			Len(HttpWriter.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpWriterVirtualTable

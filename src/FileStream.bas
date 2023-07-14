@@ -10,7 +10,7 @@ Const SmallFileBytesSize As DWORD = 4 * 4096
 
 Type _FileStream
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IFileStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -42,9 +42,9 @@ Sub InitializeFileStream( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_FILESTREAM), _
-			Len(FileStream.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalFileStreamVirtualTable

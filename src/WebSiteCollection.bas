@@ -6,7 +6,7 @@ Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTab
 
 Type WebSiteNode
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
@@ -17,7 +17,7 @@ End Type
 
 Type _WebSiteCollection
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IWebSiteCollectionVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -151,9 +151,9 @@ Function CreateWebSiteNode( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@pNode->IdString, _
+			@pNode->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSITENODE), _
-			Len(WebSiteNode.IdString) _
+			UBound(pNode->RttiClassName) - LBound(pNode->RttiClassName) + 1 _
 		)
 	#endif
 	HeapSysAddRefString(bstrHostName)
@@ -176,9 +176,9 @@ Sub InitializeWebSiteCollection( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSITECOLLECTION), _
-			Len(WebSiteCollection.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable

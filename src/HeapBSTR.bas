@@ -8,7 +8,7 @@ Const ReservedCharactersLength As Integer = 16
 
 Type _InternalHeapBSTR
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IStringVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -132,9 +132,9 @@ Sub InitializeInternalHeapBSTR( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HEAPBSTR), _
-			Len(InternalHeapBSTR.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	

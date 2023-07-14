@@ -6,7 +6,7 @@ Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVir
 
 Type _HttpTraceProcessor
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IHttpTraceAsyncProcessorVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -20,9 +20,9 @@ Sub InitializeHttpTraceProcessor( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPTRACEPROCESSOR), _
-			Len(HttpTraceProcessor.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpTraceProcessorVirtualTable

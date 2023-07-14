@@ -17,7 +17,7 @@ End Type
 
 Type _HttpProcessorCollection
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IHttpProcessorCollectionVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -39,9 +39,9 @@ Sub InitializeHttpProcessorCollection( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPPROCESSORCOLLECTION), _
-			Len(HttpProcessorCollection.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalHttpProcessorCollectionVirtualTable

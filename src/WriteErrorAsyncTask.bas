@@ -20,7 +20,7 @@ Const DefaultRetryAfterString = WStr("300")
 
 Type _WriteErrorAsyncTask
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IWriteErrorAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -255,9 +255,9 @@ Sub InitializeWriteErrorAsyncTask( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_WRITEERRORASYNCTASK), _
-			Len(WriteErrorAsyncTask.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalWriteErrorAsyncIoTaskVirtualTable

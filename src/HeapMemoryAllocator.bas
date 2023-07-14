@@ -18,7 +18,7 @@ Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	lpVtblTimeCounter As Const ITimeCounterVirtualTable Ptr
@@ -417,9 +417,9 @@ Sub InitializeHeapMemoryAllocator( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_HEAPMEMORYALLOCATOR), _
-			Len(HeapMemoryAllocator.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable

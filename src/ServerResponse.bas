@@ -22,7 +22,7 @@ End Type
 
 Type _ServerResponse
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IServerResponseVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -163,9 +163,9 @@ Sub InitializeServerResponse( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_SERVERRESPONSE), _
-			Len(ServerResponse.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalServerResponseVirtualTable

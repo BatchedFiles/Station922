@@ -17,7 +17,7 @@ Const SocketListCapacity As Integer = 10
 
 Type _WebServer
 	#if __FB_DEBUG__
-		IdString As ZString * 16
+		RttiClassName(15) As UByte
 	#endif
 	lpVtbl As Const IWebServerVirtualTable Ptr
 	ReferenceCounter As UInteger
@@ -128,9 +128,9 @@ Sub InitializeWebServer( _
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->IdString, _
+			@this->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSERVER), _
-			Len(WebServer.IdString) _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
 		)
 	#endif
 	this->lpVtbl = @GlobalWebServerVirtualTable
