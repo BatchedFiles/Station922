@@ -110,6 +110,14 @@ Sub LogWriteEntry( _
 					pvtData->scode _
 				)
 				
+			Case VT_EMPTY
+				Const StringFormat = WStr(!"%s\r\n")
+				wsprintfW( _
+					@wszStringBuffer, _
+					@StringFormat, _
+					pwszText _
+				)
+				
 			Case Else
 				Const StringFormat = WStr(!"%s\t%i\r\n")
 				wsprintfW( _
