@@ -28,7 +28,7 @@ Type _HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	ReadedData As ClientRequestBuffer
+	pReadedData As ClientRequestBuffer Ptr
 End Type
 
 Type MemoryPoolItem
@@ -117,7 +117,7 @@ Sub HeapMemoryAllocatorResetState( _
 	' Beecause number of reference is equal to one
 	this->ReferenceCounter = 1
 	
-	InitializeClientRequestBuffer(@this->ReadedData)
+	InitializeClientRequestBuffer(this->pReadedData)
 	
 	#if __FB_DEBUG__
 		PrintWalkingHeap(this->hHeap)
@@ -411,7 +411,8 @@ End Sub
 
 Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE _
+		ByVal hHeap As HANDLE, _
+		ByVal pReadedData As ClientRequestBuffer Ptr _
 	)
 	
 	#if __FB_DEBUG__
@@ -427,7 +428,8 @@ Sub InitializeHeapMemoryAllocator( _
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
 	this->ClientSocket = INVALID_SOCKET
-	InitializeClientRequestBuffer(@this->ReadedData)
+	this->pReadedData = pReadedData
+	InitializeClientRequestBuffer(this->pReadedData)
 	
 End Sub
 
@@ -459,29 +461,43 @@ Function CreateHeapMemoryAllocator( _
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
 	
-	Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+	Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
 		hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
-		SizeOf(HeapMemoryAllocator) _
+		SizeOf(ClientRequestBuffer) _
 	)
 	
-	If this Then
-		InitializeHeapMemoryAllocator(this, hHeap)
-		HeapMemoryAllocatorCreated(this)
-		
-		Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
-			this, _
-			riid, _
-			ppv _
+	If pReadedData Then
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+			hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			SizeOf(HeapMemoryAllocator) _
 		)
-		If FAILED(hrQueryInterface) Then
-			DestroyHeapMemoryAllocator(this)
+		
+		If this Then
+			InitializeHeapMemoryAllocator( _
+				this, _
+				hHeap, _
+				pReadedData _
+			)
+			HeapMemoryAllocatorCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyHeapMemoryAllocator(this)
+			End If
+			
+			Return hrQueryInterface
 		End If
 		
-		Return hrQueryInterface
+		AllocationFailed(SizeOf(HeapMemoryAllocator))
 	End If
 	
-	AllocationFailed(SizeOf(HeapMemoryAllocator))
+	AllocationFailed(SizeOf(ClientRequestBuffer))
 	
 	HeapDestroy(hHeap)
 	
@@ -618,7 +634,7 @@ Function HeapMemoryAllocatorGetClientBuffer( _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
 	)As HRESULT
 	
-	*ppBuffer = @this->ReadedData
+	*ppBuffer = this->pReadedData
 	
 	Return S_OK
 	
