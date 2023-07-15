@@ -83,7 +83,7 @@ Sub PrintWalkingHeap( _
 				vtAllocatedBytes.vt = VT_EMPTY
 				LogWriteEntry( _
 					LogEntryType.Debug, _
-					WStr("Allocated block"), _
+					WStr(!"Allocated block\r\n"), _
 					@vtAllocatedBytes _
 				)
 			End Scope
@@ -91,7 +91,7 @@ Sub PrintWalkingHeap( _
 			Dim MovableFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_MOVEABLE
 			If MovableFlag Then
 				Scope
-					Const FormatString = WStr(", movable with HANDLE %#p")
+					Const FormatString = WStr(!", movable with HANDLE %#p\r\n")
 					Dim buf As WString * 512 = Any
 					wsprintfW( _
 						@buf, _
@@ -116,7 +116,7 @@ Sub PrintWalkingHeap( _
 					vtAllocatedBytes.vt = VT_EMPTY
 					LogWriteEntry( _
 						LogEntryType.Debug, _
-						WStr(", DDESHARE"), _
+						WStr(!", DDESHARE\r\n"), _
 						@vtAllocatedBytes _
 					)
 				End Scope
@@ -152,7 +152,7 @@ Sub PrintWalkingHeap( _
 						vtAllocatedBytes.vt = VT_EMPTY
 						LogWriteEntry( _
 							LogEntryType.Debug, _
-							WStr(!"Uncommitted range"), _
+							WStr(!"Uncommitted range\r\n"), _
 							@vtAllocatedBytes _
 						)
 					End Scope
@@ -162,7 +162,7 @@ Sub PrintWalkingHeap( _
 						vtAllocatedBytes.vt = VT_EMPTY
 						LogWriteEntry( _
 							LogEntryType.Debug, _
-							WStr(!"Block"), _
+							WStr(!"Free block\r\n"), _
 							@vtAllocatedBytes _
 						)
 					End Scope
@@ -171,7 +171,7 @@ Sub PrintWalkingHeap( _
 		End If
 		
 		Scope
-			Const FormatString = WStr(!"Data portion begins at: %#p\r\n\tSize:\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
+			Const FormatString = WStr(!"\tData portion begins at:\t%#p\r\n\tSize:\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
 			Dim buf As WString * 512 = Any
 			wsprintfW( _
 				@buf, _

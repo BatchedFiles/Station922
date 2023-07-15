@@ -111,7 +111,7 @@ Sub LogWriteEntry( _
 				)
 				
 			Case VT_EMPTY
-				Const StringFormat = WStr(!"%s\r\n")
+				Const StringFormat = WStr(!"%s")
 				wsprintfW( _
 					@wszStringBuffer, _
 					@StringFormat, _

@@ -369,7 +369,7 @@ Function WebServerRun( _
 	vtErrorMessage.vt = VT_EMPTY
 	LogWriteEntry( _
 		LogEntryType.Information, _
-		WStr(!"WebServer create succeeded"), _
+		WStr(!"WebServer create succeeded\r\n"), _
 		@vtErrorMessage _
 	)
 	
