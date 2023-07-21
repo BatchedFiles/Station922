@@ -222,14 +222,11 @@ Enum ResponseErrorCode
 	VersionNotSupported
 End Enum
 
-' Требуемый размер буфера для описания кода состояния Http
+' РўСЂРµР±СѓРµРјС‹Р№ СЂР°Р·РјРµСЂ Р±СѓС„РµСЂР° РґР»СЏ РѕРїРёСЃР°РЅРёСЏ РєРѕРґР° СЃРѕСЃС‚РѕСЏРЅРёСЏ Http
 Const MaxHttpStatusCodeBufferLength As Integer = 32 - 1
 
-' Максимальное количество заголовков запроса
+' РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°РіРѕР»РѕРІРєРѕРІ Р·Р°РїСЂРѕСЃР°
 Const HttpRequestHeadersMaximum As Integer = 43
-
-' Максимальное количество заголовков ответа
-Const HttpResponseHeadersMaximum As Integer = 37
 
 Const HttpZipModesMaximum As Integer = 2
 
@@ -355,7 +352,7 @@ End Enum
 
 Const HttpRequestHeadersSize As Integer = 44
 
-' Помечены заголовки, которые клиент не может переопределить черз файл *.headers
+' РџРѕРјРµС‡РµРЅС‹ Р·Р°РіРѕР»РѕРІРєРё, РєРѕС‚РѕСЂС‹Рµ РєР»РёРµРЅС‚ РЅРµ РјРѕР¶РµС‚ РїРµСЂРµРѕРїСЂРµРґРµР»РёС‚СЊ С‡РµСЂР· С„Р°Р№Р» *.headers
 Enum HttpResponseHeaders
 	HeaderAcceptRanges          ' *
 	HeaderAge
@@ -406,8 +403,8 @@ End Enum
 
 Const ZipModesSize As Integer = 2
 
-' Возвращает указатель на строку с описанием кода состояния
-' Очищать память для строки не нужно
+' Р’РѕР·РІСЂР°С‰Р°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂРѕРєСѓ СЃ РѕРїРёСЃР°РЅРёРµРј РєРѕРґР° СЃРѕСЃС‚РѕСЏРЅРёСЏ
+' РћС‡РёС‰Р°С‚СЊ РїР°РјСЏС‚СЊ РґР»СЏ СЃС‚СЂРѕРєРё РЅРµ РЅСѓР¶РЅРѕ
 Declare Function GetStatusDescription( _
 	ByVal StatusCode As HttpStatusCodes, _
 	ByVal pBufferLength As Integer Ptr _
@@ -418,8 +415,8 @@ Declare Function GetKnownCgiHeaderIndex( _
 	ByVal pHeader As HttpResponseHeaders Ptr _
 )As Boolean
 
-' Возвращает заголовок HTTP для CGI
-' Очищать память для строки не нужно
+' Р’РѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РіРѕР»РѕРІРѕРє HTTP РґР»СЏ CGI
+' РћС‡РёС‰Р°С‚СЊ РїР°РјСЏС‚СЊ РґР»СЏ СЃС‚СЂРѕРєРё РЅРµ РЅСѓР¶РЅРѕ
 Declare Function KnownCgiHeaderToString( _
 	ByVal Header As HttpRequestHeaders, _
 	ByVal pBufferLength As Integer Ptr _
