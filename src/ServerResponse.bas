@@ -7,6 +7,8 @@
 
 Extern GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable
 
+Const ServerVersionString = WStr("Station922/1.3.0")
+Const NosniffString = WStr("nosniff")
 Const BytesString = WStr("bytes")
 Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
@@ -36,7 +38,7 @@ Type _ServerResponse
 	ByteRangeLength As LongInt
 	ResponseZipMode As ZipModes
 	Mime As MimeType
-	ResponseHeaders(HttpResponseHeadersMaximum - 1) As HeapBSTR
+	ResponseHeaders(HttpRequestHeadersSize - 1) As HeapBSTR
 	ResponseZipEnable As Boolean
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean
@@ -79,7 +81,8 @@ Dim Shared ResponseHeaderNodesVector(1 To HttpResponseHeadersSize) As ResponseHe
 	Type<ResponseHeaderNode>(@HeaderWebSocketLocationString,    Len(HeaderWebSocketLocationString),    HttpResponseHeaders.HeaderWebSocketLocation), _
 	Type<ResponseHeaderNode>(@HeaderWebSocketOriginString,      Len(HeaderWebSocketOriginString),      HttpResponseHeaders.HeaderWebSocketOrigin), _
 	Type<ResponseHeaderNode>(@HeaderWebSocketProtocolString,    Len(HeaderWebSocketProtocolString),    HttpResponseHeaders.HeaderWebSocketProtocol), _
-	Type<ResponseHeaderNode>(@HeaderWWWAuthenticateString,      Len(HeaderWWWAuthenticateString),      HttpResponseHeaders.HeaderWwwAuthenticate) _
+	Type<ResponseHeaderNode>(@HeaderWWWAuthenticateString,      Len(HeaderWWWAuthenticateString),      HttpResponseHeaders.HeaderWwwAuthenticate), _
+	Type<ResponseHeaderNode>(@HeaderXContentTypeOptionsString,  Len(HeaderXContentTypeOptionsString),  HttpResponseHeaders.HeaderXContentTypeOptions) _
 }
 
 Function KnownResponseHeaderToString( _
@@ -172,7 +175,7 @@ Sub InitializeServerResponse( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersMaximum * SizeOf(HeapBSTR))
+	ZeroMemory(@this->ResponseHeaders(0), HttpRequestHeadersSize * SizeOf(HeapBSTR))
 	this->ResponseHeaderLine = NULL
 	this->ResponseHeaderLineLength = 0
 	this->HttpVersion = HttpVersions.Http11
@@ -193,7 +196,7 @@ Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-	For i As Integer = 0 To HttpResponseHeadersMaximum - 1
+	For i As Integer = 0 To HttpRequestHeadersSize - 1
 		HeapSysFreeString(this->ResponseHeaders(i))
 	Next
 	
@@ -643,13 +646,19 @@ Function ServerResponseAllHeadersToZString( _
 		Len(BytesString) _
 	)
 	
-	#if __FB_DEBUG__
-		ServerResponseAddKnownResponseHeaderWstr( _
-			this, _
-			HttpResponseHeaders.HeaderServer, _
-			@WStr("Station922/1.0.0") _
-		)
-	#endif
+	ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HttpResponseHeaders.HeaderXContentTypeOptions, _
+		@NosniffString, _
+		Len(NosniffString) _
+	)
+	
+	ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HttpResponseHeaders.HeaderServer, _
+		@ServerVersionString, _
+		Len(ServerVersionString) _
+	)
 	
 	Select Case this->StatusCode
 		
@@ -763,7 +772,7 @@ Function ServerResponseAllHeadersToZString( _
 			)
 		End Scope
 		
-		For i As Integer = 0 To HttpResponseHeadersMaximum - 1
+		For i As Integer = 0 To HttpRequestHeadersSize - 1
 			
 			Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
 			
