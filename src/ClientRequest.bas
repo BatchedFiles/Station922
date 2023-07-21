@@ -32,8 +32,8 @@ Type _ClientRequest
 	HttpVersion As HttpVersions
 	ContentLength As LongInt
 	RequestByteRange As ByteRange
-	RequestHeaders(0 To HttpRequestHeadersMaximum - 1) As HeapBSTR
-	RequestZipModes(0 To HttpZipModesMaximum - 1) As Boolean
+	RequestHeaders(0 To HttpRequestHeadersSize - 1) As HeapBSTR
+	RequestZipModes(0 To ZipModesSize - 1) As Boolean
 	KeepAlive As Boolean
 	Expect100Continue As Boolean
 End Type
@@ -703,8 +703,8 @@ Sub InitializeClientRequest( _
 	this->RequestByteRange.LastBytePosition = 0
 	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
 	
-	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersMaximum * SizeOf(HeapBSTR))
-	ZeroMemory(@this->RequestZipModes(0), HttpZipModesMaximum * SizeOf(Boolean))
+	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersSize * SizeOf(HeapBSTR))
+	ZeroMemory(@this->RequestZipModes(0), ZipModesSize * SizeOf(Boolean))
 	this->KeepAlive = False
 	
 End Sub
@@ -719,7 +719,7 @@ Sub UnInitializeClientRequest( _
 	
 	HeapSysFreeString(this->pHttpMethod)
 	
-	For i As Integer = 0 To HttpRequestHeadersMaximum - 1
+	For i As Integer = 0 To HttpResponseHeadersSize - 1
 		HeapSysFreeString(this->RequestHeaders(i))
 	Next
 	

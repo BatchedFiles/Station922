@@ -226,11 +226,6 @@ End Enum
 ' “ребуемый размер буфера дл€ описани€ кода состо€ни€ Http
 Const MaxHttpStatusCodeBufferLength As Integer = 32 - 1
 
-' ћаксимальное количество заголовков запроса
-Const HttpRequestHeadersMaximum As Integer = 43
-
-Const HttpZipModesMaximum As Integer = 2
-
 Enum HttpVersions
 	Http11
 	Http10
@@ -403,7 +398,7 @@ Enum ZipModes
 	Deflate
 End Enum
 
-Const ZipModesSize As Integer = 2
+Const ZipModesSize As Integer = 3
 
 ' ¬озвращает указатель на строку с описанием кода состо€ни€
 ' ќчищать пам€ть дл€ строки не нужно
