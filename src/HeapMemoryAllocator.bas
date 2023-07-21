@@ -51,9 +51,11 @@ Sub PrintWalkingHeap( _
 		ByVal hHeap As HANDLE _
 	)
 	
+	Const BufSize As Integer = 256
+	
 	Scope
 		Const FormatString = WStr(!"Walking heap %#p...\r\n")
-		Dim buf As WString * 512 = Any
+		Dim buf As WString * BufSize = Any
 		wsprintfW( _
 			@buf, _
 			@FormatString, _
@@ -92,7 +94,7 @@ Sub PrintWalkingHeap( _
 			If MovableFlag Then
 				Scope
 					Const FormatString = WStr(!", movable with HANDLE %#p\r\n")
-					Dim buf As WString * 512 = Any
+					Dim buf As WString * BufSize = Any
 					wsprintfW( _
 						@buf, _
 						@FormatString, _
@@ -126,7 +128,7 @@ Sub PrintWalkingHeap( _
 			If RegionFlag Then
 				Scope
 					Const FormatString = WStr(!"Region\r\n\t%d bytes committed\r\n\t%d bytes uncommitted\r\n\tFirst block address:\t%#p\r\n\tLast block address:\t%#p\r\n")
-					Dim buf As WString * 512 = Any
+					Dim buf As WString * BufSize = Any
 					wsprintfW( _
 						@buf, _
 						@FormatString, _
@@ -172,7 +174,7 @@ Sub PrintWalkingHeap( _
 		
 		Scope
 			Const FormatString = WStr(!"\tData portion begins at:\t%#p\r\n\tSize:\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
-			Dim buf As WString * 512 = Any
+			Dim buf As WString * BufSize = Any
 			wsprintfW( _
 				@buf, _
 				@FormatString, _
