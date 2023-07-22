@@ -639,26 +639,63 @@ Function ServerResponseAllHeadersToZString( _
 		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
 	
-	ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
-		HttpResponseHeaders.HeaderAcceptRanges, _
-		@BytesString, _
-		Len(BytesString) _
-	)
+	Scope
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderAcceptRanges, _
+			@BytesString, _
+			Len(BytesString) _
+		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
+	End Scope
 	
-	ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
-		HttpResponseHeaders.HeaderXContentTypeOptions, _
-		@NosniffString, _
-		Len(NosniffString) _
-	)
+	Scope
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderXContentTypeOptions, _
+			@NosniffString, _
+			Len(NosniffString) _
+		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
+	End Scope
 	
-	ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
-		HttpResponseHeaders.HeaderServer, _
-		@ServerVersionString, _
-		Len(ServerVersionString) _
-	)
+	Scope
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderServer, _
+			@ServerVersionString, _
+			Len(ServerVersionString) _
+		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
+	End Scope
+	
+	If this->KeepAlive Then
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderConnection, _
+			@KeepAliveString, _
+			Len(KeepAliveString) _
+		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
+	Else
+		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+			this, _
+			HttpResponseHeaders.HeaderConnection, _
+			@CloseString, _
+			Len(CloseString) _
+		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
+	End If
 	
 	Select Case this->StatusCode
 		
@@ -684,22 +721,6 @@ Function ServerResponseAllHeadersToZString( _
 			)
 			
 	End Select
-	
-	If this->KeepAlive Then
-		ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
-			HttpResponseHeaders.HeaderConnection, _
-			@KeepAliveString, _
-			Len(KeepAliveString) _
-		)
-	Else
-		ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
-			HttpResponseHeaders.HeaderConnection, _
-			@CloseString, _
-			Len(CloseString) _
-		)
-	End If
 	
 	Scope
 		If this->Mime.ContentType <> ContentTypes.AnyAny Then
