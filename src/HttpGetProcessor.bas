@@ -11,7 +11,7 @@ Const GZipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 Const BytesStringWithSpace = WStr("bytes ")
 Const CompareResultEqual As Long = 0
-Const DefaultCacheControl = WStr("max-age=2678400")
+Const DefaultCacheControl = WStr("max-age=180")
 
 Type _HttpGetProcessor
 	#if __FB_DEBUG__
