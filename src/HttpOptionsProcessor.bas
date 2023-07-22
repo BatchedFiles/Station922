@@ -167,18 +167,22 @@ Function HttpOptionsProcessorPrepare( _
 	Dim Path As HeapBSTR = Any
 	IClientUri_GetPath(ClientURI, @Path)
 	
+	' TODO Get all methods from website
 	Const AllServerMethods = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 	
 	Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
 	If CompareResult = CompareResultEqual Then
-		IServerResponse_AddKnownResponseHeaderWstrLen( _
+		Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
 			pContext->pIResponse, _
 			HttpResponseHeaders.HeaderAllow, _
 			@AllServerMethods, _
 			Len(AllServerMethods) _
 		)
+		If FAILED(hrAddHeader) Then
+			Return hrAddHeader
+		End If
 	Else
 		Dim NeedProcessing As Boolean = Any
 		IWebSite_NeedCgiProcessing( _
@@ -188,19 +192,25 @@ Function HttpOptionsProcessorPrepare( _
 		)
 		
 		If NeedProcessing Then
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
+			Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
 				pContext->pIResponse, _
 				HttpResponseHeaders.HeaderAllow, _
 				@AllServerMethodsForScript, _
 				Len(AllServerMethodsForScript) _
 			)
+			If FAILED(hrAddHeader) Then
+				Return hrAddHeader
+			End If
 		Else
-			IServerResponse_AddKnownResponseHeaderWstrLen( _
+			Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
 				pContext->pIResponse, _
 				HttpResponseHeaders.HeaderAllow, _
 				@AllServerMethodsForFile, _
 				Len(AllServerMethodsForFile) _
 			)
+			If FAILED(hrAddHeader) Then
+				Return hrAddHeader
+			End If
 		End If
 	End If
 	
