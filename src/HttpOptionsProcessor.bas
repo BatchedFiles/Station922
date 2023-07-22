@@ -144,6 +144,68 @@ Function HttpOptionsProcessorRelease( _
 	
 End Function
 
+Function AddHeaderAllow( _
+		ByVal pIRequest As IClientRequest Ptr, _
+		ByVal pIResponse As IServerResponse Ptr, _
+		ByVal pIWebSite As IWebSite Ptr _
+	)As HRESULT
+	
+	Dim pHeaderAllow As WString Ptr = Any
+	Dim HeaderAllowLength As Integer = Any
+	
+	Scope
+		' TODO Get all methods from website
+		Const AllServerMethods = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
+		Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
+		Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
+		
+		Dim ClientURI As IClientUri Ptr = Any
+		IClientRequest_GetUri(pIRequest, @ClientURI)
+		
+		Dim Path As HeapBSTR = Any
+		IClientUri_GetPath(ClientURI, @Path)
+		
+		Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
+		
+		If CompareResult = CompareResultEqual Then
+			pHeaderAllow = @AllServerMethods
+			HeaderAllowLength = Len(AllServerMethods)
+		Else
+			Dim NeedProcessing As Boolean = Any
+			IWebSite_NeedCgiProcessing( _
+				pIWebSite, _
+				Path, _
+				@NeedProcessing _
+			)
+			
+			If NeedProcessing Then
+				pHeaderAllow = @AllServerMethodsForScript
+				HeaderAllowLength = Len(AllServerMethodsForScript)
+			Else
+				pHeaderAllow = @AllServerMethodsForFile
+				HeaderAllowLength = Len(AllServerMethodsForFile)
+			End If
+			
+		End If
+		
+		HeapSysFreeString(Path)
+		IClientUri_Release(ClientURI)
+	End Scope
+	
+	Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
+		pIResponse, _
+		HttpResponseHeaders.HeaderAllow, _
+		pHeaderAllow, _
+		HeaderAllowLength _
+	)
+	If FAILED(hrAddHeader) Then
+		Return hrAddHeader
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Function HttpOptionsProcessorPrepare( _
 		ByVal this As HttpOptionsProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
@@ -161,67 +223,16 @@ Function HttpOptionsProcessorPrepare( _
 		Return hrCreateBuffer
 	End If
 	
-	Dim ClientURI As IClientUri Ptr = Any
-	IClientRequest_GetUri(pContext->pIRequest, @ClientURI)
-	
-	Dim Path As HeapBSTR = Any
-	IClientUri_GetPath(ClientURI, @Path)
-	
-	' TODO Get all methods from website
-	Const AllServerMethods = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
-	Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
-	Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
-	
-	Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
-	If CompareResult = CompareResultEqual Then
-		Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
-			pContext->pIResponse, _
-			HttpResponseHeaders.HeaderAllow, _
-			@AllServerMethods, _
-			Len(AllServerMethods) _
-		)
-		If FAILED(hrAddHeader) Then
-			IMemoryStream_Release(pIBuffer)
-			*ppIBuffer = NULL
-			Return hrAddHeader
-		End If
-	Else
-		Dim NeedProcessing As Boolean = Any
-		IWebSite_NeedCgiProcessing( _
-			pContext->pIWebSite, _
-			Path, _
-			@NeedProcessing _
-		)
-		
-		If NeedProcessing Then
-			Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
-				pContext->pIResponse, _
-				HttpResponseHeaders.HeaderAllow, _
-				@AllServerMethodsForScript, _
-				Len(AllServerMethodsForScript) _
-			)
-			If FAILED(hrAddHeader) Then
-				IMemoryStream_Release(pIBuffer)
-				*ppIBuffer = NULL
-				Return hrAddHeader
-			End If
-		Else
-			Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
-				pContext->pIResponse, _
-				HttpResponseHeaders.HeaderAllow, _
-				@AllServerMethodsForFile, _
-				Len(AllServerMethodsForFile) _
-			)
-			If FAILED(hrAddHeader) Then
-				IMemoryStream_Release(pIBuffer)
-				*ppIBuffer = NULL
-				Return hrAddHeader
-			End If
-		End If
+	Dim hrAddHeaser As HRESULT = AddHeaderAllow( _
+		pContext->pIRequest, _
+		pContext->pIResponse, _
+		pContext->pIWebSite _
+	)
+	If FAILED(hrAddHeaser) Then
+		IMemoryStream_Release(pIBuffer)
+		*ppIBuffer = NULL
+		Return hrAddHeaser
 	End If
-	
-	HeapSysFreeString(Path)
-	IClientUri_Release(ClientURI)
 	
 	IMemoryStream_SetBuffer( _
 		pIBuffer, _
