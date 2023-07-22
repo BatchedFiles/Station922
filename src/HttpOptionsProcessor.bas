@@ -181,6 +181,8 @@ Function HttpOptionsProcessorPrepare( _
 			Len(AllServerMethods) _
 		)
 		If FAILED(hrAddHeader) Then
+			IMemoryStream_Release(pIBuffer)
+			*ppIBuffer = NULL
 			Return hrAddHeader
 		End If
 	Else
@@ -199,6 +201,8 @@ Function HttpOptionsProcessorPrepare( _
 				Len(AllServerMethodsForScript) _
 			)
 			If FAILED(hrAddHeader) Then
+				IMemoryStream_Release(pIBuffer)
+				*ppIBuffer = NULL
 				Return hrAddHeader
 			End If
 		Else
@@ -209,6 +213,8 @@ Function HttpOptionsProcessorPrepare( _
 				Len(AllServerMethodsForFile) _
 			)
 			If FAILED(hrAddHeader) Then
+				IMemoryStream_Release(pIBuffer)
+				*ppIBuffer = NULL
 				Return hrAddHeader
 			End If
 		End If
