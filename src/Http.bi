@@ -300,22 +300,25 @@ End Enum
 Const HttpStatusCodesSize As Integer = 60
 
 Enum HttpRequestHeaders
+	' General headers
+	HeaderCacheControl
+	HeaderConnection
+	HeaderPragma
+	HeaderTrailer
+	HeaderTransferEncoding
+	HeaderUpgrade
+	HeaderVia
+	HeaderWarning
+	
+	' Request headers
 	HeaderAccept
 	HeaderAcceptCharset
 	HeaderAcceptEncoding
 	HeaderAcceptLanguage
 	HeaderAuthorization
-	HeaderCacheControl
-	HeaderConnection
-	HeaderContentEncoding
-	HeaderContentLanguage
-	HeaderContentLength
-	HeaderContentMd5
-	HeaderContentRange
-	HeaderContentType
 	HeaderCookie
-	HeaderDNT
 	HeaderExpect
+	HeaderDNT
 	HeaderFrom
 	HeaderHost
 	HeaderIfMatch
@@ -323,38 +326,70 @@ Enum HttpRequestHeaders
 	HeaderIfNoneMatch
 	HeaderIfRange
 	HeaderIfUnModifiedSince
-	HeaderKeepAlive
 	HeaderMaxForwards
-	HeaderOrigin
-	HeaderPragma
 	HeaderProxyAuthorization
-	HeaderPurpose
 	HeaderRange
 	HeaderReferer
+	HeaderTe
+	HeaderUserAgent
+	HeaderKeepAlive
+	HeaderOrigin
+	HeaderPurpose
 	HeaderSecWebSocketKey
 	HeaderSecWebSocketKey1
 	HeaderSecWebSocketKey2
 	HeaderSecWebSocketVersion
-	HeaderTe
-	HeaderTrailer
-	HeaderTransferEncoding
-	HeaderUpgrade
 	HeaderUpgradeInsecureRequests
-	HeaderUserAgent
-	HeaderVia
-	HeaderWarning
 	HeaderWebSocketProtocol
+	
+	' Entity headers
+	HeaderContentEncoding
+	HeaderContentLanguage
+	HeaderContentLength
+	HeaderContentMd5
+	HeaderContentRange
+	HeaderContentType
 End Enum
 
 Const HttpRequestHeadersSize As Integer = 44
 
 ' Помечены заголовки, которые клиент не может переопределить черз файл *.headers
 Enum HttpResponseHeaders
-	HeaderAcceptRanges          ' *
-	HeaderAge
-	HeaderAllow
+	' General headers
 	HeaderCacheControl
 	HeaderConnection            ' *
+	HeaderDate                  ' *
+	HeaderPragma
+	HeaderTrailer
+	HeaderTransferEncoding      ' *
+	HeaderUpgrade
+	HeaderVia
+	HeaderWarning
+	
+	' Response headers
+	HeaderAcceptRanges          ' *
+	HeaderAge
+	HeaderETag
+	HeaderLocation
+	HeaderProxyAuthenticate
+	HeaderRetryAfter
+	HeaderSetCookie
+	HeaderServer                ' *
+	HeaderVary                  ' *
+	HeaderWwwAuthenticate
+	HeaderXContentTypeOptions ' *
+	
+	HeaderKeepAlive             ' *
+	HeaderSecWebSocketAccept ' *
+	HeaderSecWebSocketLocation ' *
+	HeaderSecWebSocketOrigin ' *
+	HeaderSecWebSocketProtocol ' *
+	HeaderWebSocketLocation ' *
+	HeaderWebSocketOrigin ' *
+	HeaderWebSocketProtocol ' *
+	
+	' Entity headers
+	HeaderAllow
 	HeaderContentEncoding
 	HeaderContentLanguage
 	HeaderContentLength         ' *
@@ -362,32 +397,8 @@ Enum HttpResponseHeaders
 	HeaderContentMd5
 	HeaderContentRange
 	HeaderContentType
-	HeaderDate                  ' *
-	HeaderETag
 	HeaderExpires
-	HeaderKeepAlive             ' *
 	HeaderLastModified
-	HeaderLocation
-	HeaderPragma
-	HeaderProxyAuthenticate
-	HeaderRetryAfter
-	HeaderSecWebSocketAccept ' *
-	HeaderSecWebSocketLocation ' *
-	HeaderSecWebSocketOrigin ' *
-	HeaderSecWebSocketProtocol ' *
-	HeaderServer                ' *
-	HeaderSetCookie
-	HeaderTrailer
-	HeaderTransferEncoding      ' *
-	HeaderUpgrade
-	HeaderVary                  ' *
-	HeaderVia
-	HeaderWarning
-	HeaderWebSocketLocation ' *
-	HeaderWebSocketOrigin ' *
-	HeaderWebSocketProtocol ' *
-	HeaderWwwAuthenticate
-	HeaderXContentTypeOptions ' *
 End Enum
 
 Const HttpResponseHeadersSize As Integer = 38
