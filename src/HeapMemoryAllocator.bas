@@ -411,62 +411,69 @@ Function CreateMemoryPool( _
 	MemoryPoolObject.Length = 0
 	
 	If Capacity Then
-		Const dwSpinCount As DWORD = 4000
-		Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
-			@MemoryPoolObject.crSection, _
-			dwSpinCount _
-		)
-		If resInitialize = 0 Then
-			Dim dwError As DWORD =  GetLastError()
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-		Dim hHeap As HANDLE = GetProcessHeap()
-		MemoryPoolObject.Items = HeapAlloc( _
-			hHeap, _
-			0, _
-			SizeOf(MemoryPoolItem) * Capacity _
-		)
-		If MemoryPoolObject.Items = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		HungsConnectionsEvent = CreateEventW( _
-			NULL, _
-			TRUE, _
-			FALSE, _
-			NULL _
-		)
-		If HungsConnectionsEvent = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		Const DefaultStackSize As SIZE_T_ = 0
-		HungsConnectionsThread = CreateThread( _
-			NULL, _
-			DefaultStackSize, _
-			@ClearingThread, _
-			CPtr(Integer Ptr, KeepAliveInterval), _
-			0, _
-			NULL _
-		)
-		If HungsConnectionsThread = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-		
-		For i As UInteger = 0 To Capacity - 1
-			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
-				@IID_IHeapMemoryAllocator, _
-				@pMalloc _
+		Scope
+			Const dwSpinCount As DWORD = 4000
+			Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
+				@MemoryPoolObject.crSection, _
+				dwSpinCount _
 			)
-			If FAILED(hrCreateMalloc) Then
+			If resInitialize = 0 Then
+				Dim dwError As DWORD =  GetLastError()
+				Return HRESULT_FROM_WIN32(dwError)
+			End If
+		End Scope
+		
+		Scope
+			Dim hHeap As HANDLE = GetProcessHeap()
+			MemoryPoolObject.Items = HeapAlloc( _
+				hHeap, _
+				0, _
+				SizeOf(MemoryPoolItem) * Capacity _
+			)
+			If MemoryPoolObject.Items = NULL Then
 				Return E_OUTOFMEMORY
 			End If
 			
-			MemoryPoolObject.Items[i].pMalloc = pMalloc
-			MemoryPoolObject.Items[i].IsUsed = False
-		Next
+			For i As UInteger = 0 To Capacity - 1
+				Dim pMalloc As IHeapMemoryAllocator Ptr = Any
+				Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
+					@IID_IHeapMemoryAllocator, _
+					@pMalloc _
+				)
+				If FAILED(hrCreateMalloc) Then
+					Return E_OUTOFMEMORY
+				End If
+				
+				MemoryPoolObject.Items[i].pMalloc = pMalloc
+				MemoryPoolObject.Items[i].IsUsed = False
+			Next
+		End Scope
+		
+		Scope
+			HungsConnectionsEvent = CreateEventW( _
+				NULL, _
+				TRUE, _
+				FALSE, _
+				NULL _
+			)
+			If HungsConnectionsEvent = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+			
+			Const DefaultStackSize As SIZE_T_ = 0
+			HungsConnectionsThread = CreateThread( _
+				NULL, _
+				DefaultStackSize, _
+				@ClearingThread, _
+				CPtr(Integer Ptr, KeepAliveInterval), _
+				0, _
+				NULL _
+			)
+			If HungsConnectionsThread = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+		End Scope
+		
 	End If
 	
 	Return S_OK

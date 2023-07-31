@@ -395,6 +395,16 @@ Function Station922Initialize()As HRESULT
 	End Scope
 	
 	Scope
+		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool( _
+			MemoryPoolCapacity, _
+			KeepAliveInterval _
+		)
+		If FAILED(hrCreateMemoryPool) Then
+			Return hrCreateMemoryPool
+		End If
+	End Scope
+	
+	Scope
 		Dim hrCreateThreadPool As HRESULT = CreateThreadPool( _
 			pIMemoryAllocator, _
 			@IID_IThreadPool, _
@@ -409,16 +419,6 @@ Function Station922Initialize()As HRESULT
 		Dim hrRunPool As HRESULT = IThreadPool_Run(GlobalThreadPool)
 		If FAILED(hrRunPool) Then
 			Return hrRunPool
-		End If
-	End Scope
-	
-	Scope
-		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool( _
-			MemoryPoolCapacity, _
-			KeepAliveInterval _
-		)
-		If FAILED(hrCreateMemoryPool) Then
-			Return hrCreateMemoryPool
 		End If
 	End Scope
 	
