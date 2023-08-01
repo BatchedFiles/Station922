@@ -783,14 +783,24 @@ Function ServerResponseAllHeadersToZString( _
 			Dim datNowS As SYSTEMTIME = Any
 			FileTimeToSystemTime(@datNowF, @datNowS)
 			
-			Dim dtBuffer As WString * (32) = Any
-			ConvertSystemDateToHttpDate(@dtBuffer, @datNowS)
+			Dim HttpDate As HeapBSTR = ConvertSystemDateToHttpDate( _
+				this->pIMemoryAllocator, _
+				@datNowS _
+			)
+			If HttpDate = NULL Then
+				IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
+				*ppHeaders = NULL
+				*pHeadersLength = 0
+				Return E_OUTOFMEMORY
+			End If
 			
-			ServerResponseAddKnownResponseHeaderWstr( _
+			ServerResponseAddKnownResponseHeader( _
 				this, _
 				HttpResponseHeaders.HeaderDate, _
-				@dtBuffer _
+				HttpDate _
 			)
+			
+			HeapSysFreeString(HttpDate)
 		End Scope
 		
 		For i As Integer = 0 To HttpRequestHeadersSize - 1

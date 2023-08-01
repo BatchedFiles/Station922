@@ -22,67 +22,85 @@ Type _HttpGetProcessor
 	pIMemoryAllocator As IMalloc Ptr
 End Type
 
-Sub AddResponseCacheHeaders( _
+Function AddResponseCacheHeaders( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal pDateLastFileModified As FILETIME Ptr, _
 		ByVal ETag As HeapBSTR _
-	)
+	)As HRESULT
 	
 	Dim IsFileModified As Boolean = True
 	
 	Scope
-		Dim dFileLastModified As SYSTEMTIME = Any
-		FileTimeToSystemTime(pDateLastFileModified, @dFileLastModified)
+		Dim LastModifiedHttpDate As HeapBSTR = Any
 		
-		Dim strFileLastModifiedHttpDate As WString * 256 = Any
-		ConvertSystemDateToHttpDate(@strFileLastModifiedHttpDate, @dFileLastModified)
-		
-		IServerResponse_AddKnownResponseHeaderWstr( _
-			pIResponse, _
-			HttpResponseHeaders.HeaderLastModified, _
-			@strFileLastModifiedHttpDate _
-		)
-		
-		Dim pHeaderIfModifiedSince As HeapBSTR = Any
-		IClientRequest_GetHttpHeader( _
-			pIRequest, _
-			HttpRequestHeaders.HeaderIfModifiedSince, _
-			@pHeaderIfModifiedSince _
-		)
-		
-		If SysStringLen(pHeaderIfModifiedSince) Then
+		Scope
+			Dim dFileLastModified As SYSTEMTIME = Any
+			FileTimeToSystemTime(pDateLastFileModified, @dFileLastModified)
 			
-			Dim resCompare As Long = lstrcmpiW( _
-				@strFileLastModifiedHttpDate, _
-				pHeaderIfModifiedSince _
+			LastModifiedHttpDate = ConvertSystemDateToHttpDate( _
+				pIMemoryAllocator, _
+				@dFileLastModified _
 			)
-			If resCompare = CompareResultEqual Then
-				IsFileModified = False
+			If LastModifiedHttpDate = NULL Then
+				Return E_OUTOFMEMORY
 			End If
-		End If
-		
-		HeapSysFreeString(pHeaderIfModifiedSince)
-		
-		Dim pHeaderIfUnModifiedSince As HeapBSTR = Any
-		IClientRequest_GetHttpHeader( _
-			pIRequest, _
-			HttpRequestHeaders.HeaderIfUnModifiedSince, _
-			@pHeaderIfUnModifiedSince _
-		)
-		
-		If SysStringLen(pHeaderIfUnModifiedSince) Then
 			
-			Dim resCompare As Long = lstrcmpiW( _
-				@strFileLastModifiedHttpDate, _
-				pHeaderIfUnModifiedSince _
+			IServerResponse_AddKnownResponseHeader( _
+				pIResponse, _
+				HttpResponseHeaders.HeaderLastModified, _
+				LastModifiedHttpDate _
 			)
-			If resCompare = CompareResultEqual Then
-				IsFileModified = True
-			End If
-		End If
+		End Scope
 		
-		HeapSysFreeString(pHeaderIfUnModifiedSince)
+		Scope
+			Dim pHeaderIfModifiedSince As HeapBSTR = Any
+			IClientRequest_GetHttpHeader( _
+				pIRequest, _
+				HttpRequestHeaders.HeaderIfModifiedSince, _
+				@pHeaderIfModifiedSince _
+			)
+			
+			Dim Length As Integer = SysStringLen(pHeaderIfModifiedSince)
+			
+			If Length Then
+				Dim resCompare As Long = lstrcmpiW( _
+					LastModifiedHttpDate, _
+					pHeaderIfModifiedSince _
+				)
+				If resCompare = CompareResultEqual Then
+					IsFileModified = False
+				End If
+			End If
+			
+			HeapSysFreeString(pHeaderIfModifiedSince)
+		End Scope
+		
+		Scope
+			Dim pHeaderIfUnModifiedSince As HeapBSTR = Any
+			IClientRequest_GetHttpHeader( _
+				pIRequest, _
+				HttpRequestHeaders.HeaderIfUnModifiedSince, _
+				@pHeaderIfUnModifiedSince _
+			)
+			
+			Dim Length As Integer = SysStringLen(pHeaderIfUnModifiedSince)
+			
+			If Length Then
+				Dim resCompare As Long = lstrcmpiW( _
+					LastModifiedHttpDate, _
+					pHeaderIfUnModifiedSince _
+				)
+				If resCompare = CompareResultEqual Then
+					IsFileModified = True
+				End If
+			End If
+			
+			HeapSysFreeString(pHeaderIfUnModifiedSince)
+		End Scope
+		
+		HeapSysFreeString(LastModifiedHttpDate)
 	End Scope
 	
 	Scope
@@ -93,7 +111,6 @@ Sub AddResponseCacheHeaders( _
 		)
 		
 		If IsFileModified Then
-			
 			Dim HeaderIfNoneMatch As HeapBSTR = Any
 			IClientRequest_GetHttpHeader( _
 				pIRequest, _
@@ -101,7 +118,9 @@ Sub AddResponseCacheHeaders( _
 				@HeaderIfNoneMatch _
 			)
 			
-			If SysStringLen(HeaderIfNoneMatch) Then
+			Dim Length As Integer = SysStringLen(HeaderIfNoneMatch)
+			
+			If Length Then
 				Dim CompareResult As Long = lstrcmpiW(HeaderIfNoneMatch, ETag)
 				If CompareResult = CompareResultEqual Then
 					IsFileModified = False
@@ -112,7 +131,6 @@ Sub AddResponseCacheHeaders( _
 		End If
 		
 		If IsFileModified = False Then
-			
 			Dim HeaderIfMatch As HeapBSTR = Any
 			IClientRequest_GetHttpHeader( _
 				pIRequest, _
@@ -120,7 +138,9 @@ Sub AddResponseCacheHeaders( _
 				@HeaderIfMatch _
 			)
 			
-			If SysStringLen(HeaderIfMatch) Then
+			Dim Length As Integer = SysStringLen(HeaderIfMatch)
+			
+			If Length Then
 				Dim CompareResult As Long = lstrcmpiW(HeaderIfMatch, ETag)
 				If CompareResult = CompareResultEqual Then
 					IsFileModified = True
@@ -129,28 +149,32 @@ Sub AddResponseCacheHeaders( _
 			
 			HeapSysFreeString(HeaderIfMatch)
 		End If
-		
 	End Scope
 	
-	IServerResponse_AddKnownResponseHeaderWstrLen( _
+	Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
 		pIResponse, _
 		HttpResponseHeaders.HeaderCacheControl, _
 		@DefaultCacheControl, _
 		Len(DefaultCacheControl) _
 	)
+	If FAILED(hrAddHeader) Then
+		Return E_OUTOFMEMORY
+	End If
 	
 	Dim SendOnlyHeaders As Boolean = Any
 	IServerResponse_GetSendOnlyHeaders(pIResponse, @SendOnlyHeaders)
 	
-	SendOnlyHeaders = SendOnlyHeaders OrElse (Not IsFileModified)
+	Dim CurrentSendOnlyHeaders As Boolean = SendOnlyHeaders OrElse (Not IsFileModified)
 	
-	IServerResponse_SetSendOnlyHeaders(pIResponse, SendOnlyHeaders)
+	IServerResponse_SetSendOnlyHeaders(pIResponse, CurrentSendOnlyHeaders)
 	
 	If IsFileModified = False Then
 		IServerResponse_SetStatusCode(pIResponse, HttpStatusCodes.NotModified)
 	End If
 	
-End Sub
+	Return S_OK
+	
+End Function
 
 Sub MakeContentRangeHeader( _
 		ByRef Writer As ArrayStringWriter, _
@@ -363,6 +387,7 @@ Function HttpGetProcessorPrepare( _
 		IAttributedStream_GetETag(pIBuffer, @ETag)
 		
 		AddResponseCacheHeaders( _
+			pContext->pIMemoryAllocator, _
 			pContext->pIRequest, _
 			pContext->pIResponse, _
 			@DateLastFileModified, _

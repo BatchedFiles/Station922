@@ -8,10 +8,10 @@
 #include once "IThreadPool.bi"
 #include once "IWriteErrorAsyncIoTask.bi"
 
-Declare Sub ConvertSystemDateToHttpDate( _
-	ByVal Buffer As WString Ptr, _
+Declare Function ConvertSystemDateToHttpDate( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal dt As SYSTEMTIME Ptr _
-)
+)As HeapBSTR
 
 Declare Function FindWebSiteWeakPtr( _
 	ByVal pIWebSites As IWebSiteCollection Ptr, _

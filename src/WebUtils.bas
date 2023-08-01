@@ -59,35 +59,59 @@ Dim Shared GlobalThreadPool As IThreadPool Ptr
 Dim Shared WebServers As WebServerVector
 Dim Shared IpEndPointsLength As Integer
 
-
-Sub ConvertSystemDateToHttpDate( _
-		ByVal Buffer As WString Ptr, _
+Function ConvertSystemDateToHttpDate( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
-	)
+	)As HeapBSTR
+	
+	' Tue, 15 Nov 1994 12:45:26 GMT
 	
 	Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 	Const TimeFormatString = WStr("HH:mm:ss GMT")
+	Const DateBufferCapacity As Integer = 31
 	
-	' Tue, 15 Nov 1994 12:45:26 GMT
-	Dim dtBufferLength As Integer = GetDateFormatW( _
+	Dim Buffer As WString * (DateBufferCapacity + 1) = Any
+	
+	Dim resDateLength As Long = GetDateFormatW( _
 		LOCALE_INVARIANT, _
 		0, _
 		dt, _
 		@DateFormatString, _
 		Buffer, _
-		31 _
-	) - 1
+		DateBufferCapacity _
+	)
+	If resDateLength = 0 Then
+		Return NULL
+	End If
 	
-	GetTimeFormatW( _
+	Dim DateLength As Integer = CInt(resDateLength - 1)
+	Dim FreeSpaceLength As Integer = DateBufferCapacity - DateLength
+	
+	Dim resTimeLength As Long = GetTimeFormatW( _
 		LOCALE_INVARIANT, _
 		0, _
 		dt, _
 		@TimeFormatString, _
-		@Buffer[dtBufferLength], _
-		31 - dtBufferLength _
+		@Buffer[DateLength], _
+		FreeSpaceLength _
+	)
+	If resTimeLength = 0 Then
+		Return NULL
+	End If
+	
+	Dim TimeLength As Integer = CInt(resTimeLength - 1)
+	
+	Dim DateTimeLength As Integer = DateLength + TimeLength
+	
+	Dim bstrHttpDate As HeapBSTR = CreateHeapStringLen( _
+		pIMemoryAllocator, _
+		@Buffer, _
+		DateTimeLength _
 	)
 	
-End Sub
+	Return bstrHttpDate
+	
+End Function
 
 Function FindWebSiteWeakPtr( _
 		ByVal pIWebSites As IWebSiteCollection Ptr, _
