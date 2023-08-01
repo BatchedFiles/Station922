@@ -773,11 +773,11 @@ Sub Station922CleanUp()
 		IWebServer_Release(WebServers.Vector(i))
 	Next
 	
-	DeleteMemoryPool()
-	
 	IThreadPool_Stop(GlobalThreadPool)
 	
 	IThreadPool_Release(GlobalThreadPool)
+	
+	DeleteMemoryPool()
 	
 End Sub
 
