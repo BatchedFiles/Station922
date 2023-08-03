@@ -73,7 +73,7 @@ FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
 FBCFLAGS+=-w error -maxerr 1
 FBCFLAGS+=-i src
 ifneq ($(INC_DIR),)
-FBCFLAGS+=-i $(INC_DIR)
+FBCFLAGS+=-i "$(INC_DIR)"
 endif
 FBCFLAGS+=-r
 FBCFLAGS+=-s console
@@ -100,9 +100,9 @@ GORCFLAGS_DEBUG=/d DEBUG
 LDFLAGS+=-subsystem console
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=-e $(ENTRY_POINT)
-LDFLAGS+=-L $(LIB_DIR)
+LDFLAGS+=-L "$(LIB_DIR)"
 ifneq ($(LD_SCRIPT),)
-LDFLAGS+=-T $(LD_SCRIPT)
+LDFLAGS+=-T "$(LD_SCRIPT)"
 endif
 
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
