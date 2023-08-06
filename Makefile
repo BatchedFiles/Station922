@@ -39,7 +39,8 @@ else
 CFLAGS+=-m32
 ASFLAGS+=--32
 ENTRY_POINT=_EntryPoint@0
-LDFLAGS+=-m i386pe --large-address-aware
+LDFLAGS+=-m i386pe
+LDFLAGS+=--large-address-aware
 GORCFLAGS+=
 endif
 
