@@ -29,12 +29,6 @@ DELETE_COMMAND ?= cmd.exe /c del /f /q
 MKDIR_COMMAND ?= cmd.exe /c mkdir
 SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
 
-ifeq ($(CODE_EMITTER),gcc)
-FBCFLAGS+=-gen gcc
-else
-FBCFLAGS+=-gen gcc
-endif
-
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 CFLAGS+=-m64
 ASFLAGS+=--64
@@ -69,7 +63,9 @@ OBJ_DEBUG_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Debug$(MOVE_PATH_SEP)x86
 OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x86
 endif
 
-FBCFLAGS+=-d UNICODE -d WITHOUT_RUNTIME
+FBCFLAGS+=-gen gcc
+FBCFLAGS+=-d UNICODE
+FBCFLAGS+=-d WITHOUT_RUNTIME
 FBCFLAGS+=-w error -maxerr 1
 FBCFLAGS+=-i src
 ifneq ($(INC_DIR),)
@@ -79,6 +75,7 @@ FBCFLAGS+=-r
 FBCFLAGS+=-s console
 FBCFLAGS+=-O 0
 FBCFLAGS_DEBUG+=-g
+debug: FBCFLAGS+=$(FBCFLAGS_DEBUG)
 
 CFLAGS+=-march=$(MARCH)
 ifneq ($(TARGET_TRIPLET),)
@@ -91,20 +88,35 @@ CFLAGS+=-Wno-dollar-in-identifier-extension -Wno-language-extension-token
 CFLAGS+=-Wno-parentheses-equality
 CFLAGS_DEBUG+=-g -O0
 FLTO ?=
+release: CFLAGS+=$(CFLAGS_RELEASE)
+release: CFLAGS+=-fno-math-errno -fno-exceptions
+release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
+release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
+ifneq ($(FLTO),)
+release: CFLAGS+=$(FLTO)
+endif
+debug: CFLAGS+=$(CFLAGS_DEBUG)
 
 ASFLAGS+=
 ASFLAGS_DEBUG+=
+release: ASFLAGS+=--strip-local-absolute
+debug: ASFLAGS+=$(ASFLAGS_DEBUG)
 
 GORCFLAGS+=/ni /o /d FROM_MAKEFILE
 GORCFLAGS_DEBUG=/d DEBUG
+debug: GORCFLAGS+=$(GORCFLAGS_DEBUG)
 
 LDFLAGS+=-subsystem console
 LDFLAGS+=--no-seh --nxcompat
 LDFLAGS+=-e $(ENTRY_POINT)
+LDFLAGS+=-L .
 LDFLAGS+=-L "$(LIB_DIR)"
 ifneq ($(LD_SCRIPT),)
 LDFLAGS+=-T "$(LD_SCRIPT)"
 endif
+release: LDFLAGS+=-s --gc-sections
+debug: LDFLAGS+=$(LDFLAGS_DEBUG)
+debug: LDLIBS+=$(LDLIBS_DEBUG)
 
 LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
 LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32 -luser32
@@ -271,23 +283,8 @@ OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)WriteResponseAsyncTask$(FILE_S
 $(OBJ_DEBUG_DIR)$(PATH_SEP)WriteResponseAsyncTask$(FILE_SUFFIX).c: src$(PATH_SEP)WriteResponseAsyncTask.bi src$(PATH_SEP)IWriteResponseAsyncIoTask.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IHttpAsyncIoTask.bi src$(PATH_SEP)IAsyncIoTask.bi src$(PATH_SEP)IWebSiteCollection.bi src$(PATH_SEP)IEnumWebSite.bi src$(PATH_SEP)IWebSite.bi src$(PATH_SEP)IAttributedStream.bi src$(PATH_SEP)Mime.bi src$(PATH_SEP)IHttpProcessorCollection.bi src$(PATH_SEP)IEnumHttpProcessor.bi src$(PATH_SEP)IHttpAsyncProcessor.bi src$(PATH_SEP)IHttpWriter.bi src$(PATH_SEP)IServerResponse.bi src$(PATH_SEP)ReadRequestAsyncTask.bi src$(PATH_SEP)IReadRequestAsyncIoTask.bi src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)HttpProcessorCollection.bi src$(PATH_SEP)HttpWriter.bi src$(PATH_SEP)ServerResponse.bi src$(PATH_SEP)WebsiteCollection.bi src$(PATH_SEP)WebUtils.bi src$(PATH_SEP)IThreadPool.bi src$(PATH_SEP)IWriteErrorAsyncIoTask.bi
 $(OBJ_RELEASE_DIR)$(PATH_SEP)WriteResponseAsyncTask$(FILE_SUFFIX).c: src$(PATH_SEP)WriteResponseAsyncTask.bi src$(PATH_SEP)IWriteResponseAsyncIoTask.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)ClientBuffer.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IHttpAsyncIoTask.bi src$(PATH_SEP)IAsyncIoTask.bi src$(PATH_SEP)IWebSiteCollection.bi src$(PATH_SEP)IEnumWebSite.bi src$(PATH_SEP)IWebSite.bi src$(PATH_SEP)IAttributedStream.bi src$(PATH_SEP)Mime.bi src$(PATH_SEP)IHttpProcessorCollection.bi src$(PATH_SEP)IEnumHttpProcessor.bi src$(PATH_SEP)IHttpAsyncProcessor.bi src$(PATH_SEP)IHttpWriter.bi src$(PATH_SEP)IServerResponse.bi src$(PATH_SEP)ReadRequestAsyncTask.bi src$(PATH_SEP)IReadRequestAsyncIoTask.bi src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)HttpProcessorCollection.bi src$(PATH_SEP)HttpWriter.bi src$(PATH_SEP)ServerResponse.bi src$(PATH_SEP)WebsiteCollection.bi src$(PATH_SEP)WebUtils.bi src$(PATH_SEP)IThreadPool.bi src$(PATH_SEP)IWriteErrorAsyncIoTask.bi
 
-release: CFLAGS+=$(CFLAGS_RELEASE)
-release: CFLAGS+=-fno-math-errno -fno-exceptions
-release: CFLAGS+=-fno-unwind-tables -fno-asynchronous-unwind-tables
-release: CFLAGS+=-O3 -fno-ident -fdata-sections -ffunction-sections
-ifneq ($(FLTO),)
-release: CFLAGS+=$(FLTO)
-endif
-release: ASFLAGS+=--strip-local-absolute
-release: LDFLAGS+=-s --gc-sections
 release: $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME)
 
-debug: FBCFLAGS+=$(FBCFLAGS_DEBUG)
-debug: CFLAGS+=$(CFLAGS_DEBUG)
-debug: ASFLAGS+=$(ASFLAGS_DEBUG)
-debug: GORCFLAGS+=$(GORCFLAGS_DEBUG)
-debug: LDFLAGS+=$(LDFLAGS_DEBUG)
-debug: LDLIBS+=$(LDLIBS_DEBUG)
 debug: $(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME)
 
 clean:
