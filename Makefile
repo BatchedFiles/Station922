@@ -18,6 +18,7 @@ MARCH ?= native
 
 FBC_VER ?= _FBC1100
 GCC_VER ?= _GCC0930
+USE_RUNTIME ?= FALSE
 FILE_SUFFIX=$(GCC_VER)$(FBC_VER)
 OUTPUT_FILE_NAME=Station922$(FILE_SUFFIX).exe
 
@@ -28,21 +29,6 @@ MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
 MKDIR_COMMAND ?= cmd.exe /c mkdir
 SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
-
-ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-CFLAGS+=-m64
-ASFLAGS+=--64
-ENTRY_POINT=EntryPoint
-LDFLAGS+=-m i386pep
-GORCFLAGS+=/machine X64
-else
-CFLAGS+=-m32
-ASFLAGS+=--32
-ENTRY_POINT=_EntryPoint@0
-LDFLAGS+=-m i386pe
-LDFLAGS+=--large-address-aware
-GORCFLAGS+=
-endif
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x64
@@ -78,6 +64,11 @@ FBCFLAGS+=-O 0
 FBCFLAGS_DEBUG+=-g
 debug: FBCFLAGS+=$(FBCFLAGS_DEBUG)
 
+ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+CFLAGS+=-m64
+else
+CFLAGS+=-m32
+endif
 CFLAGS+=-march=$(MARCH)
 ifneq ($(TARGET_TRIPLET),)
 CFLAGS+=--target=$(TARGET_TRIPLET)
@@ -98,18 +89,36 @@ release: CFLAGS+=$(FLTO)
 endif
 debug: CFLAGS+=$(CFLAGS_DEBUG)
 
-ASFLAGS+=
+ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+ASFLAGS+=--64
+else
+ASFLAGS+=--32
+endif
 ASFLAGS_DEBUG+=
 release: ASFLAGS+=--strip-local-absolute
 debug: ASFLAGS+=$(ASFLAGS_DEBUG)
 
+ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+GORCFLAGS+=/machine X64
+endif
 GORCFLAGS+=/ni /o /d FROM_MAKEFILE
 GORCFLAGS_DEBUG=/d DEBUG
 debug: GORCFLAGS+=$(GORCFLAGS_DEBUG)
 
+ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+ifeq ($(USE_RUNTIME),FALSE)
+LDFLAGS+=-e EntryPoint
+endif
+LDFLAGS+=-m i386pep
+else
+ifeq ($(USE_RUNTIME),FALSE)
+LDFLAGS+=-e _EntryPoint@0
+endif
+LDFLAGS+=-m i386pe
+LDFLAGS+=--large-address-aware
+endif
 LDFLAGS+=-subsystem console
 LDFLAGS+=--no-seh --nxcompat
-LDFLAGS+=-e $(ENTRY_POINT)
 LDFLAGS+=-L .
 LDFLAGS+=-L "$(LIB_DIR)"
 ifneq ($(LD_SCRIPT),)
@@ -119,9 +128,19 @@ release: LDFLAGS+=-s --gc-sections
 debug: LDFLAGS+=$(LDFLAGS_DEBUG)
 debug: LDLIBS+=$(LDLIBS_DEBUG)
 
-LDLIBS+=-ladvapi32 -lkernel32 -lmsvcrt -lmswsock -lcrypt32 -loleaut32
-LDLIBS+=-lole32 -lshell32 -lshlwapi -lws2_32 -luser32
-LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh -lucrt -lucrtbase
+ifneq ($(USE_RUNTIME),FALSE)
+LDLIBSBEGIN+=crt2.o crtbegin.o fbrt0.o
+endif
+LDLIBS+=-ladvapi32 -lcrypt32 -lgdi32 -lkernel32
+LDLIBS+=-lmsvcrt -lmswsock -lole32 -loleaut32
+LDLIBS+=-lshell32 -lshlwapi -lws2_32 -luser32
+ifneq ($(USE_RUNTIME),FALSE)
+LDLIBS+=-lfb
+endif
+LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
+ifneq ($(USE_RUNTIME),FALSE)
+LDLIBSEND+=crtend.o
+endif
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX).o
@@ -307,10 +326,10 @@ createdirs:
 	$(MKDIR_COMMAND) $(OBJ_RELEASE_DIR_MOVE)
 
 $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME): $(OBJECTFILES_RELEASE)
-	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
 
 $(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME):   $(OBJECTFILES_DEBUG)
-	$(LD) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).o: $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).asm
 	$(AS) $(ASFLAGS) -o $@ $<
