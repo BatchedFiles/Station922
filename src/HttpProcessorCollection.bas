@@ -32,7 +32,7 @@ Type _HttpProcessorCollection
 	Collection(HttpProcessorCollectionCapacity - 1) As HttpProcessorCollectionKeyValuePair
 End Type
 
-Sub InitializeHttpProcessorCollection( _
+Private Sub InitializeHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -53,7 +53,7 @@ Sub InitializeHttpProcessorCollection( _
 	
 End Sub
 
-Sub UnInitializeHttpProcessorCollection( _
+Private Sub UnInitializeHttpProcessorCollection( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
 	
@@ -65,11 +65,72 @@ Sub UnInitializeHttpProcessorCollection( _
 	
 End Sub
 
-Sub HttpProcessorCollectionCreated( _
+Private Sub HttpProcessorCollectionCreated( _
 		ByVal this As HttpProcessorCollection Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpProcessorCollectionDestroyed( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpProcessorCollection( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpProcessorCollection(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpProcessorCollectionDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpProcessorCollectionAddRef( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function HttpProcessorCollectionRelease( _
+		ByVal this As HttpProcessorCollection Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function HttpProcessorCollectionQueryInterface( _
+		ByVal this As HttpProcessorCollection Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpProcessorCollection, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	HttpProcessorCollectionAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpProcessorCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -102,68 +163,7 @@ Function CreateHttpProcessorCollection( _
 	
 End Function
 
-Sub HttpProcessorCollectionDestroyed( _
-		ByVal this As HttpProcessorCollection Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpProcessorCollection( _
-		ByVal this As HttpProcessorCollection Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpProcessorCollection(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpProcessorCollectionDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpProcessorCollectionQueryInterface( _
-		ByVal this As HttpProcessorCollection Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpProcessorCollection, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	HttpProcessorCollectionAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpProcessorCollectionAddRef( _
-		ByVal this As HttpProcessorCollection Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function HttpProcessorCollectionRelease( _
-		ByVal this As HttpProcessorCollection Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function HttpProcessorCollectionItem( _
+Private Function HttpProcessorCollectionItem( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
@@ -188,7 +188,7 @@ Function HttpProcessorCollectionItem( _
 	
 End Function
 
-Function HttpProcessorCollectionCount( _
+Private Function HttpProcessorCollectionCount( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
@@ -199,7 +199,7 @@ Function HttpProcessorCollectionCount( _
 	
 End Function
 
-Function HttpProcessorCollectionGetAllMethods( _
+Private Function HttpProcessorCollectionGetAllMethods( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal ppMethods As HeapBSTR Ptr _
 	)As HRESULT
@@ -211,7 +211,7 @@ Function HttpProcessorCollectionGetAllMethods( _
 	
 End Function
 
-Function HttpProcessorCollectionAdd( _
+Private Function HttpProcessorCollectionAdd( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
@@ -234,7 +234,7 @@ Function HttpProcessorCollectionAdd( _
 	
 End Function
 
-Function HttpProcessorCollectionItemWeakPtr( _
+Private Function HttpProcessorCollectionItemWeakPtr( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
@@ -259,7 +259,7 @@ Function HttpProcessorCollectionItemWeakPtr( _
 	
 End Function
 
-Function HttpProcessorCollectionSetAllMethods( _
+Private Function HttpProcessorCollectionSetAllMethods( _
 		ByVal this As HttpProcessorCollection Ptr, _
 		ByVal pMethods As HeapBSTR _
 	)As HRESULT
@@ -271,7 +271,7 @@ Function HttpProcessorCollectionSetAllMethods( _
 End Function
 
 
-Function IHttpProcessorCollectionQueryInterface( _
+Private Function IHttpProcessorCollectionQueryInterface( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -279,26 +279,26 @@ Function IHttpProcessorCollectionQueryInterface( _
 	Return HttpProcessorCollectionQueryInterface(ContainerOf(this, HttpProcessorCollection, lpVtbl), riid, ppvObject)
 End Function
 
-Function IHttpProcessorCollectionAddRef( _
+Private Function IHttpProcessorCollectionAddRef( _
 		ByVal this As IHttpProcessorCollection Ptr _
 	)As ULONG
 	Return HttpProcessorCollectionAddRef(ContainerOf(this, HttpProcessorCollection, lpVtbl))
 End Function
 
-Function IHttpProcessorCollectionRelease( _
+Private Function IHttpProcessorCollectionRelease( _
 		ByVal this As IHttpProcessorCollection Ptr _
 	)As ULONG
 	Return HttpProcessorCollectionRelease(ContainerOf(this, HttpProcessorCollection, lpVtbl))
 End Function
 
-' Function IHttpProcessorCollection_NewEnum( _
+' Private Function IHttpProcessorCollection_NewEnum( _
 		' ByVal this As IHttpProcessorCollection Ptr, _
 		' ByVal ppIEnum As IEnumHttpProcessor Ptr Ptr _
 	' )As HRESULT
 	' Return HttpProcessorCollection_NewEnum(ContainerOf(this, HttpProcessorCollection, lpVtbl), ppIEnum)
 ' End Function
 
-Function IHttpProcessorCollectionItem( _
+Private Function IHttpProcessorCollectionItem( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
@@ -306,21 +306,21 @@ Function IHttpProcessorCollectionItem( _
 	Return HttpProcessorCollectionItem(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
 End Function
 
-Function IHttpProcessorCollectionCount( _
+Private Function IHttpProcessorCollectionCount( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionCount(ContainerOf(this, HttpProcessorCollection, lpVtbl), pCount)
 End Function
 
-Function IHttpProcessorCollectionGetAllMethods( _
+Private Function IHttpProcessorCollectionGetAllMethods( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal ppMethods As HeapBSTR Ptr _
 	)As HRESULT
 	Return HttpProcessorCollectionGetAllMethods(ContainerOf(this, HttpProcessorCollection, lpVtbl), ppMethods)
 End Function
 
-Function IHttpProcessorCollectionAdd( _
+Private Function IHttpProcessorCollectionAdd( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal pIProcessor As IHttpAsyncProcessor Ptr _
@@ -328,7 +328,7 @@ Function IHttpProcessorCollectionAdd( _
 	Return HttpProcessorCollectionAdd(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, pIProcessor)
 End Function
 
-Function IHttpProcessorCollectionItemWeakPtr( _
+Private Function IHttpProcessorCollectionItemWeakPtr( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pKey As WString Ptr, _
 		ByVal ppIProcessor As IHttpAsyncProcessor Ptr Ptr _
@@ -336,7 +336,7 @@ Function IHttpProcessorCollectionItemWeakPtr( _
 	Return HttpProcessorCollectionItemWeakPtr(ContainerOf(this, HttpProcessorCollection, lpVtbl), pKey, ppIProcessor)
 End Function
 
-Function IHttpProcessorCollectionSetAllMethods( _
+Private Function IHttpProcessorCollectionSetAllMethods( _
 		ByVal this As IHttpProcessorCollection Ptr, _
 		ByVal pMethods As HeapBSTR _
 	)As HRESULT
