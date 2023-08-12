@@ -16,10 +16,15 @@ LD_SCRIPT ?=
 TARGET_TRIPLET ?=
 MARCH ?= native
 
+USE_RUNTIME ?= TRUE
 FBC_VER ?= _FBC1100
 GCC_VER ?= _GCC0930
-USE_RUNTIME ?= FALSE
-FILE_SUFFIX=$(GCC_VER)$(FBC_VER)
+ifeq ($(USE_RUNTIME),TRUE)
+RUNTIME = _RT
+else
+RUNTIME = _WRT
+endif
+FILE_SUFFIX=$(GCC_VER)$(FBC_VER)$(RUNTIME)
 OUTPUT_FILE_NAME=Station922$(FILE_SUFFIX).exe
 
 PATH_SEP ?= /
@@ -52,7 +57,11 @@ endif
 
 FBCFLAGS+=-gen gcc
 FBCFLAGS+=-d UNICODE
+ifeq ($(USE_RUNTIME),TRUE)
+FBCFLAGS+=-m Station922
+else
 FBCFLAGS+=-d WITHOUT_RUNTIME
+endif
 FBCFLAGS+=-w error -maxerr 1
 FBCFLAGS+=-i src
 ifneq ($(INC_DIR),)
@@ -128,18 +137,21 @@ release: LDFLAGS+=-s --gc-sections
 debug: LDFLAGS+=$(LDFLAGS_DEBUG)
 debug: LDLIBS+=$(LDLIBS_DEBUG)
 
-ifneq ($(USE_RUNTIME),FALSE)
-LDLIBSBEGIN+=crt2.o crtbegin.o fbrt0.o
+ifeq ($(USE_RUNTIME),TRUE)
+LDLIBSBEGIN+="$(LIB_DIR)\crt2.o"
+LDLIBSBEGIN+="$(LIB_DIR)\crtbegin.o"
+LDLIBSBEGIN+="$(LIB_DIR)\fbrt0.o"
 endif
 LDLIBS+=-ladvapi32 -lcrypt32 -lgdi32 -lkernel32
 LDLIBS+=-lmsvcrt -lmswsock -lole32 -loleaut32
 LDLIBS+=-lshell32 -lshlwapi -lws2_32 -luser32
-ifneq ($(USE_RUNTIME),FALSE)
+ifeq ($(USE_RUNTIME),TRUE)
 LDLIBS+=-lfb
+LDLIBS+=-luuid
 endif
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
-ifneq ($(USE_RUNTIME),FALSE)
-LDLIBSEND+=crtend.o
+ifeq ($(USE_RUNTIME),TRUE)
+LDLIBSEND+="$(LIB_DIR)\crtend.o"
 endif
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)AcceptConnectionAsyncTask$(FILE_SUFFIX).o
@@ -326,10 +338,10 @@ createdirs:
 	$(MKDIR_COMMAND) $(OBJ_RELEASE_DIR_MOVE)
 
 $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME): $(OBJECTFILES_RELEASE)
-	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ "-(" $(LDLIBS) "-)" $(LDLIBSEND) -o $@
 
 $(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME):   $(OBJECTFILES_DEBUG)
-	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ "-(" $(LDLIBS) "-)" $(LDLIBSEND) -o $@
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).o: $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).asm
 	$(AS) $(ASFLAGS) -o $@ $<
