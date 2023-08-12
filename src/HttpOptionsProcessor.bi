@@ -17,41 +17,4 @@ Declare Function CreateHttpOptionsProcessor( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Sub DestroyHttpOptionsProcessor( _
-	ByVal this As HttpOptionsProcessor Ptr _
-)
-
-Declare Function HttpOptionsProcessorQueryInterface( _
-	ByVal this As HttpOptionsProcessor Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpOptionsProcessorAddRef( _
-	ByVal this As HttpOptionsProcessor Ptr _
-)As ULONG
-
-Declare Function HttpOptionsProcessorRelease( _
-	ByVal this As HttpOptionsProcessor Ptr _
-)As ULONG
-
-Declare Function HttpOptionsProcessorPrepare( _
-	ByVal this As HttpOptionsProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal ppIBuffer As IAttributedStream Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpOptionsProcessorBeginProcess( _
-	ByVal this As HttpOptionsProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpOptionsProcessorEndProcess( _
-	ByVal this As HttpOptionsProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
 #endif
