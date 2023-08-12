@@ -85,7 +85,7 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 	Type<RequestHeaderNode>(@HeaderContentRangeString,            Len(HeaderContentRangeString),            HttpRequestHeaders.HeaderContentRange) _
 }
 
-Function FindNotSpaceCharacter( _
+Private Function FindNotSpaceCharacter( _
 		ByVal pwStr As WString Ptr _
 	)As WString Ptr
 	
@@ -100,7 +100,7 @@ Function FindNotSpaceCharacter( _
 	
 End Function
 
-Function GetHttpVersionIndex( _
+Private Function GetHttpVersionIndex( _
 		ByVal s As WString Ptr, _
 		ByVal pVersion As HttpVersions Ptr _
 	)As Boolean
@@ -130,7 +130,7 @@ Function GetHttpVersionIndex( _
 	
 End Function
 
-Function GetKnownRequestHeaderIndex( _
+Private Function GetKnownRequestHeaderIndex( _
 		ByVal pHeader As WString Ptr, _
 		ByVal pIndex As HttpRequestHeaders Ptr _
 	)As Boolean
@@ -151,7 +151,7 @@ Function GetKnownRequestHeaderIndex( _
 	
 End Function
 
-Function ClientRequestParseRequestedLine( _
+Private Function ClientRequestParseRequestedLine( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
@@ -297,7 +297,7 @@ Function ClientRequestParseRequestedLine( _
 	
 End Function
 
-Function ClientRequestAddRequestHeaderSink( _
+Private Function ClientRequestAddRequestHeaderSink( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
@@ -320,7 +320,7 @@ Function ClientRequestAddRequestHeaderSink( _
 	
 End Function
 
-Function ClientRequestAddRequestHeaders( _
+Private Function ClientRequestAddRequestHeaders( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr _
 	)As HRESULT
@@ -369,7 +369,7 @@ Function ClientRequestAddRequestHeaders( _
 	
 End Function
 
-Sub ReplaceUtcToGmt( _
+Private Sub ReplaceUtcToGmt( _
 		ByVal pSource As WString Ptr, _
 		ByVal SourceLength As Integer _
 	)
@@ -398,7 +398,7 @@ Sub ReplaceUtcToGmt( _
 	
 End Sub
 
-Sub ParseConnectionHeaderSink( _
+Private Sub ParseConnectionHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -431,7 +431,7 @@ Sub ParseConnectionHeaderSink( _
 	
 End Sub
 
-Sub ParseAcceptEncodingHeaderSink( _
+Private Sub ParseAcceptEncodingHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -464,7 +464,7 @@ Sub ParseAcceptEncodingHeaderSink( _
 	
 End Sub
 
-Sub ParseIfModifiedSinceHeaderSink( _
+Private Sub ParseIfModifiedSinceHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -496,7 +496,7 @@ Sub ParseIfModifiedSinceHeaderSink( _
 	
 End Sub
 
-Sub ParseRangeHeaderSink( _
+Private Sub ParseRangeHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -569,7 +569,7 @@ Sub ParseRangeHeaderSink( _
 	
 End Sub
 
-Sub ParseContentLengthHeaderSink( _
+Private Sub ParseContentLengthHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -587,7 +587,7 @@ Sub ParseContentLengthHeaderSink( _
 	
 End Sub
 
-Sub ParseExpectHeaderSink( _
+Private Sub ParseExpectHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -610,7 +610,7 @@ Sub ParseExpectHeaderSink( _
 	
 End Sub
 
-Function ParseHostHeaderSink( _
+Private Function ParseHostHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
@@ -652,7 +652,7 @@ Function ParseHostHeaderSink( _
 	
 End Function
 
-Function ClientRequestParseRequestHeaders( _
+Private Function ClientRequestParseRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
 	
@@ -677,7 +677,7 @@ Function ClientRequestParseRequestHeaders( _
 	
 End Function
 
-Sub InitializeClientRequest( _
+Private Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -709,7 +709,7 @@ Sub InitializeClientRequest( _
 	
 End Sub
 
-Sub UnInitializeClientRequest( _
+Private Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
@@ -725,11 +725,82 @@ Sub UnInitializeClientRequest( _
 	
 End Sub
 
-Sub ClientRequestCreated( _
+Private Sub ClientRequestCreated( _
 		ByVal this As ClientRequest Ptr _
 	)
 	
 End Sub
+
+Private Sub ClientRequestDestroyed( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyClientRequest( _
+		ByVal this As ClientRequest Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeClientRequest(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	ClientRequestDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function ClientRequestAddRef( _
+		ByVal this As ClientRequest Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function ClientRequestRelease( _
+		ByVal this As ClientRequest Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyClientRequest(this)
+	
+	Return 0
+	
+End Function
+
+Private Function ClientRequestQueryInterface( _
+		ByVal this As ClientRequest Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IClientRequest, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	ClientRequestAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -763,78 +834,7 @@ Function CreateClientRequest( _
 	
 End Function
 
-Sub ClientRequestDestroyed( _
-		ByVal this As ClientRequest Ptr _
-	)
-	
-End Sub
-
-Sub DestroyClientRequest( _
-		ByVal this As ClientRequest Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeClientRequest(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	ClientRequestDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function ClientRequestQueryInterface( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IClientRequest, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	ClientRequestAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function ClientRequestAddRef( _
-		ByVal this As ClientRequest Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function ClientRequestRelease( _
-		ByVal this As ClientRequest Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyClientRequest(this)
-	
-	Return 0
-	
-End Function
-
-Function ClientRequestParse( _
+Private Function ClientRequestParse( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
@@ -865,7 +865,7 @@ Function ClientRequestParse( _
 	
 End Function
 
-Function ClientRequestGetHttpMethod( _
+Private Function ClientRequestGetHttpMethod( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
@@ -880,7 +880,7 @@ Function ClientRequestGetHttpMethod( _
 	
 End Function
 
-Function ClientRequestGetUri( _
+Private Function ClientRequestGetUri( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
@@ -895,7 +895,7 @@ Function ClientRequestGetUri( _
 	
 End Function
 
-Function ClientRequestGetHttpVersion( _
+Private Function ClientRequestGetHttpVersion( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
@@ -906,7 +906,7 @@ Function ClientRequestGetHttpVersion( _
 	
 End Function
 
-Function ClientRequestGetHttpHeader( _
+Private Function ClientRequestGetHttpHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
@@ -922,7 +922,7 @@ Function ClientRequestGetHttpHeader( _
 	
 End Function
 
-Function ClientRequestGetKeepAlive( _
+Private Function ClientRequestGetKeepAlive( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
@@ -933,7 +933,7 @@ Function ClientRequestGetKeepAlive( _
 	
 End Function
 
-Function ClientRequestGetContentLength( _
+Private Function ClientRequestGetContentLength( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
@@ -944,7 +944,7 @@ Function ClientRequestGetContentLength( _
 	
 End Function
 
-Function ClientRequestGetByteRange( _
+Private Function ClientRequestGetByteRange( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
@@ -955,7 +955,7 @@ Function ClientRequestGetByteRange( _
 	
 End Function
 
-Function ClientRequestGetZipMode( _
+Private Function ClientRequestGetZipMode( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
@@ -967,7 +967,7 @@ Function ClientRequestGetZipMode( _
 	
 End Function
 
-Function ClientRequestGetExpect100Continue( _
+Private Function ClientRequestGetExpect100Continue( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pExpect As Boolean Ptr _
 	)As HRESULT
@@ -979,7 +979,7 @@ Function ClientRequestGetExpect100Continue( _
 End Function
 
 
-Function IClientRequestQueryInterface( _
+Private Function IClientRequestQueryInterface( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -987,19 +987,19 @@ Function IClientRequestQueryInterface( _
 	Return ClientRequestQueryInterface(ContainerOf(this, ClientRequest, lpVtbl), riid, ppvObject)
 End Function
 
-Function IClientRequestAddRef( _
+Private Function IClientRequestAddRef( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
 	Return ClientRequestAddRef(ContainerOf(this, ClientRequest, lpVtbl))
 End Function
 
-Function IClientRequestRelease( _
+Private Function IClientRequestRelease( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
 	Return ClientRequestRelease(ContainerOf(this, ClientRequest, lpVtbl))
 End Function
 
-Function IClientRequestParse( _
+Private Function IClientRequestParse( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
@@ -1007,28 +1007,28 @@ Function IClientRequestParse( _
 	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl), pIReader, RequestedLine)
 End Function
 
-Function IClientRequestGetHttpMethod( _
+Private Function IClientRequestGetHttpMethod( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
 	Return ClientRequestGetHttpMethod(ContainerOf(this, ClientRequest, lpVtbl), ppHttpMethod)
 End Function
 
-Function IClientRequestGetUri( _
+Private Function IClientRequestGetUri( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
 	Return ClientRequestGetUri(ContainerOf(this, ClientRequest, lpVtbl), ppUri)
 End Function
 
-Function IClientRequestGetHttpVersion( _
+Private Function IClientRequestGetHttpVersion( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pHttpVersions As HttpVersions Ptr _
 	)As HRESULT
 	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), pHttpVersions)
 End Function
 
-Function IClientRequestGetHttpHeader( _
+Private Function IClientRequestGetHttpHeader( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
@@ -1036,28 +1036,28 @@ Function IClientRequestGetHttpHeader( _
 	Return ClientRequestGetHttpHeader(ContainerOf(this, ClientRequest, lpVtbl), HeaderIndex, ppHeader)
 End Function
 
-Function IClientRequestGetKeepAlive( _
+Private Function IClientRequestGetKeepAlive( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 	Return ClientRequestGetKeepAlive(ContainerOf(this, ClientRequest, lpVtbl), pKeepAlive)
 End Function
 
-Function IClientRequestGetContentLength( _
+Private Function IClientRequestGetContentLength( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
 	Return ClientRequestGetContentLength(ContainerOf(this, ClientRequest, lpVtbl), pContentLength)
 End Function
 
-Function IClientRequestGetByteRange( _
+Private Function IClientRequestGetByteRange( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
 	Return ClientRequestGetByteRange(ContainerOf(this, ClientRequest, lpVtbl), pRange)
 End Function
 
-Function IClientRequestGetZipMode( _
+Private Function IClientRequestGetZipMode( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
@@ -1065,7 +1065,7 @@ Function IClientRequestGetZipMode( _
 	Return ClientRequestGetZipMode(ContainerOf(this, ClientRequest, lpVtbl), ZipIndex, pSupported)
 End Function
 
-Function IClientRequestGetExpect100Continue( _
+Private Function IClientRequestGetExpect100Continue( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pExpect As Boolean Ptr _
 	)As HRESULT
