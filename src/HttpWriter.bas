@@ -49,7 +49,7 @@ Type _HttpWriter
 	NeedWrite100Continue As Boolean
 End Type
 
-Sub InitializeHttpWriter( _
+Private Sub InitializeHttpWriter( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -74,7 +74,7 @@ Sub InitializeHttpWriter( _
 	
 End Sub
 
-Sub UnInitializeHttpWriter( _
+Private Sub UnInitializeHttpWriter( _
 		ByVal this As HttpWriter Ptr _
 	)
 	
@@ -92,11 +92,82 @@ Sub UnInitializeHttpWriter( _
 	
 End Sub
 
-Sub HttpWriterCreated( _
+Private Sub HttpWriterCreated( _
 		ByVal this As HttpWriter Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpWriterDestroyed( _
+		ByVal this As HttpWriter Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpWriter( _
+		ByVal this As HttpWriter Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpWriter(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpWriterDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpWriterAddRef( _
+		ByVal this As HttpWriter Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function HttpWriterRelease( _
+		ByVal this As HttpWriter Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyHttpWriter(this)
+	
+	Return 0
+	
+End Function
+
+Private Function HttpWriterQueryInterface( _
+		ByVal this As HttpWriter Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpWriter, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	HttpWriterAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpWriter( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -130,78 +201,7 @@ Function CreateHttpWriter( _
 	
 End Function
 
-Sub HttpWriterDestroyed( _
-		ByVal this As HttpWriter Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpWriter( _
-		ByVal this As HttpWriter Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpWriter(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpWriterDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpWriterQueryInterface( _
-		ByVal this As HttpWriter Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpWriter, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	HttpWriterAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpWriterAddRef( _
-		ByVal this As HttpWriter Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function HttpWriterRelease( _
-		ByVal this As HttpWriter Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyHttpWriter(this)
-	
-	Return 0
-	
-End Function
-
-Function HttpWriterGetBaseStream( _
+Private Function HttpWriterGetBaseStream( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal ppResult As IBaseStream Ptr Ptr _
 	)As HRESULT
@@ -216,7 +216,7 @@ Function HttpWriterGetBaseStream( _
 	
 End Function
 
-Function HttpWriterSetBaseStream( _
+Private Function HttpWriterSetBaseStream( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
@@ -235,7 +235,7 @@ Function HttpWriterSetBaseStream( _
 	
 End Function
 
-Function HttpWriterGetBuffer( _
+Private Function HttpWriterGetBuffer( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
@@ -250,7 +250,7 @@ Function HttpWriterGetBuffer( _
 	
 End Function
 
-Function HttpWriterSetBuffer( _
+Private Function HttpWriterSetBuffer( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIBuffer As IAttributedStream Ptr _
 	)As HRESULT
@@ -269,7 +269,7 @@ Function HttpWriterSetBuffer( _
 	
 End Function
 
-Sub HttpWriterSinkResponse( _
+Private Sub HttpWriterSinkResponse( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)
@@ -286,7 +286,7 @@ Sub HttpWriterSinkResponse( _
 	
 End Sub
 
-Function HttpWriterPrepare( _
+Private Function HttpWriterPrepare( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
@@ -372,7 +372,7 @@ Function HttpWriterPrepare( _
 	
 End Function
 
-Function HttpWriterBeginWrite( _
+Private Function HttpWriterBeginWrite( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -591,7 +591,7 @@ Function HttpWriterBeginWrite( _
 	
 End Function
 
-Function HttpWriterEndWrite( _
+Private Function HttpWriterEndWrite( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
@@ -821,7 +821,7 @@ Function HttpWriterEndWrite( _
 	
 End Function
 
-Function HttpWriterSetKeepAlive( _
+Private Function HttpWriterSetKeepAlive( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
@@ -832,7 +832,7 @@ Function HttpWriterSetKeepAlive( _
 	
 End Function
 
-Function HttpWriterSetNeedWrite100Continue( _
+Private Function HttpWriterSetNeedWrite100Continue( _
 		ByVal this As HttpWriter Ptr, _
 		ByVal NeedWrite100Continue As Boolean _
 	)As HRESULT
@@ -844,7 +844,7 @@ Function HttpWriterSetNeedWrite100Continue( _
 End Function
 
 
-Function IHttpWriterQueryInterface( _
+Private Function IHttpWriterQueryInterface( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -852,47 +852,47 @@ Function IHttpWriterQueryInterface( _
 	Return HttpWriterQueryInterface(ContainerOf(this, HttpWriter, lpVtbl), riid, ppvObject)
 End Function
 
-Function IHttpWriterAddRef( _
+Private Function IHttpWriterAddRef( _
 		ByVal this As IHttpWriter Ptr _
 	)As ULONG
 	Return HttpWriterAddRef(ContainerOf(this, HttpWriter, lpVtbl))
 End Function
 
-Function IHttpWriterRelease( _
+Private Function IHttpWriterRelease( _
 		ByVal this As IHttpWriter Ptr _
 	)As ULONG
 	Return HttpWriterRelease(ContainerOf(this, HttpWriter, lpVtbl))
 End Function
 
-Function IHttpWriterGetBaseStream( _
+Private Function IHttpWriterGetBaseStream( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal ppResult As IBaseStream Ptr Ptr _
 	)As HRESULT
 	Return HttpWriterGetBaseStream(ContainerOf(this, HttpWriter, lpVtbl), ppResult)
 End Function
 
-Function IHttpWriterSetBaseStream( _
+Private Function IHttpWriterSetBaseStream( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
 	Return HttpWriterSetBaseStream(ContainerOf(this, HttpWriter, lpVtbl), pIStream)
 End Function
 
-Function IHttpWriterGetBuffer( _
+Private Function IHttpWriterGetBuffer( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	Return HttpWriterGetBuffer(ContainerOf(this, HttpWriter, lpVtbl), ppResult)
 End Function
 
-Function IHttpWriterSetBuffer( _
+Private Function IHttpWriterSetBuffer( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIBuffer As IAttributedStream Ptr _
 	)As HRESULT
 	Return HttpWriterSetBuffer(ContainerOf(this, HttpWriter, lpVtbl), pIBuffer)
 End Function
 
-Function IHttpWriterPrepare( _
+Private Function IHttpWriterPrepare( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
@@ -901,7 +901,7 @@ Function IHttpWriterPrepare( _
 	Return HttpWriterPrepare(ContainerOf(this, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
 End Function
 
-Function IHttpWriterBeginWrite( _
+Private Function IHttpWriterBeginWrite( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -909,21 +909,21 @@ Function IHttpWriterBeginWrite( _
 	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), StateObject, ppIAsyncResult)
 End Function
 
-Function IHttpWriterEndWrite( _
+Private Function IHttpWriterEndWrite( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	Return HttpWriterEndWrite(ContainerOf(this, HttpWriter, lpVtbl), pIAsyncResult)
 End Function
 
-Function IHttpWriterSetKeepAlive( _
+Private Function IHttpWriterSetKeepAlive( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
 	Return HttpWriterSetKeepAlive(ContainerOf(this, HttpWriter, lpVtbl), KeepAlive)
 End Function
 
-Function IHttpWriterSetNeedWrite100Continue( _
+Private Function IHttpWriterSetNeedWrite100Continue( _
 		ByVal this As IHttpWriter Ptr, _
 		ByVal NeedWrite100Continue As Boolean _
 	)As HRESULT

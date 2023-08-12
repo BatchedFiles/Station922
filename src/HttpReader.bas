@@ -20,7 +20,7 @@ Type _HttpReader
 	IsAllBytesReaded As Boolean
 End Type
 
-Function GetPreloadedBytesLength( _
+Private Function GetPreloadedBytesLength( _
 		ByVal pClientBuffer As ClientRequestBuffer Ptr _
 	)As Integer
 	
@@ -30,7 +30,7 @@ Function GetPreloadedBytesLength( _
 	
 End Function
 
-Sub InitializeHttpReader( _
+Private Sub InitializeHttpReader( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -53,7 +53,7 @@ Sub InitializeHttpReader( _
 	
 End Sub
 
-Sub UnInitializeHttpReader( _
+Private Sub UnInitializeHttpReader( _
 		ByVal this As HttpReader Ptr _
 	)
 	
@@ -63,11 +63,82 @@ Sub UnInitializeHttpReader( _
 	
 End Sub
 
-Sub HttpReaderCreated( _
+Private Sub HttpReaderCreated( _
 		ByVal this As HttpReader Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpReaderDestroyed( _
+		ByVal this As HttpReader Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpReader( _
+		ByVal this As HttpReader Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpReader(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpReaderDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpReaderAddRef( _
+		ByVal this As HttpReader Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function HttpReaderRelease( _
+		ByVal this As HttpReader Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyHttpReader(this)
+	
+	Return 0
+	
+End Function
+
+Private Function HttpReaderQueryInterface( _
+		ByVal this As HttpReader Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpReader, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	HttpReaderAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -101,78 +172,7 @@ Function CreateHttpReader( _
 	
 End Function
 
-Sub HttpReaderDestroyed( _
-		ByVal this As HttpReader Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpReader( _
-		ByVal this As HttpReader Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpReader(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpReaderDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpReaderQueryInterface( _
-		ByVal this As HttpReader Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpReader, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	HttpReaderAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpReaderAddRef( _
-		ByVal this As HttpReader Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function HttpReaderRelease( _
-		ByVal this As HttpReader Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyHttpReader(this)
-	
-	Return 0
-	
-End Function
-
-Function HttpReaderReadLine( _
+Private Function HttpReaderReadLine( _
 		ByVal this As HttpReader Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
@@ -196,7 +196,7 @@ Function HttpReaderReadLine( _
 	
 End Function
 
-Function HttpReaderBeginReadLine( _
+Private Function HttpReaderBeginReadLine( _
 		ByVal this As HttpReader Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -231,13 +231,13 @@ Function HttpReaderBeginReadLine( _
 	
 End Function
 
-Sub HttpReaderPrintClientBuffer( _
+Private Sub HttpReaderPrintClientBuffer( _
 		ByVal this As HttpReader Ptr _
 	)
 	
 End Sub
 
-Function HttpReaderEndReadLine( _
+Private Function HttpReaderEndReadLine( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
@@ -323,7 +323,7 @@ Function HttpReaderEndReadLine( _
 	
 End Function
 
-Function HttpReaderClear( _
+Private Function HttpReaderClear( _
 		ByVal this As HttpReader Ptr _
 	)As HRESULT
 	
@@ -335,7 +335,7 @@ Function HttpReaderClear( _
 	
 End Function
 
-Function HttpReaderSetBaseStream( _
+Private Function HttpReaderSetBaseStream( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
@@ -354,7 +354,7 @@ Function HttpReaderSetBaseStream( _
 	
 End Function
 
-Function HttpReaderGetPreloadedBytes( _
+Private Function HttpReaderGetPreloadedBytes( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
@@ -371,7 +371,7 @@ Function HttpReaderGetPreloadedBytes( _
 	
 End Function
 
-Function HttpReaderGetRequestedBytes( _
+Private Function HttpReaderGetRequestedBytes( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
@@ -387,7 +387,7 @@ Function HttpReaderGetRequestedBytes( _
 	
 End Function
 
-Function HttpReaderSetClientBuffer( _
+Private Function HttpReaderSetClientBuffer( _
 		ByVal this As HttpReader Ptr, _
 		ByVal pBuffer As ClientRequestBuffer Ptr _
 	)As HRESULT
@@ -398,7 +398,7 @@ Function HttpReaderSetClientBuffer( _
 	
 End Function
 
-Function HttpReaderSkipBytes( _
+Private Function HttpReaderSkipBytes( _
 		ByVal this As HttpReader Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
@@ -411,7 +411,7 @@ Function HttpReaderSkipBytes( _
 End Function
 
 
-Function IHttpReaderQueryInterface( _
+Private Function IHttpReaderQueryInterface( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -419,26 +419,26 @@ Function IHttpReaderQueryInterface( _
 	Return HttpReaderQueryInterface(ContainerOf(this, HttpReader, lpVtbl), riid, ppvObject)
 End Function
 
-Function IHttpReaderAddRef( _
+Private Function IHttpReaderAddRef( _
 		ByVal this As IHttpReader Ptr _
 	)As ULONG
 	Return HttpReaderAddRef(ContainerOf(this, HttpReader, lpVtbl))
 End Function
 
-Function IHttpReaderRelease( _
+Private Function IHttpReaderRelease( _
 		ByVal this As IHttpReader Ptr _
 	)As ULONG
 	Return HttpReaderRelease(ContainerOf(this, HttpReader, lpVtbl))
 End Function
 
-Function IHttpReaderReadLine( _
+Private Function IHttpReaderReadLine( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
 	Return HttpReaderReadLine(ContainerOf(this, HttpReader, lpVtbl), pLine)
 End Function
 
-Function IHttpReaderBeginReadLine( _
+Private Function IHttpReaderBeginReadLine( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -446,7 +446,7 @@ Function IHttpReaderBeginReadLine( _
 	Return HttpReaderBeginReadLine(ContainerOf(this, HttpReader, lpVtbl), StateObject, ppIAsyncResult)
 End Function
 
-Function IHttpReaderEndReadLine( _
+Private Function IHttpReaderEndReadLine( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
@@ -454,20 +454,20 @@ Function IHttpReaderEndReadLine( _
 	Return HttpReaderEndReadLine(ContainerOf(this, HttpReader, lpVtbl), pIAsyncResult, ppLine)
 End Function
 
-Function IHttpReaderClear( _
+Private Function IHttpReaderClear( _
 		ByVal this As IHttpReader Ptr _
 	)As HRESULT
 	Return HttpReaderClear(ContainerOf(this, HttpReader, lpVtbl))
 End Function
 
-Function IHttpReaderSetBaseStream( _
+Private Function IHttpReaderSetBaseStream( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pIStream As IBaseStream Ptr _
 	)As HRESULT
 	Return HttpReaderSetBaseStream(ContainerOf(this, HttpReader, lpVtbl), pIStream)
 End Function
 
-Function IHttpReaderGetPreloadedBytes( _
+Private Function IHttpReaderGetPreloadedBytes( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
@@ -475,7 +475,7 @@ Function IHttpReaderGetPreloadedBytes( _
 	Return HttpReaderGetPreloadedBytes(ContainerOf(this, HttpReader, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
-Function IHttpReaderGetRequestedBytes( _
+Private Function IHttpReaderGetRequestedBytes( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
@@ -483,14 +483,14 @@ Function IHttpReaderGetRequestedBytes( _
 	Return HttpReaderGetRequestedBytes(ContainerOf(this, HttpReader, lpVtbl), pRequestedBytesLength, ppRequestedBytes)
 End Function
 
-Function IHttpReaderSetClientBuffer( _
+Private Function IHttpReaderSetClientBuffer( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal pBuffer As ClientRequestBuffer Ptr _
 	)As HRESULT
 	Return HttpReaderSetClientBuffer(ContainerOf(this, HttpReader, lpVtbl), pBuffer)
 End Function
 
-Function IHttpReaderSkipBytes( _
+Private Function IHttpReaderSkipBytes( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT

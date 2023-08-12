@@ -17,41 +17,4 @@ Declare Function CreateHttpPutProcessor( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Sub DestroyHttpPutProcessor( _
-	ByVal this As HttpPutProcessor Ptr _
-)
-
-Declare Function HttpPutProcessorQueryInterface( _
-	ByVal this As HttpPutProcessor Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpPutProcessorAddRef( _
-	ByVal this As HttpPutProcessor Ptr _
-)As ULONG
-
-Declare Function HttpPutProcessorRelease( _
-	ByVal this As HttpPutProcessor Ptr _
-)As ULONG
-
-Declare Function HttpPutProcessorPrepare( _
-	ByVal this As HttpPutProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal ppIBuffer As IAttributedStream Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpPutProcessorBeginProcess( _
-	ByVal this As HttpPutProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpPutProcessorEndProcess( _
-	ByVal this As HttpPutProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
 #endif

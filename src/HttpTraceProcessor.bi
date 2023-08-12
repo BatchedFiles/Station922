@@ -17,41 +17,4 @@ Declare Function CreateHttpTraceProcessor( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Sub DestroyHttpTraceProcessor( _
-	ByVal this As HttpTraceProcessor Ptr _
-)
-
-Declare Function HttpTraceProcessorQueryInterface( _
-	ByVal this As HttpTraceProcessor Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpTraceProcessorAddRef( _
-	ByVal this As HttpTraceProcessor Ptr _
-)As ULONG
-
-Declare Function HttpTraceProcessorRelease( _
-	ByVal this As HttpTraceProcessor Ptr _
-)As ULONG
-
-Declare Function HttpTraceProcessorPrepare( _
-	ByVal this As HttpTraceProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal ppIBuffer As IAttributedStream Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpTraceProcessorBeginProcess( _
-	ByVal this As HttpTraceProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpTraceProcessorEndProcess( _
-	ByVal this As HttpTraceProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
 #endif

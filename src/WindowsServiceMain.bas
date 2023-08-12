@@ -16,7 +16,7 @@ Type SERVICE_TABLE_ENTRYW_ZERO
 	Dim Zero As SERVICE_TABLE_ENTRYW
 End Type
 
-Sub ReportSvcStatus( _
+Private Sub ReportSvcStatus( _
 		ByVal lpContext As ServiceContext Ptr, _
 		ByVal dwCurrentState As DWORD, _
 		ByVal dwWin32ExitCode As DWORD, _
@@ -47,7 +47,7 @@ Sub ReportSvcStatus( _
 	
 End Sub
 
-Function SvcCtrlHandlerEx( _
+Private Function SvcCtrlHandlerEx( _
 		ByVal dwCtrl As DWORD, _
 		ByVal dwEventType As DWORD, _
 		ByVal lpEventData As LPVOID, _
@@ -85,7 +85,7 @@ Function SvcCtrlHandlerEx( _
 	
 End Function
 
-Sub SvcMain( _
+Private Sub SvcMain( _
 		ByVal dwNumServicesArgs As DWORD, _
 		ByVal lpServiceArgVectors As LPWSTR Ptr _
 	)

@@ -6,7 +6,7 @@
 Const ServiceParam = WStr("/service")
 Const CompareResultEqual As Long = 0
 
-Function IsServiceParam()As Boolean
+Private Function IsServiceParam()As Boolean
 	
 	Dim pLine As LPWSTR = GetCommandLineW()
 	Dim Args As Long = Any
@@ -34,7 +34,11 @@ Function IsServiceParam()As Boolean
 	
 End Function
 
+#ifndef WITHOUT_RUNTIME
+Private Function EntryPoint()As Integer
+#else
 Function EntryPoint Alias "EntryPoint"()As Integer
+#endif
 	
 	Dim RetCode As Integer = Any
 	

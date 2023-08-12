@@ -17,7 +17,7 @@ Type _ThreadPool
 	hThreads As HANDLE Ptr
 End Type
 
-Function CreateNewCompletionPort( _
+Private Function CreateNewCompletionPort( _
 		ByVal dwNumberOfConcurrentThreads As DWORD _
 	)As HANDLE
 	
@@ -32,7 +32,7 @@ Function CreateNewCompletionPort( _
 	
 End Function
 
-Function FinishExecuteTaskSink( _
+Private Function FinishExecuteTaskSink( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal pIResult As IAsyncResult Ptr, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr, _
@@ -75,7 +75,7 @@ Function FinishExecuteTaskSink( _
 	
 End Function
 
-Sub ThreadPoolCallBack( _
+Private Sub ThreadPoolCallBack( _
 		ByVal BytesTransferred As DWORD, _
 		ByVal CompletionKey As ULONG_PTR, _
 		ByVal pOverlap As OVERLAPPED Ptr, _
@@ -114,7 +114,7 @@ Sub ThreadPoolCallBack( _
 	
 End Sub
 
-Function WorkerThread( _
+Private Function WorkerThread( _
 		ByVal lpParam As LPVOID _
 	)As DWORD
 	
@@ -165,7 +165,7 @@ Function WorkerThread( _
 	
 End Function
 
-Sub InitializeThreadPool( _
+Private Sub InitializeThreadPool( _
 		ByVal this As ThreadPool Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -187,7 +187,7 @@ Sub InitializeThreadPool( _
 	
 End Sub
 
-Sub UnInitializeThreadPool( _
+Private Sub UnInitializeThreadPool( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
@@ -201,11 +201,82 @@ Sub UnInitializeThreadPool( _
 	
 End Sub
 
-Sub ThreadPoolCreated( _
+Private Sub ThreadPoolCreated( _
 		ByVal this As ThreadPool Ptr _
 	)
 	
 End Sub
+
+Private Sub ThreadPoolDestroyed( _
+		ByVal this As ThreadPool Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyThreadPool( _
+		ByVal this As ThreadPool Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeThreadPool(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	ThreadPoolDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function ThreadPoolAddRef( _
+		ByVal this As ThreadPool Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function ThreadPoolRelease( _
+		ByVal this As ThreadPool Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyThreadPool(this)
+	
+	Return 0
+	
+End Function
+
+Private Function ThreadPoolQueryInterface( _
+		ByVal this As ThreadPool Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IThreadPool, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	ThreadPoolAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateThreadPool( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -239,78 +310,7 @@ Function CreateThreadPool( _
 	
 End Function
 
-Sub ThreadPoolDestroyed( _
-		ByVal this As ThreadPool Ptr _
-	)
-	
-End Sub
-
-Sub DestroyThreadPool( _
-		ByVal this As ThreadPool Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeThreadPool(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	ThreadPoolDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function ThreadPoolQueryInterface( _
-		ByVal this As ThreadPool Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IThreadPool, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	ThreadPoolAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function ThreadPoolAddRef( _
-		ByVal this As ThreadPool Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function ThreadPoolRelease( _
-		ByVal this As ThreadPool Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyThreadPool(this)
-	
-	Return 0
-	
-End Function
-
-Function ThreadPoolGetMaxThreads( _
+Private Function ThreadPoolGetMaxThreads( _
 		ByVal this As ThreadPool Ptr, _
 		ByVal pMaxThreads As UInteger Ptr _
 	)As HRESULT
@@ -321,7 +321,7 @@ Function ThreadPoolGetMaxThreads( _
 	
 End Function
 
-Function ThreadPoolSetMaxThreads( _
+Private Function ThreadPoolSetMaxThreads( _
 		ByVal this As ThreadPool Ptr, _
 		ByVal MaxThreads As UInteger _
 	)As HRESULT
@@ -332,7 +332,7 @@ Function ThreadPoolSetMaxThreads( _
 	
 End Function
 
-Function ThreadPoolRun( _
+Private Function ThreadPoolRun( _
 		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
@@ -376,7 +376,7 @@ Function ThreadPoolRun( _
 	
 End Function
 
-Function ThreadPoolStop( _
+Private Function ThreadPoolStop( _
 		ByVal this As ThreadPool Ptr _
 	)As HRESULT
 	
@@ -407,7 +407,7 @@ Function ThreadPoolStop( _
 	
 End Function
 
-Function ThreadPoolAssociateDevice( _
+Private Function ThreadPoolAssociateDevice( _
 		ByVal this As ThreadPool Ptr, _
 		ByVal hHandle As HANDLE, _
 		ByVal pUserData As Any Ptr _
@@ -428,7 +428,7 @@ Function ThreadPoolAssociateDevice( _
 	
 End Function
 
-Function ThreadPoolPostPacket( _
+Private Function ThreadPoolPostPacket( _
 		ByVal this As ThreadPool Ptr, _
 		ByVal PacketSize As DWORD, _
 		ByVal CompletionKey As ULONG_PTR, _
@@ -454,7 +454,7 @@ Function ThreadPoolPostPacket( _
 End Function
 
 
-Function IThreadPoolQueryInterface( _
+Private Function IThreadPoolQueryInterface( _
 		ByVal this As IThreadPool Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -462,45 +462,45 @@ Function IThreadPoolQueryInterface( _
 	Return ThreadPoolQueryInterface(ContainerOf(this, ThreadPool, lpVtbl), riid, ppv)
 End Function
 
-Function IThreadPoolAddRef( _
+Private Function IThreadPoolAddRef( _
 		ByVal this As IThreadPool Ptr _
 	)As ULONG
 	Return ThreadPoolAddRef(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolRelease( _
+Private Function IThreadPoolRelease( _
 		ByVal this As IThreadPool Ptr _
 	)As ULONG
 	Return ThreadPoolRelease(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolGetMaxThreads( _
+Private Function IThreadPoolGetMaxThreads( _
 		ByVal this As IThreadPool Ptr, _
 		ByVal pMaxThreads As UInteger Ptr _
 	)As HRESULT
 	Return ThreadPoolGetMaxThreads(ContainerOf(this, ThreadPool, lpVtbl), pMaxThreads)
 End Function
 
-Function IThreadPoolSetMaxThreads( _
+Private Function IThreadPoolSetMaxThreads( _
 		ByVal this As IThreadPool Ptr, _
 		ByVal MaxThreads As UInteger _
 	)As HRESULT
 	Return ThreadPoolSetMaxThreads(ContainerOf(this, ThreadPool, lpVtbl), MaxThreads)
 End Function
 
-Function IThreadPoolRun( _
+Private Function IThreadPoolRun( _
 		ByVal this As IThreadPool Ptr _
 	)As HRESULT
 	Return ThreadPoolRun(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolStop( _
+Private Function IThreadPoolStop( _
 		ByVal this As IThreadPool Ptr _
 	)As HRESULT
 	Return ThreadPoolStop(ContainerOf(this, ThreadPool, lpVtbl))
 End Function
 
-Function IThreadPoolAssociateDevice( _
+Private Function IThreadPoolAssociateDevice( _
 		ByVal this As IThreadPool Ptr, _
 		ByVal hHandle As HANDLE, _
 		ByVal pUserData As Any Ptr _
@@ -508,7 +508,7 @@ Function IThreadPoolAssociateDevice( _
 	Return ThreadPoolAssociateDevice(ContainerOf(this, ThreadPool, lpVtbl), hHandle, pUserData)
 End Function
 
-Function IThreadPoolPostPacket( _
+Private Function IThreadPoolPostPacket( _
 		ByVal this As IThreadPool Ptr, _
 		ByVal PacketSize As DWORD, _
 		ByVal CompletionKey As ULONG_PTR, _

@@ -18,7 +18,7 @@ Type _HttpPutProcessor
 	pIMemoryAllocator As IMalloc Ptr
 End Type
 
-Sub InitializeHttpPutProcessor( _
+Private Sub InitializeHttpPutProcessor( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -37,17 +37,82 @@ Sub InitializeHttpPutProcessor( _
 	
 End Sub
 
-Sub UnInitializeHttpPutProcessor( _
+Private Sub UnInitializeHttpPutProcessor( _
 		ByVal this As HttpPutProcessor Ptr _
 	)
 	
 End Sub
 
-Sub HttpPutProcessorCreated( _
+Private Sub HttpPutProcessorCreated( _
 		ByVal this As HttpPutProcessor Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpPutProcessorDestroyed( _
+		ByVal this As HttpPutProcessor Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpPutProcessor( _
+		ByVal this As HttpPutProcessor Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpPutProcessor(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpPutProcessorDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpPutProcessorAddRef( _
+		ByVal this As HttpPutProcessor Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function HttpPutProcessorRelease( _
+		ByVal this As HttpPutProcessor Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function HttpPutProcessorQueryInterface( _
+		ByVal this As HttpPutProcessor Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpPutAsyncProcessor, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
+		End If
+	End If
+	
+	HttpPutProcessorAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpPutProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -81,72 +146,7 @@ Function CreateHttpPutProcessor( _
 	
 End Function
 
-Sub HttpPutProcessorDestroyed( _
-		ByVal this As HttpPutProcessor Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpPutProcessor( _
-		ByVal this As HttpPutProcessor Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpPutProcessor(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpPutProcessorDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpPutProcessorQueryInterface( _
-		ByVal this As HttpPutProcessor Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpPutAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
-		End If
-	End If
-	
-	HttpPutProcessorAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpPutProcessorAddRef( _
-		ByVal this As HttpPutProcessor Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function HttpPutProcessorRelease( _
-		ByVal this As HttpPutProcessor Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function HttpPutProcessorPrepare( _
+Private Function HttpPutProcessorPrepare( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -224,7 +224,7 @@ Function HttpPutProcessorPrepare( _
 	
 End Function
 
-Function HttpPutProcessorBeginProcess( _
+Private Function HttpPutProcessorBeginProcess( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -244,7 +244,7 @@ Function HttpPutProcessorBeginProcess( _
 	
 End Function
 
-Function HttpPutProcessorEndProcess( _
+Private Function HttpPutProcessorEndProcess( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
@@ -276,7 +276,7 @@ Function HttpPutProcessorEndProcess( _
 End Function
 
 
-Function IHttpPutProcessorQueryInterface( _
+Private Function IHttpPutProcessorQueryInterface( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -284,19 +284,19 @@ Function IHttpPutProcessorQueryInterface( _
 	Return HttpPutProcessorQueryInterface(ContainerOf(this, HttpPutProcessor, lpVtbl), riid, ppv)
 End Function
 
-Function IHttpPutProcessorAddRef( _
+Private Function IHttpPutProcessorAddRef( _
 		ByVal this As IHttpPutAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpPutProcessorAddRef(ContainerOf(this, HttpPutProcessor, lpVtbl))
 End Function
 
-Function IHttpPutProcessorRelease( _
+Private Function IHttpPutProcessorRelease( _
 		ByVal this As IHttpPutAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpPutProcessorRelease(ContainerOf(this, HttpPutProcessor, lpVtbl))
 End Function
 
-Function IHttpPutProcessorPrepare( _
+Private Function IHttpPutProcessorPrepare( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -304,7 +304,7 @@ Function IHttpPutProcessorPrepare( _
 	Return HttpPutProcessorPrepare(ContainerOf(this, HttpPutProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
-Function IHttpPutProcessorBeginProcess( _
+Private Function IHttpPutProcessorBeginProcess( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -313,7 +313,7 @@ Function IHttpPutProcessorBeginProcess( _
 	Return HttpPutProcessorBeginProcess(ContainerOf(this, HttpPutProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
 End Function
 
-Function IHttpPutProcessorEndProcess( _
+Private Function IHttpPutProcessorEndProcess( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _

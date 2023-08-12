@@ -85,7 +85,7 @@ Dim Shared ResponseHeaderNodesVector(1 To HttpResponseHeadersSize) As ResponseHe
 	Type<ResponseHeaderNode>(@HeaderLastModifiedString,         Len(HeaderLastModifiedString),         HttpResponseHeaders.HeaderLastModified) _
 }
 
-Function KnownResponseHeaderToString( _
+Private Function KnownResponseHeaderToString( _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeaderLength As Integer Ptr _
 	)As WString Ptr
@@ -109,7 +109,7 @@ Function KnownResponseHeaderToString( _
 	
 End Function
 
-Function HttpVersionToString( _
+Private Function HttpVersionToString( _
 		ByVal v As HttpVersions, _
 		ByVal pBufferLength As Integer Ptr _
 	)As WString Ptr
@@ -138,7 +138,7 @@ Function HttpVersionToString( _
 	
 End Function
 
-Function GetKnownResponseHeaderIndex( _
+Private Function GetKnownResponseHeaderIndex( _
 		ByVal pHeader As WString Ptr, _
 		ByVal pIndex As HttpResponseHeaders Ptr _
 	)As Boolean
@@ -159,7 +159,7 @@ Function GetKnownResponseHeaderIndex( _
 	
 End Function
 
-Sub InitializeServerResponse( _
+Private Sub InitializeServerResponse( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -192,7 +192,7 @@ Sub InitializeServerResponse( _
 	
 End Sub
 
-Sub UnInitializeServerResponse( _
+Private Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
@@ -211,11 +211,82 @@ Sub UnInitializeServerResponse( _
 	
 End Sub
 
-Sub ServerResponseCreated( _
+Private Sub ServerResponseCreated( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
 End Sub
+
+Private Sub ServerResponseDestroyed( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyServerResponse( _
+		ByVal this As ServerResponse Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeServerResponse(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	ServerResponseDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function ServerResponseAddRef( _
+		ByVal this As ServerResponse Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function ServerResponseRelease( _
+		ByVal this As ServerResponse Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyServerResponse(this)
+	
+	Return 0
+	
+End Function
+
+Private Function ServerResponseQueryInterface( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IServerResponse, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	ServerResponseAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -249,78 +320,7 @@ Function CreateServerResponse( _
 	
 End Function
 
-Sub ServerResponseDestroyed( _
-		ByVal this As ServerResponse Ptr _
-	)
-	
-End Sub
-
-Sub DestroyServerResponse( _
-		ByVal this As ServerResponse Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeServerResponse(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	ServerResponseDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function ServerResponseQueryInterface( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IServerResponse, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	ServerResponseAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function ServerResponseAddRef( _
-		ByVal this As ServerResponse Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function ServerResponseRelease( _
-		ByVal this As ServerResponse Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyServerResponse(this)
-	
-	Return 0
-	
-End Function
-
-Function ServerResponseGetHttpVersion( _
+Private Function ServerResponseGetHttpVersion( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
@@ -331,7 +331,7 @@ Function ServerResponseGetHttpVersion( _
 	
 End Function
 
-Function ServerResponseSetHttpVersion( _
+Private Function ServerResponseSetHttpVersion( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HttpVersion As HttpVersions _
 	)As HRESULT
@@ -342,7 +342,7 @@ Function ServerResponseSetHttpVersion( _
 	
 End Function
 
-Function ServerResponseGetStatusCode( _
+Private Function ServerResponseGetStatusCode( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pStatusCode As HttpStatusCodes Ptr _
 	)As HRESULT
@@ -353,7 +353,7 @@ Function ServerResponseGetStatusCode( _
 	
 End Function
 
-Function ServerResponseSetStatusCode( _
+Private Function ServerResponseSetStatusCode( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal StatusCode As HttpStatusCodes _
 	)As HRESULT
@@ -364,7 +364,7 @@ Function ServerResponseSetStatusCode( _
 	
 End Function
 
-Function ServerResponseGetStatusDescription( _
+Private Function ServerResponseGetStatusDescription( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
@@ -375,7 +375,7 @@ Function ServerResponseGetStatusDescription( _
 	
 End Function
 
-Function ServerResponseSetStatusDescription( _
+Private Function ServerResponseSetStatusDescription( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
@@ -386,7 +386,7 @@ Function ServerResponseSetStatusDescription( _
 	
 End Function
 
-Function ServerResponseGetKeepAlive( _
+Private Function ServerResponseGetKeepAlive( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
@@ -397,7 +397,7 @@ Function ServerResponseGetKeepAlive( _
 	
 End Function
 
-Function ServerResponseSetKeepAlive( _
+Private Function ServerResponseSetKeepAlive( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
@@ -408,7 +408,7 @@ Function ServerResponseSetKeepAlive( _
 	
 End Function
 
-Function ServerResponseGetSendOnlyHeaders( _
+Private Function ServerResponseGetSendOnlyHeaders( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pSendOnlyHeaders As Boolean Ptr _
 	)As HRESULT
@@ -419,7 +419,7 @@ Function ServerResponseGetSendOnlyHeaders( _
 	
 End Function
 
-Function ServerResponseSetSendOnlyHeaders( _
+Private Function ServerResponseSetSendOnlyHeaders( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal SendOnlyHeaders As Boolean _
 	)As HRESULT
@@ -430,7 +430,7 @@ Function ServerResponseSetSendOnlyHeaders( _
 	
 End Function
 
-Function ServerResponseGetMimeType( _
+Private Function ServerResponseGetMimeType( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
@@ -441,7 +441,7 @@ Function ServerResponseGetMimeType( _
 	
 End Function
 
-Function ServerResponseSetMimeType( _
+Private Function ServerResponseSetMimeType( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
@@ -452,7 +452,7 @@ Function ServerResponseSetMimeType( _
 	
 End Function
 
-Function ServerResponseGetHttpHeader( _
+Private Function ServerResponseGetHttpHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
@@ -464,7 +464,7 @@ Function ServerResponseGetHttpHeader( _
 	
 End Function
 
-Function ServerResponseSetHttpHeader( _
+Private Function ServerResponseSetHttpHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeader As HeapBSTR _
@@ -476,7 +476,7 @@ Function ServerResponseSetHttpHeader( _
 	
 End Function
 
-Function ServerResponseGetZipEnabled( _
+Private Function ServerResponseGetZipEnabled( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pZipEnabled As Boolean Ptr _
 	)As HRESULT
@@ -487,7 +487,7 @@ Function ServerResponseGetZipEnabled( _
 	
 End Function
 
-Function ServerResponseSetZipEnabled( _
+Private Function ServerResponseSetZipEnabled( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ZipEnabled As Boolean _
 	)As HRESULT
@@ -498,7 +498,7 @@ Function ServerResponseSetZipEnabled( _
 	
 End Function
 
-Function ServerResponseGetZipMode( _
+Private Function ServerResponseGetZipMode( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
@@ -509,7 +509,7 @@ Function ServerResponseGetZipMode( _
 	
 End Function
 
-Function ServerResponseSetZipMode( _
+Private Function ServerResponseSetZipMode( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
@@ -520,7 +520,19 @@ Function ServerResponseSetZipMode( _
 	
 End Function
 
-Function ServerResponseAddResponseHeader( _
+Private Function ServerResponseAddKnownResponseHeader( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As HeapBSTR _
+	)As HRESULT
+	
+	LET_HEAPSYSSTRING(this->ResponseHeaders(HeaderIndex), Value)
+	
+	Return S_OK
+	
+End Function
+
+Private Function ServerResponseAddResponseHeader( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderName As HeapBSTR, _
 		ByVal Value As HeapBSTR _
@@ -541,38 +553,7 @@ Function ServerResponseAddResponseHeader( _
 	
 End Function
 
-Function ServerResponseAddKnownResponseHeader( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As HeapBSTR _
-	)As HRESULT
-	
-	LET_HEAPSYSSTRING(this->ResponseHeaders(HeaderIndex), Value)
-	
-	Return S_OK
-	
-End Function
-
-Function ServerResponseAddKnownResponseHeaderWstr( _
-		ByVal this As ServerResponse Ptr, _
-		ByVal HeaderIndex As HttpResponseHeaders, _
-		ByVal Value As WString Ptr _
-	)As HRESULT
-	
-	Dim Length As Integer = lstrlenW(Value)
-	
-	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
-		HeaderIndex, _
-		Value, _
-		Length _
-	)
-	
-	Return hr
-	
-End Function
-
-Function ServerResponseAddKnownResponseHeaderWstrLen( _
+Private Function ServerResponseAddKnownResponseHeaderWstrLen( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As WString Ptr, _
@@ -600,7 +581,26 @@ Function ServerResponseAddKnownResponseHeaderWstrLen( _
 	
 End Function
 
-Function ServerResponseGetByteRange( _
+Private Function ServerResponseAddKnownResponseHeaderWstr( _
+		ByVal this As ServerResponse Ptr, _
+		ByVal HeaderIndex As HttpResponseHeaders, _
+		ByVal Value As WString Ptr _
+	)As HRESULT
+	
+	Dim Length As Integer = lstrlenW(Value)
+	
+	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
+		this, _
+		HeaderIndex, _
+		Value, _
+		Length _
+	)
+	
+	Return hr
+	
+End Function
+
+Private Function ServerResponseGetByteRange( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal pOffset As LongInt Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -613,7 +613,7 @@ Function ServerResponseGetByteRange( _
 	
 End Function
 
-Function ServerResponseSetByteRange( _
+Private Function ServerResponseSetByteRange( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal Offset As LongInt, _
 		ByVal Length As LongInt _
@@ -626,13 +626,13 @@ Function ServerResponseSetByteRange( _
 	
 End Function
 
-Sub ServerResponsePrintServerHeaders( _
+Private Sub ServerResponsePrintServerHeaders( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
 End Sub
 
-Function ServerResponseAllHeadersToZString( _
+Private Function ServerResponseAllHeadersToZString( _
 		ByVal this As ServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
@@ -862,7 +862,7 @@ Function ServerResponseAllHeadersToZString( _
 End Function
 
 
-Function IServerResponseQueryInterface( _
+Private Function IServerResponseQueryInterface( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -870,103 +870,103 @@ Function IServerResponseQueryInterface( _
 	Return ServerResponseQueryInterface(ContainerOf(this, ServerResponse, lpVtbl), riid, ppvObject)
 End Function
 
-Function IServerResponseAddRef( _
+Private Function IServerResponseAddRef( _
 		ByVal this As IServerResponse Ptr _
 	)As ULONG
 	Return ServerResponseAddRef(ContainerOf(this, ServerResponse, lpVtbl))
 End Function
 
-Function IServerResponseRelease( _
+Private Function IServerResponseRelease( _
 		ByVal this As IServerResponse Ptr _
 	)As ULONG
 	Return ServerResponseRelease(ContainerOf(this, ServerResponse, lpVtbl))
 End Function
 
-Function IServerResponseGetHttpVersion( _
+Private Function IServerResponseGetHttpVersion( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
 	Return ServerResponseGetHttpVersion(ContainerOf(this, ServerResponse, lpVtbl), pHttpVersion)
 End Function
 
-Function IServerResponseSetHttpVersion( _
+Private Function IServerResponseSetHttpVersion( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HttpVersion As HttpVersions _
 	)As HRESULT
 	Return ServerResponseSetHttpVersion(ContainerOf(this, ServerResponse, lpVtbl), HttpVersion)
 End Function
 
-Function IServerResponseGetStatusCode( _
+Private Function IServerResponseGetStatusCode( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pStatusCode As HttpStatusCodes Ptr _
 	)As HRESULT
 	Return ServerResponseGetStatusCode(ContainerOf(this, ServerResponse, lpVtbl), pStatusCode)
 End Function
 
-Function IServerResponseSetStatusCode( _
+Private Function IServerResponseSetStatusCode( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal StatusCode As HttpStatusCodes _
 	)As HRESULT
 	Return ServerResponseSetStatusCode(ContainerOf(this, ServerResponse, lpVtbl), StatusCode)
 End Function
 
-Function IServerResponseGetStatusDescription( _
+Private Function IServerResponseGetStatusDescription( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
 	Return ServerResponseGetStatusDescription(ContainerOf(this, ServerResponse, lpVtbl), ppStatusDescription)
 End Function
 
-Function IServerResponseSetStatusDescription( _
+Private Function IServerResponseSetStatusDescription( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
 	Return ServerResponseSetStatusDescription(ContainerOf(this, ServerResponse, lpVtbl), pStatusDescription)
 End Function
 
-Function IServerResponseGetKeepAlive( _
+Private Function IServerResponseGetKeepAlive( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 	Return ServerResponseGetKeepAlive(ContainerOf(this, ServerResponse, lpVtbl), pKeepAlive)
 End Function
 
-Function IServerResponseSetKeepAlive( _
+Private Function IServerResponseSetKeepAlive( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
 	Return ServerResponseSetKeepAlive(ContainerOf(this, ServerResponse, lpVtbl), KeepAlive)
 End Function
 
-Function IServerResponseGetSendOnlyHeaders( _
+Private Function IServerResponseGetSendOnlyHeaders( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pSendOnlyHeaders As Boolean Ptr _
 	)As HRESULT
 	Return ServerResponseGetSendOnlyHeaders(ContainerOf(this, ServerResponse, lpVtbl), pSendOnlyHeaders)
 End Function
 
-Function IServerResponseSetSendOnlyHeaders( _
+Private Function IServerResponseSetSendOnlyHeaders( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal SendOnlyHeaders As Boolean _
 	)As HRESULT
 	Return ServerResponseSetSendOnlyHeaders(ContainerOf(this, ServerResponse, lpVtbl), SendOnlyHeaders)
 End Function
 
-Function IServerResponseGetMimeType( _
+Private Function IServerResponseGetMimeType( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 	Return ServerResponseGetMimeType(ContainerOf(this, ServerResponse, lpVtbl), pMimeType)
 End Function
 
-Function IServerResponseSetMimeType( _
+Private Function IServerResponseSetMimeType( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 	Return ServerResponseSetMimeType(ContainerOf(this, ServerResponse, lpVtbl), pMimeType)
 End Function
 
-Function IServerResponseGetHttpHeader( _
+Private Function IServerResponseGetHttpHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
@@ -974,7 +974,7 @@ Function IServerResponseGetHttpHeader( _
 	Return ServerResponseGetHttpHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, ppHeader)
 End Function
 
-Function IServerResponseSetHttpHeader( _
+Private Function IServerResponseSetHttpHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeader As HeapBSTR _
@@ -982,35 +982,35 @@ Function IServerResponseSetHttpHeader( _
 	Return ServerResponseSetHttpHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, pHeader)
 End Function
 
-Function IServerResponseGetZipEnabled( _
+Private Function IServerResponseGetZipEnabled( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pZipEnabled As Boolean Ptr _
 	)As HRESULT
 	Return ServerResponseGetZipEnabled(ContainerOf(this, ServerResponse, lpVtbl), pZipEnabled)
 End Function
 
-Function IServerResponseSetZipEnabled( _
+Private Function IServerResponseSetZipEnabled( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ZipEnabled As Boolean _
 	)As HRESULT
 	Return ServerResponseSetZipEnabled(ContainerOf(this, ServerResponse, lpVtbl), ZipEnabled)
 End Function
 
-Function IServerResponseGetZipMode( _
+Private Function IServerResponseGetZipMode( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	Return ServerResponseGetZipMode(ContainerOf(this, ServerResponse, lpVtbl), pZipMode)
 End Function
 
-Function IServerResponseSetZipMode( _
+Private Function IServerResponseSetZipMode( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 	Return ServerResponseSetZipMode(ContainerOf(this, ServerResponse, lpVtbl), ZipMode)
 End Function
 
-Function IServerResponseAddResponseHeader( _
+Private Function IServerResponseAddResponseHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderName As HeapBSTR, _
 		ByVal Value As HeapBSTR _
@@ -1018,7 +1018,7 @@ Function IServerResponseAddResponseHeader( _
 	Return ServerResponseAddResponseHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderName, Value)
 End Function
 
-Function IServerResponseAddKnownResponseHeader( _
+Private Function IServerResponseAddKnownResponseHeader( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR _
@@ -1026,7 +1026,7 @@ Function IServerResponseAddKnownResponseHeader( _
 	Return ServerResponseAddKnownResponseHeader(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
-Function IServerResponseAddKnownResponseHeaderWstr( _
+Private Function IServerResponseAddKnownResponseHeaderWstr( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR _
@@ -1034,7 +1034,7 @@ Function IServerResponseAddKnownResponseHeaderWstr( _
 	Return ServerResponseAddKnownResponseHeaderWstr(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
-Function IServerResponseGetByteRange( _
+Private Function IServerResponseGetByteRange( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal pOffset As LongInt Ptr, _
 		ByVal pLength As LongInt Ptr _
@@ -1042,7 +1042,7 @@ Function IServerResponseGetByteRange( _
 	Return ServerResponseGetByteRange(ContainerOf(this, ServerResponse, lpVtbl), pOffset, pLength)
 End Function
 
-Function IServerResponseSetByteRange( _
+Private Function IServerResponseSetByteRange( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal Offset As LongInt, _
 		ByVal Length As LongInt _
@@ -1050,7 +1050,7 @@ Function IServerResponseSetByteRange( _
 	Return ServerResponseSetByteRange(ContainerOf(this, ServerResponse, lpVtbl), Offset, Length)
 End Function
 
-Function IServerResponseAddKnownResponseHeaderWstrLen( _
+Private Function IServerResponseAddKnownResponseHeaderWstrLen( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR, _
@@ -1059,7 +1059,7 @@ Function IServerResponseAddKnownResponseHeaderWstrLen( _
 	Return ServerResponseAddKnownResponseHeaderWstrLen(ContainerOf(this, ServerResponse, lpVtbl), HeaderIndex, Value, Length)
 End Function
 
-Function IServerResponseAllHeadersToZString( _
+Private Function IServerResponseAllHeadersToZString( _
 		ByVal this As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _

@@ -22,7 +22,7 @@ Type _TcpListener
 	ProtLength As Long
 End Type
 
-Sub InitializeTcpListener( _
+Private Sub InitializeTcpListener( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -42,17 +42,78 @@ Sub InitializeTcpListener( _
 	
 End Sub
 
-Sub UnInitializeTcpListener( _
+Private Sub UnInitializeTcpListener( _
 		ByVal this As TcpListener Ptr _
 	)
 	
 End Sub
 
-Sub TcpListenerCreated( _
+Private Sub TcpListenerCreated( _
 		ByVal this As TcpListener Ptr _
 	)
 	
 End Sub
+
+Private Sub TcpListenerDestroyed( _
+		ByVal this As TcpListener Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyTcpListener( _
+		ByVal this As TcpListener Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeTcpListener(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	TcpListenerDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function TcpListenerAddRef( _
+		ByVal this As TcpListener Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function TcpListenerRelease( _
+		ByVal this As TcpListener Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function TcpListenerQueryInterface( _
+		ByVal this As TcpListener Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_ITcpListener, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	TcpListenerAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateTcpListener( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -86,68 +147,7 @@ Function CreateTcpListener( _
 	
 End Function
 
-Sub TcpListenerDestroyed( _
-		ByVal this As TcpListener Ptr _
-	)
-	
-End Sub
-
-Sub DestroyTcpListener( _
-		ByVal this As TcpListener Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeTcpListener(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	TcpListenerDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function TcpListenerQueryInterface( _
-		ByVal this As TcpListener Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_ITcpListener, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	TcpListenerAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function TcpListenerAddRef( _
-		ByVal this As TcpListener Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function TcpListenerRelease( _
-		ByVal this As TcpListener Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function TcpListenerBeginAccept( _
+Private Function TcpListenerBeginAccept( _
 		ByVal this As TcpListener Ptr, _
 		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -214,7 +214,7 @@ Function TcpListenerBeginAccept( _
 	
 End Function
 
-Function TcpListenerEndAccept( _
+Private Function TcpListenerEndAccept( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ReadedBytes As DWORD, _
@@ -258,7 +258,7 @@ Function TcpListenerEndAccept( _
 	
 End Function
 
-Function TcpListenerGetListenSocket( _
+Private Function TcpListenerGetListenSocket( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
 	)As HRESULT
@@ -269,7 +269,7 @@ Function TcpListenerGetListenSocket( _
 	
 End Function
 
-Function TcpListenerSetListenSocket( _
+Private Function TcpListenerSetListenSocket( _
 		ByVal this As TcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
@@ -294,7 +294,7 @@ Function TcpListenerSetListenSocket( _
 End Function
 
 
-Function ITcpListenerQueryInterface( _
+Private Function ITcpListenerQueryInterface( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -302,19 +302,19 @@ Function ITcpListenerQueryInterface( _
 	Return TcpListenerQueryInterface(ContainerOf(this, TcpListener, lpVtbl), riid, ppv)
 End Function
 
-Function ITcpListenerAddRef( _
+Private Function ITcpListenerAddRef( _
 		ByVal this As ITcpListener Ptr _
 	)As ULONG
 	Return TcpListenerAddRef(ContainerOf(this, TcpListener, lpVtbl))
 End Function
 
-Function ITcpListenerRelease( _
+Private Function ITcpListenerRelease( _
 		ByVal this As ITcpListener Ptr _
 	)As ULONG
 	Return TcpListenerRelease(ContainerOf(this, TcpListener, lpVtbl))
 End Function
 
-Function ITcpListenerBeginAccept( _
+Private Function ITcpListenerBeginAccept( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -323,7 +323,7 @@ Function ITcpListenerBeginAccept( _
 	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), Buffer, StateObject, ppIAsyncResult)
 End Function
 
-Function ITcpListenerEndAccept( _
+Private Function ITcpListenerEndAccept( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ReadedBytes As DWORD, _
@@ -332,14 +332,14 @@ Function ITcpListenerEndAccept( _
 	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, ReadedBytes, pClientSocket)
 End Function
 
-Function ITcpListenerGetListenSocket( _
+Private Function ITcpListenerGetListenSocket( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
 	)As ULONG
 	Return TcpListenerGetListenSocket(ContainerOf(this, TcpListener, lpVtbl), pListenSocket)
 End Function
 
-Function ITcpListenerSetListenSocket( _
+Private Function ITcpListenerSetListenSocket( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As ULONG

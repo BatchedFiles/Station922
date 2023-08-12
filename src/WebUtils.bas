@@ -272,7 +272,7 @@ Function ProcessErrorRequestResponse( _
 	
 End Function
 
-Function IpEndPointExists( _
+Private Function IpEndPointExists( _
 		ByVal pIpEndPoints As IpEndPointVector Ptr, _
 		ByVal IpEndPointsLength As Integer, _
 		ByVal ListenAddress As HeapBSTR, _
@@ -299,7 +299,7 @@ Function IpEndPointExists( _
 	
 End Function
 
-Function IpEndPointCompare( _
+Private Function IpEndPointCompare( _
 		ByVal pWebSiteConfig As WebSiteConfiguration Ptr, _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _

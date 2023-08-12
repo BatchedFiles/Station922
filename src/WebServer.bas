@@ -29,7 +29,7 @@ Type _WebServer
 	ListenPort As HeapBSTR
 End Type
 
-Function CreateAcceptConnectionTask( _
+Private Function CreateAcceptConnectionTask( _
 		ByVal this As WebServer Ptr, _
 		ByVal ServerSocket As SOCKET, _
 		ByVal ppTask As IAcceptConnectionAsyncIoTask Ptr Ptr _
@@ -66,7 +66,7 @@ Function CreateAcceptConnectionTask( _
 	
 End Function
 
-Function CreateServerSocketSink( _
+Private Function CreateServerSocketSink( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
@@ -120,7 +120,7 @@ Function CreateServerSocketSink( _
 	
 End Function
 
-Sub InitializeWebServer( _
+Private Sub InitializeWebServer( _
 		ByVal this As WebServer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
@@ -143,7 +143,7 @@ Sub InitializeWebServer( _
 	
 End Sub
 
-Sub UnInitializeWebServer( _
+Private Sub UnInitializeWebServer( _
 		ByVal this As WebServer Ptr _
 	)
 	
@@ -156,11 +156,82 @@ Sub UnInitializeWebServer( _
 	
 End Sub
 
-Sub WebServerCreated( _
+Private Sub WebServerCreated( _
 		ByVal this As WebServer Ptr _
 	)
 	
 End Sub
+
+Private Sub WebServerDestroyed( _
+		ByVal this As WebServer Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyWebServer( _
+		ByVal this As WebServer Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeWebServer(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebServerDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function WebServerAddRef( _
+		ByVal this As WebServer Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function WebServerRelease( _
+		ByVal this As WebServer Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyWebServer(this)
+	
+	Return 0
+	
+End Function
+
+Private Function WebServerQueryInterface( _
+		ByVal this As WebServer Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IWebServer, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	WebServerAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -210,78 +281,7 @@ Function CreateWebServer( _
 	
 End Function
 
-Sub WebServerDestroyed( _
-		ByVal this As WebServer Ptr _
-	)
-	
-End Sub
-
-Sub DestroyWebServer( _
-		ByVal this As WebServer Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeWebServer(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	WebServerDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function WebServerQueryInterface( _
-		ByVal this As WebServer Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IWebServer, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	WebServerAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function WebServerAddRef( _
-		ByVal this As WebServer Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function WebServerRelease( _
-		ByVal this As WebServer Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyWebServer(this)
-	
-	Return 0
-	
-End Function
-
-Function WebServerAddWebSite( _
+Private Function WebServerAddWebSite( _
 		ByVal this As WebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
@@ -302,7 +302,7 @@ Function WebServerAddWebSite( _
 	
 End Function
 
-Function WebServerAddDefaultWebSite( _
+Private Function WebServerAddDefaultWebSite( _
 		ByVal this As WebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
@@ -319,7 +319,7 @@ Function WebServerAddDefaultWebSite( _
 	
 End Function
 
-Function WebServerSetEndPoint( _
+Private Function WebServerSetEndPoint( _
 		ByVal this As WebServer Ptr, _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
@@ -332,7 +332,7 @@ Function WebServerSetEndPoint( _
 	
 End Function
 
-Function WebServerRun( _
+Private Function WebServerRun( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
@@ -377,7 +377,7 @@ Function WebServerRun( _
 	
 End Function
 
-Function WebServerStop( _
+Private Function WebServerStop( _
 		ByVal this As WebServer Ptr _
 	)As HRESULT
 	
@@ -390,7 +390,7 @@ Function WebServerStop( _
 End Function
 
 
-Function IWebServerQueryInterface( _
+Private Function IWebServerQueryInterface( _
 		ByVal this As IWebServer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -398,19 +398,19 @@ Function IWebServerQueryInterface( _
 	Return WebServerQueryInterface(ContainerOf(this, WebServer, lpVtbl), riid, ppv)
 End Function
 
-Function IWebServerAddRef( _
+Private Function IWebServerAddRef( _
 		ByVal this As IWebServer Ptr _
 	)As ULONG
 	Return WebServerAddRef(ContainerOf(this, WebServer, lpVtbl))
 End Function
 
-Function IWebServerRelease( _
+Private Function IWebServerRelease( _
 		ByVal this As IWebServer Ptr _
 	)As ULONG
 	Return WebServerRelease(ContainerOf(this, WebServer, lpVtbl))
 End Function
 
-Function IWebServerAddWebSite( _
+Private Function IWebServerAddWebSite( _
 		ByVal this As IWebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
@@ -419,14 +419,14 @@ Function IWebServerAddWebSite( _
 	Return WebServerAddWebSite(ContainerOf(this, WebServer, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
-Function IWebServerAddDefaultWebSite( _
+Private Function IWebServerAddDefaultWebSite( _
 		ByVal this As IWebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
 	Return WebServerAddDefaultWebSite(ContainerOf(this, WebServer, lpVtbl), pIDefaultWebSite)
 End Function
 
-Function IWebServerSetEndPoint( _
+Private Function IWebServerSetEndPoint( _
 		ByVal this As IWebServer Ptr, _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
@@ -434,13 +434,13 @@ Function IWebServerSetEndPoint( _
 	Return WebServerSetEndPoint(ContainerOf(this, WebServer, lpVtbl), ListenAddress, ListenPort)
 End Function
 
-Function IWebServerRun( _
+Private Function IWebServerRun( _
 		ByVal this As IWebServer Ptr _
 	)As HRESULT
 	Return WebServerRun(ContainerOf(this, WebServer, lpVtbl))
 End Function
 
-Function IWebServerStop( _
+Private Function IWebServerStop( _
 		ByVal this As IWebServer Ptr _
 	)As HRESULT
 	Return WebServerStop(ContainerOf(this, WebServer, lpVtbl))

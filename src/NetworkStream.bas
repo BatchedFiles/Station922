@@ -20,7 +20,7 @@ Type _NetworkStream
 	RemoteAddressLength As Integer
 End Type
 
-Sub SetStartTime( _
+Private Sub SetStartTime( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
@@ -38,7 +38,7 @@ Sub SetStartTime( _
 	
 End Sub
 
-Sub SetEndTime( _
+Private Sub SetEndTime( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
@@ -56,7 +56,7 @@ Sub SetEndTime( _
 	
 End Sub
 
-Sub InitializeNetworkStream( _
+Private Sub InitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -77,7 +77,7 @@ Sub InitializeNetworkStream( _
 	
 End Sub
 
-Sub UnInitializeNetworkStream( _
+Private Sub UnInitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
@@ -101,11 +101,86 @@ Sub UnInitializeNetworkStream( _
 	
 End Sub
 
-Sub NetworkStreamCreated( _
+Private Sub NetworkStreamCreated( _
 		ByVal this As NetworkStream Ptr _
 	)
 	
 End Sub
+
+Private Sub NetworkStreamDestroyed( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyNetworkStream( _
+		ByVal this As NetworkStream Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeNetworkStream(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	NetworkStreamDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function NetworkStreamAddRef( _
+		ByVal this As NetworkStream Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function NetworkStreamRelease( _
+		ByVal this As NetworkStream Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyNetworkStream(this)
+	
+	Return 0
+	
+End Function
+
+Private Function NetworkStreamQueryInterface( _
+		ByVal this As NetworkStream Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_INetworkStream, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IBaseStream, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
+		End If
+	End If
+	
+	NetworkStreamAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateNetworkStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -139,82 +214,7 @@ Function CreateNetworkStream( _
 	
 End Function
 
-Sub NetworkStreamDestroyed( _
-		ByVal this As NetworkStream Ptr _
-	)
-	
-End Sub
-
-Sub DestroyNetworkStream( _
-		ByVal this As NetworkStream Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeNetworkStream(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	NetworkStreamDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function NetworkStreamQueryInterface( _
-		ByVal this As NetworkStream Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_INetworkStream, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IBaseStream, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
-		End If
-	End If
-	
-	NetworkStreamAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function NetworkStreamAddRef( _
-		ByVal this As NetworkStream Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function NetworkStreamRelease( _
-		ByVal this As NetworkStream Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyNetworkStream(this)
-	
-	Return 0
-	
-End Function
-
-Function NetworkStreamBeginRead( _
+Private Function NetworkStreamBeginRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal BufferLength As DWORD, _
@@ -287,7 +287,7 @@ Function NetworkStreamBeginRead( _
 	
 End Function
 
-Function NetworkStreamBeginWriteGatherWithFlags( _
+Private Function NetworkStreamBeginWriteGatherWithFlags( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
@@ -357,7 +357,7 @@ Function NetworkStreamBeginWriteGatherWithFlags( _
 	
 End Function
 
-Function NetworkStreamBeginWrite( _
+Private Function NetworkStreamBeginWrite( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
@@ -382,7 +382,7 @@ Function NetworkStreamBeginWrite( _
 	
 End Function
 
-Function NetworkStreamBeginWriteGather( _
+Private Function NetworkStreamBeginWriteGather( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
@@ -403,7 +403,7 @@ Function NetworkStreamBeginWriteGather( _
 	
 End Function
 
-Function NetworkStreamBeginWriteGatherAndShutdown( _
+Private Function NetworkStreamBeginWriteGatherAndShutdown( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
@@ -425,7 +425,7 @@ Function NetworkStreamBeginWriteGatherAndShutdown( _
 	
 End Function
 
-Function NetworkStreamEndRead( _
+Private Function NetworkStreamEndRead( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As DWORD Ptr _
@@ -469,7 +469,7 @@ Function NetworkStreamEndRead( _
 	
 End Function
 
-Function NetworkStreamEndWrite( _
+Private Function NetworkStreamEndWrite( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
@@ -513,7 +513,7 @@ Function NetworkStreamEndWrite( _
 	
 End Function
 
-Function NetworkStreamGetSocket( _
+Private Function NetworkStreamGetSocket( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
@@ -524,7 +524,7 @@ Function NetworkStreamGetSocket( _
 	
 End Function
 	
-Function NetworkStreamSetSocket( _
+Private Function NetworkStreamSetSocket( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal ClientSocket As SOCKET _
 	)As HRESULT
@@ -547,7 +547,7 @@ Function NetworkStreamSetSocket( _
 	
 End Function
 
-Function NetworkStreamGetRemoteAddress( _
+Private Function NetworkStreamGetRemoteAddress( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
@@ -560,7 +560,7 @@ Function NetworkStreamGetRemoteAddress( _
 	
 End Function
 
-Function NetworkStreamSetRemoteAddress( _
+Private Function NetworkStreamSetRemoteAddress( _
 		ByVal this As NetworkStream Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
@@ -574,7 +574,7 @@ Function NetworkStreamSetRemoteAddress( _
 End Function
 
 
-Function INetworkStreamQueryInterface( _
+Private Function INetworkStreamQueryInterface( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -582,19 +582,19 @@ Function INetworkStreamQueryInterface( _
 	Return NetworkStreamQueryInterface(ContainerOf(this, NetworkStream, lpVtbl), riid, ppvObject)
 End Function
 
-Function INetworkStreamAddRef( _
+Private Function INetworkStreamAddRef( _
 		ByVal this As INetworkStream Ptr _
 	)As ULONG
 	Return NetworkStreamAddRef(ContainerOf(this, NetworkStream, lpVtbl))
 End Function
 
-Function INetworkStreamRelease( _
+Private Function INetworkStreamRelease( _
 		ByVal this As INetworkStream Ptr _
 	)As ULONG
 	Return NetworkStreamRelease(ContainerOf(this, NetworkStream, lpVtbl))
 End Function
 
-Function INetworkStreamBeginRead( _
+Private Function INetworkStreamBeginRead( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
@@ -604,7 +604,7 @@ Function INetworkStreamBeginRead( _
 	Return NetworkStreamBeginRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, StateObject, ppIAsyncResult)
 End Function
 
-Function INetworkStreamBeginWrite( _
+Private Function INetworkStreamBeginWrite( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
@@ -614,7 +614,7 @@ Function INetworkStreamBeginWrite( _
 	Return NetworkStreamBeginWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, StateObject, ppIAsyncResult)
 End Function
 
-Function INetworkStreamEndRead( _
+Private Function INetworkStreamEndRead( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As DWORD Ptr _
@@ -622,7 +622,7 @@ Function INetworkStreamEndRead( _
 	Return NetworkStreamEndRead(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
 End Function
 
-Function INetworkStreamEndWrite( _
+Private Function INetworkStreamEndWrite( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
@@ -630,7 +630,7 @@ Function INetworkStreamEndWrite( _
 	Return NetworkStreamEndWrite(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
 End Function
 
-Function INetworkStreamBeginWriteGather( _
+Private Function INetworkStreamBeginWriteGather( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
@@ -640,7 +640,7 @@ Function INetworkStreamBeginWriteGather( _
 	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, StateObject, ppIAsyncResult)
 End Function
 
-Function INetworkStreamBeginWriteGatherAndShutdown( _
+Private Function INetworkStreamBeginWriteGatherAndShutdown( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
@@ -650,21 +650,21 @@ Function INetworkStreamBeginWriteGatherAndShutdown( _
 	Return NetworkStreamBeginWriteGatherAndShutdown(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, StateObject, ppIAsyncResult)
 End Function
 
-Function INetworkStreamGetSocket( _
+Private Function INetworkStreamGetSocket( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
 	Return NetworkStreamGetSocket(ContainerOf(this, NetworkStream, lpVtbl), pResult)
 End Function
 
-Function INetworkStreamSetSocket( _
+Private Function INetworkStreamSetSocket( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
 	Return NetworkStreamSetSocket(ContainerOf(this, NetworkStream, lpVtbl), sock)
 End Function
 
-Function INetworkStreamGetRemoteAddress( _
+Private Function INetworkStreamGetRemoteAddress( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
@@ -672,7 +672,7 @@ Function INetworkStreamGetRemoteAddress( _
 	Return NetworkStreamGetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
 End Function
 
-Function INetworkStreamSetRemoteAddress( _
+Private Function INetworkStreamSetRemoteAddress( _
 		ByVal this As INetworkStream Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _

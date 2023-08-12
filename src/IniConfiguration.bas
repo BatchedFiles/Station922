@@ -27,7 +27,7 @@ Type _WebServerIniConfiguration
 	pWebSitesIniFileName As WString Ptr
 End Type
 
-Function GetRoundedReservedFileBytes( _
+Private Function GetRoundedReservedFileBytes( _
 		ByVal ReservedFileBytes As UInteger _
 	)As UInteger
 	
@@ -49,7 +49,7 @@ Function GetRoundedReservedFileBytes( _
 	
 End Function
 
-Sub InitializeWebServerIniConfiguration( _
+Private Sub InitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebServerIniFileName As WString Ptr, _
@@ -72,7 +72,7 @@ Sub InitializeWebServerIniConfiguration( _
 	
 End Sub
 
-Sub UnInitializeWebServerIniConfiguration( _
+Private Sub UnInitializeWebServerIniConfiguration( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
@@ -86,11 +86,82 @@ Sub UnInitializeWebServerIniConfiguration( _
 	
 End Sub
 
-Sub WebServerIniConfigurationCreated( _
+Private Sub WebServerIniConfigurationCreated( _
 		ByVal this As WebServerIniConfiguration Ptr _
 	)
 	
 End Sub
+
+Private Sub WebServerIniConfigurationDestroyed( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyWebServerIniConfiguration( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeWebServerIniConfiguration(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebServerIniConfigurationDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function WebServerIniConfigurationAddRef( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function WebServerIniConfigurationRelease( _
+		ByVal this As WebServerIniConfiguration Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyWebServerIniConfiguration(this)
+	
+	Return 0
+	
+End Function
+
+Private Function WebServerIniConfigurationQueryInterface( _
+		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IIniConfiguration, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	WebServerIniConfigurationAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -171,78 +242,7 @@ Function CreateWebServerIniConfiguration( _
 	
 End Function
 
-Sub WebServerIniConfigurationDestroyed( _
-		ByVal this As WebServerIniConfiguration Ptr _
-	)
-	
-End Sub
-
-Sub DestroyWebServerIniConfiguration( _
-		ByVal this As WebServerIniConfiguration Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeWebServerIniConfiguration(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	WebServerIniConfigurationDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function WebServerIniConfigurationQueryInterface( _
-		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IIniConfiguration, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	WebServerIniConfigurationAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function WebServerIniConfigurationAddRef( _
-		ByVal this As WebServerIniConfiguration Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function WebServerIniConfigurationRelease( _
-		ByVal this As WebServerIniConfiguration Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyWebServerIniConfiguration(this)
-	
-	Return 0
-	
-End Function
-
-Function WebServerIniConfigurationGetWorkerThreadsCount( _
+Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
@@ -267,7 +267,7 @@ Function WebServerIniConfigurationGetWorkerThreadsCount( _
 	
 End Function
 
-Function WebServerIniConfigurationGetMemoryPoolCapacity( _
+Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pCapacity As UInteger Ptr _
 	)As HRESULT
@@ -292,7 +292,7 @@ Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 	
 End Function
 
-Function WebServerIniConfigurationGetKeepAliveInterval( _
+Private Function WebServerIniConfigurationGetKeepAliveInterval( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
@@ -313,7 +313,7 @@ Function WebServerIniConfigurationGetKeepAliveInterval( _
 	
 End Function
 
-Function GetWebSiteHost( _
+Private Function GetWebSiteHost( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -354,7 +354,7 @@ Function GetWebSiteHost( _
 	
 End Function
 
-Function GetWebSiteVirtualPath( _
+Private Function GetWebSiteVirtualPath( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -395,7 +395,7 @@ Function GetWebSiteVirtualPath( _
 	
 End Function
 
-Function GetWebSitePhisycalDir( _
+Private Function GetWebSitePhisycalDir( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -463,7 +463,7 @@ Function GetWebSitePhisycalDir( _
 	
 End Function
 
-Function GetWebSiteCanonicalUrl( _
+Private Function GetWebSiteCanonicalUrl( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -504,7 +504,7 @@ Function GetWebSiteCanonicalUrl( _
 	
 End Function
 
-Function GetWebSiteTextFileCharset( _
+Private Function GetWebSiteTextFileCharset( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -545,7 +545,7 @@ Function GetWebSiteTextFileCharset( _
 	
 End Function
 
-Function GetWebSiteListenAddress( _
+Private Function GetWebSiteListenAddress( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -586,7 +586,7 @@ Function GetWebSiteListenAddress( _
 	
 End Function
 
-Function GetWebSiteConnectBindAddress( _
+Private Function GetWebSiteConnectBindAddress( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -627,7 +627,7 @@ Function GetWebSiteConnectBindAddress( _
 	
 End Function
 
-Function GetWebSiteListenPort( _
+Private Function GetWebSiteListenPort( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -669,7 +669,7 @@ Function GetWebSiteListenPort( _
 	
 End Function
 
-Function GetWebSiteConnectBindPort( _
+Private Function GetWebSiteConnectBindPort( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -710,7 +710,7 @@ Function GetWebSiteConnectBindPort( _
 	
 End Function
 
-Function GetWebSiteMethods( _
+Private Function GetWebSiteMethods( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -751,7 +751,7 @@ Function GetWebSiteMethods( _
 	
 End Function
 
-Function GetWebSiteDefaultFileName( _
+Private Function GetWebSiteDefaultFileName( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -791,7 +791,7 @@ Function GetWebSiteDefaultFileName( _
 	
 End Function
 
-Function GetWebSiteUserName( _
+Private Function GetWebSiteUserName( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -830,7 +830,7 @@ Function GetWebSiteUserName( _
 	
 End Function
 
-Function GetWebSitePassword( _
+Private Function GetWebSitePassword( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -869,7 +869,7 @@ Function GetWebSitePassword( _
 	
 End Function
 
-Function GetWebSiteIsMoved( _
+Private Function GetWebSiteIsMoved( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Boolean
@@ -891,7 +891,7 @@ Function GetWebSiteIsMoved( _
 	
 End Function
 
-Function GetWebSiteUseSsl( _
+Private Function GetWebSiteUseSsl( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Boolean
@@ -913,7 +913,7 @@ Function GetWebSiteUseSsl( _
 	
 End Function
 
-Function GetWebSiteUtfBomFileOffset( _
+Private Function GetWebSiteUtfBomFileOffset( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As UInteger
@@ -931,7 +931,7 @@ Function GetWebSiteUtfBomFileOffset( _
 	
 End Function
 
-Function GetWebSiteReservedFileBytes( _
+Private Function GetWebSiteReservedFileBytes( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As UInteger
@@ -953,7 +953,7 @@ Function GetWebSiteReservedFileBytes( _
 	
 End Function
 
-Function GetWebSiteEnableDirectoryListing( _
+Private Function GetWebSiteEnableDirectoryListing( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Boolean
@@ -975,7 +975,7 @@ Function GetWebSiteEnableDirectoryListing( _
 	
 End Function
 
-Function GetWebSiteEnableGetAllFiles( _
+Private Function GetWebSiteEnableGetAllFiles( _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr _
 	)As Boolean
@@ -997,7 +997,7 @@ Function GetWebSiteEnableGetAllFiles( _
 	
 End Function
 
-Function GetWebSite( _
+Private Function GetWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr, _
 		ByVal lpwszHost As WString Ptr, _
@@ -1251,7 +1251,7 @@ Function GetWebSite( _
 	
 End Function
 
-Function WebServerIniConfigurationGetWebSites( _
+Private Function WebServerIniConfigurationGetWebSites( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pCount As Integer Ptr, _
 		ByVal pWebSites As WebSiteConfiguration Ptr _
@@ -1334,7 +1334,7 @@ Function WebServerIniConfigurationGetWebSites( _
 	
 End Function
 
-Function WebServerIniConfigurationGetDefaultWebSite( _
+Private Function WebServerIniConfigurationGetDefaultWebSite( _
 		ByVal this As WebServerIniConfiguration Ptr, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
@@ -1356,7 +1356,7 @@ Function WebServerIniConfigurationGetDefaultWebSite( _
 End Function
 
 
-Function IWebServerConfigurationQueryInterface( _
+Private Function IWebServerConfigurationQueryInterface( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -1364,40 +1364,40 @@ Function IWebServerConfigurationQueryInterface( _
 	Return WebServerIniConfigurationQueryInterface(ContainerOf(this, WebServerIniConfiguration, lpVtbl), riid, ppvObject)
 End Function
 
-Function IWebServerConfigurationAddRef( _
+Private Function IWebServerConfigurationAddRef( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
 	Return WebServerIniConfigurationAddRef(ContainerOf(this, WebServerIniConfiguration, lpVtbl))
 End Function
 
-Function IWebServerConfigurationRelease( _
+Private Function IWebServerConfigurationRelease( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
 	Return WebServerIniConfigurationRelease(ContainerOf(this, WebServerIniConfiguration, lpVtbl))
 End Function
 
-Function IWebServerConfigurationGetWorkerThreadsCount( _
+Private Function IWebServerConfigurationGetWorkerThreadsCount( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetWorkerThreadsCount(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
 End Function
 
-Function IWebServerConfigurationGetMemoryPoolCapacity( _
+Private Function IWebServerConfigurationGetMemoryPoolCapacity( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetMemoryPoolCapacity(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
 End Function
 
-Function IWebServerConfigurationGetKeepAliveInterval( _
+Private Function IWebServerConfigurationGetKeepAliveInterval( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetKeepAliveInterval(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
 End Function
 
-Function IWebServerConfigurationGetWebSites( _
+Private Function IWebServerConfigurationGetWebSites( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCount As Integer Ptr, _
 		ByVal pWebSites As WebSiteConfiguration Ptr _
@@ -1405,7 +1405,7 @@ Function IWebServerConfigurationGetWebSites( _
 	Return WebServerIniConfigurationGetWebSites(ContainerOf(this, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
 End Function
 
-Function IWebServerConfigurationGetDefaultWebSite( _
+Private Function IWebServerConfigurationGetDefaultWebSite( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT

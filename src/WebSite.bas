@@ -101,7 +101,7 @@ Type _WebSite
 	EnableGetAllFiles As Boolean
 End Type
 
-Function GetAuthorizationHeader( _
+Private Function GetAuthorizationHeader( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ProxyAuthorization As Boolean _
 	)As HeapBSTR
@@ -136,7 +136,7 @@ Function GetAuthorizationHeader( _
 	
 End Function
 
-Function StartsWith( _
+Private Function StartsWith( _
 		ByVal pSource As WString Ptr, _
 		ByVal pPattern As WString Ptr, _
 		ByVal Length As Integer _
@@ -156,7 +156,7 @@ Function StartsWith( _
 	
 End Function
 
-Function WebSiteHttpAuthUtil( _
+Private Function WebSiteHttpAuthUtil( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ProxyAuthorization As Boolean _
@@ -262,7 +262,7 @@ Function WebSiteHttpAuthUtil( _
 	
 End Function
 
-Sub FormatMessageErrorBody( _
+Private Sub FormatMessageErrorBody( _
 		ByRef Writer As ArrayStringWriter, _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal VirtualPath As HeapBSTR, _
@@ -366,7 +366,7 @@ Sub FormatMessageErrorBody( _
 	
 End Sub
 
-Function GetErrorBodyText( _
+Private Function GetErrorBodyText( _
 		ByVal HttpError As ResponseErrorCode _
 	)As WString Ptr
 	
@@ -472,7 +472,7 @@ Function GetErrorBodyText( _
 	
 End Function
 
-Sub GetETag( _
+Private Sub GetETag( _
 		ByVal wETag As WString Ptr, _
 		ByVal pTime As FILETIME Ptr, _
 		ByVal ZipMode As ZipModes _
@@ -502,7 +502,7 @@ Sub GetETag( _
 	
 End Sub
 
-Function GetDefaultFileName( _
+Private Function GetDefaultFileName( _
 		ByVal Buffer As WString Ptr, _
 		ByVal Index As Integer, _
 		ByVal DefaultFileName As HeapBSTR _
@@ -560,7 +560,7 @@ Function GetDefaultFileName( _
 	
 End Function
 
-Function GetFileHandle( _
+Private Function GetFileHandle( _
 		ByVal PathTranslated As WString Ptr, _
 		ByVal fAccess As FileAccess, _
 		ByVal pFileHandle As HANDLE Ptr _
@@ -698,7 +698,7 @@ Function GetFileHandle( _
 	
 End Function
 
-Sub ReplaceSolidus( _
+Private Sub ReplaceSolidus( _
 		ByVal pBuffer As WString Ptr, _
 		ByVal Length As Integer _
 	)
@@ -711,7 +711,7 @@ Sub ReplaceSolidus( _
 	
 End Sub
 
-Function GetCompressionHandle( _
+Private Function GetCompressionHandle( _
 		ByVal PathTranslated As WString Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal pZipMode As ZipModes Ptr, _
@@ -798,7 +798,7 @@ Function GetCompressionHandle( _
 	
 End Function
 
-Function GetFileBytesOffset( _
+Private Function GetFileBytesOffset( _
 		ByVal CodePage As HeapBSTR, _
 		ByVal hZipFileHandle As HANDLE, _
 		ByVal pMime As MimeType Ptr, _
@@ -815,7 +815,7 @@ Function GetFileBytesOffset( _
 	
 End Function
 
-Function WebSiteMapPath( _
+Private Function WebSiteMapPath( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pPath As WString Ptr, _
 		ByVal pBuffer As WString Ptr _
@@ -845,7 +845,7 @@ Function WebSiteMapPath( _
 	
 End Function
 
-Function WriteToFileW( _
+Private Function WriteToFileW( _
 		ByVal hFile As HANDLE, _
 		ByVal pData As WString Ptr, _
 		ByVal LengthW As Integer _
@@ -868,7 +868,7 @@ Function WriteToFileW( _
 	
 End Function
 
-Function GetFileList( _
+Private Function GetFileList( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As ListingFileItem Ptr
@@ -935,7 +935,7 @@ Function GetFileList( _
 	
 End Function
 
-Function CompareListingFileItems cdecl( _
+Private Function CompareListingFileItems cdecl( _
 		ByVal p As Const Any Ptr, _
 		ByVal q As Const Any Ptr _
 	)As Long
@@ -967,7 +967,7 @@ Function CompareListingFileItems cdecl( _
 	
 End Function
 
-Function GetDirectoryListing( _
+Private Function GetDirectoryListing( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pFileBuffer As IFileStream Ptr, _
@@ -1208,7 +1208,7 @@ Function GetDirectoryListing( _
 	
 End Function
 
-Function WebSiteOpenRequestedFile( _
+Private Function WebSiteOpenRequestedFile( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pFileBuffer As IFileStream Ptr, _
@@ -1336,7 +1336,7 @@ Function WebSiteOpenRequestedFile( _
 	
 End Function
 
-Sub InitializeWebSite( _
+Private Sub InitializeWebSite( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIProcessorCollection As IHttpProcessorCollection Ptr, _
@@ -1376,7 +1376,7 @@ Sub InitializeWebSite( _
 	
 End Sub
 
-Sub UnInitializeWebSite( _
+Private Sub UnInitializeWebSite( _
 		ByVal this As WebSite Ptr _
 	)
 	
@@ -1398,11 +1398,72 @@ Sub UnInitializeWebSite( _
 	
 End Sub
 
-Sub WebSiteCreated( _
+Private Sub WebSiteCreated( _
 		ByVal this As WebSite Ptr _
 	)
 	
 End Sub
+
+Private Sub WebSiteDestroyed( _
+		ByVal this As WebSite Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyWebSite( _
+		ByVal this As WebSite Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeWebSite(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	WebSiteDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function WebSiteAddRef( _
+		ByVal this As WebSite Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function WebSiteRelease( _
+		ByVal this As WebSite Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function WebSiteQueryInterface( _
+		ByVal this As WebSite Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IWebSite, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	WebSiteAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -1468,68 +1529,7 @@ Function CreateWebSite( _
 	
 End Function
 
-Sub WebSiteDestroyed( _
-		ByVal this As WebSite Ptr _
-	)
-	
-End Sub
-
-Sub DestroyWebSite( _
-		ByVal this As WebSite Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeWebSite(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	WebSiteDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function WebSiteQueryInterface( _
-		ByVal this As WebSite Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IWebSite, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	WebSiteAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function WebSiteAddRef( _
-		ByVal this As WebSite Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function WebSiteRelease( _
-		ByVal this As WebSite Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function WebSiteGetHostName( _
+Private Function WebSiteGetHostName( _
 		ByVal this As WebSite Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
@@ -1541,7 +1541,7 @@ Function WebSiteGetHostName( _
 	
 End Function
 
-Function WebSiteGetSitePhysicalDirectory( _
+Private Function WebSiteGetSitePhysicalDirectory( _
 		ByVal this As WebSite Ptr, _
 		ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 	)As HRESULT
@@ -1553,7 +1553,7 @@ Function WebSiteGetSitePhysicalDirectory( _
 	
 End Function
 
-Function WebSiteGetVirtualPath( _
+Private Function WebSiteGetVirtualPath( _
 		ByVal this As WebSite Ptr, _
 		ByVal ppVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
@@ -1565,7 +1565,7 @@ Function WebSiteGetVirtualPath( _
 	
 End Function
 
-Function WebSiteGetIsMoved( _
+Private Function WebSiteGetIsMoved( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIsMoved As Boolean Ptr _
 	)As HRESULT
@@ -1576,7 +1576,7 @@ Function WebSiteGetIsMoved( _
 	
 End Function
 
-Function WebSiteGetMovedUrl( _
+Private Function WebSiteGetMovedUrl( _
 		ByVal this As WebSite Ptr, _
 		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
@@ -1588,7 +1588,7 @@ Function WebSiteGetMovedUrl( _
 	
 End Function
 
-Function GetFindFileErrorCode( _
+Private Function GetFindFileErrorCode( _
 		ByVal FileName As WString Ptr, _
 		ByVal hrOpenFile As HRESULT _
 	)As HRESULT
@@ -1623,7 +1623,7 @@ Function GetFindFileErrorCode( _
 	
 End Function
 
-Function WebSiteGetBuffer( _
+Private Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
@@ -1942,7 +1942,7 @@ Function WebSiteGetBuffer( _
 	
 End Function
 
-Function WebSiteGetErrorBuffer( _
+Private Function WebSiteGetErrorBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal HttpError As ResponseErrorCode, _
@@ -2028,7 +2028,7 @@ Function WebSiteGetErrorBuffer( _
 	
 End Function
 
-Function WebSiteGetProcessorCollectionWeakPtr( _
+Private Function WebSiteGetProcessorCollectionWeakPtr( _
 		ByVal this As WebSite Ptr, _
 		ByVal ppResult As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
@@ -2039,7 +2039,7 @@ Function WebSiteGetProcessorCollectionWeakPtr( _
 	
 End Function
 
-Function WebSiteNeedDllProcessing( _
+Private Function WebSiteNeedDllProcessing( _
 		ByVal this As WebSite Ptr, _
 		ByVal Path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
@@ -2066,7 +2066,7 @@ Function WebSiteNeedDllProcessing( _
 	
 End Function
 
-Function MutableWebSiteSetHostName( _
+Private Function MutableWebSiteSetHostName( _
 		ByVal this As WebSite Ptr, _
 		ByVal pHost As HeapBSTR _
 	)As HRESULT
@@ -2077,7 +2077,7 @@ Function MutableWebSiteSetHostName( _
 	
 End Function
 
-Function MutableWebSiteSetSitePhysicalDirectory( _
+Private Function MutableWebSiteSetSitePhysicalDirectory( _
 		ByVal this As WebSite Ptr, _
 		ByVal pPhysicalDirectory As HeapBSTR _
 	)As HRESULT
@@ -2088,7 +2088,7 @@ Function MutableWebSiteSetSitePhysicalDirectory( _
 	
 End Function
 
-Function MutableWebSiteSetVirtualPath( _
+Private Function MutableWebSiteSetVirtualPath( _
 		ByVal this As WebSite Ptr, _
 		ByVal pVirtualPath As HeapBSTR _
 	)As HRESULT
@@ -2099,7 +2099,7 @@ Function MutableWebSiteSetVirtualPath( _
 	
 End Function
 
-Function MutableWebSiteSetIsMoved( _
+Private Function MutableWebSiteSetIsMoved( _
 		ByVal this As WebSite Ptr, _
 		ByVal IsMoved As Boolean _
 	)As HRESULT
@@ -2110,7 +2110,7 @@ Function MutableWebSiteSetIsMoved( _
 	
 End Function
 
-Function MutableWebSiteSetMovedUrl( _
+Private Function MutableWebSiteSetMovedUrl( _
 		ByVal this As WebSite Ptr, _
 		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
@@ -2121,7 +2121,7 @@ Function MutableWebSiteSetMovedUrl( _
 	
 End Function
 
-Function WebSiteSetTextFileEncoding( _
+Private Function WebSiteSetTextFileEncoding( _
 		ByVal this As WebSite Ptr, _
 		ByVal CodePage As HeapBSTR _
 	)As HRESULT
@@ -2132,7 +2132,7 @@ Function WebSiteSetTextFileEncoding( _
 	
 End Function
 
-Function WebSiteSetListenAddress( _
+Private Function WebSiteSetListenAddress( _
 		ByVal this As WebSite Ptr, _
 		ByVal ListenAddress As HeapBSTR _
 	)As HRESULT
@@ -2143,7 +2143,7 @@ Function WebSiteSetListenAddress( _
 	
 End Function
 
-Function WebSiteSetListenPort( _
+Private Function WebSiteSetListenPort( _
 		ByVal this As WebSite Ptr, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
@@ -2154,7 +2154,7 @@ Function WebSiteSetListenPort( _
 	
 End Function
 
-Function WebSiteSetConnectBindAddress( _
+Private Function WebSiteSetConnectBindAddress( _
 		ByVal this As WebSite Ptr, _
 		ByVal ConnectBindAddress As HeapBSTR _
 	)As HRESULT
@@ -2165,7 +2165,7 @@ Function WebSiteSetConnectBindAddress( _
 	
 End Function
 
-Function WebSiteSetConnectBindPort( _
+Private Function WebSiteSetConnectBindPort( _
 		ByVal this As WebSite Ptr, _
 		ByVal ConnectBindPort As HeapBSTR _
 	)As HRESULT
@@ -2176,7 +2176,7 @@ Function WebSiteSetConnectBindPort( _
 	
 End Function
 
-Function WebSiteSetDefaultFileName( _
+Private Function WebSiteSetDefaultFileName( _
 		ByVal this As WebSite Ptr, _
 		ByVal DefaultFileName As HeapBSTR _
 	)As HRESULT
@@ -2187,7 +2187,7 @@ Function WebSiteSetDefaultFileName( _
 	
 End Function
 
-Function WebSiteSetUseSsl( _
+Private Function WebSiteSetUseSsl( _
 		ByVal this As WebSite Ptr, _
 		ByVal UseSsl As Boolean _
 	)As HRESULT
@@ -2198,7 +2198,7 @@ Function WebSiteSetUseSsl( _
 	
 End Function
 
-Function WebSiteSetReservedFileBytes( _
+Private Function WebSiteSetReservedFileBytes( _
 		ByVal this As WebSite Ptr, _
 		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
@@ -2209,7 +2209,7 @@ Function WebSiteSetReservedFileBytes( _
 	
 End Function
 
-Function WebSiteSetUtfBomFileOffset( _
+Private Function WebSiteSetUtfBomFileOffset( _
 		ByVal this As WebSite Ptr, _
 		ByVal Offset As UInteger _
 	)As HRESULT
@@ -2220,7 +2220,7 @@ Function WebSiteSetUtfBomFileOffset( _
 	
 End Function
 
-Function WebSiteNeedCgiProcessing( _
+Private Function WebSiteNeedCgiProcessing( _
 		ByVal this As WebSite Ptr, _
 		ByVal Path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
@@ -2247,7 +2247,7 @@ Function WebSiteNeedCgiProcessing( _
 	
 End Function
 
-Function WebSiteSetAddHttpProcessor( _
+Private Function WebSiteSetAddHttpProcessor( _
 		ByVal this As WebSite Ptr, _
 		ByVal Key As HeapBSTR, _
 		ByVal Value As IHttpAsyncProcessor Ptr _
@@ -2266,7 +2266,7 @@ Function WebSiteSetAddHttpProcessor( _
 	
 End Function
 
-Function WebSiteSetDirectoryListing( _
+Private Function WebSiteSetDirectoryListing( _
 		ByVal this As WebSite Ptr, _
 		ByVal DirectoryListing As Boolean _
 	)As HRESULT
@@ -2286,7 +2286,7 @@ Function WebSiteSetDirectoryListing( _
 	
 End Function
 
-Function WebSiteSetGetAllFiles( _
+Private Function WebSiteSetGetAllFiles( _
 		ByVal this As WebSite Ptr, _
 		ByVal bGetAllFiles As Boolean _
 	)As HRESULT
@@ -2297,7 +2297,7 @@ Function WebSiteSetGetAllFiles( _
 	
 End Function
 
-Function WebSiteSetAllMethods( _
+Private Function WebSiteSetAllMethods( _
 		ByVal this As WebSite Ptr, _
 		ByVal pMethods As HeapBSTR _
 	)As HRESULT
@@ -2311,7 +2311,7 @@ Function WebSiteSetAllMethods( _
 	
 End Function
 
-Function WebSiteSetUserName( _
+Private Function WebSiteSetUserName( _
 		ByVal this As WebSite Ptr, _
 		ByVal pUserName As HeapBSTR _
 	)As HRESULT
@@ -2322,7 +2322,7 @@ Function WebSiteSetUserName( _
 	
 End Function
 
-Function WebSiteSetPassword( _
+Private Function WebSiteSetPassword( _
 		ByVal this As WebSite Ptr, _
 		ByVal pPassword As HeapBSTR _
 	)As HRESULT
@@ -2334,7 +2334,7 @@ Function WebSiteSetPassword( _
 End Function
 
 
-Function IMutableWebSiteQueryInterface( _
+Private Function IMutableWebSiteQueryInterface( _
 		ByVal this As IWebSite Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -2342,54 +2342,54 @@ Function IMutableWebSiteQueryInterface( _
 	Return WebSiteQueryInterface(ContainerOf(this, WebSite, lpVtbl), riid, ppvObject)
 End Function
 
-Function IMutableWebSiteAddRef( _
+Private Function IMutableWebSiteAddRef( _
 		ByVal this As IWebSite Ptr _
 	)As ULONG
 	Return WebSiteAddRef(ContainerOf(this, WebSite, lpVtbl))
 End Function
 
-Function IMutableWebSiteRelease( _
+Private Function IMutableWebSiteRelease( _
 		ByVal this As IWebSite Ptr _
 	)As ULONG
 	Return WebSiteRelease(ContainerOf(this, WebSite, lpVtbl))
 End Function
 
-Function IMutableWebSiteGetHostName( _
+Private Function IMutableWebSiteGetHostName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetHostName(ContainerOf(this, WebSite, lpVtbl), ppHost)
 End Function
 
-Function IMutableWebSiteGetSitePhysicalDirectory( _
+Private Function IMutableWebSiteGetSitePhysicalDirectory( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppPhysicalDirectory As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetSitePhysicalDirectory(ContainerOf(this, WebSite, lpVtbl), ppPhysicalDirectory)
 End Function
 
-Function IMutableWebSiteGetVirtualPath( _
+Private Function IMutableWebSiteGetVirtualPath( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppVirtualPath As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetVirtualPath(ContainerOf(this, WebSite, lpVtbl), ppVirtualPath)
 End Function
 
-Function IMutableWebSiteGetIsMoved( _
+Private Function IMutableWebSiteGetIsMoved( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIsMoved As Boolean Ptr _
 	)As HRESULT
 	Return WebSiteGetIsMoved(ContainerOf(this, WebSite, lpVtbl), pIsMoved)
 End Function
 
-Function IMutableWebSiteGetMovedUrl( _
+Private Function IMutableWebSiteGetMovedUrl( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppMovedUrl As HeapBSTR Ptr _
 	)As HRESULT
 	Return WebSiteGetMovedUrl(ContainerOf(this, WebSite, lpVtbl), ppMovedUrl)
 End Function
 
-Function IMutableWebSiteGetBuffer( _
+Private Function IMutableWebSiteGetBuffer( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal fAccess As FileAccess, _
@@ -2402,7 +2402,7 @@ Function IMutableWebSiteGetBuffer( _
 	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, pIReader, BufferLength, pFlags, ppResult)
 End Function
 
-Function IMutableWebSiteGetErrorBuffer( _
+Private Function IMutableWebSiteGetErrorBuffer( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal HttpError As ResponseErrorCode, _
@@ -2413,112 +2413,112 @@ Function IMutableWebSiteGetErrorBuffer( _
 	Return WebSiteGetErrorBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
 End Function
 
-Function IMutableWebSiteGetProcessorCollectionWeakPtr( _
+Private Function IMutableWebSiteGetProcessorCollectionWeakPtr( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ppResult As IHttpProcessorCollection Ptr Ptr _
 	)As HRESULT
 	Return WebSiteGetProcessorCollectionWeakPtr(ContainerOf(this, WebSite, lpVtbl), ppResult)
 End Function
 
-Function IMutableWebSiteSetHostName( _
+Private Function IMutableWebSiteSetHostName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pHost As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetHostName(ContainerOf(this, WebSite, lpVtbl), pHost)
 End Function
 
-Function IMutableWebSiteSetSitePhysicalDirectory( _
+Private Function IMutableWebSiteSetSitePhysicalDirectory( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pPhysicalDirectory As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetSitePhysicalDirectory(ContainerOf(this, WebSite, lpVtbl), pPhysicalDirectory)
 End Function
 
-Function IMutableWebSiteSetVirtualPath( _
+Private Function IMutableWebSiteSetVirtualPath( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pVirtualPath As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetVirtualPath(ContainerOf(this, WebSite, lpVtbl), pVirtualPath)
 End Function
 
-Function IMutableWebSiteSetIsMoved( _
+Private Function IMutableWebSiteSetIsMoved( _
 		ByVal this As IWebSite Ptr, _
 		ByVal IsMoved As Boolean _
 	)As HRESULT
 	Return MutableWebSiteSetIsMoved(ContainerOf(this, WebSite, lpVtbl), IsMoved)
 End Function
 
-Function IMutableWebSiteSetMovedUrl( _
+Private Function IMutableWebSiteSetMovedUrl( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pMovedUrl As HeapBSTR _
 	)As HRESULT
 	Return MutableWebSiteSetMovedUrl(ContainerOf(this, WebSite, lpVtbl), pMovedUrl)
 End Function
 
-Function IMutableWebSiteSetTextFileEncoding( _
+Private Function IMutableWebSiteSetTextFileEncoding( _
 		ByVal this As IWebSite Ptr, _
 		ByVal CodePage As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetTextFileEncoding(ContainerOf(this, WebSite, lpVtbl), CodePage)
 End Function
 
-Function IWebSiteSetUtfBomFileOffset( _
+Private Function IWebSiteSetUtfBomFileOffset( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Offset As UInteger _
 	)As HRESULT
 	Return WebSiteSetUtfBomFileOffset(ContainerOf(this, WebSite, lpVtbl), Offset)
 End Function
 
-Function IMutableWebSiteSetListenAddress( _
+Private Function IMutableWebSiteSetListenAddress( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ListenAddress As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetListenAddress(ContainerOf(this, WebSite, lpVtbl), ListenAddress)
 End Function
 
-Function IMutableWebSiteSetListenPort( _
+Private Function IMutableWebSiteSetListenPort( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetListenPort(ContainerOf(this, WebSite, lpVtbl), ListenPort)
 End Function
 
-Function IMutableWebSiteSetConnectBindAddress( _
+Private Function IMutableWebSiteSetConnectBindAddress( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ConnectBindAddress As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetConnectBindAddress(ContainerOf(this, WebSite, lpVtbl), ConnectBindAddress)
 End Function
 
-Function IMutableWebSiteSetConnectBindPort( _
+Private Function IMutableWebSiteSetConnectBindPort( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ConnectBindPort As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetConnectBindPort(ContainerOf(this, WebSite, lpVtbl), ConnectBindPort)
 End Function
 
-Function IMutableWebSiteSetDefaultFileName( _
+Private Function IMutableWebSiteSetDefaultFileName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal DefaultFileName As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetDefaultFileName(ContainerOf(this, WebSite, lpVtbl), DefaultFileName)
 End Function
 
-Function IMutableWebSiteSetUseSsl( _
+Private Function IMutableWebSiteSetUseSsl( _
 		ByVal this As IWebSite Ptr, _
 		ByVal UseSsl As Boolean _
 	)As HRESULT
 	Return WebSiteSetUseSsl(ContainerOf(this, WebSite, lpVtbl), UseSsl)
 End Function
 
-Function IMutableWebSetReservedFileBytes( _
+Private Function IMutableWebSetReservedFileBytes( _
 		ByVal this As IWebSite Ptr, _
 		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	Return WebSiteSetReservedFileBytes(ContainerOf(this, WebSite, lpVtbl), ReservedFileBytes)
 End Function
 
-Function IMutableWebSetAddHttpProcessor( _
+Private Function IMutableWebSetAddHttpProcessor( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Key As HeapBSTR, _
 		ByVal Value As IHttpAsyncProcessor Ptr _
@@ -2526,7 +2526,7 @@ Function IMutableWebSetAddHttpProcessor( _
 	Return WebSiteSetAddHttpProcessor(ContainerOf(this, WebSite, lpVtbl), Key, Value)
 End Function
 
-Function IMutableWebSiteNeedCgiProcessing( _
+Private Function IMutableWebSiteNeedCgiProcessing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal Path As HeapBSTR, _
 		ByVal pResult As Boolean Ptr _
@@ -2534,35 +2534,35 @@ Function IMutableWebSiteNeedCgiProcessing( _
 	Return WebSiteNeedCgiProcessing(ContainerOf(this, WebSite, lpVtbl), Path, pResult)
 End Function
 
-Function IMutableWebSiteSetDirectoryListing( _
+Private Function IMutableWebSiteSetDirectoryListing( _
 		ByVal this As IWebSite Ptr, _
 		ByVal DirectoryListing As Boolean _
 	)As HRESULT
 	Return WebSiteSetDirectoryListing(ContainerOf(this, WebSite, lpVtbl), DirectoryListing)
 End Function
 
-Function IMutableWebSiteSetGetAllFiles( _
+Private Function IMutableWebSiteSetGetAllFiles( _
 		ByVal this As IWebSite Ptr, _
 		ByVal bGetAllFiles As Boolean _
 	)As HRESULT
 	Return WebSiteSetGetAllFiles(ContainerOf(this, WebSite, lpVtbl), bGetAllFiles)
 End Function
 
-Function IMutableWebSiteSetAllMethods( _
+Private Function IMutableWebSiteSetAllMethods( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pMethods As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetAllMethods(ContainerOf(this, WebSite, lpVtbl), pMethods)
 End Function
 
-Function IMutableWebSiteSetUserName( _
+Private Function IMutableWebSiteSetUserName( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pUserName As HeapBSTR _
 	)As HRESULT
 	Return WebSiteSetUserName(ContainerOf(this, WebSite, lpVtbl), pUserName)
 End Function
 
-Function IMutableWebSiteSetPassword( _
+Private Function IMutableWebSiteSetPassword( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pPassword As HeapBSTR _
 	)As HRESULT

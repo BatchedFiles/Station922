@@ -13,7 +13,7 @@ Type _HttpTraceProcessor
 	pIMemoryAllocator As IMalloc Ptr
 End Type
 
-Sub InitializeHttpTraceProcessor( _
+Private Sub InitializeHttpTraceProcessor( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -32,17 +32,82 @@ Sub InitializeHttpTraceProcessor( _
 	
 End Sub
 
-Sub UnInitializeHttpTraceProcessor( _
+Private Sub UnInitializeHttpTraceProcessor( _
 		ByVal this As HttpTraceProcessor Ptr _
 	)
 	
 End Sub
 
-Sub HttpTraceProcessorCreated( _
+Private Sub HttpTraceProcessorCreated( _
 		ByVal this As HttpTraceProcessor Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpTraceProcessorDestroyed( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpTraceProcessor( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpTraceProcessor(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpTraceProcessorDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpTraceProcessorAddRef( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function HttpTraceProcessorRelease( _
+		ByVal this As HttpTraceProcessor Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function HttpTraceProcessorQueryInterface( _
+		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpTraceAsyncProcessor, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
+		End If
+	End If
+	
+	HttpTraceProcessorAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpTraceProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -76,72 +141,7 @@ Function CreateHttpTraceProcessor( _
 	
 End Function
 
-Sub HttpTraceProcessorDestroyed( _
-		ByVal this As HttpTraceProcessor Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpTraceProcessor( _
-		ByVal this As HttpTraceProcessor Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpTraceProcessor(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpTraceProcessorDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpTraceProcessorQueryInterface( _
-		ByVal this As HttpTraceProcessor Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpTraceAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
-		End If
-	End If
-	
-	HttpTraceProcessorAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpTraceProcessorAddRef( _
-		ByVal this As HttpTraceProcessor Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function HttpTraceProcessorRelease( _
-		ByVal this As HttpTraceProcessor Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function HttpTraceProcessorPrepare( _
+Private Function HttpTraceProcessorPrepare( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -201,7 +201,7 @@ Function HttpTraceProcessorPrepare( _
 	
 End Function
 
-Function HttpTraceProcessorBeginProcess( _
+Private Function HttpTraceProcessorBeginProcess( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -221,7 +221,7 @@ Function HttpTraceProcessorBeginProcess( _
 	
 End Function
 
-Function HttpTraceProcessorEndProcess( _
+Private Function HttpTraceProcessorEndProcess( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
@@ -253,7 +253,7 @@ Function HttpTraceProcessorEndProcess( _
 End Function
 
 
-Function IHttpTraceProcessorQueryInterface( _
+Private Function IHttpTraceProcessorQueryInterface( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -261,19 +261,19 @@ Function IHttpTraceProcessorQueryInterface( _
 	Return HttpTraceProcessorQueryInterface(ContainerOf(this, HttpTraceProcessor, lpVtbl), riid, ppv)
 End Function
 
-Function IHttpTraceProcessorAddRef( _
+Private Function IHttpTraceProcessorAddRef( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpTraceProcessorAddRef(ContainerOf(this, HttpTraceProcessor, lpVtbl))
 End Function
 
-Function IHttpTraceProcessorRelease( _
+Private Function IHttpTraceProcessorRelease( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpTraceProcessorRelease(ContainerOf(this, HttpTraceProcessor, lpVtbl))
 End Function
 
-Function IHttpTraceProcessorPrepare( _
+Private Function IHttpTraceProcessorPrepare( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -281,7 +281,7 @@ Function IHttpTraceProcessorPrepare( _
 	Return HttpTraceProcessorPrepare(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
-Function IHttpTraceProcessorBeginProcess( _
+Private Function IHttpTraceProcessorBeginProcess( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -290,7 +290,7 @@ Function IHttpTraceProcessorBeginProcess( _
 	Return HttpTraceProcessorBeginProcess(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
 End Function
 
-Function IHttpTraceProcessorEndProcess( _
+Private Function IHttpTraceProcessorEndProcess( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _

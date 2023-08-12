@@ -1,6 +1,6 @@
 #include once "Logger.bi"
 
-Sub ConsoleWriteColorStringW( _
+Private Sub ConsoleWriteColorStringW( _
 		ByVal s As LPCWSTR _
 	)
 	
