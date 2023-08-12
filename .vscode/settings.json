@@ -18,6 +18,7 @@
 				"INC_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\inc\"",
 				"TARGET_TRIPLET=x86_64-w64-pc-windows-msvc",
 				"FLTO=-flto",
+				"USE_RUNTIME=FALSE"
 			],
 			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
@@ -39,6 +40,7 @@
 				"INC_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\inc\"",
 				"TARGET_TRIPLET=i686-pc-windows-gnu",
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win32\\fbextra.x\"",
+				"USE_RUNTIME=FALSE"
 			],
 			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
@@ -59,6 +61,7 @@
 				"LIB_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win64\"",
 				"INC_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\inc\"",
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win64\\fbextra.x\"",
+				"USE_RUNTIME=FALSE"
 			],
 			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
@@ -79,6 +82,7 @@
 				"LIB_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win32\"",
 				"INC_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\inc\"",
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win32\\fbextra.x\"",
+				"USE_RUNTIME=FALSE"
 			],
 			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
@@ -104,15 +108,15 @@
 	],
 	"makefile.launchConfigurations": [
 		{
-			"cwd": "R:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64",
-			"binaryPath": "R:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64\\Station922_GCC1220_FBC1090.exe",
+			"cwd": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64",
+			"binaryPath": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64\\Station922_GCC1220_FBC1090.exe",
 			"binaryArgs": []
 		}
 	]
 	/*
 	"terminal.integrated.env.windows": {
-		"PATH": "R:\\Programming\\mingw64\\bin;${env:PATH}",
+		"PATH": "C:\\Programming\\mingw64\\bin;${env:PATH}",
 	},
-	"makefile.preConfigureScript": "Z:\\Programming\\setcompilerpath_gcc-12.2.0_x64.cmd",
+	"makefile.preConfigureScript": "C:\\Programming\\setcompilerpath_gcc-12.2.0_x64.cmd",
 	*/
 }
