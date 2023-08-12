@@ -17,7 +17,7 @@ Type _HttpDeleteProcessor
 	pIMemoryAllocator As IMalloc Ptr
 End Type
 
-Sub InitializeHttpDeleteProcessor( _
+Private Sub InitializeHttpDeleteProcessor( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -36,17 +36,82 @@ Sub InitializeHttpDeleteProcessor( _
 	
 End Sub
 
-Sub UnInitializeHttpDeleteProcessor( _
+Private Sub UnInitializeHttpDeleteProcessor( _
 		ByVal this As HttpDeleteProcessor Ptr _
 	)
 	
 End Sub
 
-Sub HttpDeleteProcessorCreated( _
+Private Sub HttpDeleteProcessorCreated( _
 		ByVal this As HttpDeleteProcessor Ptr _
 	)
 	
 End Sub
+
+Private Sub HttpDeleteProcessorDestroyed( _
+		ByVal this As HttpDeleteProcessor Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHttpDeleteProcessor( _
+		ByVal this As HttpDeleteProcessor Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeHttpDeleteProcessor(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	HttpDeleteProcessorDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function HttpDeleteProcessorAddRef( _
+		ByVal this As HttpDeleteProcessor Ptr _
+	)As ULONG
+	
+	Return 1
+	
+End Function
+
+Private Function HttpDeleteProcessorRelease( _
+		ByVal this As HttpDeleteProcessor Ptr _
+	)As ULONG
+	
+	Return 0
+	
+End Function
+
+Private Function HttpDeleteProcessorQueryInterface( _
+		ByVal this As HttpDeleteProcessor Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHttpDeleteAsyncProcessor, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			If IsEqualIID(@IID_IUnknown, riid) Then
+				*ppv = @this->lpVtbl
+			Else
+				*ppv = NULL
+				Return E_NOINTERFACE
+			End If
+		End If
+	End If
+	
+	HttpDeleteProcessorAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateHttpDeleteProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -80,72 +145,7 @@ Function CreateHttpDeleteProcessor( _
 	
 End Function
 
-Sub HttpDeleteProcessorDestroyed( _
-		ByVal this As HttpDeleteProcessor Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHttpDeleteProcessor( _
-		ByVal this As HttpDeleteProcessor Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeHttpDeleteProcessor(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	HttpDeleteProcessorDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function HttpDeleteProcessorQueryInterface( _
-		ByVal this As HttpDeleteProcessor Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHttpDeleteAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
-			Else
-				*ppv = NULL
-				Return E_NOINTERFACE
-			End If
-		End If
-	End If
-	
-	HttpDeleteProcessorAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HttpDeleteProcessorAddRef( _
-		ByVal this As HttpDeleteProcessor Ptr _
-	)As ULONG
-	
-	Return 1
-	
-End Function
-
-Function HttpDeleteProcessorRelease( _
-		ByVal this As HttpDeleteProcessor Ptr _
-	)As ULONG
-	
-	Return 0
-	
-End Function
-
-Function HttpDeleteProcessorPrepare( _
+Private Function HttpDeleteProcessorPrepare( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -196,7 +196,7 @@ Function HttpDeleteProcessorPrepare( _
 	
 End Function
 
-Function HttpDeleteProcessorBeginProcess( _
+Private Function HttpDeleteProcessorBeginProcess( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -216,7 +216,7 @@ Function HttpDeleteProcessorBeginProcess( _
 	
 End Function
 
-Function HttpDeleteProcessorEndProcess( _
+Private Function HttpDeleteProcessorEndProcess( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
@@ -248,7 +248,7 @@ Function HttpDeleteProcessorEndProcess( _
 End Function
 
 
-Function IHttpDeleteProcessorQueryInterface( _
+Private Function IHttpDeleteProcessorQueryInterface( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -256,19 +256,19 @@ Function IHttpDeleteProcessorQueryInterface( _
 	Return HttpDeleteProcessorQueryInterface(ContainerOf(this, HttpDeleteProcessor, lpVtbl), riid, ppv)
 End Function
 
-Function IHttpDeleteProcessorAddRef( _
+Private Function IHttpDeleteProcessorAddRef( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpDeleteProcessorAddRef(ContainerOf(this, HttpDeleteProcessor, lpVtbl))
 End Function
 
-Function IHttpDeleteProcessorRelease( _
+Private Function IHttpDeleteProcessorRelease( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr _
 	)As ULONG
 	Return HttpDeleteProcessorRelease(ContainerOf(this, HttpDeleteProcessor, lpVtbl))
 End Function
 
-Function IHttpDeleteProcessorPrepare( _
+Private Function IHttpDeleteProcessorPrepare( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
@@ -276,7 +276,7 @@ Function IHttpDeleteProcessorPrepare( _
 	Return HttpDeleteProcessorPrepare(ContainerOf(this, HttpDeleteProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
-Function IHttpDeleteProcessorBeginProcess( _
+Private Function IHttpDeleteProcessorBeginProcess( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
@@ -285,7 +285,7 @@ Function IHttpDeleteProcessorBeginProcess( _
 	Return HttpDeleteProcessorBeginProcess(ContainerOf(this, HttpDeleteProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
 End Function
 
-Function IHttpDeleteProcessorEndProcess( _
+Private Function IHttpDeleteProcessorEndProcess( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _

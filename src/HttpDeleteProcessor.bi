@@ -17,41 +17,4 @@ Declare Function CreateHttpDeleteProcessor( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
-Declare Sub DestroyHttpDeleteProcessor( _
-	ByVal this As HttpDeleteProcessor Ptr _
-)
-
-Declare Function HttpDeleteProcessorQueryInterface( _
-	ByVal this As HttpDeleteProcessor Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpDeleteProcessorAddRef( _
-	ByVal this As HttpDeleteProcessor Ptr _
-)As ULONG
-
-Declare Function HttpDeleteProcessorRelease( _
-	ByVal this As HttpDeleteProcessor Ptr _
-)As ULONG
-
-Declare Function HttpDeleteProcessorPrepare( _
-	ByVal this As HttpDeleteProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal ppIBuffer As IAttributedStream Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpDeleteProcessorBeginProcess( _
-	ByVal this As HttpDeleteProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal StateObject As IUnknown Ptr, _
-	ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
-)As HRESULT
-
-Declare Function HttpDeleteProcessorEndProcess( _
-	ByVal this As HttpDeleteProcessor Ptr, _
-	ByVal pContext As ProcessorContext Ptr, _
-	ByVal pIAsyncResult As IAsyncResult Ptr _
-)As HRESULT
-
 #endif
