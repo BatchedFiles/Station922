@@ -53,50 +53,6 @@ Type InternalHeapBSTR As _InternalHeapBSTR
 
 Type LPInternalHeapBSTR As _InternalHeapBSTR Ptr
 
-Declare Function CreateInternalHeapBSTR( _
-	ByVal pIMemoryAllocator As IMalloc Ptr, _
-	byval pwsz As Const WString Ptr, _
-	ByVal Length As UINT, _
-	ByVal Permanent As Boolean _
-)As InternalHeapBSTR Ptr
-
-Declare Sub DestroyInternalHeapBSTR( _
-	ByVal this As InternalHeapBSTR Ptr _
-)
-
-Declare Function InternalPermanentHeapBSTRQueryInterface( _
-	ByVal this As InternalHeapBSTR Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function InternalPermanentHeapBSTRAddRef( _
-	ByVal this As InternalHeapBSTR Ptr _
-)As ULONG
-
-Declare Function InternalPermanentHeapBSTRRelease( _
-	ByVal this As InternalHeapBSTR Ptr _
-)As ULONG
-
-Declare Function InternalHeapBSTRQueryInterface( _
-	ByVal this As InternalHeapBSTR Ptr, _
-	ByVal riid As REFIID, _
-	ByVal ppv As Any Ptr Ptr _
-)As HRESULT
-
-Declare Function InternalHeapBSTRAddRef( _
-	ByVal this As InternalHeapBSTR Ptr _
-)As ULONG
-
-Declare Function InternalHeapBSTRRelease( _
-	ByVal this As InternalHeapBSTR Ptr _
-)As ULONG
-
-Declare Function InternalHeapBSTRGetHeapBSTR( _
-	ByVal this As InternalHeapBSTR Ptr, _
-	ByVal pcHeapBSTR As HeapBSTR Const Ptr _
-)As HRESULT
-
 Declare Function FindStringW( _
 	ByVal pSource As WString Ptr, _
 	ByVal SourceLength As Integer, _

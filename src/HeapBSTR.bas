@@ -45,7 +45,7 @@ Function FindStringW( _
 	
 End Function
 
-Sub StringToUpper( _
+Private Sub StringToUpper( _
 		ByVal pBuffer As WString Ptr, _
 		ByVal pSource As WString Ptr, _
 		ByVal SourceLength As Integer _
@@ -122,7 +122,7 @@ Function FindStringIW( _
 	
 End Function
 
-Sub InitializeInternalHeapBSTR( _
+Private Sub InitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
@@ -164,11 +164,71 @@ Sub InitializeInternalHeapBSTR( _
 	
 End Sub
 
-Sub UnInitializeInternalHeapBSTR( _
+Private Sub UnInitializeInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
 End Sub
+
+Private Function GetAllocatedValueBstrBytes( _
+		ByVal Characters As UINT _
+	)As Integer
+	
+	Dim cbValueBstrHeader As Integer = SizeOf(InternalHeapBSTR) - (ReservedCharactersLength) * SizeOf(OLECHAR)
+	Dim cbValueBstrData As Integer = (Characters + 1) * SizeOf(OLECHAR)
+	Dim cbBytes As Integer = cbValueBstrHeader + cbValueBstrData
+	
+	Return cbBytes
+	
+End Function
+
+Private Sub HeapBSTRCreated( _
+		ByVal this As InternalHeapBSTR Ptr _
+	)
+	
+End Sub
+
+Private Function InternalHeapBSTRGetHeapBSTR( _
+		ByVal this As InternalHeapBSTR Ptr, _
+		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
+	)As HRESULT
+	
+	*pcHeapBSTR = @this->wszNullChar(0)
+	
+	Return S_OK
+	
+End Function
+
+Private Function CreateInternalHeapBSTR( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
+		byval pwsz As Const WString Ptr, _
+		ByVal Length As UINT, _
+		ByVal Permanent As Boolean _
+	)As InternalHeapBSTR Ptr
+	
+	Dim cbBytes As Integer = GetAllocatedValueBstrBytes(Length)
+	
+	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		cbBytes _
+	)
+	If this = NULL Then
+		Return NULL
+	End If
+	
+	InitializeInternalHeapBSTR( _
+		this, _
+		pIMemoryAllocator, _
+		pwsz, _
+		Length, _
+		Permanent _
+	)
+	
+	HeapBSTRCreated(this)
+	
+	Return this
+	
+End Function
 
 Function CreateHeapString( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -254,24 +314,6 @@ Function CreatePermanentHeapStringLen( _
 	
 End Function
 
-Sub HeapBSTRCreated( _
-		ByVal this As InternalHeapBSTR Ptr _
-	)
-	
-End Sub
-
-Function GetAllocatedValueBstrBytes( _
-		ByVal Characters As UINT _
-	)As Integer
-	
-	Dim cbValueBstrHeader As Integer = SizeOf(InternalHeapBSTR) - (ReservedCharactersLength) * SizeOf(OLECHAR)
-	Dim cbValueBstrData As Integer = (Characters + 1) * SizeOf(OLECHAR)
-	Dim cbBytes As Integer = cbValueBstrHeader + cbValueBstrData
-	
-	Return cbBytes
-	
-End Function
-
 Function CreateHeapZStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal psz As Const ZString Ptr, _
@@ -323,44 +365,13 @@ Function CreateHeapZStringLen( _
 	
 End Function
 
-Function CreateInternalHeapBSTR( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		byval pwsz As Const WString Ptr, _
-		ByVal Length As UINT, _
-		ByVal Permanent As Boolean _
-	)As InternalHeapBSTR Ptr
-	
-	Dim cbBytes As Integer = GetAllocatedValueBstrBytes(Length)
-	
-	Dim this As InternalHeapBSTR Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		cbBytes _
-	)
-	If this = NULL Then
-		Return NULL
-	End If
-	
-	InitializeInternalHeapBSTR( _
-		this, _
-		pIMemoryAllocator, _
-		pwsz, _
-		Length, _
-		Permanent _
-	)
-	
-	HeapBSTRCreated(this)
-	
-	Return this
-	
-End Function
-
-Sub HeapBSTRDestroyed( _
+Private Sub HeapBSTRDestroyed( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
 End Sub
 
-Sub DestroyInternalHeapBSTR( _
+Private Sub DestroyInternalHeapBSTR( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)
 	
@@ -402,7 +413,7 @@ Sub HeapSysFreeString( _
 	
 End Sub
 
-Function PermanentHeapBSTRAddRef( _
+Private Function PermanentHeapBSTRAddRef( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
@@ -410,7 +421,7 @@ Function PermanentHeapBSTRAddRef( _
 	
 End Function
 
-Function PermanentHeapBSTRRelease( _
+Private Function PermanentHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
@@ -418,7 +429,7 @@ Function PermanentHeapBSTRRelease( _
 	
 End Function
 
-Function PermanentHeapBSTRQueryInterface( _
+Private Function PermanentHeapBSTRQueryInterface( _
 		ByVal this As InternalHeapBSTR Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -441,7 +452,7 @@ Function PermanentHeapBSTRQueryInterface( _
 	
 End Function
 
-Function InternalHeapBSTRAddRef( _
+Private Function InternalHeapBSTRAddRef( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
@@ -451,7 +462,7 @@ Function InternalHeapBSTRAddRef( _
 	
 End Function
 
-Function InternalHeapBSTRRelease( _
+Private Function InternalHeapBSTRRelease( _
 		ByVal this As InternalHeapBSTR Ptr _
 	)As ULONG
 	
@@ -467,7 +478,7 @@ Function InternalHeapBSTRRelease( _
 	
 End Function
 
-Function InternalHeapBSTRQueryInterface( _
+Private Function InternalHeapBSTRQueryInterface( _
 		ByVal this As InternalHeapBSTR Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -490,19 +501,8 @@ Function InternalHeapBSTRQueryInterface( _
 	
 End Function
 
-Function InternalHeapBSTRGetHeapBSTR( _
-		ByVal this As InternalHeapBSTR Ptr, _
-		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
-	)As HRESULT
-	
-	*pcHeapBSTR = @this->wszNullChar(0)
-	
-	Return S_OK
-	
-End Function
 
-
-Function IPermanentStringQueryInterface( _
+Private Function IPermanentStringQueryInterface( _
 		ByVal this As IString Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -510,19 +510,19 @@ Function IPermanentStringQueryInterface( _
 	Return PermanentHeapBSTRQueryInterface(ContainerOf(this, InternalHeapBSTR, lpVtbl), riid, ppvObject)
 End Function
 
-Function IPermanentStringAddRef( _
+Private Function IPermanentStringAddRef( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	Return PermanentHeapBSTRAddRef(ContainerOf(this, InternalHeapBSTR, lpVtbl))
 End Function
 
-Function IPermanentStringRelease( _
+Private Function IPermanentStringRelease( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	Return PermanentHeapBSTRRelease(ContainerOf(this, InternalHeapBSTR, lpVtbl))
 End Function
 
-Function IStringQueryInterface( _
+Private Function IStringQueryInterface( _
 		ByVal this As IString Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -530,19 +530,19 @@ Function IStringQueryInterface( _
 	Return InternalHeapBSTRQueryInterface(ContainerOf(this, InternalHeapBSTR, lpVtbl), riid, ppvObject)
 End Function
 
-Function IStringAddRef( _
+Private Function IStringAddRef( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	Return InternalHeapBSTRAddRef(ContainerOf(this, InternalHeapBSTR, lpVtbl))
 End Function
 
-Function IStringRelease( _
+Private Function IStringRelease( _
 		ByVal this As IString Ptr _
 	)As ULONG
 	Return InternalHeapBSTRRelease(ContainerOf(this, InternalHeapBSTR, lpVtbl))
 End Function
 
-Function IStringGetHeapBSTR( _
+Private Function IStringGetHeapBSTR( _
 		ByVal this As IString Ptr, _
 		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
 	)As HRESULT
