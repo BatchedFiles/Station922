@@ -30,7 +30,7 @@ Function GetAsyncResultFromOverlappedWeakPtr( _
 	
 End Function
 
-Sub InitializeAsyncResult( _
+Private Sub InitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
@@ -54,7 +54,7 @@ Sub InitializeAsyncResult( _
 	
 End Sub
 
-Sub UnInitializeAsyncResult( _
+Private Sub UnInitializeAsyncResult( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
@@ -64,11 +64,82 @@ Sub UnInitializeAsyncResult( _
 	
 End Sub
 
-Sub AsyncResultCreated( _
+Private Sub AsyncResultCreated( _
 		ByVal this As AsyncResult Ptr _
 	)
 	
 End Sub
+
+Private Sub AsyncResultDestroyed( _
+		ByVal this As AsyncResult Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyAsyncResult( _
+		ByVal this As AsyncResult Ptr _
+	)
+	
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	
+	UnInitializeAsyncResult(this)
+	
+	IMalloc_Free(pIMemoryAllocator, this)
+	
+	AsyncResultDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
+	
+End Sub
+
+Private Function AsyncResultAddRef( _
+		ByVal this As AsyncResult Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function AsyncResultRelease( _
+		ByVal this As AsyncResult Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	DestroyAsyncResult(this)
+		
+	Return 0
+	
+End Function
+
+Private Function AsyncResultQueryInterface( _
+		ByVal this As AsyncResult Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IAsyncResult, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_IUnknown, riid) Then
+			*ppv = @this->lpVtbl
+		Else
+			*ppv = NULL
+			Return E_NOINTERFACE
+		End If
+	End If
+	
+	AsyncResultAddRef(this)
+	
+	Return S_OK
+	
+End Function
 
 Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
@@ -102,78 +173,7 @@ Function CreateAsyncResult( _
 	
 End Function
 
-Sub AsyncResultDestroyed( _
-		ByVal this As AsyncResult Ptr _
-	)
-	
-End Sub
-
-Sub DestroyAsyncResult( _
-		ByVal this As AsyncResult Ptr _
-	)
-	
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
-	UnInitializeAsyncResult(this)
-	
-	IMalloc_Free(pIMemoryAllocator, this)
-	
-	AsyncResultDestroyed(this)
-	
-	IMalloc_Release(pIMemoryAllocator)
-	
-End Sub
-
-Function AsyncResultQueryInterface( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IAsyncResult, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
-		Else
-			*ppv = NULL
-			Return E_NOINTERFACE
-		End If
-	End If
-	
-	AsyncResultAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function AsyncResultAddRef( _
-		ByVal this As AsyncResult Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function AsyncResultRelease( _
-		ByVal this As AsyncResult Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	DestroyAsyncResult(this)
-		
-	Return 0
-	
-End Function
-
-Function AsyncResultGetAsyncStateWeakPtr( _
+Private Function AsyncResultGetAsyncStateWeakPtr( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
@@ -184,7 +184,7 @@ Function AsyncResultGetAsyncStateWeakPtr( _
 	
 End Function
 
-Function AsyncResultGetCompleted( _
+Private Function AsyncResultGetCompleted( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
 		ByVal pCompleted As Boolean Ptr, _
@@ -199,7 +199,7 @@ Function AsyncResultGetCompleted( _
 	
 End Function
 
-Function AsyncResultSetCompleted( _
+Private Function AsyncResultSetCompleted( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal Completed As Boolean, _
@@ -214,8 +214,7 @@ Function AsyncResultSetCompleted( _
 	
 End Function
 
-
-Function AsyncResultSetAsyncStateWeakPtr( _
+Private Function AsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
@@ -226,7 +225,7 @@ Function AsyncResultSetAsyncStateWeakPtr( _
 	
 End Function
 
-Function AsyncResultGetWsaOverlapped( _
+Private Function AsyncResultGetWsaOverlapped( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
@@ -237,7 +236,7 @@ Function AsyncResultGetWsaOverlapped( _
 	
 End Function
 
-Function AsyncResultAllocBuffers( _
+Private Function AsyncResultAllocBuffers( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal Length As Integer, _
 		ByVal ppBuffers As Any Ptr Ptr _
@@ -260,7 +259,7 @@ Function AsyncResultAllocBuffers( _
 End Function
 
 
-Function IAsyncResultQueryInterface( _
+Private Function IAsyncResultQueryInterface( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -268,26 +267,26 @@ Function IAsyncResultQueryInterface( _
 	Return AsyncResultQueryInterface(ContainerOf(this, AsyncResult, lpVtbl), riid, ppvObject)
 End Function
 
-Function IAsyncResultAddRef( _
+Private Function IAsyncResultAddRef( _
 		ByVal this As IAsyncResult Ptr _
 	)As HRESULT
 	Return AsyncResultAddRef(ContainerOf(this, AsyncResult, lpVtbl))
 End Function
 
-Function IAsyncResultRelease( _
+Private Function IAsyncResultRelease( _
 		ByVal this As IAsyncResult Ptr _
 	)As HRESULT
 	Return AsyncResultRelease(ContainerOf(this, AsyncResult, lpVtbl))
 End Function
 
-Function IAsyncResultGetAsyncStateWeakPtr( _
+Private Function IAsyncResultGetAsyncStateWeakPtr( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultGetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), ppState)
 End Function
 
-Function IAsyncResultGetCompleted( _
+Private Function IAsyncResultGetCompleted( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
 		ByVal pCompleted As Boolean Ptr, _
@@ -296,7 +295,7 @@ Function IAsyncResultGetCompleted( _
 	Return AsyncResultGetCompleted(ContainerOf(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted, pdwError)
 End Function
 
-Function IAsyncResultSetCompleted( _
+Private Function IAsyncResultSetCompleted( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal Completed As Boolean, _
@@ -305,21 +304,21 @@ Function IAsyncResultSetCompleted( _
 	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed, dwError)
 End Function
 
-Function IAsyncResultSetAsyncStateWeakPtr( _
+Private Function IAsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
 	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
 End Function
 
-Function IAsyncResultGetWsaOverlapped( _
+Private Function IAsyncResultGetWsaOverlapped( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
 	Return AsyncResultGetWsaOverlapped(ContainerOf(this, AsyncResult, lpVtbl), ppOverlapped)
 End Function
 
-Function IAsyncResultAllocBuffers( _
+Private Function IAsyncResultAllocBuffers( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal Length As Integer, _
 		ByVal ppBuffers As Any Ptr Ptr _
