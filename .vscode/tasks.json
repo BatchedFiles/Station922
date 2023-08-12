@@ -18,7 +18,7 @@
 		{
 			"label": "Build project",
 			"type": "process",
-			"command": "R:\\Programming\\FreeBASIC-1.09.0-win64-gcc-9.3.0\\fbc64.exe",
+			"command": "C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\fbc64.exe",
 			"args": [
 				"-m src\\Station922",
 				"-x Station922.exe",
