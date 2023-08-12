@@ -47,7 +47,7 @@ Dim Shared MemoryPoolObject As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
 Dim Shared HungsConnectionsThread As HANDLE
 
-Sub PrintWalkingHeap( _
+Private Sub PrintWalkingHeap( _
 		ByVal hHeap As HANDLE _
 	)
 	
@@ -198,7 +198,7 @@ Sub PrintWalkingHeap( _
 	
 End Sub
 
-Sub HeapMemoryAllocatorResetState( _
+Private Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
@@ -214,7 +214,20 @@ Sub HeapMemoryAllocatorResetState( _
 	
 End Sub
 
-Function HeapMemoryAllocatorCloseHungsConnections( _
+Private Function HeapMemoryAllocatorCloseSocket( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+	
+	If this->ClientSocket <> INVALID_SOCKET Then
+		closesocket(this->ClientSocket)
+		this->ClientSocket = INVALID_SOCKET
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Private Function HeapMemoryAllocatorCloseHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal KeepAliveInterval As ULongInt _
 	)As Boolean
@@ -248,7 +261,43 @@ Function HeapMemoryAllocatorCloseHungsConnections( _
 	
 End Function
 
-Sub ReleaseHeapMemoryAllocatorInstance( _
+Private Sub UnInitializeHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
+	
+End Sub
+
+Private Sub HeapMemoryAllocatorDestroyed( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
+	
+End Sub
+
+Private Sub DestroyHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
+	
+	Dim hHeap As HANDLE = this->hHeap
+	
+	UnInitializeHeapMemoryAllocator(this)
+	
+	If hHeap Then
+		HeapFree( _
+			this->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			this _
+		)
+		
+		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
+		If resHeapDestroy = 0 Then
+		End If
+	End If
+	
+	HeapMemoryAllocatorDestroyed(this)
+	
+End Sub
+
+Private Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
 	
@@ -317,7 +366,7 @@ Function GetHeapMemoryAllocatorInstance( _
 	
 End Function
 
-Function CheckHungsConnections( _
+Private Function CheckHungsConnections( _
 		ByVal KeepAliveInterval As Integer _
 	)As Boolean
 	
@@ -361,13 +410,13 @@ Function CheckHungsConnections( _
 	
 End Function
 
-Sub WakeupClearingThread( _
+Private Sub WakeupClearingThread( _
 		ByVal Parameter As ULONG_PTR _
 	)
 	
 End Sub
 
-Function ClearingThread( _
+Private Function ClearingThread( _
 		ByVal lpParam As LPVOID _
 	)As DWORD
 	
@@ -399,6 +448,174 @@ Function ClearingThread( _
 	Loop
 	
 	Return 0
+	
+End Function
+
+Private Sub InitializeHeapMemoryAllocator( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal hHeap As HANDLE, _
+		ByVal pReadedData As ClientRequestBuffer Ptr _
+	)
+	
+	#if __FB_DEBUG__
+		CopyMemory( _
+			@this->RttiClassName(0), _
+			@Str(RTTI_ID_HEAPMEMORYALLOCATOR), _
+			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+		)
+	#endif
+	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
+	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
+	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
+	this->ReferenceCounter = 0
+	this->hHeap = hHeap
+	this->ClientSocket = INVALID_SOCKET
+	this->pReadedData = pReadedData
+	InitializeClientRequestBuffer(this->pReadedData)
+	
+End Sub
+
+Private Sub HeapMemoryAllocatorCreated( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)
+	
+End Sub
+
+Private Function HeapMemoryAllocatorAddRef( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter += 1
+	
+	Return 1
+	
+End Function
+
+Private Function HeapMemoryAllocatorRelease( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As ULONG
+	
+	this->ReferenceCounter -= 1
+	
+	If this->ReferenceCounter Then
+		Return 1
+	End If
+	
+	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
+	ReleaseHeapMemoryAllocatorInstance(pInterface)
+	
+	Return 0
+	
+End Function
+
+Private Function HeapMemoryAllocatorQueryInterface( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	If IsEqualIID(@IID_IHeapMemoryAllocator, riid) Then
+		*ppv = @this->lpVtbl
+	Else
+		If IsEqualIID(@IID_ITimeCounter, riid) Then
+			*ppv = @this->lpVtblTimeCounter
+		Else
+			If IsEqualIID(@IID_IClientSocket, riid) Then
+				*ppv = @this->lpVtblClientSocket
+			Else
+				If IsEqualIID(@IID_IMalloc, riid) Then
+					*ppv = @this->lpVtbl
+				Else
+					If IsEqualIID(@IID_IUnknown, riid) Then
+						*ppv = @this->lpVtbl
+					Else
+						*ppv = NULL
+						Return E_NOINTERFACE
+					End If
+				End If
+			End If
+		End If
+	End If
+	
+	HeapMemoryAllocatorAddRef(this)
+	
+	Return S_OK
+	
+End Function
+
+Private Sub AllocationFailed( _
+		ByVal BytesCount As SIZE_T_ _
+	)
+	
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = CLng(BytesCount)
+	LogWriteEntry( _
+		LogEntryType.Error, _
+		WStr(!"AllocMemory Failed"), _
+		@vtAllocatedBytes _
+	)
+	
+End Sub
+
+Private Function CreateHeapMemoryAllocator( _
+		ByVal riid As REFIID, _
+		ByVal ppv As Any Ptr Ptr _
+	)As HRESULT
+	
+	Dim hHeap As HANDLE = HeapCreate( _
+		HEAP_NO_SERIALIZE_FLAG, _
+		PRIVATEHEAP_INITIALSIZE, _
+		PRIVATEHEAP_MAXIMUMSIZE _
+	)
+	If hHeap = NULL Then
+		Dim dwError As DWORD = GetLastError()
+		*ppv = NULL
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
+		hHeap, _
+		HEAP_NO_SERIALIZE_FLAG, _
+		SizeOf(ClientRequestBuffer) _
+	)
+	
+	If pReadedData Then
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+			hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			SizeOf(HeapMemoryAllocator) _
+		)
+		
+		If this Then
+			InitializeHeapMemoryAllocator( _
+				this, _
+				hHeap, _
+				pReadedData _
+			)
+			HeapMemoryAllocatorCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyHeapMemoryAllocator(this)
+			End If
+			
+			Return hrQueryInterface
+		End If
+		
+		AllocationFailed(SizeOf(HeapMemoryAllocator))
+	End If
+	
+	AllocationFailed(SizeOf(ClientRequestBuffer))
+	
+	HeapDestroy(hHeap)
+	
+	*ppv = NULL
+	Return E_OUTOFMEMORY
 	
 End Function
 
@@ -490,211 +707,7 @@ Sub DeleteMemoryPool()
 	
 End Sub
 
-Sub AllocationFailed( _
-		ByVal BytesCount As SIZE_T_ _
-	)
-	
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = CLng(BytesCount)
-	LogWriteEntry( _
-		LogEntryType.Error, _
-		WStr(!"AllocMemory Failed"), _
-		@vtAllocatedBytes _
-	)
-	
-End Sub
-
-Sub InitializeHeapMemoryAllocator( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE, _
-		ByVal pReadedData As ClientRequestBuffer Ptr _
-	)
-	
-	#if __FB_DEBUG__
-		CopyMemory( _
-			@this->RttiClassName(0), _
-			@Str(RTTI_ID_HEAPMEMORYALLOCATOR), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
-		)
-	#endif
-	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
-	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
-	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
-	this->ReferenceCounter = 0
-	this->hHeap = hHeap
-	this->ClientSocket = INVALID_SOCKET
-	this->pReadedData = pReadedData
-	InitializeClientRequestBuffer(this->pReadedData)
-	
-End Sub
-
-Sub UnInitializeHeapMemoryAllocator( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-End Sub
-
-Sub HeapMemoryAllocatorCreated( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-End Sub
-
-Function CreateHeapMemoryAllocator( _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	Dim hHeap As HANDLE = HeapCreate( _
-		HEAP_NO_SERIALIZE_FLAG, _
-		PRIVATEHEAP_INITIALSIZE, _
-		PRIVATEHEAP_MAXIMUMSIZE _
-	)
-	If hHeap = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		*ppv = NULL
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
-	
-	Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
-		hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		SizeOf(ClientRequestBuffer) _
-	)
-	
-	If pReadedData Then
-		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-			hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			SizeOf(HeapMemoryAllocator) _
-		)
-		
-		If this Then
-			InitializeHeapMemoryAllocator( _
-				this, _
-				hHeap, _
-				pReadedData _
-			)
-			HeapMemoryAllocatorCreated(this)
-			
-			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
-				this, _
-				riid, _
-				ppv _
-			)
-			If FAILED(hrQueryInterface) Then
-				DestroyHeapMemoryAllocator(this)
-			End If
-			
-			Return hrQueryInterface
-		End If
-		
-		AllocationFailed(SizeOf(HeapMemoryAllocator))
-	End If
-	
-	AllocationFailed(SizeOf(ClientRequestBuffer))
-	
-	HeapDestroy(hHeap)
-	
-	*ppv = NULL
-	Return E_OUTOFMEMORY
-	
-End Function
-
-Sub HeapMemoryAllocatorDestroyed( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-End Sub
-
-Sub DestroyHeapMemoryAllocator( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-	
-	Dim hHeap As HANDLE = this->hHeap
-	
-	UnInitializeHeapMemoryAllocator(this)
-	
-	If hHeap Then
-		HeapFree( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			this _
-		)
-		
-		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
-		If resHeapDestroy = 0 Then
-		End If
-	End If
-	
-	HeapMemoryAllocatorDestroyed(this)
-	
-End Sub
-
-Function HeapMemoryAllocatorQueryInterface( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
-	
-	If IsEqualIID(@IID_IHeapMemoryAllocator, riid) Then
-		*ppv = @this->lpVtbl
-	Else
-		If IsEqualIID(@IID_ITimeCounter, riid) Then
-			*ppv = @this->lpVtblTimeCounter
-		Else
-			If IsEqualIID(@IID_IClientSocket, riid) Then
-				*ppv = @this->lpVtblClientSocket
-			Else
-				If IsEqualIID(@IID_IMalloc, riid) Then
-					*ppv = @this->lpVtbl
-				Else
-					If IsEqualIID(@IID_IUnknown, riid) Then
-						*ppv = @this->lpVtbl
-					Else
-						*ppv = NULL
-						Return E_NOINTERFACE
-					End If
-				End If
-			End If
-		End If
-	End If
-	
-	HeapMemoryAllocatorAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Function HeapMemoryAllocatorAddRef( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter += 1
-	
-	Return 1
-	
-End Function
-
-Function HeapMemoryAllocatorRelease( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)As ULONG
-	
-	this->ReferenceCounter -= 1
-	
-	If this->ReferenceCounter Then
-		Return 1
-	End If
-	
-	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
-	ReleaseHeapMemoryAllocatorInstance(pInterface)
-	
-	Return 0
-	
-End Function
-
-Function HeapMemoryAllocatorAlloc( _
+Private Function HeapMemoryAllocatorAlloc( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal BytesCount As SIZE_T_ _
 	)As Any Ptr
@@ -712,7 +725,7 @@ Function HeapMemoryAllocatorAlloc( _
 	
 End Function
 
-Sub HeapMemoryAllocatorFree( _
+Private Sub HeapMemoryAllocatorFree( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
 	)
@@ -725,7 +738,7 @@ Sub HeapMemoryAllocatorFree( _
 	
 End Sub
 
-Function HeapMemoryAllocatorGetClientBuffer( _
+Private Function HeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
 	)As HRESULT
@@ -736,7 +749,7 @@ Function HeapMemoryAllocatorGetClientBuffer( _
 	
 End Function
 
-Function HeapMemoryAllocatorStartWatch( _
+Private Function HeapMemoryAllocatorStartWatch( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
 	
@@ -748,7 +761,7 @@ Function HeapMemoryAllocatorStartWatch( _
 	
 End Function
 	
-Function HeapMemoryAllocatorStopWatch( _
+Private Function HeapMemoryAllocatorStopWatch( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
 	
@@ -758,7 +771,7 @@ Function HeapMemoryAllocatorStopWatch( _
 	
 End Function
 
-Function HeapMemoryAllocatorGetSocket( _
+Private Function HeapMemoryAllocatorGetSocket( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
@@ -769,7 +782,7 @@ Function HeapMemoryAllocatorGetSocket( _
 	
 End Function
 	
-Function HeapMemoryAllocatorSetSocket( _
+Private Function HeapMemoryAllocatorSetSocket( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
@@ -780,21 +793,8 @@ Function HeapMemoryAllocatorSetSocket( _
 	
 End Function
 	
-Function HeapMemoryAllocatorCloseSocket( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)As HRESULT
-	
-	If this->ClientSocket <> INVALID_SOCKET Then
-		closesocket(this->ClientSocket)
-		this->ClientSocket = INVALID_SOCKET
-	End If
-	
-	Return S_OK
-	
-End Function
 
-
-Function IHeapMemoryAllocatorQueryInterface( _
+Private Function IHeapMemoryAllocatorQueryInterface( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -802,40 +802,40 @@ Function IHeapMemoryAllocatorQueryInterface( _
 	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtbl), riid, ppvObject)
 End Function
 
-Function IHeapMemoryAllocatorAddRef( _
+Private Function IHeapMemoryAllocatorAddRef( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
-Function IHeapMemoryAllocatorRelease( _
+Private Function IHeapMemoryAllocatorRelease( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
-Function IHeapMemoryAllocatorAlloc( _
+Private Function IHeapMemoryAllocatorAlloc( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
 	Return HeapMemoryAllocatorAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), cb)
 End Function
 
-Sub IHeapMemoryAllocatorFree( _
+Private Sub IHeapMemoryAllocatorFree( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
 	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
 
-Function IHeapMemoryAllocatorGetClientBuffer( _
+Private Function IHeapMemoryAllocatorGetClientBuffer( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorGetClientBuffer(ContainerOf(this, HeapMemoryAllocator, lpVtbl), ppBuffer)
 End Function
 
-Function ITimeCounterQueryInterface( _
+Private Function ITimeCounterQueryInterface( _
 		ByVal this As ITimeCounter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -843,31 +843,31 @@ Function ITimeCounterQueryInterface( _
 	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter), riid, ppvObject)
 End Function
 
-Function ITimeCounterAddRef( _
+Private Function ITimeCounterAddRef( _
 		ByVal this As ITimeCounter Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
-Function ITimeCounterRelease( _
+Private Function ITimeCounterRelease( _
 		ByVal this As ITimeCounter Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
-Function ITimeCounterStartWatch( _
+Private Function ITimeCounterStartWatch( _
 		ByVal this As ITimeCounter Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorStartWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
-Function ITimeCounterStopWatch( _
+Private Function ITimeCounterStopWatch( _
 		ByVal this As ITimeCounter Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorStopWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
-Function IClientSocketQueryInterface( _
+Private Function IClientSocketQueryInterface( _
 		ByVal this As IClientSocket Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
@@ -875,33 +875,33 @@ Function IClientSocketQueryInterface( _
 	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), riid, ppvObject)
 End Function
 
-Function IClientSocketAddRef( _
+Private Function IClientSocketAddRef( _
 		ByVal this As IClientSocket Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
 End Function
 
-Function IClientSocketRelease( _
+Private Function IClientSocketRelease( _
 		ByVal this As IClientSocket Ptr _
 	)As ULONG
 	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
 End Function
 
-Function IClientSocketGetSocket( _
+Private Function IClientSocketGetSocket( _
 		ByVal this As IClientSocket Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorGetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), pResult)
 End Function
 
-Function IClientSocketSetSocket( _
+Private Function IClientSocketSetSocket( _
 		ByVal this As IClientSocket Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
 	Return HeapMemoryAllocatorSetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), sock)
 End Function
 
-Function IClientSocketCloseSocket( _
+Private Function IClientSocketCloseSocket( _
 		ByVal this As IClientSocket Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorCloseSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
