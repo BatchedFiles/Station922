@@ -31,7 +31,7 @@ Function ClientRequestBufferGetFreeSpaceLength( _
 	
 End Function
 
-Function FindStringA( _
+Private Function FindStringA( _
 		ByVal buffer As UByte Ptr, _
 		ByVal BufferLength As Integer, _
 		ByVal pStr As UByte Ptr, _
