@@ -151,6 +151,9 @@ LDLIBS+=-luuid
 endif
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
 ifeq ($(USE_RUNTIME),TRUE)
+LDLIBS+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
+endif
+ifeq ($(USE_RUNTIME),TRUE)
 LDLIBSEND+="$(LIB_DIR)\crtend.o"
 endif
 
