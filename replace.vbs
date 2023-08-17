@@ -114,6 +114,10 @@ Sub ParseFile()
 			InsideMainFunction = True
 		End If
 		
+		If LinesArray(i) = "int32 main( int32 __FB_ARGC__$0, char** __FB_ARGV__$0 )" Then
+			InsideMainFunction = True
+		End If
+		
 		If LinesArray(i) = "}" Then
 			InsideMainFunction = False
 		End If

@@ -3,8 +3,8 @@
 		{
 			"name": "x64 Clang-16.0.0 FBC-1.10.0",
 			"makeArgs": [
-				"FBC_VER=FBC1100",
-				"GCC_VER=Clang1600",
+				"FBC_VER=_FBC1100",
+				"GCC_VER=_Clang1600",
 				"PROCESSOR_ARCHITECTURE=AMD64",
 				"MARCH=native",
 				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc\\src\\compiler\\fbc64_icase.exe\"",
@@ -25,8 +25,8 @@
 		{
 			"name": "x86 Clang-16.0.0 FBC-1.10.0",
 			"makeArgs": [
-				"FBC_VER=FBC1100",
-				"GCC_VER=Clang1600",
+				"FBC_VER=_FBC1100",
+				"GCC_VER=_Clang1600",
 				"PROCESSOR_ARCHITECTURE=x86",
 				"MARCH=atom",
 				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc\\src\\compiler\\fbc32_icase.exe\"",
@@ -47,8 +47,8 @@
 		{
 			"name": "x64 GCC-13.1.0 FBC-1.10.0",
 			"makeArgs": [
-				"FBC_VER=FBC1100",
-				"GCC_VER=GCC1310",
+				"FBC_VER=_FBC1100",
+				"GCC_VER=_GCC1310",
 				"PROCESSOR_ARCHITECTURE=AMD64",
 				"MARCH=native",
 				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc\\src\\compiler\\fbc64_icase.exe\"",
@@ -68,8 +68,8 @@
 		{
 			"name": "x86 GCC-13.1.0 FBC-1.10.0",
 			"makeArgs": [
-				"FBC_VER=FBC1100",
-				"GCC_VER=GCC1310",
+				"FBC_VER=_FBC1100",
+				"GCC_VER=_GCC1310",
 				"PROCESSOR_ARCHITECTURE=x86",
 				"MARCH=atom",
 				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc\\src\\compiler\\fbc32_icase.exe\"",
@@ -109,7 +109,7 @@
 	"makefile.launchConfigurations": [
 		{
 			"cwd": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64",
-			"binaryPath": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64\\Station922_GCC1220_FBC1090.exe",
+			"binaryPath": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64\\Station922_GCC1310_FBC1100.exe",
 			"binaryArgs": []
 		}
 	]
