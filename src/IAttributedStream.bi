@@ -15,6 +15,7 @@ Enum FileAccess
 	ReadAccess
 	UpdateAccess
 	DeleteAccess
+	TemporaryAccess
 End Enum
 
 Type BufferSlice
