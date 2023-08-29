@@ -626,7 +626,7 @@ Private Function GetFileHandle( _
 				FILE_SHARE_READ, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
+				FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			If FileHandle = INVALID_HANDLE_VALUE Then
@@ -643,7 +643,7 @@ Private Function GetFileHandle( _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
+				FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			
@@ -662,11 +662,11 @@ Private Function GetFileHandle( _
 		Case FileAccess.DeleteAccess
 			FileHandle = CreateFileW( _
 				PathTranslated, _
-				GENERIC_READ, _
+				0, _
 				0, _
 				NULL, _
 				OPEN_EXISTING, _
-				FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_DELETE_ON_CLOSE Or FILE_FLAG_OVERLAPPED, _
+				FILE_FLAG_DELETE_ON_CLOSE Or FILE_FLAG_OVERLAPPED, _
 				NULL _
 			)
 			If FileHandle = INVALID_HANDLE_VALUE Then
