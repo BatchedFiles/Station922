@@ -750,7 +750,7 @@ Private Function GetCompressionHandle( _
 			FILE_SHARE_READ, _
 			NULL, _
 			OPEN_EXISTING, _
-			FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
+			FILE_FLAG_OVERLAPPED, _
 			NULL _
 		)
 		
@@ -786,7 +786,7 @@ Private Function GetCompressionHandle( _
 			FILE_SHARE_READ, _
 			NULL, _
 			OPEN_EXISTING, _
-			FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
+			FILE_FLAG_OVERLAPPED, _
 			NULL _
 		)
 		
