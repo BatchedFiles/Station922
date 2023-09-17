@@ -196,6 +196,23 @@ Private Sub PrintWalkingHeap( _
 		resWalk = HeapWalk(hHeap, @Entry)
 	Loop
 	
+	Scope
+		Const FormatString = WStr(!"\r\n")
+		Dim buf As WString * BufSize = Any
+		wsprintfW( _
+			@buf, _
+			@FormatString _
+		)
+		
+		Dim vtAllocatedBytes As VARIANT = Any
+		vtAllocatedBytes.vt = VT_EMPTY
+		LogWriteEntry( _
+			LogEntryType.Debug, _
+			@buf, _
+			@vtAllocatedBytes _
+		)
+	End Scope
+	
 End Sub
 
 Private Sub HeapMemoryAllocatorResetState( _
