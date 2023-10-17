@@ -33,7 +33,7 @@ MOVE_PATH_SEP ?= \\
 MOVE_COMMAND ?= cmd.exe /c move /y
 DELETE_COMMAND ?= cmd.exe /c del /f /q
 MKDIR_COMMAND ?= cmd.exe /c mkdir
-SCRIPT_COMMAND ?= cscript.exe //nologo replace.vbs
+SCRIPT_COMMAND ?= cscript.exe //nologo fix-emitted-code.vbs
 
 ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 BIN_DEBUG_DIR ?= bin$(PATH_SEP)Debug$(PATH_SEP)x64
@@ -79,9 +79,6 @@ else
 CFLAGS+=-m32
 endif
 CFLAGS+=-march=$(MARCH)
-ifneq ($(TARGET_TRIPLET),)
-CFLAGS+=--target=$(TARGET_TRIPLET)
-endif
 CFLAGS+=-pipe
 CFLAGS+=-Wall -Werror -Wextra -pedantic
 CFLAGS+=-Wno-unused-label -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
@@ -142,9 +139,11 @@ LDLIBSBEGIN+="$(LIB_DIR)\crt2.o"
 LDLIBSBEGIN+="$(LIB_DIR)\crtbegin.o"
 LDLIBSBEGIN+="$(LIB_DIR)\fbrt0.o"
 endif
-LDLIBS+=-ladvapi32 -lcrypt32 -lgdi32 -lkernel32
-LDLIBS+=-lmsvcrt -lmswsock -lole32 -loleaut32
-LDLIBS+=-lshell32 -lshlwapi -lws2_32 -luser32
+LDLIBS+=--start-group
+LDLIBS+=-ladvapi32 -lcrypt32 -lkernel32 -lmsvcrt
+LDLIBS+=-lole32 -loleaut32
+LDLIBS+=-lmswsock -lws2_32
+LDLIBS+=-lshell32 -lshlwapi -lgdi32 -luser32 -lcomctl32
 ifeq ($(USE_RUNTIME),TRUE)
 LDLIBS+=-lfb
 LDLIBS+=-luuid
@@ -153,6 +152,7 @@ LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
 ifeq ($(USE_RUNTIME),TRUE)
 LDLIBS+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
 endif
+LDLIBS+=--end-group
 ifeq ($(USE_RUNTIME),TRUE)
 LDLIBSEND+="$(LIB_DIR)\crtend.o"
 endif
@@ -341,10 +341,10 @@ createdirs:
 	$(MKDIR_COMMAND) $(OBJ_RELEASE_DIR_MOVE)
 
 $(BIN_RELEASE_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME): $(OBJECTFILES_RELEASE)
-	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ --start-group $(LDLIBS) --end-group $(LDLIBSEND) -o $@
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
 
-$(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME):   $(OBJECTFILES_DEBUG)
-	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ --start-group $(LDLIBS) --end-group $(LDLIBSEND) -o $@
+$(BIN_DEBUG_DIR)$(PATH_SEP)$(OUTPUT_FILE_NAME): $(OBJECTFILES_DEBUG)
+	$(LD) $(LDFLAGS) $(LDLIBSBEGIN) $^ $(LDLIBS) $(LDLIBSEND) -o $@
 
 $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).o: $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).asm
 	$(AS) $(ASFLAGS) -o $@ $<
