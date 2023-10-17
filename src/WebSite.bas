@@ -885,6 +885,35 @@ Private Function WriteToFileW( _
 	
 End Function
 
+Private Function FileNameIsDot( _
+		ByVal pffd As WIN32_FIND_DATAW Ptr _
+	) As Boolean
+	
+	Const DotString = "."
+	Const DotDotString = ".."
+	
+	Dim resCompareDotDot As Long = lstrcmpW( _
+		pffd->cFileName, _
+		WStr(DotDotString) _
+	)
+	
+	If resCompareDotDot = 0 Then
+		Return True
+	End If
+	
+	Dim resCompareDot As Long = lstrcmpW( _
+		pffd->cFileName, _
+		WStr(DotString) _
+	)
+	
+	If resCompareDot = 0 Then
+		Return True
+	End If
+	
+	Return False
+	
+End Function
+
 Private Function GetFileList( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pCount As Integer Ptr _
@@ -901,7 +930,7 @@ Private Function GetFileList( _
 	
 	Dim FileListCapacity As Integer = 1024
 	Dim FilesCount As Integer = 0
-	Dim pFiles As ListingFileItem Ptr = malloc( _
+	Dim pFiles As ListingFileItem Ptr = Allocate( _
 		SizeOf(ListingFileItem) * FileListCapacity _
 	)
 	If pFiles = NULL Then
@@ -911,39 +940,34 @@ Private Function GetFileList( _
 	End If
 	
 	Do
-		Dim resCompareDot As Long = lstrcmpW(ffd.cFileName, WStr("."))
+		Dim resIsDot As Boolean = FileNameIsDot(@ffd)
 		
-		If resCompareDot Then
+		If resIsDot = False Then
 			
-			Dim resCompareDotDot As Long = lstrcmpW(ffd.cFileName, WStr(".."))
-			
-			If resCompareDotDot Then
-				
-				If FilesCount >= FileListCapacity Then
-					FileListCapacity = FileListCapacity * 2
-					Dim pFilesNew As ListingFileItem Ptr = realloc( _
-						pFiles, _
-						SizeOf(ListingFileItem) * FileListCapacity _
-					)
-					If pFilesNew = NULL Then
-						*pCount = 0
-						FindClose(hFind)
-						free(pFiles)
-						Return NULL
-					End If
-					
-					pFiles = pFilesNew
+			If FilesCount >= FileListCapacity Then
+				FileListCapacity = FileListCapacity * 2
+				Dim pFilesNew As ListingFileItem Ptr = ReAllocate( _
+					pFiles, _
+					SizeOf(ListingFileItem) * FileListCapacity _
+				)
+				If pFilesNew = NULL Then
+					*pCount = 0
+					FindClose(hFind)
+					DeAllocate(pFiles)
+					Return NULL
 				End If
 				
-				Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
-				
-				lstrcpyW(@pFiles[FilesCount].FileName, ffd.cFileName)
-				pFiles[FilesCount].FileSize.LowPart = ffd.nFileSizeLow
-				pFiles[FilesCount].FileSize.HighPart = ffd.nFileSizeHigh
-				pFiles[FilesCount].IsDirectory = IsDirectory
-				
-				FilesCount += 1
+				pFiles = pFilesNew
 			End If
+			
+			Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+			
+			lstrcpyW(@pFiles[FilesCount].FileName, ffd.cFileName)
+			pFiles[FilesCount].FileSize.LowPart = ffd.nFileSizeLow
+			pFiles[FilesCount].FileSize.HighPart = ffd.nFileSizeHigh
+			pFiles[FilesCount].IsDirectory = IsDirectory
+			
+			FilesCount += 1
 		End If
 		
 		Dim resFindNext As BOOL = FindNextFileW(hFind, @ffd)
