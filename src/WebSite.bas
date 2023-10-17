@@ -899,10 +899,10 @@ Private Function GetFileList( _
 		Return NULL
 	End If
 	
-	Dim FilesCount As Integer = 1024
-	Dim FileIndex As Integer = 0
+	Dim FileListCapacity As Integer = 1024
+	Dim FilesCount As Integer = 0
 	Dim pFiles As ListingFileItem Ptr = malloc( _
-		SizeOf(ListingFileItem) * FilesCount _
+		SizeOf(ListingFileItem) * FileListCapacity _
 	)
 	If pFiles = NULL Then
 		*pCount = 0
@@ -910,16 +910,20 @@ Private Function GetFileList( _
 		Return NULL
 	End If
 	
-	Dim resFindNext As BOOL = Any
 	Do
-		If lstrcmpW(ffd.cFileName, WStr(".")) Then
-			If lstrcmpW(ffd.cFileName, WStr("..")) Then
+		Dim resCompareDot As Long = lstrcmpW(ffd.cFileName, WStr("."))
+		
+		If resCompareDot Then
+			
+			Dim resCompareDotDot As Long = lstrcmpW(ffd.cFileName, WStr(".."))
+			
+			If resCompareDotDot Then
 				
-				If FileIndex >= FilesCount Then
-					FilesCount = FilesCount * 2
+				If FilesCount >= FileListCapacity Then
+					FileListCapacity = FileListCapacity * 2
 					Dim pFilesNew As ListingFileItem Ptr = realloc( _
 						pFiles, _
-						SizeOf(ListingFileItem) * FilesCount _
+						SizeOf(ListingFileItem) * FileListCapacity _
 					)
 					If pFilesNew = NULL Then
 						*pCount = 0
@@ -933,21 +937,24 @@ Private Function GetFileList( _
 				
 				Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
 				
-				lstrcpyW(@pFiles[FileIndex].FileName, ffd.cFileName)
-				pFiles[FileIndex].FileSize.LowPart = ffd.nFileSizeLow
-				pFiles[FileIndex].FileSize.HighPart = ffd.nFileSizeHigh
-				pFiles[FileIndex].IsDirectory = IsDirectory
+				lstrcpyW(@pFiles[FilesCount].FileName, ffd.cFileName)
+				pFiles[FilesCount].FileSize.LowPart = ffd.nFileSizeLow
+				pFiles[FilesCount].FileSize.HighPart = ffd.nFileSizeHigh
+				pFiles[FilesCount].IsDirectory = IsDirectory
 				
-				FileIndex += 1
+				FilesCount += 1
 			End If
 		End If
 		
-		resFindNext = FindNextFileW(hFind, @ffd)
-	Loop While resFindNext
+		Dim resFindNext As BOOL = FindNextFileW(hFind, @ffd)
+		If resFindNext = 0 Then
+			Exit Do
+		End If
+	Loop
 	
 	FindClose(hFind)
 	
-	*pCount = FileIndex
+	*pCount = FilesCount
 	Return pFiles
 	
 End Function
