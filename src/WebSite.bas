@@ -101,6 +101,67 @@ Type _WebSite
 	EnableGetAllFiles As Boolean
 End Type
 
+Type FileIteratorW
+	Declare Constructor(ByRef ListingDir As WString)
+	Declare Destructor()
+	Declare Operator For()
+	Declare Operator Step()
+	Declare Operator Next(ByRef endCond As FileIteratorW) As Integer
+	
+	FindData As WIN32_FIND_DATAW
+	hFind As HANDLE
+	pListingDir As WString Ptr
+	resFindNext As BOOL
+End Type
+
+Private Constructor FileIteratorW(ByRef ListingDir As WString)
+	
+	hFind = INVALID_HANDLE_VALUE
+	pListingDir = @ListingDir
+	resFindNext = TRUE
+	
+End Constructor
+
+Private Destructor FileIteratorW()
+	
+	If hFind <> INVALID_HANDLE_VALUE Then
+		FindClose(hFind)
+	End If
+	
+End Destructor
+
+Private Operator FileIteratorW.For()
+	
+	hFind = FindFirstFileW( _
+		pListingDir, _
+		@FindData _
+	)
+	
+End Operator
+
+Private Operator FileIteratorW.Step()
+	
+	resFindNext = FindNextFileW( _
+		hFind, _
+		@FindData _
+	)
+	
+End Operator
+
+Private Operator FileIteratorW.Next(ByRef endCond As FileIteratorW) As Integer
+	
+	If hFind = INVALID_HANDLE_VALUE Then
+		Return 0
+	End If
+	
+	If resFindNext = 0 Then
+		Return 0
+	End If
+	
+	Return 1
+	
+End Operator
+
 Private Function GetAuthorizationHeader( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ProxyAuthorization As Boolean _
@@ -886,14 +947,14 @@ Private Function WriteToFileW( _
 End Function
 
 Private Function FileNameIsDot( _
-		ByVal pffd As WIN32_FIND_DATAW Ptr _
+		ByVal pffd As WString Ptr _
 	) As Boolean
 	
 	Const DotString = "."
 	Const DotDotString = ".."
 	
 	Dim resCompareDotDot As Long = lstrcmpW( _
-		pffd->cFileName, _
+		pffd, _
 		WStr(DotDotString) _
 	)
 	
@@ -902,7 +963,7 @@ Private Function FileNameIsDot( _
 	End If
 	
 	Dim resCompareDot As Long = lstrcmpW( _
-		pffd->cFileName, _
+		pffd, _
 		WStr(DotString) _
 	)
 	
@@ -919,28 +980,19 @@ Private Function GetFileList( _
 		ByVal pCount As Integer Ptr _
 	)As ListingFileItem Ptr
 	
-	Dim ffd As WIN32_FIND_DATAW = Any
-	Dim hFind As HANDLE = FindFirstFileW( _
-		pListingDir, _
-		@ffd _
-	)
-	If hFind = INVALID_HANDLE_VALUE Then
-		Return NULL
-	End If
-	
 	Dim FileListCapacity As Integer = 1024
 	Dim FilesCount As Integer = 0
+	
 	Dim pFiles As ListingFileItem Ptr = Allocate( _
 		SizeOf(ListingFileItem) * FileListCapacity _
 	)
 	If pFiles = NULL Then
 		*pCount = 0
-		FindClose(hFind)
 		Return NULL
 	End If
 	
-	Do
-		Dim resIsDot As Boolean = FileNameIsDot(@ffd)
+	For iterator As FileIteratorW = *pListingDir To WStr("")
+		Dim resIsDot As Boolean = FileNameIsDot(@iterator.FindData.cFileName)
 		
 		If resIsDot = False Then
 			
@@ -952,7 +1004,6 @@ Private Function GetFileList( _
 				)
 				If pFilesNew = NULL Then
 					*pCount = 0
-					FindClose(hFind)
 					DeAllocate(pFiles)
 					Return NULL
 				End If
@@ -960,23 +1011,17 @@ Private Function GetFileList( _
 				pFiles = pFilesNew
 			End If
 			
-			Dim IsDirectory As Boolean = ffd.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+			Dim IsDirectory As Boolean = iterator.FindData.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
 			
-			lstrcpyW(@pFiles[FilesCount].FileName, ffd.cFileName)
-			pFiles[FilesCount].FileSize.LowPart = ffd.nFileSizeLow
-			pFiles[FilesCount].FileSize.HighPart = ffd.nFileSizeHigh
+			lstrcpyW(@pFiles[FilesCount].FileName, iterator.FindData.cFileName)
+			pFiles[FilesCount].FileSize.LowPart = iterator.FindData.nFileSizeLow
+			pFiles[FilesCount].FileSize.HighPart = iterator.FindData.nFileSizeHigh
 			pFiles[FilesCount].IsDirectory = IsDirectory
 			
 			FilesCount += 1
 		End If
 		
-		Dim resFindNext As BOOL = FindNextFileW(hFind, @ffd)
-		If resFindNext = 0 Then
-			Exit Do
-		End If
-	Loop
-	
-	FindClose(hFind)
+	Next
 	
 	*pCount = FilesCount
 	Return pFiles
