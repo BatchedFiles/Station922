@@ -42,11 +42,14 @@ Sub WriteTextFile(FileName, strText)
 End Sub
 
 Function CommentLine(strLine)
-	CommentLine = "/*" & strLine & "*/"
-	' CommentLine = ""
+	CommentLine = "/* " & strLine & " */"
 End Function
 
 Function FixWinApiDeclaration(strLine)
+	
+	' Add "const" keyword to parameters
+	' Add "volatile" keyword to parameters
+	
 	Select Case strLine
 		
 		Case "int32 memcmp( void*, void*, uint64 );"
@@ -69,6 +72,9 @@ Function FixWinApiDeclaration(strLine)
 		
 		Case "int64 _InterlockedExchangeAdd64( int64*, int64 );"
 			FixWinApiDeclaration = "int64 _InterlockedExchangeAdd64( volatile int64*, int64 );"
+		
+		Case "int64 _InterlockedCompareExchange64( int64*, int64, int64 );"
+			FixWinApiDeclaration = "long long _InterlockedCompareExchange64(volatile long long *, long long, long long);"
 		
 		Case "int32 _InterlockedExchangeAdd( int32*, int32 );"
 			FixWinApiDeclaration = "long _InterlockedExchangeAdd( volatile long*, long );"
