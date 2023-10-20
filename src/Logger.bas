@@ -1,46 +1,12 @@
 #include once "Logger.bi"
+#include once "crt.bi"
 
 Private Sub ConsoleWriteColorStringW( _
 		ByVal s As LPCWSTR _
 	)
 	
-	Dim OutHandle As HANDLE = GetStdHandle(STD_OUTPUT_HANDLE)
-	
-	Dim NumberOfCharsWritten As DWORD = Any
-	Dim dwErrorConsole As WINBOOL = WriteConsoleW( _
-		OutHandle, _
-		s, _
-		lstrlenW(s), _
-		@NumberOfCharsWritten, _
-		0 _
-	)
-	If dwErrorConsole = 0 Then
-		
-		Const MaxConsoleCharsCount As Integer = 512 - 1
-		
-		Dim OutputCodePage As Integer = GetConsoleOutputCP()
-		Dim Buffer As ZString * (MaxConsoleCharsCount + 1) = Any
-		Dim BytesCount As Integer = WideCharToMultiByte( _
-			OutputCodePage, _
-			0, _
-			s, _
-			-1, _
-			@Buffer, _
-			MaxConsoleCharsCount, _
-			NULL, _
-			NULL _
-		)
-		
-		Dim NumberOfBytesWritten As DWORD = Any
-		WriteFile( _
-			OutHandle, _
-			@Buffer, _
-			BytesCount - 1, _
-			@NumberOfBytesWritten, _
-			0 _
-		)
-		
-	End If
+	Const FormatString = "%s"
+	wprintf(@WStr(FormatString), s)
 	
 End Sub
 
