@@ -278,15 +278,15 @@ Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 	Dim Capacity As UINT = GetPrivateProfileIntW( _
 		@WebServerSectionString, _
 		@MemoryPoolCapacityKeyString, _
-		DefaultMemoryPoolCapacity, _
+		0, _
 		this->pWebServerIniFileName _
 	)
 	
-	Dim MemoryPoolCapacity As UInteger = max( _
-		DefaultMemoryPoolCapacity, _
-		CUInt(Capacity) _
-	)
-	*pCapacity = MemoryPoolCapacity
+	If Capacity Then
+		*pCapacity = Capacity
+	Else
+		*pCapacity = DefaultMemoryPoolCapacity
+	End If
 	
 	Return S_OK
 	
