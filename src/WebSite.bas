@@ -102,27 +102,34 @@ Type _WebSite
 End Type
 
 Type FileIteratorW
-	Declare Constructor(ByRef ListingDir As WString)
+	Declare Constructor(ByVal pIMalloc As IMalloc Ptr, ByRef ListingDir As WString)
 	Declare Destructor()
 	Declare Operator For()
 	Declare Operator Step()
 	Declare Operator Next(ByRef endCond As FileIteratorW) As Integer
 	
-	FindData As WIN32_FIND_DATAW
-	hFind As HANDLE
 	pListingDir As WString Ptr
-	resFindNext As BOOL
+	pIMalloc As IMalloc Ptr
+	pFindData As WIN32_FIND_DATAW Ptr
+	hFind As HANDLE
+	resFindNext As Integer
 End Type
 
-Private Constructor FileIteratorW(ByRef ListingDir As WString)
+Private Constructor FileIteratorW(ByVal pIMalloc As IMalloc Ptr, ByRef ListingDir As WString)
 	
-	hFind = INVALID_HANDLE_VALUE
 	pListingDir = @ListingDir
+	this.pIMalloc = pIMalloc
+	pFindData = NULL
+	hFind = INVALID_HANDLE_VALUE
 	resFindNext = TRUE
 	
 End Constructor
 
 Private Destructor FileIteratorW()
+	
+	If pFindData Then
+		IMalloc_Free(pIMalloc, pFindData)
+	End If
 	
 	If hFind <> INVALID_HANDLE_VALUE Then
 		FindClose(hFind)
@@ -132,10 +139,17 @@ End Destructor
 
 Private Operator FileIteratorW.For()
 	
-	hFind = FindFirstFileW( _
-		pListingDir, _
-		@FindData _
+	pFindData = IMalloc_Alloc( _
+		pIMalloc, _
+		SizeOf(WIN32_FIND_DATAW) _
 	)
+	
+	If pFindData Then
+		hFind = FindFirstFileW( _
+			pListingDir, _
+			pFindData _
+		)
+	End If
 	
 End Operator
 
@@ -143,7 +157,7 @@ Private Operator FileIteratorW.Step()
 	
 	resFindNext = FindNextFileW( _
 		hFind, _
-		@FindData _
+		pFindData _
 	)
 	
 End Operator
@@ -155,6 +169,10 @@ Private Operator FileIteratorW.Next(ByRef endCond As FileIteratorW) As Integer
 	End If
 	
 	If resFindNext = 0 Then
+		Return 0
+	End If
+	
+	If pFindData = NULL Then
 		Return 0
 	End If
 	
@@ -976,6 +994,7 @@ Private Function FileNameIsDot( _
 End Function
 
 Private Function GetFileList( _
+		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As ListingFileItem Ptr
@@ -991,8 +1010,8 @@ Private Function GetFileList( _
 		Return NULL
 	End If
 	
-	For iterator As FileIteratorW = *pListingDir To WStr("")
-		Dim resIsDot As Boolean = FileNameIsDot(@iterator.FindData.cFileName)
+	For iterator As FileIteratorW = Type(pIMalloc, *pListingDir) To Type(pIMalloc, WStr(""))
+		Dim resIsDot As Boolean = FileNameIsDot(@iterator.pFindData->cFileName)
 		
 		If resIsDot = False Then
 			
@@ -1011,11 +1030,11 @@ Private Function GetFileList( _
 				pFiles = pFilesNew
 			End If
 			
-			Dim IsDirectory As Boolean = iterator.FindData.dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
+			Dim IsDirectory As Boolean = iterator.pFindData->dwFileAttributes And FILE_ATTRIBUTE_DIRECTORY
 			
-			lstrcpyW(@pFiles[FilesCount].FileName, iterator.FindData.cFileName)
-			pFiles[FilesCount].FileSize.LowPart = iterator.FindData.nFileSizeLow
-			pFiles[FilesCount].FileSize.HighPart = iterator.FindData.nFileSizeHigh
+			lstrcpyW(@pFiles[FilesCount].FileName, iterator.pFindData->cFileName)
+			pFiles[FilesCount].FileSize.LowPart = iterator.pFindData->nFileSizeLow
+			pFiles[FilesCount].FileSize.HighPart = iterator.pFindData->nFileSizeHigh
 			pFiles[FilesCount].IsDirectory = IsDirectory
 			
 			FilesCount += 1
@@ -1061,6 +1080,7 @@ Private Function CompareListingFileItems cdecl( _
 End Function
 
 Private Function WriteDirectoryListingFile( _
+		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal hFile As HANDLE, _
 		ByVal pListingDir As WString Ptr _
 	)As HRESULT
@@ -1133,6 +1153,7 @@ Private Function WriteDirectoryListingFile( _
 		
 		Dim FilesInDirCount As Integer = Any
 		Dim pFilesInDir As ListingFileItem Ptr = GetFileList( _
+			pIMalloc, _
 			pListingDir, _
 			@FilesInDirCount _
 		)
@@ -1285,6 +1306,7 @@ Private Function GetDirectoryListing( _
 	End If
 	
 	Dim hrWriteFileList As HRESULT = WriteDirectoryListingFile( _
+		pIMalloc, _
 		hListingFile, _
 		pListingDir _
 	)
