@@ -152,6 +152,17 @@ Private Function ReadRequestAsyncTaskQueryInterface( _
 	
 End Function
 
+Private Function ReadRequestAsyncTaskGetTaskId( _
+		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
+	*pId = AsyncIoTaskIDs.ReadRequest
+	
+	Return S_OK
+	
+End Function
+
 Function CreateReadRequestAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -462,6 +473,13 @@ Private Function IReadRequestAsyncTaskRelease( _
 	Return ReadRequestAsyncTaskRelease(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
+Private Function IReadRequestAsyncTaskGetTaskId( _
+		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	Return ReadRequestAsyncTaskGetTaskId(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pId)
+End Function
+
 Private Function IReadRequestAsyncTaskBeginExecute( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -517,6 +535,7 @@ Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVir
 	@IReadRequestAsyncTaskQueryInterface, _
 	@IReadRequestAsyncTaskAddRef, _
 	@IReadRequestAsyncTaskRelease, _
+	@IReadRequestAsyncTaskGetTaskId, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
 	@IReadRequestAsyncTaskGetBaseStream, _

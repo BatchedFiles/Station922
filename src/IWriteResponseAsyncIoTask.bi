@@ -33,6 +33,11 @@ Type IWriteResponseAsyncIoTaskVirtualTable
 		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As ULONG
 	
+	GetTaskId As Function( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
 	BeginExecute As Function( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -93,6 +98,7 @@ End Type
 #define IWriteResponseAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IWriteResponseAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IWriteResponseAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
+#define IWriteResponseAsyncIoTask_GetTaskId(this, pId) (this)->lpVtbl->GetTaskId(this, pId)
 #define IWriteResponseAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IWriteResponseAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IWriteResponseAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)

@@ -33,6 +33,11 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr _
 	)As ULONG
 	
+	GetTaskId As Function( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
 	BeginExecute As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -89,6 +94,7 @@ End Type
 #define IAcceptConnectionAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAcceptConnectionAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAcceptConnectionAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
+#define IAcceptConnectionAsyncIoTask_GetTaskId(this, pId) (this)->lpVtbl->GetTaskId(this, pId)
 #define IAcceptConnectionAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 #define IAcceptConnectionAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)

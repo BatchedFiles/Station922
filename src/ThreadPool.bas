@@ -59,9 +59,30 @@ Private Function FinishExecuteTaskSink( _
 		Dim vtErrorCode As VARIANT = Any
 		vtErrorCode.vt = VT_ERROR
 		vtErrorCode.scode = hrEndExecute
+		
+		Dim TaskId As AsyncIoTaskIDs = Any
+		IAsyncIoTask_GetTaskId(pTask, @TaskId)
+		
+		Dim p As WString Ptr = Any
+		Select Case TaskId
+			
+			Case AsyncIoTaskIDs.AcceptConnection
+				p = @WStr("AcceptConnectionTask.EndExecute Error")
+				
+			Case AsyncIoTaskIDs.ReadRequest
+				p = @WStr("ReadRequestTask.EndExecute Error")
+				
+			Case AsyncIoTaskIDs.WriteError
+				p = @WStr("WriteErrorTask.EndExecute Error")
+				
+			Case Else ' AsyncIoTaskIDs.WriteResponse
+				p = @WStr("WriteResponseTask.EndExecute Error")
+				
+		End Select
+		
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IAsyncIoTask_EndExecute Error"), _
+			p, _
 			@vtErrorCode _
 		)
 	End If

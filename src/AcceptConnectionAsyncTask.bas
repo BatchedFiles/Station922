@@ -223,6 +223,17 @@ Private Function AcceptConnectionAsyncTaskQueryInterface( _
 	
 End Function
 
+Private Function AcceptConnectionAsyncTaskGetTaskId( _
+		ByVal this As AcceptConnectionAsyncTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
+	*pId = AsyncIoTaskIDs.AcceptConnection
+	
+	Return S_OK
+	
+End Function
+
 Function CreateAcceptConnectionAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -451,6 +462,13 @@ Private Function IAcceptConnectionAsyncTaskRelease( _
 	Return AcceptConnectionAsyncTaskRelease(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl))
 End Function
 
+Private Function IAcceptConnectionAsyncTaskGetTaskId( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	Return AcceptConnectionAsyncTaskGetTaskId(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pId)
+End Function
+
 Private Function IAcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -520,6 +538,7 @@ Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyn
 	@IAcceptConnectionAsyncTaskQueryInterface, _
 	@IAcceptConnectionAsyncTaskAddRef, _
 	@IAcceptConnectionAsyncTaskRelease, _
+	@IAcceptConnectionAsyncTaskGetTaskId, _
 	@IAcceptConnectionAsyncTaskBeginExecute, _
 	@IAcceptConnectionAsyncTaskEndExecute, _
 	@IAcceptConnectionAsyncTaskGetBaseStream, _

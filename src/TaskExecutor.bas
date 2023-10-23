@@ -11,13 +11,34 @@ Function StartExecuteTask( _
 		@pIResult _
 	)
 	If FAILED(hrBeginExecute) Then
-		Dim vtSCode As VARIANT = Any
-		vtSCode.vt = VT_ERROR
-		vtSCode.scode = hrBeginExecute
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrBeginExecute
+		
+		Dim TaskId As AsyncIoTaskIDs = Any
+		IAsyncIoTask_GetTaskId(pTask, @TaskId)
+		
+		Dim p As WString Ptr = Any
+		Select Case TaskId
+			
+			Case AsyncIoTaskIDs.AcceptConnection
+				p = @WStr("AcceptConnectionTask.BeginExecute Error")
+				
+			Case AsyncIoTaskIDs.ReadRequest
+				p = @WStr("ReadRequestTask.BeginExecute Error")
+				
+			Case AsyncIoTaskIDs.WriteError
+				p = @WStr("WriteErrorTask.BeginExecute Error")
+				
+			Case Else ' AsyncIoTaskIDs.WriteResponse
+				p = @WStr("WriteResponseTask.BeginExecute Error")
+				
+		End Select
+		
 		LogWriteEntry( _
 			LogEntryType.Error, _
-			WStr(!"IAsyncTask_BeginExecute Error"), _
-			@vtSCode _
+			p, _
+			@vtErrorCode _
 		)
 		
 		Return hrBeginExecute

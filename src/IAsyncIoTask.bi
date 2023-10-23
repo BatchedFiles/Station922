@@ -16,6 +16,13 @@ Extern IID_IAsyncIoTask Alias "IID_IAsyncIoTask" As Const IID
 
 Const ASYNCTASK_S_KEEPALIVE_FALSE As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_ITF, &h0202)
 
+Enum AsyncIoTaskIDs
+	AcceptConnection
+	ReadRequest
+	WriteError
+	WriteResponse
+End Enum
+
 Type IAsyncIoTask As IAsyncIoTask_
 
 Type IAsyncIoTaskVirtualTable
@@ -33,6 +40,11 @@ Type IAsyncIoTaskVirtualTable
 	Release As Function( _
 		ByVal this As IAsyncIoTask Ptr _
 	)As ULONG
+	
+	GetTaskId As Function( _
+		ByVal this As IAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
 	
 	BeginExecute As Function( _
 		ByVal this As IAsyncIoTask Ptr, _
@@ -55,6 +67,7 @@ End Type
 #define IAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
+#define IAsyncIoTask_GetTaskId(this, pId) (this)->lpVtbl->GetTaskId(this, pId)
 #define IAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
 #define IAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
 

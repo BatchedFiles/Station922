@@ -390,6 +390,17 @@ Private Function WriteErrorAsyncTaskQueryInterface( _
 	
 End Function
 
+Private Function WriteErrorAsyncTaskGetTaskId( _
+		ByVal this As WriteErrorAsyncTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
+	*pId = AsyncIoTaskIDs.WriteError
+	
+	Return S_OK
+	
+End Function
+
 Function CreateWriteErrorAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -795,6 +806,13 @@ Private Function IWriteErrorAsyncTaskRelease( _
 	Return WriteErrorAsyncTaskRelease(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
+Private Function IWriteErrorAsyncTaskGetTaskId( _
+		ByVal this As IWriteErrorAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	Return WriteErrorAsyncTaskGetTaskId(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pId)
+End Function
+
 Private Function IWriteErrorAsyncTaskBeginExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -878,6 +896,7 @@ Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtu
 	@IWriteErrorAsyncTaskQueryInterface, _
 	@IWriteErrorAsyncTaskAddRef, _
 	@IWriteErrorAsyncTaskRelease, _
+	@IWriteErrorAsyncTaskGetTaskId, _
 	@IWriteErrorAsyncTaskBeginExecute, _
 	@IWriteErrorAsyncTaskEndExecute, _
 	@IWriteErrorAsyncTaskGetBaseStream, _

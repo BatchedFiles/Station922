@@ -176,6 +176,17 @@ Private Function WriteResponseAsyncTaskQueryInterface( _
 	
 End Function
 
+Private Function WriteResponseAsyncTaskGetTaskId( _
+		ByVal this As WriteResponseAsyncTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	
+	*pId = AsyncIoTaskIDs.WriteResponse
+	
+	Return S_OK
+	
+End Function
+
 Function CreateWriteResponseAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -585,6 +596,13 @@ Private Function IWriteResponseAsyncTaskRelease( _
 	Return WriteResponseAsyncTaskRelease(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
+Private Function IWriteResponseAsyncTaskGetTaskId( _
+		ByVal this As IWriteResponseAsyncIoTask Ptr, _
+		ByVal pId As AsyncIoTaskIDs Ptr _
+	)As HRESULT
+	Return WriteResponseAsyncTaskGetTaskId(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pId)
+End Function
+
 Private Function IWriteResponseAsyncTaskBeginExecute( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
@@ -660,6 +678,7 @@ Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTas
 	@IWriteResponseAsyncTaskQueryInterface, _
 	@IWriteResponseAsyncTaskAddRef, _
 	@IWriteResponseAsyncTaskRelease, _
+	@IWriteResponseAsyncTaskGetTaskId, _
 	@IWriteResponseAsyncTaskBeginExecute, _
 	@IWriteResponseAsyncTaskEndExecute, _
 	@IWriteResponseAsyncTaskGetBaseStream, _
