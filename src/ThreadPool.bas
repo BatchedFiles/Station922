@@ -97,9 +97,9 @@ Private Function FinishExecuteTaskSink( _
 End Function
 
 Private Sub ThreadPoolCallBack( _
+		ByVal dwError As DWORD, _
 		ByVal BytesTransferred As DWORD, _
-		ByVal pOverlap As OVERLAPPED Ptr, _
-		ByVal dwError As DWORD _
+		ByVal pOverlap As OVERLAPPED Ptr _
 	)
 	
 	Dim hrFinishExecute As HRESULT = Any
@@ -159,9 +159,9 @@ Private Function WorkerThread( _
 			End If
 			
 			ThreadPoolCallBack( _
+				ERROR_SUCCESS, _
 				BytesTransferred, _
-				pOverlap, _
-				ERROR_SUCCESS _
+				pOverlap _
 			)
 		Else
 			If pOverlap = NULL Then
@@ -171,9 +171,9 @@ Private Function WorkerThread( _
 			Dim dwError As DWORD = GetLastError()
 			
 			ThreadPoolCallBack( _
+				dwError, _
 				BytesTransferred, _
-				pOverlap, _
-				dwError _
+				pOverlap _
 			)
 		End If
 		
