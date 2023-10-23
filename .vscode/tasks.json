@@ -7,11 +7,17 @@
 			"command": "cscript.exe",
 			"args": [
 				"//nologo",
-				"CreateMakefile.vbs"
+				"C:\\Programming\\FreeBASIC Projects\\ProgrammingStyle\\CreateMakefile\\CreateMakefile.vbs",
+				"/out:Station922",
+				"/fix:true",
+				"/unicode:true",
+				"/wrt:true",
+				"/addressaware:true"
+				
 			],
 			"problemMatcher": [],
 			"group": {
-				"kind": "none",
+				"kind":"build",
 				"isDefault": true
 			}
 		},
