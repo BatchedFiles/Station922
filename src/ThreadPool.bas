@@ -98,7 +98,6 @@ End Function
 
 Private Sub ThreadPoolCallBack( _
 		ByVal BytesTransferred As DWORD, _
-		ByVal CompletionKey As ULONG_PTR, _
 		ByVal pOverlap As OVERLAPPED Ptr, _
 		ByVal dwError As DWORD _
 	)
@@ -161,7 +160,6 @@ Private Function WorkerThread( _
 			
 			ThreadPoolCallBack( _
 				BytesTransferred, _
-				CompletionKey, _
 				pOverlap, _
 				ERROR_SUCCESS _
 			)
@@ -174,7 +172,6 @@ Private Function WorkerThread( _
 			
 			ThreadPoolCallBack( _
 				BytesTransferred, _
-				CompletionKey, _
 				pOverlap, _
 				dwError _
 			)
