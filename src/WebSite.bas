@@ -120,8 +120,8 @@ Private Constructor FileIteratorW(ByVal pIMalloc As IMalloc Ptr, ByRef ListingDi
 	pListingDir = @ListingDir
 	this.pIMalloc = pIMalloc
 	pFindData = NULL
+	resFindNext = FALSE
 	hFind = INVALID_HANDLE_VALUE
-	resFindNext = TRUE
 	
 End Constructor
 
@@ -149,6 +149,10 @@ Private Operator FileIteratorW.For()
 			pListingDir, _
 			pFindData _
 		)
+		
+		If hFind <> INVALID_HANDLE_VALUE Then
+			resFindNext = TRUE
+		End If
 	End If
 	
 End Operator
@@ -164,15 +168,15 @@ End Operator
 
 Private Operator FileIteratorW.Next(ByRef endCond As FileIteratorW) As Integer
 	
+	If pFindData = NULL Then
+		Return 0
+	End If
+	
 	If hFind = INVALID_HANDLE_VALUE Then
 		Return 0
 	End If
 	
 	If resFindNext = 0 Then
-		Return 0
-	End If
-	
-	If pFindData = NULL Then
 		Return 0
 	End If
 	
@@ -1043,6 +1047,7 @@ Private Function GetFileList( _
 	Next
 	
 	*pCount = FilesCount
+	
 	Return pFiles
 	
 End Function
@@ -1161,6 +1166,11 @@ Private Function WriteDirectoryListingFile( _
 			Return E_OUTOFMEMORY
 		End If
 		
+		If FilesInDirCount = 0 Then
+			DeAllocate(pFilesInDir)
+			Return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
+		End If
+		
 		qsort( _
 			pFilesInDir, _
 			FilesInDirCount, _
@@ -1238,7 +1248,7 @@ Private Function WriteDirectoryListingFile( _
 			
 		Next
 		
-		free(pFilesInDir)
+		DeAllocate(pFilesInDir)
 	End Scope
 	
 	Scope
