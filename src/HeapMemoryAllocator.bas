@@ -237,6 +237,21 @@ Private Sub PrintNewLineString( _
 	
 End Sub
 
+Private Sub PrintAllocationFailed( _
+		ByVal BytesCount As SIZE_T_ _
+	)
+	
+	Dim vtAllocatedBytes As VARIANT = Any
+	vtAllocatedBytes.vt = VT_I4
+	vtAllocatedBytes.lVal = CLng(BytesCount)
+	LogWriteEntry( _
+		LogEntryType.Error, _
+		WStr(!"AllocMemory Failed"), _
+		@vtAllocatedBytes _
+	)
+	
+End Sub
+
 Private Sub PrintWalkingHeap( _
 		ByVal hHeap As HANDLE _
 	)
@@ -320,53 +335,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 	#endif
 	
 End Sub
-
-Private Function HeapMemoryAllocatorCloseSocket( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)As HRESULT
-	
-	If this->ClientSocket <> INVALID_SOCKET Then
-		closesocket(this->ClientSocket)
-		this->ClientSocket = INVALID_SOCKET
-	End If
-	
-	Return S_OK
-	
-End Function
-
-Private Function HeapMemoryAllocatorCloseHungsConnections( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal KeepAliveInterval As ULongInt _
-	)As Boolean
-	
-	If this->ClientSocket = INVALID_SOCKET Then
-		Return False
-	End If
-	
-	Dim ulStart As ULARGE_INTEGER = Any
-	ulStart.LowPart = this->datStartOperation.dwLowDateTime
-	ulStart.HighPart = this->datStartOperation.dwHighDateTime
-	
-	Dim datCurrent As FILETIME
-	GetSystemTimeAsFileTime(@datCurrent)
-	
-	Dim ulCurrent As ULARGE_INTEGER = Any
-	ulCurrent.LowPart = datCurrent.dwLowDateTime
-	ulCurrent.HighPart = datCurrent.dwHighDateTime
-	
-	If ulCurrent.QuadPart > ulStart.QuadPart Then
-		Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
-		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
-		
-		If nsElapsedTime > nsKeepAliveInterval Then
-			HeapMemoryAllocatorCloseSocket(this)
-			Return False
-		End If
-	End If
-	
-	Return True
-	
-End Function
 
 Private Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
@@ -470,6 +438,53 @@ Function GetHeapMemoryAllocatorInstance( _
 	End If
 	
 	Return NULL
+	
+End Function
+
+Private Function HeapMemoryAllocatorCloseSocket( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+	
+	If this->ClientSocket <> INVALID_SOCKET Then
+		closesocket(this->ClientSocket)
+		this->ClientSocket = INVALID_SOCKET
+	End If
+	
+	Return S_OK
+	
+End Function
+
+Private Function HeapMemoryAllocatorCloseHungsConnections( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal KeepAliveInterval As ULongInt _
+	)As Boolean
+	
+	If this->ClientSocket = INVALID_SOCKET Then
+		Return False
+	End If
+	
+	Dim ulStart As ULARGE_INTEGER = Any
+	ulStart.LowPart = this->datStartOperation.dwLowDateTime
+	ulStart.HighPart = this->datStartOperation.dwHighDateTime
+	
+	Dim datCurrent As FILETIME
+	GetSystemTimeAsFileTime(@datCurrent)
+	
+	Dim ulCurrent As ULARGE_INTEGER = Any
+	ulCurrent.LowPart = datCurrent.dwLowDateTime
+	ulCurrent.HighPart = datCurrent.dwHighDateTime
+	
+	If ulCurrent.QuadPart > ulStart.QuadPart Then
+		Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
+		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
+		
+		If nsElapsedTime > nsKeepAliveInterval Then
+			HeapMemoryAllocatorCloseSocket(this)
+			Return False
+		End If
+	End If
+	
+	Return True
 	
 End Function
 
@@ -650,21 +665,6 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 	
 End Function
 
-Private Sub AllocationFailed( _
-		ByVal BytesCount As SIZE_T_ _
-	)
-	
-	Dim vtAllocatedBytes As VARIANT = Any
-	vtAllocatedBytes.vt = VT_I4
-	vtAllocatedBytes.lVal = CLng(BytesCount)
-	LogWriteEntry( _
-		LogEntryType.Error, _
-		WStr(!"AllocMemory Failed"), _
-		@vtAllocatedBytes _
-	)
-	
-End Sub
-
 Private Function CreateHeapMemoryAllocator( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
@@ -714,10 +714,10 @@ Private Function CreateHeapMemoryAllocator( _
 			Return hrQueryInterface
 		End If
 		
-		AllocationFailed(SizeOf(HeapMemoryAllocator))
+		PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
 	End If
 	
-	AllocationFailed(SizeOf(ClientRequestBuffer))
+	PrintAllocationFailed(SizeOf(ClientRequestBuffer))
 	
 	HeapDestroy(hHeap)
 	
@@ -825,7 +825,7 @@ Private Function HeapMemoryAllocatorAlloc( _
 		BytesCount _
 	)
 	If pMemory = NULL Then
-		AllocationFailed(BytesCount)
+		PrintAllocationFailed(BytesCount)
 	End If
 	
 	Return pMemory
