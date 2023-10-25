@@ -71,13 +71,31 @@ Private Sub PrintWalkingHeapString( _
 End Sub
 
 Private Sub PrintAllocatedBlockString( _
+		ByVal pMem As Any Ptr _
+	)
+	
+	Dim IdString As ZString * 17 = Any
+	CopyMemory( _
+		@IdString, _
+		pMem, _
+		16 _
+	)
+	IdString[16] = 0
+	
+	Const BufSize As Integer = 256
+	Const FormatString = WStr(!"Allocated block\t\t%hs\r\n")
+	Dim buf As WString * BufSize = Any
+	wsprintfW( _
+		@buf, _
+		@FormatString, _
+		@IdString _
 	)
 	
 	Dim vtAllocatedBytes As VARIANT = Any
 	vtAllocatedBytes.vt = VT_EMPTY
 	LogWriteEntry( _
 		LogEntryType.Debug, _
-		WStr(!"Allocated block\r\n"), _
+		@buf, _
 		@vtAllocatedBytes _
 	)
 	
@@ -184,7 +202,7 @@ Private Sub PrintDataPortionString( _
 	)
 	
 	Const BufSize As Integer = 256
-	Const FormatString = WStr(!"\tData portion begins at:\t0x%04X\r\n\tSize:\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
+	Const FormatString = WStr(!"\tData portion begins at:\t0x%04X\r\n\tSize:\t\t%d bytes\r\n\tOverhead:\t%d bytes\r\n\tRegion index:\t%d\r\n")
 	
 	Dim buf As WString * BufSize = Any
 	wsprintfW( _
@@ -236,7 +254,7 @@ Private Sub PrintWalkingHeap( _
 		
 		If IsAllocatedBlock Then
 			
-			PrintAllocatedBlockString()
+			PrintAllocatedBlockString(Entry.lpData)
 			
 			Dim MovableFlag As Integer = Entry.wFlags And PROCESS_HEAP_ENTRY_MOVEABLE
 			
