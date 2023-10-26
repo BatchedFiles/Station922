@@ -26,7 +26,7 @@ Const QuoteString = WStr("""")
 Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 
-' Размер буфера в символах для записи в него кода html страницы с ошибкой
+' Р Р°Р·РјРµСЂ Р±СѓС„РµСЂР° РІ СЃРёРјРІРѕР»Р°С… РґР»СЏ Р·Р°РїРёСЃРё РІ РЅРµРіРѕ РєРѕРґР° html СЃС‚СЂР°РЅРёС†С‹ СЃ РѕС€РёР±РєРѕР№
 Const MaxHttpErrorBuffer As Integer = 1024 - 1
 
 Const DefaultContentLanguage = WStr("en")
@@ -290,9 +290,9 @@ Private Function WebSiteHttpAuthUtil( _
 	
 	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = Characters.NullChar
 	
-	' Из массива байт в строку
-	' Преобразуем utf8 в WString
-	' -1 — значит, длина строки будет проверяться самой функцией по завершающему нулю
+	' РР· РјР°СЃСЃРёРІР° Р±Р°Р№С‚ РІ СЃС‚СЂРѕРєСѓ
+	' РџСЂРµРѕР±СЂР°Р·СѓРµРј utf8 РІ WString
+	' -1 вЂ” Р·РЅР°С‡РёС‚, РґР»РёРЅР° СЃС‚СЂРѕРєРё Р±СѓРґРµС‚ РїСЂРѕРІРµСЂСЏС‚СЊСЃСЏ СЃР°РјРѕР№ С„СѓРЅРєС†РёРµР№ РїРѕ Р·Р°РІРµСЂС€Р°СЋС‰РµРјСѓ РЅСѓР»СЋ
 	Dim UsernamePasswordKey As WString * (UserNamePasswordCapacity + 1) = Any
 	Dim DecodedLength As Long = MultiByteToWideChar( _
 		CP_UTF8, _
@@ -304,7 +304,7 @@ Private Function WebSiteHttpAuthUtil( _
 	)
 	UsernamePasswordKey[DecodedLength] = Characters.NullChar
 	
-	' Теперь pColonChar хранит в себе указатель на разделитель-двоеточие
+	' РўРµРїРµСЂСЊ pColonChar С…СЂР°РЅРёС‚ РІ СЃРµР±Рµ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЂР°Р·РґРµР»РёС‚РµР»СЊ-РґРІРѕРµС‚РѕС‡РёРµ
 	Dim pColonChar As WString Ptr = StrChrW(@UsernamePasswordKey, Characters.Colon)
 	If pColonChar = NULL Then
 		HeapSysFreeString(pHeaderAuthorization)
@@ -1189,7 +1189,7 @@ Private Function WriteDirectoryListingFile( _
 			End Scope
 			
 			If pFilesInDir[i].IsDirectory Then
-				' <a href="ссылка/">ссылка/</a>
+				' <a href="СЃСЃС‹Р»РєР°/">СЃСЃС‹Р»РєР°/</a>
 				lstrcatW(@pFilesInDir[i].FileName, WStr("/"))
 			End If
 			
@@ -1338,12 +1338,15 @@ Private Function GetDirectoryListing( _
 		End If
 		
 		IFileStream_SetFileHandle(pFileBuffer, hDeleteFile)
+		
 		Dim fp As HeapBSTR = CreateHeapString( _
 			pIMalloc, _
 			pFileName _
 		)
 		If fp = NULL Then
 			CloseHandle(hListingFile)
+			' Not need to close hDeleteFile
+			' beekause it associated to IFileStream
 			Return E_OUTOFMEMORY
 		End If
 		
