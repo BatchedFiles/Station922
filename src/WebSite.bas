@@ -14,8 +14,9 @@ Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
 Const MaxHostNameLength As Integer = 1024 - 1
 Const DefaultFileNames As Integer = 8
-Const BasicAuthorizationWithSpace = WStr("Basic ")
+Const DefaultFileNameMaxLen As Integer = 16
 
+Const BasicAuthorizationWithSpace = WStr("Basic ")
 Const WebSocketGuidString = WStr("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
 Const UpgradeString = WStr("Upgrade")
 Const WebSocketString = WStr("websocket")
@@ -1378,7 +1379,7 @@ Private Function WebSiteOpenRequestedFile( _
 		ByVal fAccess As FileAccess, _
 		ByVal DefaultFileName As HeapBSTR, _
 		ByVal EnableDirectoryListing As Boolean, _
-		ByVal pFileName As WString Ptr _
+		ByVal pFullFileName As WString Ptr _
 	)As HRESULT
 	
 	Scope
@@ -1386,17 +1387,18 @@ Private Function WebSiteOpenRequestedFile( _
 		Dim LastChar As Integer = Path[PathLength - 1]
 		
 		Dim IsLastCharNotSolidus As Boolean = LastChar <> Characters.Solidus
+		
 		If IsLastCharNotSolidus Then
 			
 			WebSiteMapPath( _
 				pPhysicalDirectory, _
 				Path, _
-				pFileName _
+				pFullFileName _
 			)
 			
 			Dim hFile As HANDLE = Any
 			Dim hrGetFileHandle As HRESULT = GetFileHandle( _
-				pFileName, _
+				pFullFileName, _
 				fAccess, _
 				@hFile _
 			)
@@ -1410,8 +1412,9 @@ Private Function WebSiteOpenRequestedFile( _
 	End Scope
 	
 	Scope
-		Dim FileListLength As Integer = Any
 		Dim DefaultFileNameLength As Integer = SysStringLen(DefaultFileName)
+		
+		Dim FileListLength As Integer = Any
 		If DefaultFileNameLength Then
 			FileListLength = 1
 		Else
@@ -1421,7 +1424,7 @@ Private Function WebSiteOpenRequestedFile( _
 		Dim hrGetFile As HRESULT = E_FAIL
 		
 		For i As Integer = 0 To FileListLength - 1
-			Dim defFilename As WString * (MAX_PATH + 1) = Any
+			Dim defFilename As WString * (DefaultFileNameMaxLen + 1) = Any
 			GetDefaultFileName(@defFilename, i, DefaultFileName)
 			
 			Dim FileNameWithPath As WString * (MAX_PATH + 1) = Any
@@ -1431,12 +1434,12 @@ Private Function WebSiteOpenRequestedFile( _
 			WebSiteMapPath( _
 				pPhysicalDirectory, _
 				@FileNameWithPath, _
-				pFileName _
+				pFullFileName _
 			)
 			
 			Dim hFile As HANDLE = Any
 			hrGetFile = GetFileHandle( _
-				pFileName, _
+				pFullFileName, _
 				fAccess, _
 				@hFile _
 			)
@@ -1488,7 +1491,7 @@ Private Function WebSiteOpenRequestedFile( _
 			@ListingDir, _
 			pIMalloc, _
 			pFileBuffer, _
-			pFileName _
+			pFullFileName _
 		)
 		
 		Return hrListing
@@ -1873,7 +1876,7 @@ Private Function WebSiteGetBuffer( _
 	End Scope
 	
 	Dim hrOpenFile As HRESULT = Any
-	Dim FileName As WString * (MAX_PATH + 1) = Any
+	Dim FullFileName As WString * (MAX_PATH + 1) = Any
 	Scope
 		Scope
 			Dim ClientURI As IClientUri Ptr = Any
@@ -1890,15 +1893,16 @@ Private Function WebSiteGetBuffer( _
 				fAccess, _
 				this->DefaultFileName, _
 				this->EnableDirectoryListing, _
-				@FileName _
+				@FullFileName _
 			)
+			
 			HeapSysFreeString(Path)
 			IClientUri_Release(ClientURI)
 		End Scope
 		
 		If FAILED(hrOpenFile) Then
 			Dim hrOpenFileTranslate As HRESULT = GetFindFileErrorCode( _
-				@FileName, _
+				@FullFileName, _
 				hrOpenFile _
 			)
 			
@@ -1932,7 +1936,7 @@ Private Function WebSiteGetBuffer( _
 					
 					resGetMimeOfFileExtension = GetMimeOfFileExtension( _
 						@Mime, _
-						PathFindExtensionW(FileName), _
+						PathFindExtensionW(FullFileName), _
 						DefaultMime _
 					)
 				End If
@@ -1982,10 +1986,14 @@ Private Function WebSiteGetBuffer( _
 		Dim ZipMode As ZipModes = Any
 		Dim IsAcceptEncoding As Boolean = Any
 		
-		If hrOpenFile <> WEBSITE_S_DIRECTORY_LISTING Then
+		If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
+			ZipFileHandle = INVALID_HANDLE_VALUE
+			ZipMode = ZipModes.None
+			IsAcceptEncoding = False
+		Else
 			If Mime.Format = MimeFormats.Text Then
 				ZipFileHandle = GetCompressionHandle( _
-					FileName, _
+					FullFileName, _
 					pRequest, _
 					@ZipMode, _
 					@IsAcceptEncoding _
@@ -2011,10 +2019,6 @@ Private Function WebSiteGetBuffer( _
 				ZipMode = ZipModes.None
 				IsAcceptEncoding = False
 			End If
-		Else
-			ZipFileHandle = INVALID_HANDLE_VALUE
-			ZipMode = ZipModes.None
-			IsAcceptEncoding = False
 		End If
 		
 		IFileStream_SetEncoding(pIFile, ZipMode)
