@@ -32,7 +32,6 @@ Type _WriteErrorAsyncTask
 	pIBuffer As IAttributedStream Ptr
 	pIHttpWriter As IHttpWriter Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
-	ComplectionPort As HANDLE
 	HttpError As ResponseErrorCode
 	hrErrorCode As HRESULT
 End Type
@@ -270,7 +269,6 @@ Private Sub InitializeWriteErrorAsyncTask( _
 	this->pIResponse = pIResponse
 	this->pIBuffer = NULL
 	this->pIHttpWriter = pIHttpWriter
-	this->ComplectionPort = NULL
 	this->pIWebSitesWeakPtr = NULL
 	
 End Sub
