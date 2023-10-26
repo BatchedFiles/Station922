@@ -1792,11 +1792,11 @@ End Function
 Private Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
+		ByVal fAccess As FileAccess, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
 	
@@ -2554,14 +2554,14 @@ End Function
 Private Function IMutableWebSiteGetBuffer( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal fAccess As FileAccess, _
 		ByVal pRequest As IClientRequest Ptr, _
 		ByVal pIReader As IHttpReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
+		ByVal fAccess As FileAccess, _
 		ByVal ppResult As IAttributedStream Ptr Ptr _
 	)As HRESULT
-	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, fAccess, pRequest, pIReader, BufferLength, pFlags, ppResult)
+	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, pRequest, pIReader, BufferLength, pFlags, fAccess, ppResult)
 End Function
 
 Private Function IMutableWebSiteGetErrorBuffer( _

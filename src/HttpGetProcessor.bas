@@ -337,11 +337,11 @@ Private Function HttpGetProcessorPrepare( _
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
-		FileAccess.ReadAccess, _
 		pContext->pIRequest, _
 		pContext->pIReader, _
 		0, _
 		@Flags, _
+		FileAccess.ReadAccess, _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then

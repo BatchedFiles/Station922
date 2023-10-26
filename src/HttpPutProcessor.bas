@@ -165,11 +165,11 @@ Private Function HttpPutProcessorPrepare( _
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
-		FileAccess.CreateAccess, _
 		pContext->pIRequest, _
 		pContext->pIReader, _
 		ContentLength, _
 		@Flags, _
+		FileAccess.CreateAccess, _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then

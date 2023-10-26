@@ -156,11 +156,11 @@ Private Function HttpDeleteProcessorPrepare( _
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
-		FileAccess.DeleteAccess, _
 		pContext->pIRequest, _
 		pContext->pIReader, _
 		0, _
 		@Flags, _
+		FileAccess.DeleteAccess, _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then
