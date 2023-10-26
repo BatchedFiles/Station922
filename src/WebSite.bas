@@ -26,7 +26,7 @@ Const QuoteString = WStr("""")
 Const GzipString = WStr("gzip")
 Const DeflateString = WStr("deflate")
 
-' Р Р°Р·РјРµСЂ Р±СѓС„РµСЂР° РІ СЃРёРјРІРѕР»Р°С… РґР»СЏ Р·Р°РїРёСЃРё РІ РЅРµРіРѕ РєРѕРґР° html СЃС‚СЂР°РЅРёС†С‹ СЃ РѕС€РёР±РєРѕР№
+' Размер буфера в символах для записи в него кода html страницы с ошибкой
 Const MaxHttpErrorBuffer As Integer = 1024 - 1
 
 Const DefaultContentLanguage = WStr("en")
@@ -290,9 +290,9 @@ Private Function WebSiteHttpAuthUtil( _
 	
 	UsernamePasswordUtf8[dwUsernamePasswordUtf8Length] = Characters.NullChar
 	
-	' РР· РјР°СЃСЃРёРІР° Р±Р°Р№С‚ РІ СЃС‚СЂРѕРєСѓ
-	' РџСЂРµРѕР±СЂР°Р·СѓРµРј utf8 РІ WString
-	' -1 вЂ” Р·РЅР°С‡РёС‚, РґР»РёРЅР° СЃС‚СЂРѕРєРё Р±СѓРґРµС‚ РїСЂРѕРІРµСЂСЏС‚СЊСЃСЏ СЃР°РјРѕР№ С„СѓРЅРєС†РёРµР№ РїРѕ Р·Р°РІРµСЂС€Р°СЋС‰РµРјСѓ РЅСѓР»СЋ
+	' Из массива байт в строку
+	' Преобразуем utf8 в WString
+	' -1 — значит, длина строки будет проверяться самой функцией по завершающему нулю
 	Dim UsernamePasswordKey As WString * (UserNamePasswordCapacity + 1) = Any
 	Dim DecodedLength As Long = MultiByteToWideChar( _
 		CP_UTF8, _
@@ -304,7 +304,7 @@ Private Function WebSiteHttpAuthUtil( _
 	)
 	UsernamePasswordKey[DecodedLength] = Characters.NullChar
 	
-	' РўРµРїРµСЂСЊ pColonChar С…СЂР°РЅРёС‚ РІ СЃРµР±Рµ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЂР°Р·РґРµР»РёС‚РµР»СЊ-РґРІРѕРµС‚РѕС‡РёРµ
+	' Теперь pColonChar хранит в себе указатель на разделитель-двоеточие
 	Dim pColonChar As WString Ptr = StrChrW(@UsernamePasswordKey, Characters.Colon)
 	If pColonChar = NULL Then
 		HeapSysFreeString(pHeaderAuthorization)
@@ -1189,7 +1189,7 @@ Private Function WriteDirectoryListingFile( _
 			End Scope
 			
 			If pFilesInDir[i].IsDirectory Then
-				' <a href="СЃСЃС‹Р»РєР°/">СЃСЃС‹Р»РєР°/</a>
+				' <a href="ссылка/">ссылка/</a>
 				lstrcatW(@pFilesInDir[i].FileName, WStr("/"))
 			End If
 			
@@ -1268,6 +1268,37 @@ Private Function WriteDirectoryListingFile( _
 	
 End Function
 
+Private Function FillTemporaryFileName( _
+		ByVal pFileName As WString Ptr _
+	)As HRESULT
+	
+	Const TempPathPrefix = WStr("WebServer")
+	
+	Dim TempDir As WString * (MAX_PATH + 1) = Any
+	Dim resGetTempPath As DWORD = GetTempPathW( _
+		MAX_PATH, _
+		@TempDir _
+	)
+	If resGetTempPath = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Dim resGetTempFileName As UINT = GetTempFileNameW( _
+		@TempDir, _
+		@TempPathPrefix, _
+		0, _
+		pFileName _
+	)
+	If resGetTempFileName = 0 Then
+		Dim dwError As DWORD = GetLastError()
+		Return HRESULT_FROM_WIN32(dwError)
+	End If
+	
+	Return S_OK
+	
+End Function
+
 Private Function GetDirectoryListing( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -1275,31 +1306,10 @@ Private Function GetDirectoryListing( _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
-	Scope
-		Const TempPathPrefix = WStr("WebServer")
-		
-		Dim TempDir As WString * (MAX_PATH + 1) = Any
-		Dim resGetTempPath As DWORD = GetTempPathW( _
-			MAX_PATH, _
-			@TempDir _
-		)
-		If resGetTempPath = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-		Dim resGetTempFileName As UINT = GetTempFileNameW( _
-			@TempDir, _
-			@TempPathPrefix, _
-			0, _
-			pFileName _
-		)
-		If resGetTempFileName = 0 Then
-			Dim dwError As DWORD = GetLastError()
-			Return HRESULT_FROM_WIN32(dwError)
-		End If
-		
-	End Scope
+	Dim hrGetTempPath As HRESULT = FillTemporaryFileName(pFileName)
+	If FAILED(hrGetTempPath) Then
+		Return hrGetTempPath
+	End If
 	
 	Dim hListingFile As HANDLE = CreateFileW( _
 		pFileName, _
@@ -1414,13 +1424,13 @@ Private Function WebSiteOpenRequestedFile( _
 			Dim defFilename As WString * (MAX_PATH + 1) = Any
 			GetDefaultFileName(@defFilename, i, DefaultFileName)
 			
-			Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
-			lstrcpyW(@FullDefaultFilename, Path)
-			lstrcatW(@FullDefaultFilename, @defFilename)
+			Dim FileNameWithPath As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@FileNameWithPath, Path)
+			lstrcatW(@FileNameWithPath, @defFilename)
 			
 			WebSiteMapPath( _
 				pPhysicalDirectory, _
-				@FullDefaultFilename, _
+				@FileNameWithPath, _
 				pFileName _
 			)
 			
@@ -1435,7 +1445,7 @@ Private Function WebSiteOpenRequestedFile( _
 				
 				Dim fp As HeapBSTR = CreateHeapString( _
 					pIMalloc, _
-					@FullDefaultFilename _
+					@FileNameWithPath _
 				)
 				If fp = NULL Then
 					Return E_OUTOFMEMORY
@@ -1463,13 +1473,13 @@ Private Function WebSiteOpenRequestedFile( _
 		Scope
 			Const AsteriskString = WStr("*")
 			
-			Dim FullDefaultFilename As WString * (MAX_PATH + 1) = Any
-			lstrcpyW(@FullDefaultFilename, Path)
-			lstrcatW(@FullDefaultFilename, @AsteriskString)
+			Dim FileNameWithPath As WString * (MAX_PATH + 1) = Any
+			lstrcpyW(@FileNameWithPath, Path)
+			lstrcatW(@FileNameWithPath, @AsteriskString)
 			
 			WebSiteMapPath( _
 				pPhysicalDirectory, _
-				FullDefaultFilename, _
+				FileNameWithPath, _
 				@ListingDir _
 			)
 		End Scope
