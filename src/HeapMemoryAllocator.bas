@@ -392,6 +392,17 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 					
 					Finded = True
 					
+					#if __FB_DEBUG__
+						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+						Dim vtFreeSpace As VARIANT = Any
+						vtFreeSpace.vt = VT_I4
+						vtFreeSpace.lVal = CLng(FreeSpace)
+						LogWriteEntry( _
+							LogEntryType.Error, _
+							WStr(!"MemoryAllocator Instance released, free space:"), _
+							@vtFreeSpace _
+						)
+					#endif
 					Exit For
 				End If
 			Next
@@ -423,6 +434,18 @@ Function GetHeapMemoryAllocatorInstance( _
 					MemoryPoolObject.Items[i].IsUsed = True
 					pMalloc = MemoryPoolObject.Items[i].pMalloc
 					MemoryPoolObject.Length += 1
+					
+					#if __FB_DEBUG__
+						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+						Dim vtFreeSpace As VARIANT = Any
+						vtFreeSpace.vt = VT_I4
+						vtFreeSpace.lVal = CLng(FreeSpace)
+						LogWriteEntry( _
+							LogEntryType.Error, _
+							WStr(!"MemoryAllocator Instance taken, free space:"), _
+							@vtFreeSpace _
+						)
+					#endif
 					
 					Exit For
 				End If
