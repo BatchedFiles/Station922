@@ -2121,6 +2121,50 @@ Private Function WebSiteGetBuffer( _
 	
 End Function
 
+Private Function CalculateUtf8BufferSize( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal BufferLength As Integer _
+	)As Integer
+	
+	Dim nBufferLength As Long = CLng(BufferLength)
+	Dim Length As Long = WideCharToMultiByte( _
+		CP_UTF8, _
+		0, _
+		pBuffer, _
+		nBufferLength, _
+		NULL, _
+		0, _
+		0, _
+		0 _
+	)
+	
+	Return CInt(Length)
+	
+End Function
+
+Private Sub ConvertUtf16BufferToUtf8( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal lpMultiByteStr As Any Ptr, _
+		ByVal cbMultiByte As Integer _
+	)
+	
+	Dim nBufferLength As Long = CLng(BufferLength)
+	Dim ncbMultiByte As Long = CLng(cbMultiByte)
+	
+	WideCharToMultiByte( _
+		CP_UTF8, _
+		0, _
+		pBuffer, _
+		nBufferLength, _
+		lpMultiByteStr, _
+		ncbMultiByte, _
+		0, _
+		0 _
+	)
+	
+End Sub
+
 Private Function WebSiteGetErrorBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -2158,37 +2202,27 @@ Private Function WebSiteGetErrorBuffer( _
 		
 		Dim BodyLength As Integer = Writer.GetLength()
 		
-		Dim SendBufferLength As Integer = WideCharToMultiByte( _
-			CP_UTF8, _
-			0, _
+		Dim SendBufferLength As Integer = CalculateUtf8BufferSize( _
 			@BodyBuffer, _
-			BodyLength, _
-			NULL, _
-			0, _
-			0, _
-			0 _
+			BodyLength _
 		)
 		
-		Dim pBuffer As Any Ptr = Any
+		Dim pUtf8Buffer As Any Ptr = Any
 		Dim hrAllocBuffer As HRESULT = IMemoryStream_AllocBuffer( _
 			pIBuffer, _
 			SendBufferLength, _
-			@pBuffer _
+			@pUtf8Buffer _
 		)
 		If FAILED(hrAllocBuffer) Then
 			IMemoryStream_Release(pIBuffer)
 			Return E_OUTOFMEMORY
 		End If
 		
-		WideCharToMultiByte( _
-			CP_UTF8, _
-			0, _
+		ConvertUtf16BufferToUtf8( _
 			@BodyBuffer, _
 			BodyLength, _
-			pBuffer, _
-			SendBufferLength, _
-			0, _
-			0 _
+			pUtf8Buffer, _
+			SendBufferLength _
 		)
 		
 	End Scope
