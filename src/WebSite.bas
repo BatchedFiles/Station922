@@ -1805,6 +1805,72 @@ Private Function NeedAuthenticate( _
 	
 End Function
 
+Private Function FillMime( _
+		ByVal this As WebSite Ptr, _
+		ByVal fAccess As FileAccess, _
+		ByVal hrOpenFile As HRESULT, _
+		ByVal pFullFileName As WString Ptr, _
+		ByVal pMime As MimeType Ptr _
+	)As HRESULT
+	
+	Select Case fAccess
+		
+		Case FileAccess.ReadAccess
+			Dim resGetMimeOfFileExtension As Boolean = Any
+			
+			If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
+				pMime->ContentType = ContentTypes.TextHtml
+				pMime->CharsetWeakPtr = this->DirectoryListingEncoding
+				pMime->Format = MimeFormats.Text
+				
+				resGetMimeOfFileExtension = True
+			Else
+				Dim DefaultMime As DefaultMimeIfNotFound = Any
+				If this->EnableGetAllFiles Then
+					DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream
+				Else
+					DefaultMime = DefaultMimeIfNotFound.UseNone
+				End If
+				
+				resGetMimeOfFileExtension = GetMimeOfFileExtension( _
+					pMime, _
+					PathFindExtensionW(pFullFileName), _
+					DefaultMime _
+				)
+			End If
+			
+			If resGetMimeOfFileExtension = False Then
+				Return WEBSITE_E_FORBIDDEN
+			End If
+			
+		Case Else
+			' TODO Get Mime from Content-Type
+			' TODO Change File Extension
+			
+			' Dim pContentType As HeapBSTR = Any
+			' IClientRequest_GetHttpHeader( _
+			' 	pRequest, _
+			' 	HttpRequestHeaders.HeaderContentType, _
+			' 	@pContentType _
+			' )
+			
+			' Dim ContentTypeLength As Integer = SysStringLen(pContentType)
+			' If ContentTypeLength = 0 Then
+			' 	HeapSysFreeString(pContentType)
+			' 	IFileStream_Release(pIFile)
+			' 	*pFlags = ContentNegotiationFlags.None
+			' 	*ppResult = NULL
+			' 	Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
+			' End If
+			
+			' HeapSysFreeString(pContentType)
+			
+	End Select
+	
+	Return S_OK
+	
+End Function
+
 Private Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -1915,71 +1981,28 @@ Private Function WebSiteGetBuffer( _
 	End Scope
 	
 	Dim Mime As MimeType = Any
-	Scope
-		Select Case fAccess
-			
-			Case FileAccess.ReadAccess
-				Dim resGetMimeOfFileExtension As Boolean = Any
-				
-				If hrOpenFile = WEBSITE_S_DIRECTORY_LISTING Then
-					Mime.ContentType = ContentTypes.TextHtml
-					Mime.CharsetWeakPtr = this->DirectoryListingEncoding
-					Mime.Format = MimeFormats.Text
-					resGetMimeOfFileExtension = True
-				Else
-					Dim DefaultMime As DefaultMimeIfNotFound = Any
-					If this->EnableGetAllFiles Then
-						DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream
-					Else
-						DefaultMime = DefaultMimeIfNotFound.UseNone
-					End If
-					
-					resGetMimeOfFileExtension = GetMimeOfFileExtension( _
-						@Mime, _
-						PathFindExtensionW(FullFileName), _
-						DefaultMime _
-					)
-				End If
-				
-				If resGetMimeOfFileExtension = False Then
-					IFileStream_Release(pIFile)
-					*pFlags = ContentNegotiationFlags.None
-					*ppResult = NULL
-					Return WEBSITE_E_FORBIDDEN
-				End If
-				
-			Case Else
-				/'
-				' TODO Get Mime from Content-Type
-				' Change File Extension
-				Dim pContentType As HeapBSTR = Any
-				IClientRequest_GetHttpHeader( _
-					pRequest, _
-					HttpRequestHeaders.HeaderContentType, _
-					@pContentType _
-				)
-				
-				Dim ContentTypeLength As Integer = SysStringLen(pContentType)
-				If ContentTypeLength = 0 Then
-					HeapSysFreeString(pContentType)
-					IFileStream_Release(pIFile)
-					*pFlags = ContentNegotiationFlags.None
-					*ppResult = NULL
-					Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
-				End If
-				
-				HeapSysFreeString(pContentType)
-				'/
-				
-				IFileStream_SetFileSize(pIFile, BufferLength)
-				
-				*pFlags = ContentNegotiationFlags.None
-				*ppResult = CPtr(IAttributedStream Ptr, pIFile)
-				
-				Return hrOpenFile
-				
-		End Select
-	End Scope
+	Dim hrFillMime As HRESULT = FillMime( _
+		this, _
+		fAccess, _
+		hrOpenFile, _
+		@FullFileName, _
+		@Mime _
+	)
+	If FAILED(hrFillMime) Then
+		IFileStream_Release(pIFile)
+		*pFlags = ContentNegotiationFlags.None
+		*ppResult = NULL
+		Return WEBSITE_E_FORBIDDEN
+	End If
+	
+	If fAccess <> FileAccess.ReadAccess Then
+		IFileStream_SetFileSize(pIFile, BufferLength)
+		
+		*pFlags = ContentNegotiationFlags.None
+		*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+		
+		Return hrOpenFile
+	End If
 	
 	Scope
 		Dim ZipFileHandle As HANDLE = Any
