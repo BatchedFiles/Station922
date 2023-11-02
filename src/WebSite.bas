@@ -946,20 +946,91 @@ Private Function WebSiteMapPath( _
 	
 End Function
 
+Private Function CalculateUtf8BufferSize( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal BufferLength As Integer _
+	)As Integer
+	
+	Dim nBufferLength As Long = CLng(BufferLength)
+	Dim Length As Long = WideCharToMultiByte( _
+		CP_UTF8, _
+		0, _
+		pBuffer, _
+		nBufferLength, _
+		NULL, _
+		0, _
+		0, _
+		0 _
+	)
+	
+	Return CInt(Length)
+	
+End Function
+
+Private Sub ConvertUtf16BufferToUtf8( _
+		ByVal pBuffer As WString Ptr, _
+		ByVal BufferLength As Integer, _
+		ByVal lpMultiByteStr As Any Ptr, _
+		ByVal cbMultiByte As Integer _
+	)
+	
+	Dim nBufferLength As Long = CLng(BufferLength)
+	Dim ncbMultiByte As Long = CLng(cbMultiByte)
+	
+	WideCharToMultiByte( _
+		CP_UTF8, _
+		0, _
+		pBuffer, _
+		nBufferLength, _
+		lpMultiByteStr, _
+		ncbMultiByte, _
+		0, _
+		0 _
+	)
+	
+End Sub
+
 Private Function WriteToFileW( _
+		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal hFile As HANDLE, _
 		ByVal pData As WString Ptr, _
 		ByVal LengthW As Integer _
 	)As HRESULT
 	
+	Dim SendBufferLength As Integer = CalculateUtf8BufferSize( _
+		pData, _
+		LengthW _
+	)
+	
+	Dim pUtf8Buffer As Any Ptr = IMalloc_Alloc( _
+		pIMalloc, _
+		SendBufferLength _
+	)
+	If pUtf8Buffer = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+	
+	ConvertUtf16BufferToUtf8( _
+		pData, _
+		LengthW, _
+		pUtf8Buffer, _
+		SendBufferLength _
+	)
+	
 	Dim NumberOfBytesWritten As DWORD = Any
 	Dim resWrite As BOOL = WriteFile( _
 		hFile, _
-		pData, _
-		LengthW * SizeOf(WString), _
+		pUtf8Buffer, _
+		SendBufferLength, _
 		@NumberOfBytesWritten, _
 		NULL _
 	)
+	
+	IMalloc_Free( _
+		pIMalloc, _
+		pUtf8Buffer _
+	)
+	
 	If resWrite = 0 Then
 		Dim dwError As DWORD = GetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
@@ -1092,25 +1163,10 @@ Private Function WriteDirectoryListingFile( _
 	)As HRESULT
 	
 	Scope
-		' Write UTF-16 LE Byte Order Mark
-		Dim Utf16LeBomBytes As ZString * 2 = Any
-		Utf16LeBomBytes[0] = &hFF
-		Utf16LeBomBytes[1] = &hFE
-		
-		Dim hrWriteBom As HRESULT = WriteToFileW( _
-			hFile, _
-			Cast(WString Ptr, @Utf16LeBomBytes), _
-			1 _
-		)
-		If FAILED(hrWriteBom) Then
-			Return hrWriteBom
-		End If
-	End Scope
-	
-	Scope
 		Const FileDataBytes = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"">")
 		
 		Dim hrWriteHeader As HRESULT = WriteToFileW( _
+			pIMalloc, _
 			hFile, _
 			@FileDataBytes, _
 			Len(FileDataBytes) _
@@ -1124,6 +1180,7 @@ Private Function WriteDirectoryListingFile( _
 		Const FileDataBytes = WStr("<head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" /><title>Directory Listing</title></head>")
 		
 		Dim hrWriteHeader As HRESULT = WriteToFileW( _
+			pIMalloc, _
 			hFile, _
 			@FileDataBytes, _
 			Len(FileDataBytes) _
@@ -1137,6 +1194,7 @@ Private Function WriteDirectoryListingFile( _
 		Const FileDataBytes = WStr("<body><h1>Directory Listing</h1>")
 		
 		Dim hrWriteHeader As HRESULT = WriteToFileW( _
+			pIMalloc, _
 			hFile, _
 			@FileDataBytes, _
 			Len(FileDataBytes) _
@@ -1151,6 +1209,7 @@ Private Function WriteDirectoryListingFile( _
 			' <a href="/..">/..</a>
 			Const FileDataBytes = WStr("<p><a href="".."">..</a></p>")
 			WriteToFileW( _
+				pIMalloc, _
 				hFile, _
 				FileDataBytes, _
 				Len(FileDataBytes) _
@@ -1183,6 +1242,7 @@ Private Function WriteDirectoryListingFile( _
 			Scope
 				Const FileDataBytes = WStr("<p>")
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@FileDataBytes, _
 					Len(FileDataBytes) _
@@ -1197,6 +1257,7 @@ Private Function WriteDirectoryListingFile( _
 			Scope
 				Const FileDataBytes = WStr("<a href=""")
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@FileDataBytes, _
 					Len(FileDataBytes) _
@@ -1206,6 +1267,7 @@ Private Function WriteDirectoryListingFile( _
 			Dim FindFileNameLength As Integer = lstrlenW(@pFilesInDir[i].FileName)
 			Scope
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@pFilesInDir[i].FileName, _
 					FindFileNameLength _
@@ -1215,6 +1277,7 @@ Private Function WriteDirectoryListingFile( _
 			Scope
 				Const FileDataBytes = WStr(""">")
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@FileDataBytes, _
 					Len(FileDataBytes) _
@@ -1223,6 +1286,7 @@ Private Function WriteDirectoryListingFile( _
 			
 			Scope
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@pFilesInDir[i].FileName, _
 					FindFileNameLength _
@@ -1232,6 +1296,7 @@ Private Function WriteDirectoryListingFile( _
 			Scope
 				Const FileDataBytes = WStr("</a>")
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@FileDataBytes, _
 					Len(FileDataBytes) _
@@ -1241,6 +1306,7 @@ Private Function WriteDirectoryListingFile( _
 			Scope
 				Const FileDataBytes = WStr("</p>")
 				WriteToFileW( _
+					pIMalloc, _
 					hFile, _
 					@FileDataBytes, _
 					Len(FileDataBytes) _
@@ -1256,6 +1322,7 @@ Private Function WriteDirectoryListingFile( _
 		Const FileDataBytes = WStr("</body></html>")
 		
 		Dim hrWriteHeader As HRESULT = WriteToFileW( _
+			pIMalloc, _
 			hFile, _
 			@FileDataBytes, _
 			Len(FileDataBytes) _
@@ -2144,50 +2211,6 @@ Private Function WebSiteGetBuffer( _
 	
 End Function
 
-Private Function CalculateUtf8BufferSize( _
-		ByVal pBuffer As WString Ptr, _
-		ByVal BufferLength As Integer _
-	)As Integer
-	
-	Dim nBufferLength As Long = CLng(BufferLength)
-	Dim Length As Long = WideCharToMultiByte( _
-		CP_UTF8, _
-		0, _
-		pBuffer, _
-		nBufferLength, _
-		NULL, _
-		0, _
-		0, _
-		0 _
-	)
-	
-	Return CInt(Length)
-	
-End Function
-
-Private Sub ConvertUtf16BufferToUtf8( _
-		ByVal pBuffer As WString Ptr, _
-		ByVal BufferLength As Integer, _
-		ByVal lpMultiByteStr As Any Ptr, _
-		ByVal cbMultiByte As Integer _
-	)
-	
-	Dim nBufferLength As Long = CLng(BufferLength)
-	Dim ncbMultiByte As Long = CLng(cbMultiByte)
-	
-	WideCharToMultiByte( _
-		CP_UTF8, _
-		0, _
-		pBuffer, _
-		nBufferLength, _
-		lpMultiByteStr, _
-		ncbMultiByte, _
-		0, _
-		0 _
-	)
-	
-End Sub
-
 Private Function WebSiteGetErrorBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
@@ -2510,11 +2533,11 @@ Private Function WebSiteSetDirectoryListing( _
 	this->EnableDirectoryListing = DirectoryListing
 	
 	If DirectoryListing Then
-		Const Utf16EncodingString = WStr("utf-16")
+		Const Utf8EncodingString = WStr("utf-8")
 		this->DirectoryListingEncoding = CreatePermanentHeapStringLen( _
 			this->pIMemoryAllocator, _
-			@Utf16EncodingString, _
-			Len(Utf16EncodingString) _
+			@Utf8EncodingString, _
+			Len(Utf8EncodingString) _
 		)
 	End If
 	
