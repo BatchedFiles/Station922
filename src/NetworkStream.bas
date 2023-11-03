@@ -182,7 +182,7 @@ Private Function NetworkStreamQueryInterface( _
 	
 End Function
 
-Function CreateNetworkStream( _
+Public Function CreateNetworkStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

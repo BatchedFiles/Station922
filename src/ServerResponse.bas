@@ -288,7 +288,7 @@ Private Function ServerResponseQueryInterface( _
 	
 End Function
 
-Function CreateServerResponse( _
+Public Function CreateServerResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

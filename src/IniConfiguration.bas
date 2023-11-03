@@ -163,7 +163,7 @@ Private Function WebServerIniConfigurationQueryInterface( _
 	
 End Function
 
-Function CreateWebServerIniConfiguration( _
+Public Function CreateWebServerIniConfiguration( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

@@ -132,7 +132,7 @@ Private Function HttpProcessorCollectionQueryInterface( _
 	
 End Function
 
-Function CreateHttpProcessorCollection( _
+Public Function CreateHttpProcessorCollection( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

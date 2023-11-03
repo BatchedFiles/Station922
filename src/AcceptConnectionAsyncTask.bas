@@ -234,7 +234,7 @@ Private Function AcceptConnectionAsyncTaskGetTaskId( _
 	
 End Function
 
-Function CreateAcceptConnectionAsyncTask( _
+Public Function CreateAcceptConnectionAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

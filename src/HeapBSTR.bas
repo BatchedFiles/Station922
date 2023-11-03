@@ -20,7 +20,7 @@ Type _InternalHeapBSTR
 	wszNullChar(0 To ReservedCharactersLength - 1) As OLECHAR
 End Type
 
-Function FindStringW( _
+Public Function FindStringW( _
 		ByVal pSource As WString Ptr, _
 		ByVal SourceLength As Integer, _
 		ByVal pSubstring As WString Ptr, _
@@ -70,7 +70,7 @@ Private Sub StringToUpper( _
 	
 End Sub
 
-Function FindStringIW( _
+Public Function FindStringIW( _
 		ByVal pSource As WString Ptr, _
 		ByVal SourceLength As Integer, _
 		ByVal pSubstring As WString Ptr, _
@@ -230,7 +230,7 @@ Private Function CreateInternalHeapBSTR( _
 	
 End Function
 
-Function CreateHeapString( _
+Public Function CreateHeapString( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr _
 	)As HeapBSTR
@@ -246,7 +246,7 @@ Function CreateHeapString( _
 	
 End Function
 
-Function CreateHeapStringLen( _
+Public Function CreateHeapStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
 		ByVal Length As UINT _
@@ -272,7 +272,7 @@ Function CreateHeapStringLen( _
 	
 End Function
 
-Function CreatePermanentHeapString( _
+Public Function CreatePermanentHeapString( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr _
 	)As HeapBSTR
@@ -288,7 +288,7 @@ Function CreatePermanentHeapString( _
 	
 End Function
 
-Function CreatePermanentHeapStringLen( _
+Public Function CreatePermanentHeapStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		byval pwsz As Const WString Ptr, _
 		ByVal Length As UINT _
@@ -314,7 +314,7 @@ Function CreatePermanentHeapStringLen( _
 	
 End Function
 
-Function CreateHeapZStringLen( _
+Public Function CreateHeapZStringLen( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal psz As Const ZString Ptr, _
 		ByVal Length As UINT _
@@ -387,7 +387,7 @@ Private Sub DestroyInternalHeapBSTR( _
 	
 End Sub
 
-Function HeapSysAddRefString( _
+Public Function HeapSysAddRefString( _
 		ByVal bstrString As HeapBSTR _
 	)As HRESULT
 	
@@ -401,7 +401,7 @@ Function HeapSysAddRefString( _
 	
 End Function
 
-Sub HeapSysFreeString( _
+Public Sub HeapSysFreeString( _
 		byval bstrString As HeapBSTR _ 
 	)
 	

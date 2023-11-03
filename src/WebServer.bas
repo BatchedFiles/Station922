@@ -233,7 +233,7 @@ Private Function WebServerQueryInterface( _
 	
 End Function
 
-Function CreateWebServer( _
+Public Function CreateWebServer( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

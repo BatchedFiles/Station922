@@ -327,7 +327,7 @@ Private Function ClientUriQueryInterface( _
 	
 End Function
 
-Function CreateClientUri( _
+Public Function CreateClientUri( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

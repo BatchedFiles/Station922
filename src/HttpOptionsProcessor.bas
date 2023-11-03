@@ -112,7 +112,7 @@ Private Function HttpOptionsProcessorQueryInterface( _
 	
 End Function
 
-Function CreateHttpOptionsProcessor( _
+Public Function CreateHttpOptionsProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

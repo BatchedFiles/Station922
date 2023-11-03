@@ -1696,7 +1696,7 @@ Private Function WebSiteQueryInterface( _
 	
 End Function
 
-Function CreateWebSite( _
+Public Function CreateWebSite( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

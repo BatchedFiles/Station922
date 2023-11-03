@@ -109,7 +109,7 @@ Private Function HttpTraceProcessorQueryInterface( _
 	
 End Function
 
-Function CreateHttpTraceProcessor( _
+Public Function CreateHttpTraceProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

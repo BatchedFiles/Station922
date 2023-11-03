@@ -113,7 +113,7 @@ Private Function HttpDeleteProcessorQueryInterface( _
 	
 End Function
 
-Function CreateHttpDeleteProcessor( _
+Public Function CreateHttpDeleteProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

@@ -169,7 +169,7 @@ Private Function HttpWriterQueryInterface( _
 	
 End Function
 
-Function CreateHttpWriter( _
+Public Function CreateHttpWriter( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

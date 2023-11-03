@@ -3,7 +3,7 @@
 
 Const NewLineString = WStr(!"\r\n")
 
-Sub InitializeArrayStringWriter( _
+Public Sub InitializeArrayStringWriter( _
 		ByVal this As ArrayStringWriter Ptr _
 	)
 	
@@ -14,7 +14,7 @@ Sub InitializeArrayStringWriter( _
 	
 End Sub
 
-Function ArrayStringWriter.WriteLengthString( _
+Public Function ArrayStringWriter.WriteLengthString( _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As Boolean
@@ -30,7 +30,7 @@ Function ArrayStringWriter.WriteLengthString( _
 	
 End Function
 
-Function ArrayStringWriter.WriteNewLine( _
+Public Function ArrayStringWriter.WriteNewLine( _
 	)As Boolean
 	
 	Dim resResult As Boolean = WriteLengthString(@NewLineString, Len(NewLineString))
@@ -39,7 +39,7 @@ Function ArrayStringWriter.WriteNewLine( _
 	
 End Function
 
-Function ArrayStringWriter.WriteString( _
+Public Function ArrayStringWriter.WriteString( _
 		ByVal w As WString Ptr _
 	)As Boolean
 	
@@ -49,7 +49,7 @@ Function ArrayStringWriter.WriteString( _
 	
 End Function
 
-Function ArrayStringWriter.WriteLengthStringLine( _
+Public Function ArrayStringWriter.WriteLengthStringLine( _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
 	)As Boolean
@@ -68,7 +68,7 @@ Function ArrayStringWriter.WriteLengthStringLine( _
 	
 End Function
 
-Function ArrayStringWriter.WriteStringLine( _
+Public Function ArrayStringWriter.WriteStringLine( _
 		ByVal w As WString Ptr _
 	)As Boolean
 	
@@ -78,7 +78,7 @@ Function ArrayStringWriter.WriteStringLine( _
 	
 End Function
 
-Function ArrayStringWriter.WriteChar( _
+Public Function ArrayStringWriter.WriteChar( _
 		ByVal wc As Integer _
 	)As Boolean
 	
@@ -94,7 +94,7 @@ Function ArrayStringWriter.WriteChar( _
 	
 End Function
 
-Function ArrayStringWriter.WriteInt32( _
+Public Function ArrayStringWriter.WriteInt32( _
 		ByVal Value As Long _
 	)As Boolean
 
@@ -107,7 +107,7 @@ Function ArrayStringWriter.WriteInt32( _
 	
 End Function
 
-Function ArrayStringWriter.WriteUInt32( _
+Public Function ArrayStringWriter.WriteUInt32( _
 		ByVal Value As ULong _
 	)As Boolean
 
@@ -121,7 +121,7 @@ Function ArrayStringWriter.WriteUInt32( _
 	
 End Function
 
-Function ArrayStringWriter.WriteInt64( _
+Public Function ArrayStringWriter.WriteInt64( _
 		ByVal Value As LongInt _
 	)As Boolean
 
@@ -134,7 +134,7 @@ Function ArrayStringWriter.WriteInt64( _
 	
 End Function
 
-Function ArrayStringWriter.WriteUInt64( _
+Public Function ArrayStringWriter.WriteUInt64( _
 		ByVal Value As ULongInt _
 	)As Boolean
 
@@ -147,14 +147,14 @@ Function ArrayStringWriter.WriteUInt64( _
 	
 End Function
 
-Function ArrayStringWriter.GetCodePage( _
+Public Function ArrayStringWriter.GetCodePage( _
 	)As Integer
 	
 	Return CodePage
 	
 End Function
 
-Sub ArrayStringWriter.SetCodePage( _
+Public Sub ArrayStringWriter.SetCodePage( _
 		ByVal cp As Integer _
 	)
 	
@@ -162,7 +162,7 @@ Sub ArrayStringWriter.SetCodePage( _
 	
 End Sub
 
-Sub ArrayStringWriter.SetBuffer( _
+Public Sub ArrayStringWriter.SetBuffer( _
 		ByVal buf As WString Ptr, _
 		ByVal cap As Integer _
 	)
@@ -174,7 +174,7 @@ Sub ArrayStringWriter.SetBuffer( _
 	
 End Sub
 
-Function ArrayStringWriter.GetLength( _
+Public Function ArrayStringWriter.GetLength( _
 	)As Integer
 	
 	Return BufferLength

@@ -399,7 +399,7 @@ Private Function WriteErrorAsyncTaskGetTaskId( _
 	
 End Function
 
-Function CreateWriteErrorAsyncTask( _
+Public Function CreateWriteErrorAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

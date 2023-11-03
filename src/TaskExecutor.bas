@@ -1,7 +1,7 @@
 #include once "TaskExecutor.bi"
 #include once "Logger.bi"
 
-Function StartExecuteTask( _
+Public Function StartExecuteTask( _
 		ByVal pTask As IAsyncIoTask Ptr _
 	)As HRESULT
 	

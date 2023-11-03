@@ -184,7 +184,7 @@ Private Function FileStreamQueryInterface( _
 	
 End Function
 
-Function CreateFileStream( _
+Public Function CreateFileStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

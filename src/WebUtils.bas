@@ -59,7 +59,7 @@ Dim Shared GlobalThreadPool As IThreadPool Ptr
 Dim Shared WebServers As WebServerVector
 Dim Shared IpEndPointsLength As Integer
 
-Function ConvertSystemDateToHttpDate( _
+Public Function ConvertSystemDateToHttpDate( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
 	)As HeapBSTR
@@ -113,7 +113,7 @@ Function ConvertSystemDateToHttpDate( _
 	
 End Function
 
-Function FindWebSiteWeakPtr( _
+Public Function FindWebSiteWeakPtr( _
 		ByVal pIWebSites As IWebSiteCollection Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
@@ -149,7 +149,7 @@ Function FindWebSiteWeakPtr( _
 	
 End Function
 
-Function ProcessErrorRequestResponse( _
+Public Function ProcessErrorRequestResponse( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIStream As IBaseStream Ptr, _
 		ByVal pIHttpReader As IHttpReader Ptr, _
@@ -323,7 +323,7 @@ Private Function IpEndPointCompare( _
 	
 End Function
 
-Function Station922Initialize()As HRESULT
+Public Function Station922Initialize()As HRESULT
 	
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim WorkerThreads As Integer = Any
@@ -790,7 +790,7 @@ Function Station922Initialize()As HRESULT
 	
 End Function
 
-Sub Station922CleanUp()
+Public Sub Station922CleanUp()
 	
 	For i As Integer = 0 To IpEndPointsLength - 1
 		IWebServer_Stop(WebServers.Vector(i))
@@ -805,13 +805,13 @@ Sub Station922CleanUp()
 	
 End Sub
 
-Function GetThreadPoolWeakPtr()As IThreadPool Ptr
+Public Function GetThreadPoolWeakPtr()As IThreadPool Ptr
 	
 	Return GlobalThreadPool
 	
 End Function
 
-Function WaitAlertableLoop( _
+Public Function WaitAlertableLoop( _
 		ByVal hEvent As HANDLE _
 	)As HRESULT
 	

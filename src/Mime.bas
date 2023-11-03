@@ -190,7 +190,7 @@ Const ContentTypesVideo3gpp2 = WStr("video/3gpp2")
 
 Const CompareResultEqual As Long = 0
 
-Sub GetContentTypeOfMimeType( _
+Public Sub GetContentTypeOfMimeType( _
 		ByVal ContentType As WString Ptr, _
 		ByVal mt As MimeType Ptr _
 	)
@@ -526,7 +526,7 @@ Sub GetContentTypeOfMimeType( _
 	
 End Sub
 
-Function GetMimeOfFileExtension( _
+Public Function GetMimeOfFileExtension( _
 		ByVal mt As MimeType Ptr, _
 		ByVal ext As WString Ptr, _
 		ByVal DefaultMime As DefaultMimeIfNotFound _

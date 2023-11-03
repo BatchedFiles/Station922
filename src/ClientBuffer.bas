@@ -4,7 +4,7 @@
 Const DoubleNewLineStringA = Str(!"\r\n\r\n")
 Const NewLineStringA = Str(!"\r\n")
 
-Sub InitializeClientRequestBuffer( _
+Public Sub InitializeClientRequestBuffer( _
 		ByVal this As ClientRequestBuffer Ptr _
 	)
 	
@@ -21,7 +21,7 @@ Sub InitializeClientRequestBuffer( _
 	
 End Sub
 
-Function ClientRequestBufferGetFreeSpaceLength( _
+Public Function ClientRequestBufferGetFreeSpaceLength( _
 		ByVal this As ClientRequestBuffer Ptr _
 	)As Integer
 	
@@ -56,7 +56,7 @@ Private Function FindStringA( _
 	
 End Function
 
-Function ClientRequestBufferFindDoubleCrLfIndexA( _
+Public Function ClientRequestBufferFindDoubleCrLfIndexA( _
 		ByVal this As ClientRequestBuffer Ptr, _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
@@ -79,7 +79,7 @@ Function ClientRequestBufferFindDoubleCrLfIndexA( _
 	
 End Function
 
-Function ClientRequestBufferFindCrLfIndexA( _
+Public Function ClientRequestBufferFindCrLfIndexA( _
 		ByVal this As ClientRequestBuffer Ptr, _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
@@ -102,7 +102,7 @@ Function ClientRequestBufferFindCrLfIndexA( _
 	
 End Function
 
-Function ClientRequestBufferGetLine( _
+Public Function ClientRequestBufferGetLine( _
 		ByVal this As ClientRequestBuffer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HeapBSTR
@@ -138,7 +138,7 @@ Function ClientRequestBufferGetLine( _
 	
 End Function
 
-Sub ClientRequestBufferClear( _
+Public Sub ClientRequestBufferClear( _
 		ByVal this As ClientRequestBuffer Ptr _
 	)
 	

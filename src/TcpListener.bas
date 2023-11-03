@@ -115,7 +115,7 @@ Private Function TcpListenerQueryInterface( _
 	
 End Function
 
-Function CreateTcpListener( _
+Public Function CreateTcpListener( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

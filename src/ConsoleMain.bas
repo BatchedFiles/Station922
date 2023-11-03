@@ -1,7 +1,7 @@
 #include once "ConsoleMain.bi"
 #include once "WebUtils.bi"
 
-Function ConsoleMain()As Integer
+Public Function ConsoleMain()As Integer
 	
 	Dim hStopEvent As HANDLE = CreateEventW( _
 		NULL, _

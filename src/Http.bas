@@ -124,7 +124,7 @@ Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = 
 	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"),        23, HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
-Function GetStatusDescription( _
+Public Function GetStatusDescription( _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal pDescriptionLength As Integer Ptr _
 	)As WString Ptr
@@ -148,7 +148,7 @@ Function GetStatusDescription( _
 	
 End Function
 
-Function KnownRequestCgiHeaderToString( _
+Public Function KnownRequestCgiHeaderToString( _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal pHeaderLength As Integer Ptr _
 	)As WString Ptr

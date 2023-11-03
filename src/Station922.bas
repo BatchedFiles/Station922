@@ -37,7 +37,7 @@ End Function
 #ifndef WITHOUT_RUNTIME
 Private Function EntryPoint()As Integer
 #else
-Function EntryPoint Alias "EntryPoint"()As Integer
+Public Function EntryPoint Alias "EntryPoint"()As Integer
 #endif
 	
 	Dim RetCode As Integer = Any

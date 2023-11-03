@@ -140,7 +140,7 @@ Private Function HttpReaderQueryInterface( _
 	
 End Function
 
-Function CreateHttpReader( _
+Public Function CreateHttpReader( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

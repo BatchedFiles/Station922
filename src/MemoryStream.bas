@@ -148,7 +148,7 @@ Private Function MemoryStreamQueryInterface( _
 	
 End Function
 
-Function CreateMemoryStream( _
+Public Function CreateMemoryStream( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

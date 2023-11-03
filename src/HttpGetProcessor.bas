@@ -294,7 +294,7 @@ Private Function HttpGetProcessorQueryInterface( _
 	
 End Function
 
-Function CreateHttpGetProcessor( _
+Public Function CreateHttpGetProcessor( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

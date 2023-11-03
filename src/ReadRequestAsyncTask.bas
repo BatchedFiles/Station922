@@ -163,7 +163,7 @@ Private Function ReadRequestAsyncTaskGetTaskId( _
 	
 End Function
 
-Function CreateReadRequestAsyncTask( _
+Public Function CreateReadRequestAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

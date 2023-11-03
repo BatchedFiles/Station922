@@ -10,7 +10,7 @@ Private Sub ConsoleWriteColorStringW( _
 	
 End Sub
 
-Sub LogWriteEntry( _
+Public Sub LogWriteEntry( _
 		ByVal Reason As LogEntryType, _
 		ByVal pwszText As WString Ptr, _
 		ByVal pvtData As VARIANT Ptr _

@@ -420,7 +420,7 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 	
 End Sub
 
-Function GetHeapMemoryAllocatorInstance( _
+Public Function GetHeapMemoryAllocatorInstance( _
 	)As IHeapMemoryAllocator Ptr
 	
 	If MemoryPoolObject.Length < MemoryPoolObject.Capacity Then
@@ -749,7 +749,7 @@ Private Function CreateHeapMemoryAllocator( _
 	
 End Function
 
-Function CreateMemoryPool( _
+Public Function CreateMemoryPool( _
 		ByVal Capacity As UInteger, _
 		ByVal KeepAliveInterval As Integer _
 	)As HRESULT
@@ -828,7 +828,7 @@ Function CreateMemoryPool( _
 	
 End Function
 
-Sub DeleteMemoryPool()
+Public Sub DeleteMemoryPool()
 	
 	QueueUserAPC( _
 		@WakeupClearingThread, _

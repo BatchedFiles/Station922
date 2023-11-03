@@ -802,7 +802,7 @@ Private Function ClientRequestQueryInterface( _
 	
 End Function
 
-Function CreateClientRequest( _
+Public Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

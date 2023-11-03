@@ -1,7 +1,7 @@
 #include once "Network.bi"
 #include once "win\mswsock.bi"
 
-Function NetworkStartUp()As HRESULT
+Public Function NetworkStartUp()As HRESULT
 	
 	Dim WsaVersion22 As WORD = MAKEWORD(2, 2)
 	Dim wsa As WSADATA = Any
@@ -16,7 +16,7 @@ Function NetworkStartUp()As HRESULT
 	
 End Function
 
-Function NetworkCleanUp()As HRESULT
+Public Function NetworkCleanUp()As HRESULT
 	
 	Dim resStartup As Long = WSACleanup()
 	If resStartup <> 0 Then
@@ -28,7 +28,7 @@ Function NetworkCleanUp()As HRESULT
 	
 End Function
 
-Function LoadWsaFunctions()As HRESULT
+Public Function LoadWsaFunctions()As HRESULT
 	
 	Dim ListenSocket As SOCKET = WSASocketW( _
 		AF_INET6, _
@@ -109,7 +109,7 @@ Function LoadWsaFunctions()As HRESULT
 	
 End Function
 
-Function ResolveHostW Alias "ResolveHostW"( _
+Public Function ResolveHostW Alias "ResolveHostW"( _
 		ByVal Host As PCWSTR, _
 		ByVal Port As PCWSTR, _
 		ByVal ppAddressList As ADDRINFOW Ptr Ptr _
@@ -140,7 +140,7 @@ Function ResolveHostW Alias "ResolveHostW"( _
 	
 End Function
 
-Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
+Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
 		ByVal pSocketList As SocketNode Ptr, _
@@ -221,7 +221,7 @@ Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 	
 End Function
 
-Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
+Public Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		ByVal LocalAddress As PCWSTR, _
 		ByVal LocalPort As PCWSTR, _
 		ByVal pSocketList As SocketNode Ptr, _

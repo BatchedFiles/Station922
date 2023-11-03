@@ -18,7 +18,7 @@ Type _AsyncResult
 	Completed As Boolean
 End Type
 
-Function GetAsyncResultFromOverlappedWeakPtr( _
+Public Function GetAsyncResultFromOverlappedWeakPtr( _
 		ByVal pOverLap As OVERLAPPED Ptr _
 	)As IAsyncResult Ptr
 	
@@ -141,7 +141,7 @@ Private Function AsyncResultQueryInterface( _
 	
 End Function
 
-Function CreateAsyncResult( _
+Public Function CreateAsyncResult( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _

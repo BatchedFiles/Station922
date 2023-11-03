@@ -187,7 +187,7 @@ Private Function WriteResponseAsyncTaskGetTaskId( _
 	
 End Function
 
-Function CreateWriteResponseAsyncTask( _
+Public Function CreateWriteResponseAsyncTask( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
