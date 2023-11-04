@@ -3,11 +3,11 @@
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
+#include once "Resources.RH"
 #include once "WebUtils.bi"
 
 Extern GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable
 
-Const ServerVersionString = WStr("Station922/1.3.0")
 Const NosniffString = WStr("nosniff")
 Const BytesString = WStr("bytes")
 Const CloseString = WStr("Close")
@@ -664,11 +664,21 @@ Private Function ServerResponseAllHeadersToZString( _
 	End Scope
 	
 	Scope
+		Const BufSize As Integer = 256
+		Const FormatString = WStr(!"Station922/%s")
+		
+		Dim ServerVersionString As WString * BufSize = Any
+		Dim Length As Long = wsprintfW( _
+			@ServerVersionString, _
+			@FormatString, _
+			@WStr(VER_PRODUCTVERSION_STR) _
+		)
+		
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
 			this, _
 			HttpResponseHeaders.HeaderServer, _
 			@ServerVersionString, _
-			Len(ServerVersionString) _
+			CInt(Length) _
 		)
 		If FAILED(hrAddHeader) Then
 			Return hrAddHeader
