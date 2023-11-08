@@ -60,6 +60,7 @@ Const ExtensionJpeg = WStr(".jpeg")
 Const ExtensionTif = WStr(".tif")
 Const ExtensionTiff = WStr(".tiff")
 Const ExtensionSvg = WStr(".svg")
+Const ExtensionBmp = WStr(".bmp")
 
 Const ExtensionHtm = WStr(".htm")
 Const ExtensionHtml = WStr(".html")
@@ -151,6 +152,7 @@ Const ContentTypesImageTiff = WStr("image/tiff")
 Const ContentTypesImageIco = WStr("image/x-icon")
 Const ContentTypesImageWbmp = WStr("image/vnd.wap.wbmp")
 Const ContentTypesImageWebp = WStr("image/webp")
+Const ContentTypesImageBmp = WStr("image/bmp")
 
 Const ContentTypesMessageAny = WStr("message/*")
 Const ContentTypesMessageHttp = WStr("message/http")
@@ -229,6 +231,9 @@ Public Sub GetContentTypeOfMimeType( _
 			
 		Case ContentTypes.ImageWebp
 			lstrcpyW(ContentType, @ContentTypesImageWebp)
+			
+		Case ContentTypes.ImageBmp
+			lstrcpyW(ContentType, @ContentTypesImageBmp)
 			
 		Case ContentTypes.TextAny
 			lstrcpyW(ContentType, @ContentTypesTextAny)
@@ -670,6 +675,14 @@ Public Function GetMimeOfFileExtension( _
 		If Compare = CompareResultEqual Then
 			mt->ContentType = ContentTypes.ImageSvg
 			mt->Format = MimeFormats.Text
+			Return True
+		End If
+	End Scope
+	
+	Scope
+		Dim Compare As Long = lstrcmpiW(ext, @ExtensionBmp)
+		If Compare = CompareResultEqual Then
+			mt->ContentType = ContentTypes.ImageBmp
 			Return True
 		End If
 	End Scope

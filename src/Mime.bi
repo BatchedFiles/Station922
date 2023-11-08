@@ -82,6 +82,7 @@ Enum ContentTypes
 	ImageTiff
 	ImageWbmp
 	ImageWebp
+	ImageBmp
 	
 	MessageAny
 	MessageHttp
