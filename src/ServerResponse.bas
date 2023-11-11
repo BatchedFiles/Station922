@@ -38,7 +38,7 @@ Type _ServerResponse
 	ByteRangeLength As LongInt
 	ResponseZipMode As ZipModes
 	Mime As MimeType
-	ResponseHeaders(HttpRequestHeadersSize - 1) As HeapBSTR
+	ResponseHeaders(HttpResponseHeadersSize - 1) As HeapBSTR
 	ResponseZipEnable As Boolean
 	SendOnlyHeaders As Boolean
 	KeepAlive As Boolean
@@ -175,7 +175,7 @@ Private Sub InitializeServerResponse( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	ZeroMemory(@this->ResponseHeaders(0), HttpRequestHeadersSize * SizeOf(HeapBSTR))
+	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersSize * SizeOf(HeapBSTR))
 	this->ResponseHeaderLine = NULL
 	this->ResponseHeaderLineLength = 0
 	this->HttpVersion = HttpVersions.Http11
@@ -196,7 +196,7 @@ Private Sub UnInitializeServerResponse( _
 		ByVal this As ServerResponse Ptr _
 	)
 	
-	For i As Integer = 0 To HttpRequestHeadersSize - 1
+	For i As Integer = 0 To HttpResponseHeadersSize - 1
 		HeapSysFreeString(this->ResponseHeaders(i))
 	Next
 	
@@ -813,7 +813,7 @@ Private Function ServerResponseAllHeadersToZString( _
 			HeapSysFreeString(HttpDate)
 		End Scope
 		
-		For i As Integer = 0 To HttpRequestHeadersSize - 1
+		For i As Integer = 0 To HttpResponseHeadersSize - 1
 			
 			Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
 			

@@ -523,6 +523,7 @@ Public Sub GetContentTypeOfMimeType( _
 	End Select
 	
 	Dim CharsetLength As Integer = SysStringLen(mt->CharsetWeakPtr)
+	
 	If CharsetLength Then
 		Const CharsetWithSeparatorString = WStr(";charset=")
 		lstrcatW(ContentType, @CharsetWithSeparatorString)

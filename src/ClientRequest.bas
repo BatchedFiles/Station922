@@ -77,12 +77,12 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 	Type<RequestHeaderNode>(@HeaderSecWebSocketVersionString,     Len(HeaderSecWebSocketVersionString),     HttpRequestHeaders.HeaderSecWebSocketVersion), _
 	Type<RequestHeaderNode>(@HeaderUpgradeInsecureRequestsString, Len(HeaderUpgradeInsecureRequestsString), HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
 	Type<RequestHeaderNode>(@HeaderWebSocketProtocolString,       Len(HeaderWebSocketProtocolString),       HttpRequestHeaders.HeaderWebSocketProtocol), _
-	Type<RequestHeaderNode>(@HeaderContentLengthString,           Len(HeaderContentLengthString),           HttpRequestHeaders.HeaderContentLength), _
-	Type<RequestHeaderNode>(@HeaderContentTypeString,             Len(HeaderContentTypeString),             HttpRequestHeaders.HeaderContentType), _
-	Type<RequestHeaderNode>(@HeaderContentLanguageString,         Len(HeaderContentLanguageString),         HttpRequestHeaders.HeaderContentLanguage), _
 	Type<RequestHeaderNode>(@HeaderContentEncodingString,         Len(HeaderContentEncodingString),         HttpRequestHeaders.HeaderContentEncoding), _
+	Type<RequestHeaderNode>(@HeaderContentLanguageString,         Len(HeaderContentLanguageString),         HttpRequestHeaders.HeaderContentLanguage), _
+	Type<RequestHeaderNode>(@HeaderContentLengthString,           Len(HeaderContentLengthString),           HttpRequestHeaders.HeaderContentLength), _
 	Type<RequestHeaderNode>(@HeaderContentMd5String,              Len(HeaderContentMd5String),              HttpRequestHeaders.HeaderContentMd5), _
-	Type<RequestHeaderNode>(@HeaderContentRangeString,            Len(HeaderContentRangeString),            HttpRequestHeaders.HeaderContentRange) _
+	Type<RequestHeaderNode>(@HeaderContentRangeString,            Len(HeaderContentRangeString),            HttpRequestHeaders.HeaderContentRange), _
+	Type<RequestHeaderNode>(@HeaderContentTypeString,             Len(HeaderContentTypeString),             HttpRequestHeaders.HeaderContentType) _
 }
 
 Private Function FindNotSpaceCharacter( _
@@ -719,7 +719,7 @@ Private Sub UnInitializeClientRequest( _
 	
 	HeapSysFreeString(this->pHttpMethod)
 	
-	For i As Integer = 0 To HttpResponseHeadersSize - 1
+	For i As Integer = 0 To HttpRequestHeadersSize - 1
 		HeapSysFreeString(this->RequestHeaders(i))
 	Next
 	
