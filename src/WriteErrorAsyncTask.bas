@@ -738,10 +738,9 @@ Private Function WriteErrorAsyncTaskPrepare( _
 	End Scope
 	
 	Scope
-		Dim KeepAlive As Boolean = True
-		IClientRequest_GetKeepAlive(this->pIRequest, @KeepAlive)
-		IServerResponse_SetKeepAlive(this->pIResponse, KeepAlive)
-		IHttpWriter_SetKeepAlive(this->pIHttpWriter, KeepAlive)
+		' Close Connection when Error occured
+		IServerResponse_SetKeepAlive(this->pIResponse, False)
+		IHttpWriter_SetKeepAlive(this->pIHttpWriter, False)
 	End Scope
 	
 	Scope
