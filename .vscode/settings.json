@@ -20,7 +20,6 @@
 				"FLTO=-flto",
 				"USE_RUNTIME=FALSE"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "x86 Clang-16.0.0 FBC-1.10.0",
@@ -42,7 +41,6 @@
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win32\\fbextra.x\"",
 				"USE_RUNTIME=FALSE"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "x64 GCC-13.1.0 FBC-1.10.0",
@@ -63,7 +61,6 @@
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win64\\fbextra.x\"",
 				"USE_RUNTIME=FALSE"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "x86 GCC-13.1.0 FBC-1.10.0",
@@ -84,26 +81,22 @@
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.0-winlibs-gcc-9.3.0\\lib\\win32\\fbextra.x\"",
 				"USE_RUNTIME=FALSE"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "Print make version",
 			"makeArgs": [
 				"--version"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "Print help",
 			"makeArgs": [
 				"--help"
 			],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		},
 		{
 			"name": "Create obj bin Directories",
 			"makeArgs": [],
-			"makePath": "C:\\LLVM\\bin\\mingw32-make.exe"
 		}
 	],
 	"makefile.launchConfigurations": [
@@ -112,7 +105,8 @@
 			"binaryPath": "C:\\Programming\\FreeBASIC Projects\\Station922\\bin\\Debug\\x64\\Station922_GCC1310_FBC1100.exe",
 			"binaryArgs": []
 		}
-	]
+	],
+	"makefile.makePath": "C:\\Program Files\\mingw64\\bin\\mingw32-make.exe"
 	/*
 	"terminal.integrated.env.windows": {
 		"PATH": "C:\\Programming\\mingw64\\bin;${env:PATH}",
