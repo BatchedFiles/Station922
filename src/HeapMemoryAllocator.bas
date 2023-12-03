@@ -398,7 +398,7 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 						vtFreeSpace.vt = VT_I4
 						vtFreeSpace.lVal = CLng(FreeSpace)
 						LogWriteEntry( _
-							LogEntryType.Error, _
+							LogEntryType.Debug, _
 							WStr(!"MemoryAllocator Instance released, free space:"), _
 							@vtFreeSpace _
 						)
@@ -441,7 +441,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 						vtFreeSpace.vt = VT_I4
 						vtFreeSpace.lVal = CLng(FreeSpace)
 						LogWriteEntry( _
-							LogEntryType.Error, _
+							LogEntryType.Debug, _
 							WStr(!"MemoryAllocator Instance taken, free space:"), _
 							@vtFreeSpace _
 						)
