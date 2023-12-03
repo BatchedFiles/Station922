@@ -330,10 +330,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 	
 	InitializeClientRequestBuffer(this->pReadedData)
 	
-	#if __FB_DEBUG__
-		PrintWalkingHeap(this->hHeap)
-	#endif
-	
 End Sub
 
 Private Sub UnInitializeHeapMemoryAllocator( _
@@ -385,14 +381,10 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 				If MemoryPoolObject.Items[i].pMalloc = pMalloc Then
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-					HeapMemoryAllocatorResetState(this)
-					
-					MemoryPoolObject.Items[i].IsUsed = False
-					MemoryPoolObject.Length -= 1
-					
-					Finded = True
 					
 					#if __FB_DEBUG__
+						PrintWalkingHeap(this->hHeap)
+						
 						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
 						Dim vtFreeSpace As VARIANT = Any
 						vtFreeSpace.vt = VT_I4
@@ -403,6 +395,14 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 							@vtFreeSpace _
 						)
 					#endif
+					
+					HeapMemoryAllocatorResetState(this)
+					
+					MemoryPoolObject.Items[i].IsUsed = False
+					MemoryPoolObject.Length -= 1
+					
+					Finded = True
+					
 					Exit For
 				End If
 			Next
@@ -436,13 +436,24 @@ Public Function GetHeapMemoryAllocatorInstance( _
 					MemoryPoolObject.Length += 1
 					
 					#if __FB_DEBUG__
+						Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+						
+						Const BufSize As Integer = 256
+						Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p taken, free space:")
+						Dim buf As WString * BufSize = Any
+						wsprintfW( _
+							@buf, _
+							@FormatString, _
+							this->hHeap _
+						)
+
 						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
 						Dim vtFreeSpace As VARIANT = Any
 						vtFreeSpace.vt = VT_I4
 						vtFreeSpace.lVal = CLng(FreeSpace)
 						LogWriteEntry( _
 							LogEntryType.Debug, _
-							WStr(!"MemoryAllocator Instance taken, free space:"), _
+							buf, _
 							@vtFreeSpace _
 						)
 					#endif
