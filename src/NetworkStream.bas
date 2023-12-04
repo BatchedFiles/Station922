@@ -21,12 +21,12 @@ Type _NetworkStream
 End Type
 
 Private Sub SetStartTime( _
-		ByVal this As NetworkStream Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	Dim pITime As ITimeCounter Ptr = Any
 	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
-		this->pIMemoryAllocator, _
+		pIMemoryAllocator, _
 		@IID_ITimeCounter, _
 		@pITime _
 	)
@@ -39,12 +39,12 @@ Private Sub SetStartTime( _
 End Sub
 
 Private Sub SetEndTime( _
-		ByVal this As NetworkStream Ptr _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 	
 	Dim pITime As ITimeCounter Ptr = Any
 	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
-		this->pIMemoryAllocator, _
+		pIMemoryAllocator, _
 		@IID_ITimeCounter, _
 		@pITime _
 	)
@@ -259,7 +259,7 @@ Private Function NetworkStreamBeginRead( _
 	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 	
-	SetStartTime(this)
+	SetStartTime(this->pIMemoryAllocator)
 	
 	Dim resWSARecv As Long = WSARecv( _
 		this->ClientSocket, _
@@ -330,7 +330,7 @@ Private Function NetworkStreamBeginWriteGatherWithFlags( _
 		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
 	
-	SetStartTime(this)
+	SetStartTime(this->pIMemoryAllocator)
 	
 	Dim resTransmit As BOOL = lpfnTransmitPackets( _
 		this->ClientSocket, _
@@ -431,7 +431,7 @@ Private Function NetworkStreamEndRead( _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 	
-	SetEndTime(this)
+	SetEndTime(this->pIMemoryAllocator)
 	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
@@ -475,7 +475,7 @@ Private Function NetworkStreamEndWrite( _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	
-	SetEndTime(this)
+	SetEndTime(this->pIMemoryAllocator)
 	
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
