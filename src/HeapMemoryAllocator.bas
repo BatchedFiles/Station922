@@ -324,11 +324,14 @@ Private Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
+	InitializeClientRequestBuffer(this->pReadedData)
+	
 	' Restore the original state of the reference counter
 	' Beecause number of reference is equal to one
 	this->ReferenceCounter = 1
 	
-	InitializeClientRequestBuffer(this->pReadedData)
+	GetSystemTimeAsFileTime(@this->datStartOperation)
+	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	
 End Sub
 
@@ -509,14 +512,12 @@ Private Function HeapMemoryAllocatorCloseHungsConnections( _
 	ulCurrent.LowPart = datCurrent.dwLowDateTime
 	ulCurrent.HighPart = datCurrent.dwHighDateTime
 	
-	If ulCurrent.QuadPart > ulStart.QuadPart Then
-		Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
-		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
-		
-		If nsElapsedTime > nsKeepAliveInterval Then
-			HeapMemoryAllocatorCloseSocket(this)
-			Return False
-		End If
+	Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
+	Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
+	
+	If nsElapsedTime > nsKeepAliveInterval Then
+		HeapMemoryAllocatorCloseSocket(this)
+		Return False
 	End If
 	
 	Return True
@@ -545,10 +546,12 @@ Private Function CheckHungsConnections( _
 			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 				If MemoryPoolObject.Items[i].IsUsed Then
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+					
 					Dim resClose As Boolean = HeapMemoryAllocatorCloseHungsConnections( _
 						this, _
 						KeepAliveInterval _
 					)
+					
 					If resClose Then
 						AnyClientsConnected = True
 					End If
@@ -614,6 +617,8 @@ Private Sub InitializeHeapMemoryAllocator( _
 		ByVal pReadedData As ClientRequestBuffer Ptr _
 	)
 	
+	InitializeClientRequestBuffer(pReadedData)
+	
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->RttiClassName(0), _
@@ -627,8 +632,9 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
 	this->ClientSocket = INVALID_SOCKET
+	GetSystemTimeAsFileTime(@this->datStartOperation)
+	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	this->pReadedData = pReadedData
-	InitializeClientRequestBuffer(this->pReadedData)
 	
 End Sub
 
