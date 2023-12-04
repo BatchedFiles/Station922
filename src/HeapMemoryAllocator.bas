@@ -382,6 +382,8 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 					
 					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
 					
+					MemoryPoolObject.Length -= 1
+					
 					#if __FB_DEBUG__
 						PrintWalkingHeap(this->hHeap)
 						
@@ -399,7 +401,6 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 					HeapMemoryAllocatorResetState(this)
 					
 					MemoryPoolObject.Items[i].IsUsed = False
-					MemoryPoolObject.Length -= 1
 					
 					Finded = True
 					
