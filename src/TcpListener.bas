@@ -6,6 +6,8 @@
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
 
+Const SOCKET_ADDRESS_STORAGE_LENGTH As Integer = 128
+
 Type _TcpListener
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
@@ -13,12 +15,13 @@ Type _TcpListener
 	lpVtbl As Const ITcpListenerVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	Buffer As ClientRequestBuffer Ptr
 	ListenSocket As SOCKET
 	ClientSocket As SOCKET
 	Padding1 As Integer
 	Padding2 As Integer
 	ProtInfo As WSAPROTOCOL_INFOW
+	LocalAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
+	RemoteAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
 	ProtLength As Long
 End Type
 
@@ -149,7 +152,6 @@ End Function
 
 Private Function TcpListenerBeginAccept( _
 		ByVal this As TcpListener Ptr, _
-		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
@@ -185,16 +187,16 @@ Private Function TcpListenerBeginAccept( _
 	
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
 	
-	this->Buffer = Buffer
-	' Dim dwBytes As DWORD = Any
+	Const dwReceiveDataLength = 0
+	Const lpdwBytesReceived = NULL
 	Dim resAccept As BOOL = lpfnAcceptEx( _
 		this->ListenSocket, _
 		this->ClientSocket, _
-		@Buffer->LocalAddress, _
-		0, _
+		@this->LocalAddress, _
+		dwReceiveDataLength, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
-		NULL, _ /' @dwBytes, _ '/
+		lpdwBytesReceived, _
 		pOverlap _
 	)
 	If resAccept = 0 Then
@@ -316,11 +318,10 @@ End Function
 
 Private Function ITcpListenerBeginAccept( _
 		ByVal this As ITcpListener Ptr, _
-		ByVal Buffer As ClientRequestBuffer Ptr, _
 		ByVal StateObject As IUnknown Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), Buffer, StateObject, ppIAsyncResult)
+	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), StateObject, ppIAsyncResult)
 End Function
 
 Private Function ITcpListenerEndAccept( _

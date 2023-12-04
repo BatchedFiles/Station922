@@ -6,7 +6,6 @@
 Const RTTI_ID_CLIENTREQUESTBUFFER        = !"\001Request_Buffer\001"
 
 Const MEMORYPAGE_SIZE As Integer = 4096
-Const SOCKET_ADDRESS_STORAGE_LENGTH As Integer = 128
 
 #if __FB_DEBUG__
 Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 2
@@ -15,9 +14,9 @@ Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
 #endif
 
 #if __FB_DEBUG__
-Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer)) - 2 * SOCKET_ADDRESS_STORAGE_LENGTH - SizeOf(ZString) * 16
+Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer)) - SizeOf(ZString) * 16
 #else
-Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer)) - 2 * SOCKET_ADDRESS_STORAGE_LENGTH
+Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer))
 #endif
 
 Type ClientRequestBuffer
@@ -33,8 +32,6 @@ Type ClientRequestBuffer
 	Padding2 As Integer
 	Padding3 As Integer
 	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
-	LocalAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
-	RemoteAddress As ZString * SOCKET_ADDRESS_STORAGE_LENGTH
 End Type
 
 Declare Sub InitializeClientRequestBuffer( _

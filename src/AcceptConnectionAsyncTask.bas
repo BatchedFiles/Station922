@@ -20,9 +20,6 @@ Type _AcceptConnectionAsyncTask
 	pListener As ITcpListener Ptr
 	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	ListenSocket As SOCKET
-	pReadTask As IReadRequestAsyncIoTask Ptr
-	pStream As INetworkStream Ptr
-	pBuffer As ClientRequestBuffer Ptr
 End Type
 
 Private Function CreateReadTask( _
@@ -59,11 +56,6 @@ Private Function CreateReadTask( _
 			If SUCCEEDED(hrCreateNetworkStream) Then
 				
 				*ppStream = pINetworkStream
-				INetworkStream_SetRemoteAddress( _
-					pINetworkStream, _
-					CPtr(SOCKADDR Ptr, @this->pBuffer->RemoteAddress), _
-					SOCKET_ADDRESS_STORAGE_LENGTH _
-				)
 				
 				' TODO Запросить интерфейс вместо конвертирования указателя
 				IHttpReader_SetBaseStream( _
@@ -124,17 +116,12 @@ Private Sub InitializeAcceptConnectionAsyncTask( _
 	this->pIWebSitesWeakPtr = NULL
 	this->ListenSocket = INVALID_SOCKET
 	this->pListener = pListener
-	this->pReadTask = NULL
 	
 End Sub
 
 Private Sub UnInitializeAcceptConnectionAsyncTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr _
 	)
-	
-	If this->pReadTask Then
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
-	End If
 	
 End Sub
 
@@ -285,25 +272,12 @@ Private Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	this->pReadTask = CreateReadTask( _
-		this, _
-		@this->pBuffer, _
-		@this->pStream _
-	)
-	If this->pReadTask = NULL Then
-		*ppIResult = NULL
-		Return E_OUTOFMEMORY
-	End If
-	
 	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
 		this->pListener, _
-		this->pBuffer, _
 		CPtr(IUnknown Ptr, @this->lpVtbl), _
 		ppIResult _
 	)
 	If FAILED(hrBeginAccept) Then
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
-		this->pReadTask = NULL
 		*ppIResult = NULL
 		Return hrBeginAccept
 	End If
@@ -328,13 +302,23 @@ Private Function AcceptConnectionAsyncTaskEndExecute( _
 	)
 	If FAILED(hrEndAccept) Then
 		*ppNextTask = NULL
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
-		this->pReadTask = NULL
 		Return hrEndAccept
 	End If
 	
+	Dim pBuffer As ClientRequestBuffer Ptr = Any
+	Dim pStream As INetworkStream Ptr = Any
+	Dim pReadTask As IReadRequestAsyncIoTask Ptr = CreateReadTask( _
+		this, _
+		@pBuffer, _
+		@pStream _
+	)
+	If pReadTask = NULL Then
+		*ppNextTask = NULL
+		Return E_OUTOFMEMORY
+	End If
+	
 	INetworkStream_SetSocket( _
-		this->pStream, _
+		pStream, _
 		ClientSocket _
 	)
 	
@@ -342,23 +326,22 @@ Private Function AcceptConnectionAsyncTaskEndExecute( _
 	Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
 		pIPool, _
 		Cast(HANDLE, ClientSocket), _
-		this->pReadTask _
+		pReadTask _
 	)
 	If FAILED(hrBind) Then
 		*ppNextTask = NULL
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
-		this->pReadTask = NULL
+		IReadRequestAsyncIoTask_Release(pReadTask)
 		Return hrBind
 	End If
 	
 	Dim hrBeginExecute As HRESULT = StartExecuteTask( _
-		CPtr(IAsyncIoTask Ptr, this->pReadTask) _
+		CPtr(IAsyncIoTask Ptr, pReadTask) _
 	)
 	If FAILED(hrBeginExecute) Then
-		IReadRequestAsyncIoTask_Release(this->pReadTask)
+		*ppNextTask = NULL
+		IReadRequestAsyncIoTask_Release(pReadTask)
 	End If
 	
-	this->pReadTask = NULL
 	AcceptConnectionAsyncTaskAddRef(this)
 	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
 	
