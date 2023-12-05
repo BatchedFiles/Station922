@@ -388,42 +388,45 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
 	
-	If MemoryPoolObject.Length Then
-		
-		EnterCriticalSection(@MemoryPoolObject.crSection)
-		Scope
-			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-				If MemoryPoolObject.Items[i].pMalloc = pMalloc Then
+	EnterCriticalSection(@MemoryPoolObject.crSection)
+	Scope
+		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+			If MemoryPoolObject.Items[i].pMalloc = pMalloc Then
+				
+				Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+				
+				MemoryPoolObject.Length -= 1
+				
+				#if __FB_DEBUG__
+					PrintWalkingHeap(this->hHeap)
 					
-					Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
-					
-					MemoryPoolObject.Length -= 1
-					
-					#if __FB_DEBUG__
-						PrintWalkingHeap(this->hHeap)
-						
-						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-						Dim vtFreeSpace As VARIANT = Any
-						vtFreeSpace.vt = VT_I4
-						vtFreeSpace.lVal = CLng(FreeSpace)
-						LogWriteEntry( _
-							LogEntryType.Debug, _
-							WStr(!"MemoryAllocator Instance released, free space:"), _
-							@vtFreeSpace _
-						)
-					#endif
-					
-					HeapMemoryAllocatorResetState(this)
-					
-					Exit For
-				End If
-			Next
-		End Scope
-		LeaveCriticalSection(@MemoryPoolObject.crSection)
-		
-	Else
-		' TODO The length of the memory pool is zero, return an error
-	End If
+					Const BufSize As Integer = 256
+					Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p released, free space:")
+					Dim buf As WString * BufSize = Any
+					wsprintfW( _
+						@buf, _
+						@FormatString, _
+						this->hHeap _
+					)
+
+					Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+					Dim vtFreeSpace As VARIANT = Any
+					vtFreeSpace.vt = VT_I4
+					vtFreeSpace.lVal = CLng(FreeSpace)
+					LogWriteEntry( _
+						LogEntryType.Debug, _
+						buf, _
+						@vtFreeSpace _
+					)
+				#endif
+				
+				HeapMemoryAllocatorResetState(this)
+				
+				Exit For
+			End If
+		Next
+	End Scope
+	LeaveCriticalSection(@MemoryPoolObject.crSection)
 	
 End Sub
 
@@ -561,7 +564,8 @@ Private Function CheckHungsConnections( _
 					Select Case resClose
 						
 						Case ConnectionStatuses.Closed
-							this->ItemStatus = PoolItemStatuses.ItemFree
+							HeapMemoryAllocatorResetState(this)
+							MemoryPoolObject.Length += 1
 							AnyClientsConnected = True
 							
 						Case ConnectionStatuses.Hungs
