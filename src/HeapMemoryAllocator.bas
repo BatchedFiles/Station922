@@ -21,6 +21,12 @@ Enum PoolItemStatuses
 	ItemFree = 0
 End Enum
 
+Enum ConnectionStatuses
+	Closed
+	Hungs
+	Alive
+End Enum
+
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
@@ -494,10 +500,10 @@ End Function
 Private Function HeapMemoryAllocatorCloseHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal KeepAliveInterval As ULongInt _
-	)As Boolean
+	)As ConnectionStatuses
 	
 	If this->ClientSocket = INVALID_SOCKET Then
-		Return False
+		Return ConnectionStatuses.Closed
 	End If
 	
 	Dim ulStart As ULARGE_INTEGER = Any
@@ -516,10 +522,10 @@ Private Function HeapMemoryAllocatorCloseHungsConnections( _
 	
 	If nsElapsedTime > nsKeepAliveInterval Then
 		HeapMemoryAllocatorCloseSocket(this)
-		Return False
+		Return ConnectionStatuses.Hungs
 	End If
 	
-	Return True
+	Return ConnectionStatuses.Alive
 	
 End Function
 
@@ -547,14 +553,24 @@ Private Function CheckHungsConnections( _
 				
 				If this->ItemStatus = PoolItemStatuses.ItemUsed Then
 					
-					Dim resClose As Boolean = HeapMemoryAllocatorCloseHungsConnections( _
+					Dim resClose As ConnectionStatuses = HeapMemoryAllocatorCloseHungsConnections( _
 						this, _
 						KeepAliveInterval _
 					)
 					
-					If resClose Then
-						AnyClientsConnected = True
-					End If
+					Select Case resClose
+						
+						Case ConnectionStatuses.Closed
+							this->ItemStatus = PoolItemStatuses.ItemFree
+							AnyClientsConnected = True
+							
+						Case ConnectionStatuses.Hungs
+							AnyClientsConnected = True
+							
+						Case ConnectionStatuses.Alive
+							
+					End Select
+					
 				End If
 			Next
 		End Scope
