@@ -564,8 +564,33 @@ Private Function CheckHungsConnections( _
 					Select Case resClose
 						
 						Case ConnectionStatuses.Closed
+							MemoryPoolObject.Length -= 1
+							
+							#if __FB_DEBUG__
+								PrintWalkingHeap(this->hHeap)
+								
+								Const BufSize As Integer = 256
+								Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p closed, free space:")
+								Dim buf As WString * BufSize = Any
+								wsprintfW( _
+									@buf, _
+									@FormatString, _
+									this->hHeap _
+								)
+
+								Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+								Dim vtFreeSpace As VARIANT = Any
+								vtFreeSpace.vt = VT_I4
+								vtFreeSpace.lVal = CLng(FreeSpace)
+								LogWriteEntry( _
+									LogEntryType.Debug, _
+									buf, _
+									@vtFreeSpace _
+								)
+							#endif
+							
 							HeapMemoryAllocatorResetState(this)
-							MemoryPoolObject.Length += 1
+							
 							AnyClientsConnected = True
 							
 						Case ConnectionStatuses.Hungs
