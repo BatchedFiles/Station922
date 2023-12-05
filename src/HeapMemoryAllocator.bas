@@ -16,6 +16,11 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = MEMORY_ALLOCATION_GRANULARITY
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
 Type _HeapMemoryAllocator
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
@@ -29,11 +34,11 @@ Type _HeapMemoryAllocator
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
 	pReadedData As ClientRequestBuffer Ptr
+	ItemStatus As PoolItemStatuses
 End Type
 
 Type MemoryPoolItem
 	pMalloc As IHeapMemoryAllocator Ptr
-	IsUsed As Boolean
 End Type
 
 Type MemoryPool
@@ -333,6 +338,8 @@ Private Sub HeapMemoryAllocatorResetState( _
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	
+	this->ItemStatus = PoolItemStatuses.ItemFree
+	
 End Sub
 
 Private Sub UnInitializeHeapMemoryAllocator( _
@@ -376,14 +383,13 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 	)
 	
 	If MemoryPoolObject.Length Then
-		Dim Finded As Boolean = False
 		
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 				If MemoryPoolObject.Items[i].pMalloc = pMalloc Then
 					
-					Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
+					Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
 					
 					MemoryPoolObject.Length -= 1
 					
@@ -403,21 +409,12 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 					
 					HeapMemoryAllocatorResetState(this)
 					
-					MemoryPoolObject.Items[i].IsUsed = False
-					
-					Finded = True
-					
 					Exit For
 				End If
 			Next
 		End Scope
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
 		
-		If Finded = False Then
-			' TODO Element not found, return an error
-			Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
-			DestroyHeapMemoryAllocator(this)
-		End If
 	Else
 		' TODO The length of the memory pool is zero, return an error
 	End If
@@ -433,14 +430,16 @@ Public Function GetHeapMemoryAllocatorInstance( _
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-				If MemoryPoolObject.Items[i].IsUsed = False Then
+				Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+				
+				If this->ItemStatus = PoolItemStatuses.ItemFree Then
 					
-					MemoryPoolObject.Items[i].IsUsed = True
-					pMalloc = MemoryPoolObject.Items[i].pMalloc
+					this->ItemStatus = PoolItemStatuses.ItemUsed
 					MemoryPoolObject.Length += 1
 					
+					pMalloc = MemoryPoolObject.Items[i].pMalloc
+					
 					#if __FB_DEBUG__
-						Dim this As HeapMemoryAllocator Ptr = ContainerOf(pMalloc, HeapMemoryAllocator, lpVtbl)
 						
 						Const BufSize As Integer = 256
 						Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p taken, free space:")
@@ -544,8 +543,9 @@ Private Function CheckHungsConnections( _
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		Scope
 			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-				If MemoryPoolObject.Items[i].IsUsed Then
-					Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+				Dim this As HeapMemoryAllocator Ptr = ContainerOf(MemoryPoolObject.Items[i].pMalloc, HeapMemoryAllocator, lpVtbl)
+				
+				If this->ItemStatus = PoolItemStatuses.ItemUsed Then
 					
 					Dim resClose As Boolean = HeapMemoryAllocatorCloseHungsConnections( _
 						this, _
@@ -635,6 +635,7 @@ Private Sub InitializeHeapMemoryAllocator( _
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	this->pReadedData = pReadedData
+	this->ItemStatus = PoolItemStatuses.ItemFree
 	
 End Sub
 
@@ -813,7 +814,6 @@ Public Function CreateMemoryPool( _
 			End If
 			
 			MemoryPoolObject.Items[i].pMalloc = pMalloc
-			MemoryPoolObject.Items[i].IsUsed = False
 		Next
 	End Scope
 	
