@@ -14,9 +14,9 @@ Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
 #endif
 
 #if __FB_DEBUG__
-Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer)) - SizeOf(ZString) * 16
+Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (4 * SizeOf(Integer)) - SizeOf(ZString) * 16
 #else
-Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (8 * SizeOf(Integer))
+Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (4 * SizeOf(Integer))
 #endif
 
 Type ClientRequestBuffer
@@ -27,10 +27,6 @@ Type ClientRequestBuffer
 	EndOfHeaders As Integer
 	StartLine As Integer
 	Padding1 As Integer
-	LocalAddressLength As Integer
-	RemoteAddressLength As Integer
-	Padding2 As Integer
-	Padding3 As Integer
 	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
 End Type
 
