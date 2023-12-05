@@ -7,11 +7,7 @@ Const RTTI_ID_CLIENTREQUESTBUFFER        = !"\001Request_Buffer\001"
 
 Const MEMORYPAGE_SIZE As Integer = 4096
 
-#if __FB_DEBUG__
-Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 2
-#else
 Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
-#endif
 
 #if __FB_DEBUG__
 Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (4 * SizeOf(Integer)) - SizeOf(ZString) * 16
