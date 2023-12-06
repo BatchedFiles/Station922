@@ -297,7 +297,7 @@ Private Function ClientRequestParseRequestedLine( _
 	
 End Function
 
-Private Function ClientRequestAddRequestHeaderSink( _
+Private Function ClientRequestAddHeader( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
@@ -310,11 +310,10 @@ Private Function ClientRequestAddRequestHeaderSink( _
 	)
 	If Finded = False Then
 		' TODO Add item to collection of unrecognized request headers
-		HeapSysFreeString(Value)
 		Return False
 	End If
 	
-	this->RequestHeaders(HeaderIndex) = Value
+	LET_HEAPSYSSTRING(this->RequestHeaders(HeaderIndex), Value)
 	
 	Return True
 	
@@ -360,7 +359,9 @@ Private Function ClientRequestAddRequestHeaders( _
 				Return E_OUTOFMEMORY
 			End If
 			
-			ClientRequestAddRequestHeaderSink(this, pLine, Value)
+			ClientRequestAddHeader(this, pLine, Value)
+			
+			HeapSysFreeString(Value)
 			
 		End If
 		
