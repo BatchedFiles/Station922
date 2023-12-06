@@ -24,7 +24,6 @@ End Type
 
 Private Function CreateReadTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr, _
 		ByVal ppStream As INetworkStream Ptr Ptr _
 	)As IReadRequestAsyncIoTask Ptr
 	
@@ -44,7 +43,6 @@ Private Function CreateReadTask( _
 			Dim pBuffer As ClientRequestBuffer Ptr = Any
 			IHeapMemoryAllocator_GetClientBuffer(pIClientMemoryAllocator, @pBuffer)
 			IHttpReader_SetClientBuffer(pIHttpReader, pBuffer)
-			*ppBuffer = pBuffer
 			
 			Dim pINetworkStream As INetworkStream Ptr = Any
 			Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
@@ -305,11 +303,9 @@ Private Function AcceptConnectionAsyncTaskEndExecute( _
 		Return hrEndAccept
 	End If
 	
-	Dim pBuffer As ClientRequestBuffer Ptr = Any
 	Dim pStream As INetworkStream Ptr = Any
 	Dim pReadTask As IReadRequestAsyncIoTask Ptr = CreateReadTask( _
 		this, _
-		@pBuffer, _
 		@pStream _
 	)
 	If pReadTask = NULL Then
