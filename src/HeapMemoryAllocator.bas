@@ -35,11 +35,12 @@ Type _HeapMemoryAllocator
 	lpVtblTimeCounter As Const ITimeCounterVirtualTable Ptr
 	lpVtblClientSocket As Const IClientSocketVirtualTable Ptr
 	ReferenceCounter As UInteger
+	pIMemoryAllocator As IMalloc Ptr
 	hHeap As HANDLE
 	ClientSocket As SOCKET
+	ItemStatus As PoolItemStatuses
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	ItemStatus As PoolItemStatuses
 End Type
 
 Type MemoryPoolItem
@@ -349,6 +350,10 @@ Private Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
+	If this->hHeap Then
+		HeapDestroy(this->hHeap)
+	End If
+	
 End Sub
 
 Private Sub HeapMemoryAllocatorDestroyed( _
@@ -361,23 +366,15 @@ Private Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 	
-	Dim hHeap As HANDLE = this->hHeap
+	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
 	
 	UnInitializeHeapMemoryAllocator(this)
 	
-	If hHeap Then
-		HeapFree( _
-			this->hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
-			this _
-		)
-		
-		Dim resHeapDestroy As BOOL = HeapDestroy(hHeap)
-		If resHeapDestroy = 0 Then
-		End If
-	End If
+	IMalloc_Free(pIMemoryAllocator, this)
 	
 	HeapMemoryAllocatorDestroyed(this)
+	
+	IMalloc_Release(pIMemoryAllocator)
 	
 End Sub
 
@@ -655,6 +652,7 @@ End Function
 
 Private Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 	
@@ -669,6 +667,8 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
 	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
 	this->ReferenceCounter = 0
+	IMalloc_AddRef(pIMemoryAllocator)
+	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hHeap = hHeap
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
@@ -746,6 +746,7 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 End Function
 
 Private Function CreateHeapMemoryAllocator( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
@@ -758,15 +759,15 @@ Private Function CreateHeapMemoryAllocator( _
 	
 	If hHeap Then
 		
-		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
-			hHeap, _
-			HEAP_NO_SERIALIZE_FLAG, _
+		Dim this As HeapMemoryAllocator Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
 			SizeOf(HeapMemoryAllocator) _
 		)
 		
 		If this Then
 			InitializeHeapMemoryAllocator( _
 				this, _
+				pIMemoryAllocator, _
 				hHeap _
 			)
 			HeapMemoryAllocatorCreated(this)
@@ -794,6 +795,7 @@ Private Function CreateHeapMemoryAllocator( _
 End Function
 
 Public Function CreateMemoryPool( _
+		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal Capacity As UInteger, _
 		ByVal KeepAliveInterval As Integer _
 	)As HRESULT
@@ -831,6 +833,7 @@ Public Function CreateMemoryPool( _
 		For i As UInteger = 0 To Capacity - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
 			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
+				pIMemoryAllocator, _
 				@IID_IHeapMemoryAllocator, _
 				@pMalloc _
 			)

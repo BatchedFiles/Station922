@@ -15,6 +15,7 @@ Type ServerHeapMemoryAllocator As _ServerHeapMemoryAllocator
 Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
 
 Declare Function CreateMemoryPool( _
+	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal Length As UInteger, _
 	ByVal KeepAliveInterval As Integer _
 )As HRESULT
