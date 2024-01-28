@@ -4,7 +4,6 @@
 #include once "windows.bi"
 #include once "win\winsock2.bi"
 #include once "IAsyncResult.bi"
-#include once "ClientBuffer.bi"
 
 Extern IID_ITcpListener Alias "IID_ITcpListener" As Const IID
 

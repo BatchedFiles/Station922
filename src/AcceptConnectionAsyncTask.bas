@@ -40,10 +40,6 @@ Private Function CreateReadTask( _
 		
 		If SUCCEEDED(hrCreateHttpReader) Then
 			
-			Dim pBuffer As ClientRequestBuffer Ptr = Any
-			IHeapMemoryAllocator_GetClientBuffer(pIClientMemoryAllocator, @pBuffer)
-			IHttpReader_SetClientBuffer(pIHttpReader, pBuffer)
-			
 			Dim pINetworkStream As INetworkStream Ptr = Any
 			Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
 				CPtr(IMalloc Ptr, pIClientMemoryAllocator), _

@@ -39,7 +39,6 @@ Type _HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	pReadedData As ClientRequestBuffer Ptr
 	ItemStatus As PoolItemStatuses
 End Type
 
@@ -334,8 +333,6 @@ End Sub
 Private Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
-	
-	InitializeClientRequestBuffer(this->pReadedData)
 	
 	' Restore the original state of the reference counter
 	' Beecause number of reference is equal to one
@@ -658,11 +655,8 @@ End Function
 
 Private Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal hHeap As HANDLE, _
-		ByVal pReadedData As ClientRequestBuffer Ptr _
+		ByVal hHeap As HANDLE _
 	)
-	
-	InitializeClientRequestBuffer(pReadedData)
 	
 	#if __FB_DEBUG__
 		CopyMemory( _
@@ -679,7 +673,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
-	this->pReadedData = pReadedData
 	this->ItemStatus = PoolItemStatuses.ItemFree
 	
 End Sub
@@ -762,19 +755,9 @@ Private Function CreateHeapMemoryAllocator( _
 		PRIVATEHEAP_INITIALSIZE, _
 		PRIVATEHEAP_MAXIMUMSIZE _
 	)
-	If hHeap = NULL Then
-		Dim dwError As DWORD = GetLastError()
-		*ppv = NULL
-		Return HRESULT_FROM_WIN32(dwError)
-	End If
 	
-	Dim pReadedData As ClientRequestBuffer Ptr = HeapAlloc( _
-		hHeap, _
-		HEAP_NO_SERIALIZE_FLAG, _
-		SizeOf(ClientRequestBuffer) _
-	)
-	
-	If pReadedData Then
+	If hHeap Then
+		
 		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
 			hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
@@ -784,8 +767,7 @@ Private Function CreateHeapMemoryAllocator( _
 		If this Then
 			InitializeHeapMemoryAllocator( _
 				this, _
-				hHeap, _
-				pReadedData _
+				hHeap _
 			)
 			HeapMemoryAllocatorCreated(this)
 			
@@ -802,11 +784,9 @@ Private Function CreateHeapMemoryAllocator( _
 		End If
 		
 		PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
+		
+		HeapDestroy(hHeap)
 	End If
-	
-	PrintAllocationFailed(SizeOf(ClientRequestBuffer))
-	
-	HeapDestroy(hHeap)
 	
 	*ppv = NULL
 	Return E_OUTOFMEMORY
@@ -932,17 +912,6 @@ Private Sub HeapMemoryAllocatorFree( _
 	
 End Sub
 
-Private Function HeapMemoryAllocatorGetClientBuffer( _
-		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
-	)As HRESULT
-	
-	*ppBuffer = this->pReadedData
-	
-	Return S_OK
-	
-End Function
-
 Private Function HeapMemoryAllocatorStartWatch( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
@@ -1021,13 +990,6 @@ Private Sub IHeapMemoryAllocatorFree( _
 	)
 	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
-
-Private Function IHeapMemoryAllocatorGetClientBuffer( _
-		ByVal this As IHeapMemoryAllocator Ptr, _
-		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
-	)As HRESULT
-	Return HeapMemoryAllocatorGetClientBuffer(ContainerOf(this, HeapMemoryAllocator, lpVtbl), ppBuffer)
-End Function
 
 Private Function ITimeCounterQueryInterface( _
 		ByVal this As ITimeCounter Ptr, _
@@ -1112,8 +1074,7 @@ Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTa
 	NULL, _ /' @IHeapMemoryAllocatorDidAlloc, _ '/
 	NULL, _ /' @IHeapMemoryAllocatorHeapMinimize, _ '/
 	NULL, _ /' RegisterMallocSpy '/
-	NULL, _ /' RevokeMallocSpy '/
-	@IHeapMemoryAllocatorGetClientBuffer _
+	NULL _  /' RevokeMallocSpy '/
 )
 
 Dim GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable = Type( _

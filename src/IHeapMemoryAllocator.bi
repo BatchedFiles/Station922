@@ -1,7 +1,8 @@
 #ifndef IHEAPMEMORYALLOCATOR_BI
 #define IHEAPMEMORYALLOCATOR_BI
 
-#include once "ClientBuffer.bi"
+#include once "windows.bi"
+#include once "win\ole2.bi"
 
 Extern IID_IHeapMemoryAllocator Alias "IID_IHeapMemoryAllocator" As Const IID
 
@@ -62,11 +63,6 @@ Type IHeapMemoryAllocatorVirtualTable
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As HRESULT
 	
-	GetClientBuffer As Function( _
-		ByVal this As IHeapMemoryAllocator Ptr, _
-		ByVal ppBuffer As ClientRequestBuffer Ptr Ptr _
-	)As HRESULT
-	
 End Type
 
 Type IHeapMemoryAllocator_
@@ -84,6 +80,5 @@ End Type
 #define IHeapMemoryAllocator_HeapMinimize(This) (This)->lpVtbl->HeapMinimize(This)
 #define IHeapMemoryAllocator_RegisterMallocSpy(This, pMallocSpy) (This)->lpVtbl->RegisterMallocSpy(This, pMallocSpy)
 #define IHeapMemoryAllocator_RevokeMallocSpy(This) (This)->lpVtbl->RevokeMallocSpy(This)
-#define IHeapMemoryAllocator_GetClientBuffer(This, ppBuffer) (This)->lpVtbl->GetClientBuffer(This, ppBuffer)
 
 #endif

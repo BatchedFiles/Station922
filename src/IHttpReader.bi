@@ -1,9 +1,9 @@
 #ifndef IHTTPREADER_BI
 #define IHTTPREADER_BI
 
-#include once "ClientBuffer.bi"
 #include once "IAsyncResult.bi"
 #include once "IBaseStream.bi"
+#include once "IString.bi"
 
 Extern IID_IHttpReader Alias "IID_IHttpReader" As Const IID
 
@@ -74,12 +74,7 @@ Type IHttpReaderVirtualTable
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	
-	SetClientBuffer As Function( _
-		ByVal this As IHttpReader Ptr, _
-		ByVal pBuffer As ClientRequestBuffer Ptr _
-	)As HRESULT
-	
-	SkipBytes As Function( _
+	SetSkippedBytes As Function( _
 		ByVal this As IHttpReader Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
@@ -100,7 +95,6 @@ End Type
 #define IHttpReader_SetBaseStream(this, pIStream) (this)->lpVtbl->SetBaseStream(this, pIStream)
 #define IHttpReader_GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes) (this)->lpVtbl->GetPreloadedBytes(this, pPreloadedBytesLength, ppPreloadedBytes)
 #define IHttpReader_GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes) (this)->lpVtbl->GetRequestedBytes(this, pRequestedBytesLength, ppRequestedBytes)
-#define IHttpReader_SetClientBuffer(this, pBuffer) (this)->lpVtbl->SetClientBuffer(this, pBuffer)
-#define IHttpReader_SkipBytes(this, Length) (this)->lpVtbl->SkipBytes(this, Length)
+#define IHttpReader_SetSkippedBytes(this, Length) (this)->lpVtbl->SetSkippedBytes(this, Length)
 
 #endif
