@@ -109,6 +109,7 @@ Private Sub InitializeAcceptConnectionAsyncTask( _
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pIWebSitesWeakPtr = NULL
 	this->ListenSocket = INVALID_SOCKET
+	' Do not need AddRef pListener
 	this->pListener = pListener
 	
 End Sub
@@ -221,39 +222,44 @@ Public Function CreateAcceptConnectionAsyncTask( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pListener As ITcpListener Ptr = Any
-	Dim hrCreateListener As HRESULT = CreateTcpListener( _
-		pIMemoryAllocator, _
-		@IID_ITcpListener, _
-		@pListener _
-	)
-	If FAILED(hrCreateListener) Then
-		*ppv = NULL
-		Return hrCreateListener
-	End If
-	
 	Dim this As AcceptConnectionAsyncTask Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(AcceptConnectionAsyncTask) _
 	)
+	
 	If this Then
-		InitializeAcceptConnectionAsyncTask( _
-			this, _
+		Dim pListener As ITcpListener Ptr = Any
+		Dim hrCreateListener As HRESULT = CreateTcpListener( _
 			pIMemoryAllocator, _
-			pListener _
+			@IID_ITcpListener, _
+			@pListener _
 		)
-		AcceptConnectionAsyncTaskCreated(this)
 		
-		Dim hrQueryInterface As HRESULT = AcceptConnectionAsyncTaskQueryInterface( _
-			this, _
-			riid, _
-			ppv _
-		)
-		If FAILED(hrQueryInterface) Then
-			DestroyAcceptConnectionAsyncTask(this)
+		If SUCCEEDED(hrCreateListener) Then
+			
+			InitializeAcceptConnectionAsyncTask( _
+				this, _
+				pIMemoryAllocator, _
+				pListener _
+			)
+			AcceptConnectionAsyncTaskCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = AcceptConnectionAsyncTaskQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyAcceptConnectionAsyncTask(this)
+			End If
+			
+			Return hrQueryInterface
 		End If
 		
-		Return hrQueryInterface
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
 	
 	*ppv = NULL

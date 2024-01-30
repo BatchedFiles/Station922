@@ -42,6 +42,7 @@ Private Sub InitializeReadRequestAsyncTask( _
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIWebSitesWeakPtr = NULL
+	' Do not need AddRef pIRequest
 	this->pIRequest = pIRequest
 	this->RequestedLine = NULL
 	
@@ -169,43 +170,45 @@ Public Function CreateReadRequestAsyncTask( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIRequest As IClientRequest Ptr = Any
-	Dim hrCreateRequest As HRESULT = CreateClientRequest( _
-		pIMemoryAllocator, _
-		@IID_IClientRequest, _
-		@pIRequest _
-	)
-	If FAILED(hrCreateRequest) Then
-		*ppv = NULL
-		Return hrCreateRequest
-	End If
-	
 	Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ReadRequestAsyncTask) _
 	)
 	
 	If this Then
-		InitializeReadRequestAsyncTask( _
-			this, _
+		Dim pIRequest As IClientRequest Ptr = Any
+		Dim hrCreateRequest As HRESULT = CreateClientRequest( _
 			pIMemoryAllocator, _
-			pIRequest _
+			@IID_IClientRequest, _
+			@pIRequest _
 		)
-		ReadRequestAsyncTaskCreated(this)
 		
-		Dim hrQueryInterface As HRESULT = ReadRequestAsyncTaskQueryInterface( _
-			this, _
-			riid, _
-			ppv _
-		)
-		If FAILED(hrQueryInterface) Then
-			DestroyReadRequestAsyncTask(this)
+		If SUCCEEDED(hrCreateRequest) Then
+			
+			InitializeReadRequestAsyncTask( _
+				this, _
+				pIMemoryAllocator, _
+				pIRequest _
+			)
+			ReadRequestAsyncTaskCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = ReadRequestAsyncTaskQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyReadRequestAsyncTask(this)
+			End If
+			
+			Return hrQueryInterface
 		End If
 		
-		Return hrQueryInterface
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
-	
-	IClientRequest_Release(pIRequest)
 	
 	*ppv = NULL
 	Return E_OUTOFMEMORY

@@ -137,6 +137,7 @@ Private Sub InitializeWebServer( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
+	' Do not need AddRef pIWebSites
 	this->pIWebSites = pIWebSites
 	this->ListenAddress = NULL
 	this->ListenPort = NULL
@@ -239,41 +240,45 @@ Public Function CreateWebServer( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIWebSites As IWebSiteCollection Ptr = Any
-	Dim hrCreateCollection As HRESULT = CreateWebSiteCollection( _
-		pIMemoryAllocator, _
-		@IID_IWebSiteCollection, _
-		@pIWebSites _
-	)
-	If FAILED(hrCreateCollection) Then
-		*ppv = NULL
-		Return hrCreateCollection
-	End If
-	
 	Dim this As WebServer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebServer) _
 	)
 	
 	If this Then
-		InitializeWebServer( _
-			this, _
+		Dim pIWebSites As IWebSiteCollection Ptr = Any
+		Dim hrCreateCollection As HRESULT = CreateWebSiteCollection( _
 			pIMemoryAllocator, _
-			pIWebSites _
+			@IID_IWebSiteCollection, _
+			@pIWebSites _
 		)
 		
-		WebServerCreated(this)
-		
-		Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
-			this, _
-			riid, _
-			ppv _
-		)
-		If FAILED(hrQueryInterface) Then
-			DestroyWebServer(this)
+		If SUCCEEDED(hrCreateCollection) Then
+			
+			InitializeWebServer( _
+				this, _
+				pIMemoryAllocator, _
+				pIWebSites _
+			)
+			
+			WebServerCreated(this)
+			
+			Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				DestroyWebServer(this)
+			End If
+			
+			Return hrQueryInterface
 		End If
 		
-		Return hrQueryInterface
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
 	
 	*ppv = NULL

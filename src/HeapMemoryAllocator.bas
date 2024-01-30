@@ -751,20 +751,20 @@ Private Function CreateHeapMemoryAllocator( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim hHeap As HANDLE = HeapCreate( _
-		HEAP_NO_SERIALIZE_FLAG, _
-		PRIVATEHEAP_INITIALSIZE, _
-		PRIVATEHEAP_MAXIMUMSIZE _
+	Dim this As HeapMemoryAllocator Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(HeapMemoryAllocator) _
 	)
 	
-	If hHeap Then
-		
-		Dim this As HeapMemoryAllocator Ptr = IMalloc_Alloc( _
-			pIMemoryAllocator, _
-			SizeOf(HeapMemoryAllocator) _
+	If this Then
+		Dim hHeap As HANDLE = HeapCreate( _
+			HEAP_NO_SERIALIZE_FLAG, _
+			PRIVATEHEAP_INITIALSIZE, _
+			PRIVATEHEAP_MAXIMUMSIZE _
 		)
 		
-		If this Then
+		If hHeap Then
+			
 			InitializeHeapMemoryAllocator( _
 				this, _
 				pIMemoryAllocator, _
@@ -784,10 +784,13 @@ Private Function CreateHeapMemoryAllocator( _
 			Return hrQueryInterface
 		End If
 		
-		PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
-		
-		HeapDestroy(hHeap)
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
+	
+	PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
 	
 	*ppv = NULL
 	Return E_OUTOFMEMORY

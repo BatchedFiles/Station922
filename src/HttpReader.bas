@@ -317,18 +317,18 @@ Public Function CreateHttpReader( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pClientBuffer As ClientRequestBuffer Ptr = IMalloc_Alloc( _
+	Dim this As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		SizeOf(ClientRequestBuffer) _
+		SizeOf(HttpReader) _
 	)
 	
-	If pClientBuffer Then
-		Dim this As HttpReader Ptr = IMalloc_Alloc( _
+	If this Then
+		Dim pClientBuffer As ClientRequestBuffer Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
-			SizeOf(HttpReader) _
+			SizeOf(ClientRequestBuffer) _
 		)
 		
-		If this Then
+		If pClientBuffer Then
 			InitializeHttpReader(this, pIMemoryAllocator, pClientBuffer)
 			HttpReaderCreated(this)
 			
@@ -344,7 +344,7 @@ Public Function CreateHttpReader( _
 			Return hrQueryInterface
 		End If
 		
-		IMalloc_Free(pIMemoryAllocator, pClientBuffer)
+		IMalloc_Free(pIMemoryAllocator, this)
 	End If
 	
 	*ppv = NULL

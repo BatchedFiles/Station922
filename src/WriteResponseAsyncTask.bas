@@ -52,8 +52,10 @@ Private Sub InitializeWriteResponseAsyncTask( _
 	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = NULL
+	' Do not need AddRef pIResponse
 	this->pIResponse = pIResponse
 	this->pIBuffer = NULL
+	' Do not need AddRef pIHttpWriter
 	this->pIHttpWriter = pIHttpWriter
 	this->pIProcessorWeakPtr = NULL
 	this->pIWebSitesWeakPtr = NULL
@@ -193,30 +195,30 @@ Public Function CreateWriteResponseAsyncTask( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIHttpWriter As IHttpWriter Ptr = Any
-	Dim hrCreateWriter As HRESULT = CreateHttpWriter( _
+	Dim this As WriteResponseAsyncTask Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		@IID_IHttpWriter, _
-		@pIHttpWriter _
+		SizeOf(WriteResponseAsyncTask) _
 	)
 	
-	If SUCCEEDED(hrCreateWriter) Then
-		
-		Dim pIResponse As IServerResponse Ptr = Any
-		Dim hrCreateResponse As HRESULT = CreateServerResponse( _
+	If this Then
+		Dim pIHttpWriter As IHttpWriter Ptr = Any
+		Dim hrCreateWriter As HRESULT = CreateHttpWriter( _
 			pIMemoryAllocator, _
-			@IID_IServerResponse, _
-			@pIResponse _
+			@IID_IHttpWriter, _
+			@pIHttpWriter _
 		)
 		
-		If SUCCEEDED(hrCreateResponse) Then
+		If SUCCEEDED(hrCreateWriter) Then
 			
-			Dim this As WriteResponseAsyncTask Ptr = IMalloc_Alloc( _
+			Dim pIResponse As IServerResponse Ptr = Any
+			Dim hrCreateResponse As HRESULT = CreateServerResponse( _
 				pIMemoryAllocator, _
-				SizeOf(WriteResponseAsyncTask) _
+				@IID_IServerResponse, _
+				@pIResponse _
 			)
 			
-			If this Then
+			If SUCCEEDED(hrCreateResponse) Then
+				
 				InitializeWriteResponseAsyncTask( _
 					this, _
 					pIMemoryAllocator, _
@@ -237,10 +239,13 @@ Public Function CreateWriteResponseAsyncTask( _
 				Return hrQueryInterface
 			End If
 			
-			IServerResponse_Release(pIResponse)
+			IHttpWriter_Release(pIHttpWriter)
 		End If
 		
-		IHttpWriter_Release(pIHttpWriter)
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
 	
 	*ppv = NULL

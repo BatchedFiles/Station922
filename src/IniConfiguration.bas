@@ -169,72 +169,71 @@ Public Function CreateWebServerIniConfiguration( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pWebServerIniFileName As WString Ptr = IMalloc_Alloc( _
+	Dim this As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
-		(MAX_PATH + 1) * SizeOf(WString) _
+		SizeOf(WebServerIniConfiguration) _
 	)
 	
-	If pWebServerIniFileName Then
-		
-		Dim pWebSitesIniFileName As WString Ptr = IMalloc_Alloc( _
+	If this Then
+		Dim pWebServerIniFileName As WString Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
 			(MAX_PATH + 1) * SizeOf(WString) _
 		)
 		
-		If pWebSitesIniFileName Then
+		If pWebServerIniFileName Then
 			
-			Dim ExeFileName As WString * (MAX_PATH + 1) = Any
-			Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
-				0, _
-				@ExeFileName, _
-				MAX_PATH _
-			)
-			If ExeFileNameLength = 0 Then
-				IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
-				IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
-				Return NULL
-			End If
-			
-			Dim this As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
+			Dim pWebSitesIniFileName As WString Ptr = IMalloc_Alloc( _
 				pIMemoryAllocator, _
-				SizeOf(WebServerIniConfiguration) _
+				(MAX_PATH + 1) * SizeOf(WString) _
 			)
 			
-			If this Then
+			If pWebSitesIniFileName Then
 				
-				Scope
-					Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
-					lstrcpyW(@ExecutableDirectory, @ExeFileName)
-					PathRemoveFileSpecW(@ExecutableDirectory)
+				Dim ExeFileName As WString * (MAX_PATH + 1) = Any
+				Dim ExeFileNameLength As DWORD = GetModuleFileNameW( _
+					0, _
+					@ExeFileName, _
+					MAX_PATH _
+				)
+				
+				If ExeFileNameLength Then
 					
-					PathCombineW(pWebServerIniFileName, @ExecutableDirectory, @WebServerIniFileString)
-					PathCombineW(pWebSitesIniFileName, @ExecutableDirectory, @WebSitesIniFileString)
-				End Scope
-				
-				InitializeWebServerIniConfiguration( _
-					this, _
-					pIMemoryAllocator, _
-					pWebServerIniFileName, _
-					pWebSitesIniFileName _
-				)
-				WebServerIniConfigurationCreated(this)
-				
-				Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
-					this, _
-					riid, _
-					ppv _
-				)
-				If FAILED(hrQueryInterface) Then
-					DestroyWebServerIniConfiguration(this)
+					Scope
+						Dim ExecutableDirectory As WString * (MAX_PATH + 1) = Any
+						lstrcpyW(@ExecutableDirectory, @ExeFileName)
+						PathRemoveFileSpecW(@ExecutableDirectory)
+						
+						PathCombineW(pWebServerIniFileName, @ExecutableDirectory, @WebServerIniFileString)
+						PathCombineW(pWebSitesIniFileName, @ExecutableDirectory, @WebSitesIniFileString)
+					End Scope
+					
+					InitializeWebServerIniConfiguration( _
+						this, _
+						pIMemoryAllocator, _
+						pWebServerIniFileName, _
+						pWebSitesIniFileName _
+					)
+					WebServerIniConfigurationCreated(this)
+					
+					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
+						this, _
+						riid, _
+						ppv _
+					)
+					If FAILED(hrQueryInterface) Then
+						DestroyWebServerIniConfiguration(this)
+					End If
+					
+					Return hrQueryInterface
 				End If
 				
-				Return hrQueryInterface
+				IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
 			End If
 			
-			IMalloc_Free(pIMemoryAllocator, pWebSitesIniFileName)
+			IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
 		End If
 		
-		IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
+		IMalloc_Free(pIMemoryAllocator, this)
 	End If
 	
 	*ppv = NULL

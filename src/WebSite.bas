@@ -1599,6 +1599,7 @@ Private Sub InitializeWebSite( _
 	this->ErrorPageEncoding = ErrorPageEncoding
 	this->UserName = NULL
 	this->Password = NULL
+	' Do not need AddRef pIProcessorCollection
 	this->pIProcessorCollection = pIProcessorCollection
 	this->UtfBomFileOffset = 0
 	this->ReservedFileBytes = 0
@@ -1702,57 +1703,57 @@ Public Function CreateWebSite( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
-	Scope
-		Dim hrCreate As HRESULT = CreateHttpProcessorCollection( _
-			pIMemoryAllocator, _
-			@IID_IHttpProcessorCollection, _
-			@pIProcessorCollection _
-		)
-		If FAILED(hrCreate) Then
-			*ppv = NULL
-			Return E_OUTOFMEMORY
-		End If
-	End Scope
-	
-	Dim ErrorPageEncoding As HeapBSTR = Any
-	Scope
-		Const Utf8EncodingString = WStr("utf-8")
-		ErrorPageEncoding = CreatePermanentHeapStringLen( _
-			pIMemoryAllocator, _
-			@Utf8EncodingString, _
-			Len(Utf8EncodingString) _
-		)
-		If ErrorPageEncoding = NULL Then
-			*ppv = NULL
-			Return E_OUTOFMEMORY
-		End If
-	End Scope
-	
 	Dim this As WebSite Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSite) _
 	)
 	
 	If this Then
-		InitializeWebSite( _
-			this, _
+		Dim pIProcessorCollection As IHttpProcessorCollection Ptr = Any
+		Dim hrCreate As HRESULT = CreateHttpProcessorCollection( _
 			pIMemoryAllocator, _
-			pIProcessorCollection, _
-			ErrorPageEncoding _
+			@IID_IHttpProcessorCollection, _
+			@pIProcessorCollection _
 		)
-		WebSiteCreated(this)
 		
-		Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
-			this, _
-			riid, _
-			ppv _
-		)
-		If FAILED(hrQueryInterface) Then
-			DestroyWebSite(this)
+		If SUCCEEDED(hrCreate) Then
+			
+			Const Utf8EncodingString = WStr("utf-8")
+			
+			Dim ErrorPageEncoding As HeapBSTR = CreatePermanentHeapStringLen( _
+				pIMemoryAllocator, _
+				@Utf8EncodingString, _
+				Len(Utf8EncodingString) _
+			)
+			If ErrorPageEncoding Then
+				
+				InitializeWebSite( _
+					this, _
+					pIMemoryAllocator, _
+					pIProcessorCollection, _
+					ErrorPageEncoding _
+				)
+				WebSiteCreated(this)
+				
+				Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
+					this, _
+					riid, _
+					ppv _
+				)
+				If FAILED(hrQueryInterface) Then
+					DestroyWebSite(this)
+				End If
+				
+				Return hrQueryInterface
+			End If
+			
+			IHttpProcessorCollection_Release(pIProcessorCollection)
 		End If
 		
-		Return hrQueryInterface
+		IMalloc_Free( _
+			pIMemoryAllocator, _
+			this _
+		)
 	End If
 	
 	*ppv = NULL
