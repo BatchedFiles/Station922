@@ -8,13 +8,24 @@
 			"args": [
 				"//nologo",
 				"C:\\Programming\\FreeBASIC Projects\\ProgrammingStyle\\CreateMakefile\\CreateMakefile.vbs",
+				/* "/makefile:Makefile", */
+				/* "/src:src", */
+				/* "/fbc-path:C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0", */
+				/* "/fbc:fbc64.exe", */
 				"/out:Station922",
+				/* "/module:Station922", */
+				/* "/exetype:exe", */
+				/* "/subsystem:console", */
+				/* "/emitter:gcc", */
 				"/fix:true",
 				"/unicode:true",
 				"/wrt:true",
-				"/addressaware:true"
-				
-			],
+				"/addressaware:true",
+				/* "/multithreading:true", */
+				/* "/usefilesuffix:true", */
+				/* "/pedantic:true", */
+				"/winver:1281",
+				],
 			"problemMatcher": [],
 			"group": {
 				"kind":"build",
