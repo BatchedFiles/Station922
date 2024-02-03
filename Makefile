@@ -18,14 +18,13 @@ TARGET_TRIPLET ?=
 MARCH ?= native
 
 USE_RUNTIME ?= TRUE
-FBC_VER ?= _FBC1100
+FBC_VER ?= _FBC1101
 GCC_VER ?= _GCC0930
 ifeq ($(USE_RUNTIME),TRUE)
 RUNTIME = _RT
 else
 RUNTIME = _WRT
 endif
-FILE_SUFFIX=$(GCC_VER)$(FBC_VER)$(RUNTIME)
 OUTPUT_FILE_NAME=Station922$(FILE_SUFFIX).exe
 
 PATH_SEP ?= /
@@ -57,7 +56,12 @@ OBJ_RELEASE_DIR_MOVE ?= obj$(MOVE_PATH_SEP)Release$(MOVE_PATH_SEP)x86
 endif
 
 FBCFLAGS+=-gen gcc
+ifeq ($(USE_UNICODE),TRUE)
 FBCFLAGS+=-d UNICODE
+FBCFLAGS+=-d _UNICODE
+endif
+FBCFLAGS+=-d WINVER=$(WINVER)
+FBCFLAGS+=-d _WIN32_WINNT=$(_WIN32_WINNT)
 ifeq ($(USE_RUNTIME),TRUE)
 FBCFLAGS+=-m Station922
 else
@@ -142,10 +146,11 @@ LDLIBSBEGIN+="$(LIB_DIR)\crtbegin.o"
 LDLIBSBEGIN+="$(LIB_DIR)\fbrt0.o"
 endif
 LDLIBS+=--start-group
-LDLIBS+=-ladvapi32 -lcrypt32 -lkernel32 -lmsvcrt
-LDLIBS+=-lole32 -loleaut32
-LDLIBS+=-lmswsock -lws2_32
-LDLIBS+=-lshell32 -lshlwapi -lgdi32 -lgdiplus -luser32 -lcomctl32
+LDLIBS+=-ladvapi32 -lcomctl32 -lcomdlg32 -lcrypt32
+LDLIBS+=-lgdi32 -lgdiplus -lkernel32 -lmswsock
+LDLIBS+=-lole32 -loleaut32 -lshell32 -lshlwapi
+LDLIBS+=-lwsock32 -lws2_32 -luser32
+LDLIBS+=-lmsvcrt
 ifeq ($(USE_RUNTIME),TRUE)
 LDLIBS+=-lfb
 LDLIBS+=-luuid
@@ -216,8 +221,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).c: src$(PATH_SEP)HeapBSTR.bi
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)IClientSocket.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).o
@@ -258,8 +263,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)HttpPutProcessor$(FILE_SUFFIX).c: src$(PATH_SEP)Htt
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpReader.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpReader.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpReader.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpReader.bi src$(PATH_SEP)IHttpReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpTraceProcessor$(FILE_SUFFIX).o
@@ -318,8 +323,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)ReadRequestAsyncTask$(FILE_SUFFIX).c: src$(PATH_SEP
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj: src$(PATH_SEP)Resources.RH src$(PATH_SEP)manifest.xml
-$(OBJ_RELEASE_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj: src$(PATH_SEP)Resources.RH src$(PATH_SEP)manifest.xml
+$(OBJ_DEBUG_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj: src$(PATH_SEP)manifest.xml src$(PATH_SEP)Resources.RC src$(PATH_SEP)Resources.RH
+$(OBJ_RELEASE_DIR)$(PATH_SEP)Resources$(FILE_SUFFIX).obj: src$(PATH_SEP)manifest.xml src$(PATH_SEP)Resources.RC src$(PATH_SEP)Resources.RH
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)ServerResponse$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)ServerResponse$(FILE_SUFFIX).o
@@ -342,8 +347,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)TaskExecutor$(FILE_SUFFIX).c: src$(PATH_SEP)TaskExe
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).c: src$(PATH_SEP)TcpListener.bi src$(PATH_SEP)ITcpListener.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Network.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).c: src$(PATH_SEP)TcpListener.bi src$(PATH_SEP)ITcpListener.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Network.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).c: src$(PATH_SEP)TcpListener.bi src$(PATH_SEP)ITcpListener.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Network.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)TcpListener$(FILE_SUFFIX).c: src$(PATH_SEP)TcpListener.bi src$(PATH_SEP)ITcpListener.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ContainerOf.bi src$(PATH_SEP)Network.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)ThreadPool$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)ThreadPool$(FILE_SUFFIX).o
