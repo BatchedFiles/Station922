@@ -25,7 +25,6 @@ Type _WriteErrorAsyncTask
 	lpVtbl As Const IWriteErrorAsyncIoTaskVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
-	pIHttpReader As IHttpReader Ptr
 	pIStream As IBaseStream Ptr
 	pIRequest As IClientRequest Ptr
 	pIResponse As IServerResponse Ptr
@@ -263,7 +262,6 @@ Private Sub InitializeWriteErrorAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIHttpReader = NULL
 	this->pIStream = NULL
 	this->pIRequest = NULL
 	' Do not need AddRef pIResponse
@@ -285,10 +283,6 @@ Private Sub UnInitializeWriteErrorAsyncTask( _
 	
 	If this->pIStream Then
 		IBaseStream_Release(this->pIStream)
-	End If
-	
-	If this->pIHttpReader Then
-		IHttpReader_Release(this->pIHttpReader)
 	End If
 	
 	If this->pIBuffer Then
@@ -508,38 +502,9 @@ Private Function WriteErrorAsyncTaskEndExecute( _
 	Select Case hrEndWrite
 		
 		Case S_OK
-			
-			Dim KeepAlive As Boolean = Any
-			IServerResponse_GetKeepAlive(this->pIResponse, @KeepAlive)
-			
-			If KeepAlive = False Then
-				*ppNextTask = NULL
-				Return ASYNCTASK_S_KEEPALIVE_FALSE
-			End If
-			
-			Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-			Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
-				this->pIMemoryAllocator, _
-				@IID_IReadRequestAsyncIoTask, _
-				@pTask _
-			)
-			If FAILED(hrCreateTask) Then
-				' Мы не запускаем задачу отправки ошибки
-				' Чтобы не войти в бесконечный цикл
-				*ppNextTask = NULL
-				Return hrCreateTask
-			End If
-			
-			IHttpReader_Clear(this->pIHttpReader)
-			
-			IReadRequestAsyncIoTask_SetBaseStream(pTask, this->pIStream)
-			IReadRequestAsyncIoTask_SetHttpReader(pTask, this->pIHttpReader)
-			IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
-			
-			' Сейчас мы не уменьшаем счётчик ссылок на задачу
-			' Счётчик ссылок уменьшим в пуле потоков после функции EndExecute
-			*ppNextTask = CPtr(IAsyncIoTask Ptr, pTask)
-			Return S_OK
+			' Close the connection when an error occurred
+			*ppNextTask = NULL
+			Return ASYNCTASK_S_KEEPALIVE_FALSE
 			
 		Case S_FALSE
 			' Write 0 bytes
@@ -599,13 +564,9 @@ Private Function WriteErrorAsyncTaskGetHttpReader( _
 		ByVal ppReader As IHttpReader Ptr Ptr _
 	)As HRESULT
 	
-	If this->pIHttpReader Then
-		IHttpReader_AddRef(this->pIHttpReader)
-	End If
+	*ppReader = NULL
 	
-	*ppReader = this->pIHttpReader
-	
-	Return S_OK
+	Return E_UNEXPECTED
 	
 End Function
 
@@ -613,16 +574,6 @@ Private Function WriteErrorAsyncTaskSetHttpReader( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		byVal pReader As IHttpReader Ptr _
 	)As HRESULT
-	
-	If this->pIHttpReader Then
-		IHttpReader_Release(this->pIHttpReader)
-	End If
-	
-	If pReader Then
-		IHttpReader_AddRef(pReader)
-	End If
-	
-	this->pIHttpReader = pReader
 	
 	Return S_OK
 	
