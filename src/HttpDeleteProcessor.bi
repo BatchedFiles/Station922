@@ -7,10 +7,6 @@ Extern CLSID_HTTPDELETEASYNCPROCESSOR Alias "CLSID_HTTPDELETEASYNCPROCESSOR" As 
 
 Const RTTI_ID_HTTPDELETEPROCESSOR        = !"\001Delete____Proc\001"
 
-Type HttpDeleteProcessor As _HttpDeleteProcessor
-
-Type LPHttpDeleteProcessor As _HttpDeleteProcessor Ptr
-
 Declare Function CreateHttpDeleteProcessor( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

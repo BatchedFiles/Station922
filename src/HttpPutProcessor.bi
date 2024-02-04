@@ -7,10 +7,6 @@ Extern CLSID_HTTPPUTASYNCPROCESSOR Alias "CLSID_HTTPPUTASYNCPROCESSOR" As Const 
 
 Const RTTI_ID_HTTPPUTPROCESSOR        = !"\001Put_______Proc\001"
 
-Type HttpPutProcessor As _HttpPutProcessor
-
-Type LPHttpPutProcessor As _HttpPutProcessor Ptr
-
 Declare Function CreateHttpPutProcessor( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

@@ -7,7 +7,7 @@ Extern GlobalHttpOptionsProcessorVirtualTable As Const IHttpOptionsAsyncProcesso
 
 Const CompareResultEqual As Long = 0
 
-Type _HttpOptionsProcessor
+Type HttpOptionsProcessor
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

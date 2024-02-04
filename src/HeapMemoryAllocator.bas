@@ -27,7 +27,7 @@ Enum ConnectionStatuses
 	Alive
 End Enum
 
-Type _HeapMemoryAllocator
+Type HeapMemoryAllocator
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

@@ -15,7 +15,7 @@ Type WebSiteNode
 	pIWebSite As IWebSite Ptr
 End Type
 
-Type _WebSiteCollection
+Type WebSiteCollection
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

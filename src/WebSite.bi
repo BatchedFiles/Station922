@@ -7,10 +7,6 @@ Extern CLSID_WEBSITE Alias "CLSID_WEBSITE" As Const CLSID
 
 Const RTTI_ID_WEBSITE                 = !"\001Web_______Site\001"
 
-Type WebSite As _WebSite
-
-Type LPWebSite As _WebSite Ptr
-
 Declare Function CreateWebSite( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

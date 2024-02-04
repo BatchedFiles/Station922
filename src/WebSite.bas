@@ -72,7 +72,7 @@ Type ListingFileItem
 	IsDirectory As Boolean
 End Type
 
-Type _WebSite
+Type WebSite
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

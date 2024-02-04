@@ -10,7 +10,7 @@
 
 Extern GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable
 
-Type _AcceptConnectionAsyncTask
+Type AcceptConnectionAsyncTask
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

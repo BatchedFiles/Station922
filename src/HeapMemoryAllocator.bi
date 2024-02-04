@@ -8,12 +8,6 @@ Extern CLSID_SERVERHEAPMEMORYALLOCATOR Alias "CLSID_SERVERHEAPMEMORYALLOCATOR" A
 
 Const RTTI_ID_HEAPMEMORYALLOCATOR     = !"\001Mem__Allocator\001"
 
-Type HeapMemoryAllocator As _HeapMemoryAllocator
-
-Type ServerHeapMemoryAllocator As _ServerHeapMemoryAllocator
-
-Type LPHeapMemoryAllocator As _HeapMemoryAllocator Ptr
-
 Declare Function CreateMemoryPool( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal Length As UInteger, _

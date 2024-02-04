@@ -7,10 +7,6 @@ Extern CLSID_ACCEPTCONNECTIONASYNCTASK Alias "CLSID_ACCEPTCONNECTIONASYNCTASK" A
 
 Const RTTI_ID_ACCEPTCONNECTIONASYNCTASK  = !"\001Task____Accept\001"
 
-Type AcceptConnectionAsyncTask As _AcceptConnectionAsyncTask
-
-Type LPAcceptConnectionAsyncTask As _AcceptConnectionAsyncTask Ptr
-
 Declare Function CreateAcceptConnectionAsyncTask( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

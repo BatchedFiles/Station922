@@ -3,7 +3,7 @@
 
 Extern GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable
 
-Type _AsyncResult
+Type AsyncResult
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

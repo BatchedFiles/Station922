@@ -8,10 +8,6 @@ Const RTTI_ID_CLIENTREQUESTBUFFER     = !"\001Request_Buffer\001"
 
 Extern CLSID_HTTPREADER Alias "CLSID_HTTPREADER" As Const CLSID
 
-Type HttpReader As _HttpReader
-
-Type LPHttpReader As _HttpReader Ptr
-
 Declare Function CreateHttpReader( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

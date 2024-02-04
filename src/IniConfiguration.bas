@@ -16,7 +16,7 @@ Const AdministratorsSectionString = WStr("admins")
 Const MaxSectionsLength As Integer = 32000 - 1
 Const CompareResultEqual As Long = 0
 
-Type _WebServerIniConfiguration
+Type WebServerIniConfiguration
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

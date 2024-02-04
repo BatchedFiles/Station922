@@ -29,7 +29,7 @@ Type ClientRequestBuffer
 	Bytes(0 To RAWBUFFER_CAPACITY - 1) As UByte
 End Type
 
-Type _HttpReader
+Type HttpReader
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

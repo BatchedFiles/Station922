@@ -22,7 +22,7 @@ Type HeadersBodyBuffer
 	Buf(1) As BaseStreamBuffer
 End Type
 
-Type _HttpWriter
+Type HttpWriter
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

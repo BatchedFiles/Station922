@@ -8,7 +8,7 @@ Extern GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable
 
 Const SmallFileBytesSize As DWORD = 6 * 4096
 
-Type _FileStream
+Type FileStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

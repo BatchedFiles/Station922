@@ -7,10 +7,6 @@ Extern CLSID_WRITEERRORASYNCTASK Alias "CLSID_WRITEERRORASYNCTASK" As Const CLSI
 
 Const RTTI_ID_WRITEERRORASYNCTASK     = !"\001Task_____Error\001"
 
-Type WriteErrorAsyncTask As _WriteErrorAsyncTask
-
-Type LPWriteErrorAsyncTask As _WriteErrorAsyncTask Ptr
-
 Declare Function CreateWriteErrorAsyncTask( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

@@ -5,7 +5,7 @@
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
-Type _ThreadPool
+Type ThreadPool
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

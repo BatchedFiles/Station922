@@ -16,7 +16,7 @@ Const DefaultHeaderWwwAuthenticate1 = WStr("Basic realm=""Authorization""")
 Const DefaultHeaderWwwAuthenticate2 = WStr("Basic realm=""Use Basic auth""")
 Const DefaultRetryAfterString = WStr("300")
 
-Type _WriteErrorAsyncTask
+Type WriteErrorAsyncTask
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

@@ -10,7 +10,7 @@ Extern GlobalClientUriVirtualTable As Const IClientUriVirtualTable
 Const CompareResultEqual As Long = 0
 Const MAX_URL_LENGTH As Integer = 1500
 
-Type _ClientUri
+Type ClientUri
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

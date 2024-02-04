@@ -8,7 +8,7 @@
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkStreamVirtualTable
 
-Type _NetworkStream
+Type NetworkStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

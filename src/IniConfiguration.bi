@@ -7,10 +7,6 @@ Extern CLSID_INICONFIGURATION Alias "CLSID_INICONFIGURATION" As Const CLSID
 
 Const RTTI_ID_INICONFIGURATION        = !"\001INI_____Config\001"
 
-Type WebServerIniConfiguration As _WebServerIniConfiguration
-
-Type LPWebServerIniConfiguration As _WebServerIniConfiguration Ptr
-
 Declare Function CreateWebServerIniConfiguration( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

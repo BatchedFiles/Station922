@@ -6,7 +6,7 @@ Extern GlobalInternalStringVirtualTable As Const IStringVirtualTable
 
 Const ReservedCharactersLength As Integer = 16
 
-Type _InternalHeapBSTR
+Type InternalHeapBSTR
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

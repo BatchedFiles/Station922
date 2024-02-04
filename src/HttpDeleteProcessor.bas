@@ -8,7 +8,7 @@ Extern GlobalHttpDeleteProcessorVirtualTable As Const IHttpDeleteAsyncProcessorV
 
 Const CompareResultEqual As Long = 0
 
-Type _HttpDeleteProcessor
+Type HttpDeleteProcessor
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

@@ -22,7 +22,7 @@ Type ResponseHeaderNode
 	HeaderIndex As HttpResponseHeaders
 End Type
 
-Type _ServerResponse
+Type ServerResponse
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

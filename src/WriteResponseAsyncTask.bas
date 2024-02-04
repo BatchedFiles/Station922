@@ -13,7 +13,7 @@ Extern GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIo
 
 Const CompareResultEqual As Long = 0
 
-Type _WriteResponseAsyncTask
+Type WriteResponseAsyncTask
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

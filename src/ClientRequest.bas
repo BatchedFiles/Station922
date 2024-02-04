@@ -20,7 +20,7 @@ Type RequestHeaderNode
 	HeaderIndex As HttpRequestHeaders
 End Type
 
-Type _ClientRequest
+Type ClientRequest
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

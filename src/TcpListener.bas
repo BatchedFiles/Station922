@@ -8,7 +8,7 @@ Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
 
 Const SOCKET_ADDRESS_STORAGE_LENGTH As Integer = 128
 
-Type _TcpListener
+Type TcpListener
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

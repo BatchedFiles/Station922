@@ -9,7 +9,7 @@ Extern GlobalHttpPutProcessorVirtualTable As Const IHttpPutAsyncProcessorVirtual
 
 Const CompareResultEqual As Long = 0
 
-Type _HttpPutProcessor
+Type HttpPutProcessor
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

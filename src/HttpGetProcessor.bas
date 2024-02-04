@@ -13,7 +13,7 @@ Const BytesStringWithSpace = WStr("bytes ")
 Const CompareResultEqual As Long = 0
 Const DefaultCacheControl = WStr("max-age=180")
 
-Type _HttpGetProcessor
+Type HttpGetProcessor
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

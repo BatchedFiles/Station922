@@ -15,7 +15,7 @@ Const THREAD_SLEEPING_TIME As DWORD = 60 * 1000
 
 Const SocketListCapacity As Integer = 10
 
-Type _WebServer
+Type WebServer
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

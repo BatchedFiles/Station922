@@ -7,10 +7,6 @@ Extern CLSID_ASYNCRESULT Alias "CLSID_ASYNCRESULT" As Const CLSID
 
 Const RTTI_ID_ASYNCRESULT             = !"\001Async___Result\001"
 
-Type AsyncResult As _AsyncResult
-
-Type LPAsyncResult As _AsyncResult Ptr
-
 Declare Function CreateAsyncResult( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

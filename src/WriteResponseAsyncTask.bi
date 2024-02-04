@@ -7,10 +7,6 @@ Extern CLSID_WRITERESPONSEASYNCTASK Alias "CLSID_WRITERESPONSEASYNCTASK" As Cons
 
 Const RTTI_ID_WRITERESPONSEASYNCTASK  = !"\001Task__Response\001"
 
-Type WriteResponseAsyncTask As _WriteResponseAsyncTask
-
-Type LPWriteResponseAsyncTask As _WriteResponseAsyncTask Ptr
-
 Declare Function CreateWriteResponseAsyncTask( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

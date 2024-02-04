@@ -6,7 +6,7 @@
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
 
-Type _MemoryStream
+Type MemoryStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

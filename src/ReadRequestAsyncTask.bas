@@ -8,7 +8,7 @@
 
 Extern GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable
 
-Type _ReadRequestAsyncTask
+Type ReadRequestAsyncTask
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

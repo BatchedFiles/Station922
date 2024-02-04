@@ -4,7 +4,7 @@
 
 Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable
 
-Type _HttpTraceProcessor
+Type HttpTraceProcessor
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif

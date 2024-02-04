@@ -7,10 +7,6 @@ Extern CLSID_WEBSERVER Alias "CLSID_WEBSERVER" As Const CLSID
 
 Const RTTI_ID_WEBSERVER               = !"\001Web_____Server\001"
 
-Type WebServer As _WebServer
-
-Type LPWebServer As _WebServer Ptr
-
 Declare Function CreateWebServer( _
 	ByVal pIMemoryAllocator As IMalloc Ptr, _
 	ByVal riid As REFIID, _

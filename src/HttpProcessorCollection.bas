@@ -15,7 +15,7 @@ Type HttpProcessorCollectionKeyValuePair
 	Padding2 As Integer
 End Type
 
-Type _HttpProcessorCollection
+Type HttpProcessorCollection
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif
