@@ -1,6 +1,70 @@
 #include once "TaskExecutor.bi"
 #include once "Logger.bi"
 
+Private Function FinishExecuteTaskSink( _
+		ByVal BytesTransferred As DWORD, _
+		ByVal pIResult As IAsyncResult Ptr, _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr, _
+		ByVal dwError As DWORD _
+	)As HRESULT
+	
+	IAsyncResult_SetCompleted( _
+		pIResult, _
+		BytesTransferred, _
+		True, _
+		dwError _
+	)
+	
+	Dim pTask As IAsyncIoTask Ptr = Any
+	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
+	
+	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
+		pTask, _
+		pIResult, _
+		BytesTransferred, _
+		ppNextTask _
+	)
+	If FAILED(hrEndExecute) Then
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+		
+		Dim TaskId As AsyncIoTaskIDs = Any
+		IAsyncIoTask_GetTaskId(pTask, @TaskId)
+		
+		Dim p As WString Ptr = Any
+		Select Case TaskId
+			
+			Case AsyncIoTaskIDs.AcceptConnection
+				p = @WStr("AcceptConnectionTask.EndExecute Error")
+				
+			Case AsyncIoTaskIDs.ReadRequest
+				p = @WStr("ReadRequestTask.EndExecute Error")
+				
+			Case AsyncIoTaskIDs.WriteError
+				p = @WStr("WriteErrorTask.EndExecute Error")
+				
+			Case Else ' AsyncIoTaskIDs.WriteResponse
+				p = @WStr("WriteResponseTask.EndExecute Error")
+				
+		End Select
+		
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			p, _
+			@vtErrorCode _
+		)
+	End If
+	
+	' Releasing the references to the task and futura
+	' beecause we haven't done this before
+	IAsyncResult_Release(pIResult)
+	IAsyncIoTask_Release(pTask)
+	
+	Return hrEndExecute
+	
+End Function
+
 Public Sub ThreadPoolCallBack( _
 		ByVal dwError As DWORD, _
 		ByVal BytesTransferred As DWORD, _
@@ -83,69 +147,5 @@ Public Function StartExecuteTask( _
 	End If
 	
 	Return S_OK
-	
-End Function
-
-Private Function FinishExecuteTaskSink( _
-		ByVal BytesTransferred As DWORD, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr, _
-		ByVal dwError As DWORD _
-	)As HRESULT
-	
-	IAsyncResult_SetCompleted( _
-		pIResult, _
-		BytesTransferred, _
-		True, _
-		dwError _
-	)
-	
-	Dim pTask As IAsyncIoTask Ptr = Any
-	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
-	
-	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
-		pTask, _
-		pIResult, _
-		BytesTransferred, _
-		ppNextTask _
-	)
-	If FAILED(hrEndExecute) Then
-		Dim vtErrorCode As VARIANT = Any
-		vtErrorCode.vt = VT_ERROR
-		vtErrorCode.scode = hrEndExecute
-		
-		Dim TaskId As AsyncIoTaskIDs = Any
-		IAsyncIoTask_GetTaskId(pTask, @TaskId)
-		
-		Dim p As WString Ptr = Any
-		Select Case TaskId
-			
-			Case AsyncIoTaskIDs.AcceptConnection
-				p = @WStr("AcceptConnectionTask.EndExecute Error")
-				
-			Case AsyncIoTaskIDs.ReadRequest
-				p = @WStr("ReadRequestTask.EndExecute Error")
-				
-			Case AsyncIoTaskIDs.WriteError
-				p = @WStr("WriteErrorTask.EndExecute Error")
-				
-			Case Else ' AsyncIoTaskIDs.WriteResponse
-				p = @WStr("WriteResponseTask.EndExecute Error")
-				
-		End Select
-		
-		LogWriteEntry( _
-			LogEntryType.Error, _
-			p, _
-			@vtErrorCode _
-		)
-	End If
-	
-	' Releasing the references to the task and futura
-	' beecause we haven't done this before
-	IAsyncResult_Release(pIResult)
-	IAsyncIoTask_Release(pTask)
-	
-	Return hrEndExecute
 	
 End Function
