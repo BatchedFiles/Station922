@@ -184,6 +184,17 @@ Private Function AsyncResultGetAsyncStateWeakPtr( _
 	
 End Function
 
+Private Function AsyncResultSetAsyncStateWeakPtr( _
+		ByVal this As AsyncResult Ptr, _
+		ByVal pState As Any Ptr _
+	)As HRESULT
+	
+	this->pState = pState
+	
+	Return S_OK
+	
+End Function
+
 Private Function AsyncResultGetCompleted( _
 		ByVal this As AsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
@@ -209,17 +220,6 @@ Private Function AsyncResultSetCompleted( _
 	this->BytesTransferred = BytesTransferred
 	this->Completed = Completed
 	this->dwError = dwError
-	
-	Return S_OK
-	
-End Function
-
-Private Function AsyncResultSetAsyncStateWeakPtr( _
-		ByVal this As AsyncResult Ptr, _
-		ByVal pState As Any Ptr _
-	)As HRESULT
-	
-	this->pState = pState
 	
 	Return S_OK
 	
@@ -286,6 +286,13 @@ Private Function IAsyncResultGetAsyncStateWeakPtr( _
 	Return AsyncResultGetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), ppState)
 End Function
 
+Private Function IAsyncResultSetAsyncStateWeakPtr( _
+		ByVal this As IAsyncResult Ptr, _
+		ByVal pState As Any Ptr _
+	)As HRESULT
+	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
+End Function
+
 Private Function IAsyncResultGetCompleted( _
 		ByVal this As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
@@ -302,13 +309,6 @@ Private Function IAsyncResultSetCompleted( _
 		ByVal dwError As DWORD _
 	)As HRESULT
 	Return AsyncResultSetCompleted(ContainerOf(this, AsyncResult, lpVtbl), BytesTransferred, Completed, dwError)
-End Function
-
-Private Function IAsyncResultSetAsyncStateWeakPtr( _
-		ByVal this As IAsyncResult Ptr, _
-		ByVal pState As Any Ptr _
-	)As HRESULT
-	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
 End Function
 
 Private Function IAsyncResultGetWsaOverlapped( _
@@ -331,9 +331,9 @@ Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultAddRef, _
 	@IAsyncResultRelease, _
 	@IAsyncResultGetAsyncStateWeakPtr, _
+	@IAsyncResultSetAsyncStateWeakPtr, _
 	@IAsyncResultGetCompleted, _
 	@IAsyncResultSetCompleted, _
-	@IAsyncResultSetAsyncStateWeakPtr, _
 	@IAsyncResultGetWsaOverlapped, _
 	@IAsyncResultAllocBuffers _
 )
