@@ -283,7 +283,6 @@ End Function
 Private Function WriteResponseAsyncTaskEndExecute( _
 		ByVal this As WriteResponseAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
@@ -618,10 +617,9 @@ End Function
 Private Function IWriteResponseAsyncTaskEndExecute( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
+	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIResult, ppNextTask)
 End Function
 
 Private Function IWriteResponseAsyncTaskGetBaseStream( _

@@ -289,7 +289,6 @@ End Function
 Private Function AcceptConnectionAsyncTaskEndExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
@@ -297,7 +296,6 @@ Private Function AcceptConnectionAsyncTaskEndExecute( _
 	Dim hrEndAccept As HRESULT = ITcpListener_EndAccept( _
 		this->pListener, _
 		pIResult, _
-		BytesTransferred, _
 		@ClientSocket _
 	)
 	If FAILED(hrEndAccept) Then
@@ -460,10 +458,9 @@ End Function
 Private Function IAcceptConnectionAsyncTaskEndExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
+	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult, ppNextTask)
 End Function
 
 Private Function IAcceptConnectionAsyncTaskGetBaseStream( _

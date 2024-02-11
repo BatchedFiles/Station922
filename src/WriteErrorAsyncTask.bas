@@ -484,7 +484,6 @@ End Function
 Private Function WriteErrorAsyncTaskEndExecute( _
 		ByVal this As WriteErrorAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
@@ -775,10 +774,9 @@ End Function
 Private Function IWriteErrorAsyncTaskEndExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
+	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult, ppNextTask)
 End Function
 
 Private Function IWriteErrorAsyncTaskGetBaseStream( _

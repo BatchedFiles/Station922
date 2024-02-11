@@ -219,7 +219,6 @@ End Function
 Private Function TcpListenerEndAccept( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal ReadedBytes As DWORD, _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
 	
@@ -327,10 +326,9 @@ End Function
 Private Function ITcpListenerEndAccept( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
-		ByVal ReadedBytes As DWORD, _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As ULONG
-	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, ReadedBytes, pClientSocket)
+	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, pClientSocket)
 End Function
 
 Private Function ITcpListenerGetListenSocket( _

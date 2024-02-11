@@ -43,6 +43,7 @@ Private Function WorkerThread( _
 		Dim BytesTransferred As DWORD = Any
 		Dim CompletionKey As ULONG_PTR = Any
 		Dim pOverlap As OVERLAPPED Ptr = Any
+		Dim dwError As DWORD = Any
 		
 		Dim resCompletionStatus As BOOL = GetQueuedCompletionStatus( _
 			this->CompletionPort, _
@@ -51,30 +52,31 @@ Private Function WorkerThread( _
 			@pOverlap, _
 			INFINITE _
 		)
+		
 		If resCompletionStatus Then
 			If CompletionKey = 0 Then
 				Exit Do
 			End If
 			
-			ThreadPoolCallBack( _
-				ERROR_SUCCESS, _
-				BytesTransferred, _
-				pOverlap _
-			)
+			dwError = ERROR_SUCCESS
 		Else
 			If pOverlap = NULL Then
 				Exit Do
 			End If
 			
-			Dim dwError As DWORD = GetLastError()
-			
-			ThreadPoolCallBack( _
-				dwError, _
-				BytesTransferred, _
-				pOverlap _
-			)
+			dwError = GetLastError()
 		End If
 		
+		Dim pIResult As IAsyncResult Ptr = GetAsyncResultFromOverlappedWeakPtr(pOverlap)
+		
+		IAsyncResult_SetCompleted( _
+			pIResult, _
+			BytesTransferred, _
+			True, _
+			dwError _
+		)
+		
+		ThreadPoolCallBack(pIResult)
 	Loop
 	
 	Return 0

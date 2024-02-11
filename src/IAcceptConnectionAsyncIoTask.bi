@@ -46,7 +46,6 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 	EndExecute As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
@@ -96,7 +95,7 @@ End Type
 #define IAcceptConnectionAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
 #define IAcceptConnectionAsyncIoTask_GetTaskId(this, pId) (this)->lpVtbl->GetTaskId(this, pId)
 #define IAcceptConnectionAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
-#define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, BytesTransferred, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, BytesTransferred, ppNextTask)
+#define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, ppNextTask)
 #define IAcceptConnectionAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
 #define IAcceptConnectionAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
 #define IAcceptConnectionAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)

@@ -241,7 +241,6 @@ End Function
 Private Function ReadRequestAsyncTaskEndExecute( _
 		ByVal this As ReadRequestAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
 	
@@ -493,10 +492,9 @@ End Function
 Private Function IReadRequestAsyncTaskEndExecute( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal BytesTransferred As DWORD, _
 		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, BytesTransferred, ppNextTask)
+	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult, ppNextTask)
 End Function
 
 Private Function IReadRequestAsyncTaskGetBaseStream( _

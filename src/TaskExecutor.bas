@@ -2,18 +2,9 @@
 #include once "Logger.bi"
 
 Private Function FinishExecuteTaskSink( _
-		ByVal BytesTransferred As DWORD, _
 		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr, _
-		ByVal dwError As DWORD _
+		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
 	)As HRESULT
-	
-	IAsyncResult_SetCompleted( _
-		pIResult, _
-		BytesTransferred, _
-		True, _
-		dwError _
-	)
 	
 	Dim pTask As IAsyncIoTask Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pTask)
@@ -21,7 +12,6 @@ Private Function FinishExecuteTaskSink( _
 	Dim hrEndExecute As HRESULT = IAsyncIoTask_EndExecute( _
 		pTask, _
 		pIResult, _
-		BytesTransferred, _
 		ppNextTask _
 	)
 	If FAILED(hrEndExecute) Then
@@ -66,21 +56,16 @@ Private Function FinishExecuteTaskSink( _
 End Function
 
 Public Sub ThreadPoolCallBack( _
-		ByVal dwError As DWORD, _
-		ByVal BytesTransferred As DWORD, _
-		ByVal pOverlap As OVERLAPPED Ptr _
+		ByVal pIResult As IAsyncResult Ptr _
 	)
 	
 	Dim hrFinishExecute As HRESULT = Any
 	Dim pNextTask As IAsyncIoTask Ptr = Any
 	Scope
-		Dim pIResult As IAsyncResult Ptr = GetAsyncResultFromOverlappedWeakPtr(pOverlap)
 		
 		hrFinishExecute = FinishExecuteTaskSink( _
-			BytesTransferred, _
 			pIResult, _
-			@pNextTask, _
-			dwError _
+			@pNextTask _
 		)
 	End Scope
 	

@@ -8,9 +8,7 @@ Declare Function StartExecuteTask( _
 )As HRESULT
 
 Declare Sub ThreadPoolCallBack( _
-	ByVal dwError As DWORD, _
-	ByVal BytesTransferred As DWORD, _
-	ByVal pOverlap As OVERLAPPED Ptr _
+	ByVal pIResult As IAsyncResult Ptr _
 )
 
 #endif
