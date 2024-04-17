@@ -12,7 +12,7 @@
 				"_WIN32_WINNT=1281",
 				"USE_UNICODE=TRUE",
 				"FILE_SUFFIX=_GCC0930_FBC1101_WRT",
-				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc-modified\\src\\compiler\\fbc64_icase.exe\"",
+				"FBC=\"C:\\Programming\\FreeBASIC Projects\\fbc-modified\\bin\\Release\\x64\\fbc64.exe\"",
 				"CC=\"C:\\Program Files\\mingw64\\bin\\gcc.exe\"",
 				"AS=\"C:\\Program Files\\mingw64\\bin\\as.exe\"",
 				"LD=\"C:\\Program Files\\mingw64\\bin\\ld.exe\"",
