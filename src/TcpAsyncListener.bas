@@ -1,4 +1,4 @@
-#include once "TcpListener.bi"
+#include once "TcpAsyncListener.bi"
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
@@ -152,7 +152,8 @@ End Function
 
 Private Function TcpListenerBeginAccept( _
 		ByVal this As TcpListener Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -185,7 +186,7 @@ Private Function TcpListenerBeginAccept( _
 	Dim pOverlap As OVERLAPPED Ptr = Any
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 	
-	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
 	
 	Const dwReceiveDataLength = 0
 	Const lpdwBytesReceived = NULL
@@ -222,14 +223,13 @@ Private Function TcpListenerEndAccept( _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
 	
-	/'
-	Dim pLocalSockaddr As sockaddr Ptr = Any
+	Dim pLocalSockaddr As SOCKADDR Ptr = Any
 	Dim LocalSockaddrLength As INT_ = Any
-	Dim pRemoteSockaddr As sockaddr Ptr = Any
+	Dim pRemoteSockaddr As SOCKADDR Ptr = Any
 	Dim RemoteSockaddrLength As INT_ = Any
 	
 	lpfnGetAcceptExSockaddrs( _
-		@this->Buffer->LocalAddress, _
+		@this->LocalAddress, _
 		0, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
 		SOCKET_ADDRESS_STORAGE_LENGTH, _
@@ -239,19 +239,20 @@ Private Function TcpListenerEndAccept( _
 		@RemoteSockaddrLength _
 	)
 	
+	Dim optval As Zstring Ptr = CPtr(Zstring Ptr, @this->ListenSocket)
 	Dim resSetOptions As Long = setsockopt( _
 		this->ClientSocket, _
 		SOL_SOCKET, _
 		SO_UPDATE_ACCEPT_CONTEXT, _
-		CPtr(Zstring Ptr, @this->ListenSocket), _
+		optval, _
 		SizeOf(SOCKET) _
 	)
 	If resSetOptions = SOCKET_ERROR Then
 		Dim dwError As Long = WSAGetLastError()
+		closesocket(this->ClientSocket)
 		*pClientSocket = INVALID_SOCKET
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	'/
 	
 	*pClientSocket = this->ClientSocket
 	
@@ -317,10 +318,11 @@ End Function
 
 Private Function ITcpListenerBeginAccept( _
 		ByVal this As ITcpListener Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), StateObject, ppIAsyncResult)
+	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function ITcpListenerEndAccept( _

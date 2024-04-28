@@ -6,7 +6,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "IniConfiguration.bi"
-#include once "Logger.bi"
 #include once "Mime.bi"
 #include once "Network.bi"
 #include once "ThreadPool.bi"
@@ -63,15 +62,15 @@ Public Function ConvertSystemDateToHttpDate( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal dt As SYSTEMTIME Ptr _
 	)As HeapBSTR
-	
+
 	' Tue, 15 Nov 1994 12:45:26 GMT
-	
+
 	Const DateFormatString = WStr("ddd, dd MMM yyyy ")
 	Const TimeFormatString = WStr("HH:mm:ss GMT")
 	Const DateBufferCapacity As Integer = 31
-	
+
 	Dim Buffer As WString * (DateBufferCapacity + 1) = Any
-	
+
 	Dim resDateLength As Long = GetDateFormatW( _
 		LOCALE_INVARIANT, _
 		0, _
@@ -83,10 +82,10 @@ Public Function ConvertSystemDateToHttpDate( _
 	If resDateLength = 0 Then
 		Return NULL
 	End If
-	
+
 	Dim DateLength As Integer = CInt(resDateLength - 1)
 	Dim FreeSpaceLength As Integer = DateBufferCapacity - DateLength
-	
+
 	Dim resTimeLength As Long = GetTimeFormatW( _
 		LOCALE_INVARIANT, _
 		0, _
@@ -98,19 +97,19 @@ Public Function ConvertSystemDateToHttpDate( _
 	If resTimeLength = 0 Then
 		Return NULL
 	End If
-	
+
 	Dim TimeLength As Integer = CInt(resTimeLength - 1)
-	
+
 	Dim DateTimeLength As Integer = DateLength + TimeLength
-	
+
 	Dim bstrHttpDate As HeapBSTR = CreateHeapStringLen( _
 		pIMemoryAllocator, _
 		@Buffer, _
 		DateTimeLength _
 	)
-	
+
 	Return bstrHttpDate
-	
+
 End Function
 
 Public Function FindWebSiteWeakPtr( _
@@ -118,7 +117,7 @@ Public Function FindWebSiteWeakPtr( _
 		ByVal pIRequest As IClientRequest Ptr, _
 		ByVal ppIWebSiteWeakPtr As IWebSite Ptr Ptr _
 	)As HRESULT
-	
+
 	/'
 	If HttpMethod = HttpMethods.HttpConnect Then
 		IWebSiteCollection_Item( _
@@ -129,147 +128,24 @@ Public Function FindWebSiteWeakPtr( _
 		Return S_OK
 	End If
 	'/
-	
+
 	Dim HeaderHost As HeapBSTR = Any
 	IClientRequest_GetHttpHeader( _
 		pIRequest, _
 		HttpRequestHeaders.HeaderHost, _
 		@HeaderHost _
 	)
-	
+
 	Dim hrFindSite As HRESULT = IWebSiteCollection_ItemWeakPtr( _
 		pIWebSites, _
 		HeaderHost, _
 		ppIWebSiteWeakPtr _
 	)
-	
-	HeapSysFreeString(HeaderHost)
-	
-	Return hrFindSite
-	
-End Function
 
-Public Function ProcessErrorRequestResponse( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal pIStream As IBaseStream Ptr, _
-		ByVal pIHttpReader As IHttpReader Ptr, _
-		ByVal pIRequest As IClientRequest Ptr, _
-		ByVal pIWebSitesWeakPtr As IWebSiteCollection Ptr, _
-		ByVal hrErrorCode As HRESULT, _
-		ByVal ppTask As IWriteErrorAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	Dim pTask As IWriteErrorAsyncIoTask Ptr = Any
-	Dim hrCreateTask As HRESULT = CreateWriteErrorAsyncTask( _
-		pIMemoryAllocator, _
-		@IID_IWriteErrorAsyncIoTask, _
-		@pTask _
-	)
-	If FAILED(hrCreateTask) Then
-		*ppTask = NULL
-		Return hrCreateTask
-	End If
-	
-	IWriteErrorAsyncIoTask_SetBaseStream(pTask, pIStream)
-	IWriteErrorAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-	IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, pIWebSitesWeakPtr)
-	
-	IWriteErrorAsyncIoTask_SetClientRequest(pTask, pIRequest)
-	
-	Dim HttpError As ResponseErrorCode = Any
-	
-	Select Case hrErrorCode
-		
-		Case HTTPREADER_E_INTERNALBUFFEROVERFLOW, HTTPREADER_E_INSUFFICIENT_BUFFER
-			HttpError = ResponseErrorCode.RequestHeaderFieldsTooLarge
-			
-		Case CLIENTURI_E_CONTAINSBADCHAR, CLIENTURI_E_PATHNOTFOUND
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case HTTPREADER_E_SOCKETERROR
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case HTTPREADER_E_CLIENTCLOSEDCONNECTION
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADHOST
-			HttpError = ResponseErrorCode.HostNotFound
-			
-		Case CLIENTREQUEST_E_BADREQUEST
-			HttpError = ResponseErrorCode.BadRequest
-			
-		Case CLIENTREQUEST_E_BADPATH, CLIENTURI_E_PATHNOTFOUND
-			HttpError = ResponseErrorCode.PathNotValid
-			
-		Case CLIENTURI_E_URITOOLARGE, CLIENTREQUEST_E_URITOOLARGE
-			HttpError = ResponseErrorCode.RequestUrlTooLarge
-			
-		Case CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
-			HttpError = ResponseErrorCode.VersionNotSupported
-			
-		Case CLIENTREQUEST_E_CONTENTTYPEEMPTY
-			HttpError = ResponseErrorCode.ContentTypeEmpty
-			
-		Case WEBSITE_E_SITENOTFOUND
-			HttpError = ResponseErrorCode.SiteNotFound
-			
-		Case WEBSITE_E_REDIRECTED
-			HttpError = ResponseErrorCode.MovedPermanently
-			
-		Case WEBSITE_E_FILENOTFOUND
-			HttpError = ResponseErrorCode.FileNotFound
-			
-		Case WEBSITE_E_FILEGONE
-			HttpError = ResponseErrorCode.FileGone
-			
-		Case WEBSITE_E_FORBIDDEN
-			HttpError = ResponseErrorCode.Forbidden
-			
-		Case WEBSITE_E_NEEDAUTHENTICATE
-			HttpError = ResponseErrorCode.NeedAuthenticate
-			
-		Case WEBSITE_E_BADAUTHENTICATEPARAM
-			HttpError = ResponseErrorCode.BadAuthenticateParam
-			
-		Case WEBSITE_E_NEEDBASICAUTHENTICATE
-			HttpError = ResponseErrorCode.NeedBasicAuthenticate
-			
-		Case WEBSITE_E_EMPTYPASSWORD
-			HttpError = ResponseErrorCode.EmptyPassword
-			
-		Case WEBSITE_E_BADUSERNAMEPASSWORD
-			HttpError = ResponseErrorCode.BadUserNamePassword
-			
-		Case HTTPPROCESSOR_E_NOTIMPLEMENTED
-			HttpError = ResponseErrorCode.NotImplemented
-			
-		Case HTTPPROCESSOR_E_RANGENOTSATISFIABLE
-			HttpError = ResponseErrorCode.RequestRangeNotSatisfiable
-			
-		Case HTTPPROCESSOR_E_LENGTHREQUIRED
-			HttpError = ResponseErrorCode.LengthRequired
-			
-		Case E_OUTOFMEMORY
-			HttpError = ResponseErrorCode.NotEnoughMemory
-			
-		Case Else
-			HttpError = ResponseErrorCode.InternalServerError
-			
-	End Select
-	
-	IWriteErrorAsyncIoTask_SetErrorCode(pTask, HttpError, hrErrorCode)
-	
-	Dim hrPrepare As HRESULT = IWriteErrorAsyncIoTask_Prepare(pTask)
-	If FAILED(hrPrepare) Then
-		IWriteErrorAsyncIoTask_Release(pTask)
-		*ppTask = NULL
-		Return hrPrepare
-	End If
-	
-	*ppTask = pTask
-	
-	Return S_OK
-	
+	HeapSysFreeString(HeaderHost)
+
+	Return hrFindSite
+
 End Function
 
 Private Function IpEndPointExists( _
@@ -278,7 +154,7 @@ Private Function IpEndPointExists( _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As Boolean
-	
+
 	For i As Integer = 0 To IpEndPointsLength - 1
 		Dim resCompareAddress As Long = lstrcmpW( _
 			pIpEndPoints->Vector(i).ListenAddress, _
@@ -294,9 +170,9 @@ Private Function IpEndPointExists( _
 			End If
 		End If
 	Next
-	
+
 	Return False
-	
+
 End Function
 
 Private Function IpEndPointCompare( _
@@ -304,7 +180,7 @@ Private Function IpEndPointCompare( _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As Boolean
-	
+
 	Dim resCompareAddress As Long = lstrcmpW( _
 		pWebSiteConfig->ListenAddress, _
 		ListenAddress _
@@ -318,13 +194,13 @@ Private Function IpEndPointCompare( _
 			Return True
 		End If
 	End If
-	
+
 	Return False
-	
+
 End Function
 
 Public Function Station922Initialize()As HRESULT
-	
+
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim WorkerThreads As Integer = Any
 	Dim MemoryPoolCapacity As UInteger = Any
@@ -336,20 +212,20 @@ Public Function Station922Initialize()As HRESULT
 	Dim HttpProcessors As HttpProcessorVector = Any
 	Dim pIDefaultWebSite As IWebSite Ptr = Any
 	Dim IpEndPoints As IpEndPointVector = Any
-	
+
 	Scope
 		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
 		If FAILED(hrNetworkStartup) Then
 			Return hrNetworkStartup
 		End If
-		
+
 		Dim hrLoadWsa As HRESULT = LoadWsaFunctions()
 		If FAILED(hrLoadWsa) Then
 			NetworkCleanUp()
 			Return hrLoadWsa
 		End If
 	End Scope
-	
+
 	Scope
 		Const dwReserved As DWORD = 1
 		Dim hrGetMalloc As HRESULT = CoGetMalloc( _
@@ -360,7 +236,7 @@ Public Function Station922Initialize()As HRESULT
 			Return hrGetMalloc
 		End If
 	End Scope
-	
+
 	Scope
 		Dim cbBytes As SIZE_T_ = MaxWebSites * SizeOf(WebSiteConfiguration)
 		pWebSiteConfig = IMalloc_Alloc( _
@@ -371,7 +247,7 @@ Public Function Station922Initialize()As HRESULT
 			Return E_OUTOFMEMORY
 		End If
 	End Scope
-	
+
 	Scope
 		Dim pIConfig As IWebServerConfiguration Ptr = Any
 		Dim hrCreateConfiguration As HRESULT = CreateWebServerIniConfiguration( _
@@ -382,22 +258,22 @@ Public Function Station922Initialize()As HRESULT
 		If FAILED(hrCreateConfiguration) Then
 			Return hrCreateConfiguration
 		End If
-		
+
 		IWebServerConfiguration_GetWorkerThreadsCount( _
 			pIConfig, _
 			@WorkerThreads _
 		)
-		
+
 		IWebServerConfiguration_GetMemoryPoolCapacity( _
 			pIConfig, _
 			@MemoryPoolCapacity _
 		)
-		
+
 		IWebServerConfiguration_GetKeepAliveInterval( _
 			pIConfig, _
 			@KeepAliveInterval _
 		)
-		
+
 		Dim hrWebSites As HRESULT = IWebServerConfiguration_GetWebSites( _
 			pIConfig, _
 			@WebSitesLength, _
@@ -406,7 +282,7 @@ Public Function Station922Initialize()As HRESULT
 		If FAILED(hrWebSites) Then
 			Return hrWebSites
 		End If
-		
+
 		Dim hrDefaultWebSite As HRESULT = IWebServerConfiguration_GetDefaultWebSite( _
 			pIConfig, _
 			@DefaultWebSiteConfig _
@@ -414,10 +290,10 @@ Public Function Station922Initialize()As HRESULT
 		If FAILED(hrDefaultWebSite) Then
 			Return hrDefaultWebSite
 		End If
-		
+
 		IWebServerConfiguration_Release(pIConfig)
 	End Scope
-	
+
 	Scope
 		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool( _
 			pIMemoryAllocator, _
@@ -428,7 +304,7 @@ Public Function Station922Initialize()As HRESULT
 			Return hrCreateMemoryPool
 		End If
 	End Scope
-	
+
 	Scope
 		Dim hrCreateThreadPool As HRESULT = CreateThreadPool( _
 			pIMemoryAllocator, _
@@ -438,17 +314,17 @@ Public Function Station922Initialize()As HRESULT
 		If FAILED(hrCreateThreadPool) Then
 			Return hrCreateThreadPool
 		End If
-		
+
 		IThreadPool_SetMaxThreads(GlobalThreadPool, WorkerThreads)
-		
+
 		Dim hrRunPool As HRESULT = IThreadPool_Run(GlobalThreadPool)
 		If FAILED(hrRunPool) Then
 			Return hrRunPool
 		End If
 	End Scope
-	
+
 	Scope
-		
+
 		Scope
 			Dim pIHttpGetProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrCreateProcessor As HRESULT = CreateHttpGetProcessor( _
@@ -459,7 +335,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateProcessor) Then
 				Return hrCreateProcessor
 			End If
-			
+
 			Const GetKeyString = WStr("GET")
 			Dim bstrGetString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -469,12 +345,12 @@ Public Function Station922Initialize()As HRESULT
 			If bstrGetString = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			HttpProcessors.Vector(0).Key = bstrGetString
 			HttpProcessors.Vector(0).Value = pIHttpGetProcessor
-			
+
 			IHttpAsyncProcessor_AddRef(pIHttpGetProcessor)
-			
+
 			Const HeadKeyString = WStr("HEAD")
 			Dim bstrHeadString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -487,7 +363,7 @@ Public Function Station922Initialize()As HRESULT
 			HttpProcessors.Vector(1).Key = bstrHeadString
 			HttpProcessors.Vector(1).Value = pIHttpGetProcessor
 		End Scope
-		
+
 		Scope
 			Dim pIHttpPutProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrCreateProcessor As HRESULT = CreateHttpPutProcessor( _
@@ -498,7 +374,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateProcessor) Then
 				Return hrCreateProcessor
 			End If
-			
+
 			Const PutKeyString = WStr("PUT")
 			Dim bstrPutString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -508,11 +384,11 @@ Public Function Station922Initialize()As HRESULT
 			If bstrPutString = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			HttpProcessors.Vector(2).Key = bstrPutString
 			HttpProcessors.Vector(2).Value = pIHttpPutProcessor
 		End Scope
-		
+
 		Scope
 			Dim pIHttpTraceProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrCreateProcessor As HRESULT = CreateHttpTraceProcessor( _
@@ -523,7 +399,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateProcessor) Then
 				Return hrCreateProcessor
 			End If
-			
+
 			Const TraceKeyString = WStr("TRACE")
 			Dim bstrTraceString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -533,11 +409,11 @@ Public Function Station922Initialize()As HRESULT
 			If bstrTraceString = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			HttpProcessors.Vector(3).Key = bstrTraceString
 			HttpProcessors.Vector(3).Value = pIHttpTraceProcessor
 		End Scope
-		
+
 		Scope
 			Dim pIHttpOptionsProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrCreateProcessor As HRESULT = CreateHttpOptionsProcessor( _
@@ -548,7 +424,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateProcessor) Then
 				Return hrCreateProcessor
 			End If
-			
+
 			Const OptionsKeyString = WStr("OPTIONS")
 			Dim bstrOptionsString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -558,11 +434,11 @@ Public Function Station922Initialize()As HRESULT
 			If bstrOptionsString = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			HttpProcessors.Vector(4).Key = bstrOptionsString
 			HttpProcessors.Vector(4).Value = pIHttpOptionsProcessor
 		End Scope
-	
+
 		Scope
 			Dim pIHttpDeleteProcessor As IHttpAsyncProcessor Ptr = Any
 			Dim hrCreateProcessor As HRESULT = CreateHttpDeleteProcessor( _
@@ -573,7 +449,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateProcessor) Then
 				Return hrCreateProcessor
 			End If
-			
+
 			Const DeleteKeyString = WStr("DELETE")
 			Dim bstrDeleteString As HeapBSTR = CreatePermanentHeapStringLen( _
 				pIMemoryAllocator, _
@@ -583,12 +459,12 @@ Public Function Station922Initialize()As HRESULT
 			If bstrDeleteString = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			HttpProcessors.Vector(5).Key = bstrDeleteString
 			HttpProcessors.Vector(5).Value = pIHttpDeleteProcessor
 		End Scope
 	End Scope
-	
+
 	Scope
 		For i As Integer = 0 To WebSitesLength - 1
 			Dim pIWebSite As IWebSite Ptr = Any
@@ -600,7 +476,7 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreateWebSite) Then
 				Return hrCreateWebSite
 			End If
-			
+
 			IWebSite_SetHostName(pIWebSite, pWebSiteConfig[i].HostName)
 			IWebSite_SetVirtualPath(pIWebSite, pWebSiteConfig[i].VirtualPath)
 			IWebSite_SetSitePhysicalDirectory(pIWebSite, pWebSiteConfig[i].PhysicalDirectory)
@@ -620,11 +496,11 @@ Public Function Station922Initialize()As HRESULT
 			IWebSite_SetUseSsl(pIWebSite, pWebSiteConfig[i].UseSsl)
 			IWebSite_SetDirectoryListing(pIWebSite, pWebSiteConfig[i].EnableDirectoryListing)
 			IWebSite_SetGetAllFiles(pIWebSite, pWebSiteConfig[i].EnableGetAllFiles)
-			
+
 			WebSites.Vector(i) = pIWebSite
 		Next
 	End Scope
-	
+
 	Scope
 		Dim hrCreateWebSite As HRESULT = CreateWebSite( _
 			pIMemoryAllocator, _
@@ -634,7 +510,7 @@ Public Function Station922Initialize()As HRESULT
 		If FAILED(hrCreateWebSite) Then
 			Return hrCreateWebSite
 		End If
-		
+
 		IWebSite_SetHostName(pIDefaultWebSite, DefaultWebSiteConfig.HostName)
 		IWebSite_SetVirtualPath(pIDefaultWebSite, DefaultWebSiteConfig.VirtualPath)
 		IWebSite_SetSitePhysicalDirectory(pIDefaultWebSite, DefaultWebSiteConfig.PhysicalDirectory)
@@ -655,21 +531,21 @@ Public Function Station922Initialize()As HRESULT
 		IWebSite_SetDirectoryListing(pIDefaultWebSite, DefaultWebSiteConfig.EnableDirectoryListing)
 		IWebSite_SetGetAllFiles(pIDefaultWebSite, DefaultWebSiteConfig.EnableGetAllFiles)
 	End Scope
-	
+
 	Scope
 		For j As Integer = 0 To WebSitesLength - 1
 			Dim MethodsLength As Integer = SysStringLen(pWebSiteConfig[j].Methods)
-			
+
 			For i As Integer = 0 To HttpProcessorsLength - 1
 				Dim KeyLength As Integer = SysStringLen(HttpProcessors.Vector(i).Key)
-				
+
 				Dim pFind As WString Ptr = FindStringW( _
 					pWebSiteConfig[j].Methods, _
 					MethodsLength, _
 					HttpProcessors.Vector(i).Key, _
 					KeyLength _
 				)
-				
+
 				If pFind Then
 					IWebSite_AddHttpProcessor( _
 						WebSites.Vector(j), _
@@ -680,7 +556,7 @@ Public Function Station922Initialize()As HRESULT
 			Next
 		Next
 	End Scope
-	
+
 	Scope
 		For i As Integer = 0 To WebSitesLength - 1
 			Dim resExists As Boolean = IpEndPointExists( _
@@ -689,14 +565,14 @@ Public Function Station922Initialize()As HRESULT
 				pWebSiteConfig[i].ListenAddress, _
 				pWebSiteConfig[i].ListenPort _
 			)
-			
+
 			If resExists = False Then
 				IpEndPoints.Vector(IpEndPointsLength).ListenAddress = pWebSiteConfig[i].ListenAddress
 				IpEndPoints.Vector(IpEndPointsLength).ListenPort = pWebSiteConfig[i].ListenPort
 				IpEndPointsLength += 1
 			End If
 		Next
-		
+
 		For i As Integer = 0 To IpEndPointsLength - 1
 			Dim pIWebServer As IWebServer Ptr = Any
 			Dim hrCreate As HRESULT = CreateWebServer( _
@@ -707,21 +583,21 @@ Public Function Station922Initialize()As HRESULT
 			If FAILED(hrCreate) Then
 				Return hrCreate
 			End If
-			
+
 			WebServers.Vector(i) = pIWebServer
 		Next
 	End Scope
-	
+
 	Scope
 		For j As Integer = 0 To IpEndPointsLength - 1
-			
+
 			For i As Integer = 0 To WebSitesLength - 1
 				Dim resCompare As Boolean = IpEndPointCompare( _
 					@pWebSiteConfig[i], _
 					IpEndPoints.Vector(j).ListenAddress, _
 					IpEndPoints.Vector(j).ListenPort _
 				)
-				
+
 				If resCompare Then
 					Dim hrAddWebSite As HRESULT = IWebServer_AddWebSite( _
 						WebServers.Vector(j), _
@@ -733,9 +609,9 @@ Public Function Station922Initialize()As HRESULT
 						Return hrAddWebSite
 					End If
 				End If
-				
+
 			Next
-			
+
 			Scope
 				Dim hrAddDefaultWebSite As HRESULT = IWebServer_AddDefaultWebSite( _
 					WebServers.Vector(j), _
@@ -744,7 +620,7 @@ Public Function Station922Initialize()As HRESULT
 				If FAILED(hrAddDefaultWebSite) Then
 					Return hrAddDefaultWebSite
 				End If
-				
+
 				Dim hrSetEndPoint As HRESULT = IWebServer_SetEndPoint( _
 					WebServers.Vector(j), _
 					IpEndPoints.Vector(j).ListenAddress, _
@@ -756,7 +632,7 @@ Public Function Station922Initialize()As HRESULT
 			End Scope
 		Next
 	End Scope
-	
+
 	Scope
 		For i As Integer = 0 To IpEndPointsLength - 1
 			Dim hrStart As HRESULT = IWebServer_Run( _
@@ -767,7 +643,7 @@ Public Function Station922Initialize()As HRESULT
 			End If
 		Next
 	End Scope
-	
+
 	Scope
 		' Cleanup
 		For i As Integer = 0 To WebSitesLength - 1
@@ -783,62 +659,62 @@ Public Function Station922Initialize()As HRESULT
 			HeapSysFreeString(pWebSiteConfig[i].Methods)
 			HeapSysFreeString(pWebSiteConfig[i].DefaultFileName)
 		Next
-		
+
 		IMalloc_Free(pIMemoryAllocator, pWebSiteConfig)
 	End Scope
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Sub Station922CleanUp()
-	
+
 	For i As Integer = 0 To IpEndPointsLength - 1
 		IWebServer_Stop(WebServers.Vector(i))
 		IWebServer_Release(WebServers.Vector(i))
 	Next
-	
+
 	IThreadPool_Stop(GlobalThreadPool)
-	
+
 	IThreadPool_Release(GlobalThreadPool)
-	
+
 	DeleteMemoryPool()
-	
+
 End Sub
 
 Public Function GetThreadPoolWeakPtr()As IThreadPool Ptr
-	
+
 	Return GlobalThreadPool
-	
+
 End Function
 
 Public Function WaitAlertableLoop( _
 		ByVal hEvent As HANDLE _
 	)As HRESULT
-	
+
 	Do
 		Dim resWait As DWORD = WaitForSingleObjectEx( _
 			hEvent, _
 			INFINITE, _
 			TRUE _
 		)
-		
+
 		Select Case resWait
-			
+
 			Case WAIT_OBJECT_0
 				' The event became a signal
 				' exit from loop
 				Return S_OK
-				
+
 			Case WAIT_IO_COMPLETION
 				' The asynchronous procedure has ended
 				' we continue to wait
 				Continue Do
-				
+
 			Case Else ' WAIT_ABANDONED, WAIT_TIMEOUT, WAIT_FAILED
 				Return E_FAIL
-				
+
 		End Select
 	Loop
-	
+
 End Function

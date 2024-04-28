@@ -3,7 +3,7 @@
 
 Type IWebSite As IWebSite_
 
-#include once "IAttributedStream.bi"
+#include once "IAttributedAsyncStream.bi"
 #include once "IClientRequest.bi"
 #include once "IHttpProcessorCollection.bi"
 #include once "IString.bi"
@@ -68,11 +68,11 @@ Type IWebSiteVirtualTable
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pRequest As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal fAccess As FileAccess, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	GetErrorBuffer As Function( _
@@ -81,7 +81,7 @@ Type IWebSiteVirtualTable
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrErrorCode As HRESULT, _
 		ByVal StatusCode As HttpStatusCodes, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	GetProcessorCollectionWeakPtr As Function( _

@@ -1,10 +1,10 @@
-#include once "FileStream.bi"
+#include once "FileAsyncStream.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
-Extern GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable
+Extern GlobalFileStreamVirtualTable As Const IFileAsyncStreamVirtualTable
 
 Const SmallFileBytesSize As DWORD = 6 * 4096
 
@@ -12,7 +12,7 @@ Type FileStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif
-	lpVtbl As Const IFileStreamVirtualTable Ptr
+	lpVtbl As Const IFileAsyncStreamVirtualTable Ptr
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
@@ -163,10 +163,10 @@ Private Function FileStreamQueryInterface( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 	
-	If IsEqualIID(@IID_IFileStream, riid) Then
+	If IsEqualIID(@IID_IFileAsyncStream, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IAttributedStream, riid) Then
+		If IsEqualIID(@IID_IAttributedAsyncStream, riid) Then
 			*ppv = @this->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
@@ -281,7 +281,8 @@ Private Function FileStreamBeginReadSlice( _
 		ByVal this As FileStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal dwLength As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -325,7 +326,7 @@ Private Function FileStreamBeginReadSlice( _
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 		
-		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
 		
 		Dim liStartIndex As LARGE_INTEGER = Any
 		liStartIndex.QuadPart = VirtualStartIndex
@@ -415,7 +416,8 @@ Private Function FileStreamBeginWriteSlice( _
 		ByVal this As FileStream Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr, _
 		ByVal Offset As LongInt, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -448,7 +450,7 @@ Private Function FileStreamBeginWriteSlice( _
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 		
-		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
 		
 		Dim liStartIndex As LARGE_INTEGER = Any
 		liStartIndex.QuadPart = VirtualStartIndex
@@ -794,247 +796,249 @@ Private Function FileStreamGetReservedBytes( _
 End Function
 
 
-Private Function IFileStreamQueryInterface( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamQueryInterface( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
 	Return FileStreamQueryInterface(ContainerOf(this, FileStream, lpVtbl), riid, ppvObject)
 End Function
 
-Private Function IFileStreamAddRef( _
-		ByVal this As IFileStream Ptr _
+Private Function IFileAsyncStreamAddRef( _
+		ByVal this As IFileAsyncStream Ptr _
 	)As ULONG
 	Return FileStreamAddRef(ContainerOf(this, FileStream, lpVtbl))
 End Function
 
-Private Function IFileStreamRelease( _
-		ByVal this As IFileStream Ptr _
+Private Function IFileAsyncStreamRelease( _
+		ByVal this As IFileAsyncStream Ptr _
 	)As ULONG
 	Return FileStreamRelease(ContainerOf(this, FileStream, lpVtbl))
 End Function
 
-Private Function IFileStreamGetContentType( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetContentType( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
 	Return FileStreamGetContentType(ContainerOf(this, FileStream, lpVtbl), ppType)
 End Function
 
-Private Function IFileStreamGetEncoding( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetEncoding( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 	Return FileStreamGetEncoding(ContainerOf(this, FileStream, lpVtbl), pZipMode)
 End Function
 
-Private Function IFileStreamGetLanguage( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetLanguage( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
 	)As HRESULT
 	Return FileStreamGetLanguage(ContainerOf(this, FileStream, lpVtbl), ppLanguage)
 End Function
 
-Private Function IFileStreamGetETag( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetETag( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
 	Return FileStreamGetETag(ContainerOf(this, FileStream, lpVtbl), ppETag)
 End Function
 
-Private Function IFileStreamGetLastFileModifiedDate( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetLastFileModifiedDate( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
 	Return FileStreamGetLastFileModifiedDate(ContainerOf(this, FileStream, lpVtbl), ppDate)
 End Function
 
-Private Function IFileStreamGetLength( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetLength( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 	Return FileStreamGetLength(ContainerOf(this, FileStream, lpVtbl), pLength)
 End Function
 
-Private Function IFileStreamGetPreloadedBytes( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetPreloadedBytes( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	Return FileStreamGetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
-Private Function IFileStreamBeginReadSlice( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamBeginReadSlice( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return FileStreamBeginReadSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, StateObject, ppIAsyncResult)
+	Return FileStreamBeginReadSlice(ContainerOf(this, FileStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
 End Function
 
-Private Function IFileStreamEndReadSlice( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamEndReadSlice( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
 	Return FileStreamEndReadSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pBufferSlice)
 End Function
 
-Private Function IFileStreamGetFilePath( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetFilePath( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ppFilePath As HeapBSTR Ptr _
 	)As HRESULT
 	Return FileStreamGetFilePath(ContainerOf(this, FileStream, lpVtbl), ppFilePath)
 End Function
 
-Private Function IFileStreamSetFilePath( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetFilePath( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal FilePath As HeapBSTR _
 	)As HRESULT
 	Return FileStreamSetFilePath(ContainerOf(this, FileStream, lpVtbl), FilePath)
 End Function
 
-Private Function IFileStreamGetFileHandle( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetFileHandle( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	Return FileStreamGetFileHandle(ContainerOf(this, FileStream, lpVtbl), pResult)
 End Function
 
-Private Function IFileStreamSetFileHandle( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetFileHandle( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	Return FileStreamSetFileHandle(ContainerOf(this, FileStream, lpVtbl), hFile)
 End Function
 
-Private Function IFileStreamGetZipFileHandle( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetZipFileHandle( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pResult As HANDLE Ptr _
 	)As HRESULT
 	Return FileStreamGetZipFileHandle(ContainerOf(this, FileStream, lpVtbl), pResult)
 End Function
 
-Private Function IFileStreamSetZipFileHandle( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetZipFileHandle( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal hFile As HANDLE _
 	)As HRESULT
 	Return FileStreamSetZipFileHandle(ContainerOf(this, FileStream, lpVtbl), hFile)
 End Function
 
-Private Function IFileStreamSetContentType( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetContentType( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
 	Return FileStreamSetContentType(ContainerOf(this, FileStream, lpVtbl), pType)
 End Function
 
-Private Function IFileStreamSetFileOffset( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetFileOffset( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal Offset As LongInt _
 	)As HRESULT
 	Return FileStreamSetFileOffset(ContainerOf(this, FileStream, lpVtbl), Offset)
 End Function
 
-Private Function IFileStreamSetFileSize( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetFileSize( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal FileSize As LongInt _
 	)As HRESULT
 	Return FileStreamSetFileSize(ContainerOf(this, FileStream, lpVtbl), FileSize)
 End Function
 
-Private Function IFileStreamSetEncoding( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetEncoding( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 	Return FileStreamSetEncoding(ContainerOf(this, FileStream, lpVtbl), ZipMode)
 End Function
 
-Private Function IFileStreamSetFileTime( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetFileTime( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pTime As FILETIME Ptr _
 	)As HRESULT
 	Return FileStreamSetFileTime(ContainerOf(this, FileStream, lpVtbl), pTime)
 End Function
 
-Private Function IFileStreamSetETag( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetETag( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ETag As HeapBSTR _
 	)As HRESULT
 	Return FileStreamSetETag(ContainerOf(this, FileStream, lpVtbl), ETag)
 End Function
 
-Private Function IFileStreamSetReservedFileBytes( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetReservedFileBytes( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal ReservedFileBytes As UInteger _
 	)As HRESULT
 	Return FileStreamSetReservedFileBytes(ContainerOf(this, FileStream, lpVtbl), ReservedFileBytes)
 End Function
 
-Private Function IFileStreamSetPreloadedBytes( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamSetPreloadedBytes( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal PreloadedBytesLength As UInteger, _
 		ByVal pPreloadedBytes As UByte Ptr _
 	)As HRESULT
 	Return FileStreamSetPreloadedBytes(ContainerOf(this, FileStream, lpVtbl), PreloadedBytesLength, pPreloadedBytes)
 End Function
 
-Private Function IFileStreamGetReservedBytes( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamGetReservedBytes( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pReservedBytesLength As Integer Ptr, _
 		ByVal ppReservedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	Return FileStreamGetReservedBytes(ContainerOf(this, FileStream, lpVtbl), pReservedBytesLength, ppReservedBytes)
 End Function
 
-Private Function IFileStreamBeginWriteSlice( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamBeginWriteSlice( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr, _
 		ByVal Offset As LongInt, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return FileStreamBeginWriteSlice(ContainerOf(this, FileStream, lpVtbl), pBufferSlice, Offset, StateObject, ppIAsyncResult)
+	Return FileStreamBeginWriteSlice(ContainerOf(this, FileStream, lpVtbl), pBufferSlice, Offset, pcb, StateObject, ppIAsyncResult)
 End Function
 
-Private Function IFileStreamEndWriteSlice( _
-		ByVal this As IFileStream Ptr, _
+Private Function IFileAsyncStreamEndWriteSlice( _
+		ByVal this As IFileAsyncStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 	Return FileStreamEndWriteSlice(ContainerOf(this, FileStream, lpVtbl), pIAsyncResult, pWritedBytes)
 End Function
 
-Dim GlobalFileStreamVirtualTable As Const IFileStreamVirtualTable = Type( _
-	@IFileStreamQueryInterface, _
-	@IFileStreamAddRef, _
-	@IFileStreamRelease, _
-	@IFileStreamBeginReadSlice, _
-	@IFileStreamEndReadSlice, _
-	@IFileStreamGetContentType, _
-	@IFileStreamGetEncoding, _
-	@IFileStreamGetLanguage, _
-	@IFileStreamGetETag, _
-	@IFileStreamGetLastFileModifiedDate, _
-	@IFileStreamGetLength, _
-	@IFileStreamGetPreloadedBytes, _
-	@IFileStreamGetFilePath, _
-	@IFileStreamSetFilePath, _
-	@IFileStreamGetFileHandle, _
-	@IFileStreamSetFileHandle, _
-	@IFileStreamGetZipFileHandle, _
-	@IFileStreamSetZipFileHandle, _
-	@IFileStreamSetContentType, _
-	@IFileStreamSetFileOffset, _
-	@IFileStreamSetFileSize, _
-	@IFileStreamSetEncoding, _
-	@IFileStreamSetFileTime, _
-	@IFileStreamSetETag, _
-	@IFileStreamSetReservedFileBytes, _
-	@IFileStreamSetPreloadedBytes, _
-	@IFileStreamGetReservedBytes, _
-	@IFileStreamBeginWriteSlice, _
-	@IFileStreamEndWriteSlice _
+Dim GlobalFileStreamVirtualTable As Const IFileAsyncStreamVirtualTable = Type( _
+	@IFileAsyncStreamQueryInterface, _
+	@IFileAsyncStreamAddRef, _
+	@IFileAsyncStreamRelease, _
+	@IFileAsyncStreamBeginReadSlice, _
+	@IFileAsyncStreamEndReadSlice, _
+	@IFileAsyncStreamGetContentType, _
+	@IFileAsyncStreamGetEncoding, _
+	@IFileAsyncStreamGetLanguage, _
+	@IFileAsyncStreamGetETag, _
+	@IFileAsyncStreamGetLastFileModifiedDate, _
+	@IFileAsyncStreamGetLength, _
+	@IFileAsyncStreamGetPreloadedBytes, _
+	@IFileAsyncStreamGetFilePath, _
+	@IFileAsyncStreamSetFilePath, _
+	@IFileAsyncStreamGetFileHandle, _
+	@IFileAsyncStreamSetFileHandle, _
+	@IFileAsyncStreamGetZipFileHandle, _
+	@IFileAsyncStreamSetZipFileHandle, _
+	@IFileAsyncStreamSetContentType, _
+	@IFileAsyncStreamSetFileOffset, _
+	@IFileAsyncStreamSetFileSize, _
+	@IFileAsyncStreamSetEncoding, _
+	@IFileAsyncStreamSetFileTime, _
+	@IFileAsyncStreamSetETag, _
+	@IFileAsyncStreamSetReservedFileBytes, _
+	@IFileAsyncStreamSetPreloadedBytes, _
+	@IFileAsyncStreamGetReservedBytes, _
+	@IFileAsyncStreamBeginWriteSlice, _
+	@IFileAsyncStreamEndWriteSlice _
 )

@@ -1,7 +1,7 @@
 #ifndef HTTPWRITER_BI
 #define HTTPWRITER_BI
 
-#include once "IHttpWriter.bi"
+#include once "IHttpAsyncWriter.bi"
 
 Const RTTI_ID_HTTPWRITER              = !"\001Http____Writer\001"
 

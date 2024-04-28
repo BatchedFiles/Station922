@@ -1,7 +1,7 @@
 #ifndef IMEMORYSTREAM_BI
 #define IMEMORYSTREAM_BI
 
-#include once "IAttributedStream.bi"
+#include once "IAttributedAsyncStream.bi"
 
 Extern IID_IMemoryStream Alias "IID_IMemoryStream" As Const IID
 
@@ -27,7 +27,8 @@ Type IMemoryStreamVirtualTable
 		ByVal this As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -99,6 +100,7 @@ End Type
 #define IMemoryStream_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IMemoryStream_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IMemoryStream_Release(this) (this)->lpVtbl->Release(this)
+#define IMemoryStream_BeginReadSlice(this, StartIndex, Length, pcb, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginReadSlice(this, StartIndex, Length, pcb, StateObject, ppIAsyncResult)
 #define IMemoryStream_GetContentType(this, ppType) (this)->lpVtbl->GetContentType(this, ppType)
 #define IMemoryStream_GetEncoding(this, ppEncoding) (this)->lpVtbl->GetEncoding(this, ppEncoding)
 #define IMemoryStream_GetLanguage(this, ppLanguage) (this)->lpVtbl->GetLanguage(this, ppLanguage)

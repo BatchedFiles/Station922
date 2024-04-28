@@ -1,7 +1,7 @@
-#ifndef FILESTREAM_BI
-#define FILESTREAM_BI
+#ifndef FILEASYNCSTREAM_BI
+#define FILEASYNCSTREAM_BI
 
-#include once "IFileStream.bi"
+#include once "IFileAsyncStream.bi"
 
 Extern CLSID_FILESTREAM Alias "CLSID_FILESTREAM" As Const CLSID
 

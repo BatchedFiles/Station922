@@ -13,6 +13,7 @@ Type AsyncResult
 	pState As Any Ptr
 	OverLap As OVERLAPPED
 	pBuffers As Any Ptr
+	pcb As AsyncCallback
 	BytesTransferred As DWORD
 	dwError As DWORD
 	Completed As Boolean
@@ -47,8 +48,9 @@ Private Sub InitializeAsyncResult( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pState = NULL
-	this->pBuffers = NULL
 	ZeroMemory(@this->OverLap, SizeOf(OVERLAPPED))
+	this->pBuffers = NULL
+	this->pcb = NULL
 	this->BytesTransferred = 0
 	this->Completed = False
 	
@@ -186,9 +188,11 @@ End Function
 
 Private Function AsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As AsyncResult Ptr, _
+		ByVal pcb As AsyncCallback, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
 	
+	this->pcb = pcb
 	this->pState = pState
 	
 	Return S_OK
@@ -258,6 +262,17 @@ Private Function AsyncResultAllocBuffers( _
 	
 End Function
 
+Private Function AsyncResultGetAsyncCallback( _
+		ByVal this As AsyncResult Ptr, _
+		ByVal ppcb As AsyncCallback Ptr _
+	)As HRESULT
+	
+	*ppcb = this->pcb
+	
+	Return S_OK
+	
+End Function
+
 
 Private Function IAsyncResultQueryInterface( _
 		ByVal this As IAsyncResult Ptr, _
@@ -288,9 +303,10 @@ End Function
 
 Private Function IAsyncResultSetAsyncStateWeakPtr( _
 		ByVal this As IAsyncResult Ptr, _
+		ByVal pcb As AsyncCallback, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
-	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pState)
+	Return AsyncResultSetAsyncStateWeakPtr(ContainerOf(this, AsyncResult, lpVtbl), pcb, pState)
 End Function
 
 Private Function IAsyncResultGetCompleted( _
@@ -326,6 +342,13 @@ Private Function IAsyncResultAllocBuffers( _
 	Return AsyncResultAllocBuffers(ContainerOf(this, AsyncResult, lpVtbl), Length, ppBuffers)
 End Function
 
+Private Function IAsyncResultGetAsyncCallback( _
+		ByVal this As IAsyncResult Ptr, _
+		ByVal ppcb As AsyncCallback Ptr _
+	)As HRESULT
+	Return AsyncResultGetAsyncCallback(ContainerOf(this, AsyncResult, lpVtbl), ppcb)
+End Function
+
 Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultQueryInterface, _
 	@IAsyncResultAddRef, _
@@ -335,5 +358,6 @@ Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _
 	@IAsyncResultGetCompleted, _
 	@IAsyncResultSetCompleted, _
 	@IAsyncResultGetWsaOverlapped, _
-	@IAsyncResultAllocBuffers _
+	@IAsyncResultAllocBuffers, _
+	@IAsyncResultGetAsyncCallback _
 )

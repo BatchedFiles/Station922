@@ -1,12 +1,6 @@
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ContainerOf.bi"
-#include once "HeapMemoryAllocator.bi"
-#include once "HttpReader.bi"
-#include once "NetworkStream.bi"
-#include once "ReadRequestAsyncTask.bi"
-#include once "TaskExecutor.bi"
-#include once "TcpListener.bi"
-#include once "WebUtils.bi"
+#include once "TcpAsyncListener.bi"
 
 Extern GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable
 
@@ -18,77 +12,9 @@ Type AcceptConnectionAsyncTask
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pListener As ITcpListener Ptr
-	pIWebSitesWeakPtr As IWebSiteCollection Ptr
 	ListenSocket As SOCKET
+	ClientSocket As SOCKET
 End Type
-
-Private Function CreateReadTask( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppStream As INetworkStream Ptr Ptr _
-	)As IReadRequestAsyncIoTask Ptr
-	
-	Dim pIClientMemoryAllocator As IHeapMemoryAllocator Ptr = GetHeapMemoryAllocatorInstance()
-	
-	If pIClientMemoryAllocator Then
-		
-		Dim pIHttpReader As IHttpReader Ptr = Any
-		Dim hrCreateHttpReader As HRESULT = CreateHttpReader( _
-			CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-			@IID_IHttpReader, _
-			@pIHttpReader _
-		)
-		
-		If SUCCEEDED(hrCreateHttpReader) Then
-			
-			Dim pINetworkStream As INetworkStream Ptr = Any
-			Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
-				CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-				@IID_INetworkStream, _
-				@pINetworkStream _
-			)
-			
-			If SUCCEEDED(hrCreateNetworkStream) Then
-				
-				*ppStream = pINetworkStream
-				
-				' TODO Запросить интерфейс вместо конвертирования указателя
-				IHttpReader_SetBaseStream( _
-					pIHttpReader, _
-					CPtr(IBaseStream Ptr, pINetworkStream) _
-				)
-				
-				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-				Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
-					CPtr(IMalloc Ptr, pIClientMemoryAllocator), _
-					@IID_IReadRequestAsyncIoTask, _
-					@pTask _
-				)
-				
-				If SUCCEEDED(hrCreateTask) Then
-					IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseStream Ptr, pINetworkStream))
-					IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpReader)
-					IReadRequestAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSitesWeakPtr)
-					
-					INetworkStream_Release(pINetworkStream)
-					IHttpReader_Release(pIHttpReader)
-					IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-					
-					Return pTask
-					
-				End If
-				
-				INetworkStream_Release(pINetworkStream)
-			End If
-			
-			IHttpReader_Release(pIHttpReader)
-		End If
-		
-		IHeapMemoryAllocator_Release(pIClientMemoryAllocator)
-	End If
-	
-	Return NULL
-	
-End Function
 
 Private Sub InitializeAcceptConnectionAsyncTask( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
@@ -107,7 +33,6 @@ Private Sub InitializeAcceptConnectionAsyncTask( _
 	this->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIWebSitesWeakPtr = NULL
 	this->ListenSocket = INVALID_SOCKET
 	' Do not need AddRef pListener
 	this->pListener = pListener
@@ -183,34 +108,19 @@ Private Function AcceptConnectionAsyncTaskQueryInterface( _
 	If IsEqualIID(@IID_IAcceptConnectionAsyncIoTask, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IHttpAsyncIoTask, riid) Then
+		If IsEqualIID(@IID_IAsyncIoTask, riid) Then
 			*ppv = @this->lpVtbl
 		Else
-			If IsEqualIID(@IID_IAsyncIoTask, riid) Then
+			If IsEqualIID(@IID_IUnknown, riid) Then
 				*ppv = @this->lpVtbl
 			Else
-				If IsEqualIID(@IID_IUnknown, riid) Then
-					*ppv = @this->lpVtbl
-				Else
-					*ppv = NULL
-					Return E_NOINTERFACE
-				End If
+				*ppv = NULL
+				Return E_NOINTERFACE
 			End If
 		End If
 	End If
 	
 	AcceptConnectionAsyncTaskAddRef(this)
-	
-	Return S_OK
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskGetTaskId( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pId As AsyncIoTaskIDs Ptr _
-	)As HRESULT
-	
-	*pId = AsyncIoTaskIDs.AcceptConnection
 	
 	Return S_OK
 	
@@ -269,12 +179,15 @@ End Function
 
 Private Function AcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal state As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
 	Dim hrBeginAccept As HRESULT = ITcpListener_BeginAccept( _
 		this->pListener, _
-		CPtr(IUnknown Ptr, @this->lpVtbl), _
+		pcb, _
+		state, _
 		ppIResult _
 	)
 	If FAILED(hrBeginAccept) Then
@@ -288,109 +201,17 @@ End Function
 
 Private Function AcceptConnectionAsyncTaskEndExecute( _
 		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+		ByVal pIResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim ClientSocket As SOCKET = Any
 	Dim hrEndAccept As HRESULT = ITcpListener_EndAccept( _
 		this->pListener, _
 		pIResult, _
-		@ClientSocket _
+		@this->ClientSocket _
 	)
 	If FAILED(hrEndAccept) Then
-		*ppNextTask = NULL
 		Return hrEndAccept
 	End If
-	
-	Dim pStream As INetworkStream Ptr = Any
-	Dim pReadTask As IReadRequestAsyncIoTask Ptr = CreateReadTask( _
-		this, _
-		@pStream _
-	)
-	If pReadTask = NULL Then
-		*ppNextTask = NULL
-		Return E_OUTOFMEMORY
-	End If
-	
-	INetworkStream_SetSocket( _
-		pStream, _
-		ClientSocket _
-	)
-	
-	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
-	Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
-		pIPool, _
-		Cast(HANDLE, ClientSocket), _
-		pReadTask _
-	)
-	If FAILED(hrBind) Then
-		*ppNextTask = NULL
-		IReadRequestAsyncIoTask_Release(pReadTask)
-		Return hrBind
-	End If
-	
-	Dim hrBeginExecute As HRESULT = StartExecuteTask( _
-		CPtr(IAsyncIoTask Ptr, pReadTask) _
-	)
-	If FAILED(hrBeginExecute) Then
-		*ppNextTask = NULL
-		IReadRequestAsyncIoTask_Release(pReadTask)
-	End If
-	
-	AcceptConnectionAsyncTaskAddRef(this)
-	*ppNextTask = CPtr(IAsyncIoTask Ptr, @this->lpVtbl)
-	
-	Return S_OK
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskGetBaseStream( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppStream As IBaseStream Ptr Ptr _
-	)As HRESULT
-	
-	*ppStream = NULL
-	
-	Return E_NOTIMPL
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskSetBaseStream( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pStream As IBaseStream Ptr _
-	)As HRESULT
-	
-	Return E_NOTIMPL
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskGetHttpReader( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal ppReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	
-	*ppReader = NULL
-	
-	Return E_NOTIMPL
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskSetHttpReader( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pReader As IHttpReader Ptr _
-	)As HRESULT
-	
-	Return E_NOTIMPL
-	
-End Function
-
-Private Function AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As AcceptConnectionAsyncTask Ptr, _
-		ByVal pCollection As IWebSiteCollection Ptr _
-	)As HRESULT
-	
-	this->pIWebSitesWeakPtr = pCollection
 	
 	Return S_OK
 	
@@ -420,6 +241,17 @@ Private Function AcceptConnectionAsyncTaskSetListenSocket( _
 	
 End Function
 
+Private Function AcceptConnectionAsyncTaskGetClientSocket( _
+		ByVal this As AcceptConnectionAsyncTask Ptr, _
+		ByVal pClientSocket As SOCKET Ptr _
+	)As HRESULT
+	
+	*pClientSocket = this->ClientSocket
+	
+	Return S_OK
+	
+End Function
+
 
 Private Function IAcceptConnectionAsyncTaskQueryInterface( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
@@ -441,61 +273,20 @@ Private Function IAcceptConnectionAsyncTaskRelease( _
 	Return AcceptConnectionAsyncTaskRelease(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl))
 End Function
 
-Private Function IAcceptConnectionAsyncTaskGetTaskId( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pId As AsyncIoTaskIDs Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetTaskId(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pId)
-End Function
-
 Private Function IAcceptConnectionAsyncTaskBeginExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal state As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return AcceptConnectionAsyncTaskBeginExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppIResult)
+	Return AcceptConnectionAsyncTaskBeginExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pcb, state, ppIResult)
 End Function
 
 Private Function IAcceptConnectionAsyncTaskEndExecute( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
+		ByVal pIResult As IAsyncResult Ptr _
 	)As ULONG
-	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult, ppNextTask)
-End Function
-
-Private Function IAcceptConnectionAsyncTaskGetBaseStream( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppStream As IBaseStream Ptr Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetBaseStream(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppStream)
-End Function
-
-Private Function IAcceptConnectionAsyncTaskSetBaseStream( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		byVal pStream As IBaseStream Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetBaseStream(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pStream)
-End Function
-
-Private Function IAcceptConnectionAsyncTaskGetHttpReader( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskGetHttpReader(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ppReader)
-End Function
-
-Private Function IAcceptConnectionAsyncTaskSetHttpReader( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		byVal pReader As IHttpReader Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetHttpReader(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pReader)
-End Function
-
-Private Function IAcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pCollection As IWebSiteCollection Ptr _
-	)As HRESULT
-	Return AcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pCollection)
+	Return AcceptConnectionAsyncTaskEndExecute(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pIResult)
 End Function
 
 Private Function IAcceptConnectionAsyncTaskGetListenSocket( _
@@ -512,18 +303,20 @@ Private Function IAcceptConnectionAsyncTaskSetListenSocket( _
 	Return AcceptConnectionAsyncTaskSetListenSocket(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), ListenSocket)
 End Function
 
+Private Function IAcceptConnectionAsyncTaskGetClientSocket( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pClientSocket As SOCKET Ptr _
+	)As HRESULT
+	Return AcceptConnectionAsyncTaskGetClientSocket(ContainerOf(this, AcceptConnectionAsyncTask, lpVtbl), pClientSocket)
+End Function
+
 Dim GlobalAcceptConnectionAsyncIoTaskVirtualTable As Const IAcceptConnectionAsyncIoTaskVirtualTable = Type( _
 	@IAcceptConnectionAsyncTaskQueryInterface, _
 	@IAcceptConnectionAsyncTaskAddRef, _
 	@IAcceptConnectionAsyncTaskRelease, _
-	@IAcceptConnectionAsyncTaskGetTaskId, _
 	@IAcceptConnectionAsyncTaskBeginExecute, _
 	@IAcceptConnectionAsyncTaskEndExecute, _
-	@IAcceptConnectionAsyncTaskGetBaseStream, _
-	@IAcceptConnectionAsyncTaskSetBaseStream, _
-	@IAcceptConnectionAsyncTaskGetHttpReader, _
-	@IAcceptConnectionAsyncTaskSetHttpReader, _
-	@IAcceptConnectionAsyncTaskSetWebSiteCollectionWeakPtr, _
 	@IAcceptConnectionAsyncTaskGetListenSocket, _
-	@IAcceptConnectionAsyncTaskSetListenSocket _
+	@IAcceptConnectionAsyncTaskSetListenSocket, _
+	@IAcceptConnectionAsyncTaskGetClientSocket _
 )

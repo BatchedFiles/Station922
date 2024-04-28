@@ -203,12 +203,12 @@ DEFINE_IID(IID_IAsyncIoTask, _
 )
 
 ' {FAC287DE-4E2C-4F51-8E7E-B0B77E2AE918}
-DEFINE_IID(IID_IAttributedStream, _
+DEFINE_IID(IID_IAttributedAsyncStream, _
 	&hfac287de, &h4e2c, &h4f51, &h8e, &h7e, &hb0, &hb7, &h7e, &h2a, &he9, &h18 _
 )
 
 ' {B6AC4CEF-9B3D-4B41-B2F6-DEA27D085EB7}
-DEFINE_IID(IID_IBaseStream, _
+DEFINE_IID(IID_IBaseAsyncStream, _
 	&hb6ac4cef, &h9b3d, &h4b41, &hb2, &hf6, &hde, &ha2, &h7d, &h8, &h5e, &hb7 _
 )
 
@@ -233,18 +233,13 @@ DEFINE_IID(IID_IEnumWebSite, _
 )
 
 ' {A44A1AB3-A0D5-42E6-A4FF-ADBAE8CE3682}
-DEFINE_IID(IID_IFileStream, _
+DEFINE_IID(IID_IFileAsyncStream, _
 	&ha44a1ab3, &ha0d5, &h42e6, &ha4, &hff, &had, &hba, &he8, &hce, &h36, &h82 _
 )
 
 ' {6C7428A7-2E13-453C-90E9-534281710B85}
 DEFINE_IID(IID_IHeapMemoryAllocator, _
 	&h6c7428a7, &h2e13, &h453c, &h90, &he9, &h53, &h42, &h81, &h71, &hb, &h85 _
-)
-
-' {F1683D2F-C33F-4D2F-B536-E88A609BC9FC}
-DEFINE_IID(IID_IHttpAsyncIoTask, _
-	&hf1683d2f, &hc33f, &h4d2f, &hb5, &h36, &he8, &h8a, &h60, &h9b, &hc9, &hfc _
 )
 
 ' {6FA7FA73-6097-478F-BA06-C908C6AACFCC}
@@ -283,12 +278,12 @@ DEFINE_IID(IID_IHttpPutAsyncProcessor, _
 )
 
 ' {D34D026F-D057-422F-9B32-C6D9424336F2}
-DEFINE_IID(IID_IHttpReader, _
+DEFINE_IID(IID_IHttpAsyncReader, _
 	&hd34d026f, &hd057, &h422f, &h9b, &h32, &hc6, &hd9, &h42, &h43, &h36, &hf2 _
 )
 
 ' {C910075B-3950-4831-85B0-8CAF047AB902}
-DEFINE_IID(IID_IHttpWriter, _
+DEFINE_IID(IID_IHttpAsyncWriter, _
 	&hc910075b, &h3950, &h4831, &h85, &hb0, &h8c, &haf, &h4, &h7a, &hb9, &h2 _
 )
 
@@ -303,7 +298,7 @@ DEFINE_IID(IID_IMemoryStream, _
 )
 
 ' {A4C7EAED-5EC0-4B7C-81D2-05BE69E63A1F}
-DEFINE_IID(IID_INetworkStream, _
+DEFINE_IID(IID_INetworkAsyncStream, _
 	&ha4c7eaed, &h5ec0, &h4b7c, &h81, &hd2, &h5, &hbe, &h69, &he6, &h3a, &h1f _
 )
 

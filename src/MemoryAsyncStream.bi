@@ -1,7 +1,7 @@
-#ifndef MEMORYSTREAM_BI
-#define MEMORYSTREAM_BI
+#ifndef MEMORYASYNCSTREAM_BI
+#define MEMORYASYNCSTREAM_BI
 
-#include once "IMemoryStream.bi"
+#include once "IMemoryAsyncStream.bi"
 
 Const RTTI_ID_MEMORYSTREAM            = !"\001Memory__Stream\001"
 Const RTTI_ID_MEMORYBODY        = !"\001Body____Buffer\001"

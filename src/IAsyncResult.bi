@@ -12,6 +12,8 @@ Declare Function GetAsyncResultFromOverlappedWeakPtr( _
 	ByVal pOverLap As OVERLAPPED Ptr _
 )As IAsyncResult Ptr
 
+Type AsyncCallback As Sub(ByVal ar As IAsyncResult Ptr)
+
 Type IAsyncResultVirtualTable
 	
 	QueryInterface As Function( _
@@ -35,6 +37,7 @@ Type IAsyncResultVirtualTable
 	
 	SetAsyncStateWeakPtr As Function( _
 		ByVal this As IAsyncResult Ptr, _
+		ByVal pcb As AsyncCallback, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
 	
@@ -63,6 +66,11 @@ Type IAsyncResultVirtualTable
 		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
 	
+	GetAsyncCallback As Function( _
+		ByVal this As IAsyncResult Ptr, _
+		ByVal ppcb As AsyncCallback Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IAsyncResult_
@@ -73,10 +81,11 @@ End Type
 #define IAsyncResult_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAsyncResult_Release(this) (this)->lpVtbl->Release(this)
 #define IAsyncResult_GetAsyncStateWeakPtr(this, ppState) (this)->lpVtbl->GetAsyncStateWeakPtr(this, ppState)
-#define IAsyncResult_SetAsyncStateWeakPtr(this, pState) (this)->lpVtbl->SetAsyncStateWeakPtr(this, pState)
+#define IAsyncResult_SetAsyncStateWeakPtr(this, pcb, pState) (this)->lpVtbl->SetAsyncStateWeakPtr(this, pcb, pState)
 #define IAsyncResult_GetCompleted(this, pBytesTransferred, pCompleted, pdwError) (this)->lpVtbl->GetCompleted(this, pBytesTransferred, pCompleted, pdwError)
 #define IAsyncResult_SetCompleted(this, BytesTransferred, Completed, dwError) (this)->lpVtbl->SetCompleted(this, BytesTransferred, Completed, dwError)
 #define IAsyncResult_GetWsaOverlapped(this, ppRecvOverlapped) (this)->lpVtbl->GetWsaOverlapped(this, ppRecvOverlapped)
 #define IAsyncResult_AllocBuffers(this, Count, ppBuffers) (this)->lpVtbl->AllocBuffers(this, Count, ppBuffers)
+#define IAsyncResult_GetAsyncCallback(this, ppcb) (this)->lpVtbl->GetAsyncCallback(this, ppcb)
 
 #endif

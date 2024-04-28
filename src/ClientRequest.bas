@@ -321,12 +321,12 @@ End Function
 
 Private Function ClientRequestAddRequestHeaders( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr _
+		ByVal pIReader As IHttpAsyncReader Ptr _
 	)As HRESULT
 	
 	Do
 		Dim pLine As HeapBSTR = Any
-		Dim hrReadLine As HRESULT = IHttpReader_ReadLine( _
+		Dim hrReadLine As HRESULT = IHttpAsyncReader_ReadLine( _
 			pIReader, _
 			@pLine _
 		)
@@ -837,7 +837,7 @@ End Function
 
 Private Function ClientRequestParse( _
 		ByVal this As ClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	
@@ -1002,7 +1002,7 @@ End Function
 
 Private Function IClientRequestParse( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl), pIReader, RequestedLine)

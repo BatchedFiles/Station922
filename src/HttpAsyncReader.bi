@@ -1,7 +1,7 @@
-#ifndef HTTPREADER_BI
-#define HTTPREADER_BI
+#ifndef HTTPASYNCREADER_BI
+#define HTTPASYNCREADER_BI
 
-#include once "IHttpReader.bi"
+#include once "IHttpAsyncReader.bi"
 
 Const RTTI_ID_HTTPREADER              = !"\001Http____Reader\001"
 Const RTTI_ID_CLIENTREQUESTBUFFER     = !"\001Request_Buffer\001"

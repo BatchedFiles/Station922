@@ -148,11 +148,11 @@ End Function
 Private Function HttpDeleteProcessorPrepare( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim Flags As ContentNegotiationFlags = Any
-	Dim pIBuffer As IAttributedStream Ptr = Any
+	Dim pIBuffer As IAttributedAsyncStream Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
@@ -178,14 +178,14 @@ Private Function HttpDeleteProcessorPrepare( _
 		True _
 	)
 	
-	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
+	Dim hrPrepareResponse As HRESULT = IHttpAsyncWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
 		0, _
 		FileAccess.DeleteAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
-		IAttributedStream_Release(pIBuffer)
+		IAttributedAsyncStream_Release(pIBuffer)
 		*ppIBuffer = NULL
 		Return hrPrepareResponse
 	End If
@@ -199,12 +199,14 @@ End Function
 Private Function HttpDeleteProcessorBeginProcess( _
 		ByVal this As HttpDeleteProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
+		pcb, _
 		StateObject, _
 		ppIAsyncResult _
 	)
@@ -222,7 +224,7 @@ Private Function HttpDeleteProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+	Dim hrEndWrite As HRESULT = IHttpAsyncWriter_EndWrite( _
 		pContext->pIWriter, _
 		pIAsyncResult _
 	)
@@ -271,7 +273,7 @@ End Function
 Private Function IHttpDeleteProcessorPrepare( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return HttpDeleteProcessorPrepare(ContainerOf(this, HttpDeleteProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
@@ -279,10 +281,11 @@ End Function
 Private Function IHttpDeleteProcessorBeginProcess( _
 		ByVal this As IHttpDeleteAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpDeleteProcessorBeginProcess(ContainerOf(this, HttpDeleteProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
+	Return HttpDeleteProcessorBeginProcess(ContainerOf(this, HttpDeleteProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpDeleteProcessorEndProcess( _

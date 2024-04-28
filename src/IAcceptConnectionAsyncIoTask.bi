@@ -3,7 +3,7 @@
 
 #include once "windows.bi"
 #include once "win\winsock2.bi"
-#include once "IHttpAsyncIoTask.bi"
+#include once "IAsyncIoTask.bi"
 
 Extern IID_IAcceptConnectionAsyncIoTask Alias "IID_IAcceptConnectionAsyncIoTask" As Const IID
 
@@ -33,45 +33,16 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr _
 	)As ULONG
 	
-	GetTaskId As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pId As AsyncIoTaskIDs Ptr _
-	)As HRESULT
-	
 	BeginExecute As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal state As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
 	EndExecute As Function( _
 		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal pIResult As IAsyncResult Ptr, _
-		ByVal ppNextTask As IAsyncIoTask Ptr Ptr _
-	)As HRESULT
-	
-	GetBaseStream As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppStream As IBaseStream Ptr Ptr _
-	)As HRESULT
-	
-	SetBaseStream As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		byVal pStream As IBaseStream Ptr _
-	)As HRESULT
-	
-	GetHttpReader As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		ByVal ppReader As IHttpReader Ptr Ptr _
-	)As HRESULT
-	
-	SetHttpReader As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		byVal pReader As IHttpReader Ptr _
-	)As HRESULT
-	
-	SetWebSiteCollectionWeakPtr As Function( _
-		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
-		byVal pCollection As IWebSiteCollection Ptr _
+		ByVal pIResult As IAsyncResult Ptr _
 	)As HRESULT
 	
 	GetListenSocket As Function( _
@@ -84,6 +55,11 @@ Type IAcceptConnectionAsyncIoTaskVirtualTable
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
 	
+	GetClientSocket As Function( _
+		ByVal this As IAcceptConnectionAsyncIoTask Ptr, _
+		ByVal pClientSocket As SOCKET Ptr _
+	)As HRESULT
+	
 End Type
 
 Type IAcceptConnectionAsyncIoTask_
@@ -93,15 +69,10 @@ End Type
 #define IAcceptConnectionAsyncIoTask_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
 #define IAcceptConnectionAsyncIoTask_AddRef(this) (this)->lpVtbl->AddRef(this)
 #define IAcceptConnectionAsyncIoTask_Release(this) (this)->lpVtbl->Release(this)
-#define IAcceptConnectionAsyncIoTask_GetTaskId(this, pId) (this)->lpVtbl->GetTaskId(this, pId)
-#define IAcceptConnectionAsyncIoTask_BeginExecute(this, ppIResult) (this)->lpVtbl->BeginExecute(this, ppIResult)
-#define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult, ppNextTask) (this)->lpVtbl->EndExecute(this, pIResult, ppNextTask)
-#define IAcceptConnectionAsyncIoTask_GetBaseStream(this, ppStream) (this)->lpVtbl->GetBaseStream(this, ppStream)
-#define IAcceptConnectionAsyncIoTask_SetBaseStream(this, pStream) (this)->lpVtbl->SetBaseStream(this, pStream)
-#define IAcceptConnectionAsyncIoTask_GetHttpReader(this, ppReader) (this)->lpVtbl->GetHttpReader(this, ppReader)
-#define IAcceptConnectionAsyncIoTask_SetHttpReader(this, pReader) (this)->lpVtbl->SetHttpReader(this, pReader)
-#define IAcceptConnectionAsyncIoTask_SetWebSiteCollectionWeakPtr(this, pCollection) (this)->lpVtbl->SetWebSiteCollectionWeakPtr(this, pCollection)
+#define IAcceptConnectionAsyncIoTask_BeginExecute(this, pcb, state, ppIResult) (this)->lpVtbl->BeginExecute(this, pcb, state, ppIResult)
+#define IAcceptConnectionAsyncIoTask_EndExecute(this, pIResult) (this)->lpVtbl->EndExecute(this, pIResult)
 #define IAcceptConnectionAsyncIoTask_GetListenSocket(this, pListenSocket) (this)->lpVtbl->GetListenSocket(this, pListenSocket)
 #define IAcceptConnectionAsyncIoTask_SetListenSocket(this, ListenSocket) (this)->lpVtbl->SetListenSocket(this, ListenSocket)
+#define IAcceptConnectionAsyncIoTask_GetClientSocket(this, pClientSocket) (this)->lpVtbl->GetClientSocket(this, pClientSocket)
 
 #endif

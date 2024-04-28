@@ -1,4 +1,4 @@
-#include once "MemoryStream.bi"
+#include once "MemoryAsyncStream.bi"
 #include once "AsyncResult.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
@@ -130,7 +130,7 @@ Private Function MemoryStreamQueryInterface( _
 	If IsEqualIID(@IID_IMemoryStream, riid) Then
 		*ppv = @this->lpVtbl
 	Else
-		If IsEqualIID(@IID_IAttributedStream, riid) Then
+		If IsEqualIID(@IID_IAttributedAsyncStream, riid) Then
 			*ppv = @this->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
@@ -184,7 +184,8 @@ Private Function MemoryStreamBeginGetSlice( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
@@ -211,7 +212,8 @@ Private Function MemoryStreamBeginGetSlice( _
 	this->RequestStartIndex = StartIndex
 	this->RequestLength = Length
 	
-	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, StateObject)
+	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+	
 	*ppIAsyncResult = pINewAsyncResult
 	
 	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
@@ -501,10 +503,11 @@ Private Function IMemoryStreamBeginGetSlice( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
 		ByVal Length As DWORD, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return MemoryStreamBeginGetSlice(ContainerOf(this, MemoryStream, lpVtbl), StartIndex, Length, StateObject, ppIAsyncResult)
+	Return MemoryStreamBeginGetSlice(ContainerOf(this, MemoryStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IMemoryStreamEndGetSlice( _

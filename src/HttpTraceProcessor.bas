@@ -1,6 +1,6 @@
 #include once "HttpTraceProcessor.bi"
 #include once "ContainerOf.bi"
-#include once "MemoryStream.bi"
+#include once "MemoryAsyncStream.bi"
 
 Extern GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable
 
@@ -144,7 +144,7 @@ End Function
 Private Function HttpTraceProcessorPrepare( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
@@ -160,7 +160,7 @@ Private Function HttpTraceProcessorPrepare( _
 	
 	Dim RequestedBytesLength As Integer = Any
 	Dim pRequestedBytes As UByte Ptr = Any
-	IHttpReader_GetRequestedBytes( _
+	IHttpAsyncReader_GetRequestedBytes( _
 		pContext->pIReader, _
 		@RequestedBytesLength, _
 		@pRequestedBytes _
@@ -183,7 +183,7 @@ Private Function HttpTraceProcessorPrepare( _
 		IServerResponse_SetMimeType(pContext->pIResponse, @Mime)
 	End Scope
 	
-	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
+	Dim hrPrepareResponse As HRESULT = IHttpAsyncWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
 		CLngInt(RequestedBytesLength), _
@@ -195,7 +195,7 @@ Private Function HttpTraceProcessorPrepare( _
 		Return hrPrepareResponse
 	End If
 	
-	*ppIBuffer = CPtr(IAttributedStream Ptr, pIBuffer)
+	*ppIBuffer = CPtr(IAttributedAsyncStream Ptr, pIBuffer)
 	
 	Return S_OK
 	
@@ -204,13 +204,15 @@ End Function
 Private Function HttpTraceProcessorBeginProcess( _
 		ByVal this As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
 		StateObject, _
+		pcb, _
 		ppIAsyncResult _
 	)
 	If FAILED(hrBeginWrite) Then
@@ -227,7 +229,7 @@ Private Function HttpTraceProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+	Dim hrEndWrite As HRESULT = IHttpAsyncWriter_EndWrite( _
 		pContext->pIWriter, _
 		pIAsyncResult _
 	)
@@ -276,7 +278,7 @@ End Function
 Private Function IHttpTraceProcessorPrepare( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return HttpTraceProcessorPrepare(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
@@ -284,10 +286,11 @@ End Function
 Private Function IHttpTraceProcessorBeginProcess( _
 		ByVal this As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpTraceProcessorBeginProcess(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
+	Return HttpTraceProcessorBeginProcess(ContainerOf(this, HttpTraceProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpTraceProcessorEndProcess( _

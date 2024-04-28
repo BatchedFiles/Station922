@@ -1,7 +1,7 @@
-#ifndef TCPLISTENER_BI
-#define TCPLISTENER_BI
+#ifndef TCPASYNCLISTENER_BI
+#define TCPASYNCLISTENER_BI
 
-#include once "ITcpListener.bi"
+#include once "ITcpAsyncListener.bi"
 
 Extern CLSID_TCPLISTENER Alias "CLSID_TCPLISTENER" As Const CLSID
 

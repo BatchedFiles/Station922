@@ -1,7 +1,5 @@
 #include once "ThreadPool.bi"
 #include once "ContainerOf.bi"
-#include once "Logger.bi"
-#include once "TaskExecutor.bi"
 
 Extern GlobalThreadPoolVirtualTable As Const IThreadPoolVirtualTable
 
@@ -76,7 +74,12 @@ Private Function WorkerThread( _
 			dwError _
 		)
 		
-		ThreadPoolCallBack(pIResult)
+		Dim pcb As AsyncCallback = Any
+		IAsyncResult_GetAsyncCallback(pIResult, @pcb)
+		
+		If pcb Then
+			pcb(pIResult)
+		End If
 	Loop
 	
 	Return 0

@@ -3,7 +3,7 @@
 
 #include once "IClientUri.bi"
 #include once "Http.bi"
-#include once "IHttpReader.bi"
+#include once "IHttpAsyncReader.bi"
 
 Extern IID_IClientRequest Alias "IID_IClientRequest" As Const IID
 
@@ -43,7 +43,7 @@ Type IClientRequestVirtualTable
 	
 	Parse As Function( _
 		ByVal this As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
 	

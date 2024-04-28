@@ -1,7 +1,7 @@
-#ifndef NETWORKSTREAM_BI
-#define NETWORKSTREAM_BI
+#ifndef NETWORKASYNCSTREAM_BI
+#define NETWORKASYNCSTREAM_BI
 
-#include once "INetworkStream.bi"
+#include once "INetworkAsyncStream.bi"
 
 Const RTTI_ID_NETWORKSTREAM           = !"\001Network_Stream\001"
 

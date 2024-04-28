@@ -149,7 +149,7 @@ End Function
 Private Function HttpPutProcessorPrepare( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim ContentLength As LongInt = Any
@@ -161,7 +161,7 @@ Private Function HttpPutProcessorPrepare( _
 	End If
 	
 	Dim Flags As ContentNegotiationFlags = Any
-	Dim pIBuffer As IAttributedStream Ptr = Any
+	Dim pIBuffer As IAttributedAsyncStream Ptr = Any
 	Dim hrGetBuffer As HRESULT = IWebSite_GetBuffer( _
 		pContext->pIWebSite, _
 		pContext->pIMemoryAllocator, _
@@ -173,7 +173,7 @@ Private Function HttpPutProcessorPrepare( _
 		@pIBuffer _
 	)
 	If FAILED(hrGetBuffer) Then
-		IHttpReader_SetSkippedBytes(pContext->pIReader, ContentLength)
+		IHttpAsyncReader_SetSkippedBytes(pContext->pIReader, ContentLength)
 		*ppIBuffer = NULL
 		Return hrGetBuffer
 	End If
@@ -200,20 +200,20 @@ Private Function HttpPutProcessorPrepare( _
 			pContext->pIRequest, _
 			@NeedWrite100Continue _
 		)
-		IHttpWriter_SetNeedWrite100Continue( _
+		IHttpAsyncWriter_SetNeedWrite100Continue( _
 			pContext->pIWriter, _
 			NeedWrite100Continue _
 		)
 	End Scope
 	
-	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
+	Dim hrPrepareResponse As HRESULT = IHttpAsyncWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
 		ContentLength, _
 		FileAccess.CreateAccess _
 	)
 	If FAILED(hrPrepareResponse) Then
-		IAttributedStream_Release(pIBuffer)
+		IAttributedAsyncStream_Release(pIBuffer)
 		*ppIBuffer = NULL
 		Return hrPrepareResponse
 	End If
@@ -227,12 +227,14 @@ End Function
 Private Function HttpPutProcessorBeginProcess( _
 		ByVal this As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
+		pcb, _
 		StateObject, _
 		ppIAsyncResult _
 	)
@@ -250,7 +252,7 @@ Private Function HttpPutProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+	Dim hrEndWrite As HRESULT = IHttpAsyncWriter_EndWrite( _
 		pContext->pIWriter, _
 		pIAsyncResult _
 	)
@@ -299,7 +301,7 @@ End Function
 Private Function IHttpPutProcessorPrepare( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return HttpPutProcessorPrepare(ContainerOf(this, HttpPutProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
@@ -307,10 +309,11 @@ End Function
 Private Function IHttpPutProcessorBeginProcess( _
 		ByVal this As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpPutProcessorBeginProcess(ContainerOf(this, HttpPutProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
+	Return HttpPutProcessorBeginProcess(ContainerOf(this, HttpPutProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpPutProcessorEndProcess( _

@@ -3,10 +3,10 @@
 #include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "ContainerOf.bi"
-#include once "FileStream.bi"
+#include once "FileAsyncStream.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpProcessorCollection.bi"
-#include once "MemoryStream.bi"
+#include once "MemoryAsyncStream.bi"
 #include once "Mime.bi"
 #include once "WebUtils.bi"
 
@@ -1370,7 +1370,7 @@ End Function
 Private Function GetDirectoryListing( _
 		ByVal pListingDir As WString Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal pFileBuffer As IFileStream Ptr, _
+		ByVal pFileBuffer As IFileAsyncStream Ptr, _
 		ByVal pFileName As WString Ptr _
 	)As HRESULT
 	
@@ -1415,7 +1415,7 @@ Private Function GetDirectoryListing( _
 			Return hrOpen
 		End If
 		
-		IFileStream_SetFileHandle(pFileBuffer, hDeleteFile)
+		IFileAsyncStream_SetFileHandle(pFileBuffer, hDeleteFile)
 		
 		Dim fp As HeapBSTR = CreateHeapString( _
 			pIMalloc, _
@@ -1424,11 +1424,11 @@ Private Function GetDirectoryListing( _
 		If fp = NULL Then
 			CloseHandle(hListingFile)
 			' Not need to close hDeleteFile
-			' beekause it associated to IFileStream
+			' beekause it associated to IFileAsyncStream
 			Return E_OUTOFMEMORY
 		End If
 		
-		IFileStream_SetFilePath(pFileBuffer, fp)
+		IFileAsyncStream_SetFilePath(pFileBuffer, fp)
 		HeapSysFreeString(fp)
 	End Scope
 	
@@ -1441,7 +1441,7 @@ End Function
 Private Function WebSiteOpenRequestedFile( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pIMalloc As IMalloc Ptr, _
-		ByVal pFileBuffer As IFileStream Ptr, _
+		ByVal pFileBuffer As IFileAsyncStream Ptr, _
 		ByVal Path As HeapBSTR, _
 		ByVal fAccess As FileAccess, _
 		ByVal DefaultFileName As HeapBSTR, _
@@ -1470,8 +1470,8 @@ Private Function WebSiteOpenRequestedFile( _
 				@hFile _
 			)
 			
-			IFileStream_SetFilePath(pFileBuffer, Path)
-			IFileStream_SetFileHandle(pFileBuffer, hFile)
+			IFileAsyncStream_SetFilePath(pFileBuffer, Path)
+			IFileAsyncStream_SetFileHandle(pFileBuffer, hFile)
 			
 			Return hrGetFileHandle
 			
@@ -1521,8 +1521,8 @@ Private Function WebSiteOpenRequestedFile( _
 					Return E_OUTOFMEMORY
 				End If
 				
-				IFileStream_SetFilePath(pFileBuffer, fp)
-				IFileStream_SetFileHandle(pFileBuffer, hFile)
+				IFileAsyncStream_SetFilePath(pFileBuffer, fp)
+				IFileAsyncStream_SetFileHandle(pFileBuffer, hFile)
 				
 				HeapSysFreeString(fp)
 				
@@ -1925,7 +1925,7 @@ Private Function FillMime( _
 			' Dim ContentTypeLength As Integer = SysStringLen(pContentType)
 			' If ContentTypeLength = 0 Then
 			' 	HeapSysFreeString(pContentType)
-			' 	IFileStream_Release(pIFile)
+			' 	IFileAsyncStream_Release(pIFile)
 			' 	*pFlags = ContentNegotiationFlags.None
 			' 	*ppResult = NULL
 			' 	Return CLIENTREQUEST_E_CONTENTTYPEEMPTY
@@ -1943,11 +1943,11 @@ Private Function WebSiteGetBuffer( _
 		ByVal this As WebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pRequest As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal fAccess As FileAccess, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Scope
@@ -1968,11 +1968,11 @@ Private Function WebSiteGetBuffer( _
 		End If
 	End Scope
 	
-	Dim pIFile As IFileStream Ptr = Any
+	Dim pIFile As IFileAsyncStream Ptr = Any
 	Scope
 		Dim hrCreateFileBuffer As HRESULT = CreateFileStream( _
 			pIMalloc, _
-			@IID_IFileStream, _
+			@IID_IFileAsyncStream, _
 			@pIFile _
 		)
 		If FAILED(hrCreateFileBuffer) Then
@@ -1982,12 +1982,12 @@ Private Function WebSiteGetBuffer( _
 		End If
 		
 		If fAccess <> FileAccess.DeleteAccess Then
-			Dim hrReservedFileBytes As HRESULT = IFileStream_SetReservedFileBytes( _
+			Dim hrReservedFileBytes As HRESULT = IFileAsyncStream_SetReservedFileBytes( _
 				pIFile, _
 				this->ReservedFileBytes _
 			)
 			If FAILED(hrReservedFileBytes) Then
-				IFileStream_Release(pIFile)
+				IFileAsyncStream_Release(pIFile)
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = NULL
 				Return hrCreateFileBuffer
@@ -1995,13 +1995,13 @@ Private Function WebSiteGetBuffer( _
 			
 			Dim PreloadedBytesLength As Integer = Any
 			Dim pPreloadedBytes As UByte Ptr = Any
-			IHttpReader_GetPreloadedBytes( _
+			IHttpAsyncReader_GetPreloadedBytes( _
 				pIReader, _
 				@PreloadedBytesLength, _
 				@pPreloadedBytes _
 			)
 			
-			IFileStream_SetPreloadedBytes( _
+			IFileAsyncStream_SetPreloadedBytes( _
 				pIFile, _
 				PreloadedBytesLength, _
 				pPreloadedBytes _
@@ -2040,7 +2040,7 @@ Private Function WebSiteGetBuffer( _
 				hrOpenFile _
 			)
 			
-			IFileStream_Release(pIFile)
+			IFileAsyncStream_Release(pIFile)
 			*pFlags = ContentNegotiationFlags.None
 			*ppResult = NULL
 			Return hrOpenFileTranslate
@@ -2057,17 +2057,17 @@ Private Function WebSiteGetBuffer( _
 		@Mime _
 	)
 	If FAILED(hrFillMime) Then
-		IFileStream_Release(pIFile)
+		IFileAsyncStream_Release(pIFile)
 		*pFlags = ContentNegotiationFlags.None
 		*ppResult = NULL
 		Return WEBSITE_E_FORBIDDEN
 	End If
 	
 	If fAccess <> FileAccess.ReadAccess Then
-		IFileStream_SetFileSize(pIFile, BufferLength)
+		IFileAsyncStream_SetFileSize(pIFile, BufferLength)
 		
 		*pFlags = ContentNegotiationFlags.None
-		*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+		*ppResult = CPtr(IAttributedAsyncStream Ptr, pIFile)
 		
 		Return hrOpenFile
 	End If
@@ -2099,7 +2099,7 @@ Private Function WebSiteGetBuffer( _
 					)
 					If FAILED(hrBind) Then
 						CloseHandle(ZipFileHandle)
-						IFileStream_Release(pIFile)
+						IFileAsyncStream_Release(pIFile)
 						*pFlags = ContentNegotiationFlags.None
 						*ppResult = NULL
 						Return hrBind
@@ -2112,11 +2112,11 @@ Private Function WebSiteGetBuffer( _
 			End If
 		End If
 		
-		IFileStream_SetEncoding(pIFile, ZipMode)
-		IFileStream_SetZipFileHandle(pIFile, ZipFileHandle)
+		IFileAsyncStream_SetEncoding(pIFile, ZipMode)
+		IFileAsyncStream_SetZipFileHandle(pIFile, ZipFileHandle)
 		
 		Dim FileHandle As HANDLE = Any
-		IFileStream_GetFileHandle(pIFile, @FileHandle)
+		IFileAsyncStream_GetFileHandle(pIFile, @FileHandle)
 		
 		Scope
 			Dim LastFileModifiedDate As FILETIME = Any
@@ -2128,13 +2128,13 @@ Private Function WebSiteGetBuffer( _
 			)
 			If resFileTime = 0 Then
 				Dim dwError As DWORD = GetLastError()
-				IFileStream_Release(pIFile)
+				IFileAsyncStream_Release(pIFile)
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			IFileStream_SetFileTime(pIFile, @LastFileModifiedDate)
+			IFileAsyncStream_SetFileTime(pIFile, @LastFileModifiedDate)
 			
 			Dim ETagBuffer As WString * 256 = Any
 			GetETag( _
@@ -2148,13 +2148,13 @@ Private Function WebSiteGetBuffer( _
 				ETagBuffer _
 			)
 			If ETag = NULL Then
-				IFileStream_Release(pIFile)
+				IFileAsyncStream_Release(pIFile)
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = NULL
 				Return E_OUTOFMEMORY
 			End If
 			
-			IFileStream_SetETag(pIFile, ETag)
+			IFileAsyncStream_SetETag(pIFile, ETag)
 			
 			HeapSysFreeString(ETag)
 		End Scope
@@ -2174,13 +2174,13 @@ Private Function WebSiteGetBuffer( _
 			)
 			If resGetFileSize = 0 Then
 				Dim dwError As DWORD = GetLastError()
-				IFileStream_Release(pIFile)
+				IFileAsyncStream_Release(pIFile)
 				*pFlags = ContentNegotiationFlags.None
 				*ppResult = NULL
 				Return HRESULT_FROM_WIN32(dwError)
 			End If
 			
-			IFileStream_SetFileSize(pIFile, FileSize.QuadPart)
+			IFileAsyncStream_SetFileSize(pIFile, FileSize.QuadPart)
 		End Scope
 		
 		If Mime.Format = MimeFormats.Text Then
@@ -2193,7 +2193,7 @@ Private Function WebSiteGetBuffer( _
 						this->UtfBomFileOffset _
 					)
 					
-					IFileStream_SetFileOffset(pIFile, EncodingFileOffset)
+					IFileAsyncStream_SetFileOffset(pIFile, EncodingFileOffset)
 				End If
 			End If
 		End If
@@ -2204,9 +2204,9 @@ Private Function WebSiteGetBuffer( _
 		
 	End Scope
 	
-	IFileStream_SetContentType(pIFile, @Mime)
+	IFileAsyncStream_SetContentType(pIFile, @Mime)
 	
-	*ppResult = CPtr(IAttributedStream Ptr, pIFile)
+	*ppResult = CPtr(IAttributedAsyncStream Ptr, pIFile)
 	
 	Return S_OK
 	
@@ -2218,7 +2218,7 @@ Private Function WebSiteGetErrorBuffer( _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrErrorCode As HRESULT, _
 		ByVal StatusCode As HttpStatusCodes, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
@@ -2282,7 +2282,7 @@ Private Function WebSiteGetErrorBuffer( _
 	End With
 	IMemoryStream_SetContentType(pIBuffer, @Mime)
 	
-	*ppResult = CPtr(IAttributedStream Ptr, pIBuffer)
+	*ppResult = CPtr(IAttributedAsyncStream Ptr, pIBuffer)
 	
 	Return S_OK
 	
@@ -2653,11 +2653,11 @@ Private Function IMutableWebSiteGetBuffer( _
 		ByVal this As IWebSite Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pRequest As IClientRequest Ptr, _
-		ByVal pIReader As IHttpReader Ptr, _
+		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal BufferLength As LongInt, _
 		ByVal pFlags As ContentNegotiationFlags Ptr, _
 		ByVal fAccess As FileAccess, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return WebSiteGetBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, pRequest, pIReader, BufferLength, pFlags, fAccess, ppResult)
 End Function
@@ -2668,7 +2668,7 @@ Private Function IMutableWebSiteGetErrorBuffer( _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrErrorCode As HRESULT, _
 		ByVal StatusCode As HttpStatusCodes, _
-		ByVal ppResult As IAttributedStream Ptr Ptr _
+		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return WebSiteGetErrorBuffer(ContainerOf(this, WebSite, lpVtbl), pIMalloc, HttpError, hrErrorCode, StatusCode, ppResult)
 End Function

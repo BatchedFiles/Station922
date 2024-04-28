@@ -1,7 +1,7 @@
 #include once "HttpOptionsProcessor.bi"
 #include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
-#include once "MemoryStream.bi"
+#include once "MemoryAsyncStream.bi"
 
 Extern GlobalHttpOptionsProcessorVirtualTable As Const IHttpOptionsAsyncProcessorVirtualTable
 
@@ -209,7 +209,7 @@ End Function
 Private Function HttpOptionsProcessorPrepare( _
 		ByVal this As HttpOptionsProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	
 	Dim pIBuffer As IMemoryStream Ptr = Any
@@ -243,7 +243,7 @@ Private Function HttpOptionsProcessorPrepare( _
 	IServerResponse_SetSendOnlyHeaders(pContext->pIResponse, True)
 	IServerResponse_SetStatusCode(pContext->pIResponse, HttpStatusCodes.NoContent)
 	
-	Dim hrPrepareResponse As HRESULT = IHttpWriter_Prepare( _
+	Dim hrPrepareResponse As HRESULT = IHttpAsyncWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
 		CLngInt(0), _
@@ -255,7 +255,7 @@ Private Function HttpOptionsProcessorPrepare( _
 		Return hrPrepareResponse
 	End If
 	
-	*ppIBuffer = CPtr(IAttributedStream Ptr, pIBuffer)
+	*ppIBuffer = CPtr(IAttributedAsyncStream Ptr, pIBuffer)
 	
 	Return S_OK
 	
@@ -264,12 +264,14 @@ End Function
 Private Function HttpOptionsProcessorBeginProcess( _
 		ByVal this As HttpOptionsProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 	
-	Dim hrBeginWrite As HRESULT = IHttpWriter_BeginWrite( _
+	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
+		pcb, _
 		StateObject, _
 		ppIAsyncResult _
 	)
@@ -287,7 +289,7 @@ Private Function HttpOptionsProcessorEndProcess( _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 	
-	Dim hrEndWrite As HRESULT = IHttpWriter_EndWrite( _
+	Dim hrEndWrite As HRESULT = IHttpAsyncWriter_EndWrite( _
 		pContext->pIWriter, _
 		pIAsyncResult _
 	)
@@ -336,7 +338,7 @@ End Function
 Private Function IHttpOptionsProcessorPrepare( _
 		ByVal this As IHttpOptionsAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal ppIBuffer As IAttributedStream Ptr Ptr _
+		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 	Return HttpOptionsProcessorPrepare(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
@@ -344,10 +346,11 @@ End Function
 Private Function IHttpOptionsProcessorBeginProcess( _
 		ByVal this As IHttpOptionsAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
-		ByVal StateObject As IUnknown Ptr, _
+		ByVal pcb As AsyncCallback, _
+		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpOptionsProcessorBeginProcess(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, StateObject, ppIAsyncResult)
+	Return HttpOptionsProcessorBeginProcess(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpOptionsProcessorEndProcess( _
