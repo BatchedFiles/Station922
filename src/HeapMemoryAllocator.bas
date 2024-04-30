@@ -383,44 +383,44 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 	)
 
 	EnterCriticalSection(@MemoryPoolObject.crSection)
-	Scope
-		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-			var localMalloc = MemoryPoolObject.Items[i].pMalloc
-			If localMalloc = pMalloc Then
+	For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+		var localMalloc = MemoryPoolObject.Items[i].pMalloc
+		If localMalloc = pMalloc Then
 
-				Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-				MemoryPoolObject.Length -= 1
+			MemoryPoolObject.Length -= 1
 
-				#if __FB_DEBUG__
-					PrintWalkingHeap(this->hHeap)
+			#if __FB_DEBUG__
+				PrintWalkingHeap(this->hHeap)
 
-					Const BufSize As Integer = 256
-					Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p released, free space:")
-					Dim buf As WString * BufSize = Any
-					wsprintfW( _
-						@buf, _
-						@FormatString, _
-						this->hHeap _
-					)
+				Const BufSize As Integer = 256
+				Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p released, free space:")
+				Dim buf As WString * BufSize = Any
+				wsprintfW( _
+					@buf, _
+					@FormatString, _
+					this->hHeap _
+				)
 
-					Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-					Dim vtFreeSpace As VARIANT = Any
-					vtFreeSpace.vt = VT_I4
-					vtFreeSpace.lVal = CLng(FreeSpace)
-					LogWriteEntry( _
-						LogEntryType.Debug, _
-						buf, _
-						@vtFreeSpace _
-					)
-				#endif
+				Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
 
-				HeapMemoryAllocatorResetState(this)
+				Dim vtFreeSpace As VARIANT = Any
+				vtFreeSpace.vt = VT_I4
+				vtFreeSpace.lVal = CLng(FreeSpace)
 
-				Exit For
-			End If
-		Next
-	End Scope
+				LogWriteEntry( _
+					LogEntryType.Debug, _
+					buf, _
+					@vtFreeSpace _
+				)
+			#endif
+
+			HeapMemoryAllocatorResetState(this)
+
+			Exit For
+		End If
+	Next
 	LeaveCriticalSection(@MemoryPoolObject.crSection)
 
 End Sub
@@ -501,26 +501,38 @@ End Function
 
 Private Function HeapMemoryAllocatorCloseHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal KeepAliveInterval As ULongInt _
+		ByVal KeepAliveInterval As Integer _
 	)As ConnectionStatuses
 
 	If this->ClientSocket = INVALID_SOCKET Then
 		Return ConnectionStatuses.Closed
 	End If
 
-	Dim ulStart As ULARGE_INTEGER = Any
-	ulStart.LowPart = this->datStartOperation.dwLowDateTime
-	ulStart.HighPart = this->datStartOperation.dwHighDateTime
+	Dim nsElapsedTime As ULongInt = Any
+	Scope
+		Dim ulStart As ULARGE_INTEGER = Any
+		ulStart.LowPart = this->datStartOperation.dwLowDateTime
+		ulStart.HighPart = this->datStartOperation.dwHighDateTime
 
-	Dim datCurrent As FILETIME
-	GetSystemTimeAsFileTime(@datCurrent)
+		Dim datCurrent As FILETIME = Any
+		GetSystemTimeAsFileTime(@datCurrent)
 
-	Dim ulCurrent As ULARGE_INTEGER = Any
-	ulCurrent.LowPart = datCurrent.dwLowDateTime
-	ulCurrent.HighPart = datCurrent.dwHighDateTime
+		Dim ulFinish As ULARGE_INTEGER = Any
+		ulFinish.LowPart = datCurrent.dwLowDateTime
+		ulFinish.HighPart = datCurrent.dwHighDateTime
 
-	Dim nsElapsedTime As ULongInt = ulCurrent.QuadPart - ulStart.QuadPart
-	Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * KeepAliveInterval
+		nsElapsedTime = ulFinish.QuadPart - ulStart.QuadPart
+	End Scope
+
+	' 10 nanoseconds * 1000 microseconds * 1000 milliseconds
+	Dim ulKeepAliveInterval As ULongInt = CUlngInt(KeepAliveInterval)
+
+#if __FB_DEBUG__
+	Dim nsKeepAliveInterval As ULongInt = ulKeepAliveInterval
+	nsElapsedTime \= 10 * 1000 * 1000
+#else
+	Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * ulKeepAliveInterval
+#endif
 
 	If nsElapsedTime > nsKeepAliveInterval Then
 		HeapMemoryAllocatorCloseSocket(this)
@@ -533,93 +545,88 @@ End Function
 
 Private Function CheckHungsConnections( _
 		ByVal KeepAliveInterval As Integer _
-	)As Boolean
+	)As HRESULT
+
+	Const msTimeToHungsConnection As DWORD = 1000 * 60
 
 	Do
-		Const msTimeToHungsConnection As DWORD = 1000 * 60
 		Dim resWait As DWORD = SleepEx(msTimeToHungsConnection, TRUE)
-		If resWait <> 0 Then
-			Return True
+
+		If resWait = WAIT_IO_COMPLETION Then
+			' Return signal to I/O completion callback
+			Return E_FAIL
 		End If
 
 		If MemoryPoolObject.Length = 0 Then
-			Return False
+			Return S_OK
 		End If
 
-		Dim AnyClientsConnected As Boolean = False
+		Dim IsPoolFree As Boolean = True
 
 		EnterCriticalSection(@MemoryPoolObject.crSection)
-		Scope
-			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-				var localMalloc = MemoryPoolObject.Items[i].pMalloc
-				Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+			var localMalloc = MemoryPoolObject.Items[i].pMalloc
+			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-				If this->ItemStatus = PoolItemStatuses.ItemUsed Then
+			If this->ItemStatus = PoolItemStatuses.ItemUsed Then
 
-					Dim resClose As ConnectionStatuses = HeapMemoryAllocatorCloseHungsConnections( _
-						this, _
-						KeepAliveInterval _
-					)
+				Dim resClose As ConnectionStatuses = HeapMemoryAllocatorCloseHungsConnections( _
+					this, _
+					KeepAliveInterval _
+				)
 
-					Select Case resClose
+				Select Case resClose
 
-						Case ConnectionStatuses.Closed
-							MemoryPoolObject.Length -= 1
+					Case ConnectionStatuses.Closed
+						MemoryPoolObject.Length -= 1
 
-							#if __FB_DEBUG__
-								PrintWalkingHeap(this->hHeap)
+						#if __FB_DEBUG__
+							PrintWalkingHeap(this->hHeap)
 
-								Const BufSize As Integer = 256
-								Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forced closed, free space:")
-								Dim buf As WString * BufSize = Any
-								wsprintfW( _
-									@buf, _
-									@FormatString, _
-									this->hHeap _
-								)
+							Const BufSize As Integer = 256
+							Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forced closed, free space:")
+							Dim buf As WString * BufSize = Any
+							wsprintfW( _
+								@buf, _
+								@FormatString, _
+								this->hHeap _
+							)
 
-								Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-								Dim vtFreeSpace As VARIANT = Any
-								vtFreeSpace.vt = VT_I4
-								vtFreeSpace.lVal = CLng(FreeSpace)
-								LogWriteEntry( _
-									LogEntryType.Debug, _
-									buf, _
-									@vtFreeSpace _
-								)
-							#endif
+							Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
 
-							HeapMemoryAllocatorResetState(this)
+							Dim vtFreeSpace As VARIANT = Any
+							vtFreeSpace.vt = VT_I4
+							vtFreeSpace.lVal = CLng(FreeSpace)
 
-							AnyClientsConnected = True
+							LogWriteEntry( _
+								LogEntryType.Debug, _
+								buf, _
+								@vtFreeSpace _
+							)
+						#endif
 
-						Case ConnectionStatuses.Hungs
-							AnyClientsConnected = True
+						HeapMemoryAllocatorResetState(this)
 
-						Case ConnectionStatuses.Alive
+					Case ConnectionStatuses.Hungs
+						IsPoolFree = False
 
-					End Select
+					Case ConnectionStatuses.Alive
 
-				End If
-			Next
-		End Scope
+				End Select
+
+			End If
+		Next
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
 
-		If AnyClientsConnected = False Then
-			Return False
+		If IsPoolFree Then
+			Return S_OK
 		End If
 
 	Loop
 
-	Return False
+	Return S_OK
 
 End Function
-
-Private Sub WakeupClearingThread( _
-		ByVal Parameter As ULONG_PTR _
-	)
-
-End Sub
 
 Private Function ClearingThread( _
 		ByVal lpParam As LPVOID _
@@ -633,14 +640,21 @@ Private Function ClearingThread( _
 			INFINITE, _
 			TRUE _
 		)
+
 		If resWait <> WAIT_OBJECT_0 Then
+			' Function returned due to I/O completion callback
+			' This is a signal to complete the process
+			' Need to close Event, Thread and exit from thread
 			CloseHandle(HungsConnectionsThread)
 			CloseHandle(HungsConnectionsEvent)
 			Return 0
 		End If
 
-		Dim resCheck As Boolean = CheckHungsConnections(KeepAliveInterval)
-		If resCheck Then
+		Dim hrCheck As HRESULT = CheckHungsConnections(KeepAliveInterval)
+
+		If FAILED(hrCheck) Then
+			' This is a signal to complete the process
+			' Need to close Event, Thread and exit from thread
 			CloseHandle(HungsConnectionsThread)
 			CloseHandle(HungsConnectionsEvent)
 			Return 0
@@ -648,7 +662,7 @@ Private Function ClearingThread( _
 
 		Dim resReset As BOOL = ResetEvent(HungsConnectionsEvent)
 		If resReset = 0 Then
-			Return 0
+			Return 1
 		End If
 	Loop
 
@@ -875,6 +889,7 @@ Public Function CreateMemoryPool( _
 			NULL _
 		)
 		If HungsConnectionsThread = NULL Then
+			CloseHandle(HungsConnectionsEvent)
 			Return E_OUTOFMEMORY
 		End If
 	End Scope
@@ -882,6 +897,12 @@ Public Function CreateMemoryPool( _
 	Return S_OK
 
 End Function
+
+Private Sub WakeupClearingThread( _
+		ByVal Parameter As ULONG_PTR _
+	)
+
+End Sub
 
 Public Sub DeleteMemoryPool()
 
