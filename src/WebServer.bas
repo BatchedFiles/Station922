@@ -242,10 +242,9 @@ Private Function CreateReadRequestContextFromSocket( _
 							Return pState
 						End If
 
-						INetworkAsyncStream_Release(pINetworkAsyncStream)
+						IHttpAsyncReader_Release(pIHttpAsyncReader)
 					End If
 
-					IHttpAsyncReader_Release(pIHttpAsyncReader)
 				End If
 
 				IReadRequestAsyncIoTask_Release(pTask)
