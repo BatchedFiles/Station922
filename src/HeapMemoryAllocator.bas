@@ -527,12 +527,12 @@ Private Function HeapMemoryAllocatorCloseHungsConnections( _
 	' 10 nanoseconds * 1000 microseconds * 1000 milliseconds
 	Dim ulKeepAliveInterval As ULongInt = CUlngInt(KeepAliveInterval)
 
-#if __FB_DEBUG__
-	Dim nsKeepAliveInterval As ULongInt = ulKeepAliveInterval
-	nsElapsedTime \= 10 * 1000 * 1000
-#else
-	Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * ulKeepAliveInterval
-#endif
+	#if __FB_DEBUG__
+		Dim nsKeepAliveInterval As ULongInt = ulKeepAliveInterval
+		nsElapsedTime \= 10 * 1000 * 1000
+	#else
+		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * ulKeepAliveInterval
+	#endif
 
 	If nsElapsedTime > nsKeepAliveInterval Then
 		HeapMemoryAllocatorCloseSocket(this)
