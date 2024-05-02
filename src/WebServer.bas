@@ -1,7 +1,6 @@
 #include once "WebServer.bi"
 #include once "AcceptConnectionAsyncTask.bi"
 #include once "ClientRequest.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpAsyncReader.bi"
@@ -1410,19 +1409,19 @@ Private Function IWebServerQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return WebServerQueryInterface(ContainerOf(this, WebServer, lpVtbl), riid, ppv)
+	Return WebServerQueryInterface(CONTAINING_RECORD(this, WebServer, lpVtbl), riid, ppv)
 End Function
 
 Private Function IWebServerAddRef( _
 		ByVal this As IWebServer Ptr _
 	)As ULONG
-	Return WebServerAddRef(ContainerOf(this, WebServer, lpVtbl))
+	Return WebServerAddRef(CONTAINING_RECORD(this, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerRelease( _
 		ByVal this As IWebServer Ptr _
 	)As ULONG
-	Return WebServerRelease(ContainerOf(this, WebServer, lpVtbl))
+	Return WebServerRelease(CONTAINING_RECORD(this, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerAddWebSite( _
@@ -1431,14 +1430,14 @@ Private Function IWebServerAddWebSite( _
 		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebServerAddWebSite(ContainerOf(this, WebServer, lpVtbl), pKey, Port, pIWebSite)
+	Return WebServerAddWebSite(CONTAINING_RECORD(this, WebServer, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
 Private Function IWebServerAddDefaultWebSite( _
 		ByVal this As IWebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebServerAddDefaultWebSite(ContainerOf(this, WebServer, lpVtbl), pIDefaultWebSite)
+	Return WebServerAddDefaultWebSite(CONTAINING_RECORD(this, WebServer, lpVtbl), pIDefaultWebSite)
 End Function
 
 Private Function IWebServerSetEndPoint( _
@@ -1446,19 +1445,19 @@ Private Function IWebServerSetEndPoint( _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
-	Return WebServerSetEndPoint(ContainerOf(this, WebServer, lpVtbl), ListenAddress, ListenPort)
+	Return WebServerSetEndPoint(CONTAINING_RECORD(this, WebServer, lpVtbl), ListenAddress, ListenPort)
 End Function
 
 Private Function IWebServerRun( _
 		ByVal this As IWebServer Ptr _
 	)As HRESULT
-	Return WebServerRun(ContainerOf(this, WebServer, lpVtbl))
+	Return WebServerRun(CONTAINING_RECORD(this, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerStop( _
 		ByVal this As IWebServer Ptr _
 	)As HRESULT
-	Return WebServerStop(ContainerOf(this, WebServer, lpVtbl))
+	Return WebServerStop(CONTAINING_RECORD(this, WebServer, lpVtbl))
 End Function
 
 Dim GlobalWebServerVirtualTable As Const IWebServerVirtualTable = Type( _

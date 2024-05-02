@@ -1,5 +1,4 @@
 #include once "HttpOptionsProcessor.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "MemoryAsyncStream.bi"
 
@@ -20,7 +19,7 @@ Private Sub InitializeHttpOptionsProcessor( _
 		ByVal this As HttpOptionsProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
-	
+
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->RttiClassName(0), _
@@ -32,57 +31,57 @@ Private Sub InitializeHttpOptionsProcessor( _
 	this->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
-	
+
 End Sub
 
 Private Sub UnInitializeHttpOptionsProcessor( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)
-	
+
 End Sub
 
 Private Sub HttpOptionsProcessorCreated( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)
-	
+
 End Sub
 
 Private Sub HttpOptionsProcessorDestroyed( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)
-	
+
 End Sub
 
 Private Sub DestroyHttpOptionsProcessor( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)
-	
+
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
+
 	UnInitializeHttpOptionsProcessor(this)
-	
+
 	IMalloc_Free(pIMemoryAllocator, this)
-	
+
 	HttpOptionsProcessorDestroyed(this)
-	
+
 	IMalloc_Release(pIMemoryAllocator)
-	
+
 End Sub
 
 Private Function HttpOptionsProcessorAddRef( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)As ULONG
-	
+
 	Return 1
-	
+
 End Function
 
 Private Function HttpOptionsProcessorRelease( _
 		ByVal this As HttpOptionsProcessor Ptr _
 	)As ULONG
-	
+
 	Return 0
-	
+
 End Function
 
 Private Function HttpOptionsProcessorQueryInterface( _
@@ -90,7 +89,7 @@ Private Function HttpOptionsProcessorQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	If IsEqualIID(@IID_IHttpOptionsAsyncProcessor, riid) Then
 		*ppv = @this->lpVtbl
 	Else
@@ -105,11 +104,11 @@ Private Function HttpOptionsProcessorQueryInterface( _
 			End If
 		End If
 	End If
-	
+
 	HttpOptionsProcessorAddRef(this)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateHttpOptionsProcessor( _
@@ -117,16 +116,16 @@ Public Function CreateHttpOptionsProcessor( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim this As HttpOptionsProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpOptionsProcessor) _
 	)
-	
+
 	If this Then
 		InitializeHttpOptionsProcessor(this, pIMemoryAllocator)
 		HttpOptionsProcessorCreated(this)
-		
+
 		Dim hrQueryInterface As HRESULT = HttpOptionsProcessorQueryInterface( _
 			this, _
 			riid, _
@@ -135,13 +134,13 @@ Public Function CreateHttpOptionsProcessor( _
 		If FAILED(hrQueryInterface) Then
 			DestroyHttpOptionsProcessor(this)
 		End If
-		
+
 		Return hrQueryInterface
 	End If
-	
+
 	*ppv = NULL
 	Return E_OUTOFMEMORY
-	
+
 End Function
 
 Private Function AddHeaderAllow( _
@@ -149,24 +148,24 @@ Private Function AddHeaderAllow( _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	
+
 	Dim pHeaderAllow As WString Ptr = Any
 	Dim HeaderAllowLength As Integer = Any
-	
+
 	Scope
 		' TODO Get all methods from website
 		Const AllServerMethods = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 		Const AllServerMethodsForFile = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
 		Const AllServerMethodsForScript = WStr("GET, HEAD, OPTIONS, PUT, TRACE")
-		
+
 		Dim ClientURI As IClientUri Ptr = Any
 		IClientRequest_GetUri(pIRequest, @ClientURI)
-		
+
 		Dim Path As HeapBSTR = Any
 		IClientUri_GetPath(ClientURI, @Path)
-		
+
 		Dim CompareResult As Long = lstrcmpW(Path, WStr("*"))
-		
+
 		If CompareResult = CompareResultEqual Then
 			pHeaderAllow = @AllServerMethods
 			HeaderAllowLength = Len(AllServerMethods)
@@ -177,7 +176,7 @@ Private Function AddHeaderAllow( _
 				Path, _
 				@NeedProcessing _
 			)
-			
+
 			If NeedProcessing Then
 				pHeaderAllow = @AllServerMethodsForScript
 				HeaderAllowLength = Len(AllServerMethodsForScript)
@@ -185,13 +184,13 @@ Private Function AddHeaderAllow( _
 				pHeaderAllow = @AllServerMethodsForFile
 				HeaderAllowLength = Len(AllServerMethodsForFile)
 			End If
-			
+
 		End If
-		
+
 		HeapSysFreeString(Path)
 		IClientUri_Release(ClientURI)
 	End Scope
-	
+
 	Dim hrAddHeader As HRESULT = IServerResponse_AddKnownResponseHeaderWstrLen( _
 		pIResponse, _
 		HttpResponseHeaders.HeaderAllow, _
@@ -201,9 +200,9 @@ Private Function AddHeaderAllow( _
 	If FAILED(hrAddHeader) Then
 		Return hrAddHeader
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function HttpOptionsProcessorPrepare( _
@@ -211,7 +210,7 @@ Private Function HttpOptionsProcessorPrepare( _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim pIBuffer As IMemoryStream Ptr = Any
 	Dim hrCreateBuffer As HRESULT = CreateMemoryStream( _
 		this->pIMemoryAllocator, _
@@ -222,7 +221,7 @@ Private Function HttpOptionsProcessorPrepare( _
 		*ppIBuffer = NULL
 		Return hrCreateBuffer
 	End If
-	
+
 	Dim hrAddHeaser As HRESULT = AddHeaderAllow( _
 		pContext->pIRequest, _
 		pContext->pIResponse, _
@@ -233,16 +232,16 @@ Private Function HttpOptionsProcessorPrepare( _
 		*ppIBuffer = NULL
 		Return hrAddHeaser
 	End If
-	
+
 	IMemoryStream_SetBuffer( _
 		pIBuffer, _
 		NULL, _
 		0 _
 	)
-	
+
 	IServerResponse_SetSendOnlyHeaders(pContext->pIResponse, True)
 	IServerResponse_SetStatusCode(pContext->pIResponse, HttpStatusCodes.NoContent)
-	
+
 	Dim hrPrepareResponse As HRESULT = IHttpAsyncWriter_Prepare( _
 		pContext->pIWriter, _
 		pContext->pIResponse, _
@@ -254,11 +253,11 @@ Private Function HttpOptionsProcessorPrepare( _
 		*ppIBuffer = NULL
 		Return hrPrepareResponse
 	End If
-	
+
 	*ppIBuffer = CPtr(IAttributedAsyncStream Ptr, pIBuffer)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function HttpOptionsProcessorBeginProcess( _
@@ -268,7 +267,7 @@ Private Function HttpOptionsProcessorBeginProcess( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
 		pcb, _
@@ -278,9 +277,9 @@ Private Function HttpOptionsProcessorBeginProcess( _
 	If FAILED(hrBeginWrite) Then
 		Return hrBeginWrite
 	End If
-	
+
 	Return HTTPASYNCPROCESSOR_S_IO_PENDING
-	
+
 End Function
 
 Private Function HttpOptionsProcessorEndProcess( _
@@ -288,7 +287,7 @@ Private Function HttpOptionsProcessorEndProcess( _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	
+
 	Dim hrEndWrite As HRESULT = IHttpAsyncWriter_EndWrite( _
 		pContext->pIWriter, _
 		pIAsyncResult _
@@ -296,22 +295,22 @@ Private Function HttpOptionsProcessorEndProcess( _
 	If FAILED(hrEndWrite) Then
 		Return hrEndWrite
 	End If
-	
+
 	Select Case hrEndWrite
-		
+
 		Case S_OK
 			Return S_OK
-			
+
 		Case S_FALSE
 			Return S_FALSE
-			
+
 		Case HTTPWRITER_S_IO_PENDING
 			Return HTTPASYNCPROCESSOR_S_IO_PENDING
-			
+
 	End Select
 
 	Return S_OK
-	
+
 End Function
 
 
@@ -320,19 +319,19 @@ Private Function IHttpOptionsProcessorQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpOptionsProcessorQueryInterface(ContainerOf(this, HttpOptionsProcessor, lpVtbl), riid, ppv)
+	Return HttpOptionsProcessorQueryInterface(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl), riid, ppv)
 End Function
 
 Private Function IHttpOptionsProcessorAddRef( _
 		ByVal this As IHttpOptionsAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpOptionsProcessorAddRef(ContainerOf(this, HttpOptionsProcessor, lpVtbl))
+	Return HttpOptionsProcessorAddRef(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl))
 End Function
 
 Private Function IHttpOptionsProcessorRelease( _
 		ByVal this As IHttpOptionsAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpOptionsProcessorRelease(ContainerOf(this, HttpOptionsProcessor, lpVtbl))
+	Return HttpOptionsProcessorRelease(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl))
 End Function
 
 Private Function IHttpOptionsProcessorPrepare( _
@@ -340,7 +339,7 @@ Private Function IHttpOptionsProcessorPrepare( _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpOptionsProcessorPrepare(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, ppIBuffer)
+	Return HttpOptionsProcessorPrepare(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
 Private Function IHttpOptionsProcessorBeginProcess( _
@@ -350,7 +349,7 @@ Private Function IHttpOptionsProcessorBeginProcess( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpOptionsProcessorBeginProcess(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
+	Return HttpOptionsProcessorBeginProcess(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpOptionsProcessorEndProcess( _
@@ -358,7 +357,7 @@ Private Function IHttpOptionsProcessorEndProcess( _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpOptionsProcessorEndProcess(ContainerOf(this, HttpOptionsProcessor, lpVtbl), pContext, pIAsyncResult)
+	Return HttpOptionsProcessorEndProcess(CONTAINING_RECORD(this, HttpOptionsProcessor, lpVtbl), pContext, pIAsyncResult)
 End Function
 
 Dim GlobalHttpOptionsProcessorVirtualTable As Const IHttpOptionsAsyncProcessorVirtualTable = Type( _

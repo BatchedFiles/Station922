@@ -1,6 +1,5 @@
 #include once "ReadRequestAsyncTask.bi"
 #include once "ClientRequest.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 
 Extern GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable
@@ -332,19 +331,19 @@ Private Function IReadRequestAsyncTaskQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskQueryInterface(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), riid, ppv)
+	Return ReadRequestAsyncTaskQueryInterface(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), riid, ppv)
 End Function
 
 Private Function IReadRequestAsyncTaskAddRef( _
 		ByVal this As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskAddRef(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
+	Return ReadRequestAsyncTaskAddRef(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Private Function IReadRequestAsyncTaskRelease( _
 		ByVal this As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskRelease(ContainerOf(this, ReadRequestAsyncTask, lpVtbl))
+	Return ReadRequestAsyncTaskRelease(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Private Function IReadRequestAsyncTaskBeginExecute( _
@@ -353,49 +352,49 @@ Private Function IReadRequestAsyncTaskBeginExecute( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskBeginExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
+	Return ReadRequestAsyncTaskBeginExecute(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
 End Function
 
 Private Function IReadRequestAsyncTaskEndExecute( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pIResult)
+	Return ReadRequestAsyncTaskEndExecute(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pIResult)
 End Function
 
 Private Function IReadRequestAsyncTaskGetBaseStream( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskGetBaseStream(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppStream)
+	Return ReadRequestAsyncTaskGetBaseStream(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppStream)
 End Function
 
 Private Function IReadRequestAsyncTaskSetBaseStream( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		byVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskSetBaseStream(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pStream)
+	Return ReadRequestAsyncTaskSetBaseStream(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pStream)
 End Function
 
 Private Function IReadRequestAsyncTaskGetHttpReader( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskGetHttpReader(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppReader)
+	Return ReadRequestAsyncTaskGetHttpReader(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppReader)
 End Function
 
 Private Function IReadRequestAsyncTaskSetHttpReader( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		byVal pReader As IHttpAsyncReader Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskSetHttpReader(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), pReader)
+	Return ReadRequestAsyncTaskSetHttpReader(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pReader)
 End Function
 
 Private Function IReadRequestAsyncTaskParse( _
 		ByVal this As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskParse(ContainerOf(this, ReadRequestAsyncTask, lpVtbl), ppRequest)
+	Return ReadRequestAsyncTaskParse(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppRequest)
 End Function
 
 Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable = Type( _

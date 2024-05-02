@@ -1,6 +1,5 @@
 #include once "MemoryAsyncStream.bi"
 #include once "AsyncResult.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
 
@@ -29,7 +28,7 @@ Private Sub InitializeMemoryStream( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
-	
+
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->RttiClassName(0), _
@@ -51,74 +50,74 @@ Private Sub InitializeMemoryStream( _
 	this->ContentType.ContentType = ContentTypes.AnyAny
 	this->ContentType.CharsetWeakPtr = NULL
 	this->ContentType.Format = MimeFormats.Binary
-	
+
 End Sub
 
 Private Sub UnInitializeMemoryStream( _
 		ByVal this As MemoryStream Ptr _
 	)
-	
+
 	HeapSysFreeString(this->ETag)
 	HeapSysFreeString(this->Language)
-	
+
 	If this->pBuffer Then
 		IMalloc_Free(this->pIMemoryAllocator, this->pBuffer)
 	End If
-	
+
 End Sub
 
 Private Sub MemoryStreamCreated( _
 		ByVal this As MemoryStream Ptr _
 	)
-	
+
 End Sub
 
 Private Sub MemoryStreamDestroyed( _
 		ByVal this As MemoryStream Ptr _
 	)
-	
+
 End Sub
 
 Private Sub DestroyMemoryStream( _
 		ByVal this As MemoryStream Ptr _
 	)
-	
+
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
+
 	UnInitializeMemoryStream(this)
-	
+
 	IMalloc_Free(pIMemoryAllocator, this)
-	
+
 	MemoryStreamDestroyed(this)
-	
+
 	IMalloc_Release(pIMemoryAllocator)
-	
+
 End Sub
 
 Private Function MemoryStreamAddRef( _
 		ByVal this As MemoryStream Ptr _
 	)As ULONG
-	
+
 	this->ReferenceCounter += 1
-	
+
 	Return 1
-	
+
 End Function
 
 Private Function MemoryStreamRelease( _
 		ByVal this As MemoryStream Ptr _
 	)As ULONG
-	
+
 	this->ReferenceCounter -= 1
-	
+
 	If this->ReferenceCounter Then
 		Return 1
 	End If
-	
+
 	DestroyMemoryStream(this)
-	
+
 	Return 0
-	
+
 End Function
 
 Private Function MemoryStreamQueryInterface( _
@@ -126,7 +125,7 @@ Private Function MemoryStreamQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	If IsEqualIID(@IID_IMemoryStream, riid) Then
 		*ppv = @this->lpVtbl
 	Else
@@ -141,11 +140,11 @@ Private Function MemoryStreamQueryInterface( _
 			End If
 		End If
 	End If
-	
+
 	MemoryStreamAddRef(this)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateMemoryStream( _
@@ -153,16 +152,16 @@ Public Function CreateMemoryStream( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim this As MemoryStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(MemoryStream) _
 	)
-	
+
 	If this Then
 		InitializeMemoryStream(this, pIMemoryAllocator)
 		MemoryStreamCreated(this)
-		
+
 		Dim hrQueryInterface As HRESULT = MemoryStreamQueryInterface( _
 			this, _
 			riid, _
@@ -171,13 +170,13 @@ Public Function CreateMemoryStream( _
 		If FAILED(hrQueryInterface) Then
 			DestroyMemoryStream(this)
 		End If
-		
+
 		Return hrQueryInterface
 	End If
-	
+
 	*ppv = NULL
 	Return E_OUTOFMEMORY
-	
+
 End Function
 
 Private Function MemoryStreamBeginGetSlice( _
@@ -188,14 +187,14 @@ Private Function MemoryStreamBeginGetSlice( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim VirtualStartIndex As LongInt = StartIndex + this->Offset
-	
+
 	If VirtualStartIndex >= this->Capacity Then
 		*ppIAsyncResult = NULL
 		Return E_OUTOFMEMORY
 	End If
-	
+
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Scope
 		Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
@@ -208,14 +207,14 @@ Private Function MemoryStreamBeginGetSlice( _
 			Return hrCreateAsyncResult
 		End If
 	End Scope
-	
+
 	this->RequestStartIndex = StartIndex
 	this->RequestLength = Length
-	
+
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
-	
+
 	*ppIAsyncResult = pINewAsyncResult
-	
+
 	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
 	Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
 		pIPool, _
@@ -228,9 +227,9 @@ Private Function MemoryStreamBeginGetSlice( _
 		*ppIAsyncResult = NULL
 		Return hrStatus
 	End If
-	
+
 	Return ATTRIBUTEDSTREAM_S_IO_PENDING
-	
+
 End Function
 
 Private Function MemoryStreamEndGetSlice( _
@@ -238,7 +237,7 @@ Private Function MemoryStreamEndGetSlice( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
-	
+
 	Dim dwBytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
 	Dim dwError As DWORD = Any
@@ -251,7 +250,7 @@ Private Function MemoryStreamEndGetSlice( _
 	If dwError Then
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	If Completed Then
 		Scope
 			Dim pMem As Byte Ptr = Any
@@ -260,94 +259,94 @@ Private Function MemoryStreamEndGetSlice( _
 			Else
 				pMem = this->pOuterBuffer
 			End If
-			
+
 			Dim VirtualIndex As LongInt = this->RequestStartIndex + this->Offset
 			pBufferSlice->pSlice = @pMem[VirtualIndex]
 			pBufferSlice->Length = CInt(dwBytesTransferred)
 		End Scope
-		
+
 		If dwBytesTransferred = 0 Then
 			Return S_FALSE
 		End If
-		
+
 		If dwBytesTransferred <= this->Capacity Then
 			Return S_FALSE
 		End If
-		
+
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetContentType( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
-	
+
 	CopyMemory(ppType, @this->ContentType, SizeOf(MimeType))
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetEncoding( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	
+
 	*pZipMode = this->ZipMode
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetLanguage( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	HeapSysAddRefString(this->Language)
 	*ppLanguage = this->Language
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetLastFileModifiedDate( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
-	
+
 	ZeroMemory(ppDate, SizeOf(FILETIME))
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetETag( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	HeapSysAddRefString(this->ETag)
 	*ppETag = this->ETag
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetLength( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
-	
+
 	Dim VirtualLength As LongInt = this->Capacity - this->Offset
-	
+
 	*pLength = VirtualLength
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamGetPreloadedBytes( _
@@ -355,23 +354,23 @@ Private Function MemoryStreamGetPreloadedBytes( _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
-	
+
 	*ppPreloadedBytes = this->pOuterBuffer
 	*pPreloadedBytesLength = this->Capacity
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamSetContentType( _
 		ByVal this As MemoryStream Ptr, _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
-	
+
 	CopyMemory(@this->ContentType, pType, SizeOf(MimeType))
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamAllocBuffer( _
@@ -379,14 +378,14 @@ Private Function MemoryStreamAllocBuffer( _
 		ByVal Length As LongInt, _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim Offset As LongInt = Any
 	#if __FB_DEBUG__
 		Offset = Len(RTTI_ID_MEMORYBODY)
 	#else
 		Offset = 0
 	#endif
-	
+
 	Dim BufferLength As LongInt = Length + Offset
 	this->pBuffer = IMalloc_Alloc( _
 		this->pIMemoryAllocator, _
@@ -396,7 +395,7 @@ Private Function MemoryStreamAllocBuffer( _
 		*ppBuffer = NULL
 		Return E_OUTOFMEMORY
 	End If
-	
+
 	#if __FB_DEBUG__
 		CopyMemory( _
 			this->pBuffer, _
@@ -404,14 +403,14 @@ Private Function MemoryStreamAllocBuffer( _
 			Len(RTTI_ID_MEMORYBODY) _
 		)
 	#endif
-	
+
 	this->Capacity = BufferLength
 	this->Offset = Offset
-	
+
 	*ppBuffer = @this->pBuffer[Offset]
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function MemoryStreamSetBuffer( _
@@ -419,13 +418,13 @@ Private Function MemoryStreamSetBuffer( _
 		ByVal pBuffer As Any Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
-	
+
 	this->pOuterBuffer = pBuffer
-	this->Capacity = Length 
+	this->Capacity = Length
 	this->Offset = 0
-	
+
 	Return S_OK
-	
+
 End Function
 
 
@@ -434,61 +433,61 @@ Private Function IMemoryStreamQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return MemoryStreamQueryInterface(ContainerOf(this, MemoryStream, lpVtbl), riid, ppvObject)
+	Return MemoryStreamQueryInterface(CONTAINING_RECORD(this, MemoryStream, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IMemoryStreamAddRef( _
 		ByVal this As IMemoryStream Ptr _
 	)As ULONG
-	Return MemoryStreamAddRef(ContainerOf(this, MemoryStream, lpVtbl))
+	Return MemoryStreamAddRef(CONTAINING_RECORD(this, MemoryStream, lpVtbl))
 End Function
 
 Private Function IMemoryStreamRelease( _
 		ByVal this As IMemoryStream Ptr _
 	)As ULONG
-	Return MemoryStreamRelease(ContainerOf(this, MemoryStream, lpVtbl))
+	Return MemoryStreamRelease(CONTAINING_RECORD(this, MemoryStream, lpVtbl))
 End Function
 
 Private Function IMemoryStreamGetContentType( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal ppType As MimeType Ptr _
 	)As HRESULT
-	Return MemoryStreamGetContentType(ContainerOf(this, MemoryStream, lpVtbl), ppType)
+	Return MemoryStreamGetContentType(CONTAINING_RECORD(this, MemoryStream, lpVtbl), ppType)
 End Function
 
 Private Function IMemoryStreamGetEncoding( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	Return MemoryStreamGetEncoding(ContainerOf(this, MemoryStream, lpVtbl), pZipMode)
+	Return MemoryStreamGetEncoding(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pZipMode)
 End Function
 
 Private Function IMemoryStreamGetLanguage( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal ppLanguage As HeapBSTR Ptr _
 	)As HRESULT
-	Return MemoryStreamGetLanguage(ContainerOf(this, MemoryStream, lpVtbl), ppLanguage)
+	Return MemoryStreamGetLanguage(CONTAINING_RECORD(this, MemoryStream, lpVtbl), ppLanguage)
 End Function
 
 Private Function IMemoryStreamGetETag( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal ppETag As HeapBSTR Ptr _
 	)As HRESULT
-	Return MemoryStreamGetETag(ContainerOf(this, MemoryStream, lpVtbl), ppETag)
+	Return MemoryStreamGetETag(CONTAINING_RECORD(this, MemoryStream, lpVtbl), ppETag)
 End Function
 
 Private Function IMemoryStreamGetLastFileModifiedDate( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal ppDate As FILETIME Ptr _
 	)As HRESULT
-	Return MemoryStreamGetLastFileModifiedDate(ContainerOf(this, MemoryStream, lpVtbl), ppDate)
+	Return MemoryStreamGetLastFileModifiedDate(CONTAINING_RECORD(this, MemoryStream, lpVtbl), ppDate)
 End Function
 
 Private Function IMemoryStreamGetLength( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As ULONG
-	Return MemoryStreamGetLength(ContainerOf(this, MemoryStream, lpVtbl), pLength)
+	Return MemoryStreamGetLength(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pLength)
 End Function
 
 Private Function IMemoryStreamGetPreloadedBytes( _
@@ -496,7 +495,7 @@ Private Function IMemoryStreamGetPreloadedBytes( _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As ULONG
-	Return MemoryStreamGetPreloadedBytes(ContainerOf(this, MemoryStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
+	Return MemoryStreamGetPreloadedBytes(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
 Private Function IMemoryStreamBeginGetSlice( _
@@ -507,7 +506,7 @@ Private Function IMemoryStreamBeginGetSlice( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return MemoryStreamBeginGetSlice(ContainerOf(this, MemoryStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
+	Return MemoryStreamBeginGetSlice(CONTAINING_RECORD(this, MemoryStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IMemoryStreamEndGetSlice( _
@@ -515,14 +514,14 @@ Private Function IMemoryStreamEndGetSlice( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
-	Return MemoryStreamEndGetSlice(ContainerOf(this, MemoryStream, lpVtbl), pIAsyncResult, pBufferSlice)
+	Return MemoryStreamEndGetSlice(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pIAsyncResult, pBufferSlice)
 End Function
 
 Private Function IMemoryStreamSetContentType( _
 		ByVal this As IMemoryStream Ptr, _
 		ByVal pType As MimeType Ptr _
 	)As HRESULT
-	Return MemoryStreamSetContentType(ContainerOf(this, MemoryStream, lpVtbl), pType)
+	Return MemoryStreamSetContentType(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pType)
 End Function
 
 Private Function IMemoryStreamAllocBuffer( _
@@ -530,7 +529,7 @@ Private Function IMemoryStreamAllocBuffer( _
 		ByVal Length As LongInt, _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
-	Return MemoryStreamAllocBuffer(ContainerOf(this, MemoryStream, lpVtbl), Length, ppBuffer)
+	Return MemoryStreamAllocBuffer(CONTAINING_RECORD(this, MemoryStream, lpVtbl), Length, ppBuffer)
 End Function
 
 Private Function IMemoryStreamSetBuffer( _
@@ -538,7 +537,7 @@ Private Function IMemoryStreamSetBuffer( _
 		ByVal pBuffer As Any Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
-	Return MemoryStreamSetBuffer(ContainerOf(this, MemoryStream, lpVtbl), pBuffer, Length)
+	Return MemoryStreamSetBuffer(CONTAINING_RECORD(this, MemoryStream, lpVtbl), pBuffer, Length)
 End Function
 
 Dim GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable = Type( _

@@ -1,7 +1,6 @@
 #include once "NetworkAsyncStream.bi"
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
-#include once "ContainerOf.bi"
 #include once "IClientSocket.bi"
 #include once "ITimeCounter.bi"
 #include once "Network.bi"
@@ -580,19 +579,19 @@ Private Function INetworkAsyncStreamQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamQueryInterface(ContainerOf(this, NetworkStream, lpVtbl), riid, ppvObject)
+	Return NetworkStreamQueryInterface(CONTAINING_RECORD(this, NetworkStream, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function INetworkAsyncStreamAddRef( _
 		ByVal this As INetworkAsyncStream Ptr _
 	)As ULONG
-	Return NetworkStreamAddRef(ContainerOf(this, NetworkStream, lpVtbl))
+	Return NetworkStreamAddRef(CONTAINING_RECORD(this, NetworkStream, lpVtbl))
 End Function
 
 Private Function INetworkAsyncStreamRelease( _
 		ByVal this As INetworkAsyncStream Ptr _
 	)As ULONG
-	Return NetworkStreamRelease(ContainerOf(this, NetworkStream, lpVtbl))
+	Return NetworkStreamRelease(CONTAINING_RECORD(this, NetworkStream, lpVtbl))
 End Function
 
 Private Function INetworkAsyncStreamBeginRead( _
@@ -603,7 +602,7 @@ Private Function INetworkAsyncStreamBeginRead( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginRead(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginRead(CONTAINING_RECORD(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamBeginWrite( _
@@ -614,7 +613,7 @@ Private Function INetworkAsyncStreamBeginWrite( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWrite(ContainerOf(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWrite(CONTAINING_RECORD(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamEndRead( _
@@ -622,7 +621,7 @@ Private Function INetworkAsyncStreamEndRead( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
-	Return NetworkStreamEndRead(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
+	Return NetworkStreamEndRead(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
 End Function
 
 Private Function INetworkAsyncStreamEndWrite( _
@@ -630,7 +629,7 @@ Private Function INetworkAsyncStreamEndWrite( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
-	Return NetworkStreamEndWrite(ContainerOf(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
+	Return NetworkStreamEndWrite(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
 End Function
 
 Private Function INetworkAsyncStreamBeginWriteGather( _
@@ -641,7 +640,7 @@ Private Function INetworkAsyncStreamBeginWriteGather( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGather(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGather(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamBeginWriteGatherAndShutdown( _
@@ -652,21 +651,21 @@ Private Function INetworkAsyncStreamBeginWriteGatherAndShutdown( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGatherAndShutdown(ContainerOf(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGatherAndShutdown(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamGetSocket( _
 		ByVal this As INetworkAsyncStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
-	Return NetworkStreamGetSocket(ContainerOf(this, NetworkStream, lpVtbl), pResult)
+	Return NetworkStreamGetSocket(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pResult)
 End Function
 
 Private Function INetworkAsyncStreamSetSocket( _
 		ByVal this As INetworkAsyncStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
-	Return NetworkStreamSetSocket(ContainerOf(this, NetworkStream, lpVtbl), sock)
+	Return NetworkStreamSetSocket(CONTAINING_RECORD(this, NetworkStream, lpVtbl), sock)
 End Function
 
 Private Function INetworkAsyncStreamGetRemoteAddress( _
@@ -674,7 +673,7 @@ Private Function INetworkAsyncStreamGetRemoteAddress( _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
-	Return NetworkStreamGetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
+	Return NetworkStreamGetRemoteAddress(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
 End Function
 
 Private Function INetworkAsyncStreamSetRemoteAddress( _
@@ -682,7 +681,7 @@ Private Function INetworkAsyncStreamSetRemoteAddress( _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
-	Return NetworkStreamSetRemoteAddress(ContainerOf(this, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
+	Return NetworkStreamSetRemoteAddress(CONTAINING_RECORD(this, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
 End Function
 
 Dim GlobalNetworkStreamVirtualTable As Const INetworkAsyncStreamVirtualTable = Type( _

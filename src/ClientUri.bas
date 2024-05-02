@@ -2,7 +2,6 @@
 #include once "win\shlwapi.bi"
 #include once "win\wininet.bi"
 #include once "CharacterConstants.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "Http.bi"
 
@@ -791,89 +790,89 @@ Private Function IClientUriQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return ClientUriQueryInterface(ContainerOf(this, ClientUri, lpVtbl), riid, ppvObject)
+	Return ClientUriQueryInterface(CONTAINING_RECORD(this, ClientUri, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IClientUriAddRef( _
 		ByVal this As IClientUri Ptr _
 	)As ULONG
-	Return ClientUriAddRef(ContainerOf(this, ClientUri, lpVtbl))
+	Return ClientUriAddRef(CONTAINING_RECORD(this, ClientUri, lpVtbl))
 End Function
 
 Private Function IClientUriRelease( _
 		ByVal this As IClientUri Ptr _
 	)As ULONG
-	Return ClientUriRelease(ContainerOf(this, ClientUri, lpVtbl))
+	Return ClientUriRelease(CONTAINING_RECORD(this, ClientUri, lpVtbl))
 End Function
 
 Private Function IClientUriUriFromString( _
 		ByVal this As IClientUri Ptr, _
 		ByVal bstrUri As HeapBSTR _
 	)As HRESULT
-	Return ClientUriUriFromString(ContainerOf(this, ClientUri, lpVtbl), bstrUri)
+	Return ClientUriUriFromString(CONTAINING_RECORD(this, ClientUri, lpVtbl), bstrUri)
 End Function
 
 Private Function IClientUriGetOriginalString( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppOriginalString As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetOriginalString(ContainerOf(this, ClientUri, lpVtbl), ppOriginalString)
+	Return ClientUriGetOriginalString(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppOriginalString)
 End Function
 
 Private Function IClientUriGetUserName( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppUserName As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetUserName(ContainerOf(this, ClientUri, lpVtbl), ppUserName)
+	Return ClientUriGetUserName(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppUserName)
 End Function
 
 Private Function IClientUriGetPassword( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppPassword As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPassword(ContainerOf(this, ClientUri, lpVtbl), ppPassword)
+	Return ClientUriGetPassword(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPassword)
 End Function
 
 Private Function IClientUriGetHost( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetHost(ContainerOf(this, ClientUri, lpVtbl), ppHost)
+	Return ClientUriGetHost(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppHost)
 End Function
 
 Private Function IClientUriGetPort( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppPort As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPort(ContainerOf(this, ClientUri, lpVtbl), ppPort)
+	Return ClientUriGetPort(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPort)
 End Function
 
 Private Function IClientUriGetScheme( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppScheme As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetScheme(ContainerOf(this, ClientUri, lpVtbl), ppScheme)
+	Return ClientUriGetScheme(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppScheme)
 End Function
 
 Private Function IClientUriGetPath( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppPath As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPath(ContainerOf(this, ClientUri, lpVtbl), ppPath)
+	Return ClientUriGetPath(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPath)
 End Function
 
 Private Function IClientUriGetQuery( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppQuery As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetQuery(ContainerOf(this, ClientUri, lpVtbl), ppQuery)
+	Return ClientUriGetQuery(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppQuery)
 End Function
 
 Private Function IClientUriGetFragment( _
 		ByVal this As IClientUri Ptr, _
 		ByVal ppFragment As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetFragment(ContainerOf(this, ClientUri, lpVtbl), ppFragment)
+	Return ClientUriGetFragment(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppFragment)
 End Function
 
 Dim GlobalClientUriVirtualTable As Const IClientUriVirtualTable = Type( _

@@ -1,7 +1,6 @@
 #include once "TcpAsyncListener.bi"
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
-#include once "ContainerOf.bi"
 #include once "Network.bi"
 
 Extern GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable
@@ -29,7 +28,7 @@ Private Sub InitializeTcpListener( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
-	
+
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->RttiClassName(0), _
@@ -42,57 +41,57 @@ Private Sub InitializeTcpListener( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->ListenSocket = INVALID_SOCKET
-	
+
 End Sub
 
 Private Sub UnInitializeTcpListener( _
 		ByVal this As TcpListener Ptr _
 	)
-	
+
 End Sub
 
 Private Sub TcpListenerCreated( _
 		ByVal this As TcpListener Ptr _
 	)
-	
+
 End Sub
 
 Private Sub TcpListenerDestroyed( _
 		ByVal this As TcpListener Ptr _
 	)
-	
+
 End Sub
 
 Private Sub DestroyTcpListener( _
 		ByVal this As TcpListener Ptr _
 	)
-	
+
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
+
 	UnInitializeTcpListener(this)
-	
+
 	IMalloc_Free(pIMemoryAllocator, this)
-	
+
 	TcpListenerDestroyed(this)
-	
+
 	IMalloc_Release(pIMemoryAllocator)
-	
+
 End Sub
 
 Private Function TcpListenerAddRef( _
 		ByVal this As TcpListener Ptr _
 	)As ULONG
-	
+
 	Return 1
-	
+
 End Function
 
 Private Function TcpListenerRelease( _
 		ByVal this As TcpListener Ptr _
 	)As ULONG
-	
+
 	Return 0
-	
+
 End Function
 
 Private Function TcpListenerQueryInterface( _
@@ -100,7 +99,7 @@ Private Function TcpListenerQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	If IsEqualIID(@IID_ITcpListener, riid) Then
 		*ppv = @this->lpVtbl
 	Else
@@ -111,11 +110,11 @@ Private Function TcpListenerQueryInterface( _
 			Return E_NOINTERFACE
 		End If
 	End If
-	
+
 	TcpListenerAddRef(this)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateTcpListener( _
@@ -123,16 +122,16 @@ Public Function CreateTcpListener( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim this As TcpListener Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(TcpListener) _
 	)
-	
+
 	If this Then
 		InitializeTcpListener(this, pIMemoryAllocator)
 		TcpListenerCreated(this)
-		
+
 		Dim hrQueryInterface As HRESULT = TcpListenerQueryInterface( _
 			this, _
 			riid, _
@@ -141,13 +140,13 @@ Public Function CreateTcpListener( _
 		If FAILED(hrQueryInterface) Then
 			DestroyTcpListener(this)
 		End If
-		
+
 		Return hrQueryInterface
 	End If
-	
+
 	*ppv = NULL
 	Return E_OUTOFMEMORY
-	
+
 End Function
 
 Private Function TcpListenerBeginAccept( _
@@ -156,7 +155,7 @@ Private Function TcpListenerBeginAccept( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	
+
 	this->ClientSocket = WSASocketW( _
 		0, _ /' AF_INET6 '/
 		0, _ /' SOCK_STREAM '/
@@ -170,7 +169,7 @@ Private Function TcpListenerBeginAccept( _
 		*ppIAsyncResult = NULL
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
 		this->pIMemoryAllocator, _
@@ -182,12 +181,12 @@ Private Function TcpListenerBeginAccept( _
 		*ppIAsyncResult = NULL
 		Return hrCreateAsyncResult
 	End If
-	
+
 	Dim pOverlap As OVERLAPPED Ptr = Any
 	IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
-	
+
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
-	
+
 	Const dwReceiveDataLength = 0
 	Const lpdwBytesReceived = NULL
 	Dim resAccept As BOOL = lpfnAcceptEx( _
@@ -208,13 +207,13 @@ Private Function TcpListenerBeginAccept( _
 			*ppIAsyncResult = NULL
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
-		
+
 	End If
-	
+
 	*ppIAsyncResult = pINewAsyncResult
-	
+
 	Return TCPLISTENER_S_IO_PENDING
-	
+
 End Function
 
 Private Function TcpListenerEndAccept( _
@@ -222,12 +221,12 @@ Private Function TcpListenerEndAccept( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
-	
+
 	Dim pLocalSockaddr As SOCKADDR Ptr = Any
 	Dim LocalSockaddrLength As INT_ = Any
 	Dim pRemoteSockaddr As SOCKADDR Ptr = Any
 	Dim RemoteSockaddrLength As INT_ = Any
-	
+
 	lpfnGetAcceptExSockaddrs( _
 		@this->LocalAddress, _
 		0, _
@@ -238,7 +237,7 @@ Private Function TcpListenerEndAccept( _
 		@pRemoteSockaddr, _
 		@RemoteSockaddrLength _
 	)
-	
+
 	Dim optval As Zstring Ptr = CPtr(Zstring Ptr, @this->ListenSocket)
 	Dim resSetOptions As Long = setsockopt( _
 		this->ClientSocket, _
@@ -253,29 +252,29 @@ Private Function TcpListenerEndAccept( _
 		*pClientSocket = INVALID_SOCKET
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	*pClientSocket = this->ClientSocket
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function TcpListenerGetListenSocket( _
 		ByVal this As TcpListener Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
 	)As HRESULT
-	
+
 	*pListenSocket = this->ListenSocket
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function TcpListenerSetListenSocket( _
 		ByVal this As TcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
-	
+
 	this->ProtLength = SizeOf(WSAPROTOCOL_INFOW)
 	Dim resOptions As Long = getsockopt( _
 		ListenSocket, _
@@ -288,11 +287,11 @@ Private Function TcpListenerSetListenSocket( _
 		Dim dwError As Long = WSAGetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	this->ListenSocket = ListenSocket
-	
+
 	Return S_OK
-	
+
 End Function
 
 
@@ -301,19 +300,19 @@ Private Function ITcpListenerQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return TcpListenerQueryInterface(ContainerOf(this, TcpListener, lpVtbl), riid, ppv)
+	Return TcpListenerQueryInterface(CONTAINING_RECORD(this, TcpListener, lpVtbl), riid, ppv)
 End Function
 
 Private Function ITcpListenerAddRef( _
 		ByVal this As ITcpListener Ptr _
 	)As ULONG
-	Return TcpListenerAddRef(ContainerOf(this, TcpListener, lpVtbl))
+	Return TcpListenerAddRef(CONTAINING_RECORD(this, TcpListener, lpVtbl))
 End Function
 
 Private Function ITcpListenerRelease( _
 		ByVal this As ITcpListener Ptr _
 	)As ULONG
-	Return TcpListenerRelease(ContainerOf(this, TcpListener, lpVtbl))
+	Return TcpListenerRelease(CONTAINING_RECORD(this, TcpListener, lpVtbl))
 End Function
 
 Private Function ITcpListenerBeginAccept( _
@@ -322,7 +321,7 @@ Private Function ITcpListenerBeginAccept( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return TcpListenerBeginAccept(ContainerOf(this, TcpListener, lpVtbl), pcb, StateObject, ppIAsyncResult)
+	Return TcpListenerBeginAccept(CONTAINING_RECORD(this, TcpListener, lpVtbl), pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function ITcpListenerEndAccept( _
@@ -330,21 +329,21 @@ Private Function ITcpListenerEndAccept( _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As ULONG
-	Return TcpListenerEndAccept(ContainerOf(this, TcpListener, lpVtbl), pIAsyncResult, pClientSocket)
+	Return TcpListenerEndAccept(CONTAINING_RECORD(this, TcpListener, lpVtbl), pIAsyncResult, pClientSocket)
 End Function
 
 Private Function ITcpListenerGetListenSocket( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
 	)As ULONG
-	Return TcpListenerGetListenSocket(ContainerOf(this, TcpListener, lpVtbl), pListenSocket)
+	Return TcpListenerGetListenSocket(CONTAINING_RECORD(this, TcpListener, lpVtbl), pListenSocket)
 End Function
 
 Private Function ITcpListenerSetListenSocket( _
 		ByVal this As ITcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As ULONG
-	Return TcpListenerSetListenSocket(ContainerOf(this, TcpListener, lpVtbl), ListenSocket)
+	Return TcpListenerSetListenSocket(CONTAINING_RECORD(this, TcpListener, lpVtbl), ListenSocket)
 End Function
 
 Dim GlobalTcpListenerVirtualTable As Const ITcpListenerVirtualTable = Type( _

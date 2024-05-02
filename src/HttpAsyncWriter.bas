@@ -1,6 +1,5 @@
 #include once "HttpAsyncWriter.bi"
 #include once "AsyncResult.bi"
-#include once "ContainerOf.bi"
 #include once "IFileAsyncStream.bi"
 #include once "WebUtils.bi"
 
@@ -860,47 +859,47 @@ Private Function IHttpAsyncWriterQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterQueryInterface(ContainerOf(this, HttpWriter, lpVtbl), riid, ppvObject)
+	Return HttpWriterQueryInterface(CONTAINING_RECORD(this, HttpWriter, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IHttpAsyncWriterAddRef( _
 		ByVal this As IHttpAsyncWriter Ptr _
 	)As ULONG
-	Return HttpWriterAddRef(ContainerOf(this, HttpWriter, lpVtbl))
+	Return HttpWriterAddRef(CONTAINING_RECORD(this, HttpWriter, lpVtbl))
 End Function
 
 Private Function IHttpAsyncWriterRelease( _
 		ByVal this As IHttpAsyncWriter Ptr _
 	)As ULONG
-	Return HttpWriterRelease(ContainerOf(this, HttpWriter, lpVtbl))
+	Return HttpWriterRelease(CONTAINING_RECORD(this, HttpWriter, lpVtbl))
 End Function
 
 Private Function IHttpAsyncWriterGetBaseStream( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal ppResult As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterGetBaseStream(ContainerOf(this, HttpWriter, lpVtbl), ppResult)
+	Return HttpWriterGetBaseStream(CONTAINING_RECORD(this, HttpWriter, lpVtbl), ppResult)
 End Function
 
 Private Function IHttpAsyncWriterSetBaseStream( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return HttpWriterSetBaseStream(ContainerOf(this, HttpWriter, lpVtbl), pIStream)
+	Return HttpWriterSetBaseStream(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIStream)
 End Function
 
 Private Function IHttpAsyncWriterGetBuffer( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterGetBuffer(ContainerOf(this, HttpWriter, lpVtbl), ppResult)
+	Return HttpWriterGetBuffer(CONTAINING_RECORD(this, HttpWriter, lpVtbl), ppResult)
 End Function
 
 Private Function IHttpAsyncWriterSetBuffer( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal pIBuffer As IAttributedAsyncStream Ptr _
 	)As HRESULT
-	Return HttpWriterSetBuffer(ContainerOf(this, HttpWriter, lpVtbl), pIBuffer)
+	Return HttpWriterSetBuffer(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIBuffer)
 End Function
 
 Private Function IHttpAsyncWriterPrepare( _
@@ -909,7 +908,7 @@ Private Function IHttpAsyncWriterPrepare( _
 		ByVal ContentLength As LongInt, _
 		ByVal fFileAccess As FileAccess _
 	)As HRESULT
-	Return HttpWriterPrepare(ContainerOf(this, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
+	Return HttpWriterPrepare(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
 End Function
 
 Private Function IHttpAsyncWriterBeginWrite( _
@@ -918,28 +917,28 @@ Private Function IHttpAsyncWriterBeginWrite( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterBeginWrite(ContainerOf(this, HttpWriter, lpVtbl), pcb, StateObject, ppIAsyncResult)
+	Return HttpWriterBeginWrite(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpAsyncWriterEndWrite( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpWriterEndWrite(ContainerOf(this, HttpWriter, lpVtbl), pIAsyncResult)
+	Return HttpWriterEndWrite(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIAsyncResult)
 End Function
 
 Private Function IHttpAsyncWriterSetKeepAlive( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
-	Return HttpWriterSetKeepAlive(ContainerOf(this, HttpWriter, lpVtbl), KeepAlive)
+	Return HttpWriterSetKeepAlive(CONTAINING_RECORD(this, HttpWriter, lpVtbl), KeepAlive)
 End Function
 
 Private Function IHttpAsyncWriterSetNeedWrite100Continue( _
 		ByVal this As IHttpAsyncWriter Ptr, _
 		ByVal NeedWrite100Continue As Boolean _
 	)As HRESULT
-	Return HttpWriterSetNeedWrite100Continue(ContainerOf(this, HttpWriter, lpVtbl), NeedWrite100Continue)
+	Return HttpWriterSetNeedWrite100Continue(CONTAINING_RECORD(this, HttpWriter, lpVtbl), NeedWrite100Continue)
 End Function
 
 Dim GlobalHttpWriterVirtualTable As Const IHttpAsyncWriterVirtualTable = Type( _

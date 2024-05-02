@@ -1,6 +1,5 @@
 #include once "WriteResponseAsyncTask.bi"
 #include once "ClientRequest.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpProcessorCollection.bi"
 #include once "HttpAsyncWriter.bi"
@@ -528,19 +527,19 @@ Private Function IWriteResponseAsyncTaskQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskQueryInterface(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), riid, ppv)
+	Return WriteResponseAsyncTaskQueryInterface(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), riid, ppv)
 End Function
 
 Private Function IWriteResponseAsyncTaskAddRef( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskAddRef(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
+	Return WriteResponseAsyncTaskAddRef(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
 Private Function IWriteResponseAsyncTaskRelease( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskRelease(ContainerOf(this, WriteResponseAsyncTask, lpVtbl))
+	Return WriteResponseAsyncTaskRelease(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl))
 End Function
 
 Private Function IWriteResponseAsyncTaskBeginExecute( _
@@ -549,63 +548,63 @@ Private Function IWriteResponseAsyncTaskBeginExecute( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskBeginExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
+	Return WriteResponseAsyncTaskBeginExecute(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
 End Function
 
 Private Function IWriteResponseAsyncTaskEndExecute( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr _
 	)As ULONG
-	Return WriteResponseAsyncTaskEndExecute(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIResult)
+	Return WriteResponseAsyncTaskEndExecute(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pIResult)
 End Function
 
 Private Function IWriteResponseAsyncTaskGetBaseStream( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskGetBaseStream(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppStream)
+	Return WriteResponseAsyncTaskGetBaseStream(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), ppStream)
 End Function
 
 Private Function IWriteResponseAsyncTaskSetBaseStream( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskSetBaseStream(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pStream)
+	Return WriteResponseAsyncTaskSetBaseStream(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pStream)
 End Function
 
 Private Function IWriteResponseAsyncTaskGetHttpReader( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskGetHttpReader(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppReader)
+	Return WriteResponseAsyncTaskGetHttpReader(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), ppReader)
 End Function
 
 Private Function IWriteResponseAsyncTaskSetHttpReader( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		byVal pReader As IHttpAsyncReader Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskSetHttpReader(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pReader)
+	Return WriteResponseAsyncTaskSetHttpReader(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pReader)
 End Function
 
 Private Function IWriteResponseAsyncTaskGetClientRequest( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskGetClientRequest(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), ppIRequest)
+	Return WriteResponseAsyncTaskGetClientRequest(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), ppIRequest)
 End Function
 
 Private Function IWriteResponseAsyncTaskSetClientRequest( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskSetClientRequest(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIRequest)
+	Return WriteResponseAsyncTaskSetClientRequest(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pIRequest)
 End Function
 
 Private Function IWriteResponseAsyncTaskPrepare( _
 		ByVal this As IWriteResponseAsyncIoTask Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)As HRESULT
-	Return WriteResponseAsyncTaskPrepare(ContainerOf(this, WriteResponseAsyncTask, lpVtbl), pIWebSites)
+	Return WriteResponseAsyncTaskPrepare(CONTAINING_RECORD(this, WriteResponseAsyncTask, lpVtbl), pIWebSites)
 End Function
 
 Dim GlobalWriteResponseAsyncIoTaskVirtualTable As Const IWriteResponseAsyncIoTaskVirtualTable = Type( _

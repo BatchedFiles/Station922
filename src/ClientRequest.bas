@@ -2,7 +2,6 @@
 #include once "win\shlwapi.bi"
 #include once "CharacterConstants.bi"
 #include once "ClientUri.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
@@ -88,28 +87,28 @@ Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeade
 Private Function FindNotSpaceCharacter( _
 		ByVal pwStr As WString Ptr _
 	)As WString Ptr
-	
+
 	Dim Character As Integer = pwStr[0]
-	
+
 	If Character = Characters.WhiteSpace Then
 		Dim pNext As WString Ptr = @pwStr[1]
 		Return FindNotSpaceCharacter(pNext)
 	End If
-	
+
 	Return pwStr
-	
+
 End Function
 
 Private Function GetHttpVersionIndex( _
 		ByVal s As WString Ptr, _
 		ByVal pVersion As HttpVersions Ptr _
 	)As Boolean
-	
+
 	If lstrlenW(s) = 0 Then
 		*pVersion = HttpVersions.Http09
 		Return True
 	End If
-	
+
 	Scope
 		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion11String)
 		If CompareResult = CompareResultEqual Then
@@ -117,7 +116,7 @@ Private Function GetHttpVersionIndex( _
 			Return True
 		End If
 	End Scope
-	
+
 	Scope
 		Dim CompareResult As Long = lstrcmpW(s, @HttpVersion10String)
 		If CompareResult = CompareResultEqual Then
@@ -125,16 +124,16 @@ Private Function GetHttpVersionIndex( _
 			Return True
 		End If
 	End Scope
-	
+
 	Return False
-	
+
 End Function
 
 Private Function GetKnownRequestHeaderIndex( _
 		ByVal pHeader As WString Ptr, _
 		ByVal pIndex As HttpRequestHeaders Ptr _
 	)As Boolean
-	
+
 	For i As Integer = 1 To HttpRequestHeadersSize
 		Dim CompareResult As Long = lstrcmpiW( _
 			RequestHeaderNodesVector(i).pHeader, _
@@ -145,30 +144,30 @@ Private Function GetKnownRequestHeaderIndex( _
 			Return True
 		End If
 	Next
-	
+
 	*pIndex = 0
 	Return False
-	
+
 End Function
 
 Private Function ClientRequestParseRequestedLine( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
-	
+
 	' Метод, запрошенный ресурс и версия протокола
-	
+
 	If SysStringLen(RequestedLine) = 0 Then
 		Return CLIENTREQUEST_E_BADREQUEST
 	End If
-	
+
 	Dim pFirstChar As WString Ptr = RequestedLine
-	
+
 	Dim FirstChar As Integer = pFirstChar[0]
 	If FirstChar = Characters.WhiteSpace Then
 		Return CLIENTREQUEST_E_BADREQUEST
 	End If
-	
+
 	' Первый пробел
 	Dim pSpace As WString Ptr = StrChrW( _
 		pFirstChar, _
@@ -177,11 +176,11 @@ Private Function ClientRequestParseRequestedLine( _
 	If pSpace = NULL Then
 		Return CLIENTREQUEST_E_BADREQUEST
 	End If
-	
+
 	' Verb
 	Scope
 		Dim pVerb As WString Ptr = pFirstChar
-		
+
 		Dim VerbLength As Integer = pSpace - pVerb
 		this->pHttpMethod = CreateHeapStringLen( _
 			this->pIMemoryAllocator, _
@@ -192,7 +191,7 @@ Private Function ClientRequestParseRequestedLine( _
 			Return E_OUTOFMEMORY
 		End If
 	End Scope
-	
+
 	' Uri
 	Scope
 		Dim hrCreateUri As HRESULT = CreateClientUri( _
@@ -203,20 +202,20 @@ Private Function ClientRequestParseRequestedLine( _
 		If FAILED(hrCreateUri) Then
 			Return hrCreateUri
 		End If
-		
+
 		' Найти начало непробела
 		pSpace = FindNotSpaceCharacter(@pSpace[1])
-		
+
 		' Здесь начинается Url
 		Dim pUri As WString Ptr = pSpace
-		
+
 		' Второй пробел
 		Dim bstrUri As HeapBSTR = Any
 		pSpace = StrChrW( _
 			pSpace, _
 			Characters.WhiteSpace _
 		)
-		
+
 		If pSpace = NULL Then
 			bstrUri = CreateHeapString( _
 				this->pIMemoryAllocator, _
@@ -230,23 +229,23 @@ Private Function ClientRequestParseRequestedLine( _
 				UriLength _
 			)
 		End If
-		
+
 		If bstrUri = NULL Then
 			Return E_OUTOFMEMORY
 		End If
-		
+
 		Dim hrUriFromString As HRESULT = IClientUri_UriFromString( _
 			this->pClientURI, _
 			bstrUri _
 		)
 		HeapSysFreeString(bstrUri)
-		
+
 		If FAILED(hrUriFromString) Then
 			Return hrUriFromString
 		End If
-		
+
 	End Scope
-	
+
 	' Version
 	Scope
 		If pSpace = NULL Then
@@ -254,9 +253,9 @@ Private Function ClientRequestParseRequestedLine( _
 		Else
 			' Найти начало непробела
 			pSpace = FindNotSpaceCharacter(@pSpace[1])
-			
+
 			Dim pVersion As WString Ptr = pSpace
-			
+
 			' Третий пробел
 			pSpace = StrChrW( _
 				pSpace, _
@@ -266,7 +265,7 @@ Private Function ClientRequestParseRequestedLine( _
 				' Слишком много пробелов
 				Return CLIENTREQUEST_E_BADREQUEST
 			End If
-			
+
 			Dim bstrVersion As HeapBSTR = CreateHeapString( _
 				this->pIMemoryAllocator, _
 				pVersion _
@@ -274,27 +273,27 @@ Private Function ClientRequestParseRequestedLine( _
 			If bstrVersion = NULL Then
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			Dim GetHttpVersionResult As Boolean = GetHttpVersionIndex( _
 				bstrVersion, _
 				@this->HttpVersion _
 			)
 			HeapSysFreeString(bstrVersion)
-			
+
 			If GetHttpVersionResult = False Then
 				Return CLIENTREQUEST_E_HTTPVERSIONNOTSUPPORTED
 			End If
-			
+
 			If this->HttpVersion = HttpVersions.Http11 Then
 				' Для версии 1.1 это по умолчанию
 				this->KeepAlive = True
 			End If
-			
+
 		End If
 	End Scope
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestAddHeader( _
@@ -302,7 +301,7 @@ Private Function ClientRequestAddHeader( _
 		ByVal Header As WString Ptr, _
 		ByVal Value As HeapBSTR _
 	)As Boolean
-	
+
 	Dim HeaderIndex As HttpRequestHeaders = Any
 	Dim Finded As Boolean = GetKnownRequestHeaderIndex( _
 		Header, _
@@ -312,18 +311,18 @@ Private Function ClientRequestAddHeader( _
 		' TODO Add item to collection of unrecognized request headers
 		Return False
 	End If
-	
+
 	LET_HEAPSYSSTRING(this->RequestHeaders(HeaderIndex), Value)
-	
+
 	Return True
-	
+
 End Function
 
 Private Function ClientRequestAddRequestHeaders( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIReader As IHttpAsyncReader Ptr _
 	)As HRESULT
-	
+
 	Do
 		Dim pLine As HeapBSTR = Any
 		Dim hrReadLine As HRESULT = IHttpAsyncReader_ReadLine( _
@@ -333,20 +332,20 @@ Private Function ClientRequestAddRequestHeaders( _
 		If FAILED(hrReadLine) Then
 			Return hrReadLine
 		End If
-		
+
 		Dim LineLength As Integer = SysStringLen(pLine)
 		If LineLength = 0 Then
 			HeapSysFreeString(pLine)
 			Return S_OK
 		End If
-		
+
 		Dim pColon As WString Ptr = StrChrW(pLine, Characters.Colon)
-		
+
 		If pColon Then
 			pColon[0] = 0
-			
+
 			Dim pwszValue As WString Ptr = FindNotSpaceCharacter(@pColon[1])
-			
+
 			Dim pNullChar As WString Ptr = @pLine[LineLength]
 			Dim ValueLength As Integer = pNullChar - pwszValue
 			Dim Value As HeapBSTR = CreateHeapStringLen( _
@@ -358,36 +357,36 @@ Private Function ClientRequestAddRequestHeaders( _
 				HeapSysFreeString(pLine)
 				Return E_OUTOFMEMORY
 			End If
-			
+
 			ClientRequestAddHeader(this, pLine, Value)
-			
+
 			HeapSysFreeString(Value)
-			
+
 		End If
-		
+
 		HeapSysFreeString(pLine)
 	Loop
-	
+
 End Function
 
 Private Sub ReplaceUtcToGmt( _
 		ByVal pSource As WString Ptr, _
 		ByVal SourceLength As Integer _
 	)
-	
+
 	Const UTC = WStr("UTC")
 	Const GMT = WStr("GMT")
-	
+
 	Dim UtcLength As Integer = Len(UTC)
 	Dim GmtLength As Integer = Len(GMT)
-	
+
 	Dim pUTC As WString Ptr = FindStringW( _
 		pSource, _
 		SourceLength, _
 		@UTC, _
 		UtcLength _
 	)
-	
+
 	Dim GmtBytes As Integer = GmtLength * SizeOf(WString)
 	If pUTC Then
 		CopyMemory( _
@@ -396,13 +395,13 @@ Private Sub ReplaceUtcToGmt( _
 			GmtBytes _
 		)
 	End If
-	
+
 End Sub
 
 Private Sub ParseConnectionHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderConnection)
 	If pSource Then
 		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
@@ -426,16 +425,16 @@ Private Sub ParseConnectionHeaderSink( _
 			End If
 		End If
 	End If
-	
+
 	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderConnection))
 	this->RequestHeaders(HttpRequestHeaders.HeaderConnection) = NULL
-	
+
 End Sub
 
 Private Sub ParseAcceptEncodingHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding)
 	If pSource Then
 		Dim SourceLength As Integer = SysStringLen(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
@@ -448,7 +447,7 @@ Private Sub ParseAcceptEncodingHeaderSink( _
 		If pGzipString Then
 			this->RequestZipModes(ZipModes.GZip) = True
 		End If
-		
+
 		Dim pDeflateString As PCWSTR = FindStringIW( _
 			pSource, _
 			SourceLength, _
@@ -459,16 +458,16 @@ Private Sub ParseAcceptEncodingHeaderSink( _
 			this->RequestZipModes(ZipModes.Deflate) = True
 		End If
 	End If
-	
+
 	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding))
 	this->RequestHeaders(HttpRequestHeaders.HeaderAcceptEncoding) = NULL
-	
+
 End Sub
 
 Private Sub ParseIfModifiedSinceHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Scope
 		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfModifiedSince)
 		If pSource Then
@@ -476,7 +475,7 @@ Private Sub ParseIfModifiedSinceHeaderSink( _
 			ReplaceUtcToGmt(pSource, SourceLength)
 		End If
 	End Scope
-	
+
 	Scope
 		Dim pSource As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderIfUnModifiedSince)
 		If pSource Then
@@ -484,7 +483,7 @@ Private Sub ParseIfModifiedSinceHeaderSink( _
 			ReplaceUtcToGmt(pSource, SourceLength)
 		End If
 	End Scope
-	
+
 	/'
 	Dim wSeparator As WString Ptr = StrChrW( _
 		pHeaderIfUnModifiedSince, _
@@ -494,21 +493,21 @@ Private Sub ParseIfModifiedSinceHeaderSink( _
 		wSeparator[0] = 0
 	End If
 	'/
-	
+
 End Sub
 
 Private Sub ParseRangeHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Const BytesEqualString = WStr("bytes=")
-	
+
 	Dim pwszHeaderRange As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderRange)
 	If pwszHeaderRange Then
 		Dim HeaderRangeLength As Integer = SysStringLen( _
 			this->RequestHeaders(HttpRequestHeaders.HeaderRange) _
 		)
-		
+
 		' TODO Обрабатывать несколько байтовых диапазонов
 		/'
 		Dim pCommaChar As WString Ptr = StrChrW(pwszHeaderRange, Characters.Comma)
@@ -516,7 +515,7 @@ Private Sub ParseRangeHeaderSink( _
 			pCommaChar[0] = 0
 		End If
 		'/
-		
+
 		Dim pwszBytesString As WString Ptr = FindStringW( _
 			pwszHeaderRange, _
 			HeaderRangeLength, _
@@ -525,18 +524,18 @@ Private Sub ParseRangeHeaderSink( _
 		)
 		If pwszBytesString = pwszHeaderRange Then
 			Dim wStartIntegerData As WString Ptr = @pwszHeaderRange[Len(BytesEqualString)]
-			
+
 			Dim wStartIndex As WString Ptr = wStartIntegerData
-			
+
 			Dim wHyphenMinusChar As WString Ptr = StrChrW( _
 				wStartIndex, _
 				Characters.HyphenMinus _
 			)
 			If wHyphenMinusChar Then
 				wHyphenMinusChar[0] = 0
-				
+
 				Dim wEndIndex As WString Ptr = @wHyphenMinusChar[1]
-				
+
 				Dim FirstConverted As BOOL = StrToInt64ExW( _
 					wStartIndex, _
 					STIF_DEFAULT, _
@@ -545,7 +544,7 @@ Private Sub ParseRangeHeaderSink( _
 				If FirstConverted Then
 					this->RequestByteRange.IsSet = ByteRangeIsSet.FirstBytePositionIsSet
 				End If
-				
+
 				Dim LastConverted As BOOL = StrToInt64ExW( _
 					wEndIndex, _
 					STIF_DEFAULT, _
@@ -558,22 +557,22 @@ Private Sub ParseRangeHeaderSink( _
 						this->RequestByteRange.IsSet = ByteRangeIsSet.LastBytePositionIsSet
 					End If
 				End If
-				
+
 			End If
-			
+
 		End If
-		
+
 	End If
-	
+
 	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderRange))
 	this->RequestHeaders(HttpRequestHeaders.HeaderRange) = NULL
-	
+
 End Sub
 
 Private Sub ParseContentLengthHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Dim pHeaderContentLength As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderContentLength)
 	If pHeaderContentLength Then
 		StrToInt64ExW( _
@@ -582,16 +581,16 @@ Private Sub ParseContentLengthHeaderSink( _
 			@this->ContentLength _
 		)
 	End If
-	
+
 	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderContentLength))
 	this->RequestHeaders(HttpRequestHeaders.HeaderContentLength) = NULL
-	
+
 End Sub
 
 Private Sub ParseExpectHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Dim pHeaderExpect As WString Ptr = this->RequestHeaders(HttpRequestHeaders.HeaderExpect)
 	If pHeaderExpect Then
 		Const Expect100 = WStr("100-continue")
@@ -605,16 +604,16 @@ Private Sub ParseExpectHeaderSink( _
 			this->Expect100Continue = False
 		End If
 	End If
-	
+
 	HeapSysFreeString(this->RequestHeaders(HttpRequestHeaders.HeaderExpect))
 	this->RequestHeaders(HttpRequestHeaders.HeaderExpect) = NULL
-	
+
 End Sub
 
 Private Function ParseHostHeaderSink( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
-	
+
 	/'
 	' TODO Найти правильный заголовок Host в зависимости от версии 1.0 или 1.1
 	Dim HeaderHost As HeapBSTR = Any
@@ -625,7 +624,7 @@ Private Function ParseHostHeaderSink( _
 		IClientRequest_GetHttpHeader(pIRequest, HttpRequestHeaders.HeaderHost, @HeaderHost)
 	End If
 	'/
-	
+
 	Dim HeaderHostLength As Integer = SysStringLen( _
 		this->RequestHeaders(HttpRequestHeaders.HeaderHost) _
 	)
@@ -641,48 +640,48 @@ Private Function ParseHostHeaderSink( _
 			If ClientUriHostLength = 0 Then
 				Return CLIENTREQUEST_E_BADHOST
 			End If
-			
+
 			LET_HEAPSYSSTRING( _
 				this->RequestHeaders(HttpRequestHeaders.HeaderHost), _
 				pHost _
 			)
 		End If
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestParseRequestHeaders( _
 		ByVal this As ClientRequest Ptr _
 	)As HRESULT
-	
+
 	ParseConnectionHeaderSink(this)
-	
+
 	ParseAcceptEncodingHeaderSink(this)
-	
+
 	ParseIfModifiedSinceHeaderSink(this)
-	
+
 	ParseRangeHeaderSink(this)
-	
+
 	ParseContentLengthHeaderSink(this)
-	
+
 	ParseExpectHeaderSink(this)
-	
+
 	Dim hrParseHost As HRESULT = ParseHostHeaderSink(this)
 	If FAILED(hrParseHost) Then
 		Return hrParseHost
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Sub InitializeClientRequest( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
-	
+
 	#if __FB_DEBUG__
 		CopyMemory( _
 			@this->RttiClassName(0), _
@@ -695,89 +694,89 @@ Private Sub InitializeClientRequest( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pClientURI = NULL
-	
+
 	this->pHttpMethod = NULL
 	this->HttpVersion = HttpVersions.Http11
 	this->ContentLength = 0
-	
+
 	this->RequestByteRange.FirstBytePosition = 0
 	this->RequestByteRange.LastBytePosition = 0
 	this->RequestByteRange.IsSet = ByteRangeIsSet.NotSet
-	
+
 	ZeroMemory(@this->RequestHeaders(0), HttpRequestHeadersSize * SizeOf(HeapBSTR))
 	ZeroMemory(@this->RequestZipModes(0), ZipModesSize * SizeOf(Boolean))
 	this->KeepAlive = False
-	
+
 End Sub
 
 Private Sub UnInitializeClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	If this->pClientURI Then
 		IClientUri_Release(this->pClientURI)
 	End If
-	
+
 	HeapSysFreeString(this->pHttpMethod)
-	
+
 	For i As Integer = 0 To HttpRequestHeadersSize - 1
 		HeapSysFreeString(this->RequestHeaders(i))
 	Next
-	
+
 End Sub
 
 Private Sub ClientRequestCreated( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 End Sub
 
 Private Sub ClientRequestDestroyed( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 End Sub
 
 Private Sub DestroyClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
-	
+
 	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-	
+
 	UnInitializeClientRequest(this)
-	
+
 	IMalloc_Free(pIMemoryAllocator, this)
-	
+
 	ClientRequestDestroyed(this)
-	
+
 	IMalloc_Release(pIMemoryAllocator)
-	
+
 End Sub
 
 Private Function ClientRequestAddRef( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
-	
+
 	this->ReferenceCounter += 1
-	
+
 	Return 1
-	
+
 End Function
 
 Private Function ClientRequestRelease( _
 		ByVal this As ClientRequest Ptr _
 	)As ULONG
-	
+
 	this->ReferenceCounter -= 1
-	
+
 	If this->ReferenceCounter Then
 		Return 1
 	End If
-	
+
 	DestroyClientRequest(this)
-	
+
 	Return 0
-	
+
 End Function
 
 Private Function ClientRequestQueryInterface( _
@@ -785,7 +784,7 @@ Private Function ClientRequestQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	If IsEqualIID(@IID_IClientRequest, riid) Then
 		*ppv = @this->lpVtbl
 	Else
@@ -796,11 +795,11 @@ Private Function ClientRequestQueryInterface( _
 			Return E_NOINTERFACE
 		End If
 	End If
-	
+
 	ClientRequestAddRef(this)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateClientRequest( _
@@ -808,16 +807,16 @@ Public Function CreateClientRequest( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ClientRequest) _
 	)
-	
+
 	If this Then
 		InitializeClientRequest(this, pIMemoryAllocator)
 		ClientRequestCreated(this)
-		
+
 		Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
 			this, _
 			riid, _
@@ -826,13 +825,13 @@ Public Function CreateClientRequest( _
 		If FAILED(hrQueryInterface) Then
 			DestroyClientRequest(this)
 		End If
-		
+
 		Return hrQueryInterface
 	End If
-	
+
 	*ppv = NULL
 	Return E_OUTOFMEMORY
-	
+
 End Function
 
 Private Function ClientRequestParse( _
@@ -840,7 +839,7 @@ Private Function ClientRequestParse( _
 		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
-	
+
 	Dim hrParseRequestedLine As HRESULT = ClientRequestParseRequestedLine( _
 		this, _
 		RequestedLine _
@@ -848,7 +847,7 @@ Private Function ClientRequestParse( _
 	If FAILED(hrParseRequestedLine) Then
 		Return hrParseRequestedLine
 	End If
-	
+
 	Dim hrAddHeaders As HRESULT = ClientRequestAddRequestHeaders( _
 		this, _
 		pIReader _
@@ -856,55 +855,55 @@ Private Function ClientRequestParse( _
 	If FAILED(hrAddHeaders) Then
 		Return hrAddHeaders
 	End If
-	
+
 	Dim hrParseHeaders As HRESULT = ClientRequestParseRequestHeaders(this)
 	If FAILED(hrParseHeaders) Then
 		Return hrParseHeaders
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetHttpMethod( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	HeapSysAddRefString( _
 		this->pHttpMethod _
 	)
-	
+
 	*ppHttpMethod = this->pHttpMethod
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetUri( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
-	
+
 	If this->pClientURI Then
 		IClientUri_AddRef(this->pClientURI)
 	End If
-	
+
 	*ppUri = this->pClientURI
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetHttpVersion( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
-	
+
 	*pHttpVersion = this->HttpVersion
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetHttpHeader( _
@@ -912,48 +911,48 @@ Private Function ClientRequestGetHttpHeader( _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	HeapSysAddRefString( _
 		this->RequestHeaders(HeaderIndex) _
 	)
-	
+
 	*ppHeader = this->RequestHeaders(HeaderIndex)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetKeepAlive( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
-	
+
 	*pKeepAlive = this->KeepAlive
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetContentLength( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
-	
+
 	*pContentLength = this->ContentLength
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetByteRange( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
-	
+
 	*pRange = this->RequestByteRange
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetZipMode( _
@@ -961,22 +960,22 @@ Private Function ClientRequestGetZipMode( _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
-	
+
 	*pSupported = this->RequestZipModes(ZipIndex)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Private Function ClientRequestGetExpect100Continue( _
 		ByVal this As ClientRequest Ptr, _
 		ByVal pExpect As Boolean Ptr _
 	)As HRESULT
-	
+
 	*pExpect = this->Expect100Continue
-	
+
 	Return S_OK
-	
+
 End Function
 
 
@@ -985,19 +984,19 @@ Private Function IClientRequestQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return ClientRequestQueryInterface(ContainerOf(this, ClientRequest, lpVtbl), riid, ppvObject)
+	Return ClientRequestQueryInterface(CONTAINING_RECORD(this, ClientRequest, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IClientRequestAddRef( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
-	Return ClientRequestAddRef(ContainerOf(this, ClientRequest, lpVtbl))
+	Return ClientRequestAddRef(CONTAINING_RECORD(this, ClientRequest, lpVtbl))
 End Function
 
 Private Function IClientRequestRelease( _
 		ByVal this As IClientRequest Ptr _
 	)As ULONG
-	Return ClientRequestRelease(ContainerOf(this, ClientRequest, lpVtbl))
+	Return ClientRequestRelease(CONTAINING_RECORD(this, ClientRequest, lpVtbl))
 End Function
 
 Private Function IClientRequestParse( _
@@ -1005,28 +1004,28 @@ Private Function IClientRequestParse( _
 		ByVal pIReader As IHttpAsyncReader Ptr, _
 		ByVal RequestedLine As HeapBSTR _
 	)As HRESULT
-	Return ClientRequestParse(ContainerOf(this, ClientRequest, lpVtbl), pIReader, RequestedLine)
+	Return ClientRequestParse(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pIReader, RequestedLine)
 End Function
 
 Private Function IClientRequestGetHttpMethod( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ppHttpMethod As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpMethod(ContainerOf(this, ClientRequest, lpVtbl), ppHttpMethod)
+	Return ClientRequestGetHttpMethod(CONTAINING_RECORD(this, ClientRequest, lpVtbl), ppHttpMethod)
 End Function
 
 Private Function IClientRequestGetUri( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal ppUri As IClientUri Ptr Ptr _
 	)As HRESULT
-	Return ClientRequestGetUri(ContainerOf(this, ClientRequest, lpVtbl), ppUri)
+	Return ClientRequestGetUri(CONTAINING_RECORD(this, ClientRequest, lpVtbl), ppUri)
 End Function
 
 Private Function IClientRequestGetHttpVersion( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pHttpVersions As HttpVersions Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpVersion(ContainerOf(this, ClientRequest, lpVtbl), pHttpVersions)
+	Return ClientRequestGetHttpVersion(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pHttpVersions)
 End Function
 
 Private Function IClientRequestGetHttpHeader( _
@@ -1034,28 +1033,28 @@ Private Function IClientRequestGetHttpHeader( _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientRequestGetHttpHeader(ContainerOf(this, ClientRequest, lpVtbl), HeaderIndex, ppHeader)
+	Return ClientRequestGetHttpHeader(CONTAINING_RECORD(this, ClientRequest, lpVtbl), HeaderIndex, ppHeader)
 End Function
 
 Private Function IClientRequestGetKeepAlive( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
-	Return ClientRequestGetKeepAlive(ContainerOf(this, ClientRequest, lpVtbl), pKeepAlive)
+	Return ClientRequestGetKeepAlive(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pKeepAlive)
 End Function
 
 Private Function IClientRequestGetContentLength( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pContentLength As LongInt Ptr _
 	)As HRESULT
-	Return ClientRequestGetContentLength(ContainerOf(this, ClientRequest, lpVtbl), pContentLength)
+	Return ClientRequestGetContentLength(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pContentLength)
 End Function
 
 Private Function IClientRequestGetByteRange( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pRange As ByteRange Ptr _
 	)As HRESULT
-	Return ClientRequestGetByteRange(ContainerOf(this, ClientRequest, lpVtbl), pRange)
+	Return ClientRequestGetByteRange(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pRange)
 End Function
 
 Private Function IClientRequestGetZipMode( _
@@ -1063,14 +1062,14 @@ Private Function IClientRequestGetZipMode( _
 		ByVal ZipIndex As ZipModes, _
 		ByVal pSupported As Boolean Ptr _
 	)As HRESULT
-	Return ClientRequestGetZipMode(ContainerOf(this, ClientRequest, lpVtbl), ZipIndex, pSupported)
+	Return ClientRequestGetZipMode(CONTAINING_RECORD(this, ClientRequest, lpVtbl), ZipIndex, pSupported)
 End Function
 
 Private Function IClientRequestGetExpect100Continue( _
 		ByVal this As IClientRequest Ptr, _
 		ByVal pExpect As Boolean Ptr _
 	)As HRESULT
-	Return ClientRequestGetExpect100Continue(ContainerOf(this, ClientRequest, lpVtbl), pExpect)
+	Return ClientRequestGetExpect100Continue(CONTAINING_RECORD(this, ClientRequest, lpVtbl), pExpect)
 End Function
 
 Dim GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable = Type( _

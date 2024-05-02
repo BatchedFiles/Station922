@@ -1,6 +1,5 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "crt.bi"
-#include once "ContainerOf.bi"
 #include once "IClientSocket.bi"
 #include once "ITimeCounter.bi"
 #include once "Logger.bi"
@@ -412,7 +411,7 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 		var localMalloc = MemoryPoolObject.Items[i].pMalloc
 		If localMalloc = pMalloc Then
 
-			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
 			MemoryPoolObject.Length -= 1
 
@@ -462,7 +461,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 			var localMalloc = MemoryPoolObject.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
 			If this->ItemStatus = PoolItemStatuses.ItemFree Then
 
@@ -574,7 +573,7 @@ Private Function CheckHungsConnections( _
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 			var localMalloc = MemoryPoolObject.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
 			If this->ItemStatus = PoolItemStatuses.ItemUsed Then
 
@@ -1004,33 +1003,33 @@ Private Function IHeapMemoryAllocatorQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtbl), riid, ppvObject)
+	Return HeapMemoryAllocatorQueryInterface(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IHeapMemoryAllocatorAddRef( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
+	Return HeapMemoryAllocatorAddRef(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
 Private Function IHeapMemoryAllocatorRelease( _
 		ByVal this As IHeapMemoryAllocator Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtbl))
+	Return HeapMemoryAllocatorRelease(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtbl))
 End Function
 
 Private Function IHeapMemoryAllocatorAlloc( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal cb As SIZE_T_ _
 	)As Any Ptr
-	Return HeapMemoryAllocatorAlloc(ContainerOf(this, HeapMemoryAllocator, lpVtbl), cb)
+	Return HeapMemoryAllocatorAlloc(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtbl), cb)
 End Function
 
 Private Sub IHeapMemoryAllocatorFree( _
 		ByVal this As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
 	)
-	HeapMemoryAllocatorFree(ContainerOf(this, HeapMemoryAllocator, lpVtbl), pv)
+	HeapMemoryAllocatorFree(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtbl), pv)
 End Sub
 
 Private Function ITimeCounterQueryInterface( _
@@ -1038,31 +1037,31 @@ Private Function ITimeCounterQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter), riid, ppvObject)
+	Return HeapMemoryAllocatorQueryInterface(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter), riid, ppvObject)
 End Function
 
 Private Function ITimeCounterAddRef( _
 		ByVal this As ITimeCounter Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+	Return HeapMemoryAllocatorAddRef(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
 Private Function ITimeCounterRelease( _
 		ByVal this As ITimeCounter Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+	Return HeapMemoryAllocatorRelease(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
 Private Function ITimeCounterStartWatch( _
 		ByVal this As ITimeCounter Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorStartWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+	Return HeapMemoryAllocatorStartWatch(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
 Private Function ITimeCounterStopWatch( _
 		ByVal this As ITimeCounter Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorStopWatch(ContainerOf(this, HeapMemoryAllocator, lpVtblTimeCounter))
+	Return HeapMemoryAllocatorStopWatch(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
 Private Function IClientSocketQueryInterface( _
@@ -1070,39 +1069,39 @@ Private Function IClientSocketQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorQueryInterface(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), riid, ppvObject)
+	Return HeapMemoryAllocatorQueryInterface(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket), riid, ppvObject)
 End Function
 
 Private Function IClientSocketAddRef( _
 		ByVal this As IClientSocket Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorAddRef(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+	Return HeapMemoryAllocatorAddRef(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket))
 End Function
 
 Private Function IClientSocketRelease( _
 		ByVal this As IClientSocket Ptr _
 	)As ULONG
-	Return HeapMemoryAllocatorRelease(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+	Return HeapMemoryAllocatorRelease(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket))
 End Function
 
 Private Function IClientSocketGetSocket( _
 		ByVal this As IClientSocket Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorGetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), pResult)
+	Return HeapMemoryAllocatorGetSocket(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket), pResult)
 End Function
 
 Private Function IClientSocketSetSocket( _
 		ByVal this As IClientSocket Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
-	Return HeapMemoryAllocatorSetSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket), sock)
+	Return HeapMemoryAllocatorSetSocket(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket), sock)
 End Function
 
 Private Function IClientSocketCloseSocket( _
 		ByVal this As IClientSocket Ptr _
 	)As HRESULT
-	Return HeapMemoryAllocatorCloseSocket(ContainerOf(this, HeapMemoryAllocator, lpVtblClientSocket))
+	Return HeapMemoryAllocatorCloseSocket(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket))
 End Function
 
 Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _

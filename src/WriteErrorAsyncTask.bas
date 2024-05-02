@@ -1,6 +1,5 @@
 #include once "WriteErrorAsyncTask.bi"
 #include once "ClientRequest.bi"
-#include once "ContainerOf.bi"
 #include once "HeapBSTR.bi"
 #include once "HttpAsyncWriter.bi"
 #include once "ServerResponse.bi"
@@ -699,19 +698,19 @@ Private Function IWriteErrorAsyncTaskQueryInterface( _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskQueryInterface(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), riid, ppv)
+	Return WriteErrorAsyncTaskQueryInterface(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), riid, ppv)
 End Function
 
 Private Function IWriteErrorAsyncTaskAddRef( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskAddRef(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
+	Return WriteErrorAsyncTaskAddRef(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
 Private Function IWriteErrorAsyncTaskRelease( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskRelease(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
+	Return WriteErrorAsyncTaskRelease(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
 Private Function IWriteErrorAsyncTaskBeginExecute( _
@@ -720,49 +719,49 @@ Private Function IWriteErrorAsyncTaskBeginExecute( _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskBeginExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
+	Return WriteErrorAsyncTaskBeginExecute(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
 End Function
 
 Private Function IWriteErrorAsyncTaskEndExecute( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr _
 	)As ULONG
-	Return WriteErrorAsyncTaskEndExecute(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIResult)
+	Return WriteErrorAsyncTaskEndExecute(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), pIResult)
 End Function
 
 Private Function IWriteErrorAsyncTaskGetBaseStream( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskGetBaseStream(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppStream)
+	Return WriteErrorAsyncTaskGetBaseStream(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), ppStream)
 End Function
 
 Private Function IWriteErrorAsyncTaskSetBaseStream( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		byVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskSetBaseStream(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pStream)
+	Return WriteErrorAsyncTaskSetBaseStream(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), pStream)
 End Function
 
 Private Function IWriteErrorAsyncTaskSetWebSiteCollectionWeakPtr( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		byVal pCollection As IWebSiteCollection Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pCollection)
+	Return WriteErrorAsyncTaskSetWebSiteCollectionWeakPtr(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), pCollection)
 End Function
 
 Private Function IWriteErrorAsyncTaskGetClientRequest( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal ppIRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskGetClientRequest(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), ppIRequest)
+	Return WriteErrorAsyncTaskGetClientRequest(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), ppIRequest)
 End Function
 
 Private Function IWriteErrorAsyncTaskSetClientRequest( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr, _
 		ByVal pIRequest As IClientRequest Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskSetClientRequest(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), pIRequest)
+	Return WriteErrorAsyncTaskSetClientRequest(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), pIRequest)
 End Function
 
 Private Function IWriteErrorAsyncTaskSetErrorCode( _
@@ -770,13 +769,13 @@ Private Function IWriteErrorAsyncTaskSetErrorCode( _
 		ByVal HttpError As ResponseErrorCode, _
 		ByVal hrCode As HRESULT _
 	)As HRESULT
-	Return WriteErrorAsyncTaskSetErrorCode(ContainerOf(this, WriteErrorAsyncTask, lpVtbl), HttpError, hrCode)
+	Return WriteErrorAsyncTaskSetErrorCode(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl), HttpError, hrCode)
 End Function
 
 Private Function IWriteErrorAsyncTaskPrepare( _
 		ByVal this As IWriteErrorAsyncIoTask Ptr _
 	)As HRESULT
-	Return WriteErrorAsyncTaskPrepare(ContainerOf(this, WriteErrorAsyncTask, lpVtbl))
+	Return WriteErrorAsyncTaskPrepare(CONTAINING_RECORD(this, WriteErrorAsyncTask, lpVtbl))
 End Function
 
 Dim GlobalWriteErrorAsyncIoTaskVirtualTable As Const IWriteErrorAsyncIoTaskVirtualTable = Type( _
