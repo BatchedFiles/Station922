@@ -58,6 +58,31 @@ Dim Shared MemoryPoolObject As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
 Dim Shared HungsConnectionsThread As HANDLE
 
+Private Sub PrintHeapAllocatorTaken( _
+		ByVal hHeap As HANDLE, _
+		ByVal FreeSpace As UInteger _
+	)
+
+	Const BufSize As Integer = 256
+	Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p taken, free space:")
+	Dim buf As WString * BufSize = Any
+	wsprintfW( _
+		@buf, _
+		@FormatString, _
+		hHeap _
+	)
+
+	Dim vtFreeSpace As VARIANT = Any
+	vtFreeSpace.vt = VT_I4
+	vtFreeSpace.lVal = CLng(FreeSpace)
+	LogWriteEntry( _
+		LogEntryType.Debug, _
+		buf, _
+		@vtFreeSpace _
+	)
+
+End Sub
+
 Private Sub PrintWalkingHeapString( _
 		ByVal hHeap As HANDLE _
 	)
@@ -435,44 +460,25 @@ Public Function GetHeapMemoryAllocatorInstance( _
 		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
 
 		EnterCriticalSection(@MemoryPoolObject.crSection)
-		Scope
-			For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-				var localMalloc = MemoryPoolObject.Items[i].pMalloc
-				Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
+		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+			var localMalloc = MemoryPoolObject.Items[i].pMalloc
+			Dim this As HeapMemoryAllocator Ptr = ContainerOf(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-				If this->ItemStatus = PoolItemStatuses.ItemFree Then
+			If this->ItemStatus = PoolItemStatuses.ItemFree Then
 
-					this->ItemStatus = PoolItemStatuses.ItemUsed
-					MemoryPoolObject.Length += 1
+				this->ItemStatus = PoolItemStatuses.ItemUsed
+				MemoryPoolObject.Length += 1
 
-					pMalloc = MemoryPoolObject.Items[i].pMalloc
+				pMalloc = MemoryPoolObject.Items[i].pMalloc
 
-					#if __FB_DEBUG__
+				#if __FB_DEBUG__
+					Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
+				#endif
 
-						Const BufSize As Integer = 256
-						Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p taken, free space:")
-						Dim buf As WString * BufSize = Any
-						wsprintfW( _
-							@buf, _
-							@FormatString, _
-							this->hHeap _
-						)
-
-						Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-						Dim vtFreeSpace As VARIANT = Any
-						vtFreeSpace.vt = VT_I4
-						vtFreeSpace.lVal = CLng(FreeSpace)
-						LogWriteEntry( _
-							LogEntryType.Debug, _
-							buf, _
-							@vtFreeSpace _
-						)
-					#endif
-
-					Exit For
-				End If
-			Next
-		End Scope
+				Exit For
+			End If
+		Next
 		LeaveCriticalSection(@MemoryPoolObject.crSection)
 
 		' We do not increase the reference counter to the object
@@ -529,8 +535,10 @@ Private Function HeapMemoryAllocatorCloseHungsConnections( _
 
 	#if __FB_DEBUG__
 		Dim nsKeepAliveInterval As ULongInt = ulKeepAliveInterval
+		' Elapsed time in seconds
 		nsElapsedTime \= 10 * 1000 * 1000
 	#else
+		' KeepAlive time in nanoseconds
 		Dim nsKeepAliveInterval As ULongInt = 10 * 1000 * 1000 * ulKeepAliveInterval
 	#endif
 
@@ -584,7 +592,7 @@ Private Function CheckHungsConnections( _
 							PrintWalkingHeap(this->hHeap)
 
 							Const BufSize As Integer = 256
-							Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forced closed, free space:")
+							Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forcely closed, free space:")
 							Dim buf As WString * BufSize = Any
 							wsprintfW( _
 								@buf, _
@@ -611,6 +619,7 @@ Private Function CheckHungsConnections( _
 						IsPoolFree = False
 
 					Case ConnectionStatuses.Alive
+						IsPoolFree = False
 
 				End Select
 
