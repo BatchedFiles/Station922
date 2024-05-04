@@ -33,24 +33,36 @@ Type WebServer
 End Type
 
 Type AcceptConnectionContext
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
 	pWebServer As WebServer Ptr
 	pIMalloc As IMalloc Ptr
 	pTask As IAcceptConnectionAsyncIoTask Ptr
 End Type
 
 Type ReadRequestContext
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
 	pWebServer As WebServer Ptr
 	pIMalloc As IMalloc Ptr
 	pTask As IReadRequestAsyncIoTask Ptr
 End Type
 
 Type WriteResponseContext
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
 	pWebServer As WebServer Ptr
 	pIMalloc As IMalloc Ptr
 	pTask As IWriteResponseAsyncIoTask Ptr
 End Type
 
 Type WriteErrorContext
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
 	pWebServer As WebServer Ptr
 	pIMalloc As IMalloc Ptr
 	pTask As IWriteErrorAsyncIoTask Ptr
@@ -83,6 +95,14 @@ Private Function CreateAcceptConnectionContext( _
 			)
 
 			If SUCCEEDED(hrCreateTask) Then
+
+				#if __FB_DEBUG__
+					CopyMemory( _
+						@pState->RttiClassName(0), _
+						@Str(!"\001Accept_Context\001"), _
+						UBound(pState->RttiClassName) - LBound(pState->RttiClassName) + 1 _
+					)
+				#endif
 
 				pState->pWebServer = this
 				pState->pIMalloc = pIMalloc
@@ -135,6 +155,14 @@ Private Function CreateReadRequestContextFromWriteContext( _
 		)
 
 		If SUCCEEDED(hrCreateTask) Then
+
+			#if __FB_DEBUG__
+				CopyMemory( _
+					@pReadContext->RttiClassName(0), _
+					@Str(!"\001Read___Context\001"), _
+					UBound(pReadContext->RttiClassName) - LBound(pReadContext->RttiClassName) + 1 _
+				)
+			#endif
 
 			pReadContext->pWebServer = this
 			IMalloc_AddRef(pWriteContext->pIMalloc)
@@ -229,6 +257,14 @@ Private Function CreateReadRequestContextFromSocket( _
 
 							If SUCCEEDED(hrCreateNetworkStream) Then
 
+								#if __FB_DEBUG__
+									CopyMemory( _
+										@pState->RttiClassName(0), _
+										@Str(!"\001Read___Context\001"), _
+										UBound(pState->RttiClassName) - LBound(pState->RttiClassName) + 1 _
+									)
+								#endif
+
 								pState->pWebServer = this
 								pState->pIMalloc = pIMalloc
 								pState->pTask = pTask
@@ -308,6 +344,14 @@ Private Function CreateWriteResponseContext( _
 		)
 
 		If SUCCEEDED(hrCreateTask) Then
+			#if __FB_DEBUG__
+				CopyMemory( _
+					@pContext->RttiClassName(0), _
+					@Str(!"\001Write__Context\001"), _
+					UBound(pContext->RttiClassName) - LBound(pContext->RttiClassName) + 1 _
+				)
+			#endif
+
 			IHttpAsyncReader_Clear(pIHttpAsyncReader)
 			IWriteResponseAsyncIoTask_SetBaseStream(pTask, pStream)
 			IWriteResponseAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
@@ -472,6 +516,15 @@ Private Function CreateWriteErrorContext( _
 				Dim hrPrepare As HRESULT = IWriteErrorAsyncIoTask_Prepare(pTask)
 
 				If SUCCEEDED(hrPrepare) Then
+
+					#if __FB_DEBUG__
+						CopyMemory( _
+							@pContext->RttiClassName(0), _
+							@Str(!"\001Error__Context\001"), _
+							UBound(pContext->RttiClassName) - LBound(pContext->RttiClassName) + 1 _
+						)
+					#endif
+
 					pContext->pWebServer = this
 					IMalloc_AddRef(pIMalloc)
 					pContext->pIMalloc = pIMalloc

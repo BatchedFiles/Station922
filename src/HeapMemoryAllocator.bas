@@ -714,7 +714,7 @@ Private Function HeapMemoryAllocatorSetSocket( _
 
 End Function
 
-Private Function MemoryPoolCloseHungsConnections( _
+Private Function MemoryPoolCheckHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
 		ByVal KeepAliveInterval As Integer _
 	)As ConnectionStatuses
@@ -752,7 +752,6 @@ Private Function MemoryPoolCloseHungsConnections( _
 	#endif
 
 	If nsElapsedTime > nsKeepAliveInterval Then
-		HeapMemoryAllocatorCloseSocket(this)
 		Return ConnectionStatuses.Hungs
 	End If
 
@@ -760,7 +759,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 End Function
 
-Private Function CheckHungsConnections( _
+Private Function MemoryPoolCloseHungsConnections( _
 		ByVal KeepAliveInterval As Integer _
 	)As HRESULT
 
@@ -789,7 +788,7 @@ Private Function CheckHungsConnections( _
 
 			If this->ItemStatus = PoolItemStatuses.ItemUsed Then
 
-				Dim resClose As ConnectionStatuses = MemoryPoolCloseHungsConnections( _
+				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
 					KeepAliveInterval _
 				)
@@ -797,13 +796,15 @@ Private Function CheckHungsConnections( _
 				Select Case resClose
 
 					Case ConnectionStatuses.Closed
-						MemoryPoolObject.Length -= 1
+
+					Case ConnectionStatuses.Hungs
+						IsPoolFree = False
 
 						#if __FB_DEBUG__
 							PrintWalkingHeap(this->hHeap)
 
 							Const BufSize As Integer = 256
-							Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forcely closed, free space:")
+							Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p forcely closed\r\n")
 							Dim buf As WString * BufSize = Any
 							wsprintfW( _
 								@buf, _
@@ -811,23 +812,16 @@ Private Function CheckHungsConnections( _
 								this->hHeap _
 							)
 
-							Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-
-							Dim vtFreeSpace As VARIANT = Any
-							vtFreeSpace.vt = VT_I4
-							vtFreeSpace.lVal = CLng(FreeSpace)
-
+							Dim vtAllocatedBytes As VARIANT = Any
+							vtAllocatedBytes.vt = VT_EMPTY
 							LogWriteEntry( _
 								LogEntryType.Debug, _
-								buf, _
-								@vtFreeSpace _
+								@buf, _
+								@vtAllocatedBytes _
 							)
 						#endif
 
-						HeapMemoryAllocatorResetState(this)
-
-					Case ConnectionStatuses.Hungs
-						IsPoolFree = False
+						HeapMemoryAllocatorCloseSocket(this)
 
 					Case ConnectionStatuses.Alive
 						IsPoolFree = False
@@ -870,7 +864,7 @@ Private Function ClearingThread( _
 			Return 0
 		End If
 
-		Dim hrCheck As HRESULT = CheckHungsConnections(KeepAliveInterval)
+		Dim hrCheck As HRESULT = MemoryPoolCloseHungsConnections(KeepAliveInterval)
 
 		If FAILED(hrCheck) Then
 			' This is a signal to complete the process

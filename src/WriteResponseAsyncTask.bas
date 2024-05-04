@@ -300,7 +300,7 @@ Private Function WriteResponseAsyncTaskEndExecute( _
 			Return S_OK
 
 		Case S_FALSE
-	' 		' Write 0 bytes
+			' Write 0 bytes
 			Return S_FALSE
 
 		Case HTTPASYNCPROCESSOR_S_IO_PENDING
@@ -485,6 +485,7 @@ Private Function WriteResponseAsyncTaskPrepare( _
 			HttpMethod, _
 			@this->pIProcessorWeakPtr _
 		)
+
 		HeapSysFreeString(HttpMethod)
 
 		If FAILED(hrProcessorItem) Then
