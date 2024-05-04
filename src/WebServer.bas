@@ -718,8 +718,6 @@ Private Sub ReadRequestCallback( _
 	Select Case hrEndExecute
 
 		Case S_OK
-			' Get RequestedLine
-
 			' Get HttpReader
 			Dim pIHttpAsyncReader As IHttpAsyncReader Ptr = Any
 			IReadRequestAsyncIoTask_GetHttpReader( _
