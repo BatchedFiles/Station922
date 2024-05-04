@@ -1,7 +1,6 @@
 #include once "NetworkAsyncStream.bi"
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
-#include once "IClientSocket.bi"
 #include once "ITimeCounter.bi"
 #include once "Network.bi"
 
@@ -80,23 +79,7 @@ Private Sub UnInitializeNetworkStream( _
 		ByVal this As NetworkStream Ptr _
 	)
 
-	If this->ClientSocket <> INVALID_SOCKET Then
-		Dim pISocket As IClientSocket Ptr = Any
-		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
-			this->pIMemoryAllocator, _
-			@IID_IClientSocket, _
-			@pISocket _
-		)
-
-		If SUCCEEDED(hrQueryInterface) Then
-			IClientSocket_CloseSocket(pISocket)
-			IClientSocket_Release(pISocket)
-		End If
-
-		#if __FB_DEBUG__
-			this->ClientSocket = INVALID_SOCKET
-		#endif
-	End If
+	this->ClientSocket = INVALID_SOCKET
 
 End Sub
 
@@ -530,18 +513,6 @@ Private Function NetworkStreamSetSocket( _
 	)As HRESULT
 
 	this->ClientSocket = ClientSocket
-
-	Dim pISocket As IClientSocket Ptr = Any
-	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
-		this->pIMemoryAllocator, _
-		@IID_IClientSocket, _
-		@pISocket _
-	)
-
-	If SUCCEEDED(hrQueryInterface) Then
-		IClientSocket_SetSocket(pISocket, ClientSocket)
-		IClientSocket_Release(pISocket)
-	End If
 
 	Return S_OK
 

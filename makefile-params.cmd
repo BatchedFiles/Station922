@@ -1,9 +1,11 @@
 if %PROCESSOR_ARCHITECTURE% == AMD64 (
 set BinFolder=bin\win64
 set LibFolder=lib\win64
+set FBC_FILENAME=fbc64.exe
 ) else (
 set BinFolder=bin\win32
 set LibFolder=lib\win32
+set FBC_FILENAME=fbc32.exe
 )
 
 rem Add mingw64 directory to PATH
@@ -14,10 +16,10 @@ rem Add compiler directory to PATH
 set FBC_DIR=C:\Program Files (x86)\FreeBASIC-1.10.1-winlibs-gcc-9.3.0
 set PATH=%FBC_DIR%\%BinFolder%;%PATH%
 
-rem File Suffixes
-set GCC_VER=_GCC0930
-set FBC_VER=_FBC1101
+rem Source code directory
+set SRC_DIR=src
 
+rem Set to TRUE for use runtime libraries
 set USE_RUNTIME=FALSE
 rem WinAPI version
 set WINVER=1281
@@ -25,6 +27,11 @@ set _WIN32_WINNT=1281
 
 rem Use unicode in WinAPI
 set USE_UNICODE=TRUE
+rem Set variable FILE_SUFFIX to make the executable name different
+rem for different toolchains, libraries, and compilation flags
+set GCC_VER=_GCC0930
+set FBC_VER=_FBC1101
+
 set FILE_SUFFIX=%GCC_VER%%FBC_VER%%RUNTIME%
 
 rem Toolchain
@@ -39,12 +46,12 @@ set DLL_TOOL="%FBC_DIR%\%BinFolder%\dlltool.exe"
 rem Without quotes:
 set LIB_DIR==%FBC_DIR%\%LibFolder%
 set INC_DIR=%FBC_DIR%\inc
-set SRC_DIR=src
 
 rem Linker script only for GCC x86, GCC x64 and Clang x86
 rem Without quotes:
 set LD_SCRIPT=%FBC_DIR%\%LibFolder%\fbextra.x
 
+rem Set processor architecture
 set MARCH=native
 
 rem Only for Clang x86

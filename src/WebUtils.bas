@@ -296,7 +296,6 @@ Public Function Station922Initialize()As HRESULT
 
 	Scope
 		Dim hrCreateMemoryPool As HRESULT = CreateMemoryPool( _
-			pIMemoryAllocator, _
 			MemoryPoolCapacity, _
 			KeepAliveInterval _
 		)

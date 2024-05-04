@@ -34,7 +34,6 @@ Type HeapMemoryAllocator
 	lpVtblTimeCounter As Const ITimeCounterVirtualTable Ptr
 	lpVtblClientSocket As Const IClientSocketVirtualTable Ptr
 	ReferenceCounter As UInteger
-	pIMemoryAllocator As IMalloc Ptr
 	hHeap As HANDLE
 	ClientSocket As SOCKET
 	ItemStatus As PoolItemStatuses
@@ -355,9 +354,24 @@ Private Sub PrintWalkingHeap( _
 
 End Sub
 
+Private Function HeapMemoryAllocatorCloseSocket( _
+		ByVal this As HeapMemoryAllocator Ptr _
+	)As HRESULT
+
+	If this->ClientSocket <> INVALID_SOCKET Then
+		closesocket(this->ClientSocket)
+		this->ClientSocket = INVALID_SOCKET
+	End If
+
+	Return S_OK
+
+End Function
+
 Private Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
+
+	HeapMemoryAllocatorCloseSocket(this)
 
 	' Restore the original state of the reference counter
 	' Beecause number of reference is equal to one
@@ -390,15 +404,9 @@ Private Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
-
 	UnInitializeHeapMemoryAllocator(this)
 
-	IMalloc_Free(pIMemoryAllocator, this)
-
 	HeapMemoryAllocatorDestroyed(this)
-
-	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
@@ -491,22 +499,8 @@ Public Function GetHeapMemoryAllocatorInstance( _
 
 End Function
 
-Private Function HeapMemoryAllocatorCloseSocket( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)As HRESULT
-
-	If this->ClientSocket <> INVALID_SOCKET Then
-		closesocket(this->ClientSocket)
-		this->ClientSocket = INVALID_SOCKET
-	End If
-
-	Return S_OK
-
-End Function
-
 Private Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal hHeap As HANDLE _
 	)
 
@@ -521,8 +515,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
 	this->lpVtblClientSocket = @GlobalClientSocketVirtualTable
 	this->ReferenceCounter = 0
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
 	this->hHeap = hHeap
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
@@ -600,28 +592,27 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 End Function
 
 Private Function CreateHeapMemoryAllocator( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HeapMemoryAllocator Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		SizeOf(HeapMemoryAllocator) _
+	Dim hHeap As HANDLE = HeapCreate( _
+		HEAP_NO_SERIALIZE_FLAG, _
+		PRIVATEHEAP_INITIALSIZE, _
+		PRIVATEHEAP_MAXIMUMSIZE _
 	)
 
-	If this Then
-		Dim hHeap As HANDLE = HeapCreate( _
+	If hHeap Then
+		Dim this As HeapMemoryAllocator Ptr = HeapAlloc( _
+			hHeap, _
 			HEAP_NO_SERIALIZE_FLAG, _
-			PRIVATEHEAP_INITIALSIZE, _
-			PRIVATEHEAP_MAXIMUMSIZE _
+			SizeOf(HeapMemoryAllocator) _
 		)
 
-		If hHeap Then
+		If this Then
 
 			InitializeHeapMemoryAllocator( _
 				this, _
-				pIMemoryAllocator, _
 				hHeap _
 			)
 			HeapMemoryAllocatorCreated(this)
@@ -638,10 +629,7 @@ Private Function CreateHeapMemoryAllocator( _
 			Return hrQueryInterface
 		End If
 
-		IMalloc_Free( _
-			pIMemoryAllocator, _
-			this _
-		)
+		HeapDestroy(hHeap)
 	End If
 
 	PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
@@ -792,8 +780,10 @@ Private Function CheckHungsConnections( _
 
 		Dim IsPoolFree As Boolean = True
 
+		Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
+
 		EnterCriticalSection(@MemoryPoolObject.crSection)
-		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+		For i As UInteger = 0 To PoolCapacity - 1
 			var localMalloc = MemoryPoolObject.Items[i].pMalloc
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
@@ -907,7 +897,6 @@ Private Sub WakeupClearingThread( _
 End Sub
 
 Public Function CreateMemoryPool( _
-		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal Capacity As UInteger, _
 		ByVal KeepAliveInterval As Integer _
 	)As HRESULT
@@ -945,7 +934,6 @@ Public Function CreateMemoryPool( _
 		For i As UInteger = 0 To Capacity - 1
 			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
 			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
-				pIMemoryAllocator, _
 				@IID_IHeapMemoryAllocator, _
 				@pMalloc _
 			)
@@ -1098,12 +1086,6 @@ Private Function IClientSocketSetSocket( _
 	Return HeapMemoryAllocatorSetSocket(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket), sock)
 End Function
 
-Private Function IClientSocketCloseSocket( _
-		ByVal this As IClientSocket Ptr _
-	)As HRESULT
-	Return HeapMemoryAllocatorCloseSocket(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblClientSocket))
-End Function
-
 Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _
 	@IHeapMemoryAllocatorQueryInterface, _
 	@IHeapMemoryAllocatorAddRef, _
@@ -1131,6 +1113,5 @@ Dim GlobalClientSocketVirtualTable As Const IClientSocketVirtualTable = Type( _
 	@IClientSocketAddRef, _
 	@IClientSocketRelease, _
 	@IClientSocketGetSocket, _
-	@IClientSocketSetSocket, _
-	@IClientSocketCloseSocket _
+	@IClientSocketSetSocket _
 )

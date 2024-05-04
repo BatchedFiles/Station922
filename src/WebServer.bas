@@ -4,6 +4,7 @@
 #include once "HeapBSTR.bi"
 #include once "HeapMemoryAllocator.bi"
 #include once "HttpAsyncReader.bi"
+#include once "IClientSocket.bi"
 #include once "Logger.bi"
 #include once "Network.bi"
 #include once "NetworkAsyncStream.bi"
@@ -177,79 +178,91 @@ Private Function CreateReadRequestContextFromSocket( _
 	Dim pIMalloc As IMalloc Ptr = CPtr(IMalloc Ptr, tmpMalloc)
 
 	If pIMalloc Then
-		Dim pState As ReadRequestContext Ptr = IMalloc_Alloc( _
+		Dim pISocket As IClientSocket Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
 			pIMalloc, _
-			SizeOf(ReadRequestContext) _
+			@IID_IClientSocket, _
+			@pISocket _
 		)
 
-		If pState Then
-			Dim pTask As IReadRequestAsyncIoTask Ptr = Any
-			Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
+		If SUCCEEDED(hrQueryInterface) Then
+			IClientSocket_SetSocket(pISocket, ClientSocket)
+			IClientSocket_Release(pISocket)
+
+			Dim pState As ReadRequestContext Ptr = IMalloc_Alloc( _
 				pIMalloc, _
-				@IID_IReadRequestAsyncIoTask, _
-				@pTask _
+				SizeOf(ReadRequestContext) _
 			)
 
-			If SUCCEEDED(hrCreateTask) Then
-				Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
-				Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
-					pIPool, _
-					Cast(HANDLE, ClientSocket), _
-					Cast(Any Ptr, ClientSocket) _
+			If pState Then
+				Dim pTask As IReadRequestAsyncIoTask Ptr = Any
+				Dim hrCreateTask As HRESULT = CreateReadRequestAsyncTask( _
+					pIMalloc, _
+					@IID_IReadRequestAsyncIoTask, _
+					@pTask _
 				)
 
-				If SUCCEEDED(hrBind) Then
-					Dim pIHttpAsyncReader As IHttpAsyncReader Ptr = Any
-					Dim hrCreateHttpReader As HRESULT = CreateHttpReader( _
-						pIMalloc, _
-						@IID_IHttpAsyncReader, _
-						@pIHttpAsyncReader _
+				If SUCCEEDED(hrCreateTask) Then
+					Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+					Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
+						pIPool, _
+						Cast(HANDLE, ClientSocket), _
+						Cast(Any Ptr, ClientSocket) _
 					)
 
-					If SUCCEEDED(hrCreateHttpReader) Then
-
-						Dim pINetworkAsyncStream As INetworkAsyncStream Ptr = Any
-						Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
+					If SUCCEEDED(hrBind) Then
+						Dim pIHttpAsyncReader As IHttpAsyncReader Ptr = Any
+						Dim hrCreateHttpReader As HRESULT = CreateHttpReader( _
 							pIMalloc, _
-							@IID_INetworkAsyncStream, _
-							@pINetworkAsyncStream _
+							@IID_IHttpAsyncReader, _
+							@pIHttpAsyncReader _
 						)
 
-						If SUCCEEDED(hrCreateNetworkStream) Then
+						If SUCCEEDED(hrCreateHttpReader) Then
 
-							pState->pWebServer = this
-							pState->pIMalloc = pIMalloc
-							pState->pTask = pTask
-
-							INetworkAsyncStream_SetSocket( _
-								pINetworkAsyncStream, _
-								ClientSocket _
+							Dim pINetworkAsyncStream As INetworkAsyncStream Ptr = Any
+							Dim hrCreateNetworkStream As HRESULT = CreateNetworkStream( _
+								pIMalloc, _
+								@IID_INetworkAsyncStream, _
+								@pINetworkAsyncStream _
 							)
 
-							' TODO Запросить интерфейс вместо конвертирования указателя
-							IHttpAsyncReader_SetBaseStream( _
-								pIHttpAsyncReader, _
-								CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream) _
-							)
+							If SUCCEEDED(hrCreateNetworkStream) Then
 
-							IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream))
-							IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
+								pState->pWebServer = this
+								pState->pIMalloc = pIMalloc
+								pState->pTask = pTask
 
-							INetworkAsyncStream_Release(pINetworkAsyncStream)
+								INetworkAsyncStream_SetSocket( _
+									pINetworkAsyncStream, _
+									ClientSocket _
+								)
+
+								' TODO Запросить интерфейс вместо конвертирования указателя
+								IHttpAsyncReader_SetBaseStream( _
+									pIHttpAsyncReader, _
+									CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream) _
+								)
+
+								IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream))
+								IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
+
+								INetworkAsyncStream_Release(pINetworkAsyncStream)
+								IHttpAsyncReader_Release(pIHttpAsyncReader)
+
+								Return pState
+							End If
+
 							IHttpAsyncReader_Release(pIHttpAsyncReader)
-
-							Return pState
 						End If
 
-						IHttpAsyncReader_Release(pIHttpAsyncReader)
 					End If
 
+					IReadRequestAsyncIoTask_Release(pTask)
 				End If
 
-				IReadRequestAsyncIoTask_Release(pTask)
+				IMalloc_Free(pIMalloc, pState)
 			End If
-
-			IMalloc_Free(pIMalloc, pState)
 		End If
 
 		IMalloc_Release(pIMalloc)
