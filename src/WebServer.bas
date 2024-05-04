@@ -136,7 +136,6 @@ Private Sub DestroyAcceptConnectionContext( _
 End Sub
 
 Private Function CreateReadRequestContextFromWriteContext( _
-		ByVal this As WebServer Ptr, _
 		ByVal pWriteContext As WriteResponseContext Ptr _
 	)As ReadRequestContext Ptr
 
@@ -164,7 +163,7 @@ Private Function CreateReadRequestContextFromWriteContext( _
 				)
 			#endif
 
-			pReadContext->pWebServer = this
+			pReadContext->pWebServer = pWriteContext->pWebServer
 			IMalloc_AddRef(pWriteContext->pIMalloc)
 			pReadContext->pIMalloc = pWriteContext->pIMalloc
 			pReadContext->pTask = pTask
@@ -671,7 +670,6 @@ Private Sub WriteResponseCallback( _
 		Case S_OK
 			' Create ReadTask
 			Dim pReadContext As ReadRequestContext Ptr = CreateReadRequestContextFromWriteContext( _
-				pWriteContext->pWebServer, _
 				pWriteContext _
 			)
 
@@ -888,9 +886,7 @@ Private Sub ReadRequestCallback( _
 					pWriteContext->pTask, _
 					pWriteContext->pWebServer->pIWebSites _
 				)
-
 				If FAILED(hrPrepareResponse) Then
-
 					Dim pErrorContext As WriteErrorContext Ptr = CreateWriteErrorContext( _
 						pReadContext->pWebServer, _
 						pReadContext->pIMalloc, _
@@ -903,6 +899,7 @@ Private Sub ReadRequestCallback( _
 					IBaseAsyncStream_Release(pStream)
 					IHttpAsyncReader_Release(pIHttpAsyncReader)
 					DestroyReadRequestContext(pReadContext)
+					DestroyWriteResponseContext(pWriteContext)
 
 					If pErrorContext = NULL Then
 						Exit Sub

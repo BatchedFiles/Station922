@@ -210,12 +210,12 @@ Private Function ClientRequestParseRequestedLine( _
 		Dim pUri As WString Ptr = pSpace
 
 		' Второй пробел
-		Dim bstrUri As HeapBSTR = Any
 		pSpace = StrChrW( _
 			pSpace, _
 			Characters.WhiteSpace _
 		)
 
+		Dim bstrUri As HeapBSTR = Any
 		If pSpace = NULL Then
 			bstrUri = CreateHeapString( _
 				this->pIMemoryAllocator, _
@@ -238,6 +238,7 @@ Private Function ClientRequestParseRequestedLine( _
 			this->pClientURI, _
 			bstrUri _
 		)
+
 		HeapSysFreeString(bstrUri)
 
 		If FAILED(hrUriFromString) Then
