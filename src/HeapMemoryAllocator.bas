@@ -796,6 +796,8 @@ Private Function MemoryPoolCloseHungsConnections( _
 				Select Case resClose
 
 					Case ConnectionStatuses.Closed
+						MemoryPoolObject.Length -= 1
+						HeapMemoryAllocatorResetState(this)
 
 					Case ConnectionStatuses.Hungs
 						IsPoolFree = False
