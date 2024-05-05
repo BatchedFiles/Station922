@@ -1,22 +1,22 @@
 #include once "windows.bi"
 
 #ifndef DEFINE_GUID
-#define DEFINE_GUID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const GUID : _ 
+#define DEFINE_GUID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const GUID : _
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
 #ifndef DEFINE_IID
-#define DEFINE_IID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const IID : _ 
+#define DEFINE_IID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const IID : _
 	Dim n As Const IID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
 #ifndef DEFINE_CLSID
-#define DEFINE_CLSID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const CLSID : _ 
+#define DEFINE_CLSID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const CLSID : _
 	Dim n As Const CLSID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
 #ifndef DEFINE_LIBID
-#define DEFINE_LIBID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const GUID : _ 
+#define DEFINE_LIBID(n, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) Extern n Alias #n As Const GUID : _
 	Dim n As Const GUID = Type(l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8})
 #endif
 
@@ -215,11 +215,6 @@ DEFINE_IID(IID_IBaseAsyncStream, _
 ' {E998CAB4-5559-409C-93BC-97AFDF6A3921}
 DEFINE_IID(IID_IClientRequest, _
 	&he998cab4, &h5559, &h409c, &h93, &hbc, &h97, &haf, &hdf, &h6a, &h39, &h21 _
-)
-
-' {38CBD760-F5C4-408A-B58D-A9AC9948A7C1}
-DEFINE_IID(IID_IClientSocket, _
-	&h38cbd760, &hf5c4, &h408a, &hb5, &h8d, &ha9, &hac, &h99, &h48, &ha7, &hc1 _
 )
 
 ' {FA6493DA-9102-4FF6-822E-163399BF9E81}

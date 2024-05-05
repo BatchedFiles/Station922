@@ -2,6 +2,7 @@
 #define HEAPMEMORYALLOCATOR_BI
 
 #include once "IHeapMemoryAllocator.bi"
+#include once "win\winsock2.bi"
 
 Extern CLSID_HEAPMEMORYALLOCATOR Alias "CLSID_HEAPMEMORYALLOCATOR" As Const CLSID
 Extern CLSID_SERVERHEAPMEMORYALLOCATOR Alias "CLSID_SERVERHEAPMEMORYALLOCATOR" As Const CLSID
@@ -17,6 +18,7 @@ Declare Sub DeleteMemoryPool( _
 )
 
 Declare Function GetHeapMemoryAllocatorInstance( _
+	ByVal ClientSocket As SOCKET _
 )As IHeapMemoryAllocator Ptr
 
 #endif
