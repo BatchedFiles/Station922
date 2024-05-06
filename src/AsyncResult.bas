@@ -245,17 +245,34 @@ Private Function AsyncResultAllocBuffers( _
 		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim pMemory As Any Ptr = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
-		Length _
-	)
+	Const RTTI_ID_ASYNCBUFFERS = !"\001Async__Buffers\001"
+
+	#if __FB_DEBUG__
+		Dim pMemory As UByte Ptr = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			Length + Len(RTTI_ID_ASYNCBUFFERS) _
+		)
+	#else
+		Dim pMemory As UByte Ptr = IMalloc_Alloc( _
+			this->pIMemoryAllocator, _
+			Length _
+		)
+	#endif
 	If pMemory = NULL Then
 		*ppBuffers = NULL
 		Return E_OUTOFMEMORY
 	End If
 
+	#if __FB_DEBUG__
+		CopyMemory( _
+			pMemory, _
+			@Str(RTTI_ID_ASYNCBUFFERS), _
+			Len(RTTI_ID_ASYNCBUFFERS) _
+		)
+	#endif
+
 	this->pBuffers = pMemory
-	*ppBuffers = pMemory
+	*ppBuffers = @pMemory[Len(RTTI_ID_ASYNCBUFFERS)]
 
 	Return S_OK
 
