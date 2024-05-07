@@ -276,6 +276,7 @@ Dim Shared MimeTypeNodesVector(0 To ...) As MimeTypeNode = { _
 	Type<MimeTypeNode>(NULL,           @ContentTypesImageAny, ContentTypes.ImageAny, MimeFormats.Binary), _
 	Type<MimeTypeNode>(NULL,           @ContentTypesTextAny, ContentTypes.TextAny, MimeFormats.Text), _
 	Type<MimeTypeNode>(NULL,           @ContentTypesApplicationAny, ContentTypes.ApplicationAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
 	Type<MimeTypeNode>(NULL,           @ContentTypesAudioAny, ContentTypes.AudioAny, MimeFormats.Binary), _
 	Type<MimeTypeNode>(NULL,           @ContentTypesMessageAny, ContentTypes.MessageAny, MimeFormats.Binary), _
 	Type<MimeTypeNode>(NULL,           @ContentTypesMessageHttp, ContentTypes.MessageHttp, MimeFormats.Binary), _
@@ -327,11 +328,13 @@ Public Function GetMimeOfFileExtension( _
 	mt->CharsetWeakPtr = NULL
 
 	For i As Integer = LBound(MimeTypeNodesVector) To UBound(MimeTypeNodesVector)
-		Dim Compare As Long = lstrcmpiW(ext, MimeTypeNodesVector(i).Extension)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = MimeTypeNodesVector(i).ContentType
-			mt->Format = MimeTypeNodesVector(i).Format
-			Return True
+		If MimeTypeNodesVector(i).Extension Then
+			Dim Compare As Long = lstrcmpiW(ext, MimeTypeNodesVector(i).Extension)
+			If Compare = CompareResultEqual Then
+				mt->ContentType = MimeTypeNodesVector(i).ContentType
+				mt->Format = MimeTypeNodesVector(i).Format
+				Return True
+			End If
 		End If
 	Next
 
