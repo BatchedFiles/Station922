@@ -272,7 +272,12 @@ Private Function AsyncResultAllocBuffers( _
 	#endif
 
 	this->pBuffers = pMemory
-	*ppBuffers = @pMemory[Len(RTTI_ID_ASYNCBUFFERS)]
+
+	#if __FB_DEBUG__
+		*ppBuffers = @pMemory[Len(RTTI_ID_ASYNCBUFFERS)]
+	#else
+		*ppBuffers = pMemory
+	#endif
 
 	Return S_OK
 
