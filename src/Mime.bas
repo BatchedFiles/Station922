@@ -38,6 +38,7 @@ Const ExtensionOdf = WStr(".odf")
 Const ExtensionOtf = WStr(".otf")
 Const ExtensionOdm = WStr(".odm")
 Const ExtensionOth = WStr(".oth")
+Const ExtensionWasm = WStr(".wasm")
 
 Const ExtensionAvi = WStr(".avi")
 Const ExtensionMpg = WStr(".mpg")
@@ -61,11 +62,13 @@ Const ExtensionTif = WStr(".tif")
 Const ExtensionTiff = WStr(".tiff")
 Const ExtensionSvg = WStr(".svg")
 Const ExtensionBmp = WStr(".bmp")
+Const ExtensionWebp = WStr(".webp")
 
 Const ExtensionHtm = WStr(".htm")
 Const ExtensionHtml = WStr(".html")
 Const ExtensionXhtml = WStr(".xhtml")
 Const ExtensionCss = WStr(".css")
+Const ExtensionCsv = WStr(".csv")
 Const ExtensionTxt = WStr(".txt")
 Const ExtensionXml = WStr(".xml")
 Const ExtensionXsl = WStr(".xsl")
@@ -73,7 +76,6 @@ Const ExtensionXslt = WStr(".xslt")
 Const ExtensionRss = WStr(".rss")
 Const ExtensionAtom = WStr(".atom")
 Const ExtensionJs = WStr(".js")
-Const ExtensionWasm = WStr(".wasm")
 
 Const ContentTypesAnyAny = WStr("*/*")
 
@@ -192,344 +194,128 @@ Const ContentTypesVideo3gpp2 = WStr("video/3gpp2")
 
 Const CompareResultEqual As Long = 0
 
+Type MimeTypeNode
+	Extension As WString Ptr
+	MimeString As WString Ptr
+	ContentType As ContentTypes
+	Format As MimeFormats
+End Type
+
+Dim Shared MimeTypeNodesVector(0 To ...) As MimeTypeNode = { _
+	Type<MimeTypeNode>(@ExtensionHtm,  @ContentTypesTextHtml, ContentTypes.TextHtml, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionCss,  @ContentTypesTextCss, ContentTypes.TextCss, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionPng,  @ContentTypesImagePng, ContentTypes.ImagePng, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionGif,  @ContentTypesImageGif, ContentTypes.ImageGif, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionJpg,  @ContentTypesImageJpeg, ContentTypes.ImageJpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionWebp, @ContentTypesImageWebp, ContentTypes.ImageWebp, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionIco,  @ContentTypesImageIco, ContentTypes.ImageIco, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionXhtml, @ContentTypesApplicationXhtml, ContentTypes.ApplicationXhtml, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionXml,  @ContentTypesApplicationXml, ContentTypes.ApplicationXml, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionXsl,  @ContentTypesApplicationXmlXslt, ContentTypes.ApplicationXmlXslt, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionXslt, @ContentTypesApplicationXmlXslt, ContentTypes.ApplicationXmlXslt, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionTxt,  @ContentTypesTextPlain, ContentTypes.TextPlain, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionRss,  @ContentTypesApplicationRssXml, ContentTypes.ApplicationRssXml, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionJs,   @ContentTypesApplicationJavascript, ContentTypes.ApplicationJavascript, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionZip,  @ContentTypesApplicationZip, ContentTypes.ApplicationZip, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionHtml, @ContentTypesTextHtml, ContentTypes.TextHtml, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionSvg,  @ContentTypesImageSvg, ContentTypes.ImageSvg, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionBmp,  @ContentTypesImageBmp, ContentTypes.ImageBmp, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionJpe,  @ContentTypesImageJpeg, ContentTypes.ImageJpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionJpeg, @ContentTypesImageJpeg, ContentTypes.ImageJpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionTif,  @ContentTypesImageTiff, ContentTypes.ImageTiff, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionTiff, @ContentTypesImageTiff, ContentTypes.ImageTiff, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionAtom, @ContentTypesApplicationAtom, ContentTypes.ApplicationAtom, MimeFormats.Text), _
+	Type<MimeTypeNode>(@ExtensionCsv,  @ContentTypesTextCsv, ContentTypes.TextCsv, MimeFormats.Text), _
+	Type<MimeTypeNode>(@Extension7z,   @ContentTypesApplication7z, ContentTypes.Application7z, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionRar,  @ContentTypesApplicationRar, ContentTypes.ApplicationRar, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionGz,   @ContentTypesApplicationGzip, ContentTypes.ApplicationGzip, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionTgz,  @ContentTypesApplicationXCompressed, ContentTypes.ApplicationXCompressed, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionRtf,  @ContentTypesApplicationRtf, ContentTypes.ApplicationRtf, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMp3,  @ContentTypesAudioMpeg, ContentTypes.AudioMpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMpg,  @ContentTypesVideoMpeg, ContentTypes.VideoMpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMpeg, @ContentTypesVideoMpeg, ContentTypes.VideoMpeg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionAvi,  @ContentTypesVideoXMsvideo, ContentTypes.VideoXMsvideo, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOgv,  @ContentTypesVideoOgg, ContentTypes.VideoOgg, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMp4,  @ContentTypesVideoMp4, ContentTypes.VideoMp4, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionWebm, @ContentTypesVideoWebm, ContentTypes.VideoWebm, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionWasm, @ContentTypesApplicationWasm, ContentTypes.ApplicationWasm, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionWmv,  @ContentTypesVideoXmswmv, ContentTypes.VideoXmswmv, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionBin,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionExe,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionDll,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionDeb,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionDmg,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionEot,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionIso,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionImg,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMsi,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMsp,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMsm,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionSwf,  @ContentTypesApplicationFlash, ContentTypes.ApplicationFlash, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionRam,  @ContentTypesAudioRealaudio, ContentTypes.AudioRealaudio, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionCrt,  @ContentTypesApplicationCertx509, ContentTypes.ApplicationCertx509, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionCer,  @ContentTypesApplicationCertx509, ContentTypes.ApplicationCertx509, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionPdf,  @ContentTypesApplicationPdf, ContentTypes.ApplicationPdf, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdt,  @ContentTypesApplicationOpenDocumentText, ContentTypes.ApplicationOpenDocumentText, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOtt,  @ContentTypesApplicationOpenDocumentTextTemplate, ContentTypes.ApplicationOpenDocumentTextTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdg,  @ContentTypesApplicationOpenDocumentGraphics, ContentTypes.ApplicationOpenDocumentGraphics, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOtg,  @ContentTypesApplicationOpenDocumentGraphicsTemplate, ContentTypes.ApplicationOpenDocumentGraphicsTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdp,  @ContentTypesApplicationOpenDocumentPresentation, ContentTypes.ApplicationOpenDocumentPresentation, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOtp,  @ContentTypesApplicationOpenDocumentPresentationTemplate, ContentTypes.ApplicationOpenDocumentPresentationTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOds,  @ContentTypesApplicationOpenDocumentSpreadsheet, ContentTypes.ApplicationOpenDocumentSpreadsheet, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOts,  @ContentTypesApplicationOpenDocumentSpreadsheetTemplate, ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdc,  @ContentTypesApplicationOpenDocumentChart, ContentTypes.ApplicationOpenDocumentChart, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOtc,  @ContentTypesApplicationOpenDocumentChartTemplate, ContentTypes.ApplicationOpenDocumentChartTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdi,  @ContentTypesApplicationOpenDocumentImage, ContentTypes.ApplicationOpenDocumentImage, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOti,  @ContentTypesApplicationOpenDocumentImageTemplate, ContentTypes.ApplicationOpenDocumentImageTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdf,  @ContentTypesApplicationOpenDocumentFormula, ContentTypes.ApplicationOpenDocumentFormula, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOtf,  @ContentTypesApplicationOpenDocumentFormulaTemplate, ContentTypes.ApplicationOpenDocumentFormulaTemplate, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOdm,  @ContentTypesApplicationOpenDocumentMaster, ContentTypes.ApplicationOpenDocumentMaster, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionOth,  @ContentTypesApplicationOpenDocumentWeb, ContentTypes.ApplicationOpenDocumentWeb, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesAnyAny, ContentTypes.AnyAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesImageAny, ContentTypes.ImageAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesTextAny, ContentTypes.TextAny, MimeFormats.Text), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesApplicationAny, ContentTypes.ApplicationAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesAudioAny, ContentTypes.AudioAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMessageAny, ContentTypes.MessageAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMessageHttp, ContentTypes.MessageHttp, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesVideoAny, ContentTypes.VideoAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartAny, ContentTypes.MultipartAny, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartMixed, ContentTypes.MultipartMixed, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartAlternative, ContentTypes.MultipartAlternative, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartRelated, ContentTypes.MultipartRelated, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartFormdata, ContentTypes.MultipartFormdata, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartSigned, ContentTypes.MultipartSigned, MimeFormats.Binary), _
+	Type<MimeTypeNode>(NULL,           @ContentTypesMultipartEncrypted, ContentTypes.MultipartEncrypted, MimeFormats.Binary) _
+}
+
 Public Sub GetContentTypeOfMimeType( _
-		ByVal ContentType As WString Ptr, _
+		ByVal pBuffer As WString Ptr, _
 		ByVal mt As MimeType Ptr _
 	)
-	
-	Select Case mt->ContentType
-		
-		Case ContentTypes.AnyAny
-			lstrcpyW(ContentType, @ContentTypesAnyAny)
-		
-		Case ContentTypes.ImageAny
-			lstrcpyW(ContentType, @ContentTypesImageAny)
-			
-		Case ContentTypes.ImageGif
-			lstrcpyW(ContentType, @ContentTypesImageGif)
-			
-		Case ContentTypes.ImageJpeg
-			lstrcpyW(ContentType, @ContentTypesImageJpeg)
-			
-		Case ContentTypes.ImagePjpeg
-			lstrcpyW(ContentType, @ContentTypesImagePJpeg)
-			
-		Case ContentTypes.ImagePng
-			lstrcpyW(ContentType, @ContentTypesImagePng)
-			
-		Case ContentTypes.ImageSvg
-			lstrcpyW(ContentType, @ContentTypesImageSvg)
-			
-		Case ContentTypes.ImageTiff
-			lstrcpyW(ContentType, @ContentTypesImageTiff)
-			
-		Case ContentTypes.ImageIco
-			lstrcpyW(ContentType, @ContentTypesImageIco)
-			
-		Case ContentTypes.ImageWbmp
-			lstrcpyW(ContentType, @ContentTypesImageWbmp)
-			
-		Case ContentTypes.ImageWebp
-			lstrcpyW(ContentType, @ContentTypesImageWebp)
-			
-		Case ContentTypes.ImageBmp
-			lstrcpyW(ContentType, @ContentTypesImageBmp)
-			
-		Case ContentTypes.TextAny
-			lstrcpyW(ContentType, @ContentTypesTextAny)
-			
-		Case ContentTypes.TextCmd
-			lstrcpyW(ContentType, @ContentTypesTextCmd)
-			
-		Case ContentTypes.TextCss
-			lstrcpyW(ContentType, @ContentTypesTextCss)
-			
-		Case ContentTypes.TextCsv
-			lstrcpyW(ContentType, @ContentTypesTextCsv)
-			
-		Case ContentTypes.TextHtml
-			lstrcpyW(ContentType, @ContentTypesTextHtml)
-			
-		Case ContentTypes.TextPlain
-			lstrcpyW(ContentType, @ContentTypesTextPlain)
-			
-		Case ContentTypes.TextPhp
-			lstrcpyW(ContentType, @ContentTypesTextPhp)
-			
-		Case ContentTypes.TextXml
-			lstrcpyW(ContentType, @ContentTypesTextXml)
-			
-		Case ContentTypes.ApplicationAny
-			lstrcpyW(ContentType, @ContentTypesApplicationAny)
-			
-		Case ContentTypes.ApplicationXml
-			lstrcpyW(ContentType, @ContentTypesApplicationXml)
-			
-		Case ContentTypes.ApplicationXmlXslt
-			lstrcpyW(ContentType, @ContentTypesApplicationXmlXslt)
-			
-		Case ContentTypes.ApplicationXhtml
-			lstrcpyW(ContentType, @ContentTypesApplicationXhtml)
-			
-		Case ContentTypes.ApplicationAtom
-			lstrcpyW(ContentType, @ContentTypesApplicationAtom)
-			
-		Case ContentTypes.ApplicationRssXml
-			lstrcpyW(ContentType, @ContentTypesApplicationRssXml)
-			
-		Case ContentTypes.ApplicationJavascript
-			lstrcpyW(ContentType, @ContentTypesApplicationJavascript)
-			
-		Case ContentTypes.ApplicationXJavascript
-			lstrcpyW(ContentType, @ContentTypesApplicationXJavascript)
-			
-		Case ContentTypes.ApplicationJson
-			lstrcpyW(ContentType, @ContentTypesApplicationJson)
-			
-		Case ContentTypes.ApplicationSoapxml
-			lstrcpyW(ContentType, @ContentTypesApplicationSoapxml)
-			
-		Case ContentTypes.ApplicationXmldtd
-			lstrcpyW(ContentType, @ContentTypesApplicationXmldtd)
-			
-		Case ContentTypes.Application7z
-			lstrcpyW(ContentType, @ContentTypesApplication7z)
-			
-		Case ContentTypes.ApplicationRar
-			lstrcpyW(ContentType, @ContentTypesApplicationRar)
-			
-		Case ContentTypes.ApplicationZip
-			lstrcpyW(ContentType, @ContentTypesApplicationZip)
-			
-		Case ContentTypes.ApplicationGzip
-			lstrcpyW(ContentType, @ContentTypesApplicationGzip)
-			
-		Case ContentTypes.ApplicationXCompressed
-			lstrcpyW(ContentType, @ContentTypesApplicationXCompressed)
-			
-		Case ContentTypes.ApplicationRtf
-			lstrcpyW(ContentType, @ContentTypesApplicationRtf)
-			
-		Case ContentTypes.ApplicationPdf
-			lstrcpyW(ContentType, @ContentTypesApplicationPdf)
-			
-		Case ContentTypes.ApplicationOpenDocumentText
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentText)
-			
-		Case ContentTypes.ApplicationOpenDocumentTextTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentTextTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentGraphics
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentGraphics)
-			
-		Case ContentTypes.ApplicationOpenDocumentGraphicsTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentGraphicsTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentPresentation
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentPresentation)
-			
-		Case ContentTypes.ApplicationOpenDocumentPresentationTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentPresentationTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentSpreadsheet
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheet)
-			
-		Case ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentSpreadsheetTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentChart
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentChart)
-			
-		Case ContentTypes.ApplicationOpenDocumentChartTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentChartTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentImage
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentImage)
-			
-		Case ContentTypes.ApplicationOpenDocumentImageTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentImageTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentFormula
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentFormula)
-			
-		Case ContentTypes.ApplicationOpenDocumentFormulaTemplate
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentFormulaTemplate)
-			
-		Case ContentTypes.ApplicationOpenDocumentMaster
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentMaster)
-			
-		Case ContentTypes.ApplicationOpenDocumentWeb
-			lstrcpyW(ContentType, @ContentTypesApplicationOpenDocumentWeb)
-			
-		Case ContentTypes.ApplicationVndmsexcel
-			lstrcpyW(ContentType, @ContentTypesApplicationVndmsexcel)
-			
-		Case ContentTypes.ApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet
-			lstrcpyW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentspreadsheetmlsheet)
-			
-		Case ContentTypes.ApplicationVndmspowerpoint
-			lstrcpyW(ContentType, @ContentTypesApplicationVndmspowerpoint)
-			
-		Case ContentTypes.ApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation
-			lstrcpyW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentpresentationmlpresentation)
-			
-		Case ContentTypes.ApplicationMsword
-			lstrcpyW(ContentType, @ContentTypesApplicationMsword)
-			
-		Case ContentTypes.ApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument
-			lstrcpyW(ContentType, @ContentTypesApplicationVndopenxmlformatsofficedocumentwordprocessingmldocument)
-			
-		Case ContentTypes.ApplicationFontwoff
-			lstrcpyW(ContentType, @ContentTypesApplicationFontwoff)
-			
-		Case ContentTypes.ApplicationXfontttf
-			lstrcpyW(ContentType, @ContentTypesApplicationXfontttf)
-			
-		Case ContentTypes.ApplicationXwwwformurlencoded
-			lstrcpyW(ContentType, @ContentTypesApplicationXwwwformurlencoded)
-			
-		Case ContentTypes.ApplicationOctetStream
-			lstrcpyW(ContentType, @ContentTypesApplicationOctetStream)
-			
-		Case ContentTypes.ApplicationXbittorrent
-			lstrcpyW(ContentType, @ContentTypesApplicationXbittorrent)
-			
-		Case ContentTypes.ApplicationOgg
-			lstrcpyW(ContentType, @ContentTypesApplicationOgg)
-			
-		Case ContentTypes.ApplicationFlash
-			lstrcpyW(ContentType, @ContentTypesApplicationFlash)
-			
-		Case ContentTypes.ApplicationCertx509
-			lstrcpyW(ContentType, @ContentTypesApplicationCertx509)
-			
-		Case ContentTypes.ApplicationWasm
-			lstrcpyW(ContentType, @ContentTypesApplicationWasm)
-			
-		Case ContentTypes.AudioAny
-			lstrcpyW(ContentType, @ContentTypesAudioAny)
-			
-		Case ContentTypes.AudioBasic
-			lstrcpyW(ContentType, @ContentTypesAudioBasic)
-			
-		Case ContentTypes.AudioL24
-			lstrcpyW(ContentType, @ContentTypesAudioL24)
-			
-		Case ContentTypes.AudioMp4
-			lstrcpyW(ContentType, @ContentTypesAudioMp4)
-			
-		Case ContentTypes.AudioAac
-			lstrcpyW(ContentType, @ContentTypesAudioAac)
-			
-		Case ContentTypes.AudioMpeg
-			lstrcpyW(ContentType, @ContentTypesAudioMpeg)
-			
-		Case ContentTypes.AudioOgg
-			lstrcpyW(ContentType, @ContentTypesAudioOgg)
-			
-		Case ContentTypes.AudioVorbis
-			lstrcpyW(ContentType, @ContentTypesAudioVorbis)
-			
-		Case ContentTypes.AudioXmswma
-			lstrcpyW(ContentType, @ContentTypesAudioXmswma)
-			
-		Case ContentTypes.AudioXmswax
-			lstrcpyW(ContentType, @ContentTypesAudioXmswax)
-			
-		Case ContentTypes.AudioRealaudio
-			lstrcpyW(ContentType, @ContentTypesAudioRealaudio)
-			
-		Case ContentTypes.AudioVndwave
-			lstrcpyW(ContentType, @ContentTypesAudioVndwave)
-			
-		Case ContentTypes.AudioWebm
-			lstrcpyW(ContentType, @ContentTypesAudioWebm)
-			
-		Case ContentTypes.MessageAny
-			lstrcpyW(ContentType, @ContentTypesMessageAny)
-			
-		Case ContentTypes.MessageHttp
-			lstrcpyW(ContentType, @ContentTypesMessageHttp)
-			
-		Case ContentTypes.MessageImdnxml
-			lstrcpyW(ContentType, @ContentTypesMessageImdnxml)
-			
-		Case ContentTypes.MessagePartial
-			lstrcpyW(ContentType, @ContentTypesMessagePartial)
-			
-		Case ContentTypes.MessageRfc822
-			lstrcpyW(ContentType, @ContentTypesMessageRfc822)
-			
-		Case ContentTypes.VideoAny
-			lstrcpyW(ContentType, @ContentTypesVideoAny)
-			
-		Case ContentTypes.VideoMpeg
-			lstrcpyW(ContentType, @ContentTypesVideoMpeg)
-			
-		Case ContentTypes.VideoOgg
-			lstrcpyW(ContentType, @ContentTypesVideoOgg)
-			
-		Case ContentTypes.VideoMp4
-			lstrcpyW(ContentType, @ContentTypesVideoMp4)
-			
-		Case ContentTypes.VideoQuicktime
-			lstrcpyW(ContentType, @ContentTypesVideoQuicktime)
-			
-		Case ContentTypes.VideoWebm
-			lstrcpyW(ContentType, @ContentTypesVideoWebm)
-			
-		Case ContentTypes.VideoXmswmv
-			lstrcpyW(ContentType, @ContentTypesVideoXmswmv)
-			
-		Case ContentTypes.VideoXflv
-			lstrcpyW(ContentType, @ContentTypesVideoXflv)
-			
-		Case ContentTypes.VideoXMatroska
-			lstrcpyW(ContentType, @ContentTypesVideoXMatroska)
-			
-		Case ContentTypes.VideoXMsvideo
-			lstrcpyW(ContentType, @ContentTypesVideoXMsvideo)
-			
-		Case ContentTypes.Video3gpp
-			lstrcpyW(ContentType, @ContentTypesVideo3gpp)
-			
-		Case ContentTypes.Video3gpp2
-			lstrcpyW(ContentType, @ContentTypesVideo3gpp2)
-			
-		Case ContentTypes.MultipartAny
-			lstrcpyW(ContentType, @ContentTypesMultipartAny)
-			
-		Case ContentTypes.MultipartMixed
-			lstrcpyW(ContentType, @ContentTypesMultipartMixed)
-			
-		Case ContentTypes.MultipartAlternative
-			lstrcpyW(ContentType, @ContentTypesMultipartAlternative)
-			
-		Case ContentTypes.MultipartRelated
-			lstrcpyW(ContentType, @ContentTypesMultipartRelated)
-			
-		Case ContentTypes.MultipartFormdata
-			lstrcpyW(ContentType, @ContentTypesMultipartFormdata)
-			
-		Case ContentTypes.MultipartSigned
-			lstrcpyW(ContentType, @ContentTypesMultipartSigned)
-			
-		Case ContentTypes.MultipartEncrypted
-			lstrcpyW(ContentType, @ContentTypesMultipartEncrypted)
-			
-		Case Else
-			lstrcpyW(ContentType, @ContentTypesApplicationOctetStream)
-			
-	End Select
-	
+
+	Dim Finded As Boolean = False
+
+	For i As Integer = LBound(MimeTypeNodesVector) To UBound(MimeTypeNodesVector)
+		If mt->ContentType = MimeTypeNodesVector(i).ContentType Then
+			lstrcpyW(pBuffer, MimeTypeNodesVector(i).MimeString)
+			Finded = True
+			Exit For
+		End If
+	Next
+
+	If Finded = False Then
+		lstrcpyW(pBuffer, @ContentTypesApplicationOctetStream)
+	End If
+
 	Dim CharsetLength As Integer = SysStringLen(mt->CharsetWeakPtr)
-	
+
 	If CharsetLength Then
 		Const CharsetWithSeparatorString = WStr(";charset=")
-		lstrcatW(ContentType, @CharsetWithSeparatorString)
-		lstrcatW(ContentType, mt->CharsetWeakPtr)
+		lstrcatW(pBuffer, @CharsetWithSeparatorString)
+		lstrcatW(pBuffer, mt->CharsetWeakPtr)
 	End If
-	
+
 End Sub
 
 Public Function GetMimeOfFileExtension( _
@@ -537,582 +323,26 @@ Public Function GetMimeOfFileExtension( _
 		ByVal ext As WString Ptr, _
 		ByVal DefaultMime As DefaultMimeIfNotFound _
 	)As Boolean
-	
-	mt->Format = MimeFormats.Binary
+
 	mt->CharsetWeakPtr = NULL
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtm)
+
+	For i As Integer = LBound(MimeTypeNodesVector) To UBound(MimeTypeNodesVector)
+		Dim Compare As Long = lstrcmpiW(ext, MimeTypeNodesVector(i).Extension)
 		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.TextHtml
-			mt->Format = MimeFormats.Text
+			mt->ContentType = MimeTypeNodesVector(i).ContentType
+			mt->Format = MimeTypeNodesVector(i).Format
 			Return True
 		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXhtml)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationXhtml
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCss)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.TextCss
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionPng)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImagePng
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionGif)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageGif
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageJpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionIco)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageIco
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXml)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationXml
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXsl)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationXmlXslt
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionXslt)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationXmlXslt
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTxt)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.TextPlain
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRss)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationRssXml
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJs)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationJavascript
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionZip)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationZip
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionHtml)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.TextHtml
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionSvg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageSvg
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionBmp)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageBmp
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpe)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageJpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionJpeg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageJpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTif)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageTiff
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTiff)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ImageTiff
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionAtom)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationAtom
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @Extension7z)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.Application7z
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRar)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationRar
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionGz)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationGzip
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionTgz)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationXCompressed
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRtf)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationRtf
-			mt->Format = MimeFormats.Text
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMp3)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.AudioMpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMpg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoMpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMpeg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoMpeg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMkv)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoXMatroska
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionAvi)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoXMsvideo
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOgv)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoOgg
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMp4)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoMp4
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWebm)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoWebm
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWmv)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.VideoXmswmv
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionBin)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionExe)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDll)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDeb)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionDmg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionEot)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionIso)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionImg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsi)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsp)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionMsm)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOctetStream
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionSwf)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationFlash
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionRam)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.AudioRealaudio
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCrt)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationCertx509
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionCer)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationCertx509
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionPdf)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationPdf
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdt)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentText
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtt)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentTextTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphics
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtg)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentGraphicsTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdp)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentation
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtp)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentPresentationTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOds)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheet
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOts)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentSpreadsheetTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdc)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentChart
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtc)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentChartTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdi)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentImage
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOti)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentImageTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdf)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormula
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOtf)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentFormulaTemplate
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOdm)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentMaster
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionOth)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationOpenDocumentWeb
-			Return True
-		End If
-	End Scope
-	
-	Scope
-		Dim Compare As Long = lstrcmpiW(ext, @ExtensionWasm)
-		If Compare = CompareResultEqual Then
-			mt->ContentType = ContentTypes.ApplicationWasm
-			Return True
-		End If
-	End Scope
-	
+	Next
+
 	Scope
 		If DefaultMime = DefaultMimeIfNotFound.UseApplicationOctetStream Then
 			mt->ContentType = ContentTypes.ApplicationOctetStream
+			mt->Format = MimeFormats.Binary
 			Return True
 		End If
 	End Scope
-	
+
 	Return False
-	
+
 End Function
