@@ -14,4 +14,12 @@ Declare Function CreateHttpReader( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
+Declare Function CreateHttpReaderPool( _
+	pMalloc As IMalloc Ptr _
+)As HRESULT
+
+Declare Sub DestroyHttpReaderPool( _
+	pMalloc As IMalloc Ptr _
+)
+
 #endif

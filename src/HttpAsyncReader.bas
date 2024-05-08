@@ -1,15 +1,18 @@
 #include once "HttpAsyncReader.bi"
 #include once "Http.bi"
 #include once "HeapBSTR.bi"
+#include once "IObjectPool.bi"
 
 Extern GlobalHttpReaderVirtualTable As Const IHttpAsyncReaderVirtualTable
 
 Const DoubleNewLineStringA = Str(!"\r\n\r\n")
 Const NewLineStringA = Str(!"\r\n")
 
-Const MEMORYPAGE_SIZE As Integer = 4096
+Const MEMORYPAGE_SIZE = 4096
 
-Const RAWBUFFER_MEMORYPAGE_COUNT As Integer = 4
+Const RAWBUFFER_MEMORYPAGE_COUNT = 4
+
+Const OBJECT_POOL_CAPACITY = 1
 
 #if __FB_DEBUG__
 Const RAWBUFFER_CAPACITY As Integer = (RAWBUFFER_MEMORYPAGE_COUNT * MEMORYPAGE_SIZE) - (4 * SizeOf(Integer)) - SizeOf(ZString) * 16
@@ -39,6 +42,22 @@ Type HttpReader
 	pClientBuffer As ClientRequestBuffer Ptr
 	SkippedBytes As LongInt
 	IsAllBytesReaded As Boolean
+End Type
+
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
+Type ObjectPoolItem
+	pItem As HttpReader Ptr
+	ItemStatus As PoolItemStatuses
+End Type
+
+Type ObjectPool
+	Items As ObjectPoolItem Ptr
+	Capacity As UInteger
+	Length As UInteger
 End Type
 
 Private Sub InitializeClientRequestBuffer( _
@@ -307,6 +326,35 @@ Private Function HttpReaderQueryInterface( _
 	HttpReaderAddRef(this)
 
 	Return S_OK
+
+End Function
+
+Private Function CreateHttpReader_Internal( _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
+	)As HttpReader Ptr
+
+	Dim this As HttpReader Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(HttpReader) _
+	)
+
+	If this Then
+		Dim pClientBuffer As ClientRequestBuffer Ptr = IMalloc_Alloc( _
+			pIMemoryAllocator, _
+			SizeOf(ClientRequestBuffer) _
+		)
+
+		If pClientBuffer Then
+			InitializeHttpReader(this, pIMemoryAllocator, pClientBuffer)
+			HttpReaderCreated(this)
+
+			Return this
+		End If
+
+		IMalloc_Free(pIMemoryAllocator, this)
+	End If
+
+	Return NULL
 
 End Function
 
@@ -579,6 +627,64 @@ Private Function HttpReaderSkipBytes( _
 	Return S_OK
 
 End Function
+
+
+Public Function CreateHttpReaderPool( _
+		pMalloc As IMalloc Ptr _
+	)As HRESULT
+
+	Dim pool As ObjectPool Ptr = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(ObjectPool) _
+	)
+	If pool = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+
+	pool->Capacity = OBJECT_POOL_CAPACITY
+	pool->Length = 0
+
+	pool->Items = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(ObjectPoolItem) * OBJECT_POOL_CAPACITY _
+	)
+	If pool->Items = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		pool->Items[i].pItem = CreateHttpReader_Internal(pMalloc)
+
+		If pool->Items[0].pItem = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+
+		pool->Items[0].ItemStatus = PoolItemStatuses.ItemFree
+	Next
+
+	Dim pPool As IObjectPool Ptr = Any
+	Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+		pMalloc, _
+		@IID_IObjectPool, _
+		@pPool _
+	)
+	If FAILED(hrQueryInterface) Then
+		Return hrQueryInterface
+	End If
+
+	IObjectPool_SetPool(pPool, 0, pool)
+
+	IObjectPool_Release(pPool)
+
+	Return S_OK
+
+End Function
+
+Public Sub DeleteHttpReaderPool( _
+		pMalloc As IMalloc Ptr _
+	)
+
+End Sub
 
 
 Private Function IHttpAsyncReaderQueryInterface( _
