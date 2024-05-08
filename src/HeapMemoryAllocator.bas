@@ -354,6 +354,7 @@ Private Sub PrintWalkingHeap( _
 
 End Sub
 
+
 Private Function HeapMemoryAllocatorCloseSocket( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
@@ -371,7 +372,7 @@ Private Sub HeapMemoryAllocatorResetState( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
-	HeapMemoryAllocatorCloseSocket(this)
+	this->ClientSocket = INVALID_SOCKET
 
 	' Restore the original state of the reference counter
 	' Beecause number of reference is equal to one
@@ -386,9 +387,7 @@ Private Sub UnInitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
-	If this->hHeap Then
-		HeapDestroy(this->hHeap)
-	End If
+	HeapMemoryAllocatorCloseSocket(this)
 
 End Sub
 
@@ -403,6 +402,10 @@ Private Sub DestroyHeapMemoryAllocator( _
 	)
 
 	UnInitializeHeapMemoryAllocator(this)
+
+	If this->hHeap Then
+		HeapDestroy(this->hHeap)
+	End If
 
 	HeapMemoryAllocatorDestroyed(this)
 
@@ -446,6 +449,7 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 				)
 			#endif
 
+			UnInitializeHeapMemoryAllocator(this)
 			HeapMemoryAllocatorResetState(this)
 
 			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
@@ -552,7 +556,7 @@ Private Function HeapMemoryAllocatorRelease( _
 	End If
 
 	' Do not delete object
-	' Only mark that the object is free
+	' Only mark that object is free and return to pool
 	HeapMemoryAllocatorReturnToPool(this)
 
 	Return 0
