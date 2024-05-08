@@ -15,11 +15,6 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = MEMORY_ALLOCATION_GRANULARITY
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
-Enum PoolItemStatuses
-	ItemUsed = -1
-	ItemFree = 0
-End Enum
-
 Enum ConnectionStatuses
 	Closed
 	Hungs
@@ -36,13 +31,18 @@ Type HeapMemoryAllocator
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
 	ClientSocket As SOCKET
-	ItemStatus As PoolItemStatuses
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
 End Type
 
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
 Type MemoryPoolItem
 	pMalloc As IHeapMemoryAllocator Ptr
+	ItemStatus As PoolItemStatuses
 End Type
 
 Type MemoryPool
@@ -380,8 +380,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 
-	this->ItemStatus = PoolItemStatuses.ItemFree
-
 End Sub
 
 Private Sub UnInitializeHeapMemoryAllocator( _
@@ -450,6 +448,8 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 
 			HeapMemoryAllocatorResetState(this)
 
+			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
+
 			Exit For
 		End If
 	Next
@@ -472,11 +472,12 @@ Public Function GetHeapMemoryAllocatorInstance( _
 			var localMalloc = MemoryPoolObject.Items[i].pMalloc
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-			If this->ItemStatus = PoolItemStatuses.ItemFree Then
+			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
+
+				MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
+				MemoryPoolObject.Length += 1
 
 				this->ClientSocket = ClientSocket
-				this->ItemStatus = PoolItemStatuses.ItemUsed
-				MemoryPoolObject.Length += 1
 
 				pMalloc = MemoryPoolObject.Items[i].pMalloc
 
@@ -521,7 +522,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
-	this->ItemStatus = PoolItemStatuses.ItemFree
 
 End Sub
 
@@ -788,7 +788,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 			var localMalloc = MemoryPoolObject.Items[i].pMalloc
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-			If this->ItemStatus = PoolItemStatuses.ItemUsed Then
+			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
@@ -800,6 +800,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 					Case ConnectionStatuses.Closed
 						MemoryPoolObject.Length -= 1
 						HeapMemoryAllocatorResetState(this)
+						MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 
 					Case ConnectionStatuses.Hungs
 						IsPoolFree = False
@@ -940,6 +941,7 @@ Public Function CreateMemoryPool( _
 			End If
 
 			MemoryPoolObject.Items[i].pMalloc = pMalloc
+			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 		Next
 	End Scope
 

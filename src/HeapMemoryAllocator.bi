@@ -10,7 +10,7 @@ Extern CLSID_SERVERHEAPMEMORYALLOCATOR Alias "CLSID_SERVERHEAPMEMORYALLOCATOR" A
 Const RTTI_ID_HEAPMEMORYALLOCATOR     = !"\001Mem__Allocator\001"
 
 Declare Function CreateMemoryPool( _
-	ByVal Length As UInteger, _
+	ByVal Capacity As UInteger, _
 	ByVal KeepAliveInterval As Integer _
 )As HRESULT
 
