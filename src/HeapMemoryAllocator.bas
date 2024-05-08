@@ -590,10 +590,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 		ByVal ClientSocket As SOCKET _
 	)As IHeapMemoryAllocator Ptr
 
-	Dim PoolLength As UInteger = MemoryPoolObject.Length
-	Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
-
-	If PoolLength < PoolCapacity Then
+	If MemoryPoolObject.Length < MemoryPoolObject.Capacity Then
 		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
 
 		EnterCriticalSection(@MemoryPoolObject.crSection)
@@ -754,7 +751,6 @@ Private Function MemoryPoolCloseHungsConnections( _
 	)As HRESULT
 
 	Const msTimeToHungsConnection As DWORD = 1000 * 60
-	Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
 
 	Do
 		Dim resWait As DWORD = SleepEx(msTimeToHungsConnection, TRUE)
@@ -771,7 +767,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 		Dim IsPoolFree As Boolean = True
 
 		EnterCriticalSection(@MemoryPoolObject.crSection)
-		For i As UInteger = 0 To PoolCapacity - 1
+		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 
 			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
