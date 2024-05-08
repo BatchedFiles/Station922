@@ -41,7 +41,7 @@ Enum PoolItemStatuses
 End Enum
 
 Type MemoryPoolItem
-	pMalloc As IHeapMemoryAllocator Ptr
+	pMalloc As HeapMemoryAllocator Ptr
 	ItemStatus As PoolItemStatuses
 End Type
 
@@ -374,10 +374,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 
 	this->ClientSocket = INVALID_SOCKET
 
-	' Restore the original state of the reference counter
-	' Beecause number of reference is equal to one
-	this->ReferenceCounter = 1
-
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 
@@ -415,12 +411,12 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
-	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
-
 	EnterCriticalSection(@MemoryPoolObject.crSection)
 	For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+
 		var localMalloc = MemoryPoolObject.Items[i].pMalloc
-		If localMalloc = pInterface Then
+
+		If this = localMalloc Then
 
 			MemoryPoolObject.Length -= 1
 
@@ -460,51 +456,6 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 	LeaveCriticalSection(@MemoryPoolObject.crSection)
 
 End Sub
-
-Public Function GetHeapMemoryAllocatorInstance( _
-		ByVal ClientSocket As SOCKET _
-	)As IHeapMemoryAllocator Ptr
-
-	Dim PoolLength As UInteger = MemoryPoolObject.Length
-	Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
-
-	If PoolLength < PoolCapacity Then
-		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
-
-		EnterCriticalSection(@MemoryPoolObject.crSection)
-		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
-			var localMalloc = MemoryPoolObject.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
-
-			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
-
-				MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
-				MemoryPoolObject.Length += 1
-
-				this->ClientSocket = ClientSocket
-
-				pMalloc = MemoryPoolObject.Items[i].pMalloc
-
-				#if __FB_DEBUG__
-					Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
-					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
-				#endif
-
-				Exit For
-			End If
-		Next
-		LeaveCriticalSection(@MemoryPoolObject.crSection)
-
-		' We do not increase the reference counter to the object
-		' to track the lifetime
-		' When the object reference count reaches zero
-		' the Release function returns the object to the object pool
-		Return pMalloc
-	End If
-
-	Return NULL
-
-End Function
 
 Private Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
@@ -598,10 +549,8 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 
 End Function
 
-Private Function CreateHeapMemoryAllocator( _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
+Private Function CreateHeapMemoryAllocator_Internal( _
+	)As HeapMemoryAllocator Ptr
 
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
@@ -622,18 +571,10 @@ Private Function CreateHeapMemoryAllocator( _
 				this, _
 				hHeap _
 			)
+
 			HeapMemoryAllocatorCreated(this)
 
-			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
-				this, _
-				riid, _
-				ppv _
-			)
-			If FAILED(hrQueryInterface) Then
-				DestroyHeapMemoryAllocator(this)
-			End If
-
-			Return hrQueryInterface
+			Return this
 		End If
 
 		HeapDestroy(hHeap)
@@ -641,8 +582,51 @@ Private Function CreateHeapMemoryAllocator( _
 
 	PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
 
-	*ppv = NULL
-	Return E_OUTOFMEMORY
+	Return NULL
+
+End Function
+
+Public Function GetHeapMemoryAllocatorInstance( _
+		ByVal ClientSocket As SOCKET _
+	)As IHeapMemoryAllocator Ptr
+
+	Dim PoolLength As UInteger = MemoryPoolObject.Length
+	Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
+
+	If PoolLength < PoolCapacity Then
+		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+
+		EnterCriticalSection(@MemoryPoolObject.crSection)
+		For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
+
+			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
+
+				MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
+				MemoryPoolObject.Length += 1
+
+				var this = MemoryPoolObject.Items[i].pMalloc
+				this->ClientSocket = ClientSocket
+
+				HeapMemoryAllocatorQueryInterface( _
+					this, _
+					@IID_IHeapMemoryAllocator, _
+					@pMalloc _
+				)
+
+				#if __FB_DEBUG__
+					Dim FreeSpace As UInteger = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
+				#endif
+
+				Exit For
+			End If
+		Next
+		LeaveCriticalSection(@MemoryPoolObject.crSection)
+
+		Return pMalloc
+	End If
+
+	Return NULL
 
 End Function
 
@@ -770,6 +754,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 	)As HRESULT
 
 	Const msTimeToHungsConnection As DWORD = 1000 * 60
+	Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
 
 	Do
 		Dim resWait As DWORD = SleepEx(msTimeToHungsConnection, TRUE)
@@ -785,15 +770,12 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 		Dim IsPoolFree As Boolean = True
 
-		Dim PoolCapacity As UInteger = MemoryPoolObject.Capacity
-
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		For i As UInteger = 0 To PoolCapacity - 1
-			var localMalloc = MemoryPoolObject.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
 			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
+				var this = MemoryPoolObject.Items[i].pMalloc
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
 					KeepAliveInterval _
@@ -935,12 +917,8 @@ Public Function CreateMemoryPool( _
 		End If
 
 		For i As UInteger = 0 To Capacity - 1
-			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
-				@IID_IHeapMemoryAllocator, _
-				@pMalloc _
-			)
-			If FAILED(hrCreateMalloc) Then
+			Dim pMalloc As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator_Internal()
+			If pMalloc = NULL Then
 				Return E_OUTOFMEMORY
 			End If
 
