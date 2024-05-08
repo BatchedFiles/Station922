@@ -515,6 +515,7 @@ Private Sub InitializeHeapMemoryAllocator( _
 	#endif
 	this->lpVtbl = @GlobalHeapMemoryAllocatorVirtualTable
 	this->lpVtblTimeCounter = @GlobalTimeCounterVirtualTable
+	this->lpVtblObjectPool = @GlobalObjectPoolVirtualTable
 	this->ReferenceCounter = 0
 	this->hHeap = hHeap
 	this->ClientSocket = INVALID_SOCKET
