@@ -297,6 +297,11 @@ DEFINE_IID(IID_INetworkAsyncStream, _
 	&ha4c7eaed, &h5ec0, &h4b7c, &h81, &hd2, &h5, &hbe, &h69, &he6, &h3a, &h1f _
 )
 
+' {BF32020C-4AF3-47E3-B89C-08F9D561E341}
+DEFINE_IID(IID_IObjectPool, _
+	&hbf32020c, &h4af3, &h47e3, &hb8, &h9c, &h8, &hf9, &hd5, &h61, &he3, &h41 _
+)
+
 ' {82B525C1-E266-4317-9FA5-F8B19DF8C73C}
 DEFINE_IID(IID_IReadRequestAsyncIoTask, _
 	&h82b525c1, &he266, &h4317, &h9f, &ha5, &hf8, &hb1, &h9d, &hf8, &hc7, &h3c _
