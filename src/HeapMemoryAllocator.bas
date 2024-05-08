@@ -1,10 +1,12 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "crt.bi"
+#include once "IObjectPool.bi"
 #include once "ITimeCounter.bi"
 #include once "Logger.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 Extern GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable
+Extern GlobalObjectPoolVirtualTable As Const IObjectPoolVirtualTable
 
 Const MEMORY_ALLOCATION_GRANULARITY As DWORD = 64 * 1024
 
@@ -30,6 +32,7 @@ Type HeapMemoryAllocator
 	#endif
 	lpVtbl As Const IHeapMemoryAllocatorVirtualTable Ptr
 	lpVtblTimeCounter As Const ITimeCounterVirtualTable Ptr
+	lpVtblObjectPool As Const IObjectPoolVirtualTable Ptr
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
 	ClientSocket As SOCKET
@@ -566,14 +569,18 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 		If IsEqualIID(@IID_ITimeCounter, riid) Then
 			*ppv = @this->lpVtblTimeCounter
 		Else
-			If IsEqualIID(@IID_IMalloc, riid) Then
-				*ppv = @this->lpVtbl
+			If IsEqualIID(@IID_IObjectPool, riid) Then
+				*ppv = @this->lpVtblTimeCounter
 			Else
-				If IsEqualIID(@IID_IUnknown, riid) Then
+				If IsEqualIID(@IID_IMalloc, riid) Then
 					*ppv = @this->lpVtbl
 				Else
-					*ppv = NULL
-					Return E_NOINTERFACE
+					If IsEqualIID(@IID_IUnknown, riid) Then
+						*ppv = @this->lpVtbl
+					Else
+						*ppv = NULL
+						Return E_NOINTERFACE
+					End If
 				End If
 			End If
 		End If
@@ -685,6 +692,27 @@ Private Function HeapMemoryAllocatorStopWatch( _
 	Return S_OK
 
 End Function
+
+Private Function HeapMemoryAllocatorGetPool( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal PoolId As Integer, _
+		ByVal ppPool As Any Ptr Ptr _
+	)As HRESULT
+
+	Return S_OK
+
+End Function
+
+Private Function HeapMemoryAllocatorSetPool( _
+		ByVal this As HeapMemoryAllocator Ptr, _
+		ByVal PoolId As Integer, _
+		ByVal pPool As Any Ptr _
+	)As HRESULT
+
+	Return S_OK
+
+End Function
+
 
 Private Function MemoryPoolCheckHungsConnections( _
 		ByVal this As HeapMemoryAllocator Ptr, _
@@ -1020,6 +1048,42 @@ Private Function ITimeCounterStopWatch( _
 	Return HeapMemoryAllocatorStopWatch(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblTimeCounter))
 End Function
 
+Private Function IObjectPoolQueryInterface( _
+		ByVal this As IObjectPool Ptr, _
+		ByVal riid As REFIID, _
+		ByVal ppvObject As Any Ptr Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorQueryInterface(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool), riid, ppvObject)
+End Function
+
+Private Function IObjectPoolAddRef( _
+		ByVal this As IObjectPool Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorAddRef(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool))
+End Function
+
+Private Function IObjectPoolRelease( _
+		ByVal this As IObjectPool Ptr _
+	)As ULONG
+	Return HeapMemoryAllocatorRelease(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool))
+End Function
+
+Private Function IObjectPoolGetPool( _
+		ByVal this As IObjectPool Ptr, _
+		ByVal PoolId As Integer, _
+		ByVal ppPool As Any Ptr Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorGetPool(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool), PoolId, ppPool)
+End Function
+
+Private Function IObjectPoolSetPool( _
+		ByVal this As IObjectPool Ptr, _
+		ByVal PoolId As Integer, _
+		ByVal pPool As Any Ptr _
+	)As HRESULT
+	Return HeapMemoryAllocatorSetPool(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool), PoolId, pPool)
+End Function
+
 Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable = Type( _
 	@IHeapMemoryAllocatorQueryInterface, _
 	@IHeapMemoryAllocatorAddRef, _
@@ -1040,4 +1104,12 @@ Dim GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable = Type( _
 	@ITimeCounterRelease, _
 	@ITimeCounterStartWatch, _
 	@ITimeCounterStopWatch _
+)
+
+Dim GlobalObjectPoolVirtualTable As Const IObjectPoolVirtualTable = Type( _
+	@IObjectPoolQueryInterface, _
+	@IObjectPoolAddRef, _
+	@IObjectPoolRelease, _
+	@IObjectPoolGetPool, _
+	@IObjectPoolSetPool _
 )
