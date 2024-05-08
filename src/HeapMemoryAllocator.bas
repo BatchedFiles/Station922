@@ -410,16 +410,16 @@ Private Sub DestroyHeapMemoryAllocator( _
 
 End Sub
 
-Private Sub ReleaseHeapMemoryAllocatorInstance( _
-		ByVal pMalloc As IHeapMemoryAllocator Ptr _
+Private Sub HeapMemoryAllocatorReturnToPool( _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)
+
+	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
 
 	EnterCriticalSection(@MemoryPoolObject.crSection)
 	For i As UInteger = 0 To MemoryPoolObject.Capacity - 1
 		var localMalloc = MemoryPoolObject.Items[i].pMalloc
-		If localMalloc = pMalloc Then
-
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
+		If localMalloc = pInterface Then
 
 			MemoryPoolObject.Length -= 1
 
@@ -551,8 +551,9 @@ Private Function HeapMemoryAllocatorRelease( _
 		Return 1
 	End If
 
-	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
-	ReleaseHeapMemoryAllocatorInstance(pInterface)
+	' Do not delete object
+	' Only mark that the object is free
+	HeapMemoryAllocatorReturnToPool(this)
 
 	Return 0
 
