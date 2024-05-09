@@ -86,6 +86,50 @@ Const HeaderWebSocketProtocolString =  WStr("WebSocket-Protocol")
 Const HeaderWWWAuthenticateString =    WStr("WWW-Authenticate")
 Const HeaderXContentTypeOptionsString = WStr("X-Content-Type-Options")
 
+Const CgiHeaderAcceptString = WStr("HTTP_ACCEPT")
+Const CgiHeaderAcceptCharsetString = WStr("HTTP_ACCEPT_CHARSET")
+Const CgiHeaderAcceptEncodingString = WStr("HTTP_ACCEPT_ENCODING")
+Const CgiHeaderAcceptLanguageString = WStr("HTTP_ACCEPT_LANGUAGE")
+Const CgiHeaderAuthorizationString = WStr("AUTH_TYPE")
+Const CgiHeaderCacheControlString = WStr("HTTP_CACHE_CONTROL")
+Const CgiHeaderConnectionString = WStr("HTTP_CONNECTION")
+Const CgiHeaderContentEncodingString = WStr("HTTP_CONTENT_ENCODING")
+Const CgiHeaderContentLanguageString = WStr("HTTP_CONTENT_LANGUAGE")
+Const CgiHeaderContentLengthString = WStr("CONTENT_LENGTH")
+Const CgiHeaderContentMd5String = WStr("HTTP_CONTENT_MD5")
+Const CgiHeaderContentRangeString = WStr("HTTP_CONTENT_RANGE")
+Const CgiHeaderContentTypeString = WStr("CONTENT_TYPE")
+Const CgiHeaderCookieString = WStr("HTTP_COOKIE")
+Const CgiHeaderDNTString = WStr("HTTP_DNT")
+Const CgiHeaderExpectString = WStr("HTTP_EXPECT")
+Const CgiHeaderFromString = WStr("HTTP_FROM")
+Const CgiHeaderHostString = WStr("HTTP_HOST")
+Const CgiHeaderIfMatchString = WStr("HTTP_IF_MATCH")
+Const CgiHeaderIfModifiedSinceString = WStr("HTTP_IF_MODIFIED_SINCE")
+Const CgiHeaderIfNoneMatchString = WStr("HTTP_IF_NONE_MATCH")
+Const CgiHeaderIfRangeString = WStr("HTTP_IF_RANGE")
+Const CgiHeaderIfUnmodifiedSinceString = WStr("HTTP_IF_UNMODIFIED_SINCE")
+Const CgiHeaderKeepAliveString = WStr("HTTP_KEEP_ALIVE")
+Const CgiHeaderMaxForwardsString = WStr("HTTP_MAX_FORWARDS")
+Const CgiHeaderOriginString = WStr("HTTP_ORIGIN")
+Const CgiHeaderPragmaString = WStr("HTTP_PRAGMA")
+Const CgiHeaderProxyAuthorizationString = WStr("HTTP_PROXY_AUTHORIZATION")
+Const CgiHeaderRangeString = WStr("HTTP_RANGE")
+Const CgiHeaderRefererString = WStr("HTTP_REFERER")
+Const CgiHeaderSecWebSocketKeyString = WStr("HTTP_SEC_WEBSOCKET_KEY")
+Const CgiHeaderSecWebSocketKey1String = WStr("HTTP_SEC_WEBSOCKET_KEY1")
+Const CgiHeaderSecWebSocketKey2String = WStr("HTTP_SEC_WEBSOCKET_KEY2")
+Const CgiHeaderSecWebSocketVersionString = WStr("HTTP_SEC_WEBSOCKET_VERSION")
+Const CgiHeaderTeString = WStr("HTTP_TE")
+Const CgiHeaderTrailerString = WStr("HTTP_TRAILER")
+Const CgiHeaderTransferEncodingString = WStr("HTTP_TRANSFER_ENCODING")
+Const CgiHeaderUpgradeString = WStr("HTTP_UPGRADE")
+Const CgiHeaderUpgradeInsecureRequestsString = WStr("HTTP_UPGRADE_INSECURE_REQUESTS")
+Const CgiHeaderUserAgentString = WStr("HTTP_USER_AGENT")
+Const CgiHeaderViaString = WStr("HTTP_VIA")
+Const CgiHeaderWarningString = WStr("HTTP_WARNING")
+Const CgiHeaderWebSocketProtocolString = WStr("HTTP_WEBSOCKET_PROTOCOL")
+
 Const HttpStatusCodeString100 = WStr("Continue")
 Const HttpStatusCodeString101 = WStr("Switching Protocols")
 Const HttpStatusCodeString102 = WStr("Processing")
@@ -189,7 +233,7 @@ Const HTTPPROCESSOR_E_LENGTHREQUIRED As HRESULT =           MAKE_HRESULT(SEVERIT
 
 Enum ResponseErrorCode
 	MovedPermanently
-	
+
 	BadRequest
 	PathNotValid
 	HostNotFound
@@ -208,7 +252,7 @@ Enum ResponseErrorCode
 	RequestUrlTooLarge
 	RequestRangeNotSatisfiable
 	RequestHeaderFieldsTooLarge
-	
+
 	InternalServerError
 	FileNotAvailable
 	CannotCreateChildProcess
@@ -309,7 +353,7 @@ Enum HttpRequestHeaders
 	HeaderUpgrade
 	HeaderVia
 	HeaderWarning
-	
+
 	' Request headers
 	HeaderAccept
 	HeaderAcceptCharset
@@ -341,7 +385,7 @@ Enum HttpRequestHeaders
 	HeaderSecWebSocketVersion
 	HeaderUpgradeInsecureRequests
 	HeaderWebSocketProtocol
-	
+
 	' Entity headers
 	HeaderContentEncoding
 	HeaderContentLanguage
@@ -365,7 +409,7 @@ Enum HttpResponseHeaders
 	HeaderUpgrade
 	HeaderVia
 	HeaderWarning
-	
+
 	' Response headers
 	HeaderAcceptRanges          ' *
 	HeaderAge
@@ -378,7 +422,7 @@ Enum HttpResponseHeaders
 	HeaderVary                  ' *
 	HeaderWwwAuthenticate
 	HeaderXContentTypeOptions ' *
-	
+
 	HeaderKeepAlive             ' *
 	HeaderSecWebSocketAccept ' *
 	HeaderSecWebSocketLocation ' *
@@ -387,7 +431,7 @@ Enum HttpResponseHeaders
 	HeaderWebSocketLocation ' *
 	HeaderWebSocketOrigin ' *
 	HeaderWebSocketProtocol ' *
-	
+
 	' Entity headers
 	HeaderAllow
 	HeaderContentEncoding

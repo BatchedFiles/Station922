@@ -79,59 +79,59 @@ Dim Shared StatusCodeNodesVector(1 To HttpStatusCodesSize) As StatusCodeNode = {
 }
 
 Dim Shared CgiHeaderNodesVector(1 To HttpRequestHeadersSize) As CgiHeaderNode = { _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT"),                    11, HttpRequestHeaders.HeaderAccept), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_CHARSET"),            19, HttpRequestHeaders.HeaderAcceptCharset), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_ENCODING"),           20, HttpRequestHeaders.HeaderAcceptEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ACCEPT_LANGUAGE"),           20, HttpRequestHeaders.HeaderAcceptLanguage), _
-	Type<CgiHeaderNode>(@WStr("AUTH_TYPE"),                      9,  HttpRequestHeaders.HeaderAuthorization), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CACHE_CONTROL"),             18, HttpRequestHeaders.HeaderCacheControl), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONNECTION"),                15, HttpRequestHeaders.HeaderConnection), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_ENCODING"),          21, HttpRequestHeaders.HeaderContentEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_LANGUAGE"),          21, HttpRequestHeaders.HeaderContentLanguage), _
-	Type<CgiHeaderNode>(@WStr("CONTENT_LENGTH"),                 14, HttpRequestHeaders.HeaderContentLength), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_MD5"),               16, HttpRequestHeaders.HeaderContentMd5), _
-	Type<CgiHeaderNode>(@WStr("HTTP_CONTENT_RANGE"),             18, HttpRequestHeaders.HeaderContentRange), _
-	Type<CgiHeaderNode>(@WStr("CONTENT_TYPE"),                   12, HttpRequestHeaders.HeaderContentType), _
-	Type<CgiHeaderNode>(@WStr("HTTP_COOKIE"),                    11, HttpRequestHeaders.HeaderCookie), _
-	Type<CgiHeaderNode>(@WStr("HTTP_DNT"),                       8,  HttpRequestHeaders.HeaderDNT), _
-	Type<CgiHeaderNode>(@WStr("HTTP_EXPECT"),                    11, HttpRequestHeaders.HeaderExpect), _
-	Type<CgiHeaderNode>(@WStr("HTTP_FROM"),                      9,  HttpRequestHeaders.HeaderFrom), _
-	Type<CgiHeaderNode>(@WStr("HTTP_HOST"),                      9,  HttpRequestHeaders.HeaderHost), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_MATCH"),                  13, HttpRequestHeaders.HeaderIfMatch), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_MODIFIED_SINCE"),         22, HttpRequestHeaders.HeaderIfModifiedSince), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_NONE_MATCH"),             18, HttpRequestHeaders.HeaderIfNoneMatch), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_RANGE"),                  13, HttpRequestHeaders.HeaderIfRange), _
-	Type<CgiHeaderNode>(@WStr("HTTP_IF_UNMODIFIED_SINCE"),       24, HttpRequestHeaders.HeaderIfUnModifiedSince), _
-	Type<CgiHeaderNode>(@WStr("HTTP_KEEP_ALIVE"),                15, HttpRequestHeaders.HeaderKeepAlive), _
-	Type<CgiHeaderNode>(@WStr("HTTP_MAX_FORWARDS"),              17, HttpRequestHeaders.HeaderMaxForwards), _
-	Type<CgiHeaderNode>(@WStr("HTTP_ORIGIN"),                    11, HttpRequestHeaders.HeaderOrigin), _
-	Type<CgiHeaderNode>(@WStr("HTTP_PRAGMA"),                    11, HttpRequestHeaders.HeaderPragma), _
-	Type<CgiHeaderNode>(@WStr("HTTP_PROXY_AUTHORIZATION"),       24, HttpRequestHeaders.HeaderProxyAuthorization), _
-	Type<CgiHeaderNode>(@WStr("HTTP_RANGE"),                     10, HttpRequestHeaders.HeaderRange), _
-	Type<CgiHeaderNode>(@WStr("HTTP_REFERER"),                   12, HttpRequestHeaders.HeaderReferer), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY"),         22, HttpRequestHeaders.HeaderSecWebSocketKey), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY1"),        23, HttpRequestHeaders.HeaderSecWebSocketKey1), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_KEY2"),        23, HttpRequestHeaders.HeaderSecWebSocketKey2), _
-	Type<CgiHeaderNode>(@WStr("HTTP_SEC_WEBSOCKET_VERSION"),     26, HttpRequestHeaders.HeaderSecWebSocketVersion), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TE"),                        7,  HttpRequestHeaders.HeaderTe), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TRAILER"),                   12, HttpRequestHeaders.HeaderTrailer), _
-	Type<CgiHeaderNode>(@WStr("HTTP_TRANSFER_ENCODING"),         22, HttpRequestHeaders.HeaderTransferEncoding), _
-	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE"),                   12, HttpRequestHeaders.HeaderUpgrade), _
-	Type<CgiHeaderNode>(@WStr("HTTP_UPGRADE_INSECURE_REQUESTS"), 30, HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
-	Type<CgiHeaderNode>(@WStr("HTTP_USER_AGENT"),                15, HttpRequestHeaders.HeaderUserAgent), _
-	Type<CgiHeaderNode>(@WStr("HTTP_VIA"),                       8,  HttpRequestHeaders.HeaderVia), _
-	Type<CgiHeaderNode>(@WStr("HTTP_WARNING"),                   12, HttpRequestHeaders.HeaderWarning), _
-	Type<CgiHeaderNode>(@WStr("HTTP_WEBSOCKET_PROTOCOL"),        23, HttpRequestHeaders.HeaderWebSocketProtocol) _
+	Type<CgiHeaderNode>(@CgiHeaderAcceptString,                  Len(CgiHeaderAcceptString), HttpRequestHeaders.HeaderAccept), _
+	Type<CgiHeaderNode>(@CgiHeaderAcceptCharsetString,           Len(CgiHeaderAcceptCharsetString), HttpRequestHeaders.HeaderAcceptCharset), _
+	Type<CgiHeaderNode>(@CgiHeaderAcceptEncodingString,          Len(CgiHeaderAcceptEncodingString), HttpRequestHeaders.HeaderAcceptEncoding), _
+	Type<CgiHeaderNode>(@CgiHeaderAcceptLanguageString,          Len(CgiHeaderAcceptLanguageString), HttpRequestHeaders.HeaderAcceptLanguage), _
+	Type<CgiHeaderNode>(@CgiHeaderAuthorizationString,           Len(CgiHeaderAuthorizationString), HttpRequestHeaders.HeaderAuthorization), _
+	Type<CgiHeaderNode>(@CgiHeaderCacheControlString,            Len(CgiHeaderCacheControlString), HttpRequestHeaders.HeaderCacheControl), _
+	Type<CgiHeaderNode>(@CgiHeaderConnectionString,              Len(CgiHeaderConnectionString), HttpRequestHeaders.HeaderConnection), _
+	Type<CgiHeaderNode>(@CgiHeaderContentEncodingString,         Len(CgiHeaderContentEncodingString), HttpRequestHeaders.HeaderContentEncoding), _
+	Type<CgiHeaderNode>(@CgiHeaderContentLanguageString,         Len(CgiHeaderContentLanguageString), HttpRequestHeaders.HeaderContentLanguage), _
+	Type<CgiHeaderNode>(@CgiHeaderContentLengthString,           Len(CgiHeaderContentLengthString), HttpRequestHeaders.HeaderContentLength), _
+	Type<CgiHeaderNode>(@CgiHeaderContentMd5String,              Len(CgiHeaderContentMd5String), HttpRequestHeaders.HeaderContentMd5), _
+	Type<CgiHeaderNode>(@CgiHeaderContentRangeString,            Len(CgiHeaderContentRangeString), HttpRequestHeaders.HeaderContentRange), _
+	Type<CgiHeaderNode>(@CgiHeaderContentTypeString,             Len(CgiHeaderContentTypeString), HttpRequestHeaders.HeaderContentType), _
+	Type<CgiHeaderNode>(@CgiHeaderCookieString,                  Len(CgiHeaderCookieString), HttpRequestHeaders.HeaderCookie), _
+	Type<CgiHeaderNode>(@CgiHeaderDNTString,                     Len(CgiHeaderDNTString), HttpRequestHeaders.HeaderDNT), _
+	Type<CgiHeaderNode>(@CgiHeaderExpectString,                  Len(CgiHeaderExpectString), HttpRequestHeaders.HeaderExpect), _
+	Type<CgiHeaderNode>(@CgiHeaderFromString,                    Len(CgiHeaderFromString), HttpRequestHeaders.HeaderFrom), _
+	Type<CgiHeaderNode>(@CgiHeaderHostString,                    Len(CgiHeaderHostString), HttpRequestHeaders.HeaderHost), _
+	Type<CgiHeaderNode>(@CgiHeaderIfMatchString,                 Len(CgiHeaderIfMatchString), HttpRequestHeaders.HeaderIfMatch), _
+	Type<CgiHeaderNode>(@CgiHeaderIfModifiedSinceString,         Len(CgiHeaderIfModifiedSinceString), HttpRequestHeaders.HeaderIfModifiedSince), _
+	Type<CgiHeaderNode>(@CgiHeaderIfNoneMatchString,             Len(CgiHeaderIfNoneMatchString), HttpRequestHeaders.HeaderIfNoneMatch), _
+	Type<CgiHeaderNode>(@CgiHeaderIfRangeString,                 Len(CgiHeaderIfRangeString), HttpRequestHeaders.HeaderIfRange), _
+	Type<CgiHeaderNode>(@CgiHeaderIfUnmodifiedSinceString,       Len(CgiHeaderIfUnmodifiedSinceString), HttpRequestHeaders.HeaderIfUnModifiedSince), _
+	Type<CgiHeaderNode>(@CgiHeaderKeepAliveString,               Len(CgiHeaderKeepAliveString), HttpRequestHeaders.HeaderKeepAlive), _
+	Type<CgiHeaderNode>(@CgiHeaderMaxForwardsString,             Len(CgiHeaderMaxForwardsString), HttpRequestHeaders.HeaderMaxForwards), _
+	Type<CgiHeaderNode>(@CgiHeaderOriginString,                  Len(CgiHeaderOriginString), HttpRequestHeaders.HeaderOrigin), _
+	Type<CgiHeaderNode>(@CgiHeaderPragmaString,                  Len(CgiHeaderPragmaString), HttpRequestHeaders.HeaderPragma), _
+	Type<CgiHeaderNode>(@CgiHeaderProxyAuthorizationString,      Len(CgiHeaderProxyAuthorizationString), HttpRequestHeaders.HeaderProxyAuthorization), _
+	Type<CgiHeaderNode>(@CgiHeaderRangeString,                   Len(CgiHeaderRangeString), HttpRequestHeaders.HeaderRange), _
+	Type<CgiHeaderNode>(@CgiHeaderRefererString,                 Len(CgiHeaderRefererString), HttpRequestHeaders.HeaderReferer), _
+	Type<CgiHeaderNode>(@CgiHeaderSecWebSocketKeyString,         Len(CgiHeaderSecWebSocketKeyString), HttpRequestHeaders.HeaderSecWebSocketKey), _
+	Type<CgiHeaderNode>(@CgiHeaderSecWebSocketKey1String,        Len(CgiHeaderSecWebSocketKey1String), HttpRequestHeaders.HeaderSecWebSocketKey1), _
+	Type<CgiHeaderNode>(@CgiHeaderSecWebSocketKey2String,        Len(CgiHeaderSecWebSocketKey2String), HttpRequestHeaders.HeaderSecWebSocketKey2), _
+	Type<CgiHeaderNode>(@CgiHeaderSecWebSocketVersionString,     Len(CgiHeaderSecWebSocketVersionString), HttpRequestHeaders.HeaderSecWebSocketVersion), _
+	Type<CgiHeaderNode>(@CgiHeaderTeString,                      Len(CgiHeaderTeString), HttpRequestHeaders.HeaderTe), _
+	Type<CgiHeaderNode>(@CgiHeaderTrailerString,                 Len(CgiHeaderTrailerString), HttpRequestHeaders.HeaderTrailer), _
+	Type<CgiHeaderNode>(@CgiHeaderTransferEncodingString,        Len(CgiHeaderTransferEncodingString), HttpRequestHeaders.HeaderTransferEncoding), _
+	Type<CgiHeaderNode>(@CgiHeaderUpgradeString,                 Len(CgiHeaderUpgradeString), HttpRequestHeaders.HeaderUpgrade), _
+	Type<CgiHeaderNode>(@CgiHeaderUpgradeInsecureRequestsString, Len(CgiHeaderUpgradeInsecureRequestsString), HttpRequestHeaders.HeaderUpgradeInsecureRequests), _
+	Type<CgiHeaderNode>(@CgiHeaderUserAgentString,               Len(CgiHeaderUserAgentString), HttpRequestHeaders.HeaderUserAgent), _
+	Type<CgiHeaderNode>(@CgiHeaderViaString,                     Len(CgiHeaderViaString), HttpRequestHeaders.HeaderVia), _
+	Type<CgiHeaderNode>(@CgiHeaderWarningString,                 Len(CgiHeaderWarningString), HttpRequestHeaders.HeaderWarning), _
+	Type<CgiHeaderNode>(@CgiHeaderWebSocketProtocolString,       Len(CgiHeaderWebSocketProtocolString), HttpRequestHeaders.HeaderWebSocketProtocol) _
 }
 
 Public Function GetStatusDescription( _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal pDescriptionLength As Integer Ptr _
 	)As WString Ptr
-	
+
 	Dim pDescription As WString Ptr = NULL
 	Dim DescriptionLength As Integer = 0
-	
+
 	For i As Integer = 1 To HttpStatusCodesSize
 		If StatusCodeNodesVector(i).StatusCodeIndex = StatusCode Then
 			DescriptionLength = StatusCodeNodesVector(i).DescriptionLength
@@ -139,23 +139,23 @@ Public Function GetStatusDescription( _
 			Exit For
 		End If
 	Next
-	
+
 	If pDescriptionLength Then
 		*pDescriptionLength = DescriptionLength
 	End If
-	
+
 	Return pDescription
-	
+
 End Function
 
 Public Function KnownRequestCgiHeaderToString( _
 		ByVal HeaderIndex As HttpRequestHeaders, _
 		ByVal pHeaderLength As Integer Ptr _
 	)As WString Ptr
-	
+
 	Dim pHeader As WString Ptr = NULL
 	Dim HeaderLength As Integer = 0
-	
+
 	For i As Integer = 1 To HttpRequestHeadersSize
 		If CgiHeaderNodesVector(i).HeaderIndex = HeaderIndex Then
 			HeaderLength = CgiHeaderNodesVector(i).HeaderLength
@@ -163,11 +163,11 @@ Public Function KnownRequestCgiHeaderToString( _
 			Exit For
 		End If
 	Next
-	
+
 	If pHeaderLength Then
 		*pHeaderLength = HeaderLength
 	End If
-	
+
 	Return pHeader
-	
+
 End Function
