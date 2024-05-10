@@ -390,12 +390,6 @@ Private Sub UnInitializeHeapMemoryAllocator( _
 
 End Sub
 
-Private Sub HeapMemoryAllocatorDestroyed( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
@@ -405,8 +399,6 @@ Private Sub DestroyHeapMemoryAllocator( _
 	If this->hHeap Then
 		HeapDestroy(this->hHeap)
 	End If
-
-	HeapMemoryAllocatorDestroyed(this)
 
 End Sub
 
@@ -481,12 +473,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 	this->LocalPoolCreated = False
-
-End Sub
-
-Private Sub HeapMemoryAllocatorCreated( _
-		ByVal this As HeapMemoryAllocator Ptr _
-	)
 
 End Sub
 
@@ -575,8 +561,6 @@ Private Function CreateHeapMemoryAllocator_Internal( _
 				this, _
 				hHeap _
 			)
-
-			HeapMemoryAllocatorCreated(this)
 
 			Return this
 		End If
