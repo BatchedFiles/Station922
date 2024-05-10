@@ -1,35 +1,39 @@
 #include once "Network.bi"
 #include once "win\mswsock.bi"
 
+Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
+Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
+Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
+
 Public Function NetworkStartUp()As HRESULT
-	
+
 	Dim WsaVersion22 As WORD = MAKEWORD(2, 2)
 	Dim wsa As WSADATA = Any
-	
+
 	Dim resWsaStartup As Long = WSAStartup(WsaVersion22, @wsa)
 	If resWsaStartup <> NO_ERROR Then
 		Dim dwError As Long = WSAGetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function NetworkCleanUp()As HRESULT
-	
+
 	Dim resStartup As Long = WSACleanup()
 	If resStartup <> 0 Then
 		Dim dwError As Long = WSAGetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function LoadWsaFunctions()As HRESULT
-	
+
 	Dim ListenSocket As SOCKET = WSASocketW( _
 		AF_INET6, _
 		SOCK_STREAM, _
@@ -42,7 +46,7 @@ Public Function LoadWsaFunctions()As HRESULT
 		Dim dwError As Long = WSAGetLastError()
 		Return HRESULT_FROM_WIN32(dwError)
 	End If
-	
+
 	Scope
 		Dim dwBytes As DWORD = Any
 		Dim resLoadAcceptEx As Long = WSAIoctl( _
@@ -62,7 +66,7 @@ Public Function LoadWsaFunctions()As HRESULT
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
-	
+
 	Scope
 		Dim dwBytes As DWORD = Any
 		Dim resGetAcceptExSockaddrs As Long = WSAIoctl( _
@@ -82,7 +86,7 @@ Public Function LoadWsaFunctions()As HRESULT
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
-	
+
 	Scope
 		Dim dwBytes As DWORD = Any
 		Dim resGetTransmitPackets As Long = WSAIoctl( _
@@ -102,11 +106,11 @@ Public Function LoadWsaFunctions()As HRESULT
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
 	End Scope
-	
+
 	closesocket(ListenSocket)
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function ResolveHostW Alias "ResolveHostW"( _
@@ -114,18 +118,18 @@ Public Function ResolveHostW Alias "ResolveHostW"( _
 		ByVal Port As PCWSTR, _
 		ByVal ppAddressList As ADDRINFOW Ptr Ptr _
 	)As HRESULT
-	
+
 	Dim hints As ADDRINFOW = Any
 	ZeroMemory(@hints, SizeOf(ADDRINFOW))
-	
+
 	With hints
 		.ai_family = AF_UNSPEC ' AF_INET, AF_INET6
 		.ai_socktype = SOCK_STREAM
 		.ai_protocol = IPPROTO_TCP
 	End With
-	
+
 	*ppAddressList = NULL
-	
+
 	Dim resAddrInfo As INT_ = GetAddrInfoW( _
 		Host, _
 		Port, _
@@ -135,9 +139,9 @@ Public Function ResolveHostW Alias "ResolveHostW"( _
 	If resAddrInfo Then
 		Return HRESULT_FROM_WIN32(resAddrInfo)
 	End If
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
@@ -147,7 +151,7 @@ Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 		ByVal Count As Integer, _
 		ByVal pSockets As Integer Ptr _
 	)As HRESULT
-	
+
 	Dim pAddressList As ADDRINFOW Ptr = NULL
 	Dim hr As HRESULT = ResolveHostW( _
 		LocalAddress, _
@@ -158,18 +162,18 @@ Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 		*pSockets = 0
 		Return hr
 	End If
-	
+
 	Dim pAddressNode As ADDRINFOW Ptr = pAddressList
 	Dim BindResult As Long = 0
 	Dim SocketCount As Integer = 0
-	
+
 	Dim dwError As Long = 0
 	Do
 		If SocketCount > Count Then
 			dwError = ERROR_INSUFFICIENT_BUFFER
 			Exit Do
 		End If
-		
+
 		Dim ClientSocket As SOCKET = WSASocketW( _
 			pAddressNode->ai_family, _
 			pAddressNode->ai_socktype, _
@@ -183,7 +187,7 @@ Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			pAddressNode = pAddressNode->ai_next
 			Continue Do
 		End If
-		
+
 		BindResult = bind( _
 			ClientSocket, _
 			Cast(LPSOCKADDR, pAddressNode->ai_addr), _
@@ -195,30 +199,30 @@ Public Function CreateSocketAndBindW Alias "CreateSocketAndBindW"( _
 			pAddressNode = pAddressNode->ai_next
 			Continue Do
 		End If
-		
+
 		pSocketList[SocketCount].ClientSocket = ClientSocket
 		pSocketList[SocketCount].AddressFamily = pAddressNode->ai_family
 		pSocketList[SocketCount].SocketType = pAddressNode->ai_socktype
 		pSocketList[SocketCount].Protocol = pAddressNode->ai_protocol
-		
+
 		SocketCount += 1
 		pAddressNode = pAddressNode->ai_next
-		
+
 	Loop While pAddressNode
-	
+
 	FreeAddrInfoW(pAddressList)
-	
+
 	If BindResult Then
-		
+
 		*pSockets = 0
 		Return HRESULT_FROM_WIN32(dwError)
-		
+
 	End If
-	
+
 	*pSockets = SocketCount
-	
+
 	Return S_OK
-	
+
 End Function
 
 Public Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
@@ -228,7 +232,7 @@ Public Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		ByVal Count As Integer, _
 		ByVal pSockets As Integer Ptr _
 	)As HRESULT
-	
+
 	Dim hr As HRESULT = CreateSocketAndBindW( _
 		LocalAddress, _
 		LocalPort, _
@@ -240,20 +244,20 @@ Public Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 		*pSockets = 0
 		Return hr
 	End If
-	
+
 	For i As Integer = 0 To *pSockets - 1
-		
+
 		Dim resListen As Long = listen(pSocketList[i].ClientSocket, SOMAXCONN)
 		If resListen Then
 			Dim dwError As Long = WSAGetLastError()
 			closesocket(pSocketList[i].ClientSocket)
 			Return HRESULT_FROM_WIN32(dwError)
 		End If
-		
+
 	Next
-	
+
 	Return S_OK
-	
+
 End Function
 
 Dim lpfnAcceptEx As LPFN_ACCEPTEX

@@ -6,10 +6,6 @@
 #include once "win\ws2tcpip.bi"
 #include once "win\mswsock.bi"
 
-Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
-Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
-Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
-
 Extern lpfnAcceptEx Alias "lpfnAcceptEx" As LPFN_ACCEPTEX
 Extern lpfnGetAcceptExSockaddrs Alias "lpfnGetAcceptExSockaddrs" As LPFN_GETACCEPTEXSOCKADDRS
 Extern lpfnTransmitPackets Alias "lpfnTransmitPackets" As LPFN_TRANSMITPACKETS
