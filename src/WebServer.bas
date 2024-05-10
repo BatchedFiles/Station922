@@ -173,6 +173,8 @@ Private Function CreateReadRequestContextFromWriteContext( _
 				@pIHttpAsyncReader _
 			)
 
+			IHttpAsyncReader_Clear(pIHttpAsyncReader)
+
 			Dim pStream As IBaseAsyncStream Ptr = Any
 			IWriteResponseAsyncIoTask_GetBaseStream( _
 				pWriteContext->pTask, _
@@ -338,7 +340,6 @@ Private Function CreateWriteResponseContext( _
 				)
 			#endif
 
-			IHttpAsyncReader_Clear(pIHttpAsyncReader)
 			IWriteResponseAsyncIoTask_SetBaseStream(pTask, pStream)
 			IWriteResponseAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
 			IWriteResponseAsyncIoTask_SetClientRequest(pTask, pRequest)

@@ -210,8 +210,8 @@ Private Function HttpTraceProcessorBeginProcess( _
 
 	Dim hrBeginWrite As HRESULT = IHttpAsyncWriter_BeginWrite( _
 		pContext->pIWriter, _
-		StateObject, _
 		pcb, _
+		StateObject, _
 		ppIAsyncResult _
 	)
 	If FAILED(hrBeginWrite) Then
