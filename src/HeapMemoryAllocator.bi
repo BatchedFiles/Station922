@@ -19,6 +19,6 @@ Declare Sub DeleteMemoryPool( _
 
 Declare Function GetHeapMemoryAllocatorInstance( _
 	ByVal ClientSocket As SOCKET _
-)As IHeapMemoryAllocator Ptr
+)As IMalloc Ptr
 
 #endif

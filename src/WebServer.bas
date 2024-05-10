@@ -200,8 +200,7 @@ Private Function CreateReadRequestContextFromSocket( _
 		ByVal ClientSocket As SOCKET _
 	)As ReadRequestContext Ptr
 
-	var tmpMalloc = GetHeapMemoryAllocatorInstance(ClientSocket)
-	Dim pIMalloc As IMalloc Ptr = CPtr(IMalloc Ptr, tmpMalloc)
+	Dim pIMalloc As IMalloc Ptr = GetHeapMemoryAllocatorInstance(ClientSocket)
 
 	If pIMalloc Then
 		Dim pState As ReadRequestContext Ptr = IMalloc_Alloc( _

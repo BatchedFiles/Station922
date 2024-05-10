@@ -1,5 +1,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "crt.bi"
+#include once "HttpAsyncReader.bi"
 #include once "IObjectPool.bi"
 #include once "ITimeCounter.bi"
 #include once "Logger.bi"
@@ -588,10 +589,10 @@ End Function
 
 Public Function GetHeapMemoryAllocatorInstance( _
 		ByVal ClientSocket As SOCKET _
-	)As IHeapMemoryAllocator Ptr
+	)As IMalloc Ptr
 
 	If MemoryPoolObject.Length < MemoryPoolObject.Capacity Then
-		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+		Dim pMalloc As IMalloc Ptr = NULL
 
 		EnterCriticalSection(@MemoryPoolObject.crSection)
 		For i As Integer = 0 To MemoryPoolObject.Capacity - 1
@@ -606,7 +607,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 
 				HeapMemoryAllocatorQueryInterface( _
 					this, _
-					@IID_IHeapMemoryAllocator, _
+					@IID_IMalloc, _
 					@pMalloc _
 				)
 
