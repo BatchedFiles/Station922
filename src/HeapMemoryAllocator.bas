@@ -528,7 +528,7 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 			*ppv = @this->lpVtblTimeCounter
 		Else
 			If IsEqualIID(@IID_IObjectPool, riid) Then
-				*ppv = @this->lpVtblTimeCounter
+				*ppv = @this->lpVtblObjectPool
 			Else
 				If IsEqualIID(@IID_IMalloc, riid) Then
 					*ppv = @this->lpVtbl
