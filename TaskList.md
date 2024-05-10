@@ -47,9 +47,9 @@
 Такие объекты существуют в единичном экземпляре на подключение:
 
 [x] HeapMemoryAllocator
-[ ] HttpReader
+[x] HttpReader
 [ ] NetworkStream
-[ ] ClientRequest
+[x] ClientRequest
 [ ] ClientUri
 [ ] FileAsyncStream
 [ ] HttpAsyncWriter

@@ -34,6 +34,8 @@ Type HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
+	LocalPools(0) As Any Ptr
+	LocalPoolCreated As Boolean
 End Type
 
 Enum PoolItemStatuses
@@ -42,7 +44,7 @@ Enum PoolItemStatuses
 End Enum
 
 Type MemoryPoolItem
-	pMalloc As HeapMemoryAllocator Ptr
+	pItem As HeapMemoryAllocator Ptr
 	ItemStatus As PoolItemStatuses
 End Type
 
@@ -415,7 +417,7 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 	EnterCriticalSection(@MemoryPoolObject.crSection)
 	For i As Integer = 0 To MemoryPoolObject.Capacity - 1
 
-		var localMalloc = MemoryPoolObject.Items[i].pMalloc
+		var localMalloc = MemoryPoolObject.Items[i].pItem
 
 		If this = localMalloc Then
 
@@ -478,6 +480,7 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
+	this->LocalPoolCreated = False
 
 End Sub
 
@@ -602,7 +605,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 				MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
 				MemoryPoolObject.Length += 1
 
-				var this = MemoryPoolObject.Items[i].pMalloc
+				var this = MemoryPoolObject.Items[i].pItem
 				this->ClientSocket = ClientSocket
 
 				HeapMemoryAllocatorQueryInterface( _
@@ -610,6 +613,11 @@ Public Function GetHeapMemoryAllocatorInstance( _
 					@IID_IMalloc, _
 					@pMalloc _
 				)
+
+				If this->LocalPoolCreated = False Then
+					CreateHttpReaderPool(pMalloc)
+					this->LocalPoolCreated = True
+				End If
 
 				#if __FB_DEBUG__
 					Dim FreeSpace As Integer = MemoryPoolObject.Capacity - MemoryPoolObject.Length
@@ -687,6 +695,8 @@ Private Function HeapMemoryAllocatorGetPool( _
 		ByVal ppPool As Any Ptr Ptr _
 	)As HRESULT
 
+	*ppPool = this->LocalPools(PoolId)
+
 	Return S_OK
 
 End Function
@@ -696,6 +706,8 @@ Private Function HeapMemoryAllocatorSetPool( _
 		ByVal PoolId As Integer, _
 		ByVal pPool As Any Ptr _
 	)As HRESULT
+
+	this->LocalPools(PoolId) = pPool
 
 	Return S_OK
 
@@ -772,7 +784,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
-				var this = MemoryPoolObject.Items[i].pMalloc
+				var this = MemoryPoolObject.Items[i].pItem
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
 					KeepAliveInterval _
@@ -919,7 +931,7 @@ Public Function CreateMemoryPool( _
 				Return E_OUTOFMEMORY
 			End If
 
-			MemoryPoolObject.Items[i].pMalloc = pMalloc
+			MemoryPoolObject.Items[i].pItem = pMalloc
 			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 		Next
 	End Scope
