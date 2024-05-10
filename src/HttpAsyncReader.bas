@@ -56,8 +56,8 @@ End Type
 
 Type ObjectPool
 	Items As ObjectPoolItem Ptr
-	Capacity As UInteger
-	Length As UInteger
+	Capacity As Integer
+	Length As Integer
 End Type
 
 Private Sub InitializeClientRequestBuffer( _

@@ -33,47 +33,47 @@ End Type
 Type IWebServerConfiguration As IWebServerConfiguration_
 
 Type IWebServerConfigurationVirtualTable
-	
+
 	QueryInterface As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	AddRef As Function( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
-	
+
 	Release As Function( _
 		ByVal this As IWebServerConfiguration Ptr _
 	)As ULONG
-		
+
 	GetWorkerThreadsCount As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As UInteger Ptr _
+		ByVal pWorkerThreadsCount As Integer Ptr _
 	)As HRESULT
-	
+
 	GetMemoryPoolCapacity As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
+		ByVal pCapacity As Integer Ptr _
 	)As HRESULT
-	
+
 	GetKeepAliveInterval As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pKeepAliveInterval As ULongInt Ptr _
+		ByVal pKeepAliveInterval As Integer Ptr _
 	)As HRESULT
-	
+
 	GetWebSites As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pCount As Integer Ptr, _
 		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
-	
+
 	GetDefaultWebSite As Function( _
 		ByVal this As IWebServerConfiguration Ptr, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
-	
+
 End Type
 
 Type IWebServerConfiguration_

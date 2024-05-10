@@ -242,7 +242,7 @@ End Function
 
 Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As UInteger Ptr _
+		ByVal pWorkerThreadsCount As Integer Ptr _
 	)As HRESULT
 
 	Const MaxWorkerThreadsKeyString = WStr("WorkerThreads")
@@ -259,7 +259,7 @@ Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		this->pWebServerIniFileName _
 	)
 
-	*pWorkerThreadsCount = CUInt(WorkerThreadsCount)
+	*pWorkerThreadsCount = CInt(WorkerThreadsCount)
 
 	Return S_OK
 
@@ -267,7 +267,7 @@ End Function
 
 Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pCapacity As UInteger Ptr _
+		ByVal pCapacity As Integer Ptr _
 	)As HRESULT
 
 	Const MemoryPoolCapacityKeyString = WStr("MemoryPoolCapacity")
@@ -292,7 +292,7 @@ End Function
 
 Private Function WebServerIniConfigurationGetKeepAliveInterval( _
 		ByVal this As WebServerIniConfiguration Ptr, _
-		ByVal pKeepAliveInterval As ULongInt Ptr _
+		ByVal pKeepAliveInterval As Integer Ptr _
 	)As HRESULT
 
 	Const KeepAliveIntervalKeyString = WStr("KeepAliveInterval")
@@ -305,7 +305,7 @@ Private Function WebServerIniConfigurationGetKeepAliveInterval( _
 		this->pWebServerIniFileName _
 	)
 
-	*pKeepAliveInterval = CULngInt(KeepAliveInterval)
+	*pKeepAliveInterval = CInt(KeepAliveInterval)
 
 	Return S_OK
 
@@ -874,7 +874,7 @@ Private Function GetWebSiteIsMoved( _
 
 	Const IsMovedKeyString = WStr("IsMoved")
 
-	Dim IsMoved As INT_ = GetPrivateProfileIntW( _
+	Dim IsMoved As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@IsMovedKeyString, _
 		0, _
@@ -896,7 +896,7 @@ Private Function GetWebSiteUseSsl( _
 
 	Const UseSslKeyString = WStr("UseSsl")
 
-	Dim UseSsl As INT_ = GetPrivateProfileIntW( _
+	Dim UseSsl As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@UseSslKeyString, _
 		0, _
@@ -918,7 +918,7 @@ Private Function GetWebSiteUtfBomFileOffset( _
 
 	Const UtfBomFileOffsetKeyString = WStr("UtfBomFileOffset")
 
-	Dim UtfBomFileOffset As INT_ = GetPrivateProfileIntW( _
+	Dim UtfBomFileOffset As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@UtfBomFileOffsetKeyString, _
 		0, _
@@ -936,7 +936,7 @@ Private Function GetWebSiteReservedFileBytes( _
 
 	Const ReservedFileBytesKeyString = WStr("ReservedFileBytes")
 
-	Dim ReservedFileBytes As INT_ = GetPrivateProfileIntW( _
+	Dim ReservedFileBytes As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@ReservedFileBytesKeyString, _
 		0, _
@@ -958,7 +958,7 @@ Private Function GetWebSiteEnableDirectoryListing( _
 
 	Const EnableDirectoryListingKeyString = WStr("EnableDirectoryListing")
 
-	Dim bEnable As INT_ = GetPrivateProfileIntW( _
+	Dim bEnable As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@EnableDirectoryListingKeyString, _
 		0, _
@@ -980,7 +980,7 @@ Private Function GetWebSiteEnableGetAllFiles( _
 
 	Const EnableGetAllFilesKeyString = WStr("EnableGetAllFiles")
 
-	Dim bEnable As INT_ = GetPrivateProfileIntW( _
+	Dim bEnable As UINT = GetPrivateProfileIntW( _
 		lpwszHost, _
 		@EnableGetAllFilesKeyString, _
 		0, _
@@ -1376,21 +1376,21 @@ End Function
 
 Private Function IWebServerConfigurationGetWorkerThreadsCount( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pWorkerThreadsCount As UInteger Ptr _
+		ByVal pWorkerThreadsCount As Integer Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetWorkerThreadsCount(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
 End Function
 
 Private Function IWebServerConfigurationGetMemoryPoolCapacity( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
+		ByVal pCapacity As Integer Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetMemoryPoolCapacity(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
+	Return WebServerIniConfigurationGetMemoryPoolCapacity(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pCapacity)
 End Function
 
 Private Function IWebServerConfigurationGetKeepAliveInterval( _
 		ByVal this As IWebServerConfiguration Ptr, _
-		ByVal pKeepAliveInterval As ULongInt Ptr _
+		ByVal pKeepAliveInterval As Integer Ptr _
 	)As HRESULT
 	Return WebServerIniConfigurationGetKeepAliveInterval(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
 End Function
