@@ -4,6 +4,7 @@
 #include once "IObjectPool.bi"
 #include once "ITimeCounter.bi"
 #include once "Logger.bi"
+#include once "NetworkAsyncStream.bi"
 
 Extern GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTable
 Extern GlobalTimeCounterVirtualTable As Const ITimeCounterVirtualTable
@@ -34,7 +35,7 @@ Type HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	LocalPools(0) As Any Ptr
+	LocalPools(1) As Any Ptr
 	LocalPoolCreated As Boolean
 End Type
 
@@ -600,6 +601,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 
 				If this->LocalPoolCreated = False Then
 					CreateHttpReaderPool(pMalloc)
+					CreateNetworkStreamPool(pMalloc)
 					this->LocalPoolCreated = True
 				End If
 

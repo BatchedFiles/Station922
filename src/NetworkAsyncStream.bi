@@ -13,4 +13,12 @@ Declare Function CreateNetworkStream( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
+Declare Function CreateNetworkStreamPool( _
+	pMalloc As IMalloc Ptr _
+)As HRESULT
+
+Declare Sub DestroyNetworkStreamPool( _
+	pMalloc As IMalloc Ptr _
+)
+
 #endif
