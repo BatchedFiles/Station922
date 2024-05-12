@@ -1,10 +1,14 @@
 #include once "NetworkAsyncStream.bi"
 #include once "win\mswsock.bi"
 #include once "AsyncResult.bi"
+#include once "IObjectPool.bi"
 #include once "ITimeCounter.bi"
 #include once "Network.bi"
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkAsyncStreamVirtualTable
+
+Const OBJECT_POOL_CAPACITY = 1
+Const NETWORKSTREAM_POOL_ID = 1
 
 Type NetworkStream
 	#if __FB_DEBUG__
@@ -16,6 +20,25 @@ Type NetworkStream
 	ClientSocket As SOCKET
 	pRemoteAddress As SOCKADDR Ptr
 	RemoteAddressLength As Integer
+End Type
+
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
+Type ObjectPoolItem
+	pItem As NetworkStream Ptr
+	ItemStatus As PoolItemStatuses
+End Type
+
+Type ObjectPool
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
+	Capacity As Integer
+	Length As Integer
+	Items(0 To (OBJECT_POOL_CAPACITY - 1)) As ObjectPoolItem
 End Type
 
 Private Sub SetStartTime( _
@@ -161,6 +184,24 @@ Private Function NetworkStreamQueryInterface( _
 	NetworkStreamAddRef(this)
 
 	Return S_OK
+
+End Function
+
+Private Function CreateNetworkStream_Internal( _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
+	)As NetworkStream Ptr
+
+	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(NetworkStream) _
+	)
+
+	If this Then
+		InitializeNetworkStream(this, pIMemoryAllocator)
+		Return this
+	End If
+
+	Return NULL
 
 End Function
 
@@ -543,6 +584,68 @@ Private Function NetworkStreamSetRemoteAddress( _
 	Return S_OK
 
 End Function
+
+
+Public Function CreateNetworkStreamPool( _
+		pMalloc As IMalloc Ptr _
+	)As HRESULT
+
+	Const RTTI_ID_OBJECTPOOL = !"\001Pool_NetStream\001"
+
+	Dim pool As ObjectPool Ptr = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(ObjectPool) _
+	)
+	If pool = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+
+	#if __FB_DEBUG__
+		CopyMemory( _
+			@pool->RttiClassName(0), _
+			@Str(RTTI_ID_OBJECTPOOL), _
+			UBound(pool->RttiClassName) - LBound(pool->RttiClassName) + 1 _
+		)
+	#endif
+
+	pool->Capacity = OBJECT_POOL_CAPACITY
+	pool->Length = 0
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		pool->Items(i).pItem = CreateNetworkStream_Internal(pMalloc)
+
+		If pool->Items(i).pItem = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+
+		pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+	Next
+
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			pMalloc, _
+			@IID_IObjectPool, _
+			@pPool _
+		)
+		If FAILED(hrQueryInterface) Then
+			Return hrQueryInterface
+		End If
+
+		IObjectPool_SetPool(pPool, NETWORKSTREAM_POOL_ID, pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	Return S_OK
+
+End Function
+
+Public Sub DeleteNetworkStreamPool( _
+		pMalloc As IMalloc Ptr _
+	)
+
+End Sub
 
 
 Private Function INetworkAsyncStreamQueryInterface( _

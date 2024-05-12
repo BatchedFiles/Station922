@@ -600,6 +600,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 				)
 
 				If this->LocalPoolCreated = False Then
+					' TODO Check create pool for errors
 					CreateHttpReaderPool(pMalloc)
 					CreateNetworkStreamPool(pMalloc)
 					this->LocalPoolCreated = True
