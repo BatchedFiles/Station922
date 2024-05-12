@@ -678,6 +678,8 @@ Public Function CreateHttpReaderPool( _
 		pMalloc As IMalloc Ptr _
 	)As HRESULT
 
+	Const RTTI_ID_OBJECTPOOL = !"\001Pool____Reader\001"
+
 	Dim pool As ObjectPool Ptr = IMalloc_Alloc( _
 		pMalloc, _
 		SizeOf(ObjectPool) _
@@ -685,6 +687,14 @@ Public Function CreateHttpReaderPool( _
 	If pool = NULL Then
 		Return E_OUTOFMEMORY
 	End If
+
+	#if __FB_DEBUG__
+		CopyMemory( _
+			@pool->RttiClassName(0), _
+			@Str(RTTI_ID_OBJECTPOOL), _
+			UBound(pool->RttiClassName) - LBound(pool->RttiClassName) + 1 _
+		)
+	#endif
 
 	pool->Capacity = OBJECT_POOL_CAPACITY
 	pool->Length = 0
