@@ -59,9 +59,9 @@ Type ObjectPool
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
 	#endif
-	Items As ObjectPoolItem Ptr
 	Capacity As Integer
 	Length As Integer
+	Items(0 To (OBJECT_POOL_CAPACITY - 1)) As ObjectPoolItem
 End Type
 
 Private Sub InitializeClientRequestBuffer( _
@@ -297,14 +297,14 @@ Private Sub HttpReaderReturnToPool( _
 	End Scope
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
-		If pool->Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
-			Dim this As HttpReader Ptr = pool->Items[i].pItem
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
+			Dim this As HttpReader Ptr = pool->Items(i).pItem
 
 			UnInitializeHttpReader(this)
 			HttpReaderResetState(this)
 
 			pool->Length -= 1
-			pool->Items[i].ItemStatus = PoolItemStatuses.ItemFree
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
 
 			Exit Sub
 		End If
@@ -414,11 +414,11 @@ Public Function CreateHttpReader( _
 	End Scope
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
-		If pool->Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
-			pool->Items[i].ItemStatus = PoolItemStatuses.ItemUsed
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree Then
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed
 			pool->Length += 1
 
-			Dim this As HttpReader Ptr = pool->Items[i].pItem
+			Dim this As HttpReader Ptr = pool->Items(i).pItem
 
 			Dim hrQueryInterface As HRESULT = HttpReaderQueryInterface( _
 				this, _
@@ -427,7 +427,7 @@ Public Function CreateHttpReader( _
 			)
 			If FAILED(hrQueryInterface) Then
 				pool->Length -= 1
-				pool->Items[i].ItemStatus = PoolItemStatuses.ItemFree
+				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
 				*ppv = NULL
 				Return hrQueryInterface
 			End If
@@ -686,25 +686,17 @@ Public Function CreateHttpReaderPool( _
 		Return E_OUTOFMEMORY
 	End If
 
-	pool->Items = IMalloc_Alloc( _
-		pMalloc, _
-		SizeOf(ObjectPoolItem) * OBJECT_POOL_CAPACITY _
-	)
-	If pool->Items = NULL Then
-		Return E_OUTOFMEMORY
-	End If
-
 	pool->Capacity = OBJECT_POOL_CAPACITY
 	pool->Length = 0
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
-		pool->Items[i].pItem = CreateHttpReader_Internal(pMalloc)
+		pool->Items(i).pItem = CreateHttpReader_Internal(pMalloc)
 
-		If pool->Items[i].pItem = NULL Then
+		If pool->Items(i).pItem = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 
-		pool->Items[i].ItemStatus = PoolItemStatuses.ItemFree
+		pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
 	Next
 
 	Scope
