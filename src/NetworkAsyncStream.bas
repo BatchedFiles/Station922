@@ -78,8 +78,7 @@ Private Sub SetEndTime( _
 End Sub
 
 Private Sub InitializeNetworkStream( _
-		ByVal this As NetworkStream Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal this As NetworkStream Ptr _
 	)
 
 	#if __FB_DEBUG__
@@ -91,28 +90,12 @@ Private Sub InitializeNetworkStream( _
 	#endif
 	this->lpVtbl = @GlobalNetworkStreamVirtualTable
 	this->ReferenceCounter = 0
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
 	this->RemoteAddressLength = 0
 	this->ClientSocket = INVALID_SOCKET
 
 End Sub
 
 Private Sub UnInitializeNetworkStream( _
-		ByVal this As NetworkStream Ptr _
-	)
-
-	this->ClientSocket = INVALID_SOCKET
-
-End Sub
-
-Private Sub NetworkStreamCreated( _
-		ByVal this As NetworkStream Ptr _
-	)
-
-End Sub
-
-Private Sub NetworkStreamDestroyed( _
 		ByVal this As NetworkStream Ptr _
 	)
 
@@ -128,9 +111,53 @@ Private Sub DestroyNetworkStream( _
 
 	IMalloc_Free(pIMemoryAllocator, this)
 
-	NetworkStreamDestroyed(this)
-
 	IMalloc_Release(pIMemoryAllocator)
+
+End Sub
+
+Private Sub NetworkStreamResetState( _
+		ByVal this As NetworkStream Ptr _
+	)
+
+	this->ClientSocket = INVALID_SOCKET
+	IMalloc_Release(this->pIMemoryAllocator)
+
+End Sub
+
+Private Sub NetworkStreamReturnToPool( _
+		ByVal this As NetworkStream Ptr _
+	)
+
+	Dim pool As ObjectPool Ptr = Any
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			this->pIMemoryAllocator, _
+			@IID_IObjectPool, _
+			@pPool _
+		)
+		If FAILED(hrQueryInterface) Then
+			Exit Sub
+		End If
+
+		IObjectPool_GetPool(pPool, NETWORKSTREAM_POOL_ID, @pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
+			Dim this As NetworkStream Ptr = pool->Items(i).pItem
+
+			UnInitializeNetworkStream(this)
+			NetworkStreamResetState(this)
+
+			pool->Length -= 1
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+
+			Exit Sub
+		End If
+	Next
 
 End Sub
 
@@ -154,7 +181,9 @@ Private Function NetworkStreamRelease( _
 		Return 1
 	End If
 
-	DestroyNetworkStream(this)
+	' Do not delete object
+	' Only mark that object is free and return to pool
+	NetworkStreamReturnToPool(this)
 
 	Return 0
 
@@ -197,7 +226,7 @@ Private Function CreateNetworkStream_Internal( _
 	)
 
 	If this Then
-		InitializeNetworkStream(this, pIMemoryAllocator)
+		InitializeNetworkStream(this)
 		Return this
 	End If
 
@@ -211,26 +240,48 @@ Public Function CreateNetworkStream( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		SizeOf(NetworkStream) _
-	)
-
-	If this Then
-		InitializeNetworkStream(this, pIMemoryAllocator)
-		NetworkStreamCreated(this)
-
-		Dim hrQueryInterface As HRESULT = NetworkStreamQueryInterface( _
-			this, _
-			riid, _
-			ppv _
+	Dim pool As ObjectPool Ptr = Any
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			pIMemoryAllocator, _
+			@IID_IObjectPool, _
+			@pPool _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyNetworkStream(this)
+			Return hrQueryInterface
 		End If
 
-		Return hrQueryInterface
-	End If
+		IObjectPool_GetPool(pPool, NETWORKSTREAM_POOL_ID, @pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree Then
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed
+			pool->Length += 1
+
+			Dim this As NetworkStream Ptr = pool->Items(i).pItem
+
+			Dim hrQueryInterface As HRESULT = NetworkStreamQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				pool->Length -= 1
+				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+				*ppv = NULL
+				Return hrQueryInterface
+			End If
+
+			IMalloc_AddRef(pIMemoryAllocator)
+			this->pIMemoryAllocator = pIMemoryAllocator
+
+			Return S_OK
+		End If
+	Next
 
 	*ppv = NULL
 	Return E_OUTOFMEMORY

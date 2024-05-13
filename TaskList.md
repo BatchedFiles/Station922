@@ -48,8 +48,8 @@
 
 [x] HeapMemoryAllocator
 [x] HttpReader
-[ ] NetworkStream
-[x] ClientRequest
+[x] NetworkStream
+[ ] ClientRequest
 [ ] ClientUri
 [ ] FileAsyncStream
 [ ] HttpAsyncWriter
