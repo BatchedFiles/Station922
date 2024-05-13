@@ -247,6 +247,8 @@ Private Sub UnInitializeHttpReader( _
 
 	If this->pIStream Then
 		IBaseAsyncStream_Release(this->pIStream)
+		' Pointer must be zeroed to avoid double free memory
+		this->pIStream = NULL
 	End If
 
 End Sub
@@ -271,6 +273,9 @@ Private Sub HttpReaderResetState( _
 	)
 
 	IMalloc_Release(this->pIMemoryAllocator)
+	' Pointer must be zeroed to avoid double free memory
+	this->pIStream = NULL
+
 	InitializeClientRequestBuffer(this->pClientBuffer)
 
 End Sub
