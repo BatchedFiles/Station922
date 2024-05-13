@@ -3,6 +3,7 @@
 #include once "CharacterConstants.bi"
 #include once "ClientUri.bi"
 #include once "HeapBSTR.bi"
+#include once "IObjectPool.bi"
 
 Extern GlobalClientRequestVirtualTable As Const IClientRequestVirtualTable
 
@@ -12,6 +13,9 @@ Const BytesString = WStr("bytes")
 Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
 Const CompareResultEqual As Long = 0
+
+Const OBJECT_POOL_CAPACITY = 1
+Const CLIENTREQUEST_POOL_ID = 2
 
 Type RequestHeaderNode
 	pHeader As WString Ptr
@@ -35,6 +39,25 @@ Type ClientRequest
 	RequestZipModes(0 To ZipModesSize - 1) As Boolean
 	KeepAlive As Boolean
 	Expect100Continue As Boolean
+End Type
+
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
+Type ObjectPoolItem
+	pItem As ClientRequest Ptr
+	ItemStatus As PoolItemStatuses
+End Type
+
+Type ObjectPool
+	#if __FB_DEBUG__
+		RttiClassName(15) As UByte
+	#endif
+	Capacity As Integer
+	Length As Integer
+	Items(0 To (OBJECT_POOL_CAPACITY - 1)) As ObjectPoolItem
 End Type
 
 Dim Shared RequestHeaderNodesVector(1 To HttpRequestHeadersSize) As RequestHeaderNode = { _
@@ -803,6 +826,24 @@ Private Function ClientRequestQueryInterface( _
 
 End Function
 
+Private Function CreateClientRequest_Internal( _
+		ByVal pIMemoryAllocator As IMalloc Ptr _
+	)As ClientRequest Ptr
+
+	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
+		pIMemoryAllocator, _
+		SizeOf(ClientRequest) _
+	)
+
+	If this Then
+		InitializeClientRequest(this, pIMemoryAllocator)
+		Return this
+	End If
+
+	Return NULL
+
+End Function
+
 Public Function CreateClientRequest( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal riid As REFIID, _
@@ -978,6 +1019,68 @@ Private Function ClientRequestGetExpect100Continue( _
 	Return S_OK
 
 End Function
+
+
+Public Function CreateClientRequestPool( _
+		pMalloc As IMalloc Ptr _
+	)As HRESULT
+
+	Const RTTI_ID_OBJECTPOOL = !"\001Pool____Reader\001"
+
+	Dim pool As ObjectPool Ptr = IMalloc_Alloc( _
+		pMalloc, _
+		SizeOf(ObjectPool) _
+	)
+	If pool = NULL Then
+		Return E_OUTOFMEMORY
+	End If
+
+	#if __FB_DEBUG__
+		CopyMemory( _
+			@pool->RttiClassName(0), _
+			@Str(RTTI_ID_OBJECTPOOL), _
+			UBound(pool->RttiClassName) - LBound(pool->RttiClassName) + 1 _
+		)
+	#endif
+
+	pool->Capacity = OBJECT_POOL_CAPACITY
+	pool->Length = 0
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		pool->Items(i).pItem = CreateClientRequest_Internal(pMalloc)
+
+		If pool->Items(i).pItem = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+
+		pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+	Next
+
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			pMalloc, _
+			@IID_IObjectPool, _
+			@pPool _
+		)
+		If FAILED(hrQueryInterface) Then
+			Return hrQueryInterface
+		End If
+
+		IObjectPool_SetPool(pPool, CLIENTREQUEST_POOL_ID, pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	Return S_OK
+
+End Function
+
+Public Sub DeleteClientRequestPool( _
+		pMalloc As IMalloc Ptr _
+	)
+
+End Sub
 
 
 Private Function IClientRequestQueryInterface( _

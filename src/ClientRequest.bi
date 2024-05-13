@@ -13,4 +13,12 @@ Declare Function CreateClientRequest( _
 	ByVal ppv As Any Ptr Ptr _
 )As HRESULT
 
+Declare Function CreateClientRequestPool( _
+	pMalloc As IMalloc Ptr _
+)As HRESULT
+
+Declare Sub DeleteClientRequestPool( _
+	pMalloc As IMalloc Ptr _
+)
+
 #endif

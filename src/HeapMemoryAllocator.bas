@@ -1,5 +1,6 @@
 #include once "HeapMemoryAllocator.bi"
 #include once "crt.bi"
+#include once "ClientRequest.bi"
 #include once "HttpAsyncReader.bi"
 #include once "IObjectPool.bi"
 #include once "ITimeCounter.bi"
@@ -35,7 +36,7 @@ Type HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	LocalPools(1) As Any Ptr
+	LocalPools(2) As Any Ptr
 	LocalPoolCreated As Boolean
 End Type
 
@@ -603,6 +604,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 					' TODO Check create pool for errors
 					CreateHttpReaderPool(pMalloc)
 					CreateNetworkStreamPool(pMalloc)
+					CreateClientRequestPool(pMalloc)
 					this->LocalPoolCreated = True
 				End If
 
