@@ -702,8 +702,7 @@ Private Function ClientRequestParseRequestHeaders( _
 End Function
 
 Private Sub InitializeClientRequest( _
-		ByVal this As ClientRequest Ptr, _
-		ByVal pIMemoryAllocator As IMalloc Ptr _
+		ByVal this As ClientRequest Ptr _
 	)
 
 	#if __FB_DEBUG__
@@ -715,8 +714,6 @@ Private Sub InitializeClientRequest( _
 	#endif
 	this->lpVtbl = @GlobalClientRequestVirtualTable
 	this->ReferenceCounter = 0
-	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
 	this->pClientURI = NULL
 
 	this->pHttpMethod = NULL
@@ -749,13 +746,16 @@ Private Sub UnInitializeClientRequest( _
 
 End Sub
 
-Private Sub ClientRequestCreated( _
+Private Sub ClientRequestResetState( _
 		ByVal this As ClientRequest Ptr _
 	)
 
+	IMalloc_Release(this->pIMemoryAllocator)
+
+
 End Sub
 
-Private Sub ClientRequestDestroyed( _
+Private Sub ClientRequestCreated( _
 		ByVal this As ClientRequest Ptr _
 	)
 
@@ -771,9 +771,44 @@ Private Sub DestroyClientRequest( _
 
 	IMalloc_Free(pIMemoryAllocator, this)
 
-	ClientRequestDestroyed(this)
-
 	IMalloc_Release(pIMemoryAllocator)
+
+End Sub
+
+Private Sub ClientRequestReturnToPool( _
+		ByVal this As ClientRequest Ptr _
+	)
+
+	Dim pool As ObjectPool Ptr = Any
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			this->pIMemoryAllocator, _
+			@IID_IObjectPool, _
+			@pPool _
+		)
+		If FAILED(hrQueryInterface) Then
+			Exit Sub
+		End If
+
+		IObjectPool_GetPool(pPool, CLIENTREQUEST_POOL_ID, @pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
+			Dim this As ClientRequest Ptr = pool->Items(i).pItem
+
+			UnInitializeClientRequest(this)
+			ClientRequestResetState(this)
+
+			pool->Length -= 1
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+
+			Exit Sub
+		End If
+	Next
 
 End Sub
 
@@ -797,7 +832,9 @@ Private Function ClientRequestRelease( _
 		Return 1
 	End If
 
-	DestroyClientRequest(this)
+	' Do not delete object
+	' Only mark that object is free and return to pool
+	ClientRequestReturnToPool(this)
 
 	Return 0
 
@@ -836,7 +873,7 @@ Private Function CreateClientRequest_Internal( _
 	)
 
 	If this Then
-		InitializeClientRequest(this, pIMemoryAllocator)
+		InitializeClientRequest(this)
 		Return this
 	End If
 
@@ -850,26 +887,48 @@ Public Function CreateClientRequest( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As ClientRequest Ptr = IMalloc_Alloc( _
-		pIMemoryAllocator, _
-		SizeOf(ClientRequest) _
-	)
-
-	If this Then
-		InitializeClientRequest(this, pIMemoryAllocator)
-		ClientRequestCreated(this)
-
-		Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
-			this, _
-			riid, _
-			ppv _
+	Dim pool As ObjectPool Ptr = Any
+	Scope
+		Dim pPool As IObjectPool Ptr = Any
+		Dim hrQueryInterface As HRESULT = IMalloc_QueryInterface( _
+			pIMemoryAllocator, _
+			@IID_IObjectPool, _
+			@pPool _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyClientRequest(this)
+			Return hrQueryInterface
 		End If
 
-		Return hrQueryInterface
-	End If
+		IObjectPool_GetPool(pPool, CLIENTREQUEST_POOL_ID, @pool)
+
+		IObjectPool_Release(pPool)
+	End Scope
+
+	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
+		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree Then
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed
+			pool->Length += 1
+
+			Dim this As ClientRequest Ptr = pool->Items(i).pItem
+
+			Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
+				this, _
+				riid, _
+				ppv _
+			)
+			If FAILED(hrQueryInterface) Then
+				pool->Length -= 1
+				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+				*ppv = NULL
+				Return hrQueryInterface
+			End If
+
+			IMalloc_AddRef(pIMemoryAllocator)
+			this->pIMemoryAllocator = pIMemoryAllocator
+
+			Return S_OK
+		End If
+	Next
 
 	*ppv = NULL
 	Return E_OUTOFMEMORY

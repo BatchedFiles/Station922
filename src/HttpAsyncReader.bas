@@ -273,10 +273,18 @@ Private Sub HttpReaderResetState( _
 	)
 
 	IMalloc_Release(this->pIMemoryAllocator)
+	this->pIMemoryAllocator = NULL
+
 	' Pointer must be zeroed to avoid double free memory
 	this->pIStream = NULL
 
-	InitializeClientRequestBuffer(this->pClientBuffer)
+	' this->lpVtbl = @GlobalHttpReaderVirtualTable
+	' this->ReferenceCounter = 0
+	this->pIStream = NULL
+	InitializeClientRequestBuffer(pClientBuffer)
+	' this->pClientBuffer = pClientBuffer
+	this->SkippedBytes = 0
+	this->IsAllBytesReaded = False
 
 End Sub
 
