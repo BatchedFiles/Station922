@@ -281,7 +281,7 @@ Private Sub HttpReaderResetState( _
 	' this->lpVtbl = @GlobalHttpReaderVirtualTable
 	' this->ReferenceCounter = 0
 	this->pIStream = NULL
-	InitializeClientRequestBuffer(pClientBuffer)
+	InitializeClientRequestBuffer(this->pClientBuffer)
 	' this->pClientBuffer = pClientBuffer
 	this->SkippedBytes = 0
 	this->IsAllBytesReaded = False
