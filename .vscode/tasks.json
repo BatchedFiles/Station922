@@ -13,7 +13,7 @@
 				/* "/fbc-path:C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0", */
 				/* "/fbc:fbc64.exe", */
 				"/out:Station922",
-				/* "/module:Station922", */
+				"/module:Station922",
 				/* "/exetype:exe", */
 				/* "/subsystem:console", */
 				/* "/emitter:gcc", */
@@ -21,7 +21,7 @@
 				"/unicode:true",
 				"/wrt:true",
 				"/addressaware:true",
-				/* "/multithreading:true", */
+				"/multithreading:true",
 				/* "/usefilesuffix:true", */
 				/* "/pedantic:true", */
 				"/winver:1281",
