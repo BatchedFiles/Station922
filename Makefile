@@ -152,7 +152,7 @@ LDLIBS+=-lole32 -loleaut32 -lshell32 -lshlwapi
 LDLIBS+=-lwsock32 -lws2_32 -luser32
 LDLIBS+=-lmsvcrt
 ifeq ($(USE_RUNTIME),TRUE)
-LDLIBS+=-lfb
+LDLIBS+=-lfbmt
 LDLIBS+=-luuid
 endif
 LDLIBS_DEBUG+=-lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh
@@ -185,8 +185,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)AsyncResult$(FILE_SUFFIX).c: src$(PATH_SEP)AsyncRes
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).c: src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)CharacterConstants.bi src$(PATH_SEP)ClientUri.bi src$(PATH_SEP)HeapBSTR.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).c: src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)CharacterConstants.bi src$(PATH_SEP)ClientUri.bi src$(PATH_SEP)HeapBSTR.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).c: src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)CharacterConstants.bi src$(PATH_SEP)ClientUri.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IObjectPool.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)ClientRequest$(FILE_SUFFIX).c: src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)CharacterConstants.bi src$(PATH_SEP)ClientUri.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IObjectPool.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)ClientUri$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)ClientUri$(FILE_SUFFIX).o
@@ -209,8 +209,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)FileAsyncStream$(FILE_SUFFIX).c: src$(PATH_SEP)File
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).c:
-$(OBJ_RELEASE_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).c:
+$(OBJ_DEBUG_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).c: 
+$(OBJ_RELEASE_DIR)$(PATH_SEP)Guids$(FILE_SUFFIX).c: 
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).o
@@ -221,8 +221,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)HeapBSTR$(FILE_SUFFIX).c: src$(PATH_SEP)HeapBSTR.bi
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IObjectPool.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HeapMemoryAllocator$(FILE_SUFFIX).c: src$(PATH_SEP)HeapMemoryAllocator.bi src$(PATH_SEP)IHeapMemoryAllocator.bi src$(PATH_SEP)ClientRequest.bi src$(PATH_SEP)IClientRequest.bi src$(PATH_SEP)IClientUri.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IObjectPool.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Logger.bi src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).o
@@ -233,8 +233,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)Http$(FILE_SUFFIX).c: src$(PATH_SEP)Http.bi
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IObjectPool.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpAsyncReader$(FILE_SUFFIX).c: src$(PATH_SEP)HttpAsyncReader.bi src$(PATH_SEP)IHttpAsyncReader.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IString.bi src$(PATH_SEP)Http.bi src$(PATH_SEP)HeapBSTR.bi src$(PATH_SEP)IObjectPool.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)HttpAsyncWriter$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)HttpAsyncWriter$(FILE_SUFFIX).o
@@ -311,8 +311,8 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)Network$(FILE_SUFFIX).c: src$(PATH_SEP)Network.bi
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).o
 
-$(OBJ_DEBUG_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).c: src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Network.bi
-$(OBJ_RELEASE_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).c: src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Network.bi
+$(OBJ_DEBUG_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).c: src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)IObjectPool.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Network.bi
+$(OBJ_RELEASE_DIR)$(PATH_SEP)NetworkAsyncStream$(FILE_SUFFIX).c: src$(PATH_SEP)NetworkAsyncStream.bi src$(PATH_SEP)INetworkAsyncStream.bi src$(PATH_SEP)IBaseAsyncStream.bi src$(PATH_SEP)IAsyncResult.bi src$(PATH_SEP)AsyncResult.bi src$(PATH_SEP)IObjectPool.bi src$(PATH_SEP)ITimeCounter.bi src$(PATH_SEP)Network.bi
 
 OBJECTFILES_DEBUG+=$(OBJ_DEBUG_DIR)$(PATH_SEP)ReadRequestAsyncTask$(FILE_SUFFIX).o
 OBJECTFILES_RELEASE+=$(OBJ_RELEASE_DIR)$(PATH_SEP)ReadRequestAsyncTask$(FILE_SUFFIX).o
@@ -448,3 +448,4 @@ $(OBJ_RELEASE_DIR)$(PATH_SEP)%$(FILE_SUFFIX).obj: src$(PATH_SEP)%.RC
 
 $(OBJ_DEBUG_DIR)$(PATH_SEP)%$(FILE_SUFFIX).obj: src$(PATH_SEP)%.RC
 	$(GORC) $(GORCFLAGS) /fo $@ $<
+
