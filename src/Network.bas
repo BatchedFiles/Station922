@@ -35,7 +35,7 @@ End Function
 Public Function LoadWsaFunctions()As HRESULT
 
 	Dim ListenSocket As SOCKET = WSASocketW( _
-		AF_INET6, _
+		AF_INET, _ /' AF_INET6 '/
 		SOCK_STREAM, _
 		IPPROTO_TCP, _
 		NULL, _
