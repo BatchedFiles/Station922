@@ -36,7 +36,7 @@ Type HeapMemoryAllocator
 	ClientSocket As SOCKET
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
-	LocalPools(2) As Any Ptr
+	LocalPools(HTTPREADER_POOL_ID To WRITERESPONSEASYNCTASK_POOL_ID - 1) As Any Ptr
 	LocalPoolCreated As Boolean
 End Type
 
@@ -605,6 +605,7 @@ Public Function GetHeapMemoryAllocatorInstance( _
 					CreateHttpReaderPool(pMalloc)
 					CreateNetworkStreamPool(pMalloc)
 					CreateClientRequestPool(pMalloc)
+
 					this->LocalPoolCreated = True
 				End If
 
@@ -680,7 +681,7 @@ End Function
 
 Private Function HeapMemoryAllocatorGetPool( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal ppPool As Any Ptr Ptr _
 	)As HRESULT
 
@@ -692,7 +693,7 @@ End Function
 
 Private Function HeapMemoryAllocatorSetPool( _
 		ByVal this As HeapMemoryAllocator Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal pPool As Any Ptr _
 	)As HRESULT
 
@@ -1054,7 +1055,7 @@ End Function
 
 Private Function IObjectPoolGetPool( _
 		ByVal this As IObjectPool Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal ppPool As Any Ptr Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorGetPool(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool), PoolId, ppPool)
@@ -1062,7 +1063,7 @@ End Function
 
 Private Function IObjectPoolSetPool( _
 		ByVal this As IObjectPool Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal pPool As Any Ptr _
 	)As HRESULT
 	Return HeapMemoryAllocatorSetPool(CONTAINING_RECORD(this, HeapMemoryAllocator, lpVtblObjectPool), PoolId, pPool)

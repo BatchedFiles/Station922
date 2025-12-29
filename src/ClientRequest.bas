@@ -14,9 +14,6 @@ Const CloseString = WStr("Close")
 Const KeepAliveString = WStr("Keep-Alive")
 Const CompareResultEqual As Long = 0
 
-Const OBJECT_POOL_CAPACITY = 1
-Const CLIENTREQUEST_POOL_ID = 2
-
 Type RequestHeaderNode
 	pHeader As WString Ptr
 	HeaderLength As Integer

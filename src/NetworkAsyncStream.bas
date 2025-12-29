@@ -7,9 +7,6 @@
 
 Extern GlobalNetworkStreamVirtualTable As Const INetworkAsyncStreamVirtualTable
 
-Const OBJECT_POOL_CAPACITY = 1
-Const NETWORKSTREAM_POOL_ID = 1
-
 Type NetworkStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte

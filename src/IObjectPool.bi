@@ -6,6 +6,20 @@
 
 Extern IID_IObjectPool Alias "IID_IObjectPool" As Const IID
 
+Const OBJECT_POOL_CAPACITY = 1
+
+Enum ObjectPoolIds
+	HTTPREADER_POOL_ID
+	NETWORKSTREAM_POOL_ID
+	CLIENTREQUEST_POOL_ID
+	CLIENTURI_POOL_ID
+	FILEASYNCSTREAM_POOL_ID
+	HTTPASYNCWRITER_POOL_ID
+	READREQUESTASYNCTASK_POOL_ID
+	SERVERRESPONSE_POOL_ID
+	WRITERESPONSEASYNCTASK_POOL_ID
+End Enum
+
 Type IObjectPool As IObjectPool_
 
 Type IObjectPoolVirtualTable
@@ -26,13 +40,13 @@ Type IObjectPoolVirtualTable
 
 	GetPool As Function( _
 		ByVal this As IObjectPool Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal ppPool As Any Ptr Ptr _
 	)As HRESULT
 
 	SetPool As Function( _
 		ByVal this As IObjectPool Ptr, _
-		ByVal PoolId As Integer, _
+		ByVal PoolId As ObjectPoolIds, _
 		ByVal pPool As Any Ptr _
 	)As HRESULT
 
