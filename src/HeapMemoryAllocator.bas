@@ -52,7 +52,7 @@ Type MemoryPool
 	Length As Integer
 End Type
 
-Dim Shared MemoryPoolObject As MemoryPool
+Dim Shared pMemoryPool As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
 Dim Shared hHungsConnections As HANDLE
 
@@ -403,14 +403,14 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
-	EnterCriticalSection(@MemoryPoolObject.crSection)
-	For i As Integer = 0 To MemoryPoolObject.Capacity - 1
+	EnterCriticalSection(@pMemoryPool.crSection)
+	For i As Integer = 0 To pMemoryPool.Capacity - 1
 
-		var localMalloc = MemoryPoolObject.Items[i].pItem
+		var localMalloc = pMemoryPool.Items[i].pItem
 
 		If this = localMalloc Then
 
-			MemoryPoolObject.Length -= 1
+			pMemoryPool.Length -= 1
 
 			#if __FB_DEBUG__
 				PrintWalkingHeap(this->hHeap)
@@ -424,7 +424,7 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 					this->hHeap _
 				)
 
-				Dim FreeSpace As Integer = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+				Dim FreeSpace As Integer = pMemoryPool.Capacity - pMemoryPool.Length
 
 				Dim vtFreeSpace As VARIANT = Any
 				vtFreeSpace.vt = VT_I4
@@ -440,12 +440,12 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 			UnInitializeHeapMemoryAllocator(this)
 			HeapMemoryAllocatorResetState(this)
 
-			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 
 			Exit For
 		End If
 	Next
-	LeaveCriticalSection(@MemoryPoolObject.crSection)
+	LeaveCriticalSection(@pMemoryPool.crSection)
 
 End Sub
 
@@ -575,18 +575,18 @@ Public Function GetHeapMemoryAllocatorInstance( _
 		ByVal ClientSocket As SOCKET _
 	)As IMalloc Ptr
 
-	If MemoryPoolObject.Length < MemoryPoolObject.Capacity Then
+	If pMemoryPool.Length < pMemoryPool.Capacity Then
 		Dim pMalloc As IMalloc Ptr = NULL
 
-		EnterCriticalSection(@MemoryPoolObject.crSection)
-		For i As Integer = 0 To MemoryPoolObject.Capacity - 1
+		EnterCriticalSection(@pMemoryPool.crSection)
+		For i As Integer = 0 To pMemoryPool.Capacity - 1
 
-			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
+			If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
 
-				MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
-				MemoryPoolObject.Length += 1
+				pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
+				pMemoryPool.Length += 1
 
-				var this = MemoryPoolObject.Items[i].pItem
+				var this = pMemoryPool.Items[i].pItem
 				this->ClientSocket = ClientSocket
 
 				HeapMemoryAllocatorQueryInterface( _
@@ -605,14 +605,14 @@ Public Function GetHeapMemoryAllocatorInstance( _
 				End If
 
 				#if __FB_DEBUG__
-					Dim FreeSpace As Integer = MemoryPoolObject.Capacity - MemoryPoolObject.Length
+					Dim FreeSpace As Integer = pMemoryPool.Capacity - pMemoryPool.Length
 					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
 				#endif
 
 				Exit For
 			End If
 		Next
-		LeaveCriticalSection(@MemoryPoolObject.crSection)
+		LeaveCriticalSection(@pMemoryPool.crSection)
 
 		Return pMalloc
 	End If
@@ -758,18 +758,18 @@ Private Function MemoryPoolCloseHungsConnections( _
 			Return E_FAIL
 		End If
 
-		If MemoryPoolObject.Length = 0 Then
+		If pMemoryPool.Length = 0 Then
 			Return S_OK
 		End If
 
 		Dim IsPoolFree As Boolean = True
 
-		EnterCriticalSection(@MemoryPoolObject.crSection)
-		For i As Integer = 0 To MemoryPoolObject.Capacity - 1
+		EnterCriticalSection(@pMemoryPool.crSection)
+		For i As Integer = 0 To pMemoryPool.Capacity - 1
 
-			If MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
+			If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
-				var this = MemoryPoolObject.Items[i].pItem
+				var this = pMemoryPool.Items[i].pItem
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
 					KeepAliveInterval _
@@ -778,9 +778,9 @@ Private Function MemoryPoolCloseHungsConnections( _
 				Select Case resClose
 
 					Case ConnectionStatuses.Closed
-						MemoryPoolObject.Length -= 1
+						pMemoryPool.Length -= 1
 						HeapMemoryAllocatorResetState(this)
-						MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
+						pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 
 					Case ConnectionStatuses.Hungs
 						IsPoolFree = False
@@ -815,7 +815,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 			End If
 		Next
-		LeaveCriticalSection(@MemoryPoolObject.crSection)
+		LeaveCriticalSection(@pMemoryPool.crSection)
 
 		If IsPoolFree Then
 			Return S_OK
@@ -884,13 +884,13 @@ Public Function CreateMemoryPool( _
 		Return E_OUTOFMEMORY
 	End If
 
-	MemoryPoolObject.Capacity = Capacity
-	MemoryPoolObject.Length = 0
+	pMemoryPool.Capacity = Capacity
+	pMemoryPool.Length = 0
 
 	Scope
 		Const dwSpinCount As DWORD = 4000
 		Dim resInitialize As BOOL = InitializeCriticalSectionAndSpinCount( _
-			@MemoryPoolObject.crSection, _
+			@pMemoryPool.crSection, _
 			dwSpinCount _
 		)
 		If resInitialize = 0 Then
@@ -901,12 +901,12 @@ Public Function CreateMemoryPool( _
 
 	Scope
 		Dim hHeap As HANDLE = GetProcessHeap()
-		MemoryPoolObject.Items = HeapAlloc( _
+		pMemoryPool.Items = HeapAlloc( _
 			hHeap, _
 			0, _
 			SizeOf(MemoryPoolItem) * Capacity _
 		)
-		If MemoryPoolObject.Items = NULL Then
+		If pMemoryPool.Items = NULL Then
 			Return E_OUTOFMEMORY
 		End If
 
@@ -916,8 +916,8 @@ Public Function CreateMemoryPool( _
 				Return E_OUTOFMEMORY
 			End If
 
-			MemoryPoolObject.Items[i].pItem = pMalloc
-			MemoryPoolObject.Items[i].ItemStatus = PoolItemStatuses.ItemFree
+			pMemoryPool.Items[i].pItem = pMalloc
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 		Next
 	End Scope
 
