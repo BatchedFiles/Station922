@@ -1074,7 +1074,7 @@ Public Function CreateClientRequestPool( _
 		pMalloc As IMalloc Ptr _
 	)As HRESULT
 
-	Const RTTI_ID_OBJECTPOOL = !"\001Pool____Reader\001"
+	Const RTTI_ID_OBJECTPOOL = !"\001Pool___Request\001"
 
 	Dim pool As ObjectPool Ptr = IMalloc_Alloc( _
 		pMalloc, _
