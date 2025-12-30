@@ -19,11 +19,6 @@ Type NetworkStream
 	RemoteAddressLength As Integer
 End Type
 
-Enum PoolItemStatuses
-	ItemUsed = -1
-	ItemFree = 0
-End Enum
-
 Type ObjectPoolItem
 	pItem As NetworkStream Ptr
 	ItemStatus As PoolItemStatuses
@@ -143,14 +138,18 @@ Private Sub NetworkStreamReturnToPool( _
 	End Scope
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
-		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
-			Dim this As NetworkStream Ptr = pool->Items(i).pItem
+		Dim pObject As NetworkStream Ptr = pool->Items(i).pItem
 
-			UnInitializeNetworkStream(this)
-			NetworkStreamResetState(this)
+		If this = pObject Then
 
-			pool->Length -= 1
-			pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+			If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
+
+				UnInitializeNetworkStream(this)
+				NetworkStreamResetState(this)
+
+				pool->Length -= 1
+				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+			End If
 
 			Exit Sub
 		End If

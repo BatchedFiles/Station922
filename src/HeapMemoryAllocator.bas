@@ -40,11 +40,6 @@ Type HeapMemoryAllocator
 	LocalPoolCreated As Boolean
 End Type
 
-Enum PoolItemStatuses
-	ItemUsed = -1
-	ItemFree = 0
-End Enum
-
 Type MemoryPoolItem
 	pItem As HeapMemoryAllocator Ptr
 	ItemStatus As PoolItemStatuses
@@ -59,7 +54,7 @@ End Type
 
 Dim Shared MemoryPoolObject As MemoryPool
 Dim Shared HungsConnectionsEvent As HANDLE
-Dim Shared HungsConnectionsThread As HANDLE
+Dim Shared hHungsConnections As HANDLE
 
 Private Sub PrintHeapAllocatorTaken( _
 		ByVal hHeap As HANDLE, _
@@ -849,7 +844,7 @@ Private Function ClearingThread( _
 			' Function returned due to I/O completion callback
 			' This is a signal to complete the process
 			' Need to close Event, Thread and exit from thread
-			CloseHandle(HungsConnectionsThread)
+			CloseHandle(hHungsConnections)
 			CloseHandle(HungsConnectionsEvent)
 			Return 0
 		End If
@@ -859,7 +854,7 @@ Private Function ClearingThread( _
 		If FAILED(hrCheck) Then
 			' This is a signal to complete the process
 			' Need to close Event, Thread and exit from thread
-			CloseHandle(HungsConnectionsThread)
+			CloseHandle(hHungsConnections)
 			CloseHandle(HungsConnectionsEvent)
 			Return 0
 		End If
@@ -938,7 +933,7 @@ Public Function CreateMemoryPool( _
 		End If
 
 		Const DefaultStackSize As SIZE_T_ = 0
-		HungsConnectionsThread = CreateThread( _
+		hHungsConnections = CreateThread( _
 			NULL, _
 			DefaultStackSize, _
 			@ClearingThread, _
@@ -946,7 +941,7 @@ Public Function CreateMemoryPool( _
 			0, _
 			NULL _
 		)
-		If HungsConnectionsThread = NULL Then
+		If hHungsConnections = NULL Then
 			CloseHandle(HungsConnectionsEvent)
 			Return E_OUTOFMEMORY
 		End If
@@ -960,7 +955,7 @@ Public Sub DeleteMemoryPool()
 
 	QueueUserAPC( _
 		@WakeupClearingThread, _
-		HungsConnectionsThread, _
+		hHungsConnections, _
 		0 _
 	)
 

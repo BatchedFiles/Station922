@@ -20,6 +20,11 @@ Enum ObjectPoolIds
 	WRITERESPONSEASYNCTASK_POOL_ID
 End Enum
 
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
 Type IObjectPool As IObjectPool_
 
 Type IObjectPoolVirtualTable

@@ -38,11 +38,6 @@ Type ClientRequest
 	Expect100Continue As Boolean
 End Type
 
-Enum PoolItemStatuses
-	ItemUsed = -1
-	ItemFree = 0
-End Enum
-
 Type ObjectPoolItem
 	pItem As ClientRequest Ptr
 	ItemStatus As PoolItemStatuses
@@ -752,12 +747,6 @@ Private Sub ClientRequestResetState( _
 
 End Sub
 
-Private Sub ClientRequestCreated( _
-		ByVal this As ClientRequest Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyClientRequest( _
 		ByVal this As ClientRequest Ptr _
 	)
@@ -794,14 +783,18 @@ Private Sub ClientRequestReturnToPool( _
 	End Scope
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
-		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
-			Dim this As ClientRequest Ptr = pool->Items(i).pItem
+		Dim pObject As ClientRequest Ptr = pool->Items(i).pItem
 
-			UnInitializeClientRequest(this)
-			ClientRequestResetState(this)
+		If this = pObject Then
 
-			pool->Length -= 1
-			pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+			If pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed Then
+
+				UnInitializeClientRequest(this)
+				ClientRequestResetState(this)
+
+				pool->Length -= 1
+				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
+			End If
 
 			Exit Sub
 		End If
