@@ -351,6 +351,35 @@ Private Sub PrintWalkingHeap( _
 
 End Sub
 
+Private Sub DebugWalkingHeap( _
+		ByVal hHeap As HANDLE _
+	)
+
+	PrintWalkingHeap(hHeap)
+
+	Const BufSize As Integer = 256
+	Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p released, free space:")
+	Dim buf As WString * BufSize = Any
+	wsprintfW( _
+		@buf, _
+		@FormatString, _
+		hHeap _
+	)
+
+	Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
+
+	Dim vtFreeSpace As VARIANT = Any
+	vtFreeSpace.vt = VT_I4
+	vtFreeSpace.lVal = CLng(FreeSpace)
+
+	LogWriteEntry( _
+		LogEntryType.Debug, _
+		buf, _
+		@vtFreeSpace _
+	)
+
+End Sub
+
 Private Function HeapMemoryAllocatorCloseSocket( _
 		ByVal this As HeapMemoryAllocator Ptr _
 	)As HRESULT
@@ -407,13 +436,14 @@ Private Sub DestroyHeapMemoryAllocator( _
 
 End Sub
 
-Private Sub ReleaseHeapMemoryAllocatorInstance( _
+Private Sub HeapMemoryAllocatorReturnToPool( _
 		ByVal pMalloc As IHeapMemoryAllocator Ptr _
 	)
 
 	EnterCriticalSection(@pMemoryPool.crSection)
 	For i As UInteger = 0 To pMemoryPool.Capacity - 1
 		var localMalloc = pMemoryPool.Items[i].pMalloc
+
 		If localMalloc = pMalloc Then
 
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
@@ -421,28 +451,7 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 			pMemoryPool.Length -= 1
 
 			#if __FB_DEBUG__
-				PrintWalkingHeap(this->hHeap)
-
-				Const BufSize As Integer = 256
-				Const FormatString = WStr(!"MemoryAllocator Instance with Heap %#p released, free space:")
-				Dim buf As WString * BufSize = Any
-				wsprintfW( _
-					@buf, _
-					@FormatString, _
-					this->hHeap _
-				)
-
-				Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
-
-				Dim vtFreeSpace As VARIANT = Any
-				vtFreeSpace.vt = VT_I4
-				vtFreeSpace.lVal = CLng(FreeSpace)
-
-				LogWriteEntry( _
-					LogEntryType.Debug, _
-					buf, _
-					@vtFreeSpace _
-				)
+				DebugWalkingHeap(this->hHeap)
 			#endif
 
 			HeapMemoryAllocatorResetState(this)
@@ -453,50 +462,6 @@ Private Sub ReleaseHeapMemoryAllocatorInstance( _
 	LeaveCriticalSection(@pMemoryPool.crSection)
 
 End Sub
-
-Public Function GetHeapMemoryAllocatorInstance( _
-		ByVal ClientSocket As SOCKET _
-	)As IHeapMemoryAllocator Ptr
-
-	Dim PoolLength As UInteger = pMemoryPool.Length
-	Dim PoolCapacity As UInteger = pMemoryPool.Capacity
-
-	If PoolLength < PoolCapacity Then
-		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
-
-		EnterCriticalSection(@pMemoryPool.crSection)
-		For i As UInteger = 0 To pMemoryPool.Capacity - 1
-			var localMalloc = pMemoryPool.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
-
-			If this->ItemStatus = PoolItemStatuses.ItemFree Then
-
-				this->ClientSocket = ClientSocket
-				this->ItemStatus = PoolItemStatuses.ItemUsed
-				pMemoryPool.Length += 1
-
-				pMalloc = pMemoryPool.Items[i].pMalloc
-
-				#if __FB_DEBUG__
-					Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
-					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
-				#endif
-
-				Exit For
-			End If
-		Next
-		LeaveCriticalSection(@pMemoryPool.crSection)
-
-		' We do not increase the reference counter to the object
-		' to track the lifetime
-		' When the object reference count reaches zero
-		' the Release function returns the object to the object pool
-		Return pMalloc
-	End If
-
-	Return NULL
-
-End Function
 
 Private Sub InitializeHeapMemoryAllocator( _
 		ByVal this As HeapMemoryAllocator Ptr, _
@@ -548,7 +513,7 @@ Private Function HeapMemoryAllocatorRelease( _
 	End If
 
 	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
-	ReleaseHeapMemoryAllocatorInstance(pInterface)
+	HeapMemoryAllocatorReturnToPool(pInterface)
 
 	Return 0
 
@@ -952,6 +917,50 @@ Public Sub DeleteMemoryPool()
 	)
 
 End Sub
+
+Public Function GetHeapMemoryAllocatorInstance( _
+		ByVal ClientSocket As SOCKET _
+	)As IHeapMemoryAllocator Ptr
+
+	Dim PoolLength As UInteger = pMemoryPool.Length
+	Dim PoolCapacity As UInteger = pMemoryPool.Capacity
+
+	If PoolLength < PoolCapacity Then
+		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+
+		EnterCriticalSection(@pMemoryPool.crSection)
+		For i As UInteger = 0 To pMemoryPool.Capacity - 1
+			var localMalloc = pMemoryPool.Items[i].pMalloc
+			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
+
+			If this->ItemStatus = PoolItemStatuses.ItemFree Then
+
+				this->ClientSocket = ClientSocket
+				this->ItemStatus = PoolItemStatuses.ItemUsed
+				pMemoryPool.Length += 1
+
+				pMalloc = pMemoryPool.Items[i].pMalloc
+
+				#if __FB_DEBUG__
+					Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
+					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
+				#endif
+
+				Exit For
+			End If
+		Next
+		LeaveCriticalSection(@pMemoryPool.crSection)
+
+		' We do not increase the reference counter to the object
+		' to track the lifetime
+		' When the object reference count reaches zero
+		' the Release function returns the object to the object pool
+		Return pMalloc
+	End If
+
+	Return NULL
+
+End Function
 
 
 Private Function IHeapMemoryAllocatorQueryInterface( _
