@@ -595,15 +595,6 @@ Public Function GetHeapMemoryAllocatorInstance( _
 					@pMalloc _
 				)
 
-				If this->LocalPoolCreated = False Then
-					' TODO Check create pool for errors
-					CreateHttpReaderPool(pMalloc)
-					CreateNetworkStreamPool(pMalloc)
-					CreateClientRequestPool(pMalloc)
-
-					this->LocalPoolCreated = True
-				End If
-
 				#if __FB_DEBUG__
 					Dim FreeSpace As Integer = pMemoryPool.Capacity - pMemoryPool.Length
 					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
@@ -900,28 +891,6 @@ Public Function CreateMemoryPool( _
 	End Scope
 
 	Scope
-		Dim hHeap As HANDLE = GetProcessHeap()
-		pMemoryPool.Items = HeapAlloc( _
-			hHeap, _
-			0, _
-			SizeOf(MemoryPoolItem) * Capacity _
-		)
-		If pMemoryPool.Items = NULL Then
-			Return E_OUTOFMEMORY
-		End If
-
-		For i As Integer = 0 To Capacity - 1
-			Dim pMalloc As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator_Internal()
-			If pMalloc = NULL Then
-				Return E_OUTOFMEMORY
-			End If
-
-			pMemoryPool.Items[i].pItem = pMalloc
-			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
-		Next
-	End Scope
-
-	Scope
 		HungsConnectionsEvent = CreateEventW( _
 			NULL, _
 			TRUE, _
@@ -945,6 +914,45 @@ Public Function CreateMemoryPool( _
 			CloseHandle(HungsConnectionsEvent)
 			Return E_OUTOFMEMORY
 		End If
+	End Scope
+
+	Scope
+		Dim hHeap As HANDLE = GetProcessHeap()
+		pMemoryPool.Items = HeapAlloc( _
+			hHeap, _
+			0, _
+			SizeOf(MemoryPoolItem) * Capacity _
+		)
+		If pMemoryPool.Items = NULL Then
+			Return E_OUTOFMEMORY
+		End If
+
+		For i As Integer = 0 To Capacity - 1
+			Dim pMalloc As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator_Internal()
+			If pMalloc = NULL Then
+				Return E_OUTOFMEMORY
+			End If
+
+			If pMalloc->LocalPoolCreated = False Then
+				Dim pIM As IMalloc Ptr = NULL
+				HeapMemoryAllocatorQueryInterface( _
+					pMalloc, _
+					@IID_IMalloc, _
+					@pIM _
+				)
+				' TODO Check create pools for errors
+				CreateHttpReaderPool(pIM)
+				CreateNetworkStreamPool(pIM)
+				CreateClientRequestPool(pIM)
+
+				HeapMemoryAllocatorRelease(pMalloc)
+
+				pMalloc->LocalPoolCreated = True
+			End If
+
+			pMemoryPool.Items[i].pItem = pMalloc
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
+		Next
 	End Scope
 
 	Return S_OK
