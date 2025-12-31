@@ -38,7 +38,7 @@ Enum PoolItemStatuses
 End Enum
 
 Type MemoryPoolItem
-	pMalloc As IHeapMemoryAllocator Ptr
+	pMalloc As HeapMemoryAllocator Ptr
 	ItemStatus As PoolItemStatuses
 End Type
 
@@ -435,16 +435,14 @@ Private Sub DestroyHeapMemoryAllocator( _
 End Sub
 
 Private Sub HeapMemoryAllocatorReturnToPool( _
-		ByVal pMalloc As IHeapMemoryAllocator Ptr _
+		ByVal this As HeapMemoryAllocator Ptr _
 	)
 
 	EnterCriticalSection(@pMemoryPool.crSection)
 	For i As UInteger = 0 To pMemoryPool.Capacity - 1
 		var localMalloc = pMemoryPool.Items[i].pMalloc
 
-		If localMalloc = pMalloc Then
-
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
+		If localMalloc = this Then
 
 			HeapMemoryAllocatorResetState(this)
 
@@ -510,8 +508,7 @@ Private Function HeapMemoryAllocatorRelease( _
 		Return 1
 	End If
 
-	Dim pInterface As IHeapMemoryAllocator Ptr = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
-	HeapMemoryAllocatorReturnToPool(pInterface)
+	HeapMemoryAllocatorReturnToPool(this)
 
 	Return 0
 
@@ -548,10 +545,8 @@ Private Function HeapMemoryAllocatorQueryInterface( _
 
 End Function
 
-Private Function CreateHeapMemoryAllocator( _
-		ByVal riid As REFIID, _
-		ByVal ppv As Any Ptr Ptr _
-	)As HRESULT
+Private Function CreateHeapMemoryAllocator_Internal( _
+	)As HeapMemoryAllocator Ptr
 
 	Dim hHeap As HANDLE = HeapCreate( _
 		HEAP_NO_SERIALIZE_FLAG, _
@@ -574,16 +569,17 @@ Private Function CreateHeapMemoryAllocator( _
 			)
 			HeapMemoryAllocatorCreated(this)
 
+			Dim pv As Any Ptr = Any
 			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
 				this, _
-				riid, _
-				ppv _
+				@IID_IHeapMemoryAllocator, _
+				@pv _
 			)
 			If FAILED(hrQueryInterface) Then
 				DestroyHeapMemoryAllocator(this)
 			End If
 
-			Return hrQueryInterface
+			Return this
 		End If
 
 		HeapDestroy(hHeap)
@@ -591,8 +587,7 @@ Private Function CreateHeapMemoryAllocator( _
 
 	PrintAllocationFailed(SizeOf(HeapMemoryAllocator))
 
-	*ppv = NULL
-	Return E_OUTOFMEMORY
+	Return NULL
 
 End Function
 
@@ -721,8 +716,7 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 			If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
 
-				var localMalloc = pMemoryPool.Items[i].pMalloc
-				Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
+				var this = pMemoryPool.Items[i].pMalloc
 
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
@@ -864,12 +858,9 @@ Public Function CreateMemoryPool( _
 		End If
 
 		For i As UInteger = 0 To Capacity - 1
-			Dim pMalloc As IHeapMemoryAllocator Ptr = Any
-			Dim hrCreateMalloc As HRESULT = CreateHeapMemoryAllocator( _
-				@IID_IHeapMemoryAllocator, _
-				@pMalloc _
-			)
-			If FAILED(hrCreateMalloc) Then
+			Dim pMalloc As HeapMemoryAllocator Ptr = CreateHeapMemoryAllocator_Internal()
+
+			If pMalloc = NULL Then
 				Return E_OUTOFMEMORY
 			End If
 
@@ -936,12 +927,9 @@ Public Function GetHeapMemoryAllocatorInstance( _
 
 		If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
 
-			var localMalloc = pMemoryPool.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
+			var this = pMemoryPool.Items[i].pMalloc
 
 			this->ClientSocket = ClientSocket
-
-			pMalloc = pMemoryPool.Items[i].pMalloc
 
 			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
 			pMemoryPool.Length += 1
@@ -950,6 +938,8 @@ Public Function GetHeapMemoryAllocatorInstance( _
 				Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
 				PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
 			#endif
+
+			pMalloc = CPtr(IHeapMemoryAllocator Ptr, @this->lpVtbl)
 
 			Exit For
 		End If
