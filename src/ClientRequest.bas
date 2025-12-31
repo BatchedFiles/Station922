@@ -896,9 +896,6 @@ Public Function CreateClientRequest( _
 
 	For i As Integer = 0 To OBJECT_POOL_CAPACITY - 1
 		If pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree Then
-			pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed
-			pool->Length += 1
-
 			Dim this As ClientRequest Ptr = pool->Items(i).pItem
 
 			Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
@@ -907,11 +904,11 @@ Public Function CreateClientRequest( _
 				ppv _
 			)
 			If FAILED(hrQueryInterface) Then
-				pool->Length -= 1
-				pool->Items(i).ItemStatus = PoolItemStatuses.ItemFree
-				*ppv = NULL
 				Return hrQueryInterface
 			End If
+
+			pool->Items(i).ItemStatus = PoolItemStatuses.ItemUsed
+			pool->Length += 1
 
 			IMalloc_AddRef(pIMemoryAllocator)
 			this->pIMemoryAllocator = pIMemoryAllocator
