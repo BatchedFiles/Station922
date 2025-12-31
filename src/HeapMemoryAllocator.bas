@@ -13,11 +13,6 @@ Const PRIVATEHEAP_MAXIMUMSIZE As DWORD = MEMORY_ALLOCATION_GRANULARITY
 
 Const HEAP_NO_SERIALIZE_FLAG = HEAP_NO_SERIALIZE
 
-Enum PoolItemStatuses
-	ItemUsed = -1
-	ItemFree = 0
-End Enum
-
 Enum ConnectionStatuses
 	Closed
 	Hungs
@@ -33,13 +28,18 @@ Type HeapMemoryAllocator
 	ReferenceCounter As UInteger
 	hHeap As HANDLE
 	ClientSocket As SOCKET
-	ItemStatus As PoolItemStatuses
 	datStartOperation As FILETIME
 	datFinishOperation As FILETIME
 End Type
 
+Enum PoolItemStatuses
+	ItemUsed = -1
+	ItemFree = 0
+End Enum
+
 Type MemoryPoolItem
 	pMalloc As IHeapMemoryAllocator Ptr
+	ItemStatus As PoolItemStatuses
 End Type
 
 Type MemoryPool
@@ -406,8 +406,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
 
-	this->ItemStatus = PoolItemStatuses.ItemFree
-
 End Sub
 
 Private Sub UnInitializeHeapMemoryAllocator( _
@@ -448,13 +446,14 @@ Private Sub HeapMemoryAllocatorReturnToPool( _
 
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
+			HeapMemoryAllocatorResetState(this)
+
 			pMemoryPool.Length -= 1
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 
 			#if __FB_DEBUG__
 				DebugWalkingHeap(this->hHeap)
 			#endif
-
-			HeapMemoryAllocatorResetState(this)
 
 			Exit For
 		End If
@@ -482,7 +481,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	this->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@this->datStartOperation)
 	GetSystemTimeAsFileTime(@this->datFinishOperation)
-	this->ItemStatus = PoolItemStatuses.ItemFree
 
 End Sub
 
@@ -720,10 +718,11 @@ Private Function MemoryPoolCloseHungsConnections( _
 
 		EnterCriticalSection(@pMemoryPool.crSection)
 		For i As UInteger = 0 To PoolCapacity - 1
-			var localMalloc = pMemoryPool.Items[i].pMalloc
-			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-			If this->ItemStatus = PoolItemStatuses.ItemUsed Then
+			If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed Then
+
+				var localMalloc = pMemoryPool.Items[i].pMalloc
+				Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
 				Dim resClose As ConnectionStatuses = MemoryPoolCheckHungsConnections( _
 					this, _
@@ -875,6 +874,7 @@ Public Function CreateMemoryPool( _
 			End If
 
 			pMemoryPool.Items[i].pMalloc = pMalloc
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree
 		Next
 	End Scope
 
@@ -925,40 +925,42 @@ Public Function GetHeapMemoryAllocatorInstance( _
 	Dim PoolLength As UInteger = pMemoryPool.Length
 	Dim PoolCapacity As UInteger = pMemoryPool.Capacity
 
-	If PoolLength < PoolCapacity Then
-		Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+	If PoolLength >= PoolCapacity Then
+		Return NULL
+	End If
 
-		EnterCriticalSection(@pMemoryPool.crSection)
-		For i As UInteger = 0 To pMemoryPool.Capacity - 1
+	Dim pMalloc As IHeapMemoryAllocator Ptr = NULL
+
+	EnterCriticalSection(@pMemoryPool.crSection)
+	For i As UInteger = 0 To pMemoryPool.Capacity - 1
+
+		If pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemFree Then
+
 			var localMalloc = pMemoryPool.Items[i].pMalloc
 			Dim this As HeapMemoryAllocator Ptr = CONTAINING_RECORD(localMalloc, HeapMemoryAllocator, lpVtbl)
 
-			If this->ItemStatus = PoolItemStatuses.ItemFree Then
+			this->ClientSocket = ClientSocket
 
-				this->ClientSocket = ClientSocket
-				this->ItemStatus = PoolItemStatuses.ItemUsed
-				pMemoryPool.Length += 1
+			pMalloc = pMemoryPool.Items[i].pMalloc
 
-				pMalloc = pMemoryPool.Items[i].pMalloc
+			pMemoryPool.Items[i].ItemStatus = PoolItemStatuses.ItemUsed
+			pMemoryPool.Length += 1
 
-				#if __FB_DEBUG__
-					Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
-					PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
-				#endif
+			#if __FB_DEBUG__
+				Dim FreeSpace As UInteger = pMemoryPool.Capacity - pMemoryPool.Length
+				PrintHeapAllocatorTaken(this->hHeap, FreeSpace)
+			#endif
 
-				Exit For
-			End If
-		Next
-		LeaveCriticalSection(@pMemoryPool.crSection)
+			Exit For
+		End If
+	Next
+	LeaveCriticalSection(@pMemoryPool.crSection)
 
-		' We do not increase the reference counter to the object
-		' to track the lifetime
-		' When the object reference count reaches zero
-		' the Release function returns the object to the object pool
-		Return pMalloc
-	End If
-
-	Return NULL
+	' We do not increase the reference counter to the object
+	' to track the lifetime
+	' When the object reference count reaches zero
+	' the Release function returns the object to the object pool
+	Return pMalloc
 
 End Function
 
