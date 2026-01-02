@@ -560,31 +560,28 @@ Private Sub WriteErrorCallback( _
 	Dim pErrorContext As WriteErrorContext Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pErrorContext)
 
-	Dim hrEndExecute As HRESULT = Any
-	Scope
-		hrEndExecute = IWriteErrorAsyncIoTask_EndExecute( _
-			pErrorContext->pTask, _
-			pIResult _
+	Dim hrEndExecute As HRESULT = IWriteErrorAsyncIoTask_EndExecute( _
+		pErrorContext->pTask, _
+		pIResult _
+	)
+
+	IAsyncResult_Release(pIResult)
+
+	If FAILED(hrEndExecute) Then
+		DestroyWriteErrorContext(pErrorContext)
+
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			@WStr("WriteErrorTask.EndExecute Error"), _
+			@vtErrorCode _
 		)
 
-		IAsyncResult_Release(pIResult)
-
-		If FAILED(hrEndExecute) Then
-			DestroyWriteErrorContext(pErrorContext)
-
-			Dim vtErrorCode As VARIANT = Any
-			vtErrorCode.vt = VT_ERROR
-			vtErrorCode.scode = hrEndExecute
-
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				@WStr("WriteErrorTask.EndExecute Error"), _
-				@vtErrorCode _
-			)
-
-			Exit Sub
-		End If
-	End Scope
+		Exit Sub
+	End If
 
 	Select Case hrEndExecute
 
@@ -627,31 +624,28 @@ Private Sub WriteResponseCallback( _
 	Dim pWriteContext As WriteResponseContext Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pWriteContext)
 
-	Dim hrEndExecute As HRESULT = Any
-	Scope
-		hrEndExecute = IWriteResponseAsyncIoTask_EndExecute( _
-			pWriteContext->pTask, _
-			pIResult _
+	Dim hrEndExecute As HRESULT = IWriteResponseAsyncIoTask_EndExecute( _
+		pWriteContext->pTask, _
+		pIResult _
+	)
+
+	IAsyncResult_Release(pIResult)
+
+	If FAILED(hrEndExecute) Then
+		DestroyWriteResponseContext(pWriteContext)
+
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			@WStr("WriteResponseTask.EndExecute Error"), _
+			@vtErrorCode _
 		)
 
-		IAsyncResult_Release(pIResult)
-
-		If FAILED(hrEndExecute) Then
-			DestroyWriteResponseContext(pWriteContext)
-
-			Dim vtErrorCode As VARIANT = Any
-			vtErrorCode.vt = VT_ERROR
-			vtErrorCode.scode = hrEndExecute
-
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				@WStr("WriteResponseTask.EndExecute Error"), _
-				@vtErrorCode _
-			)
-
-			Exit Sub
-		End If
-	End Scope
+		Exit Sub
+	End If
 
 	Select Case hrEndExecute
 
@@ -741,31 +735,28 @@ Private Sub ReadRequestCallback( _
 	Dim pReadContext As ReadRequestContext Ptr = Any
 	IAsyncResult_GetAsyncStateWeakPtr(pIResult, @pReadContext)
 
-	Dim hrEndExecute As HRESULT = Any
-	Scope
-		hrEndExecute = IReadRequestAsyncIoTask_EndExecute( _
-			pReadContext->pTask, _
-			pIResult _
+	Dim hrEndExecute As HRESULT = IReadRequestAsyncIoTask_EndExecute( _
+		pReadContext->pTask, _
+		pIResult _
+	)
+
+	IAsyncResult_Release(pIResult)
+
+	If FAILED(hrEndExecute) Then
+		DestroyReadRequestContext(pReadContext)
+
+		Dim vtErrorCode As VARIANT = Any
+		vtErrorCode.vt = VT_ERROR
+		vtErrorCode.scode = hrEndExecute
+
+		LogWriteEntry( _
+			LogEntryType.Error, _
+			@WStr("ReadRequestTask.EndExecute Error"), _
+			@vtErrorCode _
 		)
 
-		IAsyncResult_Release(pIResult)
-
-		If FAILED(hrEndExecute) Then
-			DestroyReadRequestContext(pReadContext)
-
-			Dim vtErrorCode As VARIANT = Any
-			vtErrorCode.vt = VT_ERROR
-			vtErrorCode.scode = hrEndExecute
-
-			LogWriteEntry( _
-				LogEntryType.Error, _
-				@WStr("ReadRequestTask.EndExecute Error"), _
-				@vtErrorCode _
-			)
-
-			Exit Sub
-		End If
-	End Scope
+		Exit Sub
+	End If
 
 	Select Case hrEndExecute
 
