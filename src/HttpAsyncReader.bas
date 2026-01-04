@@ -412,12 +412,6 @@ Private Function HttpReaderBeginReadLine( _
 
 End Function
 
-Private Sub HttpReaderPrintClientBuffer( _
-		ByVal self As HttpReader Ptr _
-	)
-
-End Sub
-
 Private Function HttpReaderEndReadLine( _
 		ByVal self As HttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
@@ -482,8 +476,6 @@ Private Function HttpReaderEndReadLine( _
 		*ppLine = NULL
 		Return HTTPREADER_S_IO_PENDING
 	End If
-
-	HttpReaderPrintClientBuffer(self)
 
 	Dim NewEndOfHeaders As Integer = DoubleCrLfIndex + Len(DoubleNewLineStringA)
 	self->pClientBuffer->EndOfHeaders = NewEndOfHeaders
