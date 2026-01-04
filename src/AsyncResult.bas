@@ -22,121 +22,121 @@ Public Function GetAsyncResultFromOverlappedWeakPtr( _
 		ByVal pOverLap As OVERLAPPED Ptr _
 	)As IAsyncResult Ptr
 
-	Dim this As AsyncResult Ptr = CONTAINING_RECORD(pOverLap, AsyncResult, OverLap)
+	Dim self As AsyncResult Ptr = CONTAINING_RECORD(pOverLap, AsyncResult, OverLap)
 
-	Dim pResult As IAsyncResult Ptr = CPtr(IAsyncResult Ptr, @this->lpVtbl)
+	Dim pResult As IAsyncResult Ptr = CPtr(IAsyncResult Ptr, @self->lpVtbl)
 
 	Return pResult
 
 End Function
 
 Private Sub InitializeAsyncResult( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_ASYNCRESULT), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalAsyncResultVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalAsyncResultVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pState = NULL
-	ZeroMemory(@this->OverLap, SizeOf(OVERLAPPED))
-	this->pBuffers = NULL
-	this->pcb = NULL
-	this->BytesTransferred = 0
-	this->Completed = False
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pState = NULL
+	ZeroMemory(@self->OverLap, SizeOf(OVERLAPPED))
+	self->pBuffers = NULL
+	self->pcb = NULL
+	self->BytesTransferred = 0
+	self->Completed = False
 
 End Sub
 
 Private Sub UnInitializeAsyncResult( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)
 
-	If this->pBuffers Then
-		IMalloc_Free(this->pIMemoryAllocator, this->pBuffers)
+	If self->pBuffers Then
+		IMalloc_Free(self->pIMemoryAllocator, self->pBuffers)
 	End If
 
 End Sub
 
 Private Sub AsyncResultCreated( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)
 
 End Sub
 
 Private Sub AsyncResultDestroyed( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyAsyncResult( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeAsyncResult(this)
+	UnInitializeAsyncResult(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	AsyncResultDestroyed(this)
+	AsyncResultDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function AsyncResultAddRef( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function AsyncResultRelease( _
-		ByVal this As AsyncResult Ptr _
+		ByVal self As AsyncResult Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyAsyncResult(this)
+	DestroyAsyncResult(self)
 
 	Return 0
 
 End Function
 
 Private Function AsyncResultQueryInterface( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IAsyncResult, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	AsyncResultAddRef(this)
+	AsyncResultAddRef(self)
 
 	Return S_OK
 
@@ -148,22 +148,22 @@ Public Function CreateAsyncResult( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As AsyncResult Ptr = IMalloc_Alloc( _
+	Dim self As AsyncResult Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(AsyncResult) _
 	)
 
-	If this Then
-		InitializeAsyncResult(this, pIMemoryAllocator)
-		AsyncResultCreated(this)
+	If self Then
+		InitializeAsyncResult(self, pIMemoryAllocator)
+		AsyncResultCreated(self)
 
 		Dim hrQueryInterface As HRESULT = AsyncResultQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyAsyncResult(this)
+			DestroyAsyncResult(self)
 		End If
 
 		Return hrQueryInterface
@@ -175,72 +175,72 @@ Public Function CreateAsyncResult( _
 End Function
 
 Private Function AsyncResultGetAsyncStateWeakPtr( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
 
-	*ppState = this->pState
+	*ppState = self->pState
 
 	Return S_OK
 
 End Function
 
 Private Function AsyncResultSetAsyncStateWeakPtr( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
 
-	this->pcb = pcb
-	this->pState = pState
+	self->pcb = pcb
+	self->pState = pState
 
 	Return S_OK
 
 End Function
 
 Private Function AsyncResultGetCompleted( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
 		ByVal pCompleted As Boolean Ptr, _
 		ByVal pdwError As DWORD Ptr _
 	)As HRESULT
 
-	*pBytesTransferred = this->BytesTransferred
-	*pCompleted = this->Completed
-	*pdwError = this->dwError
+	*pBytesTransferred = self->BytesTransferred
+	*pCompleted = self->Completed
+	*pdwError = self->dwError
 
 	Return S_OK
 
 End Function
 
 Private Function AsyncResultSetCompleted( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal Completed As Boolean, _
 		ByVal dwError As DWORD _
 	)As HRESULT
 
-	this->BytesTransferred = BytesTransferred
-	this->Completed = Completed
-	this->dwError = dwError
+	self->BytesTransferred = BytesTransferred
+	self->Completed = Completed
+	self->dwError = dwError
 
 	Return S_OK
 
 End Function
 
 Private Function AsyncResultGetWsaOverlapped( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
 
-	*ppOverlapped = @this->OverLap
+	*ppOverlapped = @self->OverLap
 
 	Return S_OK
 
 End Function
 
 Private Function AsyncResultAllocBuffers( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal Length As Integer, _
 		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
@@ -249,12 +249,12 @@ Private Function AsyncResultAllocBuffers( _
 
 	#if __FB_DEBUG__
 		Dim pMemory As UByte Ptr = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
+			self->pIMemoryAllocator, _
 			Length + Len(RTTI_ID_ASYNCBUFFERS) _
 		)
 	#else
 		Dim pMemory As UByte Ptr = IMalloc_Alloc( _
-			this->pIMemoryAllocator, _
+			self->pIMemoryAllocator, _
 			Length _
 		)
 	#endif
@@ -271,7 +271,7 @@ Private Function AsyncResultAllocBuffers( _
 		)
 	#endif
 
-	this->pBuffers = pMemory
+	self->pBuffers = pMemory
 
 	#if __FB_DEBUG__
 		*ppBuffers = @pMemory[Len(RTTI_ID_ASYNCBUFFERS)]
@@ -284,11 +284,11 @@ Private Function AsyncResultAllocBuffers( _
 End Function
 
 Private Function AsyncResultGetAsyncCallback( _
-		ByVal this As AsyncResult Ptr, _
+		ByVal self As AsyncResult Ptr, _
 		ByVal ppcb As AsyncCallback Ptr _
 	)As HRESULT
 
-	*ppcb = this->pcb
+	*ppcb = self->pcb
 
 	Return S_OK
 
@@ -296,78 +296,78 @@ End Function
 
 
 Private Function IAsyncResultQueryInterface( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultQueryInterface(CONTAINING_RECORD(this, AsyncResult, lpVtbl), riid, ppvObject)
+	Return AsyncResultQueryInterface(CONTAINING_RECORD(self, AsyncResult, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IAsyncResultAddRef( _
-		ByVal this As IAsyncResult Ptr _
+		ByVal self As IAsyncResult Ptr _
 	)As HRESULT
-	Return AsyncResultAddRef(CONTAINING_RECORD(this, AsyncResult, lpVtbl))
+	Return AsyncResultAddRef(CONTAINING_RECORD(self, AsyncResult, lpVtbl))
 End Function
 
 Private Function IAsyncResultRelease( _
-		ByVal this As IAsyncResult Ptr _
+		ByVal self As IAsyncResult Ptr _
 	)As HRESULT
-	Return AsyncResultRelease(CONTAINING_RECORD(this, AsyncResult, lpVtbl))
+	Return AsyncResultRelease(CONTAINING_RECORD(self, AsyncResult, lpVtbl))
 End Function
 
 Private Function IAsyncResultGetAsyncStateWeakPtr( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal ppState As Any Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultGetAsyncStateWeakPtr(CONTAINING_RECORD(this, AsyncResult, lpVtbl), ppState)
+	Return AsyncResultGetAsyncStateWeakPtr(CONTAINING_RECORD(self, AsyncResult, lpVtbl), ppState)
 End Function
 
 Private Function IAsyncResultSetAsyncStateWeakPtr( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal pState As Any Ptr _
 	)As HRESULT
-	Return AsyncResultSetAsyncStateWeakPtr(CONTAINING_RECORD(this, AsyncResult, lpVtbl), pcb, pState)
+	Return AsyncResultSetAsyncStateWeakPtr(CONTAINING_RECORD(self, AsyncResult, lpVtbl), pcb, pState)
 End Function
 
 Private Function IAsyncResultGetCompleted( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal pBytesTransferred As DWORD Ptr, _
 		ByVal pCompleted As Boolean Ptr, _
 		ByVal pdwError As DWORD Ptr _
 	)As HRESULT
-	Return AsyncResultGetCompleted(CONTAINING_RECORD(this, AsyncResult, lpVtbl), pBytesTransferred, pCompleted, pdwError)
+	Return AsyncResultGetCompleted(CONTAINING_RECORD(self, AsyncResult, lpVtbl), pBytesTransferred, pCompleted, pdwError)
 End Function
 
 Private Function IAsyncResultSetCompleted( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal BytesTransferred As DWORD, _
 		ByVal Completed As Boolean, _
 		ByVal dwError As DWORD _
 	)As HRESULT
-	Return AsyncResultSetCompleted(CONTAINING_RECORD(this, AsyncResult, lpVtbl), BytesTransferred, Completed, dwError)
+	Return AsyncResultSetCompleted(CONTAINING_RECORD(self, AsyncResult, lpVtbl), BytesTransferred, Completed, dwError)
 End Function
 
 Private Function IAsyncResultGetWsaOverlapped( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal ppOverlapped As OVERLAPPED Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultGetWsaOverlapped(CONTAINING_RECORD(this, AsyncResult, lpVtbl), ppOverlapped)
+	Return AsyncResultGetWsaOverlapped(CONTAINING_RECORD(self, AsyncResult, lpVtbl), ppOverlapped)
 End Function
 
 Private Function IAsyncResultAllocBuffers( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal Length As Integer, _
 		ByVal ppBuffers As Any Ptr Ptr _
 	)As HRESULT
-	Return AsyncResultAllocBuffers(CONTAINING_RECORD(this, AsyncResult, lpVtbl), Length, ppBuffers)
+	Return AsyncResultAllocBuffers(CONTAINING_RECORD(self, AsyncResult, lpVtbl), Length, ppBuffers)
 End Function
 
 Private Function IAsyncResultGetAsyncCallback( _
-		ByVal this As IAsyncResult Ptr, _
+		ByVal self As IAsyncResult Ptr, _
 		ByVal ppcb As AsyncCallback Ptr _
 	)As HRESULT
-	Return AsyncResultGetAsyncCallback(CONTAINING_RECORD(this, AsyncResult, lpVtbl), ppcb)
+	Return AsyncResultGetAsyncCallback(CONTAINING_RECORD(self, AsyncResult, lpVtbl), ppcb)
 End Function
 
 Dim GlobalAsyncResultVirtualTable As Const IAsyncResultVirtualTable = Type( _

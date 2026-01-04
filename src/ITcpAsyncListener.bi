@@ -20,56 +20,56 @@ Const TCPLISTENER_S_IO_PENDING As HRESULT = MAKE_HRESULT(SEVERITY_SUCCESS, FACIL
 Type ITcpListener As ITcpListener_
 
 Type ITcpListenerVirtualTable
-	
+
 	QueryInterface As Function( _
-		ByVal this As ITcpListener Ptr, _
+		ByVal self As ITcpListener Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	AddRef As Function( _
-		ByVal this As ITcpListener Ptr _
+		ByVal self As ITcpListener Ptr _
 	)As ULONG
-	
+
 	Release As Function( _
-		ByVal this As ITcpListener Ptr _
+		ByVal self As ITcpListener Ptr _
 	)As ULONG
-	
+
 	BeginAccept As Function( _
-		ByVal this As ITcpListener Ptr, _
+		ByVal self As ITcpListener Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	
+
 	EndAccept As Function( _
-		ByVal this As ITcpListener Ptr, _
+		ByVal self As ITcpListener Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pClientSocket As SOCKET Ptr _
 	)As HRESULT
-	
+
 	GetListenSocket As Function( _
-		ByVal this As ITcpListener Ptr, _
+		ByVal self As ITcpListener Ptr, _
 		ByVal pListenSocket As SOCKET Ptr _
 	)As HRESULT
-	
+
 	SetListenSocket As Function( _
-		ByVal this As ITcpListener Ptr, _
+		ByVal self As ITcpListener Ptr, _
 		ByVal ListenSocket As SOCKET _
 	)As HRESULT
-	
+
 End Type
 
 Type ITcpListener_
 	lpVtbl As ITcpListenerVirtualTable Ptr
 End Type
 
-#define ITcpListener_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
-#define ITcpListener_AddRef(this) (this)->lpVtbl->AddRef(this)
-#define ITcpListener_Release(this) (this)->lpVtbl->Release(this)
-#define ITcpListener_BeginAccept(this, pcb, StateObject, ppIAsyncResult) (this)->lpVtbl->BeginAccept(this, pcb, StateObject, ppIAsyncResult)
-#define ITcpListener_EndAccept(this, pIAsyncResult, pClientSocket) (this)->lpVtbl->EndAccept(this, pIAsyncResult, pClientSocket)
-#define ITcpListener_GetListenSocket(this, pListenSocket) (this)->lpVtbl->GetListenSocket(this, pListenSocket)
-#define ITcpListener_SetListenSocket(this, ListenSocket) (this)->lpVtbl->SetListenSocket(this, ListenSocket)
+#define ITcpListener_QueryInterface(self, riid, ppv) (self)->lpVtbl->QueryInterface(self, riid, ppv)
+#define ITcpListener_AddRef(self) (self)->lpVtbl->AddRef(self)
+#define ITcpListener_Release(self) (self)->lpVtbl->Release(self)
+#define ITcpListener_BeginAccept(self, pcb, StateObject, ppIAsyncResult) (self)->lpVtbl->BeginAccept(self, pcb, StateObject, ppIAsyncResult)
+#define ITcpListener_EndAccept(self, pIAsyncResult, pClientSocket) (self)->lpVtbl->EndAccept(self, pIAsyncResult, pClientSocket)
+#define ITcpListener_GetListenSocket(self, pListenSocket) (self)->lpVtbl->GetListenSocket(self, pListenSocket)
+#define ITcpListener_SetListenSocket(self, ListenSocket) (self)->lpVtbl->SetListenSocket(self, ListenSocket)
 
 #endif

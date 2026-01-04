@@ -18,60 +18,60 @@ Type HttpPutProcessor
 End Type
 
 Private Sub InitializeHttpPutProcessor( _
-		ByVal this As HttpPutProcessor Ptr, _
+		ByVal self As HttpPutProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPPUTPROCESSOR), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalHttpPutProcessorVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	self->lpVtbl = @GlobalHttpPutProcessorVirtualTable
+	self->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
+	self->pIMemoryAllocator = pIMemoryAllocator
 
 End Sub
 
 Private Sub UnInitializeHttpPutProcessor( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpPutProcessorCreated( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpPutProcessorDestroyed( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyHttpPutProcessor( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeHttpPutProcessor(this)
+	UnInitializeHttpPutProcessor(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	HttpPutProcessorDestroyed(this)
+	HttpPutProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function HttpPutProcessorAddRef( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)As ULONG
 
 	Return 1
@@ -79,7 +79,7 @@ Private Function HttpPutProcessorAddRef( _
 End Function
 
 Private Function HttpPutProcessorRelease( _
-		ByVal this As HttpPutProcessor Ptr _
+		ByVal self As HttpPutProcessor Ptr _
 	)As ULONG
 
 	Return 0
@@ -87,19 +87,19 @@ Private Function HttpPutProcessorRelease( _
 End Function
 
 Private Function HttpPutProcessorQueryInterface( _
-		ByVal this As HttpPutProcessor Ptr, _
+		ByVal self As HttpPutProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IHttpPutAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+				*ppv = @self->lpVtbl
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -107,7 +107,7 @@ Private Function HttpPutProcessorQueryInterface( _
 		End If
 	End If
 
-	HttpPutProcessorAddRef(this)
+	HttpPutProcessorAddRef(self)
 
 	Return S_OK
 
@@ -119,22 +119,22 @@ Public Function CreateHttpPutProcessor( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HttpPutProcessor Ptr = IMalloc_Alloc( _
+	Dim self As HttpPutProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpPutProcessor) _
 	)
 
-	If this Then
-		InitializeHttpPutProcessor(this, pIMemoryAllocator)
-		HttpPutProcessorCreated(this)
+	If self Then
+		InitializeHttpPutProcessor(self, pIMemoryAllocator)
+		HttpPutProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpPutProcessorQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyHttpPutProcessor(this)
+			DestroyHttpPutProcessor(self)
 		End If
 
 		Return hrQueryInterface
@@ -146,7 +146,7 @@ Public Function CreateHttpPutProcessor( _
 End Function
 
 Private Function HttpPutProcessorPrepare( _
-		ByVal this As HttpPutProcessor Ptr, _
+		ByVal self As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
@@ -224,7 +224,7 @@ Private Function HttpPutProcessorPrepare( _
 End Function
 
 Private Function HttpPutProcessorBeginProcess( _
-		ByVal this As HttpPutProcessor Ptr, _
+		ByVal self As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
@@ -246,7 +246,7 @@ Private Function HttpPutProcessorBeginProcess( _
 End Function
 
 Private Function HttpPutProcessorEndProcess( _
-		ByVal this As HttpPutProcessor Ptr, _
+		ByVal self As HttpPutProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
@@ -278,49 +278,49 @@ End Function
 
 
 Private Function IHttpPutProcessorQueryInterface( _
-		ByVal this As IHttpPutAsyncProcessor Ptr, _
+		ByVal self As IHttpPutAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpPutProcessorQueryInterface(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl), riid, ppv)
+	Return HttpPutProcessorQueryInterface(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl), riid, ppv)
 End Function
 
 Private Function IHttpPutProcessorAddRef( _
-		ByVal this As IHttpPutAsyncProcessor Ptr _
+		ByVal self As IHttpPutAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpPutProcessorAddRef(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl))
+	Return HttpPutProcessorAddRef(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl))
 End Function
 
 Private Function IHttpPutProcessorRelease( _
-		ByVal this As IHttpPutAsyncProcessor Ptr _
+		ByVal self As IHttpPutAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpPutProcessorRelease(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl))
+	Return HttpPutProcessorRelease(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl))
 End Function
 
 Private Function IHttpPutProcessorPrepare( _
-		ByVal this As IHttpPutAsyncProcessor Ptr, _
+		ByVal self As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpPutProcessorPrepare(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl), pContext, ppIBuffer)
+	Return HttpPutProcessorPrepare(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
 Private Function IHttpPutProcessorBeginProcess( _
-		ByVal this As IHttpPutAsyncProcessor Ptr, _
+		ByVal self As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpPutProcessorBeginProcess(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
+	Return HttpPutProcessorBeginProcess(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpPutProcessorEndProcess( _
-		ByVal this As IHttpPutAsyncProcessor Ptr, _
+		ByVal self As IHttpPutAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpPutProcessorEndProcess(CONTAINING_RECORD(this, HttpPutProcessor, lpVtbl), pContext, pIAsyncResult)
+	Return HttpPutProcessorEndProcess(CONTAINING_RECORD(self, HttpPutProcessor, lpVtbl), pContext, pIAsyncResult)
 End Function
 
 Dim GlobalHttpPutProcessorVirtualTable As Const IHttpPutAsyncProcessorVirtualTable = Type( _

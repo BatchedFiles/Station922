@@ -159,129 +159,129 @@ Private Function GetKnownResponseHeaderIndex( _
 End Function
 
 Private Sub InitializeServerResponse( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_SERVERRESPONSE), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalServerResponseVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalServerResponseVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	ZeroMemory(@this->ResponseHeaders(0), HttpResponseHeadersSize * SizeOf(HeapBSTR))
-	this->ResponseHeaderLine = NULL
-	this->ResponseHeaderLineLength = 0
-	this->HttpVersion = HttpVersions.Http11
-	this->StatusCode = HttpStatusCodes.OK
-	this->StatusDescription = NULL
-	this->ByteRangeOffset = 0
-	this->ByteRangeLength = 0
-	this->SendOnlyHeaders = False
-	this->KeepAlive = True
-	this->ResponseZipEnable = False
-	this->Mime.ContentType = ContentTypes.AnyAny
-	this->Mime.Format = MimeFormats.Binary
-	this->Mime.CharsetWeakPtr = NULL
+	self->pIMemoryAllocator = pIMemoryAllocator
+	ZeroMemory(@self->ResponseHeaders(0), HttpResponseHeadersSize * SizeOf(HeapBSTR))
+	self->ResponseHeaderLine = NULL
+	self->ResponseHeaderLineLength = 0
+	self->HttpVersion = HttpVersions.Http11
+	self->StatusCode = HttpStatusCodes.OK
+	self->StatusDescription = NULL
+	self->ByteRangeOffset = 0
+	self->ByteRangeLength = 0
+	self->SendOnlyHeaders = False
+	self->KeepAlive = True
+	self->ResponseZipEnable = False
+	self->Mime.ContentType = ContentTypes.AnyAny
+	self->Mime.Format = MimeFormats.Binary
+	self->Mime.CharsetWeakPtr = NULL
 
 End Sub
 
 Private Sub UnInitializeServerResponse( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)
 
 	For i As Integer = 0 To HttpResponseHeadersSize - 1
-		HeapSysFreeString(this->ResponseHeaders(i))
+		HeapSysFreeString(self->ResponseHeaders(i))
 	Next
 
-	HeapSysFreeString(this->StatusDescription)
+	HeapSysFreeString(self->StatusDescription)
 
-	If this->ResponseHeaderLine Then
+	If self->ResponseHeaderLine Then
 		IMalloc_Free( _
-			this->pIMemoryAllocator, _
-			this->ResponseHeaderLine _
+			self->pIMemoryAllocator, _
+			self->ResponseHeaderLine _
 		)
 	End If
 
 End Sub
 
 Private Sub ServerResponseCreated( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)
 
 End Sub
 
 Private Sub ServerResponseDestroyed( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyServerResponse( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeServerResponse(this)
+	UnInitializeServerResponse(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	ServerResponseDestroyed(this)
+	ServerResponseDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function ServerResponseAddRef( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function ServerResponseRelease( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyServerResponse(this)
+	DestroyServerResponse(self)
 
 	Return 0
 
 End Function
 
 Private Function ServerResponseQueryInterface( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IServerResponse, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	ServerResponseAddRef(this)
+	ServerResponseAddRef(self)
 
 	Return S_OK
 
@@ -293,22 +293,22 @@ Public Function CreateServerResponse( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As ServerResponse Ptr = IMalloc_Alloc( _
+	Dim self As ServerResponse Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ServerResponse) _
 	)
 
-	If this Then
-		InitializeServerResponse(this, pIMemoryAllocator)
-		ServerResponseCreated(this)
+	If self Then
+		InitializeServerResponse(self, pIMemoryAllocator)
+		ServerResponseCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ServerResponseQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyServerResponse(this)
+			DestroyServerResponse(self)
 		End If
 
 		Return hrQueryInterface
@@ -320,219 +320,219 @@ Public Function CreateServerResponse( _
 End Function
 
 Private Function ServerResponseGetHttpVersion( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
 
-	*pHttpVersion = this->HttpVersion
+	*pHttpVersion = self->HttpVersion
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetHttpVersion( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HttpVersion As HttpVersions _
 	)As HRESULT
 
-	this->HttpVersion = HttpVersion
+	self->HttpVersion = HttpVersion
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetStatusCode( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pStatusCode As HttpStatusCodes Ptr _
 	)As HRESULT
 
-	*pStatusCode = this->StatusCode
+	*pStatusCode = self->StatusCode
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetStatusCode( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal StatusCode As HttpStatusCodes _
 	)As HRESULT
 
-	this->StatusCode = StatusCode
+	self->StatusCode = StatusCode
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetStatusDescription( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
 
-	*ppStatusDescription = this->StatusDescription
+	*ppStatusDescription = self->StatusDescription
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetStatusDescription( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
 
-	this->StatusDescription = pStatusDescription
+	self->StatusDescription = pStatusDescription
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetKeepAlive( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
 
-	*pKeepAlive = this->KeepAlive
+	*pKeepAlive = self->KeepAlive
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetKeepAlive( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
 
-	this->KeepAlive = KeepAlive
+	self->KeepAlive = KeepAlive
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetSendOnlyHeaders( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pSendOnlyHeaders As Boolean Ptr _
 	)As HRESULT
 
-	*pSendOnlyHeaders = this->SendOnlyHeaders
+	*pSendOnlyHeaders = self->SendOnlyHeaders
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetSendOnlyHeaders( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal SendOnlyHeaders As Boolean _
 	)As HRESULT
 
-	this->SendOnlyHeaders = SendOnlyHeaders
+	self->SendOnlyHeaders = SendOnlyHeaders
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetMimeType( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 
-	*pMimeType = this->Mime
+	*pMimeType = self->Mime
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetMimeType( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
 
-	this->Mime = *pMimeType
+	self->Mime = *pMimeType
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetHttpHeader( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
 
-	*ppHeader = this->ResponseHeaders(HeaderIndex)
+	*ppHeader = self->ResponseHeaders(HeaderIndex)
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetHttpHeader( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeader As HeapBSTR _
 	)As HRESULT
 
-	this->ResponseHeaders(HeaderIndex) = pHeader
+	self->ResponseHeaders(HeaderIndex) = pHeader
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetZipEnabled( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pZipEnabled As Boolean Ptr _
 	)As HRESULT
 
-	*pZipEnabled = this->ResponseZipEnable
+	*pZipEnabled = self->ResponseZipEnable
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetZipEnabled( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal ZipEnabled As Boolean _
 	)As HRESULT
 
-	this->ResponseZipEnable = ZipEnabled
+	self->ResponseZipEnable = ZipEnabled
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseGetZipMode( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
 
-	*pZipMode = this->ResponseZipMode
+	*pZipMode = self->ResponseZipMode
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetZipMode( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
 
-	this->ResponseZipMode = ZipMode
+	self->ResponseZipMode = ZipMode
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseAddKnownResponseHeader( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
 
-	LET_HEAPSYSSTRING(this->ResponseHeaders(HeaderIndex), Value)
+	LET_HEAPSYSSTRING(self->ResponseHeaders(HeaderIndex), Value)
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseAddResponseHeader( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderName As HeapBSTR, _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
@@ -541,7 +541,7 @@ Private Function ServerResponseAddResponseHeader( _
 	Dim Finded As Boolean = GetKnownResponseHeaderIndex(HeaderName, @HeaderIndex)
 	If Finded Then
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeader( _
-			this, _
+			self, _
 			HeaderIndex, _
 			Value _
 		)
@@ -553,14 +553,14 @@ Private Function ServerResponseAddResponseHeader( _
 End Function
 
 Private Function ServerResponseAddKnownResponseHeaderWstrLen( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As WString Ptr, _
 		ByVal Length As Integer _
 	)As HRESULT
 
 	Dim hBstr As HeapBSTR = CreateHeapStringLen( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		Value, _
 		Length _
 	)
@@ -569,7 +569,7 @@ Private Function ServerResponseAddKnownResponseHeaderWstrLen( _
 	End If
 
 	Dim hr As HRESULT = ServerResponseAddKnownResponseHeader( _
-		this, _
+		self, _
 		HeaderIndex, _
 		hBstr _
 	)
@@ -581,7 +581,7 @@ Private Function ServerResponseAddKnownResponseHeaderWstrLen( _
 End Function
 
 Private Function ServerResponseAddKnownResponseHeaderWstr( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As WString Ptr _
 	)As HRESULT
@@ -589,7 +589,7 @@ Private Function ServerResponseAddKnownResponseHeaderWstr( _
 	Dim Length As Integer = lstrlenW(Value)
 
 	Dim hr As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-		this, _
+		self, _
 		HeaderIndex, _
 		Value, _
 		Length _
@@ -600,39 +600,39 @@ Private Function ServerResponseAddKnownResponseHeaderWstr( _
 End Function
 
 Private Function ServerResponseGetByteRange( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal pOffset As LongInt Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 
-	*pOffset = this->ByteRangeOffset
-	*pLength = this->ByteRangeLength
+	*pOffset = self->ByteRangeOffset
+	*pLength = self->ByteRangeLength
 
 	Return S_OK
 
 End Function
 
 Private Function ServerResponseSetByteRange( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal Offset As LongInt, _
 		ByVal Length As LongInt _
 	)As HRESULT
 
-	this->ByteRangeOffset = Offset
-	this->ByteRangeLength = Length
+	self->ByteRangeOffset = Offset
+	self->ByteRangeLength = Length
 
 	Return S_OK
 
 End Function
 
 Private Sub ServerResponsePrintServerHeaders( _
-		ByVal this As ServerResponse Ptr _
+		ByVal self As ServerResponse Ptr _
 	)
 
 End Sub
 
 Private Function ServerResponseAllHeadersToZString( _
-		ByVal this As ServerResponse Ptr, _
+		ByVal self As ServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
 		ByVal pHeadersLength As LongInt Ptr _
@@ -640,7 +640,7 @@ Private Function ServerResponseAllHeadersToZString( _
 
 	Scope
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
+			self, _
 			HttpResponseHeaders.HeaderAcceptRanges, _
 			@BytesString, _
 			Len(BytesString) _
@@ -652,7 +652,7 @@ Private Function ServerResponseAllHeadersToZString( _
 
 	Scope
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
+			self, _
 			HttpResponseHeaders.HeaderXContentTypeOptions, _
 			@NosniffString, _
 			Len(NosniffString) _
@@ -674,7 +674,7 @@ Private Function ServerResponseAllHeadersToZString( _
 		)
 
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
+			self, _
 			HttpResponseHeaders.HeaderServer, _
 			@ServerVersionString, _
 			CInt(Length) _
@@ -684,9 +684,9 @@ Private Function ServerResponseAllHeadersToZString( _
 		End If
 	End Scope
 
-	If this->KeepAlive Then
+	If self->KeepAlive Then
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
+			self, _
 			HttpResponseHeaders.HeaderConnection, _
 			@KeepAliveString, _
 			Len(KeepAliveString) _
@@ -696,7 +696,7 @@ Private Function ServerResponseAllHeadersToZString( _
 		End If
 	Else
 		Dim hrAddHeader As HRESULT = ServerResponseAddKnownResponseHeaderWstrLen( _
-			this, _
+			self, _
 			HttpResponseHeaders.HeaderConnection, _
 			@CloseString, _
 			Len(CloseString) _
@@ -706,7 +706,7 @@ Private Function ServerResponseAllHeadersToZString( _
 		End If
 	End If
 
-	Select Case this->StatusCode
+	Select Case self->StatusCode
 
 		Case HttpStatusCodes.CodeContinue, _
 			HttpStatusCodes.SwitchingProtocols, _
@@ -714,7 +714,7 @@ Private Function ServerResponseAllHeadersToZString( _
 			HttpStatusCodes.NoContent
 
 			ServerResponseAddKnownResponseHeader( _
-				this, _
+				self, _
 				HttpResponseHeaders.HeaderContentLength, _
 				NULL _
 			)
@@ -724,7 +724,7 @@ Private Function ServerResponseAllHeadersToZString( _
 			_i64tow(ContentLength, @strContentLength, 10)
 
 			ServerResponseAddKnownResponseHeaderWstr( _
-				this, _
+				self, _
 				HttpResponseHeaders.HeaderContentLength, _
 				@strContentLength _
 			)
@@ -732,12 +732,12 @@ Private Function ServerResponseAllHeadersToZString( _
 	End Select
 
 	Scope
-		If this->Mime.ContentType <> ContentTypes.AnyAny Then
+		If self->Mime.ContentType <> ContentTypes.AnyAny Then
 			Dim wContentType As WString * (MaxContentTypeLength + 1) = Any
-			GetContentTypeOfMimeType(@wContentType, @this->Mime)
+			GetContentTypeOfMimeType(@wContentType, @self->Mime)
 
 			ServerResponseAddKnownResponseHeaderWstr( _
-				this, _
+				self, _
 				HttpResponseHeaders.HeaderContentType, _
 				@wContentType _
 			)
@@ -745,7 +745,7 @@ Private Function ServerResponseAllHeadersToZString( _
 	End Scope
 
 	Dim pHeadersBuffer As WString Ptr = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		SizeOf(WString) * (MaxResponseBufferLength + 1) _
 	)
 	If pHeadersBuffer = NULL Then
@@ -766,22 +766,22 @@ Private Function ServerResponseAllHeadersToZString( _
 		Scope
 			Dim HttpVersionLength As Integer = Any
 			Dim pwHttpVersion As WString Ptr = HttpVersionToString( _
-				this->HttpVersion, _
+				self->HttpVersion, _
 				@HttpVersionLength _
 			)
 
 			Writer.WriteLengthString(pwHttpVersion, HttpVersionLength)
 			Writer.WriteChar(Characters.WhiteSpace)
 
-			Writer.WriteInt32(this->StatusCode)
+			Writer.WriteInt32(self->StatusCode)
 			Writer.WriteChar(Characters.WhiteSpace)
 
-			If this->StatusDescription = NULL Then
+			If self->StatusDescription = NULL Then
 				Dim BufferLength As Integer = Any
-				Dim wBuffer As WString Ptr = GetStatusDescription(this->StatusCode, @BufferLength)
+				Dim wBuffer As WString Ptr = GetStatusDescription(self->StatusCode, @BufferLength)
 				Writer.WriteLengthStringLine(wBuffer, BufferLength)
 			Else
-				Writer.WriteStringLine(this->StatusDescription)
+				Writer.WriteStringLine(self->StatusDescription)
 			End If
 		End Scope
 
@@ -793,18 +793,18 @@ Private Function ServerResponseAllHeadersToZString( _
 			FileTimeToSystemTime(@datNowF, @datNowS)
 
 			Dim HttpDate As HeapBSTR = ConvertSystemDateToHttpDate( _
-				this->pIMemoryAllocator, _
+				self->pIMemoryAllocator, _
 				@datNowS _
 			)
 			If HttpDate = NULL Then
-				IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
+				IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
 				*ppHeaders = NULL
 				*pHeadersLength = 0
 				Return E_OUTOFMEMORY
 			End If
 
 			ServerResponseAddKnownResponseHeader( _
-				this, _
+				self, _
 				HttpResponseHeaders.HeaderDate, _
 				HttpDate _
 			)
@@ -816,7 +816,7 @@ Private Function ServerResponseAllHeadersToZString( _
 
 			Dim HeaderIndex As HttpResponseHeaders = Cast(HttpResponseHeaders, i)
 
-			If this->ResponseHeaders(HeaderIndex) Then
+			If self->ResponseHeaders(HeaderIndex) Then
 
 				Dim BufferLength As Integer = Any
 				Dim wBuffer As WString Ptr = KnownResponseHeaderToString( _
@@ -826,23 +826,23 @@ Private Function ServerResponseAllHeadersToZString( _
 
 				Writer.WriteLengthString(wBuffer, BufferLength)
 				Writer.WriteLengthString(@ColonWithSpaceString, Len(ColonWithSpaceString))
-				Writer.WriteStringLine(this->ResponseHeaders(HeaderIndex))
+				Writer.WriteStringLine(self->ResponseHeaders(HeaderIndex))
 			End If
 
 		Next
 
 		Writer.WriteNewLine()
 
-		this->ResponseHeaderLineLength = Writer.GetLength()
+		self->ResponseHeaderLineLength = Writer.GetLength()
 
 	End Scope
 
-	this->ResponseHeaderLine = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
-		this->ResponseHeaderLineLength _
+	self->ResponseHeaderLine = IMalloc_Alloc( _
+		self->pIMemoryAllocator, _
+		self->ResponseHeaderLineLength _
 	)
-	If this->ResponseHeaderLine = NULL Then
-		IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
+	If self->ResponseHeaderLine = NULL Then
+		IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
 		*ppHeaders = NULL
 		*pHeadersLength = 0
 		Return E_OUTOFMEMORY
@@ -852,19 +852,19 @@ Private Function ServerResponseAllHeadersToZString( _
 		CP_ACP, _
 		0, _
 		pHeadersBuffer, _
-		this->ResponseHeaderLineLength, _
-		this->ResponseHeaderLine, _
-		this->ResponseHeaderLineLength, _
+		self->ResponseHeaderLineLength, _
+		self->ResponseHeaderLine, _
+		self->ResponseHeaderLineLength, _
 		0, _
 		0 _
 	)
 
-	ServerResponsePrintServerHeaders(this)
+	ServerResponsePrintServerHeaders(self)
 
-	*ppHeaders = this->ResponseHeaderLine
-	*pHeadersLength = this->ResponseHeaderLineLength
+	*ppHeaders = self->ResponseHeaderLine
+	*pHeadersLength = self->ResponseHeaderLineLength
 
-	IMalloc_Free(this->pIMemoryAllocator, pHeadersBuffer)
+	IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
 
 	Return S_OK
 
@@ -872,209 +872,209 @@ End Function
 
 
 Private Function IServerResponseQueryInterface( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return ServerResponseQueryInterface(CONTAINING_RECORD(this, ServerResponse, lpVtbl), riid, ppvObject)
+	Return ServerResponseQueryInterface(CONTAINING_RECORD(self, ServerResponse, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IServerResponseAddRef( _
-		ByVal this As IServerResponse Ptr _
+		ByVal self As IServerResponse Ptr _
 	)As ULONG
-	Return ServerResponseAddRef(CONTAINING_RECORD(this, ServerResponse, lpVtbl))
+	Return ServerResponseAddRef(CONTAINING_RECORD(self, ServerResponse, lpVtbl))
 End Function
 
 Private Function IServerResponseRelease( _
-		ByVal this As IServerResponse Ptr _
+		ByVal self As IServerResponse Ptr _
 	)As ULONG
-	Return ServerResponseRelease(CONTAINING_RECORD(this, ServerResponse, lpVtbl))
+	Return ServerResponseRelease(CONTAINING_RECORD(self, ServerResponse, lpVtbl))
 End Function
 
 Private Function IServerResponseGetHttpVersion( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pHttpVersion As HttpVersions Ptr _
 	)As HRESULT
-	Return ServerResponseGetHttpVersion(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pHttpVersion)
+	Return ServerResponseGetHttpVersion(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pHttpVersion)
 End Function
 
 Private Function IServerResponseSetHttpVersion( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HttpVersion As HttpVersions _
 	)As HRESULT
-	Return ServerResponseSetHttpVersion(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HttpVersion)
+	Return ServerResponseSetHttpVersion(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HttpVersion)
 End Function
 
 Private Function IServerResponseGetStatusCode( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pStatusCode As HttpStatusCodes Ptr _
 	)As HRESULT
-	Return ServerResponseGetStatusCode(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pStatusCode)
+	Return ServerResponseGetStatusCode(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pStatusCode)
 End Function
 
 Private Function IServerResponseSetStatusCode( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal StatusCode As HttpStatusCodes _
 	)As HRESULT
-	Return ServerResponseSetStatusCode(CONTAINING_RECORD(this, ServerResponse, lpVtbl), StatusCode)
+	Return ServerResponseSetStatusCode(CONTAINING_RECORD(self, ServerResponse, lpVtbl), StatusCode)
 End Function
 
 Private Function IServerResponseGetStatusDescription( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal ppStatusDescription As HeapBSTR Ptr _
 	)As HRESULT
-	Return ServerResponseGetStatusDescription(CONTAINING_RECORD(this, ServerResponse, lpVtbl), ppStatusDescription)
+	Return ServerResponseGetStatusDescription(CONTAINING_RECORD(self, ServerResponse, lpVtbl), ppStatusDescription)
 End Function
 
 Private Function IServerResponseSetStatusDescription( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pStatusDescription As HeapBSTR _
 	)As HRESULT
-	Return ServerResponseSetStatusDescription(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pStatusDescription)
+	Return ServerResponseSetStatusDescription(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pStatusDescription)
 End Function
 
 Private Function IServerResponseGetKeepAlive( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pKeepAlive As Boolean Ptr _
 	)As HRESULT
-	Return ServerResponseGetKeepAlive(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pKeepAlive)
+	Return ServerResponseGetKeepAlive(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pKeepAlive)
 End Function
 
 Private Function IServerResponseSetKeepAlive( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
-	Return ServerResponseSetKeepAlive(CONTAINING_RECORD(this, ServerResponse, lpVtbl), KeepAlive)
+	Return ServerResponseSetKeepAlive(CONTAINING_RECORD(self, ServerResponse, lpVtbl), KeepAlive)
 End Function
 
 Private Function IServerResponseGetSendOnlyHeaders( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pSendOnlyHeaders As Boolean Ptr _
 	)As HRESULT
-	Return ServerResponseGetSendOnlyHeaders(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pSendOnlyHeaders)
+	Return ServerResponseGetSendOnlyHeaders(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pSendOnlyHeaders)
 End Function
 
 Private Function IServerResponseSetSendOnlyHeaders( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal SendOnlyHeaders As Boolean _
 	)As HRESULT
-	Return ServerResponseSetSendOnlyHeaders(CONTAINING_RECORD(this, ServerResponse, lpVtbl), SendOnlyHeaders)
+	Return ServerResponseSetSendOnlyHeaders(CONTAINING_RECORD(self, ServerResponse, lpVtbl), SendOnlyHeaders)
 End Function
 
 Private Function IServerResponseGetMimeType( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
-	Return ServerResponseGetMimeType(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pMimeType)
+	Return ServerResponseGetMimeType(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pMimeType)
 End Function
 
 Private Function IServerResponseSetMimeType( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pMimeType As MimeType Ptr _
 	)As HRESULT
-	Return ServerResponseSetMimeType(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pMimeType)
+	Return ServerResponseSetMimeType(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pMimeType)
 End Function
 
 Private Function IServerResponseGetHttpHeader( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal ppHeader As HeapBSTR Ptr _
 	)As HRESULT
-	Return ServerResponseGetHttpHeader(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderIndex, ppHeader)
+	Return ServerResponseGetHttpHeader(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderIndex, ppHeader)
 End Function
 
 Private Function IServerResponseSetHttpHeader( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal pHeader As HeapBSTR _
 	)As HRESULT
-	Return ServerResponseSetHttpHeader(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderIndex, pHeader)
+	Return ServerResponseSetHttpHeader(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderIndex, pHeader)
 End Function
 
 Private Function IServerResponseGetZipEnabled( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pZipEnabled As Boolean Ptr _
 	)As HRESULT
-	Return ServerResponseGetZipEnabled(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pZipEnabled)
+	Return ServerResponseGetZipEnabled(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pZipEnabled)
 End Function
 
 Private Function IServerResponseSetZipEnabled( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal ZipEnabled As Boolean _
 	)As HRESULT
-	Return ServerResponseSetZipEnabled(CONTAINING_RECORD(this, ServerResponse, lpVtbl), ZipEnabled)
+	Return ServerResponseSetZipEnabled(CONTAINING_RECORD(self, ServerResponse, lpVtbl), ZipEnabled)
 End Function
 
 Private Function IServerResponseGetZipMode( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pZipMode As ZipModes Ptr _
 	)As HRESULT
-	Return ServerResponseGetZipMode(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pZipMode)
+	Return ServerResponseGetZipMode(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pZipMode)
 End Function
 
 Private Function IServerResponseSetZipMode( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal ZipMode As ZipModes _
 	)As HRESULT
-	Return ServerResponseSetZipMode(CONTAINING_RECORD(this, ServerResponse, lpVtbl), ZipMode)
+	Return ServerResponseSetZipMode(CONTAINING_RECORD(self, ServerResponse, lpVtbl), ZipMode)
 End Function
 
 Private Function IServerResponseAddResponseHeader( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderName As HeapBSTR, _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
-	Return ServerResponseAddResponseHeader(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderName, Value)
+	Return ServerResponseAddResponseHeader(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderName, Value)
 End Function
 
 Private Function IServerResponseAddKnownResponseHeader( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
-	Return ServerResponseAddKnownResponseHeader(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderIndex, Value)
+	Return ServerResponseAddKnownResponseHeader(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
 Private Function IServerResponseAddKnownResponseHeaderWstr( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR _
 	)As HRESULT
-	Return ServerResponseAddKnownResponseHeaderWstr(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderIndex, Value)
+	Return ServerResponseAddKnownResponseHeaderWstr(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderIndex, Value)
 End Function
 
 Private Function IServerResponseGetByteRange( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal pOffset As LongInt Ptr, _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
-	Return ServerResponseGetByteRange(CONTAINING_RECORD(this, ServerResponse, lpVtbl), pOffset, pLength)
+	Return ServerResponseGetByteRange(CONTAINING_RECORD(self, ServerResponse, lpVtbl), pOffset, pLength)
 End Function
 
 Private Function IServerResponseSetByteRange( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal Offset As LongInt, _
 		ByVal Length As LongInt _
 	)As HRESULT
-	Return ServerResponseSetByteRange(CONTAINING_RECORD(this, ServerResponse, lpVtbl), Offset, Length)
+	Return ServerResponseSetByteRange(CONTAINING_RECORD(self, ServerResponse, lpVtbl), Offset, Length)
 End Function
 
 Private Function IServerResponseAddKnownResponseHeaderWstrLen( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal HeaderIndex As HttpResponseHeaders, _
 		ByVal Value As HeapBSTR, _
 		ByVal Length As Integer _
 	)As HRESULT
-	Return ServerResponseAddKnownResponseHeaderWstrLen(CONTAINING_RECORD(this, ServerResponse, lpVtbl), HeaderIndex, Value, Length)
+	Return ServerResponseAddKnownResponseHeaderWstrLen(CONTAINING_RECORD(self, ServerResponse, lpVtbl), HeaderIndex, Value, Length)
 End Function
 
 Private Function IServerResponseAllHeadersToZString( _
-		ByVal this As IServerResponse Ptr, _
+		ByVal self As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal ppHeaders As ZString Ptr Ptr, _
 		ByVal pHeadersLength As LongInt Ptr _
 	)As HRESULT
-	Return ServerResponseAllHeadersToZString(CONTAINING_RECORD(this, ServerResponse, lpVtbl), ContentLength, ppHeaders, pHeadersLength)
+	Return ServerResponseAllHeadersToZString(CONTAINING_RECORD(self, ServerResponse, lpVtbl), ContentLength, ppHeaders, pHeadersLength)
 End Function
 
 Dim GlobalServerResponseVirtualTable As Const IServerResponseVirtualTable = Type( _

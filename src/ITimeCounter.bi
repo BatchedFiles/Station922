@@ -9,39 +9,39 @@ Extern IID_ITimeCounter Alias "IID_ITimeCounter" As Const IID
 Type ITimeCounter As ITimeCounter_
 
 Type ITimeCounterVirtualTable
-	
+
 	QueryInterface As Function( _
-		ByVal this As ITimeCounter Ptr, _
+		ByVal self As ITimeCounter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	AddRef As Function( _
-		ByVal this As ITimeCounter Ptr _
+		ByVal self As ITimeCounter Ptr _
 	)As ULONG
-	
+
 	Release As Function( _
-		ByVal this As ITimeCounter Ptr _
+		ByVal self As ITimeCounter Ptr _
 	)As ULONG
-	
+
 	StartWatch As Function( _
-		ByVal this As ITimeCounter Ptr _
+		ByVal self As ITimeCounter Ptr _
 	)As HRESULT
-	
+
 	StopWatch As Function( _
-		ByVal this As ITimeCounter Ptr _
+		ByVal self As ITimeCounter Ptr _
 	)As HRESULT
-	
+
 End Type
 
 Type ITimeCounter_
 	lpVtbl As ITimeCounterVirtualTable Ptr
 End Type
 
-#define ITimeCounter_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
-#define ITimeCounter_AddRef(this) (this)->lpVtbl->AddRef(this)
-#define ITimeCounter_Release(this) (this)->lpVtbl->Release(this)
-#define ITimeCounter_StartWatch(this) (this)->lpVtbl->StartWatch(this)
-#define ITimeCounter_StopWatch(this) (this)->lpVtbl->StopWatch(this)
+#define ITimeCounter_QueryInterface(self, riid, ppv) (self)->lpVtbl->QueryInterface(self, riid, ppv)
+#define ITimeCounter_AddRef(self) (self)->lpVtbl->AddRef(self)
+#define ITimeCounter_Release(self) (self)->lpVtbl->Release(self)
+#define ITimeCounter_StartWatch(self) (self)->lpVtbl->StartWatch(self)
+#define ITimeCounter_StopWatch(self) (self)->lpVtbl->StopWatch(self)
 
 #endif

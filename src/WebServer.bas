@@ -72,7 +72,7 @@ Declare Sub ReadRequestCallback( _
 )
 
 Private Function CreateAcceptConnectionContext( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As AcceptConnectionContext Ptr
 
 	Dim pIMalloc As IMalloc Ptr = Any
@@ -88,7 +88,7 @@ Private Function CreateAcceptConnectionContext( _
 
 			Dim pTask As IAcceptConnectionAsyncIoTask Ptr = Any
 			Dim hrCreateTask As HRESULT = CreateAcceptConnectionAsyncTask( _
-				this->pIMemoryAllocator, _
+				self->pIMemoryAllocator, _
 				@IID_IAcceptConnectionAsyncIoTask, _
 				@pTask _
 			)
@@ -103,7 +103,7 @@ Private Function CreateAcceptConnectionContext( _
 					)
 				#endif
 
-				pState->pWebServer = this
+				pState->pWebServer = self
 				pState->pIMalloc = pIMalloc
 				pState->pTask = pTask
 
@@ -198,7 +198,7 @@ Private Function CreateReadRequestContextFromWriteContext( _
 End Function
 
 Private Function CreateReadRequestContextFromSocket( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal ClientSocket As SOCKET _
 	)As ReadRequestContext Ptr
 
@@ -254,7 +254,7 @@ Private Function CreateReadRequestContextFromSocket( _
 								)
 							#endif
 
-							pState->pWebServer = this
+							pState->pWebServer = self
 							pState->pIMalloc = pIMalloc
 							pState->pTask = pTask
 
@@ -311,7 +311,7 @@ Private Sub DestroyReadRequestContext( _
 End Sub
 
 Private Function CreateWriteResponseContext( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pStream As IBaseAsyncStream Ptr, _
 		ByVal pIHttpAsyncReader As IHttpAsyncReader Ptr, _
@@ -344,7 +344,7 @@ Private Function CreateWriteResponseContext( _
 			IWriteResponseAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
 			IWriteResponseAsyncIoTask_SetClientRequest(pTask, pRequest)
 
-			pContext->pWebServer = this
+			pContext->pWebServer = self
 			IMalloc_AddRef(pIMalloc)
 			pContext->pIMalloc = pIMalloc
 			pContext->pTask = pTask
@@ -374,7 +374,7 @@ Private Sub DestroyWriteResponseContext( _
 End Sub
 
 Private Function CreateWriteErrorContext( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pStream As IBaseAsyncStream Ptr, _
 		ByVal pIRequest As IClientRequest Ptr, _
@@ -413,7 +413,7 @@ Private Function CreateWriteErrorContext( _
 			If SUCCEEDED(hrCreateTask) Then
 
 				IWriteErrorAsyncIoTask_SetBaseStream(pTask, pStream)
-				IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, this->pIWebSites)
+				IWriteErrorAsyncIoTask_SetWebSiteCollectionWeakPtr(pTask, self->pIWebSites)
 
 				IWriteErrorAsyncIoTask_SetClientRequest(pTask, localRequest)
 
@@ -512,7 +512,7 @@ Private Function CreateWriteErrorContext( _
 						)
 					#endif
 
-					pContext->pWebServer = this
+					pContext->pWebServer = self
 					IMalloc_AddRef(pIMalloc)
 					pContext->pIMalloc = pIMalloc
 					pContext->pTask = pTask
@@ -1087,21 +1087,21 @@ Private Sub AcceptConnectionCallback( _
 End Sub
 
 Private Function CreateServerSocketSink( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As HRESULT
 
 	Dim hrCreateSocket As HRESULT = CreateSocketAndListenW( _
-		this->ListenAddress, _
-		this->ListenPort, _
-		@this->SocketList(0), _
+		self->ListenAddress, _
+		self->ListenPort, _
+		@self->SocketList(0), _
 		SocketListCapacity, _
-		@this->SocketListLength _
+		@self->SocketListLength _
 	)
 
 	Scope
 		Dim vtAddressMessage As VARIANT = Any
 		vtAddressMessage.vt = VT_BSTR
-		vtAddressMessage.bstrVal = this->ListenAddress
+		vtAddressMessage.bstrVal = self->ListenAddress
 		LogWriteEntry( _
 			LogEntryType.Information, _
 			WStr(!"Listen address"), _
@@ -1110,7 +1110,7 @@ Private Function CreateServerSocketSink( _
 
 		Dim vtPortMessage As VARIANT = Any
 		vtPortMessage.vt = VT_BSTR
-		vtPortMessage.bstrVal = this->ListenPort
+		vtPortMessage.bstrVal = self->ListenPort
 		LogWriteEntry( _
 			LogEntryType.Information, _
 			WStr(!"Listen port"), _
@@ -1118,11 +1118,11 @@ Private Function CreateServerSocketSink( _
 		)
 	End Scope
 
-	HeapSysFreeString(this->ListenAddress)
-	this->ListenAddress = NULL
+	HeapSysFreeString(self->ListenAddress)
+	self->ListenAddress = NULL
 
-	HeapSysFreeString(this->ListenPort)
-	this->ListenPort = NULL
+	HeapSysFreeString(self->ListenPort)
+	self->ListenPort = NULL
 
 	If FAILED(hrCreateSocket) Then
 		Dim vtErrorMessage As VARIANT = Any
@@ -1141,114 +1141,114 @@ Private Function CreateServerSocketSink( _
 End Function
 
 Private Sub InitializeWebServer( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pIWebSites As IWebSiteCollection Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSERVER), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalWebServerVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalWebServerVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
+	self->pIMemoryAllocator = pIMemoryAllocator
 	' Do not need AddRef pIWebSites
-	this->pIWebSites = pIWebSites
-	this->ListenAddress = NULL
-	this->ListenPort = NULL
+	self->pIWebSites = pIWebSites
+	self->ListenAddress = NULL
+	self->ListenPort = NULL
 
 End Sub
 
 Private Sub UnInitializeWebServer( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)
 
-	HeapSysFreeString(this->ListenAddress)
-	HeapSysFreeString(this->ListenPort)
+	HeapSysFreeString(self->ListenAddress)
+	HeapSysFreeString(self->ListenPort)
 
-	If this->pIWebSites Then
-		IWebSiteCollection_Release(this->pIWebSites)
+	If self->pIWebSites Then
+		IWebSiteCollection_Release(self->pIWebSites)
 	End If
 
 End Sub
 
 Private Sub WebServerCreated( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)
 
 End Sub
 
 Private Sub WebServerDestroyed( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyWebServer( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeWebServer(this)
+	UnInitializeWebServer(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	WebServerDestroyed(this)
+	WebServerDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function WebServerAddRef( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function WebServerRelease( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyWebServer(this)
+	DestroyWebServer(self)
 
 	Return 0
 
 End Function
 
 Private Function WebServerQueryInterface( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IWebServer, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	WebServerAddRef(this)
+	WebServerAddRef(self)
 
 	Return S_OK
 
@@ -1260,12 +1260,12 @@ Public Function CreateWebServer( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As WebServer Ptr = IMalloc_Alloc( _
+	Dim self As WebServer Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebServer) _
 	)
 
-	If this Then
+	If self Then
 		Dim pIWebSites As IWebSiteCollection Ptr = Any
 		Dim hrCreateCollection As HRESULT = CreateWebSiteCollection( _
 			pIMemoryAllocator, _
@@ -1276,20 +1276,20 @@ Public Function CreateWebServer( _
 		If SUCCEEDED(hrCreateCollection) Then
 
 			InitializeWebServer( _
-				this, _
+				self, _
 				pIMemoryAllocator, _
 				pIWebSites _
 			)
 
-			WebServerCreated(this)
+			WebServerCreated(self)
 
 			Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
-				this, _
+				self, _
 				riid, _
 				ppv _
 			)
 			If FAILED(hrQueryInterface) Then
-				DestroyWebServer(this)
+				DestroyWebServer(self)
 			End If
 
 			Return hrQueryInterface
@@ -1297,7 +1297,7 @@ Public Function CreateWebServer( _
 
 		IMalloc_Free( _
 			pIMemoryAllocator, _
-			this _
+			self _
 		)
 	End If
 
@@ -1307,14 +1307,14 @@ Public Function CreateWebServer( _
 End Function
 
 Private Function WebServerAddWebSite( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 
 	Dim hrAdd As HRESULT = IWebSiteCollection_Add( _
-		this->pIWebSites, _
+		self->pIWebSites, _
 		pKey, _
 		Port, _
 		pIWebSite _
@@ -1328,12 +1328,12 @@ Private Function WebServerAddWebSite( _
 End Function
 
 Private Function WebServerAddDefaultWebSite( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
 
 	Dim hrAdd As HRESULT = IWebSiteCollection_SetDefaultWebSite( _
-		this->pIWebSites, _
+		self->pIWebSites, _
 		pIDefaultWebSite _
 	)
 	If FAILED(hrAdd) Then
@@ -1345,40 +1345,40 @@ Private Function WebServerAddDefaultWebSite( _
 End Function
 
 Private Function WebServerSetEndPoint( _
-		ByVal this As WebServer Ptr, _
+		ByVal self As WebServer Ptr, _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
 
-	LET_HEAPSYSSTRING(this->ListenAddress, ListenAddress)
-	LET_HEAPSYSSTRING(this->ListenPort, ListenPort)
+	LET_HEAPSYSSTRING(self->ListenAddress, ListenAddress)
+	LET_HEAPSYSSTRING(self->ListenPort, ListenPort)
 
 	Return S_OK
 
 End Function
 
 Private Function WebServerRun( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As HRESULT
 
-	Dim hrSocket As HRESULT = CreateServerSocketSink(this)
+	Dim hrSocket As HRESULT = CreateServerSocketSink(self)
 	If FAILED(hrSocket) Then
 		Return hrSocket
 	End If
 
-	For i As Integer = 0 To this->SocketListLength - 1
+	For i As Integer = 0 To self->SocketListLength - 1
 
 		Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
 		Dim hrBind As HRESULT = IThreadPool_AssociateDevice( _
 			pIPool, _
-			Cast(HANDLE, this->SocketList(i).ClientSocket), _
-			Cast(Any Ptr, this->SocketList(i).ClientSocket) _
+			Cast(HANDLE, self->SocketList(i).ClientSocket), _
+			Cast(Any Ptr, self->SocketList(i).ClientSocket) _
 		)
 		If FAILED(hrBind) Then
 			Return E_OUTOFMEMORY
 		End If
 
-		Dim pState As AcceptConnectionContext Ptr = CreateAcceptConnectionContext(this)
+		Dim pState As AcceptConnectionContext Ptr = CreateAcceptConnectionContext(self)
 
 		If pState = NULL Then
 			Return E_OUTOFMEMORY
@@ -1386,7 +1386,7 @@ Private Function WebServerRun( _
 
 		IAcceptConnectionAsyncIoTask_SetListenSocket( _
 			pState->pTask, _
-			this->SocketList(i).ClientSocket _
+			self->SocketList(i).ClientSocket _
 		)
 
 		Dim pIResult As IAsyncResult Ptr = Any
@@ -1432,11 +1432,11 @@ Private Function WebServerRun( _
 End Function
 
 Private Function WebServerStop( _
-		ByVal this As WebServer Ptr _
+		ByVal self As WebServer Ptr _
 	)As HRESULT
 
-	For i As Integer = 0 To this->SocketListLength - 1
-		closesocket(this->SocketList(i).ClientSocket)
+	For i As Integer = 0 To self->SocketListLength - 1
+		closesocket(self->SocketList(i).ClientSocket)
 	Next
 
 	Return S_OK
@@ -1445,59 +1445,59 @@ End Function
 
 
 Private Function IWebServerQueryInterface( _
-		ByVal this As IWebServer Ptr, _
+		ByVal self As IWebServer Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return WebServerQueryInterface(CONTAINING_RECORD(this, WebServer, lpVtbl), riid, ppv)
+	Return WebServerQueryInterface(CONTAINING_RECORD(self, WebServer, lpVtbl), riid, ppv)
 End Function
 
 Private Function IWebServerAddRef( _
-		ByVal this As IWebServer Ptr _
+		ByVal self As IWebServer Ptr _
 	)As ULONG
-	Return WebServerAddRef(CONTAINING_RECORD(this, WebServer, lpVtbl))
+	Return WebServerAddRef(CONTAINING_RECORD(self, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerRelease( _
-		ByVal this As IWebServer Ptr _
+		ByVal self As IWebServer Ptr _
 	)As ULONG
-	Return WebServerRelease(CONTAINING_RECORD(this, WebServer, lpVtbl))
+	Return WebServerRelease(CONTAINING_RECORD(self, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerAddWebSite( _
-		ByVal this As IWebServer Ptr, _
+		ByVal self As IWebServer Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebServerAddWebSite(CONTAINING_RECORD(this, WebServer, lpVtbl), pKey, Port, pIWebSite)
+	Return WebServerAddWebSite(CONTAINING_RECORD(self, WebServer, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
 Private Function IWebServerAddDefaultWebSite( _
-		ByVal this As IWebServer Ptr, _
+		ByVal self As IWebServer Ptr, _
 		ByVal pIDefaultWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebServerAddDefaultWebSite(CONTAINING_RECORD(this, WebServer, lpVtbl), pIDefaultWebSite)
+	Return WebServerAddDefaultWebSite(CONTAINING_RECORD(self, WebServer, lpVtbl), pIDefaultWebSite)
 End Function
 
 Private Function IWebServerSetEndPoint( _
-		ByVal this As IWebServer Ptr, _
+		ByVal self As IWebServer Ptr, _
 		ByVal ListenAddress As HeapBSTR, _
 		ByVal ListenPort As HeapBSTR _
 	)As HRESULT
-	Return WebServerSetEndPoint(CONTAINING_RECORD(this, WebServer, lpVtbl), ListenAddress, ListenPort)
+	Return WebServerSetEndPoint(CONTAINING_RECORD(self, WebServer, lpVtbl), ListenAddress, ListenPort)
 End Function
 
 Private Function IWebServerRun( _
-		ByVal this As IWebServer Ptr _
+		ByVal self As IWebServer Ptr _
 	)As HRESULT
-	Return WebServerRun(CONTAINING_RECORD(this, WebServer, lpVtbl))
+	Return WebServerRun(CONTAINING_RECORD(self, WebServer, lpVtbl))
 End Function
 
 Private Function IWebServerStop( _
-		ByVal this As IWebServer Ptr _
+		ByVal self As IWebServer Ptr _
 	)As HRESULT
-	Return WebServerStop(CONTAINING_RECORD(this, WebServer, lpVtbl))
+	Return WebServerStop(CONTAINING_RECORD(self, WebServer, lpVtbl))
 End Function
 
 Dim GlobalWebServerVirtualTable As Const IWebServerVirtualTable = Type( _

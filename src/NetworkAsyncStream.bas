@@ -55,102 +55,102 @@ Private Sub SetEndTime( _
 End Sub
 
 Private Sub InitializeNetworkStream( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_NETWORKSTREAM), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalNetworkStreamVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalNetworkStreamVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->RemoteAddressLength = 0
-	this->ClientSocket = INVALID_SOCKET
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->RemoteAddressLength = 0
+	self->ClientSocket = INVALID_SOCKET
 
 End Sub
 
 Private Sub UnInitializeNetworkStream( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)
 
-	this->ClientSocket = INVALID_SOCKET
+	self->ClientSocket = INVALID_SOCKET
 
 End Sub
 
 Private Sub NetworkStreamCreated( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)
 
 End Sub
 
 Private Sub NetworkStreamDestroyed( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyNetworkStream( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeNetworkStream(this)
+	UnInitializeNetworkStream(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	NetworkStreamDestroyed(this)
+	NetworkStreamDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function NetworkStreamAddRef( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function NetworkStreamRelease( _
-		ByVal this As NetworkStream Ptr _
+		ByVal self As NetworkStream Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyNetworkStream(this)
+	DestroyNetworkStream(self)
 
 	Return 0
 
 End Function
 
 Private Function NetworkStreamQueryInterface( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_INetworkAsyncStream, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IBaseAsyncStream, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+				*ppv = @self->lpVtbl
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -158,7 +158,7 @@ Private Function NetworkStreamQueryInterface( _
 		End If
 	End If
 
-	NetworkStreamAddRef(this)
+	NetworkStreamAddRef(self)
 
 	Return S_OK
 
@@ -170,22 +170,22 @@ Public Function CreateNetworkStream( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As NetworkStream Ptr = IMalloc_Alloc( _
+	Dim self As NetworkStream Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(NetworkStream) _
 	)
 
-	If this Then
-		InitializeNetworkStream(this, pIMemoryAllocator)
-		NetworkStreamCreated(this)
+	If self Then
+		InitializeNetworkStream(self, pIMemoryAllocator)
+		NetworkStreamCreated(self)
 
 		Dim hrQueryInterface As HRESULT = NetworkStreamQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyNetworkStream(this)
+			DestroyNetworkStream(self)
 		End If
 
 		Return hrQueryInterface
@@ -197,7 +197,7 @@ Public Function CreateNetworkStream( _
 End Function
 
 Private Function NetworkStreamBeginRead( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal BufferLength As DWORD, _
 		ByVal pcb As AsyncCallback, _
@@ -207,7 +207,7 @@ Private Function NetworkStreamBeginRead( _
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)
@@ -242,10 +242,10 @@ Private Function NetworkStreamBeginRead( _
 	Const lpNumberOfBytesReceived As DWORD Ptr = NULL
 	Dim Flags As DWORD = 0
 
-	SetStartTime(this->pIMemoryAllocator)
+	SetStartTime(self->pIMemoryAllocator)
 
 	Dim resWSARecv As Long = WSARecv( _
-		this->ClientSocket, _
+		self->ClientSocket, _
 		pRecvBuffers, _
 		ReceiveBuffersCount, _
 		lpNumberOfBytesReceived, _
@@ -271,7 +271,7 @@ Private Function NetworkStreamBeginRead( _
 End Function
 
 Private Function NetworkStreamBeginWriteGatherWithFlags( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
 		ByVal pcb As AsyncCallback, _
@@ -282,7 +282,7 @@ Private Function NetworkStreamBeginWriteGatherWithFlags( _
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		@IID_IAsyncResult, _
 		@pINewAsyncResult _
 	)
@@ -314,10 +314,10 @@ Private Function NetworkStreamBeginWriteGatherWithFlags( _
 		pSendBuffers[i].pBuffer = pBuffer[i].Buffer
 	Next
 
-	SetStartTime(this->pIMemoryAllocator)
+	SetStartTime(self->pIMemoryAllocator)
 
 	Dim resTransmit As BOOL = lpfnTransmitPackets( _
-		this->ClientSocket, _
+		self->ClientSocket, _
 		pSendBuffers, _
 		BuffersCount, _
 		0, _
@@ -342,7 +342,7 @@ Private Function NetworkStreamBeginWriteGatherWithFlags( _
 End Function
 
 Private Function NetworkStreamBeginWrite( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
 		ByVal pcb As AsyncCallback, _
@@ -357,7 +357,7 @@ Private Function NetworkStreamBeginWrite( _
 	buf.Length = Count
 
 	Return NetworkStreamBeginWriteGatherWithFlags( _
-		this, _
+		self, _
 		@buf, _
 		1, _
 		pcb, _
@@ -369,7 +369,7 @@ Private Function NetworkStreamBeginWrite( _
 End Function
 
 Private Function NetworkStreamBeginWriteGather( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
 		ByVal pcb As AsyncCallback, _
@@ -380,7 +380,7 @@ Private Function NetworkStreamBeginWriteGather( _
 	Const dwFlagsNone As DWORD = 0
 
 	Return NetworkStreamBeginWriteGatherWithFlags( _
-		this, _
+		self, _
 		pBuffer, _
 		BuffersCount, _
 		pcb, _
@@ -392,7 +392,7 @@ Private Function NetworkStreamBeginWriteGather( _
 End Function
 
 Private Function NetworkStreamBeginWriteGatherAndShutdown( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal BuffersCount As DWORD, _
 		ByVal pcb As AsyncCallback, _
@@ -404,7 +404,7 @@ Private Function NetworkStreamBeginWriteGatherAndShutdown( _
 	Const dwFlags As DWORD = TF_DISCONNECT
 
 	Return NetworkStreamBeginWriteGatherWithFlags( _
-		this, _
+		self, _
 		pBuffer, _
 		BuffersCount, _
 		pcb, _
@@ -416,12 +416,12 @@ Private Function NetworkStreamBeginWriteGatherAndShutdown( _
 End Function
 
 Private Function NetworkStreamEndRead( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
 
-	SetEndTime(this->pIMemoryAllocator)
+	SetEndTime(self->pIMemoryAllocator)
 
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
@@ -453,12 +453,12 @@ Private Function NetworkStreamEndRead( _
 End Function
 
 Private Function NetworkStreamEndWrite( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
 
-	SetEndTime(this->pIMemoryAllocator)
+	SetEndTime(self->pIMemoryAllocator)
 
 	Dim BytesTransferred As DWORD = Any
 	Dim Completed As Boolean = Any
@@ -497,48 +497,48 @@ Private Function NetworkStreamEndWrite( _
 End Function
 
 Private Function NetworkStreamGetSocket( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
 
-	*pResult = this->ClientSocket
+	*pResult = self->ClientSocket
 
 	Return S_OK
 
 End Function
 
 Private Function NetworkStreamSetSocket( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal ClientSocket As SOCKET _
 	)As HRESULT
 
-	this->ClientSocket = ClientSocket
+	self->ClientSocket = ClientSocket
 
 	Return S_OK
 
 End Function
 
 Private Function NetworkStreamGetRemoteAddress( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
 
-	*pRemoteAddressLength = this->RemoteAddressLength
-	CopyMemory(pRemoteAddress, @this->pRemoteAddress, this->RemoteAddressLength)
+	*pRemoteAddressLength = self->RemoteAddressLength
+	CopyMemory(pRemoteAddress, @self->pRemoteAddress, self->RemoteAddressLength)
 
 	Return S_OK
 
 End Function
 
 Private Function NetworkStreamSetRemoteAddress( _
-		ByVal this As NetworkStream Ptr, _
+		ByVal self As NetworkStream Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
 
-	this->RemoteAddressLength = RemoteAddressLength
-	this->pRemoteAddress = RemoteAddress
+	self->RemoteAddressLength = RemoteAddressLength
+	self->pRemoteAddress = RemoteAddress
 
 	Return S_OK
 
@@ -546,113 +546,113 @@ End Function
 
 
 Private Function INetworkAsyncStreamQueryInterface( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamQueryInterface(CONTAINING_RECORD(this, NetworkStream, lpVtbl), riid, ppvObject)
+	Return NetworkStreamQueryInterface(CONTAINING_RECORD(self, NetworkStream, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function INetworkAsyncStreamAddRef( _
-		ByVal this As INetworkAsyncStream Ptr _
+		ByVal self As INetworkAsyncStream Ptr _
 	)As ULONG
-	Return NetworkStreamAddRef(CONTAINING_RECORD(this, NetworkStream, lpVtbl))
+	Return NetworkStreamAddRef(CONTAINING_RECORD(self, NetworkStream, lpVtbl))
 End Function
 
 Private Function INetworkAsyncStreamRelease( _
-		ByVal this As INetworkAsyncStream Ptr _
+		ByVal self As INetworkAsyncStream Ptr _
 	)As ULONG
-	Return NetworkStreamRelease(CONTAINING_RECORD(this, NetworkStream, lpVtbl))
+	Return NetworkStreamRelease(CONTAINING_RECORD(self, NetworkStream, lpVtbl))
 End Function
 
 Private Function INetworkAsyncStreamBeginRead( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginRead(CONTAINING_RECORD(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginRead(CONTAINING_RECORD(self, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamBeginWrite( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal Buffer As LPVOID, _
 		ByVal Count As DWORD, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWrite(CONTAINING_RECORD(this, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWrite(CONTAINING_RECORD(self, NetworkStream, lpVtbl), Buffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamEndRead( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pReadedBytes As DWORD Ptr _
 	)As HRESULT
-	Return NetworkStreamEndRead(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
+	Return NetworkStreamEndRead(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pIAsyncResult, pReadedBytes)
 End Function
 
 Private Function INetworkAsyncStreamEndWrite( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pWritedBytes As DWORD Ptr _
 	)As HRESULT
-	Return NetworkStreamEndWrite(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
+	Return NetworkStreamEndWrite(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pIAsyncResult, pWritedBytes)
 End Function
 
 Private Function INetworkAsyncStreamBeginWriteGather( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGather(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGather(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamBeginWriteGatherAndShutdown( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pBuffer As BaseStreamBuffer Ptr, _
 		ByVal Count As DWORD, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return NetworkStreamBeginWriteGatherAndShutdown(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
+	Return NetworkStreamBeginWriteGatherAndShutdown(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pBuffer, Count, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function INetworkAsyncStreamGetSocket( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pResult As SOCKET Ptr _
 	)As HRESULT
-	Return NetworkStreamGetSocket(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pResult)
+	Return NetworkStreamGetSocket(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pResult)
 End Function
 
 Private Function INetworkAsyncStreamSetSocket( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal sock As SOCKET _
 	)As HRESULT
-	Return NetworkStreamSetSocket(CONTAINING_RECORD(this, NetworkStream, lpVtbl), sock)
+	Return NetworkStreamSetSocket(CONTAINING_RECORD(self, NetworkStream, lpVtbl), sock)
 End Function
 
 Private Function INetworkAsyncStreamGetRemoteAddress( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal pRemoteAddress As SOCKADDR Ptr, _
 		ByVal pRemoteAddressLength As Integer Ptr _
 	)As HRESULT
-	Return NetworkStreamGetRemoteAddress(CONTAINING_RECORD(this, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
+	Return NetworkStreamGetRemoteAddress(CONTAINING_RECORD(self, NetworkStream, lpVtbl), pRemoteAddress, pRemoteAddressLength)
 End Function
 
 Private Function INetworkAsyncStreamSetRemoteAddress( _
-		ByVal this As INetworkAsyncStream Ptr, _
+		ByVal self As INetworkAsyncStream Ptr, _
 		ByVal RemoteAddress As SOCKADDR Ptr, _
 		ByVal RemoteAddressLength As Integer _
 	)As HRESULT
-	Return NetworkStreamSetRemoteAddress(CONTAINING_RECORD(this, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
+	Return NetworkStreamSetRemoteAddress(CONTAINING_RECORD(self, NetworkStream, lpVtbl), RemoteAddress, RemoteAddressLength)
 End Function
 
 Dim GlobalNetworkStreamVirtualTable As Const INetworkAsyncStreamVirtualTable = Type( _

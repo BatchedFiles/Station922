@@ -2,12 +2,12 @@
 #define ARRAYSTRINGWRITER_BI
 
 Type ArrayStringWriter
-	
+
 	CodePage As Integer
 	Capacity As Integer
 	BufferLength As Integer
 	Buffer As WString Ptr
-	
+
 	Declare Function WriteLengthString( _
 		ByVal w As WString Ptr, _
 		ByVal Length As Integer _
@@ -63,11 +63,11 @@ Type ArrayStringWriter
 
 	Declare Function GetLength( _
 	)As Integer
-	
+
 End Type
 
 Declare Sub InitializeArrayStringWriter( _
-	ByVal this As ArrayStringWriter Ptr _
+	ByVal self As ArrayStringWriter Ptr _
 )
 
 #endif

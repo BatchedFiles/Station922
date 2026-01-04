@@ -49,7 +49,7 @@ Private Function GetRoundedReservedFileBytes( _
 End Function
 
 Private Sub InitializeWebServerIniConfiguration( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pWebServerIniFileName As WString Ptr, _
 		ByVal pWebSitesIniFileName As WString Ptr _
@@ -57,106 +57,106 @@ Private Sub InitializeWebServerIniConfiguration( _
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_INICONFIGURATION), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalWebServerIniConfigurationVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalWebServerIniConfigurationVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pWebServerIniFileName = pWebServerIniFileName
-	this->pWebSitesIniFileName = pWebSitesIniFileName
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pWebServerIniFileName = pWebServerIniFileName
+	self->pWebSitesIniFileName = pWebSitesIniFileName
 
 End Sub
 
 Private Sub UnInitializeWebServerIniConfiguration( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)
 
-	If this->pWebSitesIniFileName Then
-		IMalloc_Free(this->pIMemoryAllocator, this->pWebSitesIniFileName)
+	If self->pWebSitesIniFileName Then
+		IMalloc_Free(self->pIMemoryAllocator, self->pWebSitesIniFileName)
 	End If
 
-	If this->pWebServerIniFileName Then
-		IMalloc_Free(this->pIMemoryAllocator, this->pWebServerIniFileName)
+	If self->pWebServerIniFileName Then
+		IMalloc_Free(self->pIMemoryAllocator, self->pWebServerIniFileName)
 	End If
 
 End Sub
 
 Private Sub WebServerIniConfigurationCreated( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)
 
 End Sub
 
 Private Sub WebServerIniConfigurationDestroyed( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyWebServerIniConfiguration( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeWebServerIniConfiguration(this)
+	UnInitializeWebServerIniConfiguration(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	WebServerIniConfigurationDestroyed(this)
+	WebServerIniConfigurationDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function WebServerIniConfigurationAddRef( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function WebServerIniConfigurationRelease( _
-		ByVal this As WebServerIniConfiguration Ptr _
+		ByVal self As WebServerIniConfiguration Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyWebServerIniConfiguration(this)
+	DestroyWebServerIniConfiguration(self)
 
 	Return 0
 
 End Function
 
 Private Function WebServerIniConfigurationQueryInterface( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IIniConfiguration, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	WebServerIniConfigurationAddRef(this)
+	WebServerIniConfigurationAddRef(self)
 
 	Return S_OK
 
@@ -168,12 +168,12 @@ Public Function CreateWebServerIniConfiguration( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
+	Dim self As WebServerIniConfiguration Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebServerIniConfiguration) _
 	)
 
-	If this Then
+	If self Then
 		Dim pWebServerIniFileName As WString Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
 			(MAX_PATH + 1) * SizeOf(WString) _
@@ -207,20 +207,20 @@ Public Function CreateWebServerIniConfiguration( _
 					End Scope
 
 					InitializeWebServerIniConfiguration( _
-						this, _
+						self, _
 						pIMemoryAllocator, _
 						pWebServerIniFileName, _
 						pWebSitesIniFileName _
 					)
-					WebServerIniConfigurationCreated(this)
+					WebServerIniConfigurationCreated(self)
 
 					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
-						this, _
+						self, _
 						riid, _
 						ppv _
 					)
 					If FAILED(hrQueryInterface) Then
-						DestroyWebServerIniConfiguration(this)
+						DestroyWebServerIniConfiguration(self)
 					End If
 
 					Return hrQueryInterface
@@ -232,7 +232,7 @@ Public Function CreateWebServerIniConfiguration( _
 			IMalloc_Free(pIMemoryAllocator, pWebServerIniFileName)
 		End If
 
-		IMalloc_Free(pIMemoryAllocator, this)
+		IMalloc_Free(pIMemoryAllocator, self)
 	End If
 
 	*ppv = NULL
@@ -241,7 +241,7 @@ Public Function CreateWebServerIniConfiguration( _
 End Function
 
 Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
 
@@ -256,7 +256,7 @@ Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
 		@WebServerSectionString, _
 		@MaxWorkerThreadsKeyString, _
 		DefaultWorkerThreadsCount, _
-		this->pWebServerIniFileName _
+		self->pWebServerIniFileName _
 	)
 
 	*pWorkerThreadsCount = CUInt(WorkerThreadsCount)
@@ -266,7 +266,7 @@ Private Function WebServerIniConfigurationGetWorkerThreadsCount( _
 End Function
 
 Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pCapacity As UInteger Ptr _
 	)As HRESULT
 
@@ -277,7 +277,7 @@ Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 		@WebServerSectionString, _
 		@MemoryPoolCapacityKeyString, _
 		0, _
-		this->pWebServerIniFileName _
+		self->pWebServerIniFileName _
 	)
 
 	If Capacity Then
@@ -291,7 +291,7 @@ Private Function WebServerIniConfigurationGetMemoryPoolCapacity( _
 End Function
 
 Private Function WebServerIniConfigurationGetKeepAliveInterval( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
 
@@ -302,7 +302,7 @@ Private Function WebServerIniConfigurationGetKeepAliveInterval( _
 		@WebServerSectionString, _
 		@KeepAliveIntervalKeyString, _
 		DefaultKeepAliveInterval, _
-		this->pWebServerIniFileName _
+		self->pWebServerIniFileName _
 	)
 
 	*pKeepAliveInterval = CULngInt(KeepAliveInterval)
@@ -1250,13 +1250,13 @@ Private Function GetWebSite( _
 End Function
 
 Private Function WebServerIniConfigurationGetWebSites( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pCount As Integer Ptr, _
 		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
 
 	Dim AllSections As WString Ptr = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		(MaxSectionsLength + 1) * SizeOf(WString) _
 	)
 	If AllSections = NULL Then
@@ -1274,13 +1274,13 @@ Private Function WebServerIniConfigurationGetWebSites( _
 			@DefaultValue, _
 			AllSections, _
 			Cast(DWORD, MaxSectionsLength), _
-			this->pWebSitesIniFileName _
+			self->pWebSitesIniFileName _
 		)
 		If SectionsLength = 0 Then
 			Const DefaultWebSiteKeyString = WStr("DefaultWebSite")
 			Dim hrGetWebSite As HRESULT = GetWebSite( _
-				this->pIMemoryAllocator, _
-				this->pWebServerIniFileName, _
+				self->pIMemoryAllocator, _
+				self->pWebServerIniFileName, _
 				@DefaultWebSiteKeyString, _
 				@pWebSites[0] _
 			)
@@ -1289,7 +1289,7 @@ Private Function WebServerIniConfigurationGetWebSites( _
 			End If
 
 			IMalloc_Free( _
-				this->pIMemoryAllocator, _
+				self->pIMemoryAllocator, _
 				AllSections _
 			)
 			*pCount = 1
@@ -1305,8 +1305,8 @@ Private Function WebServerIniConfigurationGetWebSites( _
 	Do While HostLength
 
 		Dim hrGetWebSite As HRESULT = GetWebSite( _
-			this->pIMemoryAllocator, _
-			this->pWebSitesIniFileName, _
+			self->pIMemoryAllocator, _
+			self->pWebSitesIniFileName, _
 			lpwszHost, _
 			@pWebSites[WebSiteCount] _
 		)
@@ -1322,7 +1322,7 @@ Private Function WebServerIniConfigurationGetWebSites( _
 	Loop
 
 	IMalloc_Free( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		AllSections _
 	)
 
@@ -1333,15 +1333,15 @@ Private Function WebServerIniConfigurationGetWebSites( _
 End Function
 
 Private Function WebServerIniConfigurationGetDefaultWebSite( _
-		ByVal this As WebServerIniConfiguration Ptr, _
+		ByVal self As WebServerIniConfiguration Ptr, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
 
 	Const DefaultWebSiteKeyString = WStr("DefaultWebSite")
 
 	Dim hrGetWebSite As HRESULT = GetWebSite( _
-		this->pIMemoryAllocator, _
-		this->pWebServerIniFileName, _
+		self->pIMemoryAllocator, _
+		self->pWebServerIniFileName, _
 		@DefaultWebSiteKeyString, _
 		pWebSite _
 	)
@@ -1355,59 +1355,59 @@ End Function
 
 
 Private Function IWebServerConfigurationQueryInterface( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationQueryInterface(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), riid, ppvObject)
+	Return WebServerIniConfigurationQueryInterface(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IWebServerConfigurationAddRef( _
-		ByVal this As IWebServerConfiguration Ptr _
+		ByVal self As IWebServerConfiguration Ptr _
 	)As ULONG
-	Return WebServerIniConfigurationAddRef(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl))
+	Return WebServerIniConfigurationAddRef(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl))
 End Function
 
 Private Function IWebServerConfigurationRelease( _
-		ByVal this As IWebServerConfiguration Ptr _
+		ByVal self As IWebServerConfiguration Ptr _
 	)As ULONG
-	Return WebServerIniConfigurationRelease(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl))
+	Return WebServerIniConfigurationRelease(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl))
 End Function
 
 Private Function IWebServerConfigurationGetWorkerThreadsCount( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal pWorkerThreadsCount As UInteger Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetWorkerThreadsCount(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
+	Return WebServerIniConfigurationGetWorkerThreadsCount(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), pWorkerThreadsCount)
 End Function
 
 Private Function IWebServerConfigurationGetMemoryPoolCapacity( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal pCachedClientMemoryContextCount As UInteger Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetMemoryPoolCapacity(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
+	Return WebServerIniConfigurationGetMemoryPoolCapacity(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), pCachedClientMemoryContextCount)
 End Function
 
 Private Function IWebServerConfigurationGetKeepAliveInterval( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal pKeepAliveInterval As ULongInt Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetKeepAliveInterval(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
+	Return WebServerIniConfigurationGetKeepAliveInterval(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), pKeepAliveInterval)
 End Function
 
 Private Function IWebServerConfigurationGetWebSites( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal pCount As Integer Ptr, _
 		ByVal pWebSites As WebSiteConfiguration Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetWebSites(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
+	Return WebServerIniConfigurationGetWebSites(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), pCount, pWebSites)
 End Function
 
 Private Function IWebServerConfigurationGetDefaultWebSite( _
-		ByVal this As IWebServerConfiguration Ptr, _
+		ByVal self As IWebServerConfiguration Ptr, _
 		ByVal pWebSite As WebSiteConfiguration Ptr _
 	)As HRESULT
-	Return WebServerIniConfigurationGetDefaultWebSite(CONTAINING_RECORD(this, WebServerIniConfiguration, lpVtbl), pWebSite)
+	Return WebServerIniConfigurationGetDefaultWebSite(CONTAINING_RECORD(self, WebServerIniConfiguration, lpVtbl), pWebSite)
 End Function
 
 Dim GlobalWebServerIniConfigurationVirtualTable As Const IWebServerConfigurationVirtualTable = Type( _

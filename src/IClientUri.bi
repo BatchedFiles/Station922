@@ -18,89 +18,89 @@ scheme          authority                  path                 query           
 '/
 
 Type IClientUriVirtualTable
-	
+
 	QueryInterface As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	
+
 	AddRef As Function( _
-		ByVal this As IClientUri Ptr _
+		ByVal self As IClientUri Ptr _
 	)As ULONG
-	
+
 	Release As Function( _
-		ByVal this As IClientUri Ptr _
+		ByVal self As IClientUri Ptr _
 	)As ULONG
-	
+
 	UriFromString As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal bstrUri As HeapBSTR _
 	)As HRESULT
-	
+
 	GetOriginalString As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppOriginalString As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetUserName As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppUserName As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetPassword As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPassword As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetHost As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetPort As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPort As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetScheme As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppScheme As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetPath As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPath As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetQuery As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppQuery As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 	GetFragment As Function( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppFragment As HeapBSTR Ptr _
 	)As HRESULT
-	
+
 End Type
 
 Type IClientUri_
 	lpVtbl As IClientUriVirtualTable Ptr
 End Type
 
-#define IClientUri_QueryInterface(this, riid, ppv) (this)->lpVtbl->QueryInterface(this, riid, ppv)
-#define IClientUri_AddRef(this) (this)->lpVtbl->AddRef(this)
-#define IClientUri_Release(this) (this)->lpVtbl->Release(this)
-#define IClientUri_UriFromString(this, bstrUri) (this)->lpVtbl->UriFromString(this, bstrUri)
-#define IClientUri_GetOriginalString(this, ppOriginalString) (this)->lpVtbl->GetOriginalString(this, ppOriginalString)
-#define IClientUri_GetUserName(this, ppUserName) (this)->lpVtbl->GetUserName(this, ppUserName)
-#define IClientUri_GetPassword(this, ppPassword) (this)->lpVtbl->GetPassword(this, ppPassword)
-#define IClientUri_GetHost(this, ppHost) (this)->lpVtbl->GetHost(this, ppHost)
-#define IClientUri_GetPort(this, ppPort) (this)->lpVtbl->GetPort(this, ppPort)
-#define IClientUri_GetScheme(this, ppScheme) (this)->lpVtbl->GetScheme(this, ppScheme)
-#define IClientUri_GetPath(this, ppPath) (this)->lpVtbl->GetPath(this, ppPath)
-#define IClientUri_GetQuery(this, ppQuery) (this)->lpVtbl->GetQuery(this, ppQuery)
-#define IClientUri_GetFragment(this, ppFragment) (this)->lpVtbl->GetFragment(this, ppFragment)
+#define IClientUri_QueryInterface(self, riid, ppv) (self)->lpVtbl->QueryInterface(self, riid, ppv)
+#define IClientUri_AddRef(self) (self)->lpVtbl->AddRef(self)
+#define IClientUri_Release(self) (self)->lpVtbl->Release(self)
+#define IClientUri_UriFromString(self, bstrUri) (self)->lpVtbl->UriFromString(self, bstrUri)
+#define IClientUri_GetOriginalString(self, ppOriginalString) (self)->lpVtbl->GetOriginalString(self, ppOriginalString)
+#define IClientUri_GetUserName(self, ppUserName) (self)->lpVtbl->GetUserName(self, ppUserName)
+#define IClientUri_GetPassword(self, ppPassword) (self)->lpVtbl->GetPassword(self, ppPassword)
+#define IClientUri_GetHost(self, ppHost) (self)->lpVtbl->GetHost(self, ppHost)
+#define IClientUri_GetPort(self, ppPort) (self)->lpVtbl->GetPort(self, ppPort)
+#define IClientUri_GetScheme(self, ppScheme) (self)->lpVtbl->GetScheme(self, ppScheme)
+#define IClientUri_GetPath(self, ppPath) (self)->lpVtbl->GetPath(self, ppPath)
+#define IClientUri_GetQuery(self, ppQuery) (self)->lpVtbl->GetQuery(self, ppQuery)
+#define IClientUri_GetFragment(self, ppFragment) (self)->lpVtbl->GetFragment(self, ppFragment)
 
 #endif

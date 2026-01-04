@@ -42,29 +42,29 @@ Type HttpReader
 End Type
 
 Private Sub InitializeClientRequestBuffer( _
-		ByVal this As ClientRequestBuffer Ptr _
+		ByVal self As ClientRequestBuffer Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_CLIENTREQUESTBUFFER), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->cbLength = 0
-	this->EndOfHeaders = 0
+	self->cbLength = 0
+	self->EndOfHeaders = 0
 
 	' No Need ZeroMemory StartLine
-	' No Need ZeroMemory this.Bytes
+	' No Need ZeroMemory self.Bytes
 
 End Sub
 
 Private Function ClientRequestBufferGetFreeSpaceLength( _
-		ByVal this As ClientRequestBuffer Ptr _
+		ByVal self As ClientRequestBuffer Ptr _
 	)As Integer
 
-	Dim FreeSpace As Integer = RAWBUFFER_CAPACITY - this->cbLength
+	Dim FreeSpace As Integer = RAWBUFFER_CAPACITY - self->cbLength
 
 	Return FreeSpace
 
@@ -96,13 +96,13 @@ Private Function FindStringA( _
 End Function
 
 Private Function ClientRequestBufferFindDoubleCrLfIndexA( _
-		ByVal this As ClientRequestBuffer Ptr, _
+		ByVal self As ClientRequestBuffer Ptr, _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
 
 	Dim pDoubleCrLf As UByte Ptr = FindStringA( _
-		@this->Bytes(0), _
-		this->cbLength, _
+		@self->Bytes(0), _
+		self->cbLength, _
 		@DoubleNewLineStringA, _
 		Len(DoubleNewLineStringA) _
 	)
@@ -111,7 +111,7 @@ Private Function ClientRequestBufferFindDoubleCrLfIndexA( _
 		Return False
 	End If
 
-	Dim FindIndex As Integer = pDoubleCrLf - @this->Bytes(0)
+	Dim FindIndex As Integer = pDoubleCrLf - @self->Bytes(0)
 	*pFindIndex = FindIndex
 
 	Return True
@@ -119,13 +119,13 @@ Private Function ClientRequestBufferFindDoubleCrLfIndexA( _
 End Function
 
 Private Function ClientRequestBufferFindCrLfIndexA( _
-		ByVal this As ClientRequestBuffer Ptr, _
+		ByVal self As ClientRequestBuffer Ptr, _
 		ByVal pFindIndex As Integer Ptr _
 	)As Boolean
 
 	Dim pCrLf As UByte Ptr = FindStringA( _
-		@this->Bytes(this->StartLine), _
-		this->EndOfHeaders, _
+		@self->Bytes(self->StartLine), _
+		self->EndOfHeaders, _
 		@NewLineStringA, _
 		Len(NewLineStringA) _
 	)
@@ -134,7 +134,7 @@ Private Function ClientRequestBufferFindCrLfIndexA( _
 		Return False
 	End If
 
-	Dim FindIndex As Integer = pCrLf - @this->Bytes(this->StartLine)
+	Dim FindIndex As Integer = pCrLf - @self->Bytes(self->StartLine)
 	*pFindIndex = FindIndex
 
 	Return True
@@ -142,13 +142,13 @@ Private Function ClientRequestBufferFindCrLfIndexA( _
 End Function
 
 Private Function ClientRequestBufferGetLine( _
-		ByVal this As ClientRequestBuffer Ptr, _
+		ByVal self As ClientRequestBuffer Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)As HeapBSTR
 
 	Dim CrLfIndex As Integer = Any
 	Dim Finded As Boolean = ClientRequestBufferFindCrLfIndexA( _
-		this, _
+		self, _
 		@CrLfIndex _
 	)
 	If Finded = False Then
@@ -159,11 +159,11 @@ Private Function ClientRequestBufferGetLine( _
 	' Если начинается — объединить обе строки
 
 	Dim LineLength As Integer = CrLfIndex
-	Dim StartLineIndex As Integer = this->StartLine
+	Dim StartLineIndex As Integer = self->StartLine
 
 	Dim bstrLine As HeapBSTR = CreateHeapZStringLen( _
 		pIMemoryAllocator, _
-		@this->Bytes(StartLineIndex), _
+		@self->Bytes(StartLineIndex), _
 		LineLength _
 	)
 	If bstrLine = NULL Then
@@ -171,18 +171,18 @@ Private Function ClientRequestBufferGetLine( _
 	End If
 
 	Dim NewStartIndex As Integer = StartLineIndex + LineLength + Len(NewLineStringA)
-	this->StartLine = NewStartIndex
+	self->StartLine = NewStartIndex
 
 	Return bstrLine
 
 End Function
 
 Private Sub ClientRequestBufferClear( _
-		ByVal this As ClientRequestBuffer Ptr _
+		ByVal self As ClientRequestBuffer Ptr _
 	)
 
-	this->cbLength = 0
-	this->EndOfHeaders = 0
+	self->cbLength = 0
+	self->EndOfHeaders = 0
 
 End Sub
 
@@ -197,114 +197,114 @@ Private Function GetPreloadedBytesLength( _
 End Function
 
 Private Sub InitializeHttpReader( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
 		ByVal pClientBuffer As ClientRequestBuffer Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPREADER), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalHttpReaderVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalHttpReaderVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIStream = NULL
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pIStream = NULL
 	InitializeClientRequestBuffer(pClientBuffer)
-	this->pClientBuffer = pClientBuffer
-	this->SkippedBytes = 0
-	this->IsAllBytesReaded = False
+	self->pClientBuffer = pClientBuffer
+	self->SkippedBytes = 0
+	self->IsAllBytesReaded = False
 
 End Sub
 
 Private Sub UnInitializeHttpReader( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
-	IMalloc_Free(this->pIMemoryAllocator, this->pClientBuffer)
+	IMalloc_Free(self->pIMemoryAllocator, self->pClientBuffer)
 
 End Sub
 
 Private Sub HttpReaderCreated( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)
 
 End Sub
 
 Private Sub HttpReaderDestroyed( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyHttpReader( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeHttpReader(this)
+	UnInitializeHttpReader(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	HttpReaderDestroyed(this)
+	HttpReaderDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function HttpReaderAddRef( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function HttpReaderRelease( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyHttpReader(this)
+	DestroyHttpReader(self)
 
 	Return 0
 
 End Function
 
 Private Function HttpReaderQueryInterface( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IHttpAsyncReader, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	HttpReaderAddRef(this)
+	HttpReaderAddRef(self)
 
 	Return S_OK
 
@@ -316,34 +316,34 @@ Public Function CreateHttpReader( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HttpReader Ptr = IMalloc_Alloc( _
+	Dim self As HttpReader Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpReader) _
 	)
 
-	If this Then
+	If self Then
 		Dim pClientBuffer As ClientRequestBuffer Ptr = IMalloc_Alloc( _
 			pIMemoryAllocator, _
 			SizeOf(ClientRequestBuffer) _
 		)
 
 		If pClientBuffer Then
-			InitializeHttpReader(this, pIMemoryAllocator, pClientBuffer)
-			HttpReaderCreated(this)
+			InitializeHttpReader(self, pIMemoryAllocator, pClientBuffer)
+			HttpReaderCreated(self)
 
 			Dim hrQueryInterface As HRESULT = HttpReaderQueryInterface( _
-				this, _
+				self, _
 				riid, _
 				ppv _
 			)
 			If FAILED(hrQueryInterface) Then
-				DestroyHttpReader(this)
+				DestroyHttpReader(self)
 			End If
 
 			Return hrQueryInterface
 		End If
 
-		IMalloc_Free(pIMemoryAllocator, this)
+		IMalloc_Free(pIMemoryAllocator, self)
 	End If
 
 	*ppv = NULL
@@ -352,18 +352,18 @@ Public Function CreateHttpReader( _
 End Function
 
 Private Function HttpReaderReadLine( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
 
-	If this->IsAllBytesReaded = False Then
+	If self->IsAllBytesReaded = False Then
 		*ppLine = NULL
 		Return E_FAIL
 	End If
 
 	Dim bstrLine As HeapBSTR = ClientRequestBufferGetLine( _
-		this->pClientBuffer, _
-		this->pIMemoryAllocator _
+		self->pClientBuffer, _
+		self->pIMemoryAllocator _
 	)
 	If bstrLine = NULL Then
 		*ppLine = NULL
@@ -376,26 +376,26 @@ Private Function HttpReaderReadLine( _
 End Function
 
 Private Function HttpReaderBeginReadLine( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 
-	If this->IsAllBytesReaded = False Then
+	If self->IsAllBytesReaded = False Then
 
 		Dim cbFreeSpace As Integer = ClientRequestBufferGetFreeSpaceLength( _
-			this->pClientBuffer _
+			self->pClientBuffer _
 		)
 		If cbFreeSpace = 0 Then
 			*ppIAsyncResult = NULL
 			Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 		End If
 
-		Dim FreeSpaceIndex As Integer = this->pClientBuffer->cbLength
-		Dim lpFreeSpace As Any Ptr = @this->pClientBuffer->Bytes(FreeSpaceIndex)
+		Dim FreeSpaceIndex As Integer = self->pClientBuffer->cbLength
+		Dim lpFreeSpace As Any Ptr = @self->pClientBuffer->Bytes(FreeSpaceIndex)
 		Dim hrBeginRead As HRESULT = IBaseAsyncStream_BeginRead( _
-			this->pIStream, _
+			self->pIStream, _
 			lpFreeSpace, _
 			cbFreeSpace, _
 			pcb, _
@@ -413,13 +413,13 @@ Private Function HttpReaderBeginReadLine( _
 End Function
 
 Private Sub HttpReaderPrintClientBuffer( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)
 
 End Sub
 
 Private Function HttpReaderEndReadLine( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
@@ -428,7 +428,7 @@ Private Function HttpReaderEndReadLine( _
 
 	Scope
 		Dim hrRead As HRESULT = IBaseAsyncStream_EndRead( _
-			this->pIStream, _
+			self->pIStream, _
 			pIAsyncResult, _
 			@cbReceived _
 		)
@@ -444,38 +444,38 @@ Private Function HttpReaderEndReadLine( _
 
 	End Scope
 
-	Dim SkippedBytes As LongInt = min(this->SkippedBytes, CLngInt(cbReceived))
+	Dim SkippedBytes As LongInt = min(self->SkippedBytes, CLngInt(cbReceived))
 
-	If this->SkippedBytes Then
+	If self->SkippedBytes Then
 		Dim cbMovedBytes As Integer = RAWBUFFER_CAPACITY - CInt(SkippedBytes)
 		If cbMovedBytes Then
 			memmove( _
-				@this->pClientBuffer->Bytes(0), _
-				@this->pClientBuffer->Bytes(SkippedBytes), _
+				@self->pClientBuffer->Bytes(0), _
+				@self->pClientBuffer->Bytes(SkippedBytes), _
 				cbMovedBytes _
 			)
 		End If
 
-		this->SkippedBytes -= SkippedBytes
+		self->SkippedBytes -= SkippedBytes
 
-		If this->SkippedBytes Then
+		If self->SkippedBytes Then
 			*ppLine = NULL
 			Return HTTPREADER_S_IO_PENDING
 		End If
 	End If
 
-	Dim cbNewLength As Integer = this->pClientBuffer->cbLength + cbReceived - SkippedBytes
+	Dim cbNewLength As Integer = self->pClientBuffer->cbLength + cbReceived - SkippedBytes
 
 	If cbNewLength > RAWBUFFER_CAPACITY Then
 		*ppLine = NULL
 		Return HTTPREADER_E_INTERNALBUFFEROVERFLOW
 	End If
 
-	this->pClientBuffer->cbLength = cbNewLength
+	self->pClientBuffer->cbLength = cbNewLength
 
 	Dim DoubleCrLfIndex As Integer = Any
 	Dim Finded As Boolean = ClientRequestBufferFindDoubleCrLfIndexA( _
-		this->pClientBuffer, _
+		self->pClientBuffer, _
 		@DoubleCrLfIndex _
 	)
 	If Finded = False Then
@@ -483,16 +483,16 @@ Private Function HttpReaderEndReadLine( _
 		Return HTTPREADER_S_IO_PENDING
 	End If
 
-	HttpReaderPrintClientBuffer(this)
+	HttpReaderPrintClientBuffer(self)
 
 	Dim NewEndOfHeaders As Integer = DoubleCrLfIndex + Len(DoubleNewLineStringA)
-	this->pClientBuffer->EndOfHeaders = NewEndOfHeaders
-	this->pClientBuffer->StartLine = 0
-	this->IsAllBytesReaded = True
+	self->pClientBuffer->EndOfHeaders = NewEndOfHeaders
+	self->pClientBuffer->StartLine = 0
+	self->IsAllBytesReaded = True
 
 	Dim bstrLine As HeapBSTR = ClientRequestBufferGetLine( _
-		this->pClientBuffer, _
-		this->pIMemoryAllocator _
+		self->pClientBuffer, _
+		self->pIMemoryAllocator _
 	)
 	If bstrLine = NULL Then
 		*ppLine = NULL
@@ -505,45 +505,45 @@ Private Function HttpReaderEndReadLine( _
 End Function
 
 Private Function HttpReaderClear( _
-		ByVal this As HttpReader Ptr _
+		ByVal self As HttpReader Ptr _
 	)As HRESULT
 
-	this->IsAllBytesReaded = False
+	self->IsAllBytesReaded = False
 
-	ClientRequestBufferClear(this->pClientBuffer)
+	ClientRequestBufferClear(self->pClientBuffer)
 
 	Return S_OK
 
 End Function
 
 Private Function HttpReaderSetBaseStream( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
 	)As HRESULT
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
 	If pIStream Then
 		IBaseAsyncStream_AddRef(pIStream)
 	End If
 
-	this->pIStream = pIStream
+	self->pIStream = pIStream
 
 	Return S_OK
 
 End Function
 
 Private Function HttpReaderGetPreloadedBytes( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
-	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(this->pClientBuffer)
-	Dim PreloadedIndex As Integer = this->pClientBuffer->EndOfHeaders
-	Dim pBytes As UByte Ptr = @this->pClientBuffer->Bytes(PreloadedIndex)
+	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(self->pClientBuffer)
+	Dim PreloadedIndex As Integer = self->pClientBuffer->EndOfHeaders
+	Dim pBytes As UByte Ptr = @self->pClientBuffer->Bytes(PreloadedIndex)
 
 	*pPreloadedBytesLength = cbPreloadedBytes
 	*ppPreloadedBytes = pBytes
@@ -553,13 +553,13 @@ Private Function HttpReaderGetPreloadedBytes( _
 End Function
 
 Private Function HttpReaderGetRequestedBytes( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
-	Dim Length As Integer = this->pClientBuffer->cbLength
-	Dim pBytes As UByte Ptr = @this->pClientBuffer->Bytes(0)
+	Dim Length As Integer = self->pClientBuffer->cbLength
+	Dim pBytes As UByte Ptr = @self->pClientBuffer->Bytes(0)
 
 	*pRequestedBytesLength = Length
 	*ppRequestedBytes = pBytes
@@ -569,12 +569,12 @@ Private Function HttpReaderGetRequestedBytes( _
 End Function
 
 Private Function HttpReaderSkipBytes( _
-		ByVal this As HttpReader Ptr, _
+		ByVal self As HttpReader Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
 
-	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(this->pClientBuffer)
-	this->SkippedBytes = Length - CLngInt(cbPreloadedBytes)
+	Dim cbPreloadedBytes As Integer = GetPreloadedBytesLength(self->pClientBuffer)
+	self->SkippedBytes = Length - CLngInt(cbPreloadedBytes)
 
 	Return S_OK
 
@@ -582,83 +582,83 @@ End Function
 
 
 Private Function IHttpAsyncReaderQueryInterface( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpReaderQueryInterface(CONTAINING_RECORD(this, HttpReader, lpVtbl), riid, ppvObject)
+	Return HttpReaderQueryInterface(CONTAINING_RECORD(self, HttpReader, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IHttpAsyncReaderAddRef( _
-		ByVal this As IHttpAsyncReader Ptr _
+		ByVal self As IHttpAsyncReader Ptr _
 	)As ULONG
-	Return HttpReaderAddRef(CONTAINING_RECORD(this, HttpReader, lpVtbl))
+	Return HttpReaderAddRef(CONTAINING_RECORD(self, HttpReader, lpVtbl))
 End Function
 
 Private Function IHttpAsyncReaderRelease( _
-		ByVal this As IHttpAsyncReader Ptr _
+		ByVal self As IHttpAsyncReader Ptr _
 	)As ULONG
-	Return HttpReaderRelease(CONTAINING_RECORD(this, HttpReader, lpVtbl))
+	Return HttpReaderRelease(CONTAINING_RECORD(self, HttpReader, lpVtbl))
 End Function
 
 Private Function IHttpAsyncReaderReadLine( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pLine As HeapBSTR Ptr _
 	)As HRESULT
-	Return HttpReaderReadLine(CONTAINING_RECORD(this, HttpReader, lpVtbl), pLine)
+	Return HttpReaderReadLine(CONTAINING_RECORD(self, HttpReader, lpVtbl), pLine)
 End Function
 
 Private Function IHttpAsyncReaderBeginReadLine( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpReaderBeginReadLine(CONTAINING_RECORD(this, HttpReader, lpVtbl), pcb, StateObject, ppIAsyncResult)
+	Return HttpReaderBeginReadLine(CONTAINING_RECORD(self, HttpReader, lpVtbl), pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpAsyncReaderEndReadLine( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal ppLine As HeapBSTR Ptr _
 	)As HRESULT
-	Return HttpReaderEndReadLine(CONTAINING_RECORD(this, HttpReader, lpVtbl), pIAsyncResult, ppLine)
+	Return HttpReaderEndReadLine(CONTAINING_RECORD(self, HttpReader, lpVtbl), pIAsyncResult, ppLine)
 End Function
 
 Private Function IHttpAsyncReaderClear( _
-		ByVal this As IHttpAsyncReader Ptr _
+		ByVal self As IHttpAsyncReader Ptr _
 	)As HRESULT
-	Return HttpReaderClear(CONTAINING_RECORD(this, HttpReader, lpVtbl))
+	Return HttpReaderClear(CONTAINING_RECORD(self, HttpReader, lpVtbl))
 End Function
 
 Private Function IHttpAsyncReaderSetBaseStream( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return HttpReaderSetBaseStream(CONTAINING_RECORD(this, HttpReader, lpVtbl), pIStream)
+	Return HttpReaderSetBaseStream(CONTAINING_RECORD(self, HttpReader, lpVtbl), pIStream)
 End Function
 
 Private Function IHttpAsyncReaderGetPreloadedBytes( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pPreloadedBytesLength As Integer Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
-	Return HttpReaderGetPreloadedBytes(CONTAINING_RECORD(this, HttpReader, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
+	Return HttpReaderGetPreloadedBytes(CONTAINING_RECORD(self, HttpReader, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
 Private Function IHttpAsyncReaderGetRequestedBytes( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pRequestedBytesLength As Integer Ptr, _
 		ByVal ppRequestedBytes As UByte Ptr Ptr _
 	)As HRESULT
-	Return HttpReaderGetRequestedBytes(CONTAINING_RECORD(this, HttpReader, lpVtbl), pRequestedBytesLength, ppRequestedBytes)
+	Return HttpReaderGetRequestedBytes(CONTAINING_RECORD(self, HttpReader, lpVtbl), pRequestedBytesLength, ppRequestedBytes)
 End Function
 
 Private Function IHttpAsyncReaderSkipBytes( _
-		ByVal this As IHttpAsyncReader Ptr, _
+		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal Length As LongInt _
 	)As HRESULT
-	Return HttpReaderSkipBytes(CONTAINING_RECORD(this, HttpReader, lpVtbl), Length)
+	Return HttpReaderSkipBytes(CONTAINING_RECORD(self, HttpReader, lpVtbl), Length)
 End Function
 
 Dim GlobalHttpReaderVirtualTable As Const IHttpAsyncReaderVirtualTable = Type( _

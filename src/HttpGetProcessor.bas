@@ -198,60 +198,60 @@ Private Sub MakeContentRangeHeader( _
 End Sub
 
 Private Sub InitializeHttpGetProcessor( _
-		ByVal this As HttpGetProcessor Ptr, _
+		ByVal self As HttpGetProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPGETPROCESSOR), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalHttpGetProcessorVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	self->lpVtbl = @GlobalHttpGetProcessorVirtualTable
+	self->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
+	self->pIMemoryAllocator = pIMemoryAllocator
 
 End Sub
 
 Private Sub UnInitializeHttpGetProcessor( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpGetProcessorCreated( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpGetProcessorDestroyed( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyHttpGetProcessor( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeHttpGetProcessor(this)
+	UnInitializeHttpGetProcessor(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	HttpGetProcessorDestroyed(this)
+	HttpGetProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function HttpGetProcessorAddRef( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)As ULONG
 
 	Return 1
@@ -259,7 +259,7 @@ Private Function HttpGetProcessorAddRef( _
 End Function
 
 Private Function HttpGetProcessorRelease( _
-		ByVal this As HttpGetProcessor Ptr _
+		ByVal self As HttpGetProcessor Ptr _
 	)As ULONG
 
 	Return 0
@@ -267,19 +267,19 @@ Private Function HttpGetProcessorRelease( _
 End Function
 
 Private Function HttpGetProcessorQueryInterface( _
-		ByVal this As HttpGetProcessor Ptr, _
+		ByVal self As HttpGetProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IHttpGetAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+				*ppv = @self->lpVtbl
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -287,7 +287,7 @@ Private Function HttpGetProcessorQueryInterface( _
 		End If
 	End If
 
-	HttpGetProcessorAddRef(this)
+	HttpGetProcessorAddRef(self)
 
 	Return S_OK
 
@@ -299,22 +299,22 @@ Public Function CreateHttpGetProcessor( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HttpGetProcessor Ptr = IMalloc_Alloc( _
+	Dim self As HttpGetProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpGetProcessor) _
 	)
 
-	If this Then
-		InitializeHttpGetProcessor(this, pIMemoryAllocator)
-		HttpGetProcessorCreated(this)
+	If self Then
+		InitializeHttpGetProcessor(self, pIMemoryAllocator)
+		HttpGetProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpGetProcessorQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyHttpGetProcessor(this)
+			DestroyHttpGetProcessor(self)
 		End If
 
 		Return hrQueryInterface
@@ -326,7 +326,7 @@ Public Function CreateHttpGetProcessor( _
 End Function
 
 Private Function HttpGetProcessorPrepare( _
-		ByVal this As HttpGetProcessor Ptr, _
+		ByVal self As HttpGetProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
@@ -648,7 +648,7 @@ Private Function HttpGetProcessorPrepare( _
 End Function
 
 Private Function HttpGetProcessorBeginProcess( _
-		ByVal this As HttpGetProcessor Ptr, _
+		ByVal self As HttpGetProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
@@ -670,7 +670,7 @@ Private Function HttpGetProcessorBeginProcess( _
 End Function
 
 Private Function HttpGetProcessorEndProcess( _
-		ByVal this As HttpGetProcessor Ptr, _
+		ByVal self As HttpGetProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
@@ -702,49 +702,49 @@ End Function
 
 
 Private Function IHttpGetProcessorQueryInterface( _
-		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal self As IHttpGetAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpGetProcessorQueryInterface(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl), riid, ppv)
+	Return HttpGetProcessorQueryInterface(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl), riid, ppv)
 End Function
 
 Private Function IHttpGetProcessorAddRef( _
-		ByVal this As IHttpGetAsyncProcessor Ptr _
+		ByVal self As IHttpGetAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpGetProcessorAddRef(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl))
+	Return HttpGetProcessorAddRef(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl))
 End Function
 
 Private Function IHttpGetProcessorRelease( _
-		ByVal this As IHttpGetAsyncProcessor Ptr _
+		ByVal self As IHttpGetAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpGetProcessorRelease(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl))
+	Return HttpGetProcessorRelease(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl))
 End Function
 
 Private Function IHttpGetProcessorPrepare( _
-		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal self As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpGetProcessorPrepare(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl), pContext, ppIBuffer)
+	Return HttpGetProcessorPrepare(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
 Private Function IHttpGetProcessorBeginProcess( _
-		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal self As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpGetProcessorBeginProcess(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
+	Return HttpGetProcessorBeginProcess(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpGetProcessorEndProcess( _
-		ByVal this As IHttpGetAsyncProcessor Ptr, _
+		ByVal self As IHttpGetAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpGetProcessorEndProcess(CONTAINING_RECORD(this, HttpGetProcessor, lpVtbl), pContext, pIAsyncResult)
+	Return HttpGetProcessorEndProcess(CONTAINING_RECORD(self, HttpGetProcessor, lpVtbl), pContext, pIAsyncResult)
 End Function
 
 Dim GlobalHttpGetProcessorVirtualTable As Const IHttpGetAsyncProcessorVirtualTable = Type( _

@@ -49,120 +49,120 @@ Type HttpWriter
 End Type
 
 Private Sub InitializeHttpWriter( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPWRITER), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalHttpWriterVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalHttpWriterVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIStream = NULL
-	this->pIBuffer = NULL
-	this->pIResponse = NULL
-	this->BodyOffset = 0
-	this->KeepAlive = True
-	this->NeedWrite100Continue = False
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pIStream = NULL
+	self->pIBuffer = NULL
+	self->pIResponse = NULL
+	self->BodyOffset = 0
+	self->KeepAlive = True
+	self->NeedWrite100Continue = False
 
 End Sub
 
 Private Sub UnInitializeHttpWriter( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
-	If this->pIBuffer Then
-		IAttributedAsyncStream_Release(this->pIBuffer)
+	If self->pIBuffer Then
+		IAttributedAsyncStream_Release(self->pIBuffer)
 	End If
 
-	If this->pIResponse Then
-		IServerResponse_Release(this->pIResponse)
+	If self->pIResponse Then
+		IServerResponse_Release(self->pIResponse)
 	End If
 
 End Sub
 
 Private Sub HttpWriterCreated( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)
 
 End Sub
 
 Private Sub HttpWriterDestroyed( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyHttpWriter( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeHttpWriter(this)
+	UnInitializeHttpWriter(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	HttpWriterDestroyed(this)
+	HttpWriterDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function HttpWriterAddRef( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function HttpWriterRelease( _
-		ByVal this As HttpWriter Ptr _
+		ByVal self As HttpWriter Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyHttpWriter(this)
+	DestroyHttpWriter(self)
 
 	Return 0
 
 End Function
 
 Private Function HttpWriterQueryInterface( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IHttpAsyncWriter, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	HttpWriterAddRef(this)
+	HttpWriterAddRef(self)
 
 	Return S_OK
 
@@ -174,22 +174,22 @@ Public Function CreateHttpWriter( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HttpWriter Ptr = IMalloc_Alloc( _
+	Dim self As HttpWriter Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpWriter) _
 	)
 
-	If this Then
-		InitializeHttpWriter(this, pIMemoryAllocator)
-		HttpWriterCreated(this)
+	If self Then
+		InitializeHttpWriter(self, pIMemoryAllocator)
+		HttpWriterCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpWriterQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyHttpWriter(this)
+			DestroyHttpWriter(self)
 		End If
 
 		Return hrQueryInterface
@@ -201,101 +201,101 @@ Public Function CreateHttpWriter( _
 End Function
 
 Private Function HttpWriterGetBaseStream( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal ppResult As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
 
-	If this->pIStream Then
-		IBaseAsyncStream_AddRef(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_AddRef(self->pIStream)
 	End If
 
-	*ppResult = this->pIStream
+	*ppResult = self->pIStream
 
 	Return S_OK
 
 End Function
 
 Private Function HttpWriterSetBaseStream( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
 	)As HRESULT
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
 	If pIStream Then
 		IBaseAsyncStream_AddRef(pIStream)
 	End If
 
-	this->pIStream = pIStream
+	self->pIStream = pIStream
 
 	Return S_OK
 
 End Function
 
 Private Function HttpWriterGetBuffer( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 
-	If this->pIBuffer Then
-		IAttributedAsyncStream_AddRef(this->pIBuffer)
+	If self->pIBuffer Then
+		IAttributedAsyncStream_AddRef(self->pIBuffer)
 	End If
 
-	*ppResult = this->pIBuffer
+	*ppResult = self->pIBuffer
 
 	Return S_OK
 
 End Function
 
 Private Function HttpWriterSetBuffer( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIBuffer As IAttributedAsyncStream Ptr _
 	)As HRESULT
 
-	If this->pIBuffer Then
-		IAttributedAsyncStream_Release(this->pIBuffer)
+	If self->pIBuffer Then
+		IAttributedAsyncStream_Release(self->pIBuffer)
 	End If
 
 	If pIBuffer Then
 		IAttributedAsyncStream_AddRef(pIBuffer)
 	End If
 
-	this->pIBuffer = pIBuffer
+	self->pIBuffer = pIBuffer
 
 	Return S_OK
 
 End Function
 
 Private Sub HttpWriterSinkResponse( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr _
 	)
 
-	If this->pIResponse Then
-		IServerResponse_Release(this->pIResponse)
+	If self->pIResponse Then
+		IServerResponse_Release(self->pIResponse)
 	End If
 
 	If pIResponse Then
 		IServerResponse_AddRef(pIResponse)
 	End If
 
-	this->pIResponse = pIResponse
+	self->pIResponse = pIResponse
 
 End Sub
 
 Private Function HttpWriterPrepare( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal fFileAccess As FileAccess _
 	)As HRESULT
 
-	HttpWriterSinkResponse(this, pIResponse)
+	HttpWriterSinkResponse(self, pIResponse)
 
-	this->HeadersOffset = 0
-	this->HeadersSended = False
+	self->HeadersOffset = 0
+	self->HeadersSended = False
 
 	Dim ResponseContentLength As LongInt = Any
 	If fFileAccess = FileAccess.ReadAccess Then
@@ -307,8 +307,8 @@ Private Function HttpWriterPrepare( _
 	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
 		pIResponse, _
 		ResponseContentLength, _
-		@this->Headers, _
-		@this->HeadersLength _
+		@self->Headers, _
+		@self->HeadersLength _
 	)
 	If FAILED(hrHeadersToString) Then
 		Return hrHeadersToString
@@ -316,19 +316,19 @@ Private Function HttpWriterPrepare( _
 
 	IServerResponse_GetSendOnlyHeaders( _
 		pIResponse, _
-		@this->SendOnlyHeaders _
+		@self->SendOnlyHeaders _
 	)
 
-	If this->SendOnlyHeaders Then
-		this->BodySended = True
+	If self->SendOnlyHeaders Then
+		self->BodySended = True
 	Else
-		this->BodySended = False
+		self->BodySended = False
 	End If
 
 	Dim ByteRangeLength As LongInt = Any
 	IServerResponse_GetByteRange( _
 		pIResponse, _
-		@this->BodyOffset, _
+		@self->BodyOffset, _
 		@ByteRangeLength _
 	)
 
@@ -339,31 +339,31 @@ Private Function HttpWriterPrepare( _
 		BodyContentLength = ContentLength
 	End If
 
-	this->HeadersEndIndex = this->HeadersLength
-	this->BodyEndIndex = this->BodyOffset + BodyContentLength
+	self->HeadersEndIndex = self->HeadersLength
+	self->BodyEndIndex = self->BodyOffset + BodyContentLength
 
 	If BodyContentLength = 0 Then
-		this->BodySended = True
+		self->BodySended = True
 	End If
 
 	Select Case fFileAccess
 
 		Case FileAccess.ReadAccess
-			this->CurrentTask = WriterTasks.ReadFileStream
+			self->CurrentTask = WriterTasks.ReadFileStream
 
 		Case FileAccess.CreateAccess, FileAccess.UpdateAccess
-			If this->NeedWrite100Continue Then
-				this->Write100ContinueOffset = 0
-				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = @String100Continue
-				this->StreamBuffer.Buf(0).Length = Len(String100Continue)
-				this->CurrentTask = WriterTasks.Write100Continue
+			If self->NeedWrite100Continue Then
+				self->Write100ContinueOffset = 0
+				self->StreamBufferLength = 1
+				self->StreamBuffer.Buf(0).Buffer = @String100Continue
+				self->StreamBuffer.Buf(0).Length = Len(String100Continue)
+				self->CurrentTask = WriterTasks.Write100Continue
 			Else
-				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
+				self->CurrentTask = WriterTasks.WritePreloadedBytesToFile
 			End If
 
 		Case FileAccess.DeleteAccess
-			this->CurrentTask = WriterTasks.ReadFileStream
+			self->CurrentTask = WriterTasks.ReadFileStream
 
 	End Select
 
@@ -372,28 +372,28 @@ Private Function HttpWriterPrepare( _
 End Function
 
 Private Function HttpWriterBeginWrite( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 
-	Dim cTask As WriterTasks = this->CurrentTask
+	Dim cTask As WriterTasks = self->CurrentTask
 
 	Select Case cTask
 
 		Case WriterTasks.WritePreloadedBytesToNetwork
 			'
 		Case WriterTasks.ReadFileStream
-			If this->BodySended Then
-				If this->HeadersSended Then
+			If self->BodySended Then
+				If self->HeadersSended Then
 					*ppIAsyncResult = NULL
 					Return S_FALSE
 				End If
 
 				Dim pINewAsyncResult As IAsyncResult Ptr = Any
 				Dim hrCreateAsyncResult As HRESULT = CreateAsyncResult( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					@IID_IAsyncResult, _
 					@pINewAsyncResult _
 				)
@@ -420,12 +420,12 @@ Private Function HttpWriterBeginWrite( _
 				End If
 
 			Else
-				Dim DesiredSliceLength As LongInt = this->BodyEndIndex - this->BodyOffset
+				Dim DesiredSliceLength As LongInt = self->BodyEndIndex - self->BodyOffset
 				Dim dwDesiredSliceLength As DWORD = Cast(DWORD, DesiredSliceLength)
 
 				Dim hrBeginGetSlice As HRESULT = IAttributedAsyncStream_BeginReadSlice( _
-					this->pIBuffer, _
-					this->BodyOffset, _
+					self->pIBuffer, _
+					self->BodyOffset, _
 					dwDesiredSliceLength, _
 					pcb, _
 					StateObject, _
@@ -441,20 +441,20 @@ Private Function HttpWriterBeginWrite( _
 		Case WriterTasks.WriteNetworkData
 			Dim hrBeginWrite As HRESULT = Any
 
-			If this->KeepAlive Then
+			If self->KeepAlive Then
 				hrBeginWrite = IBaseAsyncStream_BeginWriteGather( _
-					this->pIStream, _
-					@this->StreamBuffer.Buf(0), _
-					this->StreamBufferLength, _
+					self->pIStream, _
+					@self->StreamBuffer.Buf(0), _
+					self->StreamBufferLength, _
 					pcb, _
 					StateObject, _
 					ppIAsyncResult _
 				)
 			Else
 				hrBeginWrite = IBaseAsyncStream_BeginWriteGatherAndShutdown( _
-					this->pIStream, _
-					@this->StreamBuffer.Buf(0), _
-					this->StreamBufferLength, _
+					self->pIStream, _
+					@self->StreamBuffer.Buf(0), _
+					self->StreamBufferLength, _
 					pcb, _
 					StateObject, _
 					ppIAsyncResult _
@@ -467,9 +467,9 @@ Private Function HttpWriterBeginWrite( _
 
 		Case WriterTasks.Write100Continue
 			Dim hrBeginWrite As HRESULT = IBaseAsyncStream_BeginWriteGather( _
-				this->pIStream, _
-				@this->StreamBuffer.Buf(0), _
-				this->StreamBufferLength, _
+				self->pIStream, _
+				@self->StreamBuffer.Buf(0), _
+				self->StreamBufferLength, _
 				pcb, _
 				StateObject, _
 				ppIAsyncResult _
@@ -479,11 +479,11 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.WritePreloadedBytesToFile
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, this->pIBuffer)
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim PreloadedBytesLength As Integer = Any
 			Dim pPreloadedBytes As UByte Ptr = Any
 			IAttributedAsyncStream_GetPreloadedBytes( _
-				this->pIBuffer, _
+				self->pIBuffer, _
 				@PreloadedBytesLength, _
 				@pPreloadedBytes _
 			)
@@ -498,7 +498,7 @@ Private Function HttpWriterBeginWrite( _
 				Dim hrBeginWrite As HRESULT = IFileAsyncStream_BeginWriteSlice( _
 					pIFileAsyncStream, _
 					@Slice, _
-					this->BodyOffset, _
+					self->BodyOffset, _
 					pcb, _
 					StateObject, _
 					ppIAsyncResult _
@@ -509,7 +509,7 @@ Private Function HttpWriterBeginWrite( _
 				End If
 
 			Else
-				this->CurrentTask = WriterTasks.ReadNetworkStream
+				self->CurrentTask = WriterTasks.ReadNetworkStream
 
 				Dim ReservedBytesLength As Integer = Any
 				Dim pReservedBytes As UByte Ptr = Any
@@ -524,11 +524,11 @@ Private Function HttpWriterBeginWrite( _
 
 				' No need to specify the buffer length
 				' as it will return to the EndRead function
-				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = pReservedBytes
+				self->StreamBufferLength = 1
+				self->StreamBuffer.Buf(0).Buffer = pReservedBytes
 
 				Dim hrBeginRead As HRESULT = IBaseAsyncStream_BeginRead( _
-					this->pIStream, _
+					self->pIStream, _
 					pReservedBytes, _
 					ReservedBytesLength, _
 					pcb, _
@@ -543,7 +543,7 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.ReadNetworkStream
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, this->pIBuffer)
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim ReservedBytesLength As Integer = Any
 			Dim pReservedBytes As UByte Ptr = Any
 			Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_GetReservedBytes( _
@@ -558,11 +558,11 @@ Private Function HttpWriterBeginWrite( _
 
 			' No need to specify the buffer length
 			' as it will return to the EndRead function
-			this->StreamBufferLength = 1
-			this->StreamBuffer.Buf(0).Buffer = pReservedBytes
+			self->StreamBufferLength = 1
+			self->StreamBuffer.Buf(0).Buffer = pReservedBytes
 
 			Dim hrBeginRead As HRESULT = IBaseAsyncStream_BeginRead( _
-				this->pIStream, _
+				self->pIStream, _
 				pReservedBytes, _
 				ReservedBytesLength, _
 				pcb, _
@@ -574,18 +574,18 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.WriteFileData
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, this->pIBuffer)
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 
 			Dim Slice As BufferSlice = Any
 			With Slice
-				.pSlice = this->StreamBuffer.Buf(0).Buffer
-				.Length = this->StreamBuffer.Buf(0).Length
+				.pSlice = self->StreamBuffer.Buf(0).Buffer
+				.Length = self->StreamBuffer.Buf(0).Length
 			End With
 
 			Dim hrBeginWrite As HRESULT = IFileAsyncStream_BeginWriteSlice( _
 				pIFileAsyncStream, _
 				@Slice, _
-				this->BodyOffset, _
+				self->BodyOffset, _
 				pcb, _
 				StateObject, _
 				ppIAsyncResult _
@@ -602,30 +602,30 @@ Private Function HttpWriterBeginWrite( _
 End Function
 
 Private Function HttpWriterEndWrite( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
 
-	Dim cTask As WriterTasks = this->CurrentTask
+	Dim cTask As WriterTasks = self->CurrentTask
 
 	Select Case cTask
 
 		Case WriterTasks.WritePreloadedBytesToNetwork
 			'
 		Case WriterTasks.ReadFileStream
-			If this->BodySended Then
-				If this->HeadersSended Then
+			If self->BodySended Then
+				If self->HeadersSended Then
 					Return S_FALSE
 				End If
 
-				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-				this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+				self->StreamBufferLength = 1
+				self->StreamBuffer.Buf(0).Buffer = @self->Headers[self->HeadersOffset]
+				self->StreamBuffer.Buf(0).Length = self->HeadersLength - self->HeadersOffset
 			Else
 
 				Dim Slice As BufferSlice = Any
 				Dim hrEndGetSlice As HRESULT = IAttributedAsyncStream_EndReadSlice( _
-					this->pIBuffer, _
+					self->pIBuffer, _
 					pIAsyncResult, _
 					@Slice _
 				)
@@ -633,28 +633,28 @@ Private Function HttpWriterEndWrite( _
 					Return hrEndGetSlice
 				End If
 
-				If this->HeadersSended Then
-					this->StreamBufferLength = 1
+				If self->HeadersSended Then
+					self->StreamBufferLength = 1
 
-					this->StreamBuffer.Buf(0).Buffer = Slice.pSlice
-					this->StreamBuffer.Buf(0).Length = Slice.Length
+					self->StreamBuffer.Buf(0).Buffer = Slice.pSlice
+					self->StreamBuffer.Buf(0).Length = Slice.Length
 				Else
-					this->StreamBufferLength = 2
+					self->StreamBufferLength = 2
 
-					this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-					this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
-					this->StreamBuffer.Buf(1).Buffer = Slice.pSlice
-					this->StreamBuffer.Buf(1).Length = Slice.Length
+					self->StreamBuffer.Buf(0).Buffer = @self->Headers[self->HeadersOffset]
+					self->StreamBuffer.Buf(0).Length = self->HeadersLength - self->HeadersOffset
+					self->StreamBuffer.Buf(1).Buffer = Slice.pSlice
+					self->StreamBuffer.Buf(1).Length = Slice.Length
 				End If
 
 			End If
 
-			this->CurrentTask = WriterTasks.WriteNetworkData
+			self->CurrentTask = WriterTasks.WriteNetworkData
 
 		Case WriterTasks.WriteNetworkData
 			Dim dwWritedBytes As DWORD = Any
 			Dim hrEndWrite As HRESULT = IBaseAsyncStream_EndWrite( _
-				this->pIStream, _
+				self->pIStream, _
 				pIAsyncResult, _
 				@dwWritedBytes _
 			)
@@ -662,41 +662,41 @@ Private Function HttpWriterEndWrite( _
 				Return hrEndWrite
 			End If
 
-			If this->HeadersSended Then
-				this->BodyOffset += CLngInt(dwWritedBytes)
+			If self->HeadersSended Then
+				self->BodyOffset += CLngInt(dwWritedBytes)
 			Else
-				Dim HeadersSize As LongInt = this->HeadersLength - this->HeadersOffset
+				Dim HeadersSize As LongInt = self->HeadersLength - self->HeadersOffset
 				Dim HeadersWritedBytes As LongInt = min(CLngInt(dwWritedBytes), HeadersSize)
 
-				this->HeadersOffset += HeadersWritedBytes
+				self->HeadersOffset += HeadersWritedBytes
 
-				If this->HeadersOffset >= this->HeadersEndIndex Then
-					this->HeadersSended = True
+				If self->HeadersOffset >= self->HeadersEndIndex Then
+					self->HeadersSended = True
 				End If
 
 				Dim BodyWritedBytes As LongInt = CLngInt(dwWritedBytes) - HeadersWritedBytes
-				this->BodyOffset += CLngInt(BodyWritedBytes)
+				self->BodyOffset += CLngInt(BodyWritedBytes)
 
 			End If
 
-			If this->BodyOffset >= this->BodyEndIndex Then
-				this->BodySended = True
+			If self->BodyOffset >= self->BodyEndIndex Then
+				self->BodySended = True
 			End If
 
 			If hrEndWrite = S_FALSE Then
 				Return S_FALSE
 			End If
 
-			If this->BodySended Then
+			If self->BodySended Then
 				Return S_OK
 			End If
 
-			this->CurrentTask = WriterTasks.ReadFileStream
+			self->CurrentTask = WriterTasks.ReadFileStream
 
 		Case WriterTasks.Write100Continue
 			Dim dwWritedBytes As DWORD = Any
 			Dim hrEndWrite As HRESULT = IBaseAsyncStream_EndWrite( _
-				this->pIStream, _
+				self->pIStream, _
 				pIAsyncResult, _
 				@dwWritedBytes _
 			)
@@ -708,18 +708,18 @@ Private Function HttpWriterEndWrite( _
 				Return S_FALSE
 			End If
 
-			this->Write100ContinueOffset += CInt(dwWritedBytes)
+			self->Write100ContinueOffset += CInt(dwWritedBytes)
 
-			If this->Write100ContinueOffset >= Len(String100Continue) Then
-				this->CurrentTask = WriterTasks.WritePreloadedBytesToFile
+			If self->Write100ContinueOffset >= Len(String100Continue) Then
+				self->CurrentTask = WriterTasks.WritePreloadedBytesToFile
 			Else
-				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = @String100Continue + this->Write100ContinueOffset
-				this->StreamBuffer.Buf(0).Length = Len(String100Continue) - this->Write100ContinueOffset
+				self->StreamBufferLength = 1
+				self->StreamBuffer.Buf(0).Buffer = @String100Continue + self->Write100ContinueOffset
+				self->StreamBuffer.Buf(0).Length = Len(String100Continue) - self->Write100ContinueOffset
 			End If
 
 		Case WriterTasks.WritePreloadedBytesToFile
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, this->pIBuffer)
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim WritedBytes As DWORD = Any
 			Dim hrEndGetSlice As HRESULT = IFileAsyncStream_EndWriteSlice( _
 				pIFileAsyncStream, _
@@ -730,10 +730,10 @@ Private Function HttpWriterEndWrite( _
 				Return hrEndGetSlice
 			End If
 
-			this->BodyOffset += CLngInt(WritedBytes)
+			self->BodyOffset += CLngInt(WritedBytes)
 
 			Dim BodySended As Boolean = Any
-			If this->BodyOffset >= this->BodyEndIndex Then
+			If self->BodyOffset >= self->BodyEndIndex Then
 				BodySended = True
 			Else
 				BodySended = False
@@ -744,30 +744,30 @@ Private Function HttpWriterEndWrite( _
 			End If
 
 			If BodySended Then
-				this->StreamBufferLength = 1
-				this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-				this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+				self->StreamBufferLength = 1
+				self->StreamBuffer.Buf(0).Buffer = @self->Headers[self->HeadersOffset]
+				self->StreamBuffer.Buf(0).Length = self->HeadersLength - self->HeadersOffset
 
-				this->CurrentTask = WriterTasks.WriteNetworkData
+				self->CurrentTask = WriterTasks.WriteNetworkData
 			Else
 				Dim PreloadedBytesLength As Integer = Any
 				Dim pPreloadedBytes As UByte Ptr = Any
 				IAttributedAsyncStream_GetPreloadedBytes( _
-					this->pIBuffer, _
+					self->pIBuffer, _
 					@PreloadedBytesLength, _
 					@pPreloadedBytes _
 				)
 
-				Dim AllPreloadBytesWrited As Boolean = this->BodyOffset >= PreloadedBytesLength
+				Dim AllPreloadBytesWrited As Boolean = self->BodyOffset >= PreloadedBytesLength
 				If AllPreloadBytesWrited Then
-					this->CurrentTask = WriterTasks.ReadNetworkStream
+					self->CurrentTask = WriterTasks.ReadNetworkStream
 				End If
 			End If
 
 		Case WriterTasks.ReadNetworkStream
 			Dim ReadedBytes As DWORD = Any
 			Dim hrEndRead As HRESULT = IBaseAsyncStream_EndRead( _
-				this->pIStream, _
+				self->pIStream, _
 				pIAsyncResult, _
 				@ReadedBytes _
 			)
@@ -780,12 +780,12 @@ Private Function HttpWriterEndWrite( _
 			End If
 
 			' The buffer pointer is already specified
-			this->StreamBuffer.Buf(0).Length = ReadedBytes
+			self->StreamBuffer.Buf(0).Length = ReadedBytes
 
-			this->CurrentTask = WriterTasks.WriteFileData
+			self->CurrentTask = WriterTasks.WriteFileData
 
 		Case WriterTasks.WriteFileData
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, this->pIBuffer)
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim WritedBytes As DWORD = Any
 			Dim hrEndGetSlice As HRESULT = IFileAsyncStream_EndWriteSlice( _
 				pIFileAsyncStream, _
@@ -796,32 +796,32 @@ Private Function HttpWriterEndWrite( _
 				Return hrEndGetSlice
 			End If
 
-			this->BodyOffset += CLngInt(WritedBytes)
+			self->BodyOffset += CLngInt(WritedBytes)
 
-			' Dim Diff As Integer = this->StreamBuffer.Buf(0).Length - WritedBytes
+			' Dim Diff As Integer = self->StreamBuffer.Buf(0).Length - WritedBytes
 			' If Diff Then
 			' 	' Write the remaining bytes
-			' 	this->StreamBuffer.Buf(0).Length = Diff
+			' 	self->StreamBuffer.Buf(0).Length = Diff
 			' Else
 				If hrEndGetSlice = S_FALSE Then
 					Return S_FALSE
 				End If
 
 				Dim BodySended As Boolean = Any
-				If this->BodyOffset >= this->BodyEndIndex Then
+				If self->BodyOffset >= self->BodyEndIndex Then
 					BodySended = True
 				Else
 					BodySended = False
 				End If
 
 				If BodySended Then
-					this->StreamBufferLength = 1
-					this->StreamBuffer.Buf(0).Buffer = @this->Headers[this->HeadersOffset]
-					this->StreamBuffer.Buf(0).Length = this->HeadersLength - this->HeadersOffset
+					self->StreamBufferLength = 1
+					self->StreamBuffer.Buf(0).Buffer = @self->Headers[self->HeadersOffset]
+					self->StreamBuffer.Buf(0).Length = self->HeadersLength - self->HeadersOffset
 
-					this->CurrentTask = WriterTasks.WriteNetworkData
+					self->CurrentTask = WriterTasks.WriteNetworkData
 				Else
-					this->CurrentTask = WriterTasks.ReadNetworkStream
+					self->CurrentTask = WriterTasks.ReadNetworkStream
 				End If
 			' End If
 
@@ -832,22 +832,22 @@ Private Function HttpWriterEndWrite( _
 End Function
 
 Private Function HttpWriterSetKeepAlive( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
 
-	this->KeepAlive = KeepAlive
+	self->KeepAlive = KeepAlive
 
 	Return S_OK
 
 End Function
 
 Private Function HttpWriterSetNeedWrite100Continue( _
-		ByVal this As HttpWriter Ptr, _
+		ByVal self As HttpWriter Ptr, _
 		ByVal NeedWrite100Continue As Boolean _
 	)As HRESULT
 
-	this->NeedWrite100Continue = NeedWrite100Continue
+	self->NeedWrite100Continue = NeedWrite100Continue
 
 	Return S_OK
 
@@ -855,90 +855,90 @@ End Function
 
 
 Private Function IHttpAsyncWriterQueryInterface( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterQueryInterface(CONTAINING_RECORD(this, HttpWriter, lpVtbl), riid, ppvObject)
+	Return HttpWriterQueryInterface(CONTAINING_RECORD(self, HttpWriter, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IHttpAsyncWriterAddRef( _
-		ByVal this As IHttpAsyncWriter Ptr _
+		ByVal self As IHttpAsyncWriter Ptr _
 	)As ULONG
-	Return HttpWriterAddRef(CONTAINING_RECORD(this, HttpWriter, lpVtbl))
+	Return HttpWriterAddRef(CONTAINING_RECORD(self, HttpWriter, lpVtbl))
 End Function
 
 Private Function IHttpAsyncWriterRelease( _
-		ByVal this As IHttpAsyncWriter Ptr _
+		ByVal self As IHttpAsyncWriter Ptr _
 	)As ULONG
-	Return HttpWriterRelease(CONTAINING_RECORD(this, HttpWriter, lpVtbl))
+	Return HttpWriterRelease(CONTAINING_RECORD(self, HttpWriter, lpVtbl))
 End Function
 
 Private Function IHttpAsyncWriterGetBaseStream( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal ppResult As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterGetBaseStream(CONTAINING_RECORD(this, HttpWriter, lpVtbl), ppResult)
+	Return HttpWriterGetBaseStream(CONTAINING_RECORD(self, HttpWriter, lpVtbl), ppResult)
 End Function
 
 Private Function IHttpAsyncWriterSetBaseStream( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return HttpWriterSetBaseStream(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIStream)
+	Return HttpWriterSetBaseStream(CONTAINING_RECORD(self, HttpWriter, lpVtbl), pIStream)
 End Function
 
 Private Function IHttpAsyncWriterGetBuffer( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal ppResult As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterGetBuffer(CONTAINING_RECORD(this, HttpWriter, lpVtbl), ppResult)
+	Return HttpWriterGetBuffer(CONTAINING_RECORD(self, HttpWriter, lpVtbl), ppResult)
 End Function
 
 Private Function IHttpAsyncWriterSetBuffer( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal pIBuffer As IAttributedAsyncStream Ptr _
 	)As HRESULT
-	Return HttpWriterSetBuffer(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIBuffer)
+	Return HttpWriterSetBuffer(CONTAINING_RECORD(self, HttpWriter, lpVtbl), pIBuffer)
 End Function
 
 Private Function IHttpAsyncWriterPrepare( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal pIResponse As IServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
 		ByVal fFileAccess As FileAccess _
 	)As HRESULT
-	Return HttpWriterPrepare(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
+	Return HttpWriterPrepare(CONTAINING_RECORD(self, HttpWriter, lpVtbl), pIResponse, ContentLength, fFileAccess)
 End Function
 
 Private Function IHttpAsyncWriterBeginWrite( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpWriterBeginWrite(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pcb, StateObject, ppIAsyncResult)
+	Return HttpWriterBeginWrite(CONTAINING_RECORD(self, HttpWriter, lpVtbl), pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpAsyncWriterEndWrite( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpWriterEndWrite(CONTAINING_RECORD(this, HttpWriter, lpVtbl), pIAsyncResult)
+	Return HttpWriterEndWrite(CONTAINING_RECORD(self, HttpWriter, lpVtbl), pIAsyncResult)
 End Function
 
 Private Function IHttpAsyncWriterSetKeepAlive( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal KeepAlive As Boolean _
 	)As HRESULT
-	Return HttpWriterSetKeepAlive(CONTAINING_RECORD(this, HttpWriter, lpVtbl), KeepAlive)
+	Return HttpWriterSetKeepAlive(CONTAINING_RECORD(self, HttpWriter, lpVtbl), KeepAlive)
 End Function
 
 Private Function IHttpAsyncWriterSetNeedWrite100Continue( _
-		ByVal this As IHttpAsyncWriter Ptr, _
+		ByVal self As IHttpAsyncWriter Ptr, _
 		ByVal NeedWrite100Continue As Boolean _
 	)As HRESULT
-	Return HttpWriterSetNeedWrite100Continue(CONTAINING_RECORD(this, HttpWriter, lpVtbl), NeedWrite100Continue)
+	Return HttpWriterSetNeedWrite100Continue(CONTAINING_RECORD(self, HttpWriter, lpVtbl), NeedWrite100Continue)
 End Function
 
 Dim GlobalHttpWriterVirtualTable As Const IHttpAsyncWriterVirtualTable = Type( _

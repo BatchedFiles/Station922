@@ -169,62 +169,62 @@ Private Function CreateWebSiteNode( _
 End Function
 
 Private Sub InitializeWebSiteCollection( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_WEBSITECOLLECTION), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalWebSiteCollectionVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	self->lpVtbl = @GlobalWebSiteCollectionVirtualTable
+	self->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pTree = NULL
-	this->WebSitesCount = 0
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pTree = NULL
+	self->WebSitesCount = 0
 
 End Sub
 
 Private Sub UnInitializeWebSiteCollection( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)
 
 End Sub
 
 Private Sub WebSiteCollectionCreated( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)
 
 End Sub
 
 Private Sub WebSiteCollectionDestroyed( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyWebSiteCollection( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeWebSiteCollection(this)
+	UnInitializeWebSiteCollection(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	WebSiteCollectionDestroyed(this)
+	WebSiteCollectionDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function WebSiteCollectionAddRef( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)As ULONG
 
 	Return 1
@@ -232,7 +232,7 @@ Private Function WebSiteCollectionAddRef( _
 End Function
 
 Private Function WebSiteCollectionRelease( _
-		ByVal this As WebSiteCollection Ptr _
+		ByVal self As WebSiteCollection Ptr _
 	)As ULONG
 
 	Return 0
@@ -240,23 +240,23 @@ Private Function WebSiteCollectionRelease( _
 End Function
 
 Private Function WebSiteCollectionQueryInterface( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IWebSiteCollection, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	WebSiteCollectionAddRef(this)
+	WebSiteCollectionAddRef(self)
 
 	Return S_OK
 
@@ -268,22 +268,22 @@ Public Function CreateWebSiteCollection( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As WebSiteCollection Ptr = IMalloc_Alloc( _
+	Dim self As WebSiteCollection Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(WebSiteCollection) _
 	)
 
-	If this Then
-		InitializeWebSiteCollection(this, pIMemoryAllocator)
-		WebSiteCollectionCreated(this)
+	If self Then
+		InitializeWebSiteCollection(self, pIMemoryAllocator)
+		WebSiteCollectionCreated(self)
 
 		Dim hrQueryInterface As HRESULT = WebSiteCollectionQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyWebSiteCollection(this)
+			DestroyWebSiteCollection(self)
 		End If
 
 		Return hrQueryInterface
@@ -295,14 +295,14 @@ Public Function CreateWebSiteCollection( _
 End Function
 
 Private Function WebSiteCollectionItem( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
 	*ppIWebSite = NULL
 
-	Dim pNode As WebSiteNode Ptr = TreeFindNode(this->pTree, pKey)
+	Dim pNode As WebSiteNode Ptr = TreeFindNode(self->pTree, pKey)
 	If pNode = NULL Then
 		Return E_FAIL
 	End If
@@ -315,25 +315,25 @@ Private Function WebSiteCollectionItem( _
 End Function
 
 Private Function WebSiteCollectionCount( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
 
-	*pCount = this->WebSitesCount
+	*pCount = self->WebSitesCount
 
 	Return S_OK
 
 End Function
 
 Private Function WebSiteCollectionAdd( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 
 	Dim pNode As WebSiteNode Ptr = CreateWebSiteNode( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		pKey, _
 		Port, _
 		pIWebSite _
@@ -342,10 +342,10 @@ Private Function WebSiteCollectionAdd( _
 		Return E_OUTOFMEMORY
 	End If
 
-	If this->pTree = NULL Then
-		this->pTree = pNode
+	If self->pTree = NULL Then
+		self->pTree = pNode
 	Else
-		TreeAddNode(this->pTree, pNode)
+		TreeAddNode(self->pTree, pNode)
 	End If
 
 	Return S_OK
@@ -353,12 +353,12 @@ Private Function WebSiteCollectionAdd( _
 End Function
 
 Private Function WebSiteCollectionItemWeakPtr( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
-	Dim pNode As WebSiteNode Ptr = TreeFindNode(this->pTree, pKey)
+	Dim pNode As WebSiteNode Ptr = TreeFindNode(self->pTree, pKey)
 	If pNode = NULL Then
 		*ppIWebSite = NULL
 		Return E_FAIL
@@ -371,22 +371,22 @@ Private Function WebSiteCollectionItemWeakPtr( _
 End Function
 
 Private Function WebSiteCollectionGetDefaultWebSite( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
-	*ppIWebSite = this->pDefaultWebSite
+	*ppIWebSite = self->pDefaultWebSite
 
 	Return S_OK
 
 End Function
 
 Private Function WebSiteCollectionSetDefaultWebSite( _
-		ByVal this As WebSiteCollection Ptr, _
+		ByVal self As WebSiteCollection Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 
-	this->pDefaultWebSite = pIWebSite
+	self->pDefaultWebSite = pIWebSite
 
 	Return S_OK
 
@@ -394,76 +394,76 @@ End Function
 
 
 Private Function IWebSiteCollectionQueryInterface( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return WebSiteCollectionQueryInterface(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), riid, ppvObject)
+	Return WebSiteCollectionQueryInterface(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IWebSiteCollectionAddRef( _
-		ByVal this As IWebSiteCollection Ptr _
+		ByVal self As IWebSiteCollection Ptr _
 	)As ULONG
-	Return WebSiteCollectionAddRef(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl))
+	Return WebSiteCollectionAddRef(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl))
 End Function
 
 Private Function IWebSiteCollectionRelease( _
-		ByVal this As IWebSiteCollection Ptr _
+		ByVal self As IWebSiteCollection Ptr _
 	)As ULONG
-	Return WebSiteCollectionRelease(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl))
+	Return WebSiteCollectionRelease(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl))
 End Function
 
 ' Private Function IWebSiteCollection_NewEnum( _
-		' ByVal this As IWebSiteCollection Ptr, _
+		' ByVal self As IWebSiteCollection Ptr, _
 		' ByVal ppIEnum As IEnumWebSite Ptr Ptr _
 	' )As HRESULT
-	' Return WebSiteCollection_NewEnum(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), ppIEnum)
+	' Return WebSiteCollection_NewEnum(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), ppIEnum)
 ' End Function
 
 Private Function IWebSiteCollectionItem( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal Host As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
-	Return WebSiteCollectionItem(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
+	Return WebSiteCollectionItem(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), Host, ppIWebSite)
 End Function
 
 Private Function IWebSiteCollectionCount( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal pCount As Integer Ptr _
 	)As HRESULT
-	Return WebSiteCollectionCount(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), pCount)
+	Return WebSiteCollectionCount(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), pCount)
 End Function
 
 Private Function IWebSiteCollectionAdd( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal pKey As HeapBSTR, _
 		ByVal Port As HeapBSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebSiteCollectionAdd(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), pKey, Port, pIWebSite)
+	Return WebSiteCollectionAdd(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), pKey, Port, pIWebSite)
 End Function
 
 Private Function IWebSiteCollectionItemWeakPtr( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal Host As HeapBSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
-	Return WebSiteCollectionItemWeakPtr(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), Host, ppIWebSite)
+	Return WebSiteCollectionItemWeakPtr(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), Host, ppIWebSite)
 End Function
 
 Private Function IWebSiteCollectionGetDefaultWebSite( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
-	Return WebSiteCollectionGetDefaultWebSite(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), ppIWebSite)
+	Return WebSiteCollectionGetDefaultWebSite(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), ppIWebSite)
 End Function
 
 Private Function IWebSiteCollectionSetDefaultWebSite( _
-		ByVal this As IWebSiteCollection Ptr, _
+		ByVal self As IWebSiteCollection Ptr, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
-	Return WebSiteCollectionSetDefaultWebSite(CONTAINING_RECORD(this, WebSiteCollection, lpVtbl), pIWebSite)
+	Return WebSiteCollectionSetDefaultWebSite(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), pIWebSite)
 End Function
 
 Dim GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable = Type( _

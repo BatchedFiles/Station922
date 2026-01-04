@@ -17,111 +17,111 @@ Type ReadRequestAsyncTask
 End Type
 
 Private Sub InitializeReadRequestAsyncTask( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_READREQUESTASYNCTASK), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalReadRequestAsyncIoTaskVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalReadRequestAsyncIoTaskVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->pIHttpAsyncReader = NULL
-	this->pIStream = NULL
-	this->RequestedLine = NULL
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->pIHttpAsyncReader = NULL
+	self->pIStream = NULL
+	self->RequestedLine = NULL
 
 End Sub
 
 Private Sub UnInitializeReadRequestAsyncTask( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
-	If this->pIHttpAsyncReader Then
-		IHttpAsyncReader_Release(this->pIHttpAsyncReader)
+	If self->pIHttpAsyncReader Then
+		IHttpAsyncReader_Release(self->pIHttpAsyncReader)
 	End If
 
-	HeapSysFreeString(this->RequestedLine)
+	HeapSysFreeString(self->RequestedLine)
 
 End Sub
 
 Private Sub ReadRequestAsyncTaskCreated( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)
 
 End Sub
 
 Private Sub ReadRequestAsyncTaskDestroyed( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyReadRequestAsyncTask( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeReadRequestAsyncTask(this)
+	UnInitializeReadRequestAsyncTask(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	ReadRequestAsyncTaskDestroyed(this)
+	ReadRequestAsyncTaskDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function ReadRequestAsyncTaskAddRef( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function ReadRequestAsyncTaskRelease( _
-		ByVal this As ReadRequestAsyncTask Ptr _
+		ByVal self As ReadRequestAsyncTask Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyReadRequestAsyncTask(this)
+	DestroyReadRequestAsyncTask(self)
 
 	Return 0
 
 End Function
 
 Private Function ReadRequestAsyncTaskQueryInterface( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IReadRequestAsyncIoTask, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IAsyncIoTask, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+				*ppv = @self->lpVtbl
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -129,7 +129,7 @@ Private Function ReadRequestAsyncTaskQueryInterface( _
 		End If
 	End If
 
-	ReadRequestAsyncTaskAddRef(this)
+	ReadRequestAsyncTaskAddRef(self)
 
 	Return S_OK
 
@@ -141,25 +141,25 @@ Public Function CreateReadRequestAsyncTask( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
+	Dim self As ReadRequestAsyncTask Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ReadRequestAsyncTask) _
 	)
 
-	If this Then
+	If self Then
 		InitializeReadRequestAsyncTask( _
-			this, _
+			self, _
 			pIMemoryAllocator _
 		)
-		ReadRequestAsyncTaskCreated(this)
+		ReadRequestAsyncTaskCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ReadRequestAsyncTaskQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyReadRequestAsyncTask(this)
+			DestroyReadRequestAsyncTask(self)
 		End If
 
 		Return hrQueryInterface
@@ -171,14 +171,14 @@ Public Function CreateReadRequestAsyncTask( _
 End Function
 
 Private Function ReadRequestAsyncTaskBeginExecute( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 
 	Dim hrBeginReadLine As HRESULT = IHttpAsyncReader_BeginReadLine( _
-		this->pIHttpAsyncReader, _
+		self->pIHttpAsyncReader, _
 		pcb, _
 		StateObject, _
 		ppIResult _
@@ -192,14 +192,14 @@ Private Function ReadRequestAsyncTaskBeginExecute( _
 End Function
 
 Private Function ReadRequestAsyncTaskEndExecute( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr _
 	)As HRESULT
 
 	Dim hrEndReadLine As HRESULT = IHttpAsyncReader_EndReadLine( _
-		this->pIHttpAsyncReader, _
+		self->pIHttpAsyncReader, _
 		pIResult, _
-		@this->RequestedLine _
+		@self->RequestedLine _
 	)
 	If FAILED(hrEndReadLine) Then
 		Return hrEndReadLine
@@ -224,81 +224,81 @@ Private Function ReadRequestAsyncTaskEndExecute( _
 End Function
 
 Private Function ReadRequestAsyncTaskGetBaseStream( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
 
-	If this->pIStream Then
-		IBaseAsyncStream_AddRef(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_AddRef(self->pIStream)
 	End If
 
-	*ppStream = this->pIStream
+	*ppStream = self->pIStream
 
 	Return S_OK
 
 End Function
 
 Private Function ReadRequestAsyncTaskSetBaseStream( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
 
-	If this->pIStream Then
-		IBaseAsyncStream_Release(this->pIStream)
+	If self->pIStream Then
+		IBaseAsyncStream_Release(self->pIStream)
 	End If
 
 	If pStream Then
 		IBaseAsyncStream_AddRef(pStream)
 	End If
 
-	this->pIStream = pStream
+	self->pIStream = pStream
 
 	Return S_OK
 
 End Function
 
 Private Function ReadRequestAsyncTaskGetHttpReader( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
 	)As HRESULT
 
-	If this->pIHttpAsyncReader Then
-		IHttpAsyncReader_AddRef(this->pIHttpAsyncReader)
+	If self->pIHttpAsyncReader Then
+		IHttpAsyncReader_AddRef(self->pIHttpAsyncReader)
 	End If
 
-	*ppReader = this->pIHttpAsyncReader
+	*ppReader = self->pIHttpAsyncReader
 
 	Return S_OK
 
 End Function
 
 Private Function ReadRequestAsyncTaskSetHttpReader( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		byVal pReader As IHttpAsyncReader Ptr _
 	)As HRESULT
 
-	If this->pIHttpAsyncReader Then
-		IHttpAsyncReader_Release(this->pIHttpAsyncReader)
+	If self->pIHttpAsyncReader Then
+		IHttpAsyncReader_Release(self->pIHttpAsyncReader)
 	End If
 
 	If pReader Then
 		IHttpAsyncReader_AddRef(pReader)
 	End If
 
-	this->pIHttpAsyncReader = pReader
+	self->pIHttpAsyncReader = pReader
 
 	Return S_OK
 
 End Function
 
 Private Function ReadRequestAsyncTaskParse( _
-		ByVal this As ReadRequestAsyncTask Ptr, _
+		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal ppRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
 
 	Dim pIRequest As IClientRequest Ptr = Any
 	Dim hrCreateRequest As HRESULT = CreateClientRequest( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		@IID_IClientRequest, _
 		@pIRequest _
 	)
@@ -310,8 +310,8 @@ Private Function ReadRequestAsyncTaskParse( _
 
 	Dim hrParse As HRESULT = IClientRequest_Parse( _
 		pIRequest, _
-		this->pIHttpAsyncReader, _
-		this->RequestedLine _
+		self->pIHttpAsyncReader, _
+		self->RequestedLine _
 	)
 	If FAILED(hrParse) Then
 		IClientRequest_Release(pIRequest)
@@ -327,74 +327,74 @@ End Function
 
 
 Private Function IReadRequestAsyncTaskQueryInterface( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskQueryInterface(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), riid, ppv)
+	Return ReadRequestAsyncTaskQueryInterface(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), riid, ppv)
 End Function
 
 Private Function IReadRequestAsyncTaskAddRef( _
-		ByVal this As IReadRequestAsyncIoTask Ptr _
+		ByVal self As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskAddRef(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl))
+	Return ReadRequestAsyncTaskAddRef(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Private Function IReadRequestAsyncTaskRelease( _
-		ByVal this As IReadRequestAsyncIoTask Ptr _
+		ByVal self As IReadRequestAsyncIoTask Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskRelease(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl))
+	Return ReadRequestAsyncTaskRelease(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl))
 End Function
 
 Private Function IReadRequestAsyncTaskBeginExecute( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIResult As IAsyncResult Ptr Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskBeginExecute(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
+	Return ReadRequestAsyncTaskBeginExecute(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pcb, StateObject, ppIResult)
 End Function
 
 Private Function IReadRequestAsyncTaskEndExecute( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal pIResult As IAsyncResult Ptr _
 	)As ULONG
-	Return ReadRequestAsyncTaskEndExecute(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pIResult)
+	Return ReadRequestAsyncTaskEndExecute(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pIResult)
 End Function
 
 Private Function IReadRequestAsyncTaskGetBaseStream( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskGetBaseStream(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppStream)
+	Return ReadRequestAsyncTaskGetBaseStream(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), ppStream)
 End Function
 
 Private Function IReadRequestAsyncTaskSetBaseStream( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		byVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskSetBaseStream(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pStream)
+	Return ReadRequestAsyncTaskSetBaseStream(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pStream)
 End Function
 
 Private Function IReadRequestAsyncTaskGetHttpReader( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskGetHttpReader(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppReader)
+	Return ReadRequestAsyncTaskGetHttpReader(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), ppReader)
 End Function
 
 Private Function IReadRequestAsyncTaskSetHttpReader( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		byVal pReader As IHttpAsyncReader Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskSetHttpReader(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), pReader)
+	Return ReadRequestAsyncTaskSetHttpReader(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pReader)
 End Function
 
 Private Function IReadRequestAsyncTaskParse( _
-		ByVal this As IReadRequestAsyncIoTask Ptr, _
+		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppRequest As IClientRequest Ptr Ptr _
 	)As HRESULT
-	Return ReadRequestAsyncTaskParse(CONTAINING_RECORD(this, ReadRequestAsyncTask, lpVtbl), ppRequest)
+	Return ReadRequestAsyncTaskParse(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), ppRequest)
 End Function
 
 Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVirtualTable = Type( _

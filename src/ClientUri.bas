@@ -216,121 +216,121 @@ Private Function ContainsBadCharSequence( _
 End Function
 
 Private Sub InitializeClientUri( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_CLIENTURI), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalClientUriVirtualTable
-	this->ReferenceCounter = 0
+	self->lpVtbl = @GlobalClientUriVirtualTable
+	self->ReferenceCounter = 0
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
-	this->Uri = NULL
-	this->Scheme = NULL
-	this->UserName = NULL
-	this->Password = NULL
-	this->Host = NULL
-	this->Port = NULL
-	this->Path = NULL
-	this->Query = NULL
-	this->Fragment = NULL
+	self->pIMemoryAllocator = pIMemoryAllocator
+	self->Uri = NULL
+	self->Scheme = NULL
+	self->UserName = NULL
+	self->Password = NULL
+	self->Host = NULL
+	self->Port = NULL
+	self->Path = NULL
+	self->Query = NULL
+	self->Fragment = NULL
 
 End Sub
 
 Private Sub UnInitializeClientUri( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)
 
-	HeapSysFreeString(this->Fragment)
-	HeapSysFreeString(this->Query)
-	HeapSysFreeString(this->Path)
-	HeapSysFreeString(this->Port)
-	HeapSysFreeString(this->Host)
-	HeapSysFreeString(this->Password)
-	HeapSysFreeString(this->UserName)
-	HeapSysFreeString(this->Scheme)
-	HeapSysFreeString(this->Uri)
+	HeapSysFreeString(self->Fragment)
+	HeapSysFreeString(self->Query)
+	HeapSysFreeString(self->Path)
+	HeapSysFreeString(self->Port)
+	HeapSysFreeString(self->Host)
+	HeapSysFreeString(self->Password)
+	HeapSysFreeString(self->UserName)
+	HeapSysFreeString(self->Scheme)
+	HeapSysFreeString(self->Uri)
 
 End Sub
 
 Private Sub ClientUriCreated( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)
 
 End Sub
 
 Private Sub ClientUriDestroyed( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyClientUri( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeClientUri(this)
+	UnInitializeClientUri(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	ClientUriDestroyed(this)
+	ClientUriDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function ClientUriAddRef( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)As ULONG
 
-	this->ReferenceCounter += 1
+	self->ReferenceCounter += 1
 
 	Return 1
 
 End Function
 
 Private Function ClientUriRelease( _
-		ByVal this As ClientUri Ptr _
+		ByVal self As ClientUri Ptr _
 	)As ULONG
 
-	this->ReferenceCounter -= 1
+	self->ReferenceCounter -= 1
 
-	If this->ReferenceCounter Then
+	If self->ReferenceCounter Then
 		Return 1
 	End If
 
-	DestroyClientUri(this)
+	DestroyClientUri(self)
 
 	Return 0
 
 End Function
 
 Private Function ClientUriQueryInterface( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IClientUri, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IUnknown, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			*ppv = NULL
 			Return E_NOINTERFACE
 		End If
 	End If
 
-	ClientUriAddRef(this)
+	ClientUriAddRef(self)
 
 	Return S_OK
 
@@ -342,22 +342,22 @@ Public Function CreateClientUri( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As ClientUri Ptr = IMalloc_Alloc( _
+	Dim self As ClientUri Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(ClientUri) _
 	)
 
-	If this Then
-		InitializeClientUri(this, pIMemoryAllocator)
-		ClientUriCreated(this)
+	If self Then
+		InitializeClientUri(self, pIMemoryAllocator)
+		ClientUriCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ClientUriQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyClientUri(this)
+			DestroyClientUri(self)
 		End If
 
 		Return hrQueryInterface
@@ -369,7 +369,7 @@ Public Function CreateClientUri( _
 End Function
 
 Private Function ClientUriUriFromString( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal bstrUri As HeapBSTR _
 	)As HRESULT
 
@@ -380,7 +380,7 @@ Private Function ClientUriUriFromString( _
 	End If
 
 	Dim pwszDecodedUri As WString Ptr = IMalloc_Alloc( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		(INTERNET_MAX_URL_LENGTH + 1) * SizeOf(WString) _
 	)
 	If pwszDecodedUri = NULL Then
@@ -388,7 +388,7 @@ Private Function ClientUriUriFromString( _
 	End If
 
 	Dim DecodedUriLength As Integer = DecodeUri( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		pwszDecodedUri, _
 		INTERNET_MAX_URL_LENGTH, _
 		bstrUri, _
@@ -512,7 +512,7 @@ Private Function ClientUriUriFromString( _
 			FragmentLength = 0
 		Else
 			IMalloc_Free( _
-				this->pIMemoryAllocator, _
+				self->pIMemoryAllocator, _
 				pwszDecodedUri _
 			)
 			Return CLIENTURI_E_PATHNOTFOUND
@@ -525,25 +525,25 @@ Private Function ClientUriUriFromString( _
 	)
 	If FAILED(hrContainsBadChar) Then
 		IMalloc_Free( _
-			this->pIMemoryAllocator, _
+			self->pIMemoryAllocator, _
 			pwszDecodedUri _
 		)
 		Return CLIENTURI_E_CONTAINSBADCHAR
 	End If
 
 	HeapSysAddRefString(bstrUri)
-	this->Uri = bstrUri
+	self->Uri = bstrUri
 
 	Scope
 		If SchemeLength Then
-			this->Scheme = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Scheme = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pScheme, _
 				SchemeLength _
 			)
-			If this->Scheme = NULL Then
+			If self->Scheme = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -551,14 +551,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If UserNameLength Then
-			this->UserName = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->UserName = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pUserName, _
 				UserNameLength _
 			)
-			If this->UserName = NULL Then
+			If self->UserName = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -566,14 +566,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If PasswordLength Then
-			this->Password = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Password = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pPassword, _
 				PasswordLength _
 			)
-			If this->Password = NULL Then
+			If self->Password = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -581,14 +581,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If HostLength Then
-			this->Host = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Host = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pHost, _
 				HostLength _
 			)
-			If this->Host = NULL Then
+			If self->Host = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -596,14 +596,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If PortLength Then
-			this->Port = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Port = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pPort, _
 				PortLength _
 			)
-			If this->Port = NULL Then
+			If self->Port = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -613,14 +613,14 @@ Private Function ClientUriUriFromString( _
 
 	Scope
 		If PathLength Then
-			this->Path = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Path = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pPath, _
 				PathLength _
 			)
-			If this->Path = NULL Then
+			If self->Path = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -628,14 +628,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If QueryLength Then
-			this->Query = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Query = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pQuery, _
 				QueryLength _
 			)
-			If this->Query = NULL Then
+			If self->Query = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -643,14 +643,14 @@ Private Function ClientUriUriFromString( _
 		End If
 
 		If FragmentLength Then
-			this->Fragment = CreateHeapStringLen( _
-				this->pIMemoryAllocator, _
+			self->Fragment = CreateHeapStringLen( _
+				self->pIMemoryAllocator, _
 				pFragment, _
 				FragmentLength _
 			)
-			If this->Fragment = NULL Then
+			If self->Fragment = NULL Then
 				IMalloc_Free( _
-					this->pIMemoryAllocator, _
+					self->pIMemoryAllocator, _
 					pwszDecodedUri _
 				)
 				Return E_OUTOFMEMORY
@@ -659,7 +659,7 @@ Private Function ClientUriUriFromString( _
 	End Scope
 
 	IMalloc_Free( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		pwszDecodedUri _
 	)
 
@@ -668,117 +668,117 @@ Private Function ClientUriUriFromString( _
 End Function
 
 Private Function ClientUriGetOriginalString( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppOriginalString As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Uri)
+	HeapSysAddRefString(self->Uri)
 
-	*ppOriginalString = this->Uri
+	*ppOriginalString = self->Uri
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetUserName( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppUserName As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->UserName)
+	HeapSysAddRefString(self->UserName)
 
-	*ppUserName = this->UserName
+	*ppUserName = self->UserName
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetPassword( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppPassword As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Password)
+	HeapSysAddRefString(self->Password)
 
-	*ppPassword = this->Password
+	*ppPassword = self->Password
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetHost( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Host)
+	HeapSysAddRefString(self->Host)
 
-	*ppHost = this->Host
+	*ppHost = self->Host
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetPort( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppPort As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Port)
+	HeapSysAddRefString(self->Port)
 
-	*ppPort = this->Port
+	*ppPort = self->Port
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetScheme( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppScheme As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Scheme)
+	HeapSysAddRefString(self->Scheme)
 
-	*ppScheme = this->Scheme
+	*ppScheme = self->Scheme
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetPath( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppPath As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Path)
+	HeapSysAddRefString(self->Path)
 
-	*ppPath = this->Path
+	*ppPath = self->Path
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetQuery( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppQuery As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Query)
+	HeapSysAddRefString(self->Query)
 
-	*ppQuery = this->Query
+	*ppQuery = self->Query
 
 	Return S_OK
 
 End Function
 
 Private Function ClientUriGetFragment( _
-		ByVal this As ClientUri Ptr, _
+		ByVal self As ClientUri Ptr, _
 		ByVal ppFragment As HeapBSTR Ptr _
 	)As HRESULT
 
-	HeapSysAddRefString(this->Fragment)
+	HeapSysAddRefString(self->Fragment)
 
-	*ppFragment = this->Fragment
+	*ppFragment = self->Fragment
 
 	Return S_OK
 
@@ -786,93 +786,93 @@ End Function
 
 
 Private Function IClientUriQueryInterface( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppvObject As Any Ptr Ptr _
 	)As HRESULT
-	Return ClientUriQueryInterface(CONTAINING_RECORD(this, ClientUri, lpVtbl), riid, ppvObject)
+	Return ClientUriQueryInterface(CONTAINING_RECORD(self, ClientUri, lpVtbl), riid, ppvObject)
 End Function
 
 Private Function IClientUriAddRef( _
-		ByVal this As IClientUri Ptr _
+		ByVal self As IClientUri Ptr _
 	)As ULONG
-	Return ClientUriAddRef(CONTAINING_RECORD(this, ClientUri, lpVtbl))
+	Return ClientUriAddRef(CONTAINING_RECORD(self, ClientUri, lpVtbl))
 End Function
 
 Private Function IClientUriRelease( _
-		ByVal this As IClientUri Ptr _
+		ByVal self As IClientUri Ptr _
 	)As ULONG
-	Return ClientUriRelease(CONTAINING_RECORD(this, ClientUri, lpVtbl))
+	Return ClientUriRelease(CONTAINING_RECORD(self, ClientUri, lpVtbl))
 End Function
 
 Private Function IClientUriUriFromString( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal bstrUri As HeapBSTR _
 	)As HRESULT
-	Return ClientUriUriFromString(CONTAINING_RECORD(this, ClientUri, lpVtbl), bstrUri)
+	Return ClientUriUriFromString(CONTAINING_RECORD(self, ClientUri, lpVtbl), bstrUri)
 End Function
 
 Private Function IClientUriGetOriginalString( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppOriginalString As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetOriginalString(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppOriginalString)
+	Return ClientUriGetOriginalString(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppOriginalString)
 End Function
 
 Private Function IClientUriGetUserName( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppUserName As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetUserName(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppUserName)
+	Return ClientUriGetUserName(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppUserName)
 End Function
 
 Private Function IClientUriGetPassword( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPassword As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPassword(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPassword)
+	Return ClientUriGetPassword(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppPassword)
 End Function
 
 Private Function IClientUriGetHost( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppHost As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetHost(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppHost)
+	Return ClientUriGetHost(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppHost)
 End Function
 
 Private Function IClientUriGetPort( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPort As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPort(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPort)
+	Return ClientUriGetPort(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppPort)
 End Function
 
 Private Function IClientUriGetScheme( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppScheme As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetScheme(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppScheme)
+	Return ClientUriGetScheme(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppScheme)
 End Function
 
 Private Function IClientUriGetPath( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppPath As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetPath(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppPath)
+	Return ClientUriGetPath(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppPath)
 End Function
 
 Private Function IClientUriGetQuery( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppQuery As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetQuery(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppQuery)
+	Return ClientUriGetQuery(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppQuery)
 End Function
 
 Private Function IClientUriGetFragment( _
-		ByVal this As IClientUri Ptr, _
+		ByVal self As IClientUri Ptr, _
 		ByVal ppFragment As HeapBSTR Ptr _
 	)As HRESULT
-	Return ClientUriGetFragment(CONTAINING_RECORD(this, ClientUri, lpVtbl), ppFragment)
+	Return ClientUriGetFragment(CONTAINING_RECORD(self, ClientUri, lpVtbl), ppFragment)
 End Function
 
 Dim GlobalClientUriVirtualTable As Const IClientUriVirtualTable = Type( _

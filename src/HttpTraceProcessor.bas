@@ -13,60 +13,60 @@ Type HttpTraceProcessor
 End Type
 
 Private Sub InitializeHttpTraceProcessor( _
-		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal self As HttpTraceProcessor Ptr, _
 		ByVal pIMemoryAllocator As IMalloc Ptr _
 	)
 
 	#if __FB_DEBUG__
 		CopyMemory( _
-			@this->RttiClassName(0), _
+			@self->RttiClassName(0), _
 			@Str(RTTI_ID_HTTPTRACEPROCESSOR), _
-			UBound(this->RttiClassName) - LBound(this->RttiClassName) + 1 _
+			UBound(self->RttiClassName) - LBound(self->RttiClassName) + 1 _
 		)
 	#endif
-	this->lpVtbl = @GlobalHttpTraceProcessorVirtualTable
-	this->ReferenceCounter = CUInt(-1)
+	self->lpVtbl = @GlobalHttpTraceProcessorVirtualTable
+	self->ReferenceCounter = CUInt(-1)
 	IMalloc_AddRef(pIMemoryAllocator)
-	this->pIMemoryAllocator = pIMemoryAllocator
+	self->pIMemoryAllocator = pIMemoryAllocator
 
 End Sub
 
 Private Sub UnInitializeHttpTraceProcessor( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpTraceProcessorCreated( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub HttpTraceProcessorDestroyed( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)
 
 End Sub
 
 Private Sub DestroyHttpTraceProcessor( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)
 
-	Dim pIMemoryAllocator As IMalloc Ptr = this->pIMemoryAllocator
+	Dim pIMemoryAllocator As IMalloc Ptr = self->pIMemoryAllocator
 
-	UnInitializeHttpTraceProcessor(this)
+	UnInitializeHttpTraceProcessor(self)
 
-	IMalloc_Free(pIMemoryAllocator, this)
+	IMalloc_Free(pIMemoryAllocator, self)
 
-	HttpTraceProcessorDestroyed(this)
+	HttpTraceProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
 End Sub
 
 Private Function HttpTraceProcessorAddRef( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)As ULONG
 
 	Return 1
@@ -74,7 +74,7 @@ Private Function HttpTraceProcessorAddRef( _
 End Function
 
 Private Function HttpTraceProcessorRelease( _
-		ByVal this As HttpTraceProcessor Ptr _
+		ByVal self As HttpTraceProcessor Ptr _
 	)As ULONG
 
 	Return 0
@@ -82,19 +82,19 @@ Private Function HttpTraceProcessorRelease( _
 End Function
 
 Private Function HttpTraceProcessorQueryInterface( _
-		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal self As HttpTraceProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
 	If IsEqualIID(@IID_IHttpTraceAsyncProcessor, riid) Then
-		*ppv = @this->lpVtbl
+		*ppv = @self->lpVtbl
 	Else
 		If IsEqualIID(@IID_IHttpAsyncProcessor, riid) Then
-			*ppv = @this->lpVtbl
+			*ppv = @self->lpVtbl
 		Else
 			If IsEqualIID(@IID_IUnknown, riid) Then
-				*ppv = @this->lpVtbl
+				*ppv = @self->lpVtbl
 			Else
 				*ppv = NULL
 				Return E_NOINTERFACE
@@ -102,7 +102,7 @@ Private Function HttpTraceProcessorQueryInterface( _
 		End If
 	End If
 
-	HttpTraceProcessorAddRef(this)
+	HttpTraceProcessorAddRef(self)
 
 	Return S_OK
 
@@ -114,22 +114,22 @@ Public Function CreateHttpTraceProcessor( _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim this As HttpTraceProcessor Ptr = IMalloc_Alloc( _
+	Dim self As HttpTraceProcessor Ptr = IMalloc_Alloc( _
 		pIMemoryAllocator, _
 		SizeOf(HttpTraceProcessor) _
 	)
 
-	If this Then
-		InitializeHttpTraceProcessor(this, pIMemoryAllocator)
-		HttpTraceProcessorCreated(this)
+	If self Then
+		InitializeHttpTraceProcessor(self, pIMemoryAllocator)
+		HttpTraceProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpTraceProcessorQueryInterface( _
-			this, _
+			self, _
 			riid, _
 			ppv _
 		)
 		If FAILED(hrQueryInterface) Then
-			DestroyHttpTraceProcessor(this)
+			DestroyHttpTraceProcessor(self)
 		End If
 
 		Return hrQueryInterface
@@ -141,14 +141,14 @@ Public Function CreateHttpTraceProcessor( _
 End Function
 
 Private Function HttpTraceProcessorPrepare( _
-		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal self As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
 
 	Dim pIBuffer As IMemoryStream Ptr = Any
 	Dim hrCreateBuffer As HRESULT = CreateMemoryStream( _
-		this->pIMemoryAllocator, _
+		self->pIMemoryAllocator, _
 		@IID_IMemoryStream, _
 		@pIBuffer _
 	)
@@ -201,7 +201,7 @@ Private Function HttpTraceProcessorPrepare( _
 End Function
 
 Private Function HttpTraceProcessorBeginProcess( _
-		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal self As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
@@ -223,7 +223,7 @@ Private Function HttpTraceProcessorBeginProcess( _
 End Function
 
 Private Function HttpTraceProcessorEndProcess( _
-		ByVal this As HttpTraceProcessor Ptr, _
+		ByVal self As HttpTraceProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
@@ -255,49 +255,49 @@ End Function
 
 
 Private Function IHttpTraceProcessorQueryInterface( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr, _
+		ByVal self As IHttpTraceAsyncProcessor Ptr, _
 		ByVal riid As REFIID, _
 		ByVal ppv As Any Ptr Ptr _
 	)As HRESULT
-	Return HttpTraceProcessorQueryInterface(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl), riid, ppv)
+	Return HttpTraceProcessorQueryInterface(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl), riid, ppv)
 End Function
 
 Private Function IHttpTraceProcessorAddRef( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr _
+		ByVal self As IHttpTraceAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpTraceProcessorAddRef(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl))
+	Return HttpTraceProcessorAddRef(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl))
 End Function
 
 Private Function IHttpTraceProcessorRelease( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr _
+		ByVal self As IHttpTraceAsyncProcessor Ptr _
 	)As ULONG
-	Return HttpTraceProcessorRelease(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl))
+	Return HttpTraceProcessorRelease(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl))
 End Function
 
 Private Function IHttpTraceProcessorPrepare( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr, _
+		ByVal self As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal ppIBuffer As IAttributedAsyncStream Ptr Ptr _
 	)As HRESULT
-	Return HttpTraceProcessorPrepare(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl), pContext, ppIBuffer)
+	Return HttpTraceProcessorPrepare(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl), pContext, ppIBuffer)
 End Function
 
 Private Function IHttpTraceProcessorBeginProcess( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr, _
+		ByVal self As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return HttpTraceProcessorBeginProcess(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
+	Return HttpTraceProcessorBeginProcess(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl), pContext, pcb, StateObject, ppIAsyncResult)
 End Function
 
 Private Function IHttpTraceProcessorEndProcess( _
-		ByVal this As IHttpTraceAsyncProcessor Ptr, _
+		ByVal self As IHttpTraceAsyncProcessor Ptr, _
 		ByVal pContext As ProcessorContext Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr _
 	)As HRESULT
-	Return HttpTraceProcessorEndProcess(CONTAINING_RECORD(this, HttpTraceProcessor, lpVtbl), pContext, pIAsyncResult)
+	Return HttpTraceProcessorEndProcess(CONTAINING_RECORD(self, HttpTraceProcessor, lpVtbl), pContext, pIAsyncResult)
 End Function
 
 Dim GlobalHttpTraceProcessorVirtualTable As Const IHttpTraceAsyncProcessorVirtualTable = Type( _
