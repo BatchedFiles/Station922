@@ -13,7 +13,7 @@ Type ReadRequestAsyncTask
 	pIMemoryAllocator As IMalloc Ptr
 	pIHttpAsyncReader As IHttpAsyncReader Ptr
 	pIStream As IBaseAsyncStream Ptr
-	RequestedLine As HeapBSTR
+	FirstLine As HeapBSTR
 End Type
 
 Private Sub InitializeReadRequestAsyncTask( _
@@ -34,7 +34,7 @@ Private Sub InitializeReadRequestAsyncTask( _
 	self->pIMemoryAllocator = pIMemoryAllocator
 	self->pIHttpAsyncReader = NULL
 	self->pIStream = NULL
-	self->RequestedLine = NULL
+	self->FirstLine = NULL
 
 End Sub
 
@@ -50,7 +50,7 @@ Private Sub UnInitializeReadRequestAsyncTask( _
 		IHttpAsyncReader_Release(self->pIHttpAsyncReader)
 	End If
 
-	HeapSysFreeString(self->RequestedLine)
+	HeapSysFreeString(self->FirstLine)
 
 End Sub
 
@@ -199,7 +199,7 @@ Private Function ReadRequestAsyncTaskEndExecute( _
 	Dim hrEndReadLine As HRESULT = IHttpAsyncReader_EndReadLine( _
 		self->pIHttpAsyncReader, _
 		pIResult, _
-		@self->RequestedLine _
+		@self->FirstLine _
 	)
 	If FAILED(hrEndReadLine) Then
 		Return hrEndReadLine
@@ -311,7 +311,7 @@ Private Function ReadRequestAsyncTaskParse( _
 	Dim hrParse As HRESULT = IClientRequest_Parse( _
 		pIRequest, _
 		self->pIHttpAsyncReader, _
-		self->RequestedLine _
+		self->FirstLine _
 	)
 	If FAILED(hrParse) Then
 		IClientRequest_Release(pIRequest)
