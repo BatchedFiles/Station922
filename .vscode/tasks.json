@@ -4,28 +4,31 @@
 		{
 			"label": "Create Makefile",
 			"type": "process",
-			"command": "cscript.exe",
+			"command": "C:\\Programming\\FreeBASIC Projects\\ProgrammingStyle\\bin\\Debug\\x64\\CreateMakefile.exe",
 			"args": [
-				"//nologo",
-				"C:\\Programming\\FreeBASIC Projects\\ProgrammingStyle\\CreateMakefile\\CreateMakefile.vbs",
-				/* "/makefile:Makefile", */
-				/* "/src:src", */
-				/* "/fbc-path:C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0", */
-				/* "/fbc:fbc64.exe", */
-				"/out:Station922",
-				/* "/module:Station922", */
-				/* "/exetype:exe", */
-				/* "/subsystem:console", */
-				/* "/emitter:gcc", */
-				"/fix:true",
-				"/unicode:true",
-				"/wrt:true",
-				"/addressaware:true",
-				/* "/multithreading:true", */
-				/* "/usefilesuffix:true", */
-				/* "/pedantic:true", */
-				"/winver:1281",
-				],
+				/* "-makefile", "Makefile", */
+				"-src", "src",
+				"-fbc-path", "C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0",
+				/* include path */
+				"-i", "C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\inc",
+				"-fbc", "fbc64.exe",
+				"-out", "Station922",
+				/* Main module filename */
+				"-module", "Station922",
+				"-exetype", "exe",
+				/* console, windows, native */
+				"-subsystem", "console",
+				"-emitter", "gcc",
+				"-fix", "true",
+				"-unicode", "true",
+				"-wrt", "true",
+				"-addressaware", "true",
+				"-multithreading", "false",
+				"-usefilesuffix", "true",
+				"-pedantic", "true",
+				"-create-environment-file", "true",
+				"-winver", "1281",
+			],
 			"problemMatcher": [],
 			"group": {
 				"kind":"build",
