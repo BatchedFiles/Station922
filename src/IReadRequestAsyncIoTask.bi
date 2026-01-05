@@ -2,7 +2,6 @@
 #define IREADREQUESTASYNCIOTASK_BI
 
 #include once "IAsyncIoTask.bi"
-#include once "IBaseAsyncStream.bi"
 #include once "IClientRequest.bi"
 #include once "IHttpAsyncReader.bi"
 
@@ -50,16 +49,6 @@ Type IReadRequestAsyncIoTaskVirtualTable
 		ByVal pIResult As IAsyncResult Ptr _
 	)As HRESULT
 
-	GetBaseStream As Function( _
-		ByVal self As IReadRequestAsyncIoTask Ptr, _
-		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
-	)As HRESULT
-
-	SetBaseStream As Function( _
-		ByVal self As IReadRequestAsyncIoTask Ptr, _
-		byVal pStream As IBaseAsyncStream Ptr _
-	)As HRESULT
-
 	GetHttpReader As Function( _
 		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
@@ -86,8 +75,6 @@ End Type
 #define IReadRequestAsyncIoTask_Release(self) (self)->lpVtbl->Release(self)
 #define IReadRequestAsyncIoTask_BeginExecute(self, pcb, state, ppIResult) (self)->lpVtbl->BeginExecute(self, pcb, state, ppIResult)
 #define IReadRequestAsyncIoTask_EndExecute(self, pIResult) (self)->lpVtbl->EndExecute(self, pIResult)
-#define IReadRequestAsyncIoTask_GetBaseStream(self, ppStream) (self)->lpVtbl->GetBaseStream(self, ppStream)
-#define IReadRequestAsyncIoTask_SetBaseStream(self, pStream) (self)->lpVtbl->SetBaseStream(self, pStream)
 #define IReadRequestAsyncIoTask_GetHttpReader(self, ppReader) (self)->lpVtbl->GetHttpReader(self, ppReader)
 #define IReadRequestAsyncIoTask_SetHttpReader(self, pReader) (self)->lpVtbl->SetHttpReader(self, pReader)
 #define IReadRequestAsyncIoTask_Parse(self, ppRequest) (self)->lpVtbl->Parse(self, ppRequest)

@@ -58,9 +58,14 @@ Type IHttpAsyncReaderVirtualTable
 		ByVal self As IHttpAsyncReader Ptr _
 	)As HRESULT
 
+	GetBaseStream As Function( _
+		ByVal self As IHttpAsyncReader Ptr, _
+		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
+	)As HRESULT
+
 	SetBaseStream As Function( _
 		ByVal self As IHttpAsyncReader Ptr, _
-		ByVal pIStream As IBaseAsyncStream Ptr _
+		byVal pStream As IBaseAsyncStream Ptr _
 	)As HRESULT
 
 	GetPreloadedBytes As Function( _
@@ -93,6 +98,7 @@ End Type
 #define IHttpAsyncReader_BeginReadLine(self, pcb, StateObject, ppIAsyncResult) (self)->lpVtbl->BeginReadLine(self, pcb, StateObject, ppIAsyncResult)
 #define IHttpAsyncReader_EndReadLine(self, pIAsyncResult, pLine) (self)->lpVtbl->EndReadLine(self, pIAsyncResult, pLine)
 #define IHttpAsyncReader_Clear(self) (self)->lpVtbl->Clear(self)
+#define IHttpAsyncReader_GetBaseStream(self, ppIStream) (self)->lpVtbl->GetBaseStream(self, ppIStream)
 #define IHttpAsyncReader_SetBaseStream(self, pIStream) (self)->lpVtbl->SetBaseStream(self, pIStream)
 #define IHttpAsyncReader_GetPreloadedBytes(self, pPreloadedBytesLength, ppPreloadedBytes) (self)->lpVtbl->GetPreloadedBytes(self, pPreloadedBytesLength, ppPreloadedBytes)
 #define IHttpAsyncReader_GetRequestedBytes(self, pRequestedBytesLength, ppRequestedBytes) (self)->lpVtbl->GetRequestedBytes(self, pRequestedBytesLength, ppRequestedBytes)

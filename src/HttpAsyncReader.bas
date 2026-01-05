@@ -508,6 +508,21 @@ Private Function HttpReaderClear( _
 
 End Function
 
+Private Function HttpReaderGetBaseStream( _
+		ByVal self As HttpReader Ptr, _
+		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
+	)As HRESULT
+
+	If self->pIStream Then
+		IBaseAsyncStream_AddRef(self->pIStream)
+	End If
+
+	*ppStream = self->pIStream
+
+	Return S_OK
+
+End Function
+
 Private Function HttpReaderSetBaseStream( _
 		ByVal self As HttpReader Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
@@ -623,6 +638,13 @@ Private Function IHttpAsyncReaderClear( _
 	Return HttpReaderClear(CONTAINING_RECORD(self, HttpReader, lpVtbl))
 End Function
 
+Private Function IHttpAsyncReaderGetBaseStream( _
+		ByVal self As IHttpAsyncReader Ptr, _
+		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
+	)As HRESULT
+	Return HttpReaderGetBaseStream(CONTAINING_RECORD(self, HttpReader, lpVtbl), ppStream)
+End Function
+
 Private Function IHttpAsyncReaderSetBaseStream( _
 		ByVal self As IHttpAsyncReader Ptr, _
 		ByVal pIStream As IBaseAsyncStream Ptr _
@@ -661,6 +683,7 @@ Dim GlobalHttpReaderVirtualTable As Const IHttpAsyncReaderVirtualTable = Type( _
 	@IHttpAsyncReaderBeginReadLine, _
 	@IHttpAsyncReaderEndReadLine, _
 	@IHttpAsyncReaderClear, _
+	@IHttpAsyncReaderGetBaseStream, _
 	@IHttpAsyncReaderSetBaseStream, _
 	@IHttpAsyncReaderGetPreloadedBytes, _
 	@IHttpAsyncReaderGetRequestedBytes, _

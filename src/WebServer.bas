@@ -175,16 +175,8 @@ Private Function CreateReadRequestContextFromWriteContext( _
 
 			IHttpAsyncReader_Clear(pIHttpAsyncReader)
 
-			Dim pStream As IBaseAsyncStream Ptr = Any
-			IWriteResponseAsyncIoTask_GetBaseStream( _
-				pWriteContext->pTask, _
-				@pStream _
-			)
-
-			IReadRequestAsyncIoTask_SetBaseStream(pReadContext->pTask, pStream)
 			IReadRequestAsyncIoTask_SetHttpReader(pReadContext->pTask, pIHttpAsyncReader)
 
-			IBaseAsyncStream_Release(pStream)
 			IHttpAsyncReader_Release(pIHttpAsyncReader)
 
 			Return pReadContext
@@ -269,7 +261,6 @@ Private Function CreateReadRequestContextFromSocket( _
 								CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream) _
 							)
 
-							IReadRequestAsyncIoTask_SetBaseStream(pTask, CPtr(IBaseAsyncStream Ptr, pINetworkAsyncStream))
 							IReadRequestAsyncIoTask_SetHttpReader(pTask, pIHttpAsyncReader)
 
 							INetworkAsyncStream_Release(pINetworkAsyncStream)
@@ -770,8 +761,8 @@ Private Sub ReadRequestCallback( _
 
 			' Get Basestream
 			Dim pStream As IBaseAsyncStream Ptr = Any
-			IReadRequestAsyncIoTask_GetBaseStream( _
-				pReadContext->pTask, _
+			IHttpAsyncReader_GetBaseStream( _
+				pIHttpAsyncReader, _
 				@pStream _
 			)
 

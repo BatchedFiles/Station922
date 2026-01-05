@@ -12,7 +12,6 @@ Type ReadRequestAsyncTask
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pIHttpAsyncReader As IHttpAsyncReader Ptr
-	pIStream As IBaseAsyncStream Ptr
 	FirstLine As HeapBSTR
 End Type
 
@@ -33,7 +32,6 @@ Private Sub InitializeReadRequestAsyncTask( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	self->pIMemoryAllocator = pIMemoryAllocator
 	self->pIHttpAsyncReader = NULL
-	self->pIStream = NULL
 	self->FirstLine = NULL
 
 End Sub
@@ -41,10 +39,6 @@ End Sub
 Private Sub UnInitializeReadRequestAsyncTask( _
 		ByVal self As ReadRequestAsyncTask Ptr _
 	)
-
-	If self->pIStream Then
-		IBaseAsyncStream_Release(self->pIStream)
-	End If
 
 	If self->pIHttpAsyncReader Then
 		IHttpAsyncReader_Release(self->pIHttpAsyncReader)
@@ -223,40 +217,6 @@ Private Function ReadRequestAsyncTaskEndExecute( _
 
 End Function
 
-Private Function ReadRequestAsyncTaskGetBaseStream( _
-		ByVal self As ReadRequestAsyncTask Ptr, _
-		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
-	)As HRESULT
-
-	If self->pIStream Then
-		IBaseAsyncStream_AddRef(self->pIStream)
-	End If
-
-	*ppStream = self->pIStream
-
-	Return S_OK
-
-End Function
-
-Private Function ReadRequestAsyncTaskSetBaseStream( _
-		ByVal self As ReadRequestAsyncTask Ptr, _
-		ByVal pStream As IBaseAsyncStream Ptr _
-	)As HRESULT
-
-	If self->pIStream Then
-		IBaseAsyncStream_Release(self->pIStream)
-	End If
-
-	If pStream Then
-		IBaseAsyncStream_AddRef(pStream)
-	End If
-
-	self->pIStream = pStream
-
-	Return S_OK
-
-End Function
-
 Private Function ReadRequestAsyncTaskGetHttpReader( _
 		ByVal self As ReadRequestAsyncTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
@@ -362,20 +322,6 @@ Private Function IReadRequestAsyncTaskEndExecute( _
 	Return ReadRequestAsyncTaskEndExecute(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pIResult)
 End Function
 
-Private Function IReadRequestAsyncTaskGetBaseStream( _
-		ByVal self As IReadRequestAsyncIoTask Ptr, _
-		ByVal ppStream As IBaseAsyncStream Ptr Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskGetBaseStream(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), ppStream)
-End Function
-
-Private Function IReadRequestAsyncTaskSetBaseStream( _
-		ByVal self As IReadRequestAsyncIoTask Ptr, _
-		byVal pStream As IBaseAsyncStream Ptr _
-	)As HRESULT
-	Return ReadRequestAsyncTaskSetBaseStream(CONTAINING_RECORD(self, ReadRequestAsyncTask, lpVtbl), pStream)
-End Function
-
 Private Function IReadRequestAsyncTaskGetHttpReader( _
 		ByVal self As IReadRequestAsyncIoTask Ptr, _
 		ByVal ppReader As IHttpAsyncReader Ptr Ptr _
@@ -403,8 +349,6 @@ Dim GlobalReadRequestAsyncIoTaskVirtualTable As Const IReadRequestAsyncIoTaskVir
 	@IReadRequestAsyncTaskRelease, _
 	@IReadRequestAsyncTaskBeginExecute, _
 	@IReadRequestAsyncTaskEndExecute, _
-	@IReadRequestAsyncTaskGetBaseStream, _
-	@IReadRequestAsyncTaskSetBaseStream, _
 	@IReadRequestAsyncTaskGetHttpReader, _
 	@IReadRequestAsyncTaskSetHttpReader, _
 	@IReadRequestAsyncTaskParse _
