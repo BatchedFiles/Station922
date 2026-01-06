@@ -259,18 +259,6 @@ Private Sub UnInitializeClientUri( _
 
 End Sub
 
-Private Sub ClientUriCreated( _
-		ByVal self As ClientUri Ptr _
-	)
-
-End Sub
-
-Private Sub ClientUriDestroyed( _
-		ByVal self As ClientUri Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyClientUri( _
 		ByVal self As ClientUri Ptr _
 	)
@@ -280,8 +268,6 @@ Private Sub DestroyClientUri( _
 	UnInitializeClientUri(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	ClientUriDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -349,7 +335,6 @@ Public Function CreateClientUri( _
 
 	If self Then
 		InitializeClientUri(self, pIMemoryAllocator)
-		ClientUriCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ClientUriQueryInterface( _
 			self, _

@@ -1629,18 +1629,6 @@ Private Sub UnInitializeWebSite( _
 
 End Sub
 
-Private Sub WebSiteCreated( _
-		ByVal self As WebSite Ptr _
-	)
-
-End Sub
-
-Private Sub WebSiteDestroyed( _
-		ByVal self As WebSite Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyWebSite( _
 		ByVal self As WebSite Ptr _
 	)
@@ -1650,8 +1638,6 @@ Private Sub DestroyWebSite( _
 	UnInitializeWebSite(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	WebSiteDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -1732,8 +1718,6 @@ Public Function CreateWebSite( _
 					pIProcessorCollection, _
 					ErrorPageEncoding _
 				)
-				WebSiteCreated(self)
-
 				Dim hrQueryInterface As HRESULT = WebSiteQueryInterface( _
 					self, _
 					riid, _

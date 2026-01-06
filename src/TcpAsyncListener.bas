@@ -50,18 +50,6 @@ Private Sub UnInitializeTcpListener( _
 
 End Sub
 
-Private Sub TcpListenerCreated( _
-		ByVal self As TcpListener Ptr _
-	)
-
-End Sub
-
-Private Sub TcpListenerDestroyed( _
-		ByVal self As TcpListener Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyTcpListener( _
 		ByVal self As TcpListener Ptr _
 	)
@@ -71,8 +59,6 @@ Private Sub DestroyTcpListener( _
 	UnInitializeTcpListener(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	TcpListenerDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -130,7 +116,6 @@ Public Function CreateTcpListener( _
 
 	If self Then
 		InitializeTcpListener(self, pIMemoryAllocator)
-		TcpListenerCreated(self)
 
 		Dim hrQueryInterface As HRESULT = TcpListenerQueryInterface( _
 			self, _

@@ -91,18 +91,6 @@ Private Sub UnInitializeHttpWriter( _
 
 End Sub
 
-Private Sub HttpWriterCreated( _
-		ByVal self As HttpWriter Ptr _
-	)
-
-End Sub
-
-Private Sub HttpWriterDestroyed( _
-		ByVal self As HttpWriter Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpWriter( _
 		ByVal self As HttpWriter Ptr _
 	)
@@ -112,8 +100,6 @@ Private Sub DestroyHttpWriter( _
 	UnInitializeHttpWriter(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpWriterDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -181,7 +167,6 @@ Public Function CreateHttpWriter( _
 
 	If self Then
 		InitializeHttpWriter(self, pIMemoryAllocator)
-		HttpWriterCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpWriterQueryInterface( _
 			self, _

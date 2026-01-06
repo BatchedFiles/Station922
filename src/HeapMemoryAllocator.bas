@@ -423,19 +423,11 @@ Private Sub UnInitializeHeapMemoryAllocator( _
 
 End Sub
 
-Private Sub HeapMemoryAllocatorDestroyed( _
-		ByVal self As HeapMemoryAllocator Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHeapMemoryAllocator( _
 		ByVal self As HeapMemoryAllocator Ptr _
 	)
 
 	UnInitializeHeapMemoryAllocator(self)
-
-	HeapMemoryAllocatorDestroyed(self)
 
 End Sub
 
@@ -484,12 +476,6 @@ Private Sub InitializeHeapMemoryAllocator( _
 	self->ClientSocket = INVALID_SOCKET
 	GetSystemTimeAsFileTime(@self->datStartOperation)
 	GetSystemTimeAsFileTime(@self->datFinishOperation)
-
-End Sub
-
-Private Sub HeapMemoryAllocatorCreated( _
-		ByVal self As HeapMemoryAllocator Ptr _
-	)
 
 End Sub
 
@@ -572,7 +558,6 @@ Private Function CreateHeapMemoryAllocator_Internal( _
 				self, _
 				hHeap _
 			)
-			HeapMemoryAllocatorCreated(self)
 
 			Dim pv As Any Ptr = Any
 			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _

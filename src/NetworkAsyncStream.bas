@@ -83,18 +83,6 @@ Private Sub UnInitializeNetworkStream( _
 
 End Sub
 
-Private Sub NetworkStreamCreated( _
-		ByVal self As NetworkStream Ptr _
-	)
-
-End Sub
-
-Private Sub NetworkStreamDestroyed( _
-		ByVal self As NetworkStream Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyNetworkStream( _
 		ByVal self As NetworkStream Ptr _
 	)
@@ -104,8 +92,6 @@ Private Sub DestroyNetworkStream( _
 	UnInitializeNetworkStream(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	NetworkStreamDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -177,7 +163,6 @@ Public Function CreateNetworkStream( _
 
 	If self Then
 		InitializeNetworkStream(self, pIMemoryAllocator)
-		NetworkStreamCreated(self)
 
 		Dim hrQueryInterface As HRESULT = NetworkStreamQueryInterface( _
 			self, _

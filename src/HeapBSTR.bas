@@ -181,12 +181,6 @@ Private Function GetAllocatedValueBstrBytes( _
 
 End Function
 
-Private Sub HeapBSTRCreated( _
-		ByVal self As InternalHeapBSTR Ptr _
-	)
-
-End Sub
-
 Private Function InternalHeapBSTRGetHeapBSTR( _
 		ByVal self As InternalHeapBSTR Ptr, _
 		ByVal pcHeapBSTR As HeapBSTR Const Ptr _
@@ -222,8 +216,6 @@ Private Function CreateInternalHeapBSTR( _
 		Length, _
 		Permanent _
 	)
-
-	HeapBSTRCreated(self)
 
 	Return self
 
@@ -352,8 +344,6 @@ Public Function CreateHeapZStringLen( _
 	self->cbBytes = Length * SizeOf(OLECHAR)
 	self->wszNullChar(Length) = 0
 
-	HeapBSTRCreated(self)
-
 	Dim pHeapBstr As HeapBSTR = Any
 	InternalHeapBSTRGetHeapBSTR(self, @pHeapBstr)
 
@@ -364,12 +354,6 @@ Public Function CreateHeapZStringLen( _
 
 End Function
 
-Private Sub HeapBSTRDestroyed( _
-		ByVal self As InternalHeapBSTR Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyInternalHeapBSTR( _
 		ByVal self As InternalHeapBSTR Ptr _
 	)
@@ -379,8 +363,6 @@ Private Sub DestroyInternalHeapBSTR( _
 	UnInitializeInternalHeapBSTR(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HeapBSTRDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 

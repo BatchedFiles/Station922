@@ -44,18 +44,6 @@ Private Sub UnInitializeAcceptConnectionAsyncTask( _
 
 End Sub
 
-Private Sub AcceptConnectionAsyncTaskCreated( _
-		ByVal self As AcceptConnectionAsyncTask Ptr _
-	)
-
-End Sub
-
-Private Sub AcceptConnectionAsyncTaskDestroyed( _
-		ByVal self As AcceptConnectionAsyncTask Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyAcceptConnectionAsyncTask( _
 		ByVal self As AcceptConnectionAsyncTask Ptr _
 	)
@@ -65,8 +53,6 @@ Private Sub DestroyAcceptConnectionAsyncTask( _
 	UnInitializeAcceptConnectionAsyncTask(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	AcceptConnectionAsyncTaskDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -151,7 +137,6 @@ Public Function CreateAcceptConnectionAsyncTask( _
 				pIMemoryAllocator, _
 				pListener _
 			)
-			AcceptConnectionAsyncTaskCreated(self)
 
 			Dim hrQueryInterface As HRESULT = AcceptConnectionAsyncTaskQueryInterface( _
 				self, _

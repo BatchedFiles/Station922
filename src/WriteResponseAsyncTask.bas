@@ -88,18 +88,6 @@ Private Sub UnInitializeWriteResponseAsyncTask( _
 
 End Sub
 
-Private Sub WriteResponseAsyncTaskCreated( _
-		ByVal self As WriteResponseAsyncTask Ptr _
-	)
-
-End Sub
-
-Private Sub WriteResponseAsyncTaskDestroyed( _
-		ByVal self As WriteResponseAsyncTask Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyWriteResponseAsyncTask( _
 		ByVal self As WriteResponseAsyncTask Ptr _
 	)
@@ -109,8 +97,6 @@ Private Sub DestroyWriteResponseAsyncTask( _
 	UnInitializeWriteResponseAsyncTask(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	WriteResponseAsyncTaskDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -205,8 +191,6 @@ Public Function CreateWriteResponseAsyncTask( _
 					pIResponse, _
 					pIHttpAsyncWriter _
 				)
-
-				WriteResponseAsyncTaskCreated(self)
 
 				Dim hrQueryInterface As HRESULT = WriteResponseAsyncTaskQueryInterface( _
 					self, _

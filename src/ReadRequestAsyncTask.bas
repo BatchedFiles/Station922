@@ -48,18 +48,6 @@ Private Sub UnInitializeReadRequestAsyncTask( _
 
 End Sub
 
-Private Sub ReadRequestAsyncTaskCreated( _
-		ByVal self As ReadRequestAsyncTask Ptr _
-	)
-
-End Sub
-
-Private Sub ReadRequestAsyncTaskDestroyed( _
-		ByVal self As ReadRequestAsyncTask Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyReadRequestAsyncTask( _
 		ByVal self As ReadRequestAsyncTask Ptr _
 	)
@@ -69,8 +57,6 @@ Private Sub DestroyReadRequestAsyncTask( _
 	UnInitializeReadRequestAsyncTask(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	ReadRequestAsyncTaskDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -145,7 +131,6 @@ Public Function CreateReadRequestAsyncTask( _
 			self, _
 			pIMemoryAllocator _
 		)
-		ReadRequestAsyncTaskCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ReadRequestAsyncTaskQueryInterface( _
 			self, _

@@ -40,18 +40,6 @@ Private Sub UnInitializeHttpOptionsProcessor( _
 
 End Sub
 
-Private Sub HttpOptionsProcessorCreated( _
-		ByVal self As HttpOptionsProcessor Ptr _
-	)
-
-End Sub
-
-Private Sub HttpOptionsProcessorDestroyed( _
-		ByVal self As HttpOptionsProcessor Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpOptionsProcessor( _
 		ByVal self As HttpOptionsProcessor Ptr _
 	)
@@ -61,8 +49,6 @@ Private Sub DestroyHttpOptionsProcessor( _
 	UnInitializeHttpOptionsProcessor(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpOptionsProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -124,7 +110,6 @@ Public Function CreateHttpOptionsProcessor( _
 
 	If self Then
 		InitializeHttpOptionsProcessor(self, pIMemoryAllocator)
-		HttpOptionsProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpOptionsProcessorQueryInterface( _
 			self, _

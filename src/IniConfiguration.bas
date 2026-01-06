@@ -85,18 +85,6 @@ Private Sub UnInitializeWebServerIniConfiguration( _
 
 End Sub
 
-Private Sub WebServerIniConfigurationCreated( _
-		ByVal self As WebServerIniConfiguration Ptr _
-	)
-
-End Sub
-
-Private Sub WebServerIniConfigurationDestroyed( _
-		ByVal self As WebServerIniConfiguration Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyWebServerIniConfiguration( _
 		ByVal self As WebServerIniConfiguration Ptr _
 	)
@@ -106,8 +94,6 @@ Private Sub DestroyWebServerIniConfiguration( _
 	UnInitializeWebServerIniConfiguration(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	WebServerIniConfigurationDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -212,7 +198,6 @@ Public Function CreateWebServerIniConfiguration( _
 						pWebServerIniFileName, _
 						pWebSitesIniFileName _
 					)
-					WebServerIniConfigurationCreated(self)
 
 					Dim hrQueryInterface As HRESULT = WebServerIniConfigurationQueryInterface( _
 						self, _

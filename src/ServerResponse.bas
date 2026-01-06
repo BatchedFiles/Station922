@@ -210,18 +210,6 @@ Private Sub UnInitializeServerResponse( _
 
 End Sub
 
-Private Sub ServerResponseCreated( _
-		ByVal self As ServerResponse Ptr _
-	)
-
-End Sub
-
-Private Sub ServerResponseDestroyed( _
-		ByVal self As ServerResponse Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyServerResponse( _
 		ByVal self As ServerResponse Ptr _
 	)
@@ -231,8 +219,6 @@ Private Sub DestroyServerResponse( _
 	UnInitializeServerResponse(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	ServerResponseDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -300,7 +286,6 @@ Public Function CreateServerResponse( _
 
 	If self Then
 		InitializeServerResponse(self, pIMemoryAllocator)
-		ServerResponseCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ServerResponseQueryInterface( _
 			self, _

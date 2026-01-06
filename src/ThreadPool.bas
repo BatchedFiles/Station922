@@ -121,18 +121,6 @@ Private Sub UnInitializeThreadPool( _
 
 End Sub
 
-Private Sub ThreadPoolCreated( _
-		ByVal self As ThreadPool Ptr _
-	)
-
-End Sub
-
-Private Sub ThreadPoolDestroyed( _
-		ByVal self As ThreadPool Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyThreadPool( _
 		ByVal self As ThreadPool Ptr _
 	)
@@ -142,8 +130,6 @@ Private Sub DestroyThreadPool( _
 	UnInitializeThreadPool(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	ThreadPoolDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -211,7 +197,6 @@ Public Function CreateThreadPool( _
 
 	If self Then
 		InitializeThreadPool(self, pIMemoryAllocator)
-		ThreadPoolCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ThreadPoolQueryInterface( _
 			self, _

@@ -37,18 +37,6 @@ Private Sub UnInitializeHttpTraceProcessor( _
 
 End Sub
 
-Private Sub HttpTraceProcessorCreated( _
-		ByVal self As HttpTraceProcessor Ptr _
-	)
-
-End Sub
-
-Private Sub HttpTraceProcessorDestroyed( _
-		ByVal self As HttpTraceProcessor Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpTraceProcessor( _
 		ByVal self As HttpTraceProcessor Ptr _
 	)
@@ -58,8 +46,6 @@ Private Sub DestroyHttpTraceProcessor( _
 	UnInitializeHttpTraceProcessor(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpTraceProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -121,7 +107,6 @@ Public Function CreateHttpTraceProcessor( _
 
 	If self Then
 		InitializeHttpTraceProcessor(self, pIMemoryAllocator)
-		HttpTraceProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpTraceProcessorQueryInterface( _
 			self, _

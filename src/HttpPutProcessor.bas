@@ -42,18 +42,6 @@ Private Sub UnInitializeHttpPutProcessor( _
 
 End Sub
 
-Private Sub HttpPutProcessorCreated( _
-		ByVal self As HttpPutProcessor Ptr _
-	)
-
-End Sub
-
-Private Sub HttpPutProcessorDestroyed( _
-		ByVal self As HttpPutProcessor Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpPutProcessor( _
 		ByVal self As HttpPutProcessor Ptr _
 	)
@@ -63,8 +51,6 @@ Private Sub DestroyHttpPutProcessor( _
 	UnInitializeHttpPutProcessor(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpPutProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -126,7 +112,6 @@ Public Function CreateHttpPutProcessor( _
 
 	If self Then
 		InitializeHttpPutProcessor(self, pIMemoryAllocator)
-		HttpPutProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpPutProcessorQueryInterface( _
 			self, _

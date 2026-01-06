@@ -64,18 +64,6 @@ Private Sub UnInitializeHttpProcessorCollection( _
 
 End Sub
 
-Private Sub HttpProcessorCollectionCreated( _
-		ByVal self As HttpProcessorCollection Ptr _
-	)
-
-End Sub
-
-Private Sub HttpProcessorCollectionDestroyed( _
-		ByVal self As HttpProcessorCollection Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpProcessorCollection( _
 		ByVal self As HttpProcessorCollection Ptr _
 	)
@@ -85,8 +73,6 @@ Private Sub DestroyHttpProcessorCollection( _
 	UnInitializeHttpProcessorCollection(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpProcessorCollectionDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -143,7 +129,6 @@ Public Function CreateHttpProcessorCollection( _
 	)
 	If self Then
 		InitializeHttpProcessorCollection(self, pIMemoryAllocator)
-		HttpProcessorCollectionCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpProcessorCollectionQueryInterface( _
 			self, _

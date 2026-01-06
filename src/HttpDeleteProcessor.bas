@@ -41,18 +41,6 @@ Private Sub UnInitializeHttpDeleteProcessor( _
 
 End Sub
 
-Private Sub HttpDeleteProcessorCreated( _
-		ByVal self As HttpDeleteProcessor Ptr _
-	)
-
-End Sub
-
-Private Sub HttpDeleteProcessorDestroyed( _
-		ByVal self As HttpDeleteProcessor Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpDeleteProcessor( _
 		ByVal self As HttpDeleteProcessor Ptr _
 	)
@@ -62,8 +50,6 @@ Private Sub DestroyHttpDeleteProcessor( _
 	UnInitializeHttpDeleteProcessor(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpDeleteProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -125,7 +111,6 @@ Public Function CreateHttpDeleteProcessor( _
 
 	If self Then
 		InitializeHttpDeleteProcessor(self, pIMemoryAllocator)
-		HttpDeleteProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpDeleteProcessorQueryInterface( _
 			self, _

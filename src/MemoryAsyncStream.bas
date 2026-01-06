@@ -66,18 +66,6 @@ Private Sub UnInitializeMemoryStream( _
 
 End Sub
 
-Private Sub MemoryStreamCreated( _
-		ByVal self As MemoryStream Ptr _
-	)
-
-End Sub
-
-Private Sub MemoryStreamDestroyed( _
-		ByVal self As MemoryStream Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyMemoryStream( _
 		ByVal self As MemoryStream Ptr _
 	)
@@ -87,8 +75,6 @@ Private Sub DestroyMemoryStream( _
 	UnInitializeMemoryStream(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	MemoryStreamDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -160,7 +146,6 @@ Public Function CreateMemoryStream( _
 
 	If self Then
 		InitializeMemoryStream(self, pIMemoryAllocator)
-		MemoryStreamCreated(self)
 
 		Dim hrQueryInterface As HRESULT = MemoryStreamQueryInterface( _
 			self, _

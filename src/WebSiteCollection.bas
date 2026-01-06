@@ -195,18 +195,6 @@ Private Sub UnInitializeWebSiteCollection( _
 
 End Sub
 
-Private Sub WebSiteCollectionCreated( _
-		ByVal self As WebSiteCollection Ptr _
-	)
-
-End Sub
-
-Private Sub WebSiteCollectionDestroyed( _
-		ByVal self As WebSiteCollection Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyWebSiteCollection( _
 		ByVal self As WebSiteCollection Ptr _
 	)
@@ -216,8 +204,6 @@ Private Sub DestroyWebSiteCollection( _
 	UnInitializeWebSiteCollection(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	WebSiteCollectionDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -275,7 +261,6 @@ Public Function CreateWebSiteCollection( _
 
 	If self Then
 		InitializeWebSiteCollection(self, pIMemoryAllocator)
-		WebSiteCollectionCreated(self)
 
 		Dim hrQueryInterface As HRESULT = WebSiteCollectionQueryInterface( _
 			self, _

@@ -65,18 +65,6 @@ Private Sub UnInitializeAsyncResult( _
 
 End Sub
 
-Private Sub AsyncResultCreated( _
-		ByVal self As AsyncResult Ptr _
-	)
-
-End Sub
-
-Private Sub AsyncResultDestroyed( _
-		ByVal self As AsyncResult Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyAsyncResult( _
 		ByVal self As AsyncResult Ptr _
 	)
@@ -86,8 +74,6 @@ Private Sub DestroyAsyncResult( _
 	UnInitializeAsyncResult(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	AsyncResultDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -155,7 +141,6 @@ Public Function CreateAsyncResult( _
 
 	If self Then
 		InitializeAsyncResult(self, pIMemoryAllocator)
-		AsyncResultCreated(self)
 
 		Dim hrQueryInterface As HRESULT = AsyncResultQueryInterface( _
 			self, _

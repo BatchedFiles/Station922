@@ -102,18 +102,6 @@ Private Sub UnInitializeFileStream( _
 
 End Sub
 
-Private Sub FileStreamCreated( _
-		ByVal self As FileStream Ptr _
-	)
-
-End Sub
-
-Private Sub FileStreamDestroyed( _
-		ByVal self As FileStream Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyFileStream( _
 		ByVal self As FileStream Ptr _
 	)
@@ -123,8 +111,6 @@ Private Sub DestroyFileStream( _
 	UnInitializeFileStream(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	FileStreamDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -199,7 +185,6 @@ Public Function CreateFileStream( _
 			self, _
 			pIMemoryAllocator _
 		)
-		FileStreamCreated(self)
 
 		Dim hrQueryInterface As HRESULT = FileStreamQueryInterface( _
 			self, _

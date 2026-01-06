@@ -22,7 +22,8 @@
 				"INC_DIR=\"C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\inc\"",
 				"LD_SCRIPT=\"C:\\Program Files (x86)\\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\\lib\\win64\\fbextra.x\"",
 				"USE_LD_LINKER=FALSE",
-				"LIBS_OS=-ladvapi32 -lcomctl32 -lgdi32 -limm32 -lkernel32 -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lmsimg32 -lws2_32 -lwininet -lmsvcrt -lcrypt32 -lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh"
+				"LIBS_OS=-ladvapi32 -lcomctl32 -lgdi32 -limm32 -lkernel32 -lole32 -loleaut32 -lshell32 -lshlwapi -luser32 -lversion -lmsimg32 -lws2_32 -lwininet -lmsvcrt -lcrypt32 -lgcc -lmingw32 -lmingwex -lmoldname -lgcc_eh",
+				"FLTO=-flto"
 			],
 		},
 		{

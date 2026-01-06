@@ -726,18 +726,6 @@ Private Sub UnInitializeClientRequest( _
 
 End Sub
 
-Private Sub ClientRequestCreated( _
-		ByVal self As ClientRequest Ptr _
-	)
-
-End Sub
-
-Private Sub ClientRequestDestroyed( _
-		ByVal self As ClientRequest Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyClientRequest( _
 		ByVal self As ClientRequest Ptr _
 	)
@@ -747,8 +735,6 @@ Private Sub DestroyClientRequest( _
 	UnInitializeClientRequest(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	ClientRequestDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -816,7 +802,6 @@ Public Function CreateClientRequest( _
 
 	If self Then
 		InitializeClientRequest(self, pIMemoryAllocator)
-		ClientRequestCreated(self)
 
 		Dim hrQueryInterface As HRESULT = ClientRequestQueryInterface( _
 			self, _

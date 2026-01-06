@@ -233,18 +233,6 @@ Private Sub UnInitializeHttpReader( _
 
 End Sub
 
-Private Sub HttpReaderCreated( _
-		ByVal self As HttpReader Ptr _
-	)
-
-End Sub
-
-Private Sub HttpReaderDestroyed( _
-		ByVal self As HttpReader Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpReader( _
 		ByVal self As HttpReader Ptr _
 	)
@@ -254,8 +242,6 @@ Private Sub DestroyHttpReader( _
 	UnInitializeHttpReader(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpReaderDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -329,7 +315,6 @@ Public Function CreateHttpReader( _
 
 		If pClientBuffer Then
 			InitializeHttpReader(self, pIMemoryAllocator, pClientBuffer)
-			HttpReaderCreated(self)
 
 			Dim hrQueryInterface As HRESULT = HttpReaderQueryInterface( _
 				self, _

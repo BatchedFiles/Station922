@@ -1168,18 +1168,6 @@ Private Sub UnInitializeWebServer( _
 
 End Sub
 
-Private Sub WebServerCreated( _
-		ByVal self As WebServer Ptr _
-	)
-
-End Sub
-
-Private Sub WebServerDestroyed( _
-		ByVal self As WebServer Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyWebServer( _
 		ByVal self As WebServer Ptr _
 	)
@@ -1189,8 +1177,6 @@ Private Sub DestroyWebServer( _
 	UnInitializeWebServer(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	WebServerDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -1271,8 +1257,6 @@ Public Function CreateWebServer( _
 				pIMemoryAllocator, _
 				pIWebSites _
 			)
-
-			WebServerCreated(self)
 
 			Dim hrQueryInterface As HRESULT = WebServerQueryInterface( _
 				self, _

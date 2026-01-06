@@ -222,18 +222,6 @@ Private Sub UnInitializeHttpGetProcessor( _
 
 End Sub
 
-Private Sub HttpGetProcessorCreated( _
-		ByVal self As HttpGetProcessor Ptr _
-	)
-
-End Sub
-
-Private Sub HttpGetProcessorDestroyed( _
-		ByVal self As HttpGetProcessor Ptr _
-	)
-
-End Sub
-
 Private Sub DestroyHttpGetProcessor( _
 		ByVal self As HttpGetProcessor Ptr _
 	)
@@ -243,8 +231,6 @@ Private Sub DestroyHttpGetProcessor( _
 	UnInitializeHttpGetProcessor(self)
 
 	IMalloc_Free(pIMemoryAllocator, self)
-
-	HttpGetProcessorDestroyed(self)
 
 	IMalloc_Release(pIMemoryAllocator)
 
@@ -306,7 +292,6 @@ Public Function CreateHttpGetProcessor( _
 
 	If self Then
 		InitializeHttpGetProcessor(self, pIMemoryAllocator)
-		HttpGetProcessorCreated(self)
 
 		Dim hrQueryInterface As HRESULT = HttpGetProcessorQueryInterface( _
 			self, _
