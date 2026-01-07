@@ -211,7 +211,6 @@ Public Function Station922Initialize()As HRESULT
 	Dim DefaultWebSiteConfig As WebSiteConfiguration = Any
 	Dim HttpProcessors As HttpProcessorVector = Any
 	Dim pIDefaultWebSite As IWebSite Ptr = Any
-	Dim IpEndPoints As IpEndPointVector = Any
 
 	Scope
 		Dim hrNetworkStartup As HRESULT = NetworkStartUp()
@@ -557,6 +556,8 @@ Public Function Station922Initialize()As HRESULT
 	End Scope
 
 	Scope
+		Dim IpEndPoints As IpEndPointVector = Any
+
 		For i As Integer = 0 To WebSitesLength - 1
 			Dim resExists As Boolean = IpEndPointExists( _
 				@IpEndPoints, _
@@ -585,9 +586,7 @@ Public Function Station922Initialize()As HRESULT
 
 			WebServers.Vector(i) = pIWebServer
 		Next
-	End Scope
 
-	Scope
 		For j As Integer = 0 To IpEndPointsLength - 1
 
 			For i As Integer = 0 To WebSitesLength - 1
