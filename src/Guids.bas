@@ -46,6 +46,10 @@ DEFINE_GUID(GUID_WSAID_TRANSMITPACKETS, _
 	&hd9689da0, &h1f90, &h11d3, &h99, &h71, &h00, &hc0, &h4f, &h68, &hc8, &h76 _
 )
 
+DEFINE_GUID(GUID_WSAID_CONNECTEX, _
+	&h25a207b9, &hddf3, &h4660, &h8e, &he9, &h76, &he5, &h8c, &h74, &h06, &h3e _
+)
+
 ' {B40214BB-DFB6-4ACE-ACF4-8A66700F7CD0}
 DEFINE_CLSID(CLSID_ACCEPTCONNECTIONASYNCTASK, _
 	&hb40214bb, &hdfb6, &h4ace, &hac, &hf4, &h8a, &h66, &h70, &hf, &h7c, &hd0 _

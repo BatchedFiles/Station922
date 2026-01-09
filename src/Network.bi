@@ -9,6 +9,7 @@
 Extern lpfnAcceptEx Alias "lpfnAcceptEx" As LPFN_ACCEPTEX
 Extern lpfnGetAcceptExSockaddrs Alias "lpfnGetAcceptExSockaddrs" As LPFN_GETACCEPTEXSOCKADDRS
 Extern lpfnTransmitPackets Alias "lpfnTransmitPackets" As LPFN_TRANSMITPACKETS
+Extern lpfnConnectEx Alias "lpfnConnectEx" As LPFN_CONNECTEX
 
 Type SocketNode
 	ClientSocket As SOCKET

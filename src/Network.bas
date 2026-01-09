@@ -4,6 +4,13 @@
 Extern GUID_WSAID_ACCEPTEX Alias "GUID_WSAID_ACCEPTEX" As GUID
 Extern GUID_WSAID_GETACCEPTEXSOCKADDRS Alias "GUID_WSAID_GETACCEPTEXSOCKADDRS" As GUID
 Extern GUID_WSAID_TRANSMITPACKETS Alias "GUID_WSAID_TRANSMITPACKETS" As GUID
+Extern GUID_WSAID_CONNECTEX Alias "GUID_WSAID_CONNECTEX" As GUID
+
+
+Dim lpfnAcceptEx As LPFN_ACCEPTEX
+Dim lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
+Dim lpfnTransmitPackets As LPFN_TRANSMITPACKETS
+Dim lpfnConnectEx As LPFN_CONNECTEX
 
 Public Function NetworkStartUp()As HRESULT
 
@@ -101,6 +108,26 @@ Public Function LoadWsaFunctions()As HRESULT
 			NULL _
 		)
 		If resGetTransmitPackets = SOCKET_ERROR Then
+			Dim dwError As Long = WSAGetLastError()
+			closesocket(ListenSocket)
+			Return HRESULT_FROM_WIN32(dwError)
+		End If
+	End Scope
+
+	Scope
+		Dim dwBytes As DWORD = Any
+		Dim resConnectEx As Long = WSAIoctl( _
+			ListenSocket, _
+			SIO_GET_EXTENSION_FUNCTION_POINTER, _
+			@GUID_WSAID_CONNECTEX, _
+			SizeOf(GUID), _
+			@lpfnConnectEx, _
+			SizeOf(lpfnConnectEx), _
+			@dwBytes, _
+			NULL, _
+			NULL _
+		)
+		If resConnectEx = SOCKET_ERROR Then
 			Dim dwError As Long = WSAGetLastError()
 			closesocket(ListenSocket)
 			Return HRESULT_FROM_WIN32(dwError)
@@ -259,7 +286,3 @@ Public Function CreateSocketAndListenW Alias "CreateSocketAndListenW"( _
 	Return S_OK
 
 End Function
-
-Dim lpfnAcceptEx As LPFN_ACCEPTEX
-Dim lpfnGetAcceptExSockaddrs As LPFN_GETACCEPTEXSOCKADDRS
-Dim lpfnTransmitPackets As LPFN_TRANSMITPACKETS
