@@ -754,6 +754,8 @@ Private Function ClearingThread( _
 	)As DWORD
 
 	Dim KeepAliveInterval As Integer = CInt(lpParam)
+	Dim dwInterval As DWORD = Cast(DWORD, KeepAliveInterval)
+	Dim msTimeToHungsConnection As DWORD = 1000 * dwInterval
 
 	Do
 		Dim resWait As DWORD = WaitForSingleObjectEx( _
@@ -772,7 +774,6 @@ Private Function ClearingThread( _
 		End If
 
 		Do
-			Const msTimeToHungsConnection As DWORD = 1000 * 60
 			Dim resWait As DWORD = SleepEx(msTimeToHungsConnection, TRUE)
 
 			If resWait = WAIT_IO_COMPLETION Then
