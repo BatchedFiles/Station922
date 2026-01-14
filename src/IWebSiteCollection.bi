@@ -1,7 +1,6 @@
 #ifndef IWEBSITECOLLECTION_BI
 #define IWEBSITECOLLECTION_BI
 
-#include once "IString.bi"
 #include once "IEnumWebSite.bi"
 
 Extern IID_IWebSiteCollection Alias "IID_IWebSiteCollection" As Const IID
@@ -31,7 +30,7 @@ Type IWebSiteCollectionVirtualTable
 
 	Item As Function( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
+		ByVal pKey As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
@@ -42,14 +41,14 @@ Type IWebSiteCollectionVirtualTable
 
 	Add As Function( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
-		ByVal Port As HeapBSTR, _
+		ByVal pKey As BSTR, _
+		ByVal Port As BSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 
 	ItemWeakPtr As Function( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
+		ByVal pKey As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 

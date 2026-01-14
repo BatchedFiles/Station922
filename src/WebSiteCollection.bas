@@ -1,5 +1,4 @@
 #include once "WebSiteCollection.bi"
-#include once "HeapBSTR.bi"
 
 Extern GlobalWebSiteCollectionVirtualTable As Const IWebSiteCollectionVirtualTable
 
@@ -9,9 +8,9 @@ Type WebSiteNode
 	#endif
 	LeftNode As WebSiteNode Ptr
 	RightNode As WebSiteNode Ptr
-	HostName As HeapBSTR
-	Port As HeapBSTR
 	pIWebSite As IWebSite Ptr
+	HostName As WString * (MAX_PATH + 1)
+	Port As WString * (MAX_PATH + 1)
 End Type
 
 Type WebSiteCollection
@@ -32,8 +31,8 @@ Private Sub TreeAddNode( _
 	)
 
 	Dim CompareResult As Long = lstrcmpiW( _
-		pNode->HostName, _
-		pTree->HostName _
+		@pNode->HostName, _
+		@pTree->HostName _
 	)
 
 	Select Case CompareResult
@@ -82,12 +81,12 @@ End Function
 
 Private Function TreeFindNode( _
 		ByVal pNode As WebSiteNode Ptr, _
-		ByVal HostName As HeapBSTR _
+		ByVal pHostName As WString Ptr _
 	)As WebSiteNode Ptr
 
 	Dim CompareResult As Long = lstrcmpiW( _
-		HostName, _
-		pNode->HostName _
+		pHostName, _
+		@pNode->HostName _
 	)
 
 	Select Case CompareResult
@@ -96,7 +95,7 @@ Private Function TreeFindNode( _
 			Dim resCompareWithPort As Boolean = CompareHostWithPort( _
 				pNode->HostName, _
 				pNode->Port, _
-				HostName _
+				pHostName _
 			)
 
 			If resCompareWithPort Then
@@ -107,13 +106,13 @@ Private Function TreeFindNode( _
 				Return NULL
 			End If
 
-			Return TreeFindNode(pNode->RightNode, HostName)
+			Return TreeFindNode(pNode->RightNode, pHostName)
 
 		Case Is < 0
 			Dim resCompareWithPort As Boolean = CompareHostWithPort( _
 				pNode->HostName, _
 				pNode->Port, _
-				HostName _
+				pHostName _
 			)
 
 			If resCompareWithPort Then
@@ -124,7 +123,7 @@ Private Function TreeFindNode( _
 				Return NULL
 			End If
 
-			Return TreeFindNode(pNode->LeftNode, HostName)
+			Return TreeFindNode(pNode->LeftNode, pHostName)
 
 		Case Else
 			Return pNode
@@ -135,8 +134,8 @@ End Function
 
 Private Function CreateWebSiteNode( _
 		ByVal pIMemoryAllocator As IMalloc Ptr, _
-		ByVal bstrHostName As HeapBSTR, _
-		ByVal Port As HeapBSTR, _
+		ByVal bstrHostName As WString Ptr, _
+		ByVal Port As WString Ptr, _
 		ByVal pValue As IWebSite Ptr _
 	)As WebSiteNode Ptr
 
@@ -155,14 +154,12 @@ Private Function CreateWebSiteNode( _
 			UBound(pNode->RttiClassName) - LBound(pNode->RttiClassName) + 1 _
 		)
 	#endif
-	HeapSysAddRefString(bstrHostName)
-	pNode->HostName = bstrHostName
-	HeapSysAddRefString(Port)
-	pNode->Port = Port
-	IWebSite_AddRef(pValue)
-	pNode->pIWebSite = pValue
 	pNode->LeftNode = NULL
 	pNode->RightNode = NULL
+	IWebSite_AddRef(pValue)
+	pNode->pIWebSite = pValue
+	lstrcpyW(@pNode->HostName, bstrHostName)
+	lstrcpyW(@pNode->Port, Port)
 
 	Return pNode
 
@@ -281,14 +278,13 @@ End Function
 
 Private Function WebSiteCollectionItem( _
 		ByVal self As WebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
+		ByVal pKey As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
-	*ppIWebSite = NULL
-
 	Dim pNode As WebSiteNode Ptr = TreeFindNode(self->pTree, pKey)
 	If pNode = NULL Then
+		*ppIWebSite = NULL
 		Return E_FAIL
 	End If
 
@@ -312,8 +308,8 @@ End Function
 
 Private Function WebSiteCollectionAdd( _
 		ByVal self As WebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
-		ByVal Port As HeapBSTR, _
+		ByVal pKey As BSTR, _
+		ByVal Port As BSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 
@@ -339,7 +335,7 @@ End Function
 
 Private Function WebSiteCollectionItemWeakPtr( _
 		ByVal self As WebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
+		ByVal pKey As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 
@@ -407,7 +403,7 @@ End Function
 
 Private Function IWebSiteCollectionItem( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal Host As HeapBSTR, _
+		ByVal Host As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionItem(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), Host, ppIWebSite)
@@ -422,8 +418,8 @@ End Function
 
 Private Function IWebSiteCollectionAdd( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal pKey As HeapBSTR, _
-		ByVal Port As HeapBSTR, _
+		ByVal pKey As BSTR, _
+		ByVal Port As BSTR, _
 		ByVal pIWebSite As IWebSite Ptr _
 	)As HRESULT
 	Return WebSiteCollectionAdd(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), pKey, Port, pIWebSite)
@@ -431,7 +427,7 @@ End Function
 
 Private Function IWebSiteCollectionItemWeakPtr( _
 		ByVal self As IWebSiteCollection Ptr, _
-		ByVal Host As HeapBSTR, _
+		ByVal Host As BSTR, _
 		ByVal ppIWebSite As IWebSite Ptr Ptr _
 	)As HRESULT
 	Return WebSiteCollectionItemWeakPtr(CONTAINING_RECORD(self, WebSiteCollection, lpVtbl), Host, ppIWebSite)
