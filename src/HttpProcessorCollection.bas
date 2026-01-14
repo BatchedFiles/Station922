@@ -8,10 +8,8 @@ Const CompareResultEqual As Long = 0
 
 Type HttpProcessorCollectionKeyValuePair
 	Key As WString * 16
-	KeyLength As Integer
 	Value As IHttpAsyncProcessor Ptr
 	Padding1 As Integer
-	Padding2 As Integer
 End Type
 
 Type HttpProcessorCollection
@@ -205,12 +203,11 @@ Private Function HttpProcessorCollectionAdd( _
 		Return E_OUTOFMEMORY
 	End If
 
-	Dim Length As Integer = lstrlenW(pKey)
+	Dim Length As Integer = self->CollectionLength
 
-	lstrcpyW(@self->Collection(self->CollectionLength).Key, pKey)
-	self->Collection(self->CollectionLength).KeyLength = Length
+	lstrcpyW(@self->Collection(Length).Key, pKey)
 	IHttpAsyncProcessor_AddRef(pIProcessor)
-	self->Collection(self->CollectionLength).Value = pIProcessor
+	self->Collection(Length).Value = pIProcessor
 
 	self->CollectionLength += 1
 
