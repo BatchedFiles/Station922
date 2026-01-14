@@ -21,10 +21,7 @@ Const UpgradeString = WStr("Upgrade")
 Const WebSocketString = WStr("websocket")
 Const WebSocketVersionString = WStr("13")
 Const HeadersExtensionString = WStr(".headers")
-Const FileGoneExtension = WStr(".410")
 Const QuoteString = WStr("""")
-Const GzipString = WStr("gzip")
-Const DeflateString = WStr("deflate")
 
 ' Размер буфера в символах для записи в него кода html страницы с ошибкой
 Const MaxHttpErrorBuffer As Integer = 1024 - 1
@@ -561,6 +558,9 @@ Private Sub GetETag( _
 		ByVal ZipMode As ZipModes _
 	)
 
+	Const DeflateString = WStr("deflate")
+	Const GzipString = WStr("gzip")
+
 	lstrcpyW(wETag, @QuoteString)
 
 	Dim ul As ULARGE_INTEGER = Any
@@ -915,11 +915,11 @@ Private Function GetFileBytesOffset( _
 
 End Function
 
-Private Function WebSiteMapPath( _
+Private Sub MapPath( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pPath As WString Ptr, _
 		ByVal pBuffer As WString Ptr _
-	)As HRESULT
+	)
 
 	lstrcpyW(pBuffer, pPhysicalDirectory)
 
@@ -932,18 +932,18 @@ Private Function WebSiteMapPath( _
 		End If
 	End Scope
 
-	If pPath[0] = Characters.Solidus Then
-		lstrcatW(pBuffer, @pPath[1])
-	Else
-		lstrcatW(pBuffer, pPath)
-	End If
+	Scope
+		If pPath[0] = Characters.Solidus Then
+			lstrcatW(pBuffer, @pPath[1])
+		Else
+			lstrcatW(pBuffer, pPath)
+		End If
 
-	Dim BufferLength As Integer = lstrlenW(pBuffer)
-	ReplaceSolidus(pBuffer, BufferLength)
+		Dim BufferLength As Integer = lstrlenW(pBuffer)
+		ReplaceSolidus(pBuffer, BufferLength)
+	End Scope
 
-	Return S_OK
-
-End Function
+End Sub
 
 Private Function CalculateUtf8BufferSize( _
 		ByVal pBuffer As WString Ptr, _
@@ -1437,7 +1437,7 @@ Private Function GetDirectoryListing( _
 
 End Function
 
-Private Function WebSiteOpenRequestedFile( _
+Private Function OpenRequestedFile( _
 		ByVal pPhysicalDirectory As HeapBSTR, _
 		ByVal pIMalloc As IMalloc Ptr, _
 		ByVal pFileBuffer As IFileAsyncStream Ptr, _
@@ -1456,7 +1456,7 @@ Private Function WebSiteOpenRequestedFile( _
 
 		If IsLastCharNotSolidus Then
 
-			WebSiteMapPath( _
+			MapPath( _
 				pPhysicalDirectory, _
 				Path, _
 				pFullFileName _
@@ -1497,7 +1497,7 @@ Private Function WebSiteOpenRequestedFile( _
 			lstrcpyW(@FileNameWithPath, Path)
 			lstrcatW(@FileNameWithPath, @defFilename)
 
-			WebSiteMapPath( _
+			MapPath( _
 				pPhysicalDirectory, _
 				@FileNameWithPath, _
 				pFullFileName _
@@ -1546,7 +1546,7 @@ Private Function WebSiteOpenRequestedFile( _
 			lstrcpyW(@FileNameWithPath, Path)
 			lstrcatW(@FileNameWithPath, @AsteriskString)
 
-			WebSiteMapPath( _
+			MapPath( _
 				pPhysicalDirectory, _
 				FileNameWithPath, _
 				@ListingDir _
@@ -1813,6 +1813,8 @@ Private Function GetFindFileErrorCode( _
 	Select Case hrOpenFile
 
 		Case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)
+			Const FileGoneExtension = WStr(".410")
+
 			Dim File410 As WString * (MAX_PATH + 1) = Any
 			lstrcpyW(@File410, FileName)
 			lstrcatW(@File410, @FileGoneExtension)
@@ -2002,7 +2004,7 @@ Private Function WebSiteGetBuffer( _
 			Dim Path As HeapBSTR = Any
 			IClientUri_GetPath(ClientURI, @Path)
 
-			hrOpenFile = WebSiteOpenRequestedFile( _
+			hrOpenFile = OpenRequestedFile( _
 				self->pPhysicalDirectory, _
 				pIMalloc, _
 				pIFile, _
