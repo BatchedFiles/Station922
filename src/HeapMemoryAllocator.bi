@@ -10,7 +10,7 @@ Extern CLSID_SERVERHEAPMEMORYALLOCATOR Alias "CLSID_SERVERHEAPMEMORYALLOCATOR" A
 Const RTTI_ID_HEAPMEMORYALLOCATOR     = !"\001Mem__Allocator\001"
 
 Declare Function CreateMemoryPool( _
-	ByVal Length As UInteger, _
+	ByVal Length As Integer, _
 	ByVal KeepAliveInterval As Integer _
 )As HRESULT
 
@@ -19,6 +19,6 @@ Declare Sub DeleteMemoryPool( _
 
 Declare Function GetHeapMemoryAllocatorInstance( _
 	ByVal ClientSocket As SOCKET _
-)As IHeapMemoryAllocator Ptr
+)As IMalloc Ptr
 
 #endif

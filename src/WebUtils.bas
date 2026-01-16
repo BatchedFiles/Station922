@@ -203,7 +203,7 @@ Public Function Station922Initialize()As HRESULT
 
 	Dim pIMemoryAllocator As IMalloc Ptr = Any
 	Dim WorkerThreads As Integer = Any
-	Dim MemoryPoolCapacity As UInteger = Any
+	Dim MemoryPoolCapacity As Integer = Any
 	Dim KeepAliveInterval As ULongInt = Any
 	Dim WebSites As WebSiteVector = Any
 	Dim WebSitesLength As Integer = Any
