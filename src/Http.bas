@@ -1,5 +1,4 @@
 #include once "Http.bi"
-#include once "windows.bi"
 
 Const CompareResultEqual As Long = 0
 
