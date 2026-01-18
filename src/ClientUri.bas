@@ -141,6 +141,12 @@ Private Function ContainsBadCharSequence( _
 	End If
 
 	If Buffer[Length - 1] = Characters.FullStop Then
+		' The dot character at the end of a file name is not allowed
+		Return E_FAIL
+	End If
+
+	If Buffer[Length - 1] = Characters.WhiteSpace Then
+		' The space at the end of a file name is not allowed
 		Return E_FAIL
 	End If
 
@@ -154,23 +160,24 @@ Private Function ContainsBadCharSequence( _
 				Return E_FAIL
 
 			Case Characters.QuotationMark
-				' Кавычки нельзя
 				Return E_FAIL
 
 			'Case Characters.DollarSign
-				' Нельзя доллар, потому что могут открыть $MFT
+				' The "$" character is not allowed
+				' because it can open $MFT
 				'Return E_FAIL
 
 			'Case Characters.PercentSign
-				' TODO Уточнить, почему нельзя использовать знак процента
+				' The "%" character is not allowed
 				'Return E_FAIL
 
 			'Case Characters.Ampersand
-				' Объединение команд в одну
+				' The "&" character is not allowed
+				' because it is a concatenation of two commands
 				'Return E_FAIL
 
 			' Case Characters.Asterisk
-				' Нельзя звёздочку
+				' The "*" character is not allowed
 				' Return E_FAIL
 
 			Case Characters.FullStop
@@ -405,73 +412,74 @@ Private Function ClientUriUriFromString( _
 	Dim FragmentLength As Integer = Any
 
 	Dim pFirstChar As WString Ptr = pwszDecodedUri
-
 	Dim FirstChar As Integer = pFirstChar[0]
-	If FirstChar = Characters.Solidus Then
-		pScheme = NULL
-		SchemeLength = 0
 
-		pUserName = NULL
-		UserNameLength = 0
+	Select Case FirstChar
 
-		pPassword = NULL
-		PasswordLength = 0
+		Case Characters.Solidus
+			pScheme = NULL
+			SchemeLength = 0
 
-		pHost = NULL
-		HostLength = 0
+			pUserName = NULL
+			UserNameLength = 0
 
-		pPort = NULL
-		PortLength = 0
+			pPassword = NULL
+			PasswordLength = 0
 
-		pPath = pFirstChar
+			pHost = NULL
+			HostLength = 0
 
-		Dim pQuestionMark As WString Ptr = StrChrW( _
-			pFirstChar, _
-			Characters.QuestionMark _
-		)
-		If pQuestionMark = NULL Then
-			pQuery = NULL
-			QueryLength = 0
+			pPort = NULL
+			PortLength = 0
 
-			Dim pNumberSign As WString Ptr = StrChrW( _
+			pPath = pFirstChar
+
+			Dim pQuestionMark As WString Ptr = StrChrW( _
 				pFirstChar, _
-				Characters.NumberSign _
+				Characters.QuestionMark _
 			)
-			If pNumberSign = NULL Then
-				PathLength = DecodedUriLength
-				pFragment = NULL
-				FragmentLength = 0
-			Else
-				PathLength = pNumberSign - pFirstChar
-				pFragment = @pNumberSign[1]
-				Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
-				FragmentLength = pNullChar - pNumberSign
-			End If
-		Else
-			PathLength = pQuestionMark - pFirstChar
-			Dim pNumberSign As WString Ptr = StrChrW( _
-				pQuestionMark, _
-				Characters.NumberSign _
-			)
-			If pNumberSign = NULL Then
-				pFragment = NULL
-				FragmentLength = 0
-				pQuery = @pQuestionMark[1]
+			If pQuestionMark = NULL Then
+				pQuery = NULL
+				QueryLength = 0
 
-				Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
-				QueryLength = pNullChar - pQuestionMark - 1
+				Dim pNumberSign As WString Ptr = StrChrW( _
+					pFirstChar, _
+					Characters.NumberSign _
+				)
+				If pNumberSign = NULL Then
+					PathLength = DecodedUriLength
+					pFragment = NULL
+					FragmentLength = 0
+				Else
+					PathLength = pNumberSign - pFirstChar
+					pFragment = @pNumberSign[1]
+					Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
+					FragmentLength = pNullChar - pNumberSign
+				End If
 			Else
-				pQuery = @pQuestionMark[1]
-				QueryLength = pNumberSign - pQuestionMark - 1
-				pFragment = @pNumberSign[1]
+				PathLength = pQuestionMark - pFirstChar
+				Dim pNumberSign As WString Ptr = StrChrW( _
+					pQuestionMark, _
+					Characters.NumberSign _
+				)
+				If pNumberSign = NULL Then
+					pFragment = NULL
+					FragmentLength = 0
+					pQuery = @pQuestionMark[1]
 
-				Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
-				FragmentLength = pNullChar - pNumberSign - 1
+					Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
+					QueryLength = pNullChar - pQuestionMark - 1
+				Else
+					pQuery = @pQuestionMark[1]
+					QueryLength = pNumberSign - pQuestionMark - 1
+					pFragment = @pNumberSign[1]
+
+					Dim pNullChar As WString Ptr = @pFirstChar[DecodedUriLength]
+					FragmentLength = pNullChar - pNumberSign - 1
+				End If
 			End If
-		End If
-	Else
-		Dim CompareResult As Long = lstrcmpW(pFirstChar, WStr("*"))
-		If CompareResult = 0 Then
+
+		Case Characters.Asterisk
 			pScheme = NULL
 			SchemeLength = 0
 
@@ -495,14 +503,15 @@ Private Function ClientUriUriFromString( _
 
 			pFragment = NULL
 			FragmentLength = 0
-		Else
+
+		Case Else
 			IMalloc_Free( _
 				self->pIMemoryAllocator, _
 				pwszDecodedUri _
 			)
 			Return CLIENTURI_E_PATHNOTFOUND
-		End If
-	End If
+
+	End Select
 
 	Dim hrContainsBadChar As HRESULT = ContainsBadCharSequence( _
 		pPath, _
