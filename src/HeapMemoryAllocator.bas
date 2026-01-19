@@ -405,10 +405,6 @@ Private Sub HeapMemoryAllocatorResetState( _
 
 	HeapMemoryAllocatorCloseSocket(self)
 
-	' Restore the original state of the reference counter
-	' Beecause number of reference is equal to one
-	self->ReferenceCounter = 1
-
 	GetSystemTimeAsFileTime(@self->datStartOperation)
 	GetSystemTimeAsFileTime(@self->datFinishOperation)
 
@@ -559,16 +555,6 @@ Private Function CreateHeapMemoryAllocator( _
 				self, _
 				hHeap _
 			)
-
-			Dim pv As Any Ptr = Any
-			Dim hrQueryInterface As HRESULT = HeapMemoryAllocatorQueryInterface( _
-				self, _
-				@IID_IHeapMemoryAllocator, _
-				@pv _
-			)
-			If FAILED(hrQueryInterface) Then
-				DestroyHeapMemoryAllocator(self)
-			End If
 
 			Return self
 		End If
@@ -927,7 +913,11 @@ Public Function GetHeapMemoryAllocatorInstance( _
 				PrintHeapAllocatorTaken(self->hHeap, FreeSpace)
 			#endif
 
-			pMalloc = CPtr(IMalloc Ptr, @self->lpVtbl)
+			HeapMemoryAllocatorQueryInterface( _
+				self, _
+				@IID_IMalloc, _
+				@pMalloc _
+			)
 
 			Exit For
 		End If
