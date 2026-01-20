@@ -85,7 +85,7 @@ Private Sub fb_End_Internal( _
 End Sub
 
 #if __FB_GUI__ = 0
-Public Function mainCRTStartup Alias "mainCRTStartup"()As Long
+Public Function mainCRTStartup cdecl Alias "mainCRTStartup"()As Long
 
 	Dim RetCode As Long = main(0, 0)
 
@@ -95,7 +95,7 @@ Public Function mainCRTStartup Alias "mainCRTStartup"()As Long
 
 End Function
 #else
-Public Function WinMainCRTStartup Alias "WinMainCRTStartup"()As Long
+Public Function WinMainCRTStartup cdecl Alias "WinMainCRTStartup"()As Long
 
 	Dim RetCode As Long = main(0, 0)
 
