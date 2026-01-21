@@ -238,6 +238,7 @@ Dim Shared MimeTypeNodesVector(0 To ...) As MimeTypeNode = { _
 	Type<MimeTypeNode>(@ExtensionOgv,  @ContentTypesVideoOgg, ContentTypes.VideoOgg, MimeFormats.Binary), _
 	Type<MimeTypeNode>(@ExtensionMp4,  @ContentTypesVideoMp4, ContentTypes.VideoMp4, MimeFormats.Binary), _
 	Type<MimeTypeNode>(@ExtensionWebm, @ContentTypesVideoWebm, ContentTypes.VideoWebm, MimeFormats.Binary), _
+	Type<MimeTypeNode>(@ExtensionMkv,  @ContentTypesVideoXMatroska, ContentTypes.VideoXMatroska, MimeFormats.Binary), _
 	Type<MimeTypeNode>(@ExtensionWasm, @ContentTypesApplicationWasm, ContentTypes.ApplicationWasm, MimeFormats.Binary), _
 	Type<MimeTypeNode>(@ExtensionWmv,  @ContentTypesVideoXmswmv, ContentTypes.VideoXmswmv, MimeFormats.Binary), _
 	Type<MimeTypeNode>(@ExtensionBin,  @ContentTypesApplicationOctetStream, ContentTypes.ApplicationOctetStream, MimeFormats.Binary), _
