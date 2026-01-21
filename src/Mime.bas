@@ -1,6 +1,5 @@
 #include once "Mime.bi"
 #include once "windows.bi"
-#include once "win\shlwapi.bi"
 
 Const ExtensionZip = WStr(".zip")
 Const Extension7z = WStr(".7z")
