@@ -1,6 +1,5 @@
 #include once "WebSite.bi"
 #include once "win\shlwapi.bi"
-#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "FileAsyncStream.bi"
 #include once "HeapBSTR.bi"
@@ -8,6 +7,7 @@
 #include once "MemoryAsyncStream.bi"
 #include once "Mime.bi"
 #include once "WebUtils.bi"
+#include once "Resources.RH"
 
 Extern GlobalWebSiteVirtualTable As Const IWebSiteVirtualTable
 
@@ -25,9 +25,6 @@ Const QuoteString = WStr("""")
 
 ' Размер буфера в символах для записи в него кода html страницы с ошибкой
 Const MaxHttpErrorBuffer As Integer = 1024 - 1
-
-Const DefaultContentLanguage = WStr("en")
-Const DefaultCacheControlNoCache = WStr("no-cache")
 
 Const MovedPermanently = WStr("Moved Permanently.")
 Const HttpError400BadRequest = WStr("Bad Request.")
@@ -342,21 +339,13 @@ Private Function WebSiteHttpAuthUtil( _
 
 End Function
 
-Private Sub FormatMessageErrorBody( _
-		ByRef Writer As ArrayStringWriter, _
+Private Function FormatMessageErrorBody( _
+		ByVal pBodyBuffer As WString Ptr, _
 		ByVal StatusCode As HttpStatusCodes, _
 		ByVal VirtualPath As HeapBSTR, _
 		ByVal BodyText As WString Ptr, _
 		ByVal hrErrorCode As HRESULT _
-	)
-
-	Const HttpStartHeadTag = WStr("<!DOCTYPE html><html xmlns=""http://www.w3.org/1999/xhtml"" lang=""en"" xml:lang=""en""><head><meta name=""viewport"" content=""width=device-width, initial-scale=1"" />")
-	Const HttpStartTitleTag = WStr("<title>")
-	Const HttpEndTitleTag = WStr("</title>")
-	Const HttpEndHeadTag = WStr("</head>")
-	Const HttpStartBodyTag = WStr("<body>")
-	Const HttpStartH1Tag = WStr("<h1>")
-	Const HttpEndH1Tag = WStr("</h1>")
+	) As Integer
 
 	' 300
 	Const ClientMovedString = WStr("Redirection")
@@ -364,87 +353,73 @@ Private Sub FormatMessageErrorBody( _
 	Const ClientErrorString = WStr("Client Error")
 	' 500
 	Const ServerErrorString = WStr("Server Error")
-	Const HttpErrorInApplicationString = WStr(" in application ")
 
-	Const HttpStartH2Tag = WStr("<h2>")
-	Const HttpStatusCodeString = WStr("HTTP Status Code ")
-	Const HttpEndH2Tag = WStr("</h2>")
-	Const HttpHresultErrorCodeString = WStr("HRESULT Error Code")
-	Const HttpStartPTag = WStr("<p>")
-	Const HttpEndPTag = WStr("</p>")
-
-	'<p>Visit <a href=""/"">website main page</a>.</p>
-
-	Const HttpEndBodyTag = WStr("</body></html>")
-
-	Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
-
-	Writer.WriteString(HttpStartHeadTag)
-	Writer.WriteString(HttpStartTitleTag)
-	Writer.WriteString(DescriptionBuffer)
-	Writer.WriteString(HttpEndTitleTag)
-	Writer.WriteString(HttpEndHeadTag)
-
-	Writer.WriteString(HttpStartBodyTag)
-	Writer.WriteString(HttpStartH1Tag)
-	Writer.WriteString(DescriptionBuffer)
-	Writer.WriteString(HttpEndH1Tag)
-
-	Writer.WriteString(HttpStartPTag)
-
-	Select Case StatusCode
-
-		Case 300 To 399
-			Writer.WriteString(ClientMovedString)
-
-		Case 400 To 499
-			Writer.WriteString(ClientErrorString)
-
-		Case 500 To 599
-			Writer.WriteString(ServerErrorString)
-
-	End Select
-
-	Writer.WriteString(HttpErrorInApplicationString)
-	Writer.WriteLengthString(VirtualPath, SysStringLen(VirtualPath))
-	Writer.WriteString(HttpEndPTag)
-
-	Writer.WriteString(HttpStartH2Tag)
-	Writer.WriteString(HttpStatusCodeString)
-	Writer.WriteInt32(StatusCode)
-	Writer.WriteString(HttpEndH2Tag)
-
-	Writer.WriteString(HttpStartPTag)
-	Writer.WriteString(BodyText)
-	Writer.WriteString(HttpEndPTag)
-
-	Writer.WriteString(HttpStartH2Tag)
-	Writer.WriteString(HttpHresultErrorCodeString)
-	Writer.WriteString(HttpEndH2Tag)
-
-	Writer.WriteString(HttpStartPTag)
-	Writer.WriteUInt32(hrErrorCode)
-	Writer.WriteString(HttpEndPTag)
-
-	Dim wBuffer As WString * 256 = Any
-	Dim CharsCount As DWORD = FormatMessageW( _
-		FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
-		NULL, _
-		hrErrorCode, _
-		MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
-		@wBuffer, _
-		256 - 1, _
-		NULL _
+	var h = GetModuleHandle(0)
+	var r = FindResourceW( _
+		h, _
+		MAKEINTRESOURCE(RC_GENERIC_HTTP_ERROR), _
+		RT_RCDATA _
 	)
-	If CharsCount Then
-		Writer.WriteString(HttpStartPTag)
-		Writer.WriteString(wBuffer)
-		Writer.WriteString(HttpEndPTag)
+
+	If r Then
+		var p = LoadResource(h, r)
+		If p Then
+			var l = SizeofResource(h, r)
+
+			If l Then
+				Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
+
+				Dim pClientError As WString Ptr = Any
+				Select Case StatusCode
+
+					Case 300 To 399
+						pClientError = @ClientMovedString
+
+					Case 400 To 499
+						pClientError = @ClientErrorString
+
+					Case Else
+						pClientError = @ServerErrorString
+
+				End Select
+
+				Dim wErrorDescription As WString * 256 = Any
+				Dim CharsCount As DWORD = FormatMessageW( _
+					FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
+					NULL, _
+					hrErrorCode, _
+					MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
+					@wErrorDescription, _
+					256 - 1, _
+					NULL _
+				)
+				If CharsCount = 0 Then
+					wErrorDescription[0] = 0
+				End If
+
+				var c = wsprintfW( _
+					pBodyBuffer, _
+					p, _
+					DescriptionBuffer, _
+					DescriptionBuffer, _
+					pClientError, _
+					VirtualPath, _
+					StatusCode, _
+					hrErrorCode, _
+					@wErrorDescription _
+				)
+
+				Return c
+
+			End If
+		End If
 	End If
 
-	Writer.WriteString(HttpEndBodyTag)
+	pBodyBuffer[0] = 0
 
-End Sub
+	Return 0
+
+End Function
 
 Private Function GetErrorBodyText( _
 		ByVal HttpError As ResponseErrorCode _
@@ -2216,23 +2191,17 @@ Private Function WebSiteGetErrorBuffer( _
 		Return hrCreateBuffer
 	End If
 
-	Dim Writer As ArrayStringWriter = Any
-	InitializeArrayStringWriter(@Writer)
-
 	Scope
 		Dim BodyBuffer As WString * (MaxHttpErrorBuffer + 1) = Any
-		Writer.SetBuffer(@BodyBuffer, MaxHttpErrorBuffer)
 
 		Dim pBodyText As WString Ptr = GetErrorBodyText(HttpError)
-		FormatMessageErrorBody( _
-			Writer, _
+		Dim BodyLength As Integer = FormatMessageErrorBody( _
+			@BodyBuffer, _
 			StatusCode, _
 			self->pVirtualPath, _
 			pBodyText, _
 			hrErrorCode _
 		)
-
-		Dim BodyLength As Integer = Writer.GetLength()
 
 		Dim SendBufferLength As Integer = CalculateUtf8BufferSize( _
 			@BodyBuffer, _

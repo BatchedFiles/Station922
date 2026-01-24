@@ -33,4 +33,6 @@
 
 #define IDR_RT_MANIFEST1             00001
 
+#define RC_GENERIC_HTTP_ERROR        00100
+
 #endif
