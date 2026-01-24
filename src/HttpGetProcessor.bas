@@ -1,5 +1,4 @@
 #include once "HttpGetProcessor.bi"
-#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
@@ -176,24 +175,26 @@ Private Function AddResponseCacheHeaders( _
 End Function
 
 Private Sub MakeContentRangeHeader( _
-		ByRef Writer As ArrayStringWriter, _
+		ByVal pBuffer As WString Ptr, _
 		ByVal FirstBytePosition As LongInt, _
 		ByVal LastBytePosition As LongInt, _
 		ByVal TotalLength As LongInt _
 	)
 
-	' Example:
 	' Content-Range: bytes 88080384-160993791/160993792
 
-	Writer.WriteLengthString(@BytesStringWithSpace, Len(BytesStringWithSpace))
+	Const Range = WStr("Content-Range: bytes %ld-%ld/%ld")
+	var c = wsprintfW( _
+		pBuffer, _
+		@Range, _
+		FirstBytePosition, _
+		LastBytePosition, _
+		TotalLength _
+	)
 
-	Writer.WriteUInt64(FirstBytePosition)
-	Writer.WriteChar(Characters.HyphenMinus)
-
-	Writer.WriteUInt64(LastBytePosition)
-	Writer.WriteChar(Characters.Solidus)
-
-	Writer.WriteUInt64(TotalLength)
+	If c = 0 Then
+		pBuffer[0] = 0
+	End If
 
 End Sub
 
@@ -427,16 +428,9 @@ Private Function HttpGetProcessorPrepare( _
 		IAttributedAsyncStream_GetLength(pIBuffer, @ContentLength)
 	Else
 		Dim FileBytesOffset As LongInt = Any
-		Dim Writer As ArrayStringWriter = Any
-		InitializeArrayStringWriter(@Writer)
 
-		Const ContentRangeMaximumBufferLength As Integer = 512 - 1
+		Const ContentRangeMaximumBufferLength As Integer = 256 - 1
 		Dim wContentRange As WString * (ContentRangeMaximumBufferLength + 1) = Any
-
-		Writer.SetBuffer( _
-			@wContentRange, _
-			ContentRangeMaximumBufferLength _
-		)
 
 		Dim VirtualFileLength As LongInt = Any
 		IAttributedAsyncStream_GetLength(pIBuffer, @VirtualFileLength)
@@ -451,7 +445,7 @@ Private Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 
 					MakeContentRangeHeader( _
-						Writer, _
+						@wContentRange, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -482,7 +476,7 @@ Private Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = VirtualFileLength - 1
 
 				MakeContentRangeHeader( _
-					Writer, _
+					@wContentRange, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
@@ -508,7 +502,7 @@ Private Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 
 					MakeContentRangeHeader( _
-						Writer, _
+						@wContentRange, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -539,7 +533,7 @@ Private Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = VirtualFileLength - 1
 
 				MakeContentRangeHeader( _
-					Writer, _
+					@wContentRange, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
@@ -563,7 +557,7 @@ Private Function HttpGetProcessorPrepare( _
 					Dim LastBytePosition As LongInt = VirtualFileLength - 1
 
 					MakeContentRangeHeader( _
-						Writer, _
+						@wContentRange, _
 						FirstBytePosition, _
 						LastBytePosition, _
 						VirtualFileLength _
@@ -594,7 +588,7 @@ Private Function HttpGetProcessorPrepare( _
 				Dim LastBytePosition As LongInt = min(RequestedByteRange.LastBytePosition, VirtualFileLength - 1)
 
 				MakeContentRangeHeader( _
-					Writer, _
+					@wContentRange, _
 					FirstBytePosition, _
 					LastBytePosition, _
 					VirtualFileLength _
