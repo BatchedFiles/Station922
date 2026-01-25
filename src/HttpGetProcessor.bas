@@ -183,7 +183,7 @@ Private Sub MakeContentRangeHeader( _
 
 	' Content-Range: bytes 88080384-160993791/160993792
 
-	Const Range = WStr("Content-Range: bytes %ld-%ld/%ld")
+	Const Range = WStr("bytes %I64u-%I64u/%I64u")
 	var c = wsprintfW( _
 		pBuffer, _
 		@Range, _
