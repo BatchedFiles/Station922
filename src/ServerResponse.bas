@@ -811,7 +811,9 @@ Private Function ServerResponseAllHeadersToZString( _
 
 				Writer.WriteLengthString(wBuffer, BufferLength)
 				Writer.WriteLengthString(@ColonWithSpaceString, Len(ColonWithSpaceString))
-				Writer.WriteStringLine(self->ResponseHeaders(HeaderIndex))
+
+				Dim ValueLength As Integer = SysStringLen(self->ResponseHeaders(HeaderIndex))
+				Writer.WriteLengthStringLine(self->ResponseHeaders(HeaderIndex), ValueLength)
 			End If
 
 		Next
