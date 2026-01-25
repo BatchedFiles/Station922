@@ -1,5 +1,4 @@
 #include once "HttpPutProcessor.bi"
-#include once "ArrayStringWriter.bi"
 #include once "CharacterConstants.bi"
 #include once "HeapBSTR.bi"
 #include once "WebUtils.bi"
