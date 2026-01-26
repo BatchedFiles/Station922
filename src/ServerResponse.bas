@@ -29,7 +29,6 @@ Type ServerResponse
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	ResponseHeaderLine As ZString Ptr
-	ResponseHeaderLineLength As Integer
 	HttpVersion As HttpVersions
 	StatusCode As HttpStatusCodes
 	StatusDescription As HeapBSTR
@@ -176,7 +175,6 @@ Private Sub InitializeServerResponse( _
 	self->pIMemoryAllocator = pIMemoryAllocator
 	ZeroMemory(@self->ResponseHeaders(0), HttpResponseHeadersSize * SizeOf(HeapBSTR))
 	self->ResponseHeaderLine = NULL
-	self->ResponseHeaderLineLength = 0
 	self->HttpVersion = HttpVersions.Http11
 	self->StatusCode = HttpStatusCodes.OK
 	self->StatusDescription = NULL
@@ -610,12 +608,6 @@ Private Function ServerResponseSetByteRange( _
 
 End Function
 
-Private Sub ServerResponsePrintServerHeaders( _
-		ByVal self As ServerResponse Ptr _
-	)
-
-End Sub
-
 Private Function ServerResponseAllHeadersToZString( _
 		ByVal self As ServerResponse Ptr, _
 		ByVal ContentLength As LongInt, _
@@ -739,6 +731,8 @@ Private Function ServerResponseAllHeadersToZString( _
 		Return E_OUTOFMEMORY
 	End If
 
+	Dim ResponseHeaderLineLength As Integer = Any
+
 	Scope
 		Dim Writer As ArrayStringWriter = Any
 		InitializeArrayStringWriter(@Writer)
@@ -820,13 +814,13 @@ Private Function ServerResponseAllHeadersToZString( _
 
 		Writer.WriteNewLine()
 
-		self->ResponseHeaderLineLength = Writer.GetLength()
+		ResponseHeaderLineLength = Writer.GetLength()
 
 	End Scope
 
 	self->ResponseHeaderLine = IMalloc_Alloc( _
 		self->pIMemoryAllocator, _
-		self->ResponseHeaderLineLength _
+		ResponseHeaderLineLength _
 	)
 	If self->ResponseHeaderLine = NULL Then
 		IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
@@ -839,19 +833,17 @@ Private Function ServerResponseAllHeadersToZString( _
 		CP_ACP, _
 		0, _
 		pHeadersBuffer, _
-		self->ResponseHeaderLineLength, _
+		ResponseHeaderLineLength, _
 		self->ResponseHeaderLine, _
-		self->ResponseHeaderLineLength, _
+		ResponseHeaderLineLength, _
 		0, _
 		0 _
 	)
 
-	ServerResponsePrintServerHeaders(self)
+	IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
 
 	*ppHeaders = self->ResponseHeaderLine
-	*pHeadersLength = self->ResponseHeaderLineLength
-
-	IMalloc_Free(self->pIMemoryAllocator, pHeadersBuffer)
+	*pHeadersLength = ResponseHeaderLineLength
 
 	Return S_OK
 
