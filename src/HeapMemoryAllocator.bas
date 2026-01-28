@@ -592,14 +592,33 @@ Private Function HeapMemoryAllocatorRealloc( _
 		ByVal BytesCount As SIZE_T_ _
 	)As Any Ptr
 
-	Dim pMemory As Any Ptr = HeapReAlloc( _
+	If BytesCount = 0 Then
+		HeapFree( _
+			self->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			pv _
+		)
+
+		Return NULL
+	End If
+
+	Dim pMemory As Any Ptr = HeapAlloc( _
 		self->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
-		pv, _
 		BytesCount _
 	)
 	If pMemory = NULL Then
 		PrintAllocationFailed(BytesCount)
+		Return NULL
+	End If
+
+	If pv Then
+		CopyMemory(pMemory, pv, BytesCount)
+		HeapFree( _
+			self->hHeap, _
+			HEAP_NO_SERIALIZE_FLAG, _
+			pv _
+		)
 	End If
 
 	Return pMemory
