@@ -586,6 +586,26 @@ Private Function HeapMemoryAllocatorAlloc( _
 
 End Function
 
+Private Function HeapMemoryAllocatorRealloc( _
+		ByVal self As HeapMemoryAllocator Ptr, _
+		ByVal pv As Any Ptr, _
+		ByVal BytesCount As SIZE_T_ _
+	)As Any Ptr
+
+	Dim pMemory As Any Ptr = HeapRealloc( _
+		self->hHeap, _
+		HEAP_NO_SERIALIZE_FLAG, _
+		pv, _
+		BytesCount _
+	)
+	If pMemory = NULL Then
+		PrintAllocationFailed(BytesCount)
+	End If
+
+	Return pMemory
+
+End Function
+
 Private Sub HeapMemoryAllocatorFree( _
 		ByVal self As HeapMemoryAllocator Ptr, _
 		ByVal pMemory As Any Ptr _
@@ -961,6 +981,14 @@ Private Function IHeapMemoryAllocatorAlloc( _
 	Return HeapMemoryAllocatorAlloc(CONTAINING_RECORD(self, HeapMemoryAllocator, lpVtbl), cb)
 End Function
 
+Private Function IHeapMemoryAllocatorRealloc( _
+		ByVal self As IHeapMemoryAllocator Ptr, _
+		ByVal pv As Any Ptr, _
+		ByVal cb As SIZE_T_ _
+	)As Any Ptr
+	Return HeapMemoryAllocatorRealloc(CONTAINING_RECORD(self, HeapMemoryAllocator, lpVtbl), pv, cb)
+End Function
+
 Private Sub IHeapMemoryAllocatorFree( _
 		ByVal self As IHeapMemoryAllocator Ptr, _
 		ByVal pv As Any Ptr _
@@ -1005,7 +1033,7 @@ Dim GlobalHeapMemoryAllocatorVirtualTable As Const IHeapMemoryAllocatorVirtualTa
 	@IHeapMemoryAllocatorAddRef, _
 	@IHeapMemoryAllocatorRelease, _
 	@IHeapMemoryAllocatorAlloc, _
-	NULL, _ /' @IHeapMemoryAllocatorRealloc, _ '/
+	@IHeapMemoryAllocatorRealloc, _
 	@IHeapMemoryAllocatorFree, _
 	NULL, _ /' @IHeapMemoryAllocatorGetSize, _ '/
 	NULL, _ /' @IHeapMemoryAllocatorDidAlloc, _ '/
