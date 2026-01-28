@@ -841,10 +841,7 @@ Public Function CreateMemoryPool( _
 	End Scope
 
 	Scope
-		Dim hHeap As HANDLE = GetProcessHeap()
-		pMemoryPool.Items = HeapAlloc( _
-			hHeap, _
-			0, _
+		pMemoryPool.Items = Allocate( _
 			SizeOf(MemoryPoolItem) * Capacity _
 		)
 		If pMemoryPool.Items = NULL Then
