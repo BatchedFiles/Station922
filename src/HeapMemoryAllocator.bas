@@ -592,7 +592,7 @@ Private Function HeapMemoryAllocatorRealloc( _
 		ByVal BytesCount As SIZE_T_ _
 	)As Any Ptr
 
-	Dim pMemory As Any Ptr = HeapRealloc( _
+	Dim pMemory As Any Ptr = HeapReAlloc( _
 		self->hHeap, _
 		HEAP_NO_SERIALIZE_FLAG, _
 		pv, _
