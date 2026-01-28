@@ -20,7 +20,7 @@ End Enum
 
 Type BufferSlice
 	pSlice As ZString Ptr
-	Length As Integer
+	Length As UInteger
 End Type
 
 Type IAttributedAsyncStream As IAttributedAsyncStream_
@@ -44,7 +44,7 @@ Type IAttributedAsyncStreamVirtualTable
 	BeginReadSlice As Function( _
 		ByVal self As IAttributedAsyncStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -88,7 +88,7 @@ Type IAttributedAsyncStreamVirtualTable
 
 	GetPreloadedBytes As Function( _
 		ByVal self As IAttributedAsyncStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 

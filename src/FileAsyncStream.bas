@@ -5,7 +5,16 @@
 
 Extern GlobalFileStreamVirtualTable As Const IFileAsyncStreamVirtualTable
 
-Const SmallFileBytesSize As DWORD = 6 * 4096
+Const SmallFileBytesSize As DWORD = 5 * 4096
+
+' this dude must be less then max(DWORD)
+Const ReservedBytesLengthMaximum As UInteger = 3 * 1024 * 1024 * 1024
+Const ReservedBytesLengthDefault As UInteger = 8 * 1024 * 1024
+
+Type BytesVector
+	pBytes As Any Ptr
+	Length As UInteger
+End Type
 
 Type FileStream
 	#if __FB_DEBUG__
@@ -15,23 +24,20 @@ Type FileStream
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pFilePath As HeapBSTR
+	Language As HeapBSTR
+	ETag As HeapBSTR
 	FileSize As LongInt
 	FileOffset As LongInt
 	FileHandle As HANDLE
 	ZipFileHandle As HANDLE
-	FileBytes As ZString Ptr
-	SmallFileBytes As ZString Ptr
-	Language As HeapBSTR
-	ETag As HeapBSTR
-	PreloadedBytesLength As UInteger
-	ReservedFileBytesLength As UInteger
-	pPreloadedBytes As UByte Ptr
+	BigFileBytes As BytesVector
+	SmallFileBytes As BytesVector
+	PreloadedBytes As BytesVector
 	LastFileModifiedDate As FILETIME
+	ReservedBytesLength As UInteger
+	RequestedBytesLength As UInteger
 	ZipMode As ZipModes
 	ContentType As MimeType
-	dwRequestedLength As DWORD
-	PreviousAllocatedLength As DWORD
-	PreviousAllocatedSmallLength As DWORD
 End Type
 
 Private Sub InitializeFileStream( _
@@ -51,25 +57,22 @@ Private Sub InitializeFileStream( _
 	IMalloc_AddRef(pIMemoryAllocator)
 	self->pIMemoryAllocator = pIMemoryAllocator
 	self->pFilePath = NULL
-	self->FileHandle = INVALID_HANDLE_VALUE
-	self->ZipFileHandle = INVALID_HANDLE_VALUE
-	self->FileBytes = NULL
-	self->SmallFileBytes = NULL
-	self->ZipMode = ZipModes.None
 	self->Language = NULL
 	self->ETag = NULL
 	self->FileSize = 0
 	self->FileOffset = 0
-	self->PreviousAllocatedLength = 0
-	self->PreviousAllocatedSmallLength = 0
-	self->PreloadedBytesLength = 0
-	self->ReservedFileBytesLength = 0
-	self->pPreloadedBytes = NULL
+	self->FileHandle = INVALID_HANDLE_VALUE
+	self->ZipFileHandle = INVALID_HANDLE_VALUE
+	ZeroMemory(@self->BigFileBytes, SizeOf(BytesVector))
+	ZeroMemory(@self->SmallFileBytes, SizeOf(BytesVector))
+	ZeroMemory(@self->PreloadedBytes, SizeOf(BytesVector))
 	ZeroMemory(@self->LastFileModifiedDate, SizeOf(FILETIME))
+	self->ReservedBytesLength = ReservedBytesLengthDefault
+	' self->RequestedBytesLength = 0
+	self->ZipMode = ZipModes.None
 	self->ContentType.ContentType = ContentTypes.AnyAny
 	self->ContentType.CharsetWeakPtr = NULL
 	self->ContentType.Format = MimeFormats.Binary
-
 End Sub
 
 Private Sub UnInitializeFileStream( _
@@ -80,16 +83,17 @@ Private Sub UnInitializeFileStream( _
 	HeapSysFreeString(self->Language)
 	HeapSysFreeString(self->pFilePath)
 
-	If self->FileBytes Then
-		VirtualFree( _
-			self->FileBytes, _
-			0, _
-			MEM_RELEASE _
+	If self->BigFileBytes.pBytes Then
+		Deallocate( _
+			self->BigFileBytes.pBytes _
 		)
 	End If
 
-	If self->SmallFileBytes Then
-		IMalloc_Free(self->pIMemoryAllocator, self->SmallFileBytes)
+	If self->SmallFileBytes.pBytes Then
+		IMalloc_Free( _
+			self->pIMemoryAllocator, _
+			self->SmallFileBytes.pBytes _
+		)
 	End If
 
 	If self->FileHandle <> INVALID_HANDLE_VALUE Then
@@ -205,55 +209,40 @@ End Function
 
 Private Function FileStreamAllocateBufferSink( _
 		ByVal self As FileStream Ptr, _
-		ByVal dwLength As DWORD _
+		ByVal Length As UInteger _
 	)As Any Ptr
 
 	Dim pMem As Any Ptr = Any
 
-	If dwLength <= SmallFileBytesSize Then
-		VirtualFree( _
-			self->FileBytes, _
-			0, _
-			MEM_DECOMMIT _
-		)
+	If Length <= SmallFileBytesSize Then
 
-		If self->PreviousAllocatedSmallLength >= dwLength Then
-			pMem = self->SmallFileBytes
-		Else
-			If self->SmallFileBytes Then
-				IMalloc_Free( _
-					self->pIMemoryAllocator, _
-					self->SmallFileBytes _
-				)
-			End If
-			pMem = IMalloc_Alloc( _
-				self->pIMemoryAllocator, _
-				dwLength _
-			)
-			self->SmallFileBytes = pMem
-			self->PreviousAllocatedSmallLength = dwLength
-		End If
-
-	Else
-		If self->SmallFileBytes Then
+		Dim pOld As Any Ptr = self->SmallFileBytes.pBytes
+		If pOld Then
 			IMalloc_Free( _
 				self->pIMemoryAllocator, _
-				self->SmallFileBytes _
+				pOld _
 			)
-			self->SmallFileBytes = NULL
+			self->SmallFileBytes.pBytes = NULL
 		End If
 
-		If self->PreviousAllocatedLength >= dwLength Then
-			pMem = self->FileBytes
-		Else
-			pMem = VirtualAlloc( _
-				self->FileBytes, _
-				dwLength, _
-				MEM_COMMIT, _
-				PAGE_READWRITE _
-			)
-			self->FileBytes = pMem
-			self->PreviousAllocatedLength = dwLength
+		pMem = IMalloc_Alloc( _
+			self->pIMemoryAllocator, _
+			Length _
+		)
+
+		If pMem Then
+			self->SmallFileBytes.pBytes = pMem
+		End If
+	Else
+
+		Dim pOld As Any Ptr = self->BigFileBytes.pBytes
+		pMem = Reallocate( _
+			pOld, _
+			Length _
+		)
+
+		If pMem Then
+			self->BigFileBytes.pBytes = pMem
 		End If
 	End If
 
@@ -264,7 +253,7 @@ End Function
 Private Function FileStreamBeginReadSlice( _
 		ByVal self As FileStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal dwLength As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -274,7 +263,7 @@ Private Function FileStreamBeginReadSlice( _
 
 	If VirtualStartIndex >= self->FileSize Then
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return HRESULT_FROM_WIN32(ERROR_SEEK)
 	End If
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
@@ -290,33 +279,41 @@ Private Function FileStreamBeginReadSlice( _
 		End If
 	End Scope
 
-	Dim dwNumberOfBytesToRead As DWORD = min( _
-		Cast(DWORD, self->ReservedFileBytesLength), _
-		dwLength _
-	)
-	self->dwRequestedLength = dwNumberOfBytesToRead
+	Dim pMem As Any Ptr = Any
+	Scope
+		Dim liReservedBytesLength As LongInt = CLngInt(self->ReservedBytesLength)
+		Dim NumberOfBytesToRead As LongInt = min( _
+			liReservedBytesLength, _
+			Length _
+		)
 
-	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _
-		self, _
-		dwNumberOfBytesToRead _
-	)
-	If pMem = NULL Then
-		IAsyncResult_Release(pINewAsyncResult)
-		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
-	End If
+		Dim nNumberOfBytesToRead As UInteger = CUInt(NumberOfBytesToRead)
+		pMem = FileStreamAllocateBufferSink( _
+			self, _
+			nNumberOfBytesToRead _
+		)
+		If pMem = NULL Then
+			IAsyncResult_Release(pINewAsyncResult)
+			*ppIAsyncResult = NULL
+			Return E_OUTOFMEMORY
+		End If
+
+		self->RequestedBytesLength = nNumberOfBytesToRead
+	End Scope
 
 	Scope
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 
-		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+		Scope
+			Dim liStartIndex As LARGE_INTEGER = Any
+			liStartIndex.QuadPart = VirtualStartIndex
 
-		Dim liStartIndex As LARGE_INTEGER = Any
-		liStartIndex.QuadPart = VirtualStartIndex
-
-		pOverlap->Offset = liStartIndex.LowPart
-		pOverlap->OffsetHigh = liStartIndex.HighPart
+			pOverlap->Offset = liStartIndex.LowPart
+			pOverlap->OffsetHigh = liStartIndex.HighPart
+		End Scope
 
 		Dim hMapFile As HANDLE = Any
 		If self->ZipFileHandle <> INVALID_HANDLE_VALUE Then
@@ -324,6 +321,8 @@ Private Function FileStreamBeginReadSlice( _
 		Else
 			hMapFile = self->FileHandle
 		End If
+
+		Dim dwNumberOfBytesToRead As DWORD = Cast(DWORD, self->RequestedBytesLength)
 
 		Dim resReadFile As BOOL = ReadFile( _
 			hMapFile, _
@@ -368,23 +367,25 @@ Private Function FileStreamEndReadSlice( _
 	End If
 
 	If Completed Then
+		Dim nBytesTransferred As UInteger = CUInt(dwBytesTransferred)
+
 		Scope
 			Dim pMem As Any Ptr = Any
-			If self->SmallFileBytes Then
-				pMem = self->SmallFileBytes
+			If self->SmallFileBytes.pBytes Then
+				pMem = self->SmallFileBytes.pBytes
 			Else
-				pMem = self->FileBytes
+				pMem = self->BigFileBytes.pBytes
 			End If
 
 			pBufferSlice->pSlice = pMem
-			pBufferSlice->Length = CInt(dwBytesTransferred)
+			pBufferSlice->Length = nBytesTransferred
 		End Scope
 
 		If dwBytesTransferred = 0 Then
 			Return S_FALSE
 		End If
 
-		If self->dwRequestedLength < dwBytesTransferred Then
+		If self->RequestedBytesLength < nBytesTransferred Then
 			Return S_OK
 		End If
 
@@ -409,7 +410,7 @@ Private Function FileStreamBeginWriteSlice( _
 
 	If VirtualStartIndex >= self->FileSize Then
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return HRESULT_FROM_WIN32(ERROR_SEEK)
 	End If
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
@@ -421,26 +422,25 @@ Private Function FileStreamBeginWriteSlice( _
 		)
 		If FAILED(hrCreateAsyncResult) Then
 			*ppIAsyncResult = NULL
-			Return hrCreateAsyncResult
+			Return E_OUTOFMEMORY
 		End If
 	End Scope
-
-	Dim dwNumberOfBytesToWrite As DWORD = Cast(DWORD, pBufferSlice->Length)
-	self->dwRequestedLength = dwNumberOfBytesToWrite
 
 	Dim pMem As Any Ptr = pBufferSlice->pSlice
 
 	Scope
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+
 		Dim pOverlap As OVERLAPPED Ptr = Any
 		IAsyncResult_GetWsaOverlapped(pINewAsyncResult, @pOverlap)
 
-		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+		Scope
+			Dim liStartIndex As LARGE_INTEGER = Any
+			liStartIndex.QuadPart = VirtualStartIndex
 
-		Dim liStartIndex As LARGE_INTEGER = Any
-		liStartIndex.QuadPart = VirtualStartIndex
-
-		pOverlap->Offset = liStartIndex.LowPart
-		pOverlap->OffsetHigh = liStartIndex.HighPart
+			pOverlap->Offset = liStartIndex.LowPart
+			pOverlap->OffsetHigh = liStartIndex.HighPart
+		End Scope
 
 		Dim hMapFile As HANDLE = Any
 		If self->ZipFileHandle <> INVALID_HANDLE_VALUE Then
@@ -448,6 +448,15 @@ Private Function FileStreamBeginWriteSlice( _
 		Else
 			hMapFile = self->FileHandle
 		End If
+
+		Dim dwNumberOfBytesToWrite As DWORD = Any
+		Scope
+			Dim nMinBytes As UInteger = min( _
+				pBufferSlice->Length, _
+				ReservedBytesLengthMaximum _
+			)
+			dwNumberOfBytesToWrite = Cast(DWORD, nMinBytes)
+		End Scope
 
 		Dim resReadFile As BOOL = WriteFile( _
 			hMapFile, _
@@ -577,12 +586,12 @@ End Function
 
 Private Function FileStreamGetPreloadedBytes( _
 		ByVal self As FileStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
-	*pPreloadedBytesLength = self->PreloadedBytesLength
-	*ppPreloadedBytes = self->pPreloadedBytes
+	*pPreloadedBytesLength = self->PreloadedBytes.Length
+	*ppPreloadedBytes = self->PreloadedBytes.pBytes
 
 	Return S_OK
 
@@ -723,21 +732,16 @@ End Function
 
 Private Function FileStreamSetReservedFileBytes( _
 		ByVal self As FileStream Ptr, _
-		ByVal ReservedFileBytesLength As UInteger _
+		ByVal Length As UInteger _
 	)As HRESULT
 
-	Dim FileBytes As ZString Ptr = VirtualAlloc( _
-		NULL, _
-		ReservedFileBytesLength, _
-		MEM_RESERVE, _
-		PAGE_READWRITE _
-	)
-	If FileBytes = NULL Then
-		Return E_OUTOFMEMORY
-	End If
+	Dim Value As UInteger = min(Length, ReservedBytesLengthMaximum)
 
-	self->FileBytes = FileBytes
-	self->ReservedFileBytesLength = ReservedFileBytesLength
+	If Value Then
+		self->ReservedBytesLength = Value
+	Else
+		self->ReservedBytesLength = ReservedBytesLengthDefault
+	End If
 
 	Return S_OK
 
@@ -749,8 +753,8 @@ Private Function FileStreamSetPreloadedBytes( _
 		ByVal pPreloadedBytes As UByte Ptr _
 	)As HRESULT
 
-	self->PreloadedBytesLength = PreloadedBytesLength
-	self->pPreloadedBytes = pPreloadedBytes
+	self->PreloadedBytes.Length = PreloadedBytesLength
+	self->PreloadedBytes.pBytes = pPreloadedBytes
 
 	Return S_OK
 
@@ -762,18 +766,8 @@ Private Function FileStreamGetReservedBytes( _
 		ByVal ppReservedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
-	Dim pMem As Any Ptr = VirtualAlloc( _
-		self->FileBytes, _
-		self->ReservedFileBytesLength, _
-		MEM_COMMIT, _
-		PAGE_READWRITE _
-	)
-	*ppReservedBytes = pMem
-	*pReservedBytesLength = self->ReservedFileBytesLength
-
-	If pMem = NULL Then
-		Return E_OUTOFMEMORY
-	End If
+	*pReservedBytesLength = self->BigFileBytes.Length
+	*ppReservedBytes = self->BigFileBytes.pBytes
 
 	Return S_OK
 
@@ -844,7 +838,7 @@ End Function
 
 Private Function IFileAsyncStreamGetPreloadedBytes( _
 		ByVal self As IFileAsyncStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 	Return FileStreamGetPreloadedBytes(CONTAINING_RECORD(self, FileStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
@@ -853,7 +847,7 @@ End Function
 Private Function IFileAsyncStreamBeginReadSlice( _
 		ByVal self As IFileAsyncStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _

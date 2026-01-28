@@ -26,7 +26,7 @@ Type IMemoryStreamVirtualTable
 	BeginReadSlice As Function( _
 		ByVal self As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -70,7 +70,7 @@ Type IMemoryStreamVirtualTable
 
 	GetPreloadedBytes As Function( _
 		ByVal self As IMemoryStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
@@ -81,14 +81,14 @@ Type IMemoryStreamVirtualTable
 
 	AllocBuffer As Function( _
 		ByVal self As IMemoryStream Ptr, _
-		ByVal Length As LongInt, _
+		ByVal Length As UInteger, _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 
 	SetBuffer As Function( _
 		ByVal self As IMemoryStream Ptr, _
 		ByVal pBuffer As Any Ptr, _
-		ByVal Length As LongInt _
+		ByVal Length As UInteger _
 	)As HRESULT
 
 End Type

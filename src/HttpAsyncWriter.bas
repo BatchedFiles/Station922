@@ -406,12 +406,11 @@ Private Function HttpWriterBeginWrite( _
 
 			Else
 				Dim DesiredSliceLength As LongInt = self->BodyEndIndex - self->BodyOffset
-				Dim dwDesiredSliceLength As DWORD = Cast(DWORD, DesiredSliceLength)
 
 				Dim hrBeginGetSlice As HRESULT = IAttributedAsyncStream_BeginReadSlice( _
 					self->pIBuffer, _
 					self->BodyOffset, _
-					dwDesiredSliceLength, _
+					DesiredSliceLength, _
 					pcb, _
 					StateObject, _
 					ppIAsyncResult _

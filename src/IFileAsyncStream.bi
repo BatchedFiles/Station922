@@ -26,7 +26,7 @@ Type IFileAsyncStreamVirtualTable
 	BeginReadSlice As Function( _
 		ByVal self As IFileAsyncStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
@@ -70,7 +70,7 @@ Type IFileAsyncStreamVirtualTable
 
 	GetPreloadedBytes As Function( _
 		ByVal self As IFileAsyncStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 

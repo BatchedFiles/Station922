@@ -5,6 +5,8 @@
 
 Extern GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable
 
+Const SmallFileBytesSize As DWORD = 5 * 4096
+
 Type MemoryStream
 	#if __FB_DEBUG__
 		RttiClassName(15) As UByte
@@ -13,15 +15,15 @@ Type MemoryStream
 	ReferenceCounter As UInteger
 	pIMemoryAllocator As IMalloc Ptr
 	pBuffer As Byte Ptr
-	Capacity As LongInt
-	Offset As LongInt
-	RequestStartIndex As LongInt
+	Capacity As UInteger
+	Offset As UInteger
+	RequestStartIndex As UInteger
 	pOuterBuffer As Byte Ptr
 	Language As HeapBSTR
 	ETag As HeapBSTR
 	ZipMode As ZipModes
 	ContentType As MimeType
-	RequestLength As DWORD
+	RequestLength As UInteger
 End Type
 
 Private Sub InitializeMemoryStream( _
@@ -164,20 +166,22 @@ Public Function CreateMemoryStream( _
 
 End Function
 
-Private Function MemoryStreamBeginGetSlice( _
+Private Function MemoryStreamBeginReadSlice( _
 		ByVal self As MemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 
-	Dim VirtualStartIndex As LongInt = StartIndex + self->Offset
+	Dim nOffset As LongInt = CLngInt(self->Offset)
+	Dim VirtualStartIndex As LongInt = StartIndex + nOffset
 
-	If VirtualStartIndex >= self->Capacity Then
+	Dim nCapacity As LongInt = CLngInt(self->Capacity)
+	If VirtualStartIndex >= nCapacity Then
 		*ppIAsyncResult = NULL
-		Return E_OUTOFMEMORY
+		Return HRESULT_FROM_WIN32(ERROR_SEEK)
 	End If
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
@@ -198,12 +202,12 @@ Private Function MemoryStreamBeginGetSlice( _
 
 	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
 
-	*ppIAsyncResult = pINewAsyncResult
-
 	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
+
+	Dim dwLength As DWORD = Cast(DWORD, Length)
 	Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
 		pIPool, _
-		Length, _
+		dwLength, _
 		Cast(ULONG_PTR, StateObject), _
 		pINewAsyncResult _
 	)
@@ -213,11 +217,13 @@ Private Function MemoryStreamBeginGetSlice( _
 		Return hrStatus
 	End If
 
+	*ppIAsyncResult = pINewAsyncResult
+
 	Return ATTRIBUTEDSTREAM_S_IO_PENDING
 
 End Function
 
-Private Function MemoryStreamEndGetSlice( _
+Private Function MemoryStreamEndReadSlice( _
 		ByVal self As MemoryStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
@@ -237,24 +243,27 @@ Private Function MemoryStreamEndGetSlice( _
 	End If
 
 	If Completed Then
+		Dim nBytesTransferred As UInteger = CUInt(dwBytesTransferred)
+
 		Scope
 			Dim pMem As Byte Ptr = Any
-			If self->pOuterBuffer = NULL Then
-				pMem = self->pBuffer
-			Else
+			If self->pOuterBuffer Then
 				pMem = self->pOuterBuffer
+			Else
+				pMem = self->pBuffer
 			End If
 
-			Dim VirtualIndex As LongInt = self->RequestStartIndex + self->Offset
+			Dim VirtualIndex As UInteger = self->RequestStartIndex + self->Offset
+
 			pBufferSlice->pSlice = @pMem[VirtualIndex]
-			pBufferSlice->Length = CInt(dwBytesTransferred)
+			pBufferSlice->Length = nBytesTransferred
 		End Scope
 
 		If dwBytesTransferred = 0 Then
 			Return S_FALSE
 		End If
 
-		If dwBytesTransferred <= self->Capacity Then
+		If nBytesTransferred <= self->Capacity Then
 			Return S_FALSE
 		End If
 
@@ -326,7 +335,8 @@ Private Function MemoryStreamGetLength( _
 		ByVal pLength As LongInt Ptr _
 	)As HRESULT
 
-	Dim VirtualLength As LongInt = self->Capacity - self->Offset
+	Dim nLength As UInteger = self->Capacity - self->Offset
+	Dim VirtualLength As LongInt = CLngInt(nLength)
 
 	*pLength = VirtualLength
 
@@ -336,7 +346,7 @@ End Function
 
 Private Function MemoryStreamGetPreloadedBytes( _
 		ByVal self As MemoryStream Ptr, _
-		ByVal pPreloadedBytesLength As Integer Ptr, _
+		ByVal pPreloadedBytesLength As UInteger Ptr, _
 		ByVal ppPreloadedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
@@ -360,21 +370,21 @@ End Function
 
 Private Function MemoryStreamAllocBuffer( _
 		ByVal self As MemoryStream Ptr, _
-		ByVal Length As LongInt, _
+		ByVal Length As UInteger, _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim Offset As LongInt = Any
+	Dim Offset As UInteger = Any
 	#if __FB_DEBUG__
 		Offset = Len(RTTI_ID_MEMORYBODY)
 	#else
 		Offset = 0
 	#endif
 
-	Dim BufferLength As LongInt = Length + Offset
+	Dim BufferLength As UInteger = Length + Offset
 	self->pBuffer = IMalloc_Alloc( _
 		self->pIMemoryAllocator, _
-		CULngInt(BufferLength) _
+		BufferLength _
 	)
 	If self->pBuffer = NULL Then
 		*ppBuffer = NULL
@@ -401,7 +411,7 @@ End Function
 Private Function MemoryStreamSetBuffer( _
 		ByVal self As MemoryStream Ptr, _
 		ByVal pBuffer As Any Ptr, _
-		ByVal Length As LongInt _
+		ByVal Length As UInteger _
 	)As HRESULT
 
 	self->pOuterBuffer = pBuffer
@@ -483,23 +493,23 @@ Private Function IMemoryStreamGetPreloadedBytes( _
 	Return MemoryStreamGetPreloadedBytes(CONTAINING_RECORD(self, MemoryStream, lpVtbl), pPreloadedBytesLength, ppPreloadedBytes)
 End Function
 
-Private Function IMemoryStreamBeginGetSlice( _
+Private Function IMemoryStreamBeginReadSlice( _
 		ByVal self As IMemoryStream Ptr, _
 		ByVal StartIndex As LongInt, _
-		ByVal Length As DWORD, _
+		ByVal Length As LongInt, _
 		ByVal pcb As AsyncCallback, _
 		ByVal StateObject As Any Ptr, _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
-	Return MemoryStreamBeginGetSlice(CONTAINING_RECORD(self, MemoryStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
+	Return MemoryStreamBeginReadSlice(CONTAINING_RECORD(self, MemoryStream, lpVtbl), StartIndex, Length, pcb, StateObject, ppIAsyncResult)
 End Function
 
-Private Function IMemoryStreamEndGetSlice( _
+Private Function IMemoryStreamEndReadSlice( _
 		ByVal self As IMemoryStream Ptr, _
 		ByVal pIAsyncResult As IAsyncResult Ptr, _
 		ByVal pBufferSlice As BufferSlice Ptr _
 	)As HRESULT
-	Return MemoryStreamEndGetSlice(CONTAINING_RECORD(self, MemoryStream, lpVtbl), pIAsyncResult, pBufferSlice)
+	Return MemoryStreamEndReadSlice(CONTAINING_RECORD(self, MemoryStream, lpVtbl), pIAsyncResult, pBufferSlice)
 End Function
 
 Private Function IMemoryStreamSetContentType( _
@@ -511,7 +521,7 @@ End Function
 
 Private Function IMemoryStreamAllocBuffer( _
 		ByVal self As IMemoryStream Ptr, _
-		ByVal Length As LongInt, _
+		ByVal Length As UInteger, _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 	Return MemoryStreamAllocBuffer(CONTAINING_RECORD(self, MemoryStream, lpVtbl), Length, ppBuffer)
@@ -520,7 +530,7 @@ End Function
 Private Function IMemoryStreamSetBuffer( _
 		ByVal self As IMemoryStream Ptr, _
 		ByVal pBuffer As Any Ptr, _
-		ByVal Length As LongInt _
+		ByVal Length As UInteger _
 	)As HRESULT
 	Return MemoryStreamSetBuffer(CONTAINING_RECORD(self, MemoryStream, lpVtbl), pBuffer, Length)
 End Function
@@ -529,8 +539,8 @@ Dim GlobalMemoryStreamVirtualTable As Const IMemoryStreamVirtualTable = Type( _
 	@IMemoryStreamQueryInterface, _
 	@IMemoryStreamAddRef, _
 	@IMemoryStreamRelease, _
-	@IMemoryStreamBeginGetSlice, _
-	@IMemoryStreamEndGetSlice, _
+	@IMemoryStreamBeginReadSlice, _
+	@IMemoryStreamEndReadSlice, _
 	@IMemoryStreamGetContentType, _
 	@IMemoryStreamGetEncoding, _
 	@IMemoryStreamGetLanguage, _
