@@ -643,32 +643,7 @@ Private Function GetFileHandle( _
 			Dim dwError As DWORD = GetLastError()
 
 			If FileHandle = INVALID_HANDLE_VALUE Then
-				If dwError = ERROR_PATH_NOT_FOUND Then
-					Dim FileDir As WString * (MAX_PATH + 1) = Any
-					lstrcpyW(@FileDir, PathTranslated)
-					PathRemoveFileSpecW(@FileDir)
-					CreateDirectoryW(@FileDir, NULL)
-
-					Dim FileHandle2 As HANDLE = CreateFileW( _
-						PathTranslated, _
-						GENERIC_WRITE, _
-						0, _
-						NULL, _
-						CREATE_ALWAYS, _
-						FILE_ATTRIBUTE_NORMAL Or FILE_FLAG_OVERLAPPED, _
-						NULL _
-					)
-
-					If FileHandle2 = INVALID_HANDLE_VALUE Then
-						Dim dwError2 As DWORD = GetLastError()
-						hrErrorCode = HRESULT_FROM_WIN32(dwError2)
-					Else
-						FileHandle = FileHandle2
-						hrErrorCode = WEBSITE_S_CREATE_NEW
-					End If
-				Else
-					hrErrorCode = HRESULT_FROM_WIN32(dwError)
-				End If
+				hrErrorCode = HRESULT_FROM_WIN32(dwError)
 			Else
 				If dwError = ERROR_ALREADY_EXISTS Then
 					hrErrorCode = WEBSITE_S_ALREADY_EXISTS
