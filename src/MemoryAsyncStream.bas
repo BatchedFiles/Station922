@@ -175,14 +175,19 @@ Private Function MemoryStreamBeginReadSlice( _
 		ByVal ppIAsyncResult As IAsyncResult Ptr Ptr _
 	)As HRESULT
 
-	Dim nOffset As LongInt = CLngInt(self->Offset)
-	Dim VirtualStartIndex As LongInt = StartIndex + nOffset
+	Scope
+		Dim nOffset As LongInt = CLngInt(self->Offset)
+		Dim VirtualStartIndex As LongInt = StartIndex + nOffset
 
-	Dim nCapacity As LongInt = CLngInt(self->Capacity)
-	If VirtualStartIndex >= nCapacity Then
-		*ppIAsyncResult = NULL
-		Return HRESULT_FROM_WIN32(ERROR_SEEK)
-	End If
+		Dim nCapacity As LongInt = CLngInt(self->Capacity)
+		If VirtualStartIndex >= nCapacity Then
+			*ppIAsyncResult = NULL
+			Return HRESULT_FROM_WIN32(ERROR_SEEK)
+		End If
+
+		self->RequestStartIndex = StartIndex
+		self->RequestLength = Length
+	End Scope
 
 	Dim pINewAsyncResult As IAsyncResult Ptr = Any
 	Scope
@@ -197,25 +202,24 @@ Private Function MemoryStreamBeginReadSlice( _
 		End If
 	End Scope
 
-	self->RequestStartIndex = StartIndex
-	self->RequestLength = Length
+	Scope
+		IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
 
-	IAsyncResult_SetAsyncStateWeakPtr(pINewAsyncResult, pcb, StateObject)
+		Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
 
-	Dim pIPool As IThreadPool Ptr = GetThreadPoolWeakPtr()
-
-	Dim dwLength As DWORD = Cast(DWORD, Length)
-	Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
-		pIPool, _
-		dwLength, _
-		Cast(ULONG_PTR, StateObject), _
-		pINewAsyncResult _
-	)
-	If FAILED(hrStatus) Then
-		IAsyncResult_Release(pINewAsyncResult)
-		*ppIAsyncResult = NULL
-		Return hrStatus
-	End If
+		Dim dwLength As DWORD = Cast(DWORD, Length)
+		Dim hrStatus As HRESULT = IThreadPool_PostPacket( _
+			pIPool, _
+			dwLength, _
+			Cast(ULONG_PTR, StateObject), _
+			pINewAsyncResult _
+		)
+		If FAILED(hrStatus) Then
+			IAsyncResult_Release(pINewAsyncResult)
+			*ppIAsyncResult = NULL
+			Return hrStatus
+		End If
+	End Scope
 
 	*ppIAsyncResult = pINewAsyncResult
 
