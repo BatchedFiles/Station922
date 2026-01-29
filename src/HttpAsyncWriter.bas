@@ -356,6 +356,34 @@ Private Function HttpWriterPrepare( _
 
 End Function
 
+Private Function AllocBytes( _
+		ByVal pIBuffer As IAttributedAsyncStream Ptr, _
+		ByVal pLength As UInteger Ptr, _
+		ByVal ppBytes As Any Ptr Ptr _
+	) As HRESULT
+
+	Dim pIFileAsyncStream As IFileAsyncStream Ptr = Any
+	Dim hrQuery As HRESULT = IAttributedAsyncStream_QueryInterface( _
+		pIBuffer, _
+		@IID_IFileAsyncStream, _
+		@pIFileAsyncStream _
+	)
+	If FAILED(hrQuery) Then
+		Return hrQuery
+	End If
+
+	Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_AllocBytes( _
+		pIFileAsyncStream, _
+		pLength, _
+		ppBytes _
+	)
+
+	IFileAsyncStream_Release(pIFileAsyncStream)
+
+	Return hrGetReservedBytes
+
+End Function
+
 Private Function HttpWriterBeginWrite( _
 		ByVal self As HttpWriter Ptr, _
 		ByVal pcb As AsyncCallback, _
@@ -497,12 +525,14 @@ Private Function HttpWriterBeginWrite( _
 
 				Dim ReservedBytesLength As Integer = Any
 				Dim pReservedBytes As UByte Ptr = Any
-				Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_GetReservedBytes( _
-					pIFileAsyncStream, _
+
+				Dim hrGetReservedBytes As HRESULT = AllocBytes( _
+					self->pIBuffer, _
 					@ReservedBytesLength, _
-					@pReservedBytes _
+					@pReservedBytes  _
 				)
 				If FAILED(hrGetReservedBytes) Then
+					*ppIAsyncResult = NULL
 					Return hrGetReservedBytes
 				End If
 
@@ -527,13 +557,13 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.ReadNetworkStream
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
-			Dim ReservedBytesLength As Integer = Any
+			Dim ReservedBytesLength As UInteger = Any
 			Dim pReservedBytes As UByte Ptr = Any
-			Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_GetReservedBytes( _
-				pIFileAsyncStream, _
+
+			Dim hrGetReservedBytes As HRESULT = AllocBytes( _
+				self->pIBuffer, _
 				@ReservedBytesLength, _
-				@pReservedBytes _
+				@pReservedBytes  _
 			)
 			If FAILED(hrGetReservedBytes) Then
 				*ppIAsyncResult = NULL

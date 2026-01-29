@@ -760,14 +760,23 @@ Private Function FileStreamSetPreloadedBytes( _
 
 End Function
 
-Private Function FileStreamGetReservedBytes( _
+Private Function FileStreamAllocBytes( _
 		ByVal self As FileStream Ptr, _
-		ByVal pReservedBytesLength As Integer Ptr, _
+		ByVal pLength As UInteger Ptr, _
 		ByVal ppReservedBytes As UByte Ptr Ptr _
 	)As HRESULT
 
-	*pReservedBytesLength = self->BigFileBytes.Length
-	*ppReservedBytes = self->BigFileBytes.pBytes
+	Dim pMem As Any Ptr = FileStreamAllocateBufferSink( _
+		self, _
+		self->ReservedBytesLength _
+	)
+
+	*pLength = self->ReservedBytesLength
+	*ppReservedBytes = pMem
+
+	If pMem = NULL Then
+		Return E_OUTOFMEMORY
+	End If
 
 	Return S_OK
 
@@ -962,12 +971,12 @@ Private Function IFileAsyncStreamSetPreloadedBytes( _
 	Return FileStreamSetPreloadedBytes(CONTAINING_RECORD(self, FileStream, lpVtbl), PreloadedBytesLength, pPreloadedBytes)
 End Function
 
-Private Function IFileAsyncStreamGetReservedBytes( _
+Private Function IFileAsyncStreamAllocBytes( _
 		ByVal self As IFileAsyncStream Ptr, _
-		ByVal pReservedBytesLength As Integer Ptr, _
+		ByVal pLength As UInteger Ptr, _
 		ByVal ppReservedBytes As UByte Ptr Ptr _
 	)As HRESULT
-	Return FileStreamGetReservedBytes(CONTAINING_RECORD(self, FileStream, lpVtbl), pReservedBytesLength, ppReservedBytes)
+	Return FileStreamAllocBytes(CONTAINING_RECORD(self, FileStream, lpVtbl), pLength, ppReservedBytes)
 End Function
 
 Private Function IFileAsyncStreamBeginWriteSlice( _
@@ -1016,7 +1025,7 @@ Dim GlobalFileStreamVirtualTable As Const IFileAsyncStreamVirtualTable = Type( _
 	@IFileAsyncStreamSetETag, _
 	@IFileAsyncStreamSetReservedFileBytes, _
 	@IFileAsyncStreamSetPreloadedBytes, _
-	@IFileAsyncStreamGetReservedBytes, _
+	@IFileAsyncStreamAllocBytes, _
 	@IFileAsyncStreamBeginWriteSlice, _
 	@IFileAsyncStreamEndWriteSlice _
 )
