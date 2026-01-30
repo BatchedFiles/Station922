@@ -378,11 +378,10 @@ Private Function MemoryStreamAllocBuffer( _
 		ByVal ppBuffer As Any Ptr Ptr _
 	)As HRESULT
 
-	Dim Offset As UInteger = Any
 	#if __FB_DEBUG__
-		Offset = Len(RTTI_ID_MEMORYBODY)
+		Const Offset As UInteger = Len(RTTI_ID_MEMORYBODY)
 	#else
-		Offset = 0
+		Const Offset As UInteger = 0
 	#endif
 
 	Dim BufferLength As UInteger = Length + Offset

@@ -145,10 +145,10 @@ Type IFileAsyncStreamVirtualTable
 		ByVal pPreloadedBytes As UByte Ptr _
 	)As HRESULT
 
-	AllocBytes As Function( _
+	AllocSlice As Function( _
 		ByVal self As IFileAsyncStream Ptr, _
-		ByVal pLength As UInteger Ptr, _
-		ByVal ppReservedBytes As UByte Ptr Ptr _
+		ByVal DesiredLength As UInteger, _
+		ByVal pSlice As BufferSlice Ptr _
 	)As HRESULT
 
 	BeginWriteSlice As Function( _
@@ -198,7 +198,7 @@ End Type
 #define IFileAsyncStream_SetETag(self, ETag) (self)->lpVtbl->SetETag(self, ETag)
 #define IFileAsyncStream_SetReservedFileBytes(self, ReservedFileBytes) (self)->lpVtbl->SetReservedFileBytes(self, ReservedFileBytes)
 #define IFileAsyncStream_SetPreloadedBytes(self, PreloadedBytesLength, pPreloadedBytes) (self)->lpVtbl->SetPreloadedBytes(self, PreloadedBytesLength, pPreloadedBytes)
-#define IFileAsyncStream_AllocBytes(self, pReservedBytesLength, ppReservedBytes) (self)->lpVtbl->AllocBytes(self, pReservedBytesLength, ppReservedBytes)
+#define IFileAsyncStream_AllocSlice(self, DesiredLength, pSlice) (self)->lpVtbl->AllocSlice(self, DesiredLength, pSlice)
 #define IFileAsyncStream_BeginWriteSlice(self, pBufferSlice, Offset, pcb, StateObject, ppIAsyncResult) (self)->lpVtbl->BeginWriteSlice(self, pBufferSlice, Offset, pcb, StateObject, ppIAsyncResult)
 #define IFileAsyncStream_EndWriteSlice(self, pIAsyncResult, pWritedBytes) (self)->lpVtbl->EndWriteSlice(self, pIAsyncResult, pWritedBytes)
 

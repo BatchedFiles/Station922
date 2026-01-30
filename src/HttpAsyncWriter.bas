@@ -279,57 +279,63 @@ Private Function HttpWriterPrepare( _
 
 	HttpWriterSinkResponse(self, pIResponse)
 
-	self->HeadersOffset = 0
-	self->HeadersSended = False
+	Scope
+		self->HeadersOffset = 0
+		self->HeadersSended = False
 
-	Dim ResponseContentLength As LongInt = Any
-	If fFileAccess = FileAccess.ReadAccess Then
-		ResponseContentLength = ContentLength
-	Else
-		ResponseContentLength = 0
-	End If
+		Dim ResponseContentLength As LongInt = Any
+		If fFileAccess = FileAccess.ReadAccess Then
+			ResponseContentLength = ContentLength
+		Else
+			ResponseContentLength = 0
+		End If
 
-	Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
-		pIResponse, _
-		ResponseContentLength, _
-		@self->Headers, _
-		@self->HeadersLength _
-	)
-	If FAILED(hrHeadersToString) Then
-		Return hrHeadersToString
-	End If
+		Dim hrHeadersToString As HRESULT = IServerResponse_AllHeadersToZString( _
+			pIResponse, _
+			ResponseContentLength, _
+			@self->Headers, _
+			@self->HeadersLength _
+		)
+		If FAILED(hrHeadersToString) Then
+			Return hrHeadersToString
+		End If
+	End Scope
 
-	IServerResponse_GetSendOnlyHeaders( _
-		pIResponse, _
-		@self->SendOnlyHeaders _
-	)
+	Scope
+		IServerResponse_GetSendOnlyHeaders( _
+			pIResponse, _
+			@self->SendOnlyHeaders _
+		)
 
-	If self->SendOnlyHeaders Then
-		self->BodySended = True
-	Else
-		self->BodySended = False
-	End If
+		If self->SendOnlyHeaders Then
+			self->BodySended = True
+		Else
+			self->BodySended = False
+		End If
+	End Scope
 
-	Dim ByteRangeLength As LongInt = Any
-	IServerResponse_GetByteRange( _
-		pIResponse, _
-		@self->BodyOffset, _
-		@ByteRangeLength _
-	)
+	Scope
+		Dim ByteRangeLength As LongInt = Any
+		IServerResponse_GetByteRange( _
+			pIResponse, _
+			@self->BodyOffset, _
+			@ByteRangeLength _
+		)
 
-	Dim BodyContentLength As LongInt = Any
-	If ByteRangeLength Then
-		BodyContentLength = ByteRangeLength
-	Else
-		BodyContentLength = ContentLength
-	End If
+		Dim BodyContentLength As LongInt = Any
+		If ByteRangeLength Then
+			BodyContentLength = ByteRangeLength
+		Else
+			BodyContentLength = ContentLength
+		End If
 
-	self->HeadersEndIndex = self->HeadersLength
-	self->BodyEndIndex = self->BodyOffset + BodyContentLength
+		self->HeadersEndIndex = self->HeadersLength
+		self->BodyEndIndex = self->BodyOffset + BodyContentLength
 
-	If BodyContentLength = 0 Then
-		self->BodySended = True
-	End If
+		If BodyContentLength = 0 Then
+			self->BodySended = True
+		End If
+	End Scope
 
 	Select Case fFileAccess
 
@@ -358,6 +364,7 @@ End Function
 
 Private Function AllocBytes( _
 		ByVal pIBuffer As IAttributedAsyncStream Ptr, _
+		ByVal DesiredLength As LongInt, _
 		ByVal pLength As UInteger Ptr, _
 		ByVal ppBytes As Any Ptr Ptr _
 	) As HRESULT
@@ -372,15 +379,23 @@ Private Function AllocBytes( _
 		Return hrQuery
 	End If
 
-	Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_AllocBytes( _
+	Dim Slice As BufferSlice = Any
+	Dim hrAllocSlice As HRESULT = IFileAsyncStream_AllocSlice( _
 		pFileStream, _
-		pLength, _
-		ppBytes _
+		DesiredLength, _
+		@Slice _
 	)
 
 	IFileAsyncStream_Release(pFileStream)
 
-	Return hrGetReservedBytes
+	If FAILED(hrAllocSlice) Then
+		Return E_OUTOFMEMORY
+	End If
+
+	*pLength = Slice.Length
+	*ppBytes = Slice.pSlice
+
+	Return S_OK
 
 End Function
 
@@ -523,11 +538,13 @@ Private Function HttpWriterBeginWrite( _
 			Else
 				self->CurrentTask = WriterTasks.ReadNetworkStream
 
+				Dim DesiredLength As LongInt = self->BodyEndIndex - self->BodyOffset
+
 				Dim ReservedBytesLength As Integer = Any
 				Dim pReservedBytes As UByte Ptr = Any
-
 				Dim hrGetReservedBytes As HRESULT = AllocBytes( _
 					self->pIBuffer, _
+					DesiredLength , _
 					@ReservedBytesLength, _
 					@pReservedBytes  _
 				)
@@ -557,11 +574,14 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.ReadNetworkStream
+			Dim DesiredLength As LongInt = self->BodyEndIndex - self->BodyOffset
+
 			Dim ReservedBytesLength As UInteger = Any
 			Dim pReservedBytes As UByte Ptr = Any
 
 			Dim hrGetReservedBytes As HRESULT = AllocBytes( _
 				self->pIBuffer, _
+				DesiredLength, _
 				@ReservedBytesLength, _
 				@pReservedBytes  _
 			)
