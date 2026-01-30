@@ -362,23 +362,23 @@ Private Function AllocBytes( _
 		ByVal ppBytes As Any Ptr Ptr _
 	) As HRESULT
 
-	Dim pIFileAsyncStream As IFileAsyncStream Ptr = Any
+	Dim pFileStream As IFileAsyncStream Ptr = Any
 	Dim hrQuery As HRESULT = IAttributedAsyncStream_QueryInterface( _
 		pIBuffer, _
 		@IID_IFileAsyncStream, _
-		@pIFileAsyncStream _
+		@pFileStream  _
 	)
 	If FAILED(hrQuery) Then
 		Return hrQuery
 	End If
 
 	Dim hrGetReservedBytes As HRESULT = IFileAsyncStream_AllocBytes( _
-		pIFileAsyncStream, _
+		pFileStream, _
 		pLength, _
 		ppBytes _
 	)
 
-	IFileAsyncStream_Release(pIFileAsyncStream)
+	IFileAsyncStream_Release(pFileStream)
 
 	Return hrGetReservedBytes
 
@@ -491,7 +491,6 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.WritePreloadedBytesToFile
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim PreloadedBytesLength As Integer = Any
 			Dim pPreloadedBytes As UByte Ptr = Any
 			IAttributedAsyncStream_GetPreloadedBytes( _
@@ -507,6 +506,7 @@ Private Function HttpWriterBeginWrite( _
 					.Length = PreloadedBytesLength
 				End With
 
+				Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 				Dim hrBeginWrite As HRESULT = IFileAsyncStream_BeginWriteSlice( _
 					pIFileAsyncStream, _
 					@Slice, _
@@ -588,14 +588,13 @@ Private Function HttpWriterBeginWrite( _
 			End If
 
 		Case WriterTasks.WriteFileData
-			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
-
 			Dim Slice As BufferSlice = Any
 			With Slice
 				.pSlice = self->StreamBuffer.Buf(0).Buffer
 				.Length = self->StreamBuffer.Buf(0).Length
 			End With
 
+			Dim pIFileAsyncStream As IFileAsyncStream Ptr = CPtr(IFileAsyncStream Ptr, self->pIBuffer)
 			Dim hrBeginWrite As HRESULT = IFileAsyncStream_BeginWriteSlice( _
 				pIFileAsyncStream, _
 				@Slice, _
