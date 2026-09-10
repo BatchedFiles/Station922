@@ -15,18 +15,18 @@ Private Function IsServiceParam()As Boolean
 		@Args _
 	)
 
-	Dim IsService As Boolean = Any
+	Dim IsService As Boolean = False
 
-	If Args > 1 Then
-		Dim CompareResult As Long = lstrcmpiW(ppLines[1], ServiceParam)
-		If CompareResult = CompareResultEqual Then
+	For i As Integer = 1 To CInt(Args)
+		Dim resCompare As Long = lstrcmpiW( _
+			ppLines[i], _
+			@ServiceParam _
+		)
+
+		If resCompare = CompareResultEqual Then
 			IsService = True
-		Else
-			IsService = False
 		End If
-	Else
-		IsService = False
-	End If
+	Next
 
 	LocalFree(ppLines)
 
