@@ -339,6 +339,37 @@ Private Function WebSiteHttpAuthUtil( _
 
 End Function
 
+Private Function GetResourceBytes( _
+		ByVal ID As Integer, _
+		ByVal pLength As Integer Ptr _
+	) As UByte Ptr
+
+	var hInst = GetModuleHandle(0)
+	var res = FindResourceW( _
+		hInst, _
+		MAKEINTRESOURCE(ID), _
+		RT_RCDATA _
+	)
+
+	If res Then
+		var pt = LoadResource(hInst, res)
+
+		If pt Then
+			var bytes = LockResource(pt)
+
+			If bytes Then
+				var length = SizeofResource(hInst, res)
+				*pLength = length
+
+				Return bytes
+			End If
+		End If
+	End If
+
+	Return NULL
+
+End Function
+
 Private Function FormatMessageErrorBody( _
 		ByVal pBodyBuffer As WString Ptr, _
 		ByVal StatusCode As HttpStatusCodes, _
@@ -347,72 +378,64 @@ Private Function FormatMessageErrorBody( _
 		ByVal hrErrorCode As HRESULT _
 	) As Integer
 
-	' 300
-	Const ClientMovedString = WStr("Redirection")
-	' 400
-	Const ClientErrorString = WStr("Client Error")
-	' 500
-	Const ServerErrorString = WStr("Server Error")
-
-	var h = GetModuleHandle(0)
-	var r = FindResourceW( _
-		h, _
-		MAKEINTRESOURCE(RC_GENERIC_HTTP_ERROR), _
-		RT_RCDATA _
+	Dim Length As Integer = Any
+	Dim bytes As UByte Ptr = GetResourceBytes( _
+		RC_GENERIC_HTTP_ERROR, _
+		@Length _
 	)
 
-	If r Then
-		var p = LoadResource(h, r)
-		If p Then
-			var l = SizeofResource(h, r)
-
-			If l Then
-				Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
-
-				Dim pClientError As WString Ptr = Any
-				Select Case StatusCode
-
-					Case 300 To 399
-						pClientError = @ClientMovedString
-
-					Case 400 To 499
-						pClientError = @ClientErrorString
-
-					Case Else
-						pClientError = @ServerErrorString
-
-				End Select
-
-				Dim wErrorDescription As WString * 256 = Any
-				Dim CharsCount As DWORD = FormatMessageW( _
-					FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
-					NULL, _
-					hrErrorCode, _
-					MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
-					@wErrorDescription, _
-					256 - 1, _
-					NULL _
-				)
-				If CharsCount = 0 Then
-					wErrorDescription[0] = 0
-				End If
-
-				var c = wsprintfW( _
-					pBodyBuffer, _
-					p, _
-					DescriptionBuffer, _
-					DescriptionBuffer, _
-					pClientError, _
-					VirtualPath, _
-					StatusCode, _
-					hrErrorCode, _
-					@wErrorDescription _
-				)
-
-				Return c
-
-			End If
+	If bytes Then
+		Dim dwError As DWORD = HRESULT_CODE(hrErrorCode)
+		Dim wErrorDescription As WString * 256 = Any
+		Dim CharsCount As DWORD = FormatMessageW( _
+			FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_MAX_WIDTH_MASK, _
+			NULL, _
+			dwError, _
+			MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), _
+			@wErrorDescription, _
+			256 - 1, _
+			NULL _
+		)
+		If CharsCount = 0 Then
+			wErrorDescription[0] = 0
 		End If
+
+		' 300
+		Const ClientMovedString = WStr("Redirection")
+		' 400
+		Const ClientErrorString = WStr("Client Error")
+		' 500
+		Const ServerErrorString = WStr("Server Error")
+
+		Dim DescriptionBuffer As WString Ptr = GetStatusDescription(StatusCode, 0)
+		Dim pClientError As WString Ptr = Any
+		Select Case StatusCode
+
+			Case 300 To 399
+				pClientError = @ClientMovedString
+
+			Case 400 To 499
+				pClientError = @ClientErrorString
+
+			Case Else
+				pClientError = @ServerErrorString
+
+		End Select
+
+		var c = wsprintfW( _
+			pBodyBuffer, _
+			Cast(LPCWSTR, bytes), _
+			DescriptionBuffer, _
+			DescriptionBuffer, _
+			pClientError, _
+			VirtualPath, _
+			StatusCode, _
+			hrErrorCode, _
+			@wErrorDescription _
+		)
+
+		Return c
+
 	End If
 
 	pBodyBuffer[0] = 0
