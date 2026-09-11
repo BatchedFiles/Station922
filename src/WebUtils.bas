@@ -632,17 +632,6 @@ Public Function Station922Initialize()As HRESULT
 	End Scope
 
 	Scope
-		For i As Integer = 0 To IpEndPointsLength - 1
-			Dim hrStart As HRESULT = IWebServer_Run( _
-				WebServers.Vector(i) _
-			)
-			If FAILED(hrStart) Then
-				Return hrStart
-			End If
-		Next
-	End Scope
-
-	Scope
 		' Cleanup
 		For i As Integer = 0 To WebSitesLength - 1
 			HeapSysFreeString(pWebSiteConfig[i].HostName)
@@ -659,6 +648,17 @@ Public Function Station922Initialize()As HRESULT
 		Next
 
 		IMalloc_Free(pIMemoryAllocator, pWebSiteConfig)
+	End Scope
+
+	Scope
+		For i As Integer = 0 To IpEndPointsLength - 1
+			Dim hrStart As HRESULT = IWebServer_Run( _
+				WebServers.Vector(i) _
+			)
+			If FAILED(hrStart) Then
+				Return hrStart
+			End If
+		Next
 	End Scope
 
 	Return S_OK
