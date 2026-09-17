@@ -22,29 +22,29 @@ Private Sub ReportSvcStatus( _
 		ByVal dwWin32ExitCode As DWORD, _
 		ByVal dwWaitHint As DWORD _
 	)
-	
+
 	lpContext->ServiceStatus.dwCurrentState = dwCurrentState
 	lpContext->ServiceStatus.dwWin32ExitCode = dwWin32ExitCode
 	lpContext->ServiceStatus.dwWaitHint = dwWaitHint
-	
+
 	Select Case dwCurrentState
-		
+
 		Case SERVICE_STOPPED
 			lpContext->ServiceStatus.dwCheckPoint = 0
-			
+
 		Case SERVICE_START_PENDING, SERVICE_STOP_PENDING
 			lpContext->ServiceCheckPoint += 1
 			lpContext->ServiceStatus.dwCheckPoint = lpContext->ServiceCheckPoint
 			lpContext->ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP Or SERVICE_ACCEPT_SHUTDOWN
-			
+
 		Case SERVICE_RUNNING
 			lpContext->ServiceStatus.dwCheckPoint = 0
 			lpContext->ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP Or SERVICE_ACCEPT_SHUTDOWN
-			
+
 	End Select
-	
+
 	SetServiceStatus(lpContext->ServiceStatusHandle, @lpContext->ServiceStatus)
-	
+
 End Sub
 
 Private Function SvcCtrlHandlerEx( _
@@ -53,11 +53,11 @@ Private Function SvcCtrlHandlerEx( _
 		ByVal lpEventData As LPVOID, _
 		ByVal lpContext As LPVOID _
 	)As DWORD
-	
+
 	Dim pServiceContext As ServiceContext Ptr = lpContext
-	
+
 	Select Case dwCtrl
-		
+
 		Case SERVICE_CONTROL_INTERROGATE
 			ReportSvcStatus( _
 				pServiceContext, _
@@ -65,7 +65,7 @@ Private Function SvcCtrlHandlerEx( _
 				NO_ERROR, _
 				0 _
 			)
-			
+
 		Case SERVICE_CONTROL_STOP, SERVICE_CONTROL_SHUTDOWN
 			ReportSvcStatus( _
 				pServiceContext, _
@@ -73,26 +73,26 @@ Private Function SvcCtrlHandlerEx( _
 				NO_ERROR, _
 				MaxWaitHint _
 			)
-			
+
 			SetEvent(pServiceContext->hStopEvent)
-			
+
 		Case Else
 			Return ERROR_CALL_NOT_IMPLEMENTED
-			
+
 	End Select
-	
+
 	Return NO_ERROR
-	
+
 End Function
 
 Private Sub SvcMain( _
 		ByVal dwNumServicesArgs As DWORD, _
 		ByVal lpServiceArgVectors As LPWSTR Ptr _
 	)
-	
+
 	Dim Context As ServiceContext = Any
 	ZeroMemory(@Context, SizeOf(ServiceContext))
-	
+
 	Context.ServiceStatusHandle = RegisterServiceCtrlHandlerExW( _
 		@ServiceName, _
 		@SvcCtrlHandlerEx, _
@@ -101,12 +101,12 @@ Private Sub SvcMain( _
 	If Context.ServiceStatusHandle = 0 Then
 		Exit Sub
 	End If
-	
+
 	Context.ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS
 	Context.ServiceStatus.dwServiceSpecificExitCode = 0
-	
+
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
-	
+
 	Context.hStopEvent = CreateEventW( _
 		NULL, _
 		TRUE, _
@@ -118,9 +118,9 @@ Private Sub SvcMain( _
 		ReportSvcStatus(@Context, SERVICE_STOPPED, dwError, 0)
 		Exit Sub
 	End If
-	
+
 	ReportSvcStatus(@Context, SERVICE_START_PENDING, NO_ERROR, MaxWaitHint)
-	
+
 	Scope
 		Dim hrInitialize As HRESULT = Station922Initialize()
 		If FAILED(hrInitialize) Then
@@ -129,29 +129,52 @@ Private Sub SvcMain( _
 			Exit Sub
 		End If
 	End Scope
-	
+
 	ReportSvcStatus(@Context, SERVICE_RUNNING, NO_ERROR, 0)
-	
-	WaitAlertableLoop(Context.hStopEvent)
-	
+
+	Do
+		Dim resWait As DWORD = WaitForSingleObjectEx( _
+			Context.hStopEvent, _
+			INFINITE, _
+			TRUE _
+		)
+
+		Select Case resWait
+
+			Case WAIT_OBJECT_0
+				' The event became a signal
+				' exit from loop
+				Exit Do
+
+			Case WAIT_IO_COMPLETION
+				' The asynchronous procedure has ended
+				' we continue to wait
+				Continue Do
+
+			Case Else ' WAIT_ABANDONED, WAIT_TIMEOUT, WAIT_FAILED
+				Exit Do
+
+		End Select
+	Loop
+
 	ReportSvcStatus(@Context, SERVICE_STOP_PENDING, NO_ERROR, 0)
-	
+
 	Scope
 		Station922CleanUp()
 		CloseHandle(Context.hStopEvent)
 	End Scope
-	
+
 	ReportSvcStatus(@Context, SERVICE_STOPPED, NO_ERROR, 0)
-	
+
 End Sub
 
 Public Function WindowsServiceMain()As Integer
-	
+
 	Dim DispatchTable As SERVICE_TABLE_ENTRYW_ZERO = Type( _
 		Type<SERVICE_TABLE_ENTRYW>(@ServiceName, @SvcMain), _
 		Type<SERVICE_TABLE_ENTRYW>(NULL, NULL) _
 	)
-	
+
 	Dim resStartService As BOOL = StartServiceCtrlDispatcherW( _
 		CPtr(SERVICE_TABLE_ENTRYW Ptr, _
 		@DispatchTable) _
@@ -159,7 +182,7 @@ Public Function WindowsServiceMain()As Integer
 	If resStartService = 0 Then
 		Return 1
 	End If
-	
+
 	Return 0
-	
+
 End Function

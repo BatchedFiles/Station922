@@ -22,8 +22,4 @@ Declare Sub Station922CleanUp()
 
 Declare Function GetThreadPoolWeakPtr()As IThreadPool Ptr
 
-Declare Function WaitAlertableLoop( _
-	ByVal hEvent As HANDLE _
-)As HRESULT
-
 #endif
